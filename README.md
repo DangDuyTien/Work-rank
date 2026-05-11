@@ -1,4 +1,4 @@
-# WorkRank Realtime
+# Work-rank Realtime
 
 WorkRank Realtime đo hoạt động làm việc theo thời gian thực với backend privacy-first, anti-cheat, desktop tracker và dashboard quản trị.
 
