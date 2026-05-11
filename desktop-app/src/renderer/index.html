@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkRank Tracker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0b1326;
+      color: #ffffff;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-app-region: drag;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: #060e20;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #00e676;
+      box-shadow: 0 0 8px #00e67666;
+    }
+    .header-logo span {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    .header-actions button {
+      background: none;
+      border: none;
+      color: #6b7280;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .header-actions button:hover {
+      background: #1f2937;
+      color: #e5e7eb;
+    }
+    .header-actions .close:hover {
+      background: #ef4444;
+      color: white;
+    }
+
+    /* Main content */
+    .content {
+      padding: 24px 24px 0;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 56px);
+    }
+
+    /* Main Tracker */
+    .tracker-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 20px;
+    }
+    .tracker-btn {
+      width: 104px;
+      height: 104px;
+      border-radius: 22px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      -webkit-app-region: no-drag;
+    }
+    .tracker-btn.tracking {
+      background: linear-gradient(135deg, #2e5bff, #1a3fcc);
+      box-shadow: 0 0 30px #2e5bff55, 0 0 60px #2e5bff33;
+    }
+    .tracker-btn.tracking:hover {
+      box-shadow: 0 0 40px #2e5bff77, 0 0 80px #2e5bff44;
+      transform: scale(1.03);
+    }
+    .tracker-btn.stopped {
+      background: linear-gradient(135deg, #4b5563, #374151);
+      box-shadow: 0 0 10px #37415155;
+    }
+    .tracker-btn.stopped:hover {
+      transform: scale(1.03);
+    }
+    .tracker-btn .inner {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: white;
+      transition: all 0.2s;
+    }
+    .tracker-btn.stopped .inner {
+      clip-path: polygon(35% 20%, 80% 50%, 35% 80%);
+      border-radius: 0;
+      background: white;
+      width: 0;
+      height: 0;
+      border-left: 18px solid #9ca3af;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      background: none;
+    }
+    .tracker-label {
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .tracker-label.tracking { color: #2e5bff; }
+    .tracker-label.stopped { color: #9ca3af; }
+
+    .session-info {
+      margin-top: 16px;
+      text-align: center;
+    }
+    .session-info .label {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .session-info .timer {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 2px;
+      background: linear-gradient(180deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    .status-bar .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .status-bar .dot.online { background: #00e676; box-shadow: 0 0 6px #00e67666; }
+    .status-bar .dot.offline { background: #ef4444; box-shadow: 0 0 6px #ef444466; }
+    .status-bar .status-text { color: #6b7280; }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat-card {
+      background: #131b2e;
+      border: 1px solid #1a2540;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .stat-card .stat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .stat-card .stat-header svg { width: 14px; height: 14px; opacity: 0.6; }
+    .stat-card .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .stat-card .stat-change {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .stat-card .stat-change.up { color: #00e676; }
+    .stat-card .stat-change.neutral { color: #6b7280; }
+
+    /* Score Section */
+    .score-section {
+      background: #131b2e;
+      border: 1px solid #1a2540;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .score-section .score-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .score-section .score-left .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00e676;
+      box-shadow: 0 0 6px #00e67666;
+    }
+    .score-section .score-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+    .score-section .score-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .score-section .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+    }
+    .score-section .mini-chart .bar {
+      width: 5px;
+      border-radius: 2px 2px 0 0;
+      background: #2e5bff;
+      opacity: 0.6;
+      transition: height 0.3s;
+    }
+    .score-section .mini-chart .bar.high { opacity: 1; }
+    .score-section .mini-chart .bar.max { background: #00e676; opacity: 1; }
+
+    /* User Footer */
+    .user-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      margin-top: auto;
+      border-top: 1px solid #1a2540;
+    }
+    .user-footer .user-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-footer .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2e5bff, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+    }
+    .user-footer .user-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .user-footer .user-role {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 1px;
+    }
+    .user-footer .logout-btn {
+      background: none;
+      border: 1px solid #1a2540;
+      color: #6b7280;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      -webkit-app-region: no-drag;
+    }
+    .user-footer .logout-btn:hover {
+      background: #1f2937;
+      color: #ef4444;
+      border-color: #ef444433;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1a2540; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="dot"></div>
+      <span>WorkRank</span>
+    </div>
+    <div class="header-actions">
+      <button onclick="window.electronAPI.minimize()">─</button>
+      <button class="close" onclick="window.electronAPI.close()">✕</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Main Tracker -->
+    <div class="tracker-section">
+      <button class="tracker-btn stopped" id="trackerBtn" onclick="toggle()">
+        <div class="inner"></div>
+      </button>
+      <div class="tracker-label stopped" id="trackerLabel">START</div>
+
+      <div class="session-info">
+        <div class="label">SESSION ACTIVE</div>
+        <div class="timer" id="timer">00:00:00</div>
+      </div>
+
+      <div class="status-bar">
+        <div class="dot online" id="statusDot"></div>
+        <span class="status-text" id="statusText">Connected — Tracking</span>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 6V4m12 2V4M8 12h8m-4 4h4"/></svg>
+          Keystrokes
+        </div>
+        <div class="stat-value" id="keystrokesVal">0</div>
+        <div class="stat-change neutral" id="keystrokesChange">— Avg pace</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15a6 6 0 1 1-12 0 6 6 0 0 1 12 0z"/><path d="M19 9a6 6 0 0 0-6-6M21 13a8 8 0 0 1-8 8"/></svg>
+          Clicks
+        </div>
+        <div class="stat-value" id="clicksVal">0</div>
+        <div class="stat-change neutral" id="clicksChange">— Avg pace</div>
+      </div>
+    </div>
+
+    <!-- Score -->
+    <div class="score-section">
+      <div class="score-left">
+        <div class="dot"></div>
+        <div>
+          <div class="score-label">Productivity Score</div>
+          <div class="score-value" id="scoreVal">0</div>
+        </div>
+      </div>
+      <div class="mini-chart" id="miniChart">
+        <div class="bar" style="height:8px"></div>
+        <div class="bar" style="height:14px"></div>
+        <div class="bar high" style="height:20px"></div>
+        <div class="bar max" style="height:28px"></div>
+        <div class="bar high" style="height:22px"></div>
+        <div class="bar" style="height:16px"></div>
+      </div>
+    </div>
+
+    <!-- User Footer -->
+    <div class="user-footer">
+      <div class="user-left">
+        <div class="avatar">A</div>
+        <div>
+          <div class="user-name" id="userName">Alex Chen</div>
+          <div class="user-role" id="userRole">Backend Eng</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="window.electronAPI.logout()" title="Logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let tracking = false;
+    let timerInterval = null;
+    let seconds = 0;
+    let totalKeys = 0;
+    let totalClicks = 0;
+    let lastKeys = 0;
+    let lastClicks = 0;
+
+    function formatTime(s) {
+      const h = String(Math.floor(s / 3600)).padStart(2, '0');
+      const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+      const sec = String(s % 60).padStart(2, '0');
+      return `${h}:${m}:${sec}`;
+    }
+
+    function formatNum(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'm';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return n.toLocaleString();
+    }
+
+    function updateStats(data) {
+      if (data.keystrokes !== undefined) {
+        totalKeys = data.keystrokes;
+        document.getElementById('keystrokesVal').textContent = formatNum(data.keystrokes);
+      }
+      if (data.mouse_clicks !== undefined) {
+        totalClicks = data.mouse_clicks;
+        document.getElementById('clicksVal').textContent = formatNum(data.mouse_clicks);
+      }
+      if (data.score !== undefined) {
+        document.getElementById('scoreVal').textContent = data.score;
+      }
+
+      // Update status dot
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (data.connected !== false) {
+        dot.className = tracking ? 'dot online' : 'dot offline';
+        text.textContent = tracking ? 'Connected — Tracking' : 'Connected — Paused';
+      } else {
+        dot.className = 'dot offline';
+        text.textContent = 'Disconnected';
+      }
+    }
+
+    async function toggle() {
+      const res = await window.electronAPI.toggle();
+      tracking = res.tracking;
+      const btn = document.getElementById('trackerBtn');
+      const lbl = document.getElementById('trackerLabel');
+      const dot = document.getElementById('statusDot');
+
+      if (tracking) {
+        btn.className = 'tracker-btn tracking';
+        lbl.className = 'tracker-label tracking';
+        lbl.textContent = 'TRACKING';
+        dot.className = 'dot online';
+        document.getElementById('statusText').textContent = 'Connected — Tracking';
+        if (!timerInterval) {
+          timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById('timer').textContent = formatTime(seconds);
+          }, 1000);
+        }
+      } else {
+        btn.className = 'tracker-btn stopped';
+        lbl.className = 'tracker-label stopped';
+        lbl.textContent = 'START';
+        dot.className = 'dot offline';
+        document.getElementById('statusText').textContent = 'Connected — Paused';
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+    }
+
+    // Auto-start on load
+    window.electronAPI.getStatus().then((s) => {
+      if (s.tracking) {
+        tracking = true;
+        document.getElementById('trackerBtn').className = 'tracker-btn tracking';
+        document.getElementById('trackerLabel').className = 'tracker-label tracking';
+        document.getElementById('trackerLabel').textContent = 'TRACKING';
+        timerInterval = setInterval(() => {
+          seconds++;
+          document.getElementById('timer').textContent = formatTime(seconds);
+        }, 1000);
+      }
+    });
+
+    window.electronAPI.onPing((data) => updateStats(data));
+  </script>
+</body>
+</html>

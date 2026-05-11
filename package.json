@@ -1,0 +1,15 @@
+{
+  "name": "workrank-realtime",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "desktop:dev": "npm --prefix desktop-app run dev",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:seed": "npm --prefix backend run db:seed",
+    "test": "npm --prefix backend test",
+    "build": "npm --prefix frontend run build",
+    "test:anti-cheat": "npm --prefix backend run test:anti-cheat"
+  }
+}
