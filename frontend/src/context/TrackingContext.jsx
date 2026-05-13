@@ -46,10 +46,20 @@ async function signPayload(secret, payload) {
   return Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function buildDesktopTrackerUrl(action) {
+  const params = new URLSearchParams();
+  const token = localStorage.getItem('token');
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (token) params.set('token', token);
+  if (refreshToken) params.set('refreshToken', refreshToken);
+  params.set('ts', String(Date.now()));
+  return `${DESKTOP_PROTOCOL}://${action}?${params.toString()}`;
+}
+
 function triggerDesktopTracker(action) {
   try {
     const link = document.createElement('a');
-    link.href = `${DESKTOP_PROTOCOL}://${action}`;
+    link.href = buildDesktopTrackerUrl(action);
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
@@ -128,12 +138,16 @@ export function TrackingProvider({ children }) {
         setDesktopTracking(!!data.tracking);
         desktopOnlineRef.current = !!data.online;
         if (data.online) {
-          setDesktopInfo({
-            deviceName: data.deviceName,
-            platform: data.platform,
-            lastHeartbeat: data.lastHeartbeat,
-          });
-        }
+	        setDesktopInfo({
+	          deviceName: data.deviceName,
+	          platform: data.platform,
+	          lastHeartbeat: data.lastHeartbeat,
+	          error: data.error,
+	        });
+	        if (data.error) {
+	          setDesktopLaunchStatus(`❌ ${data.error}`);
+	        }
+	      }
       } catch (err) {
         console.warn('Could not check desktop status:', err.message);
       }
@@ -165,23 +179,28 @@ export function TrackingProvider({ children }) {
   }, [socket]);
 
   // Listen for desktop status updates via socket
-  useEffect(() => {
-    if (!socket) return undefined;
+	  useEffect(() => {
+	    if (!socket) return undefined;
 
-    const handleDesktopStatus = (payload) => {
-      setDesktopOnline(!!payload.online);
-      setDesktopTracking(!!payload.tracking);
-      desktopOnlineRef.current = !!payload.online;
-      if (payload.online) {
-        setDesktopInfo({
-          deviceName: payload.deviceName,
-          platform: payload.platform,
-          lastHeartbeat: payload.lastHeartbeat,
-        });
-        if (!desktopOnlineRef.current) {
-          setDesktopLaunchStatus('✅ Desktop Tracker đang online.');
-        }
-      } else {
+	    const handleDesktopStatus = (payload) => {
+	      const wasOnline = desktopOnlineRef.current;
+	      const isOnline = !!payload.online;
+	      setDesktopOnline(isOnline);
+	      setDesktopTracking(!!payload.tracking);
+	      desktopOnlineRef.current = isOnline;
+	      if (isOnline) {
+	        setDesktopInfo({
+	          deviceName: payload.deviceName,
+	          platform: payload.platform,
+	          lastHeartbeat: payload.lastHeartbeat,
+	          error: payload.error,
+	        });
+	        if (payload.error) {
+	          setDesktopLaunchStatus(`❌ ${payload.error}`);
+	        } else if (!wasOnline) {
+	          setDesktopLaunchStatus('✅ Desktop Tracker đang online.');
+	        }
+	      } else {
         setDesktopInfo(null);
       }
     };
@@ -371,12 +390,16 @@ export function TrackingProvider({ children }) {
           try {
             const res = await activityApi.desktopStatus();
             const data = res.data || res;
-            if (data.online) {
-              setDesktopOnline(true);
-              setDesktopTracking(true);
-              desktopOnlineRef.current = true;
-              setDesktopLaunchStatus('✅ Desktop Tracker đã kết nối thành công!');
-            } else {
+	            if (data.online) {
+	              setDesktopOnline(true);
+	              setDesktopTracking(!!data.tracking);
+	              desktopOnlineRef.current = true;
+	              if (data.error) {
+	                setDesktopLaunchStatus(`❌ ${data.error}`);
+	              } else {
+	                setDesktopLaunchStatus(data.tracking ? '✅ Desktop Tracker đã kết nối thành công!' : '✅ Desktop Tracker đã online.');
+	              }
+	            } else {
               setDesktopLaunchStatus('❌ Desktop Tracker chưa phản hồi. Hãy mở Desktop Tracker và cấp quyền Accessibility.');
             }
           } catch {

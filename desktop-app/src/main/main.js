@@ -16,7 +16,7 @@ const PLATFORM = PLATFORM_MAP[process.platform] || 'macos';
 const PING_INTERVAL = Number(process.env.PING_INTERVAL || 5000);
 const HEARTBEAT_INTERVAL = 10_000; // send heartbeat every 10s
 const PROTOCOL = 'workrank';
-const ACCESSIBILITY_ERROR = 'Cần cấp quyền Accessibility để bắt phím ngoài trình duyệt';
+const ACCESSIBILITY_ERROR = 'Cần cấp quyền Accessibility cho WorkRank Tracker Dev để bắt phím ngoài trình duyệt';
 const DEBUG = process.env.WORKRANK_DEBUG === 'true';
 
 let mainWindow = null;
@@ -38,6 +38,7 @@ let sessionId = null;
 let deviceSecret = null;
 let sequence = 0;
 let shouldAutoStart = true;
+let lastError = null;
 const pendingProtocolUrls = [];
 
 // Socket.IO connection to backend
@@ -52,8 +53,14 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) app.quit();
 
 function registerProtocolClient() {
-  if (process.defaultApp && process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
+  if (process.env.WORKRANK_SKIP_PROTOCOL_REGISTER === 'true') return;
+  const devAppPath = app.getAppPath();
+  const isDevElectron = process.defaultApp || process.execPath.includes(`${path.sep}node_modules${path.sep}electron${path.sep}`);
+  if (isDevElectron) {
+    const devHandlerApp = process.env.WORKRANK_PROTOCOL_HANDLER_APP || '/Applications/WorkRank Tracker Dev.app';
+    if (!fs.existsSync(devHandlerApp)) {
+      console.warn(`Dev protocol handler is not installed. Run "npm run install-protocol:mac" in ${devAppPath}.`);
+    }
   } else {
     app.setAsDefaultProtocolClient(PROTOCOL);
   }
@@ -99,11 +106,65 @@ function saveSecureState(state) {
   fs.writeFileSync(statePath(), data, { mode: 0o600 });
 }
 
+function decodeBase64Url(value) {
+  try {
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    return Buffer.from(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='), 'base64').toString('utf8');
+  } catch {
+    return '';
+  }
+}
+
+function getJwtSubject(token) {
+  try {
+    const payload = JSON.parse(decodeBase64Url(String(token || '').split('.')[1] || ''));
+    return payload.sub ? String(payload.sub) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getUserDeviceState(state, userId) {
+  const saved = userId ? state.deviceStateByUser?.[String(userId)] : null;
+  return {
+    deviceSecret: saved?.deviceSecret || state.deviceSecret || null,
+    sequence: Number(saved?.sequence ?? state.sequence ?? 0),
+  };
+}
+
+function saveRuntimeState(extra = {}) {
+  const state = loadSecureState();
+  const authUserId = getJwtSubject(accessToken) || state.authUserId || null;
+  const next = {
+    ...state,
+    ...extra,
+    accessToken,
+    refreshToken,
+    deviceSecret,
+    sequence: Number(sequence || 0),
+    authUserId,
+  };
+  if (authUserId) {
+    next.deviceStateByUser = {
+      ...(state.deviceStateByUser || {}),
+      [String(authUserId)]: {
+        deviceSecret,
+        sequence: Number(sequence || 0),
+      },
+    };
+  }
+  saveSecureState(next);
+}
+
 function clearSecureAuthState() {
   const state = loadSecureState();
   saveSecureState({
+    ...state,
     deviceSecret: state.deviceSecret || deviceSecret || null,
     sequence: Number(state.sequence || sequence || 0),
+    accessToken: null,
+    refreshToken: null,
+    authUserId: null,
   });
   accessToken = null;
   refreshToken = null;
@@ -202,6 +263,7 @@ function sendHeartbeat() {
     deviceName: DEVICE_NAME,
     platform: PLATFORM,
     appVersion: 'desktop',
+    error: lastError,
     keystrokes: totalKeystrokes,
     clicks: totalClicks,
     score,
@@ -230,13 +292,14 @@ async function sendHttpHeartbeat() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        tracking,
-        deviceUuid: DEVICE_UUID,
-        deviceName: DEVICE_NAME,
-        platform: PLATFORM,
-        appVersion: 'desktop',
-      }),
+	      body: JSON.stringify({
+	        tracking,
+	        deviceUuid: DEVICE_UUID,
+	        deviceName: DEVICE_NAME,
+	        platform: PLATFORM,
+	        appVersion: 'desktop',
+	        error: lastError,
+	      }),
     });
   } catch (err) {
     debugLog('HTTP heartbeat failed:', err.message);
@@ -263,8 +326,7 @@ async function refreshAccessToken() {
 
   accessToken = body.accessToken;
   refreshToken = body.refreshToken;
-  const state = loadSecureState();
-  saveSecureState({ ...state, accessToken, refreshToken, deviceSecret, sequence });
+  saveRuntimeState();
 
   // Reconnect socket with new token
   disconnectSocket();
@@ -291,11 +353,13 @@ async function apiRequest(pathname, options = {}, retryAuth = true) {
 async function ensureAuth() {
   if (accessToken) return;
   const state = loadSecureState();
-  const sameLogin = !state.loginEmail || state.loginEmail === LOGIN_EMAIL;
-  accessToken = sameLogin ? state.accessToken || null : null;
-  refreshToken = sameLogin ? state.refreshToken || null : null;
-  deviceSecret = sameLogin ? state.deviceSecret || null : null;
-  sequence = sameLogin ? Number(state.sequence || 0) : 0;
+  const savedAuthUserId = state.authUserId || getJwtSubject(state.accessToken);
+  const canUseSavedAuth = Boolean(state.accessToken && (state.authSource === 'protocol' || !state.loginEmail || state.loginEmail === LOGIN_EMAIL));
+  const savedDevice = getUserDeviceState(state, savedAuthUserId);
+  accessToken = canUseSavedAuth ? state.accessToken || null : null;
+  refreshToken = canUseSavedAuth ? state.refreshToken || null : null;
+  deviceSecret = canUseSavedAuth ? savedDevice.deviceSecret : null;
+  sequence = canUseSavedAuth ? savedDevice.sequence : 0;
   if (accessToken) {
     connectSocket();
     return;
@@ -303,7 +367,7 @@ async function ensureAuth() {
   const login = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: LOGIN_EMAIL, password: LOGIN_PASSWORD }) });
   accessToken = login.accessToken;
   refreshToken = login.refreshToken;
-  saveSecureState({ ...state, loginEmail: LOGIN_EMAIL, accessToken, refreshToken, deviceSecret, sequence });
+  saveRuntimeState({ loginEmail: LOGIN_EMAIL, authSource: 'env' });
   connectSocket();
 }
 
@@ -319,8 +383,7 @@ async function ensureSession() {
   sessionId = session.session.id;
   if (session.deviceSecret) deviceSecret = session.deviceSecret;
   sequence = Math.max(sequence, Number(session.lastSequence || session.device?.lastSequence || 0));
-  const state = loadSecureState();
-  saveSecureState({ ...state, accessToken, refreshToken, deviceSecret, sequence });
+  saveRuntimeState();
 }
 
 function emitPingResult(data) {
@@ -361,8 +424,7 @@ async function sendPing() {
     debugLog('flush ok', { sequence: event.sequence, flaggedCount: result.flaggedCount });
     sequence = event.sequence;
     lastFlushAt = now;
-    const state = loadSecureState();
-    saveSecureState({ ...state, accessToken, refreshToken, deviceSecret, sequence });
+    saveRuntimeState();
     totalKeystrokes += event.keystrokeCount;
     totalClicks += event.mouseClickCount;
     score = Math.max(0, score + event.keystrokeCount + event.mouseClickCount - result.flaggedCount * 10);
@@ -422,6 +484,7 @@ async function startTracking() {
   if (tracking) return;
   debugLog('start requested');
   tracking = true;
+  lastError = null;
   emitStatus({ connected: true });
   keystrokes = 0;
   clicks = 0;
@@ -434,17 +497,20 @@ async function startTracking() {
   try {
     if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) {
       systemPreferences.isTrustedAccessibilityClient(true);
-      console.warn(ACCESSIBILITY_ERROR);
-      emitPingResult({ connected: false, error: ACCESSIBILITY_ERROR });
-      tracking = false;
-      emitStatus({ connected: false, error: ACCESSIBILITY_ERROR });
-      sendHeartbeat(); // Report status change
-      return;
-    }
+	      console.warn(ACCESSIBILITY_ERROR);
+	      lastError = ACCESSIBILITY_ERROR;
+	      emitPingResult({ connected: false, error: ACCESSIBILITY_ERROR });
+	      tracking = false;
+	      emitStatus({ connected: false, error: ACCESSIBILITY_ERROR });
+	      sendHeartbeat(); // Report status change
+	      await sendHttpHeartbeat();
+	      return;
+	    }
 
-    await ensureSession();
-    debugLog('session ensured', { sessionId });
-    uIOhook.removeAllListeners('keydown');
+	    await ensureSession();
+	    debugLog('session ensured', { sessionId });
+	    await sendHttpHeartbeat();
+	    uIOhook.removeAllListeners('keydown');
     uIOhook.removeAllListeners('keyup');
     uIOhook.removeAllListeners('mousedown');
     uIOhook.removeAllListeners('mousemove');
@@ -457,17 +523,20 @@ async function startTracking() {
 
     interval = setInterval(sendPing, PING_INTERVAL);
     debugLog('flush interval started', { intervalMs: PING_INTERVAL });
-    emitPingResult({ connected: true });
-    emitStatus({ connected: true });
-    sendHeartbeat(); // Report tracking started
-  } catch (err) {
-    console.error('Failed to start desktop tracking:', err.message);
-    tracking = false;
+	    emitPingResult({ connected: true });
+	    emitStatus({ connected: true });
+	    sendHeartbeat(); // Report tracking started
+	    await sendHttpHeartbeat();
+	  } catch (err) {
+	    console.error('Failed to start desktop tracking:', err.message);
+	    lastError = err.message;
+	    tracking = false;
     emitPingResult({ connected: false, error: err.message });
-    emitStatus({ connected: false, error: err.message });
-    sendHeartbeat(); // Report error
-  }
-}
+	    emitStatus({ connected: false, error: err.message });
+	    sendHeartbeat(); // Report error
+	    await sendHttpHeartbeat();
+	  }
+	}
 
 async function stopTracking() {
   if (!tracking) return;
@@ -496,8 +565,10 @@ async function stopTracking() {
     }
   }
   emitStatus({ connected: true });
+  lastError = null;
   sendHeartbeat(); // Report tracking stopped
-}
+	  await sendHttpHeartbeat();
+	}
 
 function focusMainWindow() {
   if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -505,10 +576,53 @@ function focusMainWindow() {
   mainWindow.focus();
 }
 
+async function applyProtocolAuth(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return;
+  }
+
+  const nextAccessToken = parsed.searchParams.get('token') || parsed.searchParams.get('accessToken');
+  if (!nextAccessToken) return;
+
+  const state = loadSecureState();
+  const nextAuthUserId = getJwtSubject(nextAccessToken);
+  const currentAuthUserId = getJwtSubject(accessToken) || state.authUserId || getJwtSubject(state.accessToken);
+  const authChanged = Boolean(nextAuthUserId && currentAuthUserId && String(nextAuthUserId) !== String(currentAuthUserId));
+
+  if (authChanged && tracking) {
+    await stopTracking();
+  }
+
+  const savedDevice = getUserDeviceState(state, nextAuthUserId);
+  accessToken = nextAccessToken;
+  refreshToken = parsed.searchParams.get('refreshToken') || refreshToken || state.refreshToken || null;
+  sessionId = authChanged ? null : sessionId;
+  deviceSecret = authChanged ? savedDevice.deviceSecret : (deviceSecret || savedDevice.deviceSecret);
+  sequence = authChanged ? savedDevice.sequence : Math.max(Number(sequence || 0), Number(savedDevice.sequence || 0));
+
+  if (authChanged) {
+    keystrokes = 0;
+    clicks = 0;
+    mouseMoves = 0;
+    totalKeystrokes = 0;
+    totalClicks = 0;
+    score = 0;
+  }
+
+  saveRuntimeState({ authSource: 'protocol', loginEmail: null });
+  disconnectSocket();
+  connectSocket();
+  await sendHttpHeartbeat();
+}
+
 async function handleProtocolUrl(rawUrl) {
   const action = getProtocolAction(rawUrl);
   if (!action) return;
 
+  await applyProtocolAuth(rawUrl);
   focusMainWindow();
   if (action === 'start') await startTracking();
   else if (action === 'stop') await stopTracking();

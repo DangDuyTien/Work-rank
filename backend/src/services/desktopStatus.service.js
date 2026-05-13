@@ -8,7 +8,7 @@
 
 const ONLINE_THRESHOLD_MS = 20_000; // consider desktop offline after 20s without heartbeat
 
-// userId → { lastHeartbeat, tracking, deviceUuid, deviceName, platform }
+// userId → { lastHeartbeat, tracking, deviceUuid, deviceName, platform, error }
 const registry = new Map();
 
 /**
@@ -22,6 +22,7 @@ function heartbeat(userId, payload = {}) {
     deviceName: payload.deviceName || null,
     platform: payload.platform || null,
     appVersion: payload.appVersion || null,
+    error: payload.error || null,
   });
 }
 
@@ -44,6 +45,7 @@ function getStatus(userId) {
     deviceUuid: entry.deviceUuid,
     deviceName: entry.deviceName,
     platform: entry.platform,
+    error: entry.error,
     lastHeartbeat: new Date(entry.lastHeartbeat).toISOString(),
   };
 }
