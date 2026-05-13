@@ -54,7 +54,9 @@ class InputTracker {
       uIOhook.off('keydown', this.keyHandler);
       uIOhook.off('mousedown', this.mouseHandler);
       uIOhook.stop();
-    } catch {}
+    } catch (err) {
+      this.updateStatus({ connected: false, error: err.message });
+    }
     this.updateStatus();
   }
 

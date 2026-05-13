@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TrackingProvider } from './context/TrackingContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Tracker from './pages/Tracker';
-import Leaderboard from './pages/Leaderboard';
-import UserDetail from './pages/UserDetail';
-import Groups from './pages/Groups';
-import Security from './pages/Security';
 import Layout from './components/Layout';
+
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Tracker = lazy(() => import('./pages/Tracker'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const UserDetail = lazy(() => import('./pages/UserDetail'));
+const Groups = lazy(() => import('./pages/Groups'));
+const Security = lazy(() => import('./pages/Security'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -35,33 +36,41 @@ const ComingSoon = ({ title }) => (
   </div>
 );
 
+const PageFallback = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#4b5563', fontSize: 14 }}>
+    Đang tải...
+  </div>
+);
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <TrackingProvider>
-                  <Layout />
-                </TrackingProvider>
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="tracker" element={<Tracker />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="groups" element={<Groups />} />
-            <Route path="performance" element={<ComingSoon title="Performance Analytics" />} />
-            <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
-            <Route path="settings" element={<ComingSoon title="Settings" />} />
-            <Route path="users/:id" element={<UserDetail />} />
-          </Route>
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <TrackingProvider>
+                    <Layout />
+                  </TrackingProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="tracker" element={<Tracker />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
+              <Route path="groups" element={<Groups />} />
+              <Route path="performance" element={<ComingSoon title="Performance Analytics" />} />
+              <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
+              <Route path="settings" element={<ComingSoon title="Settings" />} />
+              <Route path="users/:id" element={<UserDetail />} />
+            </Route>
+          </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

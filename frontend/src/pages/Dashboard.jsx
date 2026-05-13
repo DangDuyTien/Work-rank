@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { leaderboard } from '../services/api';
+import { dashboard, leaderboard } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 // Icons
@@ -88,7 +88,10 @@ export default function Dashboard() {
   const fetchData = async (selectedRange) => {
     setLoading(true);
     try {
-      const res = await leaderboard.get(selectedRange);
+      const [res, overviewRes] = await Promise.all([
+        leaderboard.get(selectedRange),
+        dashboard.overview(selectedRange),
+      ]);
       const fetchedData = res.data || [];
       
       let mergedData = [];
@@ -116,12 +119,12 @@ export default function Dashboard() {
         return mergedData;
       });
 
-      // Recalculate totals immediately with merged data to avoid brief empty state or overwritten data
+      const overview = overviewRes.data || {};
       const newTotals = {
-        keystrokes: mergedData.reduce((s, u) => s + Number(u.keystrokeCount || 0), 0),
-        clicks:     mergedData.reduce((s, u) => s + Number(u.mouseClickCount || 0), 0),
-        activeSeconds: mergedData.reduce((s, u) => s + Number(u.activeSeconds || 0), 0),
-        online: mergedData.filter(u => u.status === 'active' || u.status === 'online').length,
+        keystrokes: Number(overview.totalKeystrokes || 0),
+        clicks: Number(overview.totalMouseClicks || 0),
+        activeSeconds: Number(overview.totalActiveSeconds || overview.totalActiveSecondsToday || 0),
+        online: Number(overview.activeUsersNow || 0),
       };
 
       if (prevRef.current) {
@@ -129,7 +132,9 @@ export default function Dashboard() {
       }
       prevRef.current = newTotals;
       setTotals(newTotals);
-    } catch {}
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+    }
     setLoading(false);
   };
 
@@ -145,8 +150,21 @@ export default function Dashboard() {
     const handleActivity = (data) => {
       setLiveFlash(true);
       setTimeout(() => setLiveFlash(false), 600);
+      const delta = data.delta || {};
+      setTotals(prev => ({
+        ...prev,
+        keystrokes: prev.keystrokes + Number(delta.keystrokeCount ?? data.keystrokes ?? 0),
+        clicks: prev.clicks + Number(delta.mouseClickCount ?? data.clicks ?? 0),
+        activeSeconds: prev.activeSeconds + Number(delta.activeSeconds ?? 0),
+      }));
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
+        const totals = data.totals || null;
+        const delta = data.delta || {};
+        const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
+        const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
+        const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
+        const status = data.presence || data.status || 'active';
         const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
         if (idx >= 0) {
           const next = [...prev];
@@ -154,23 +172,24 @@ export default function Dashboard() {
           next[idx] = { 
             ...existing,
             ...data,
-            keystrokeCount: (Number(existing.keystrokeCount) || 0) + (Number(data.keystrokes) || 0),
-            mouseClickCount: (Number(existing.mouseClickCount) || 0) + (Number(data.clicks) || 0),
-            activeSeconds: (Number(existing.activeSeconds) || 0) + (Number(data.activeSeconds) || 0),
-            score: (Number(existing.score) || 0) + ((Number(data.keystrokes) || 0) + (Number(data.clicks) || 0)) * 0.1,
-            status: 'active'
+            name: data.name || existing.name,
+            keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys,
+            mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks,
+            activeSeconds: totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds) || 0) + deltaActiveSeconds,
+            score: totals ? Number(totals.focusScore || data.score || 0) : (Number(existing.score) || 0) + (deltaKeys + deltaClicks) * 0.1,
+            status
           };
           return next;
         }
         return [...prev, { 
           ...data, 
           user_id: userId, 
-          status: 'active', 
+          status,
           name: data.name || `User #${userId}`,
-          keystrokeCount: Number(data.keystrokes) || 0,
-          mouseClickCount: Number(data.clicks) || 0,
-          activeSeconds: Number(data.activeSeconds) || 0,
-          score: ((Number(data.keystrokes) || 0) + (Number(data.clicks) || 0)) * 0.1
+          keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : deltaKeys,
+          mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : deltaClicks,
+          activeSeconds: totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds,
+          score: totals ? Number(totals.focusScore || data.score || 0) : (deltaKeys + deltaClicks) * 0.1
         }];
       });
     };
@@ -196,16 +215,6 @@ export default function Dashboard() {
       socket.off('user:status:update', handleStatus);
     };
   }, [socket, range]);
-
-  useEffect(() => {
-    const newTotals = {
-      keystrokes: users.reduce((s, u) => s + Number(u.keystrokeCount || 0), 0),
-      clicks:     users.reduce((s, u) => s + Number(u.mouseClickCount || 0), 0),
-      activeSeconds: users.reduce((s, u) => s + Number(u.activeSeconds || 0), 0),
-      online: users.filter(u => u.status === 'active' || u.status === 'online').length,
-    };
-    setTotals(newTotals);
-  }, [users]);
 
   const rangeLabel = range === 'today' ? 'giờ trước' : range === 'week' ? 'tuần trước' : 'tháng trước';
 

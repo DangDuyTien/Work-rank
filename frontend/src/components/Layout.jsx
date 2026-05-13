@@ -56,7 +56,11 @@ export default function Layout() {
   }, []);
 
   const handleLogout = async () => {
-    try { await auth.logout(); } catch {}
+    try {
+      await auth.logout();
+    } catch (err) {
+      console.warn('Logout request failed:', err);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     navigate('/login');

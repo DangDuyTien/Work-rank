@@ -4,6 +4,7 @@ const controller = require('../controllers/activity.controller');
 const validate = require('../middlewares/validate.middleware');
 const { auth } = require('../middlewares/auth.middleware');
 const asyncHandler = require('../utils/asyncHandler');
+const desktopStatus = require('../services/desktopStatus.service');
 
 const router = express.Router();
 const platform = z.enum(['macos', 'windows', 'linux']).optional();
@@ -31,5 +32,21 @@ router.post('/session/end', auth, validate(z.object({ body: z.object({ sessionId
 router.post('/batch', auth, validate(z.object({ body: z.object({ ...deviceFields, sessionId: z.coerce.number().int().positive().optional(), events: z.array(event).min(1).max(500), signature: z.string().length(64).optional() }) })), asyncHandler(controller.ingestBatch));
 router.post('/events', auth, validate(z.object({ body: z.object({ ...deviceFields, ...event.shape }) })), asyncHandler(controller.ingestEvent));
 router.get('/me/today', auth, asyncHandler(controller.meToday));
+
+// Desktop status heartbeat (desktop app POSTs every ~10s)
+router.post('/desktop-status', auth, (req, res) => {
+  desktopStatus.heartbeat(req.user.id, req.body);
+  // Broadcast desktop status to the user's web sockets
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`user:${req.user.id}`).emit('desktop:status', desktopStatus.getStatus(req.user.id));
+  }
+  res.json({ ok: true });
+});
+
+// Web frontend GETs to check if desktop tracker is online
+router.get('/desktop-status', auth, (req, res) => {
+  res.json(desktopStatus.getStatus(req.user.id));
+});
 
 module.exports = router;

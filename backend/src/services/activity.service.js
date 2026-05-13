@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, UniqueConstraintError } = require('sequelize');
 const { sequelize, Device, WorkSession, ActivityEvent, DailyStat } = require('../models');
 const { calculateFocusScore } = require('../utils/score');
 const { generateSecret, hashSecret } = require('../utils/crypto');
@@ -46,10 +46,47 @@ async function findOrCreateDevice(userId, payload, options = {}) {
   return { device, deviceSecret: created ? secret : undefined };
 }
 
+async function findPairedDeviceForIngest(userId, payload, transaction) {
+  const device = await Device.findOne({
+    where: { userId, deviceUuid: payload.deviceUuid },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!device) {
+    const error = new Error('Device not paired');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (device.revokedAt) {
+    const error = new Error('Device revoked');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const updates = { lastSyncAt: new Date(), appVersion: payload.appVersion || device.appVersion };
+  if (!device.deviceSecretHash && payload.deviceSecret) updates.deviceSecretHash = hashSecret(payload.deviceSecret);
+  await device.update(updates, { transaction });
+  return device;
+}
+
 async function startSession(userId, payload) {
   const { device, deviceSecret } = await findOrCreateDevice(userId, payload);
+  const endedAt = new Date();
+  const runningSessions = await WorkSession.findAll({ where: { userId, deviceId: device.id, status: 'running' } });
+  await Promise.all(runningSessions.map((session) => session.update({
+    endedAt,
+    durationSeconds: Math.max(Number(session.durationSeconds || 0), Math.floor((endedAt - session.startedAt) / 1000)),
+    status: 'crashed',
+  })));
   const session = await WorkSession.create({ userId, deviceId: device.id, startedAt: payload.startedAt || new Date(), status: 'running' });
-  return { session, deviceSecret };
+  return {
+    session,
+    deviceSecret,
+    device: { id: device.id, lastSequence: Number(device.lastSequence || 0) },
+    lastSequence: Number(device.lastSequence || 0),
+  };
 }
 
 async function endSession(userId, sessionId) {
@@ -67,17 +104,35 @@ async function endSession(userId, sessionId) {
 
 async function upsertDailyStat(userId, eventTime, delta, transaction) {
   const statDate = toDateOnly(eventTime);
-  const [stat] = await DailyStat.findOrCreate({ where: { userId, statDate }, defaults: { userId, statDate }, transaction });
-  const activeSeconds = stat.activeSeconds + delta.activeSeconds;
-  const idleSeconds = stat.idleSeconds + delta.idleSeconds;
+  let stat = await DailyStat.findOne({
+    where: { userId, statDate },
+    transaction,
+    lock: transaction?.LOCK.UPDATE,
+  });
+
+  if (!stat) {
+    try {
+      stat = await DailyStat.create({ userId, statDate }, { transaction });
+    } catch (error) {
+      if (!(error instanceof UniqueConstraintError || error.name === 'SequelizeUniqueConstraintError')) throw error;
+      stat = await DailyStat.findOne({
+        where: { userId, statDate },
+        transaction,
+        lock: transaction?.LOCK.UPDATE,
+      });
+    }
+  }
+
+  const activeSeconds = Number(stat.activeSeconds || 0) + Number(delta.activeSeconds || 0);
+  const idleSeconds = Number(stat.idleSeconds || 0) + Number(delta.idleSeconds || 0);
   const totalSeconds = activeSeconds + idleSeconds;
   await stat.update({
     activeSeconds,
     idleSeconds,
     totalSeconds,
     focusScore: calculateFocusScore(activeSeconds, idleSeconds),
-    keystrokeCount: stat.keystrokeCount + delta.keystrokeCount,
-    mouseClickCount: stat.mouseClickCount + delta.mouseClickCount,
+    keystrokeCount: Number(stat.keystrokeCount || 0) + Number(delta.keystrokeCount || 0),
+    mouseClickCount: Number(stat.mouseClickCount || 0) + Number(delta.mouseClickCount || 0),
   }, { transaction });
   return stat;
 }
@@ -127,23 +182,87 @@ function normalizeEvent(userId, device, payload, event, signatureValid, sequence
   };
 }
 
+function sumDeltas(events) {
+  return events.reduce((acc, event) => ({
+    activeSeconds: acc.activeSeconds + Number(event.activeSeconds || 0),
+    idleSeconds: acc.idleSeconds + Number(event.idleSeconds || 0),
+    keystrokeCount: acc.keystrokeCount + Number(event.keystrokeCount || 0),
+    mouseClickCount: acc.mouseClickCount + Number(event.mouseClickCount || 0),
+    mouseMoveCount: acc.mouseMoveCount + Number(event.mouseMoveCount || 0),
+  }), { activeSeconds: 0, idleSeconds: 0, keystrokeCount: 0, mouseClickCount: 0, mouseMoveCount: 0 });
+}
+
+function buildRealtimeActivityUpdate(userId, stat, events, extra = {}) {
+  const delta = sumDeltas(events);
+  const totals = {
+    activeSeconds: Number(stat?.activeSeconds || 0),
+    idleSeconds: Number(stat?.idleSeconds || 0),
+    totalSeconds: Number(stat?.totalSeconds || 0),
+    keystrokeCount: Number(stat?.keystrokeCount || 0),
+    mouseClickCount: Number(stat?.mouseClickCount || 0),
+    focusScore: Number(stat?.focusScore || 0),
+  };
+  const lastEventAt = events.reduce((latest, event) => {
+    const value = event.eventTime ? new Date(event.eventTime).getTime() : 0;
+    return value > latest ? value : latest;
+  }, 0);
+
+  return {
+    userId,
+    user_id: userId,
+    statDate: stat?.statDate || null,
+    presence: 'active',
+    status: 'active',
+    delta,
+    totals,
+    activeSeconds: totals.activeSeconds,
+    idleSeconds: totals.idleSeconds,
+    keystrokeCount: totals.keystrokeCount,
+    mouseClickCount: totals.mouseClickCount,
+    focusScore: totals.focusScore,
+    score: totals.focusScore,
+    keystrokes: delta.keystrokeCount,
+    clicks: delta.mouseClickCount,
+    mouseMoves: delta.mouseMoveCount,
+    lastEventAt: lastEventAt ? new Date(lastEventAt).toISOString() : null,
+    ...extra,
+  };
+}
+
 async function ingestBatch(userId, payload) {
-  const { device, deviceSecret } = await findOrCreateDevice(userId, payload, { allowCreate: false });
-  const signature = fraudDetection.verifyBatchSignature(device, payload);
   const baseline = await getUserActivityBaseline(userId);
-  let previousSequence = Number(device.lastSequence || 0);
-  const events = payload.events.map((event) => {
-    const sequenceCheck = fraudDetection.analyzeSequence(event, previousSequence);
-    previousSequence = Math.max(previousSequence, Number(event.sequence || 0));
-    return normalizeEvent(userId, device, payload, event, signature.valid, sequenceCheck, baseline);
-  });
-  const patternState = payload.events.reduce((state, event) => fraudDetection.nextPatternState({ ...device.toJSON(), ...state }, event), {});
-  const maxSequence = events.reduce((max, event) => Math.max(max, Number(event.sequence || 0)), Number(device.lastSequence || 0));
 
   return sequelize.transaction(async (transaction) => {
-    const created = await ActivityEvent.bulkCreate(events, { transaction });
+    const device = await findPairedDeviceForIngest(userId, payload, transaction);
+    const signature = fraudDetection.verifyBatchSignature(device, payload);
+    let previousSequence = Number(device.lastSequence || 0);
+    const events = payload.events.map((event) => {
+      const sequenceCheck = fraudDetection.analyzeSequence(event, previousSequence);
+      previousSequence = Math.max(previousSequence, Number(event.sequence || 0));
+      return normalizeEvent(userId, device, payload, event, signature.valid, sequenceCheck, baseline);
+    });
+    const replayed = events.find((event) => Array.isArray(event.flagsJson) && event.flagsJson.includes('replayed_or_old_sequence'));
+    if (replayed) {
+      const error = new Error('Replayed or old sequence');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const patternState = payload.events.reduce((state, event) => fraudDetection.nextPatternState({ ...device.toJSON(), ...state }, event), {});
+    const maxSequence = events.reduce((max, event) => Math.max(max, Number(event.sequence || 0)), Number(device.lastSequence || 0));
+    let created;
+    try {
+      created = await ActivityEvent.bulkCreate(events, { transaction });
+    } catch (error) {
+      if (!(error instanceof UniqueConstraintError || error.name === 'SequelizeUniqueConstraintError')) throw error;
+      const conflict = new Error('Duplicate device sequence');
+      conflict.statusCode = 409;
+      throw conflict;
+    }
+
+    let lastStat = null;
     for (const event of events) {
-      await upsertDailyStat(userId, event.eventTime, event, transaction);
+      lastStat = await upsertDailyStat(userId, event.eventTime, event, transaction);
       if (event.sessionId) {
         await WorkSession.increment({
           activeSeconds: event.activeSeconds,
@@ -159,10 +278,14 @@ async function ingestBatch(userId, payload) {
     return {
       count: created.length,
       deviceId: device.id,
-      deviceSecret,
       signatureValid: signature.valid,
       signatureFlag: signature.flag,
       flaggedCount,
+      realtime: buildRealtimeActivityUpdate(userId, lastStat, events, {
+        deviceId: device.id,
+        flaggedCount,
+        signatureValid: signature.valid,
+      }),
     };
   });
 }

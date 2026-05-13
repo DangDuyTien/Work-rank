@@ -31,7 +31,8 @@ function normalizeLeaderboardRow(row, index = 0) {
     name: user.name || row.name || 'Unknown User',
     email: user.email || row.email || '',
     role: user.role || row.role || 'user',
-    status: row.status || user.status || 'active',
+    accountStatus: user.status || row.accountStatus || row.status || 'active',
+    status: row.presence || row.presenceStatus || row.status || 'offline',
     rank: row.rankPosition || index + 1,
     score,
     total_keystrokes: keystrokes,
@@ -87,19 +88,31 @@ export const activity = {
     return { ...res, data: normalizeStat(res.data?.stat || {}) };
   },
   userStats: async (id) => {
-    const res = await api.get(`/api/reports/users/${id}/daily`);
+    const res = await api.get(`/api/reports/users/${id}/today`);
     const row = unwrapArray(res.data)[0] || {};
     return { ...res, data: normalizeStat(row) };
   },
-  timeline: async () => ({ data: [] }),
-  heatmap: async () => ({ data: [] }),
+  timeline: async (id, date) => {
+    const qs = date ? `?date=${encodeURIComponent(date)}` : '';
+    const res = await api.get(`/api/reports/users/${id}/timeline${qs}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
+  heatmap: async (id, days = 365) => {
+    const res = await api.get(`/api/reports/users/${id}/heatmap?days=${days}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
+  sessions: async (id, limit = 10) => {
+    const res = await api.get(`/api/reports/users/${id}/sessions?limit=${limit}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
   batch: (data) => api.post('/api/activity/batch', data),
   startSession: (data) => api.post('/api/activity/session/start', data),
   endSession: (sessionId) => api.post('/api/activity/session/end', { sessionId }),
+  desktopStatus: () => api.get('/api/activity/desktop-status'),
 };
 
 export const dashboard = {
-  overview: () => api.get('/api/dashboard/overview'),
+  overview: (range = 'today') => api.get(`/api/dashboard/overview?range=${range}`),
   realtimeUsers: () => api.get('/api/dashboard/realtime-users'),
 };
 
@@ -109,8 +122,8 @@ export const leaderboard = {
     const res = await api.get(`/api/leaderboard/${apiRange}`);
     return { ...res, data: unwrapArray(res.data).map(normalizeLeaderboardRow) };
   },
-  group: async (groupId) => {
-    const res = await api.get(`/api/leaderboard/team/${groupId}`);
+  group: async (groupId, range = 'today') => {
+    const res = await api.get(`/api/leaderboard/team/${groupId}?range=${range}`);
     return { ...res, data: unwrapArray(res.data).map(normalizeLeaderboardRow) };
   },
 };
@@ -124,28 +137,56 @@ export const security = {
 };
 
 export const groups = {
-  list: async () => ({ data: [] }),
-  get: async () => ({ data: null }),
-  create: async () => { throw new Error('Groups API pending on new backend'); },
-  update: async () => { throw new Error('Groups API pending on new backend'); },
-  delete: async () => { throw new Error('Groups API pending on new backend'); },
-  join: async () => { throw new Error('Groups API pending on new backend'); },
-  leave: async () => { throw new Error('Groups API pending on new backend'); },
-  kick: async () => { throw new Error('Groups API pending on new backend'); },
+  list: async () => {
+    const res = await api.get('/api/groups');
+    return { ...res, data: unwrapArray(res.data) };
+  },
+  get: async (id) => {
+    const res = await api.get('/api/groups');
+    return { ...res, data: unwrapArray(res.data).find((group) => String(group.id) === String(id)) || null };
+  },
+  create: async (data) => {
+    const res = await api.post('/api/groups', data);
+    return { ...res, data: res.data?.data || res.data?.group };
+  },
+  update: async () => { throw new Error('Groups update API pending'); },
+  delete: async () => { throw new Error('Groups delete API pending'); },
+  join: async (inviteCode) => {
+    const res = await api.post('/api/groups/join', { inviteCode });
+    return { ...res, data: res.data?.data || res.data?.group };
+  },
+  leave: (id) => api.post(`/api/groups/${id}/leave`),
+  kick: async () => { throw new Error('Groups kick API pending'); },
 };
 
 export const users = {
   list: async () => {
     const res = await api.get('/api/users');
-    return { ...res, data: unwrapArray(res.data).map((user) => ({ ...user, user_id: user.id, status: user.status || 'active' })) };
+    return {
+      ...res,
+      data: unwrapArray(res.data).map((user) => ({
+        ...user,
+        user_id: user.id,
+        accountStatus: user.status || 'active',
+        status: user.presence || user.presenceStatus || 'offline',
+      })),
+    };
   },
   get: async (id) => {
     try {
       const res = await api.get(`/api/users/${id}`);
       const user = res.data?.user || res.data || {};
-      return { ...res, data: { ...user, user_id: user.id, status: user.status || 'active' } };
+      return {
+        ...res,
+        data: {
+          ...user,
+          user_id: user.id,
+          accountStatus: user.status || 'active',
+          status: user.presence || user.presenceStatus || 'offline',
+        },
+      };
     } catch (err) {
-      if (err.response?.status === 403) return { data: { id, user_id: id, name: `User #${id}`, status: 'active' } };
+      if (err.response?.status === 403) return { data: { id, user_id: id, name: `User #${id}`, accountStatus: 'active', status: 'offline' } };
       throw err;
     }
   },

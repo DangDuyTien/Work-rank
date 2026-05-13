@@ -59,7 +59,7 @@ export default function Groups() {
       setNewDesc('');
       fetchGroups();
     } catch (err) {
-      setError(err.response?.data?.error || 'Có lỗi xảy ra');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra');
     }
   };
 
@@ -72,7 +72,7 @@ export default function Groups() {
       setInviteCode('');
       fetchGroups();
     } catch (err) {
-      setError(err.response?.data?.error || 'Mã mời không hợp lệ');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Mã mời không hợp lệ');
     }
   };
 
@@ -82,7 +82,7 @@ export default function Groups() {
       await groupsApi.leave(id);
       fetchGroups();
     } catch (err) {
-      alert(err.response?.data?.error || 'Lỗi khi rời nhóm');
+      alert(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi rời nhóm');
     }
   };
 

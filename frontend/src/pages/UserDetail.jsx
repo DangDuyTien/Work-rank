@@ -37,22 +37,27 @@ export default function UserDetail() {
   const [stats, setStats]       = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [uRes, sRes, tRes, hRes] = await Promise.all([
+        const [uRes, sRes, tRes, hRes, sessionRes] = await Promise.all([
           usersApi.get(id),
           activity.userStats(id, 'today'),
           activity.timeline(id),
           activity.heatmap(id),
+          activity.sessions(id, 10),
         ]);
         setUser(uRes.data);
         setStats(sRes.data);
         setTimeline(tRes.data || []);
         setHeatmapData(hRes.data || []);
-      } catch {}
+        setSessions(sessionRes.data || []);
+      } catch (err) {
+        console.error('Failed to fetch user detail:', err);
+      }
       setLoading(false);
     };
     fetchAll();
@@ -104,12 +109,20 @@ export default function UserDetail() {
     };
   });
 
-  // Fake recent sessions (would come from DB in real impl)
-  const sessions = [
-    { name: 'Morning Focus Session', time: '09:00 – 11:30 (2h 30m)', actions: stats ? Math.floor((stats.total_keystrokes || 0) * 0.4) : 0, active: true },
-    { name: 'Afternoon Work Block', time: '13:00 – 15:45 (2h 45m)', actions: stats ? Math.floor((stats.total_keystrokes || 0) * 0.35) : 0, active: false },
-    { name: 'End of Day Review',     time: '16:00 – 17:00 (1h)',     actions: stats ? Math.floor((stats.total_keystrokes || 0) * 0.25) : 0, active: false },
-  ];
+  const recentSessions = sessions.map((session, index) => {
+    const started = session.startedAt ? new Date(session.startedAt) : null;
+    const ended = session.endedAt ? new Date(session.endedAt) : null;
+    const duration = Number(session.durationSeconds || session.activeSeconds || 0);
+    const time = started
+      ? `${started.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${ended ? ended.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'đang chạy'} (${fmtDur(duration)})`
+      : 'Không rõ thời gian';
+    return {
+      name: `Phiên hoạt động #${sessions.length - index}`,
+      time,
+      actions: Number(session.keystrokeCount || 0) + Number(session.mouseClickCount || 0),
+      active: session.status === 'running',
+    };
+  });
 
   const CARD = { background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6 };
 
@@ -305,13 +318,15 @@ export default function UserDetail() {
       <div style={{ ...CARD, padding: '20px 22px' }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 16px' }}>Các phiên hoạt động gần đây</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {sessions.map((s, i) => (
+          {recentSessions.length === 0 ? (
+            <div style={{ padding: '14px 0', color: '#4b5563', fontSize: 13 }}>Chưa có phiên hoạt động nào.</div>
+          ) : recentSessions.map((s, i) => (
             <div
               key={i}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '14px 0',
-                borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                borderBottom: i < recentSessions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
               }}
             >
               <div style={{

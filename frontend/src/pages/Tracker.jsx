@@ -36,13 +36,19 @@ const LogoutIcon = () => (
     <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
   </svg>
 );
+const DesktopIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+  </svg>
+);
 
 export default function Tracker() {
   const { user } = useAuth();
   const {
     tracking, seconds, localKeys, localClicks,
     totalKeys, totalClicks, score, connected,
-    scoreHistory, formatNum, formatTime, toggle,
+    desktopLaunchStatus, scoreHistory, formatNum, formatTime, toggle,
+    desktopOnline, desktopTracking, desktopInfo,
   } = useTracking();
 
   const maxBar = Math.max(...scoreHistory, 1);
@@ -88,6 +94,31 @@ export default function Tracker() {
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#374151', cursor: 'pointer' }} />
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#374151', cursor: 'pointer' }} />
           </div>
+        </div>
+
+        {/* Desktop Status Indicator */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 16px',
+          background: desktopOnline
+            ? 'linear-gradient(90deg, rgba(34,197,94,0.08), rgba(34,197,94,0.03))'
+            : 'linear-gradient(90deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+        }}>
+          <span style={{ color: desktopOnline ? '#22c55e' : '#6b7280', display: 'flex' }}>
+            <DesktopIcon />
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 600,
+            color: desktopOnline ? '#22c55e' : '#6b7280',
+          }}>
+            Desktop Tracker: {desktopOnline ? (desktopTracking ? 'Đang chạy' : 'Online (tạm dừng)') : 'Offline'}
+          </span>
+          {desktopOnline && desktopInfo?.deviceName && (
+            <span style={{ fontSize: 10, color: '#4b5563', marginLeft: 'auto' }}>
+              {desktopInfo.deviceName}
+            </span>
+          )}
         </div>
 
         {/* Main Content */}
@@ -153,6 +184,17 @@ export default function Tracker() {
               }}>
                 {formatTime(seconds)}
               </div>
+              {desktopLaunchStatus && (
+                <div style={{
+                  marginTop: 8,
+                  color: '#9ca3af',
+                  fontSize: 11,
+                  lineHeight: 1.4,
+                  maxWidth: 240,
+                }}>
+                  {desktopLaunchStatus}
+                </div>
+              )}
             </div>
           </div>
 
@@ -177,6 +219,11 @@ export default function Tracker() {
                   </span>
                 )}
               </div>
+              {desktopOnline && desktopTracking && (
+                <div style={{ fontSize: 10, color: '#22c55e55', marginTop: 4 }}>
+                  + Desktop
+                </div>
+              )}
             </div>
 
             {/* Clicks */}
@@ -191,6 +238,11 @@ export default function Tracker() {
                   {tracking ? `+${localClicks} session` : '— Avg pace'}
                 </span>
               </div>
+              {desktopOnline && desktopTracking && (
+                <div style={{ fontSize: 10, color: '#22c55e55', marginTop: 4 }}>
+                  + Desktop
+                </div>
+              )}
             </div>
           </div>
 

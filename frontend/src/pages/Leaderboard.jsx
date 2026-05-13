@@ -131,6 +131,10 @@ export default function Leaderboard() {
     const handleActivity = (data) => {
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
+        const totals = data.totals || null;
+        const delta = data.delta || {};
+        const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
+        const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
         const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
         if (idx >= 0) {
           const next = [...prev];
@@ -138,9 +142,10 @@ export default function Leaderboard() {
           next[idx] = { 
             ...existing,
             ...data,
-            keystrokeCount: (Number(existing.keystrokeCount) || 0) + (Number(data.keystrokes) || 0),
-            mouseClickCount: (Number(existing.mouseClickCount) || 0) + (Number(data.clicks) || 0),
-            score: (Number(existing.score) || 0) + ((Number(data.keystrokes) || 0) + (Number(data.clicks) || 0)) * 0.1 // Approximation
+            name: data.name || existing.name,
+            keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys,
+            mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks,
+            score: totals ? Number(totals.focusScore || data.score || 0) : (Number(existing.score) || 0) + (deltaKeys + deltaClicks) * 0.1
           };
           return next.sort((a,b) => Number(b.score||0) - Number(a.score||0));
         }
@@ -149,9 +154,9 @@ export default function Leaderboard() {
           ...data,
           user_id: userId,
           name: data.name || `User #${userId}`,
-          keystrokeCount: Number(data.keystrokes) || 0,
-          mouseClickCount: Number(data.clicks) || 0,
-          score: ((Number(data.keystrokes) || 0) + (Number(data.clicks) || 0)) * 0.1
+          keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : deltaKeys,
+          mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : deltaClicks,
+          score: totals ? Number(totals.focusScore || data.score || 0) : (deltaKeys + deltaClicks) * 0.1
         };
         const next = [...prev, newUser];
         return next.sort((a,b) => Number(b.score||0) - Number(a.score||0));

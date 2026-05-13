@@ -439,6 +439,38 @@
       return n.toLocaleString();
     }
 
+    function applyTrackingState(nextTracking, connected = true, error = '') {
+      tracking = Boolean(nextTracking);
+      const btn = document.getElementById('trackerBtn');
+      const lbl = document.getElementById('trackerLabel');
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+
+      if (tracking) {
+        btn.className = 'tracker-btn tracking';
+        lbl.className = 'tracker-label tracking';
+        lbl.textContent = 'TRACKING';
+        dot.className = connected ? 'dot online' : 'dot offline';
+        text.textContent = connected ? 'Connected — Tracking' : (error || 'Disconnected');
+        if (!timerInterval) {
+          timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById('timer').textContent = formatTime(seconds);
+          }, 1000);
+        }
+      } else {
+        btn.className = 'tracker-btn stopped';
+        lbl.className = 'tracker-label stopped';
+        lbl.textContent = 'START';
+        dot.className = connected ? 'dot online' : 'dot offline';
+        text.textContent = connected ? 'Connected — Paused' : (error || 'Disconnected');
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+    }
+
     function updateStats(data) {
       if (data.keystrokes !== undefined) {
         totalKeys = data.keystrokes;
@@ -456,60 +488,29 @@
       const dot = document.getElementById('statusDot');
       const text = document.getElementById('statusText');
       if (data.connected !== false) {
-        dot.className = tracking ? 'dot online' : 'dot offline';
+        dot.className = 'dot online';
         text.textContent = tracking ? 'Connected — Tracking' : 'Connected — Paused';
       } else {
         dot.className = 'dot offline';
-        text.textContent = 'Disconnected';
+        text.textContent = data.error || 'Disconnected';
       }
     }
 
     async function toggle() {
       const res = await window.electronAPI.toggle();
-      tracking = res.tracking;
-      const btn = document.getElementById('trackerBtn');
-      const lbl = document.getElementById('trackerLabel');
-      const dot = document.getElementById('statusDot');
-
-      if (tracking) {
-        btn.className = 'tracker-btn tracking';
-        lbl.className = 'tracker-label tracking';
-        lbl.textContent = 'TRACKING';
-        dot.className = 'dot online';
-        document.getElementById('statusText').textContent = 'Connected — Tracking';
-        if (!timerInterval) {
-          timerInterval = setInterval(() => {
-            seconds++;
-            document.getElementById('timer').textContent = formatTime(seconds);
-          }, 1000);
-        }
-      } else {
-        btn.className = 'tracker-btn stopped';
-        lbl.className = 'tracker-label stopped';
-        lbl.textContent = 'START';
-        dot.className = 'dot offline';
-        document.getElementById('statusText').textContent = 'Connected — Paused';
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-      }
+      applyTrackingState(res.tracking, true);
     }
 
     // Auto-start on load
     window.electronAPI.getStatus().then((s) => {
-      if (s.tracking) {
-        tracking = true;
-        document.getElementById('trackerBtn').className = 'tracker-btn tracking';
-        document.getElementById('trackerLabel').className = 'tracker-label tracking';
-        document.getElementById('trackerLabel').textContent = 'TRACKING';
-        timerInterval = setInterval(() => {
-          seconds++;
-          document.getElementById('timer').textContent = formatTime(seconds);
-        }, 1000);
-      }
+      applyTrackingState(s.tracking, true);
+      updateStats(s);
     });
 
+    window.electronAPI.onStatus((data) => {
+      applyTrackingState(data.tracking, data.connected !== false, data.error);
+      updateStats(data);
+    });
     window.electronAPI.onPing((data) => updateStats(data));
   </script>
 </body>

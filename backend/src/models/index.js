@@ -8,6 +8,7 @@ const DailyStat = require('./DailyStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
+Team.belongsTo(User, { as: 'Owner', foreignKey: 'ownerId' });
 
 User.hasMany(Device, { foreignKey: 'userId' });
 Device.belongsTo(User, { foreignKey: 'userId' });

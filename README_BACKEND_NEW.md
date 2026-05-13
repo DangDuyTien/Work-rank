@@ -93,7 +93,7 @@ npm run dev
 Health check:
 
 ```bash
-curl http://localhost:5000/api/health
+curl http://localhost:5001/api/health
 ```
 
 ## API chính

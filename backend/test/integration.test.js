@@ -1,9 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const bcrypt = require('bcryptjs');
 const request = require('supertest');
 const app = require('../src/app');
+const env = require('../src/config/env');
 const { signPayload } = require('../src/utils/crypto');
-const { sequelize } = require('../src/models');
+const { sequelize, User } = require('../src/models');
 
 const agent = request(app);
 const email = process.env.TEST_EMAIL || 'admin@workrank.local';
@@ -21,6 +23,21 @@ function signedPayload(secret, payload) {
   delete signed.deviceSecret;
   return { ...payload, signature: signPayload(secret, signed) };
 }
+
+test.before(async () => {
+  const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
+  const [user] = await User.findOrCreate({
+    where: { email },
+    defaults: {
+      name: 'Integration Admin',
+      email,
+      passwordHash,
+      role: 'admin',
+      status: 'active',
+    },
+  });
+  await user.update({ passwordHash, role: 'admin', status: 'active' });
+});
 
 test.after(async () => {
   await sequelize.close();
