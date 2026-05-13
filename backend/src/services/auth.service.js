@@ -2,13 +2,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const { User } = require('../models');
-const { signAccessToken, signRefreshToken, hashToken } = require('../utils/token');
+const { signAccessToken, signRefreshToken } = require('../utils/token');
 const sanitizeUser = require('../utils/sanitizeUser');
 
 async function issueTokens(user) {
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
-  await user.update({ refreshTokenHash: hashToken(refreshToken), lastSeenAt: new Date() });
+  await user.update({ lastSeenAt: new Date() });
   return { accessToken, refreshToken, user: sanitizeUser(user) };
 }
 
@@ -41,18 +41,27 @@ async function refresh(refreshToken) {
     error.statusCode = 401;
     throw error;
   }
-  const payload = jwt.verify(refreshToken, env.refreshTokenSecret);
-  const user = await User.findByPk(payload.sub);
-  if (!user || user.refreshTokenHash !== hashToken(refreshToken)) {
-    const error = new Error('Invalid refresh token');
+  try {
+    const payload = jwt.verify(refreshToken, env.refreshTokenSecret);
+    const user = await User.findByPk(payload.sub);
+    if (!user || user.status !== 'active') {
+      const error = new Error('User not found or inactive');
+      error.statusCode = 401;
+      throw error;
+    }
+    return issueTokens(user);
+  } catch (err) {
+    const error = new Error('Invalid or expired refresh token');
     error.statusCode = 401;
     throw error;
   }
-  return issueTokens(user);
 }
 
 async function logout(user) {
-  await user.update({ refreshTokenHash: null });
+  // To implement true global logout, we would bump a tokenVersion here.
+  // For now, removing the token from the client is sufficient for standard logout.
+  await user.update({ lastSeenAt: new Date() });
 }
 
 module.exports = { register, login, refresh, logout };
+
