@@ -5,11 +5,11 @@ import { Clipboard, Plus, UserPlus, Users } from 'lucide-react';
 import { useConfirm, useToast } from '../context/UiContext';
 
 const CARD = {
-  background: '#ffffff',
-  border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 6,
+  background: '#111827',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 8,
   padding: 24,
-  boxShadow: '0 12px 32px rgba(15,23,42,0.05)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
   transition: 'all 0.2s ease',
 };
 
@@ -135,9 +135,9 @@ export default function Groups() {
         <div className="groups-actions" style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => setShowJoin(true)}
-            style={{ ...BUTTON, background: 'rgba(15,23,42,0.06)', color: '#0f172a', border: '1px solid rgba(15,23,42,0.12)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,23,42,0.12)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.06)'}
+            style={{ ...BUTTON, background: 'rgba(255,255,255,0.07)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.12)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
           >
             <UserPlus size={15} />
             Tham Gia Nhóm
@@ -182,16 +182,16 @@ export default function Groups() {
                   {g.role === 'owner' ? 'CHỦ NHÓM' : 'THÀNH VIÊN'}
                 </div>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>{g.name}</h3>
-              <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px', lineHeight: 1.5, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', margin: '0 0 4px' }}>{g.name}</h3>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.5, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
               
-              <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 16 }}>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Thành viên</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{g.member_count}</div>
+                  <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Thành viên</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#e2e8f0' }}>{g.member_count}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Mã mời</div>
+                  <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Mã mời</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6', fontFamily: 'monospace' }}>{g.invite_code}</div>
                     <button
@@ -234,29 +234,33 @@ export default function Groups() {
       {/* Create Modal */}
       {showCreate && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff' }}>
-            <h2 id="create-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px' }}>Tạo Nhóm Mới</h2>
+          <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#111827', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h2 id="create-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#f1f5f9' }}>Tạo Nhóm Mới</h2>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Tên nhóm *</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Tên nhóm *</label>
                 <input
                   required
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 6, background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Mô tả</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Mô tả</label>
                 <textarea
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 6, background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#64748b' }}>Hủy</button>
+                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)' }}>Hủy</button>
                 <button type="submit" style={{ ...BUTTON, flex: 1, background: '#3b82f6', color: '#fff' }}>Tạo Nhóm</button>
               </div>
             </form>
@@ -267,22 +271,24 @@ export default function Groups() {
       {/* Join Modal */}
       {showJoin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="join-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff' }}>
-            <h2 id="join-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px' }}>Tham Gia Nhóm</h2>
+          <div role="dialog" aria-modal="true" aria-labelledby="join-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#111827', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h2 id="join-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#f1f5f9' }}>Tham Gia Nhóm</h2>
             <form onSubmit={handleJoin}>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Mã mời (Invite Code)</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Mã mời (Invite Code)</label>
                 <input
                   required
                   placeholder="Ví dụ: WR-XXXXXX"
                   value={inviteCode}
                   onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                  style={{ width: '100%', padding: '12px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 700, fontFamily: 'monospace' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  style={{ width: '100%', padding: '12px', borderRadius: 6, background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9', textAlign: 'center', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#64748b' }}>Hủy</button>
+                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)' }}>Hủy</button>
                 <button type="submit" style={{ ...BUTTON, flex: 1, background: '#22c55e', color: '#fff' }}>Tham Gia</button>
               </div>
             </form>

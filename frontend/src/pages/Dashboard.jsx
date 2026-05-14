@@ -264,15 +264,27 @@ export default function Dashboard() {
 
       <div className="dashboard-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
         {STAT_CARDS.map((card, i) => (
-          <div key={i} style={{
-            background: '#ffffff',
-            border: '1px solid rgba(15,23,42,0.08)',
-            borderRadius: 6,
-            padding: '20px 22px',
-          }}>
+          <div key={i}
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 8,
+              padding: '20px 22px',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              cursor: 'default',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(59,130,246,0.15)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{card.label}</span>
-              <span style={{ color: '#94a3b8' }}><card.icon size={16} /></span>
+              <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{card.label}</span>
+              <span style={{ color: '#4b5563' }}><card.icon size={16} /></span>
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.8px', color: '#0f172a', lineHeight: 1 }}>
               {loading ? <span style={{ color: '#cbd5e1' }}>—</span> : card.value}
@@ -287,22 +299,23 @@ export default function Dashboard() {
       </div>
 
       <div style={{
-        background: '#ffffff',
-        border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 6,
+        background: '#111827',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 8,
         overflow: 'hidden',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 24px',
-          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Hoạt Động Thời Gian Thực</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#f8fafc' }}>Hoạt Động Thời Gian Thực</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
               background: '#22c55e',
-              boxShadow: liveFlash ? '0 0 10px #22c55e' : '0 0 6px #22c55e66',
+              boxShadow: liveFlash ? '0 0 12px #22c55e' : '0 0 6px rgba(34,197,94,0.5)',
+              animation: 'pulse-dot 2s ease infinite',
               transition: 'box-shadow 0.3s',
             }} />
             <span style={{ fontSize: 12, color: '#64748b', fontFamily: "'JetBrains Mono', 'SF Mono', monospace" }}>Cập nhật trực tiếp</span>
