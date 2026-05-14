@@ -63,37 +63,39 @@ export default function Tracker() {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      paddingTop: '1rem',
+      paddingTop: '2rem',
+      minHeight: 'calc(100vh - 120px)',
     }}>
       {/* Widget Card */}
       <div className="tracker-card" style={{
         width: 320,
-        background: '#ffffff',
-        borderRadius: 4,
-        border: '1px solid rgba(15,23,42,0.08)',
-        boxShadow: '0 32px 80px rgba(15,23,42,0.14)',
+        background: '#111827',
+        borderRadius: 8,
+        border: '1px solid rgba(255,255,255,0.07)',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.4)',
         overflow: 'hidden',
         fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
-        color: '#0f172a',
+        color: '#f1f5f9',
       }}>
 
         {/* Title Bar */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 16px 12px',
-          borderBottom: '1px solid rgba(15,23,42,0.06)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
               background: connected ? '#22c55e' : '#ef4444',
-              boxShadow: connected ? '0 0 8px #22c55e88' : '0 0 8px #ef444488',
+              boxShadow: connected ? '0 0 12px #22c55e' : '0 0 8px #ef444488',
+              animation: connected ? 'pulse-dot 2s ease infinite' : 'none',
             }} />
-            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px' }}>WorkRank</span>
+            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: '#f1f5f9' }}>WorkRank</span>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#94a3b8', cursor: 'pointer' }} />
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#94a3b8', cursor: 'pointer' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#4b5563', cursor: 'pointer' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#4b5563', cursor: 'pointer' }} />
           </div>
         </div>
 
@@ -101,19 +103,22 @@ export default function Tracker() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 16px',
-          background: desktopOnline
-            ? 'linear-gradient(90deg, rgba(34,197,94,0.08), rgba(34,197,94,0.03))'
-            : 'linear-gradient(90deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))',
-          borderBottom: '1px solid rgba(15,23,42,0.04)',
+          background: desktopOnline && tracking
+            ? 'linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))'
+            : desktopOnline
+            ? 'linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))'
+            : 'linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
         }}>
-          <span style={{ color: desktopOnline ? '#22c55e' : '#64748b', display: 'flex' }}>
+          <span style={{ color: desktopOnline && tracking ? '#22c55e' : desktopOnline ? '#f59e0b' : '#6b7280', display: 'flex' }}>
             <DesktopIcon />
           </span>
           <span style={{
             fontSize: 11, fontWeight: 600,
-            color: desktopOnline ? '#22c55e' : '#64748b',
+            color: desktopOnline && tracking ? '#22c55e' : desktopOnline ? '#f59e0b' : '#6b7280',
           }}>
-            Desktop Tracker: {desktopOnline ? (desktopTracking ? 'Đang chạy' : 'Online (tạm dừng)') : 'Offline'}
+            Desktop: {desktopOnline ? (desktopTracking ? 'Đang chạy' : 'Online (tạm dừng)') : 'Offline'}
+            {desktopTracking && <span style={{ marginLeft: 6, display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#22c55e', animation: 'pulse-dot 1.5s infinite' }} />}
           </span>
           {desktopOnline && desktopInfo?.deviceName && (
             <span style={{
@@ -185,11 +190,11 @@ export default function Tracker() {
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: tracking
                     ? 'linear-gradient(145deg, #3b82f6, #2563eb)'
-                    : 'linear-gradient(145deg, #dbeafe, #bfdbfe)',
+                    : 'linear-gradient(145deg, #1f2937, #111827)',
                   boxShadow: tracking
-                    ? '0 8px 32px rgba(59,130,246,0.45), inset 0 1px 0 rgba(15,23,42,0.16)'
-                    : '0 4px 16px rgba(15,23,42,0.12), inset 0 1px 0 rgba(15,23,42,0.06)',
-                  color: tracking ? '#ffffff' : '#2563eb',
+                    ? '0 8px 32px rgba(59,130,246,0.45), inset 0 1px 0 rgba(255,255,255,0.1)'
+                    : '0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  color: tracking ? '#ffffff' : '#3b82f6',
                   opacity: trackingPending ? 0.72 : 1,
                   cursor: trackingPending ? 'wait' : 'pointer',
                   transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -217,10 +222,10 @@ export default function Tracker() {
 
             {/* Session Time */}
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, letterSpacing: '0.05em' }}>Phiên từ Desktop</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, letterSpacing: '0.05em' }}>Phiên từ Desktop</div>
               <div style={{
                 fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
-                letterSpacing: '0.04em', color: tracking ? '#2563eb' : '#64748b', transition: 'color 0.3s',
+                letterSpacing: '0.04em', color: tracking ? '#3b82f6' : '#6b7280', transition: 'color 0.3s',
               }}>
                 {formatTime(seconds)}
               </div>
@@ -298,15 +303,15 @@ export default function Tracker() {
 
           {/* Productivity Score */}
           <div style={{
-            background: '#f8fafc', borderRadius: 6, padding: '14px 14px 12px',
-            border: '1px solid rgba(15,23,42,0.08)',
+            background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '14px 14px 12px',
+            border: '1px solid rgba(255,255,255,0.06)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e88', flexShrink: 0 }} />
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)', flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Điểm Năng Suất</div>
-                <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.2 }}>{score}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Điểm Năng Suất</div>
+                <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.2, color: '#f1f5f9' }}>{score}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 28 }}>
@@ -326,7 +331,7 @@ export default function Tracker() {
         {/* Footer */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 20px 16px', borderTop: '1px solid rgba(15,23,42,0.06)',
+          padding: '12px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
@@ -337,14 +342,14 @@ export default function Tracker() {
               boxShadow: '0 0 0 2px rgba(59,130,246,0.3)',
             }}>{(user?.name || 'U').substring(0, 1).toUpperCase()}</div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>{user?.name || 'Người dùng'}</div>
-              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2, color: '#f1f5f9' }}>{user?.name || 'Người dùng'}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</div>
             </div>
           </div>
           <button
             type="button"
             aria-label="Đăng xuất"
-            style={{ color: '#64748b', display: 'flex', padding: 6, cursor: 'pointer', border: 'none', background: 'transparent' }}
+            style={{ color: '#94a3b8', display: 'flex', padding: 6, cursor: 'pointer', border: 'none', background: 'transparent' }}
             onClick={() => { void logout(); }}
           >
             <LogoutIcon />

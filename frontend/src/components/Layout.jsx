@@ -67,9 +67,9 @@ export default function Layout() {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      background: '#f8fafc',
-      color: '#0f172a',
-      fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
+      background: '#0d1117',
+      color: '#e6edf3',
+      fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
       overflow: 'hidden',
     }}>
       <style>{`
@@ -122,17 +122,19 @@ export default function Layout() {
       <header
         className="app-header"
         style={{
-          height: 52,
+          height: 56,
           flexShrink: 0,
-          background: '#ffffff',
-          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          background: 'rgba(11,15,26,0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
           display: 'flex',
           alignItems: 'center',
-          padding: '0 24px',
+          padding: '0 28px',
           gap: 0,
-          position: 'relative',
+          position: 'sticky',
+          top: 0,
           zIndex: 100,
-          overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
@@ -147,7 +149,7 @@ export default function Layout() {
           }}>
             <Activity size={13} color="#fff" strokeWidth={2.5} />
           </div>
-          <div className="app-brand-label" style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkRank</div>
+          <div className="app-brand-label" style={{ fontSize: 14, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkRank</div>
         </div>
 
         <div
@@ -192,31 +194,21 @@ export default function Layout() {
                   padding: '6px 14px',
                   fontSize: 13,
                   fontWeight: active ? 700 : 500,
-                  color: active ? '#2563eb' : '#64748b',
+                  color: active ? '#fff' : '#6b7280',
                   textDecoration: 'none',
-                  borderRadius: 5,
-                  background: active ? 'rgba(37,99,235,0.08)' : 'transparent',
+                  borderRadius: 6,
+                  background: active ? 'rgba(59,130,246,0.15)' : 'transparent',
+                  border: active ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent',
                   position: 'relative',
                   display: 'inline-flex',
                   alignItems: 'center',
                   flex: '0 0 auto',
                   whiteSpace: 'nowrap',
                   lineHeight: 1,
-                  transition: 'color 0.15s',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {label}
-                {active && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: -14,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: '#3b82f6',
-                    borderRadius: '2px 2px 0 0',
-                  }} />
-                )}
               </NavLink>
             );
           })}
@@ -226,22 +218,21 @@ export default function Layout() {
               padding: '6px 14px',
               fontSize: 13,
               fontWeight: location.pathname.startsWith('/users') ? 700 : 500,
-              color: location.pathname.startsWith('/users') ? '#2563eb' : '#64748b',
+              color: location.pathname.startsWith('/users') ? '#fff' : '#6b7280',
               textDecoration: 'none',
-              borderRadius: 5,
-              background: location.pathname.startsWith('/users') ? 'rgba(37,99,235,0.08)' : 'transparent',
+              borderRadius: 6,
+              background: location.pathname.startsWith('/users') ? 'rgba(59,130,246,0.15)' : 'transparent',
+              border: location.pathname.startsWith('/users') ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent',
               display: 'inline-flex',
               alignItems: 'center',
               flex: '0 0 auto',
               whiteSpace: 'nowrap',
               lineHeight: 1,
               position: 'relative',
+              transition: 'all 0.15s ease',
             }}
           >
             Hồ Sơ Người Dùng
-            {location.pathname.startsWith('/users') && (
-              <div style={{ position: 'absolute', bottom: -14, left: 0, right: 0, height: 2, background: '#3b82f6', borderRadius: '2px 2px 0 0' }} />
-            )}
           </NavLink>
         </nav>
 
@@ -387,9 +378,9 @@ export default function Layout() {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '32px 36px',
+            padding: '32px 40px',
             opacity: pageVisible ? 1 : 0,
-            transform: pageVisible ? 'translateY(0)' : 'translateY(6px)',
+            transform: pageVisible ? 'translateY(0)' : 'translateY(8px)',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
           }}
         >
@@ -399,14 +390,14 @@ export default function Layout() {
         <footer
           className="app-footer"
           style={{
-            borderTop: '1px solid rgba(15,23,42,0.06)',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
             padding: '10px 36px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: 11,
             color: '#94a3b8',
-            background: '#ffffff',
+            background: 'rgba(11,15,26,0.95)',
             flexShrink: 0,
           }}
         >
