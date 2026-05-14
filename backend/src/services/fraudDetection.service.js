@@ -11,6 +11,8 @@ const LIMITS = {
   intervalToleranceMs: 350,
   baselineMinActiveDays: 3,
   baselineSpikeMultiplier: 4,
+  quarantineHighSuspicionEvents: 5,
+  quarantineWindowMs: 10 * 60 * 1000,
 };
 
 function stripSignature(payload) {

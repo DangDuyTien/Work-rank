@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { activity, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-} from 'recharts';
+import { ChevronLeft, Star, UserRound } from 'lucide-react';
 
+const UserActivityChart = lazy(() => import('../components/UserActivityChart'));
 
 const STATUS_CONFIG = {
   active:  { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.4)',  color: '#22c55e', dot: '#22c55e' },
@@ -216,13 +215,13 @@ export default function UserDetail() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#64748b' }}>
       <div style={{ width: 18, height: 18, border: '2px solid #94a3b8', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <span style={{ fontSize: 14 }}>Loading profile...</span>
+      <span style={{ fontSize: 14 }}>Đang tải hồ sơ...</span>
     </div>
   );
   if (!user) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#64748b' }}>
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      <p style={{ fontSize: 14, margin: 0 }}>User not found</p>
+      <UserRound size={40} strokeWidth={1.5} />
+      <p style={{ fontSize: 14, margin: 0 }}>Không tìm thấy người dùng</p>
     </div>
   );
 
@@ -295,15 +294,15 @@ export default function UserDetail() {
         onMouseEnter={e => e.currentTarget.style.color = '#1e293b'}
         onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <ChevronLeft size={15} strokeWidth={2.5} />
         Quay lại Bảng Xếp Hạng
       </button>
 
       {/* ── TOP ROW: Profile + Status ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 14, marginBottom: 14 }}>
+      <div className="user-detail-top-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 14, marginBottom: 14 }}>
 
         {/* Profile Card */}
-        <div style={{ ...CARD, padding: '24px 24px', display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div className="user-profile-card" style={{ ...CARD, padding: '24px 24px', display: 'flex', alignItems: 'center', gap: 20 }}>
           {/* Avatar */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{
@@ -367,7 +366,7 @@ export default function UserDetail() {
 
       {/* ── LEVELS ── */}
       <div style={{ ...CARD, padding: '20px 22px', marginBottom: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 22, alignItems: 'stretch' }}>
+        <div className="user-detail-level-grid" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 22, alignItems: 'stretch' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 18 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
@@ -424,8 +423,8 @@ export default function UserDetail() {
               <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Bảng Mốc Level</h2>
               <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Level N = 10 tỉ x (N / 50)^3 thao tác</span>
             </div>
-            <div style={{ maxHeight: 250, overflowY: 'auto', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 6 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <div className="user-detail-level-table" style={{ maxHeight: 250, overflow: 'auto', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 6 }}>
+              <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead style={{ position: 'sticky', top: 0, background: '#ffffff', zIndex: 1 }}>
                   <tr>
                     {['Level', 'Tổng gõ + click cần đạt', 'Trạng thái'].map((head) => (
@@ -504,7 +503,7 @@ export default function UserDetail() {
       </div>
 
       {/* ── CHART + PERSONAL BEST ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 14, marginBottom: 14 }}>
+      <div className="user-detail-chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 14, marginBottom: 14 }}>
         {/* Area Chart */}
         <div style={{ ...CARD, padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -521,36 +520,16 @@ export default function UserDetail() {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="gk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.2}/>
-                  <stop offset="100%" stopColor="#a78bfa" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.04)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={chartTickInterval} minTickGap={28} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip
-                contentStyle={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 6, fontSize: 12, color: '#1e293b' }}
-                cursor={{ stroke: 'rgba(15,23,42,0.1)', strokeWidth: 1 }}
-              />
-              <Area type="monotone" dataKey="keystrokes" stroke="#3b82f6" strokeWidth={2} fill="url(#gk)" name="Gõ phím" dot={false} />
-              <Area type="monotone" dataKey="clicks"     stroke="#a78bfa" strokeWidth={2} fill="url(#gc)" name="Clicks"  dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 13 }}>Đang tải biểu đồ...</div>}>
+            <UserActivityChart chartData={chartData} chartTickInterval={chartTickInterval} />
+          </Suspense>
         </div>
 
         {/* Personal Best */}
         <div style={{ ...CARD, padding: '20px 20px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Kỷ Lục Cá Nhân</h2>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+            <Star size={18} fill="#f59e0b" color="#f59e0b" />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 38, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
@@ -575,6 +554,7 @@ export default function UserDetail() {
             <div style={{ padding: '14px 0', color: '#64748b', fontSize: 13 }}>Chưa có phiên hoạt động nào.</div>
           ) : recentSessions.map((s, i) => (
             <div
+              className="user-detail-session-row"
               key={i}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,

@@ -1,64 +1,62 @@
 import React from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Keyboard,
+  LogOut,
+  Monitor,
+  Mouse,
+  Play,
+  Square,
+  TrendingUp,
+  XCircle,
+} from 'lucide-react';
 
-// Icons
-const StopIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-    <rect x="4" y="4" width="16" height="16" rx="3"/>
-  </svg>
-);
-const PlayIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-    <polygon points="5,3 19,12 5,21"/>
-  </svg>
-);
-const KeyboardIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="6" width="20" height="12" rx="2"/>
-    <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8M6 14h.01M18 14h.01"/>
-  </svg>
-);
-const MouseIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v9"/>
-  </svg>
-);
-const TrendUpIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-    <polyline points="17 6 23 6 23 12"/>
-  </svg>
-);
-const LogoutIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-  </svg>
-);
-const DesktopIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-  </svg>
-);
+const StopIcon = () => <Square size={28} fill="currentColor" strokeWidth={0} />;
+const PlayIcon = () => <Play size={28} fill="currentColor" strokeWidth={0} />;
+const KeyboardIcon = () => <Keyboard size={15} />;
+const MouseIcon = () => <Mouse size={15} />;
+const TrendUpIcon = () => <TrendingUp size={12} strokeWidth={2.5} />;
+const LogoutIcon = () => <LogOut size={16} />;
+const DesktopIcon = () => <Monitor size={14} />;
 
 export default function Tracker() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const {
     tracking, seconds,
-    totalKeys, totalClicks, score, connected,
-    desktopLaunchStatus, scoreHistory, formatNum, formatTime, toggle,
-    desktopOnline, desktopTracking, desktopInfo, startTrack,
+    activeSecondsToday, totalKeys, totalClicks, score, connected,
+    desktopLaunchStatus, desktopLaunchStatusType, scoreHistory, formatNum, formatTime, toggle,
+    desktopOnline, desktopTracking, desktopInfo, startTrack, trackingState, trackingPending,
   } = useTracking();
 
   const maxBar = Math.max(...scoreHistory, 1);
   const displayKeys = totalKeys;
   const displayClicks = totalClicks;
-  const keysPerHr = seconds > 0 ? Math.round((displayKeys / seconds) * 3600) : 0;
+  const keysPerHr = activeSecondsToday > 0 ? Math.round((displayKeys / activeSecondsToday) * 3600) : 0;
   const keysPerHrStr = keysPerHr >= 1000 ? (keysPerHr / 1000).toFixed(1) + 'k' : keysPerHr;
   const showDesktopAction = !desktopOnline || (tracking && desktopOnline && !desktopTracking);
   const desktopActionLabel = desktopOnline ? 'Bật' : 'Mở';
   const sourceLabel = desktopOnline && desktopTracking ? 'Desktop' : 'Chờ desktop';
+  const mainActionLabel = trackingState === 'starting'
+    ? 'Đang bật'
+    : trackingState === 'stopping'
+      ? 'Đang dừng'
+      : tracking ? 'Dừng' : 'Bắt đầu';
+  const StatusIcon = {
+    success: CheckCircle2,
+    warning: AlertTriangle,
+    error: XCircle,
+    info: Info,
+  }[desktopLaunchStatusType || 'info'];
+  const statusColor = {
+    success: '#16a34a',
+    warning: '#d97706',
+    error: '#dc2626',
+    info: '#64748b',
+  }[desktopLaunchStatusType || 'info'];
 
   return (
     <div style={{
@@ -68,7 +66,7 @@ export default function Tracker() {
       paddingTop: '1rem',
     }}>
       {/* Widget Card */}
-      <div style={{
+      <div className="tracker-card" style={{
         width: 320,
         background: '#ffffff',
         borderRadius: 4,
@@ -178,10 +176,12 @@ export default function Tracker() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  if (trackingPending) return;
                   toggle();
                 }}
+                disabled={trackingPending}
                 style={{
-                  width: 112, height: 112, borderRadius: 12, border: 'none', cursor: 'pointer',
+                  width: 112, height: 112, borderRadius: 12, border: 'none',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: tracking
                     ? 'linear-gradient(145deg, #3b82f6, #2563eb)'
@@ -190,6 +190,8 @@ export default function Tracker() {
                     ? '0 8px 32px rgba(59,130,246,0.45), inset 0 1px 0 rgba(15,23,42,0.16)'
                     : '0 4px 16px rgba(15,23,42,0.12), inset 0 1px 0 rgba(15,23,42,0.06)',
                   color: tracking ? '#ffffff' : '#2563eb',
+                  opacity: trackingPending ? 0.72 : 1,
+                  cursor: trackingPending ? 'wait' : 'pointer',
                   transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
@@ -208,14 +210,14 @@ export default function Tracker() {
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: tracking ? 'rgba(255,255,255,0.92)' : '#2563eb',
                 }}>
-                  {tracking ? 'Dừng' : 'Bắt đầu'}
+                  {mainActionLabel}
                 </span>
               </button>
             </div>
 
             {/* Session Time */}
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, letterSpacing: '0.05em' }}>Phiên hoạt động</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, letterSpacing: '0.05em' }}>Phiên từ Desktop</div>
               <div style={{
                 fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
                 letterSpacing: '0.04em', color: tracking ? '#2563eb' : '#64748b', transition: 'color 0.3s',
@@ -224,13 +226,23 @@ export default function Tracker() {
               </div>
               {desktopLaunchStatus && (
                 <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  gap: 6,
                   marginTop: 8,
-                  color: '#64748b',
+                  color: statusColor,
                   fontSize: 11,
                   lineHeight: 1.4,
                   maxWidth: 240,
                 }}>
-                  {desktopLaunchStatus}
+                  <StatusIcon size={13} style={{ marginTop: 1, flexShrink: 0 }} />
+                  <span>{desktopLaunchStatus}</span>
+                </div>
+              )}
+              {!tracking && activeSecondsToday > 0 && (
+                <div style={{ marginTop: 7, fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+                  Hôm nay: {formatTime(activeSecondsToday)}
                 </div>
               )}
             </div>
@@ -252,8 +264,8 @@ export default function Tracker() {
                     <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>+{keysPerHrStr} /hr</span>
                   </>
                 ) : (
-                  <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
-                    {tracking ? sourceLabel : '— Paused'}
+                    <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+                    {tracking || trackingPending ? sourceLabel : '— Tạm dừng'}
                   </span>
                 )}
               </div>
@@ -273,7 +285,7 @@ export default function Tracker() {
               <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1 }}>{formatNum(displayClicks)}</div>
               <div style={{ marginTop: 6 }}>
                 <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
-                  {tracking ? sourceLabel : '— Avg pace'}
+                  {tracking || trackingPending ? sourceLabel : '— Tạm dừng'}
                 </span>
               </div>
               {desktopOnline && desktopTracking && (
@@ -329,10 +341,14 @@ export default function Tracker() {
               <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</div>
             </div>
           </div>
-          <span style={{ color: '#64748b', display: 'flex', padding: 6, cursor: 'pointer' }} onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }}><LogoutIcon /></span>
+          <button
+            type="button"
+            aria-label="Đăng xuất"
+            style={{ color: '#64748b', display: 'flex', padding: 6, cursor: 'pointer', border: 'none', background: 'transparent' }}
+            onClick={() => { void logout(); }}
+          >
+            <LogoutIcon />
+          </button>
         </div>
       </div>
 

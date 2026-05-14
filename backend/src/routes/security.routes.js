@@ -11,6 +11,7 @@ router.get('/devices', asyncHandler(controller.listDevices));
 router.post('/devices/:id/revoke', asyncHandler(controller.revokeDevice));
 router.post('/devices/:id/restore', asyncHandler(controller.restoreDevice));
 router.get('/anomalies', asyncHandler(controller.anomalies));
+router.get('/events', asyncHandler(controller.events));
 router.get('/users/:userId/baseline', asyncHandler(controller.baseline));
 
 module.exports = router;

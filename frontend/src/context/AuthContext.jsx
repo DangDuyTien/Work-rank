@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
 import { connectSocket, disconnectSocket } from '../services/socket';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    const handleAuthExpired = (event) => {
+      auth.clearLocalSession();
+      disconnectSocket();
+      setSocket(null);
+      setUser(null);
+      sessionStorage.setItem(
+        'workrank_auth_message',
+        event.detail?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+      );
+      if (location.pathname !== '/login') navigate('/login', { replace: true });
+    };
+    window.addEventListener('workrank:auth-expired', handleAuthExpired);
+    return () => window.removeEventListener('workrank:auth-expired', handleAuthExpired);
+  }, [location.pathname, navigate]);
+
+  useEffect(() => {
     const handleAuthUpdated = (event) => {
       const token = event.detail?.token || localStorage.getItem('token');
       disconnectSocket();
@@ -61,8 +80,19 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  const logout = async () => {
+    try {
+      await auth.logout();
+    } finally {
+      disconnectSocket();
+      setSocket(null);
+      setUser(null);
+      navigate('/login', { replace: true });
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, socket, loading, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, setUser, socket, loading, isAdmin: user?.role === 'admin', logout }}>
       {children}
     </AuthContext.Provider>
   );

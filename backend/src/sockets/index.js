@@ -41,6 +41,7 @@ function registerSockets(io) {
     console.log(`Socket connected: ${socket.id} (User: ${socket.user.email}, type: ${socket.clientType})`);
     socket.join(`user:${socket.user.id}`);
     if (socket.user.teamId) socket.join(`team:${socket.user.teamId}`);
+    if (socket.user.role) socket.join(`role:${socket.user.role}`);
     socket.join('dashboard');
     // Join a type-specific room for targeted messaging
     socket.join(`${socket.clientType}:${socket.user.id}`);
@@ -89,15 +90,13 @@ function registerSockets(io) {
         return;
       }
       console.log(`Web user ${socket.user.id} sending desktop command: ${action}`);
+      const desktopRoom = io.sockets.adapter.rooms.get(`desktop:${socket.user.id}`);
+      if (!desktopRoom || desktopRoom.size === 0) {
+        if (typeof ack === 'function') ack({ ok: false, error: 'Desktop tracker is offline' });
+        return;
+      }
       // Forward the command to all desktop sockets of this user
       io.to(`desktop:${socket.user.id}`).emit('desktop:command', { action });
-      if (action === 'start') desktopStatus.setTracking(socket.user.id, true);
-      else if (action === 'stop') desktopStatus.setTracking(socket.user.id, false);
-      if (action === 'start' || action === 'stop') {
-        const nextPresence = action === 'start' ? 'active' : 'online';
-        presence.setStatus(socket.user, nextPresence);
-        emitPresence(io, socket.user, nextPresence);
-      }
       if (typeof ack === 'function') ack({ ok: true, action });
     });
 

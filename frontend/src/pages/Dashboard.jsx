@@ -2,37 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboard, leaderboard } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-// Icons
-const UsersIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-);
-const KeyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="6" width="20" height="12" rx="2"/>
-    <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>
-  </svg>
-);
-const MouseIcon2 = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v9"/>
-  </svg>
-);
-const TrendUp = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-    <polyline points="17 6 23 6 23 12"/>
-  </svg>
-);
-const TrendDown = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
-    <polyline points="17 18 23 18 23 12"/>
-  </svg>
-);
+import {
+  Keyboard as KeyIcon,
+  Mouse as MouseIcon2,
+  TrendingDown as TrendDown,
+  TrendingUp as TrendUp,
+  Users as UsersIcon,
+} from 'lucide-react';
 
 const STATUS_CONFIG = {
   active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.4)', color: '#22c55e', dot: '#22c55e' },
@@ -66,60 +42,37 @@ function calcChange(current, previous) {
   return Math.round(((current - previous) / previous) * 100);
 }
 
-// Module-level cache to preserve realtime stats across component remounts
-let globalUsersCache = [];
+function localDateKey(value = new Date()) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function Dashboard() {
   const { socket } = useAuth();
   const [range, setRange] = useState('today');
-  const [users, setUsers] = useState(globalUsersCache);
+  const [users, setUsers] = useState([]);
   const [totals, setTotals] = useState({ keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
   const [prevTotals, setPrevTotals] = useState(null);
   const [liveFlash, setLiveFlash] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const prevRef = useRef(null);
-
-  // Sync state to cache
-  useEffect(() => {
-    globalUsersCache = users;
-  }, [users]);
+  const requestIdRef = useRef(0);
 
   const fetchData = async (selectedRange) => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setUsers([]);
     setLoading(true);
     try {
       const [res, overviewRes] = await Promise.all([
         leaderboard.get(selectedRange),
         dashboard.overview(selectedRange),
       ]);
-      const fetchedData = res.data || [];
-      
-      let mergedData = [];
-      setUsers(prevUsers => {
-        const fetchedMap = new Map(fetchedData.map(u => [String(u.user_id || u.id), u]));
-        const prevMap = new Map(prevUsers.map(u => [String(u.user_id || u.id), u]));
-        
-        const allUserIds = new Set([...fetchedMap.keys(), ...prevMap.keys()]);
-        mergedData = Array.from(allUserIds).map(id => {
-          const u = fetchedMap.get(id) || {};
-          const existing = prevMap.get(id);
-          
-          if (!existing) return u;
-          if (!fetchedMap.has(id)) return existing; // Keep realtime-only users
-          
-          return {
-            ...u,
-            status: u.status || existing.status || 'offline',
-            presence: u.presence || u.status || existing.presence || existing.status || 'offline',
-            presenceStatus: u.presenceStatus || u.presence || u.status || existing.presenceStatus || existing.status || 'offline',
-            keystrokeCount: Math.max(Number(existing.keystrokeCount || 0), Number(u.keystrokeCount || 0)),
-            mouseClickCount: Math.max(Number(existing.mouseClickCount || 0), Number(u.mouseClickCount || 0)),
-            activeSeconds: Math.max(Number(existing.activeSeconds || 0), Number(u.activeSeconds || 0)),
-            score: Math.max(Number(existing.score || 0), Number(u.score || 0)),
-          };
-        });
-        return mergedData;
-      });
+      if (requestId !== requestIdRef.current) return;
+      setUsers(res.data || []);
 
       const overview = overviewRes.data || {};
       const newTotals = {
@@ -135,9 +88,9 @@ export default function Dashboard() {
       prevRef.current = newTotals;
       setTotals(newTotals);
     } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
+      if (requestId === requestIdRef.current) console.error('Failed to fetch dashboard data:', err);
     }
-    setLoading(false);
+    if (requestId === requestIdRef.current) setLoading(false);
   };
 
   // Fetch initial leaderboard data
@@ -148,10 +101,18 @@ export default function Dashboard() {
   // Setup real-time socket listeners
   useEffect(() => {
     if (!socket) return;
+    let flashTimer = null;
+
+    const eventBelongsToRange = (data = {}) => {
+      if (range !== 'today') return true;
+      return !data.statDate || data.statDate === localDateKey();
+    };
 
     const handleActivity = (data) => {
+      if (!eventBelongsToRange(data)) return;
       setLiveFlash(true);
-      setTimeout(() => setLiveFlash(false), 600);
+      if (flashTimer) window.clearTimeout(flashTimer);
+      flashTimer = window.setTimeout(() => setLiveFlash(false), 600);
       const delta = data.delta || {};
       setTotals(prev => ({
         ...prev,
@@ -196,6 +157,16 @@ export default function Dashboard() {
       });
     };
 
+    const handleOverview = (overview = {}) => {
+      if (range !== 'today') return;
+      setTotals({
+        keystrokes: Number(overview.totalKeystrokes || 0),
+        clicks: Number(overview.totalMouseClicks || 0),
+        activeSeconds: Number(overview.totalActiveSeconds || overview.totalActiveSecondsToday || 0),
+        online: Number(overview.activeUsersNow || 0),
+      });
+    };
+
     const handleStatus = (data) => {
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
@@ -217,14 +188,17 @@ export default function Dashboard() {
 
     socket.on('activity:user:update', handleActivity);
     socket.on('user:status:update', handleStatus);
+    socket.on('dashboard:overview:update', handleOverview);
 
     return () => {
+      if (flashTimer) window.clearTimeout(flashTimer);
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
+      socket.off('dashboard:overview:update', handleOverview);
     };
   }, [socket, range]);
 
-  const rangeLabel = range === 'today' ? 'giờ trước' : range === 'week' ? 'tuần trước' : 'tháng trước';
+  const rangeLabel = 'lần cập nhật trước';
 
   const buildSub = (current, prev) => {
     const pct = calcChange(current, prev);
@@ -246,11 +220,14 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>Tổng Quan</h1>
           <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0', fontWeight: 500 }}>
             Hoạt động thời gian thực của toàn bộ nhóm
+          </p>
+          <p style={{ fontSize: 11, color: '#94a3b8', margin: '3px 0 0', fontWeight: 600 }}>
+            Số liệu hoạt động lấy từ Desktop Tracker; phần so sánh là với lần cập nhật gần nhất trong phiên xem hiện tại.
           </p>
         </div>
 
@@ -285,7 +262,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="dashboard-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
         {STAT_CARDS.map((card, i) => (
           <div key={i} style={{
             background: '#ffffff',
@@ -295,14 +272,14 @@ export default function Dashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{card.label}</span>
-              <span style={{ color: '#94a3b8' }}><card.icon /></span>
+              <span style={{ color: '#94a3b8' }}><card.icon size={16} /></span>
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.8px', color: '#0f172a', lineHeight: 1 }}>
               {loading ? <span style={{ color: '#cbd5e1' }}>—</span> : card.value}
             </div>
             <div style={{ marginTop: 10, fontSize: 12, color: card.sub.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-              {card.sub.icon === 'up' && <TrendUp />}
-              {card.sub.icon === 'down' && <TrendDown />}
+              {card.sub.icon === 'up' && <TrendUp size={11} strokeWidth={2.5} />}
+              {card.sub.icon === 'down' && <TrendDown size={11} strokeWidth={2.5} />}
               {card.sub.text}
             </div>
           </div>
@@ -332,8 +309,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="dashboard-realtime-table" style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                 {['Người dùng', 'Trạng thái', 'Gõ phím/phút', 'Click/phút', 'Thời gian hoạt động', 'Điểm'].map(h => (
@@ -362,6 +339,14 @@ export default function Dashboard() {
                 return (
                   <tr
                     key={u.user_id}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(`/users/${u.user_id}`);
+                      }
+                    }}
                     style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
                     onClick={() => navigate(`/users/${u.user_id}`)}
                   >

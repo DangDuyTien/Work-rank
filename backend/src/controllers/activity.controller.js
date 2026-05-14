@@ -54,6 +54,26 @@ function emitRealtime(req, realtime) {
   });
 }
 
+function emitSecurityQuarantine(req, quarantine) {
+  if (!quarantine?.quarantined) return;
+  const io = req.app.get('io');
+  if (!io) return;
+  const payload = {
+    type: 'device_quarantined',
+    userId: req.user.id,
+    user_id: req.user.id,
+    name: req.user.name,
+    email: req.user.email,
+    teamId: req.user.teamId,
+    ...quarantine,
+  };
+  io
+    .to('role:admin')
+    .to(`web:${req.user.id}`)
+    .to(`desktop:${req.user.id}`)
+    .emit('security:device:quarantined', payload);
+}
+
 function isBrowserActivityPayload(body = {}) {
   return body.appVersion === 'web' || String(body.deviceUuid || '').startsWith('web-');
 }
@@ -97,6 +117,7 @@ async function ingestBatch(req, res) {
   }
   const result = await activityService.ingestBatch(req.user.id, req.validated.body);
   emitRealtime(req, result.realtime);
+  emitSecurityQuarantine(req, result.quarantine);
   res.status(201).json(result);
 }
 
@@ -108,6 +129,7 @@ async function ingestEvent(req, res) {
   }
   const result = await activityService.ingestBatch(req.user.id, { ...body, events: [body] });
   emitRealtime(req, result.realtime);
+  emitSecurityQuarantine(req, result.quarantine);
   res.status(201).json(result);
 }
 

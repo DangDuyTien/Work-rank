@@ -229,6 +229,45 @@ function buildRealtimeActivityUpdate(userId, stat, events, extra = {}) {
   };
 }
 
+async function evaluateDeviceQuarantine(device, transaction) {
+  const threshold = fraudDetection.LIMITS.quarantineHighSuspicionEvents;
+  const windowMs = fraudDetection.LIMITS.quarantineWindowMs;
+  const since = new Date(Date.now() - windowMs);
+  const highThreshold = fraudDetection.LIMITS.highSuspicionThreshold;
+  const flaggedEventsInWindow = await ActivityEvent.count({
+    where: {
+      deviceId: device.id,
+      createdAt: { [Op.gte]: since },
+      suspicionScore: { [Op.gte]: highThreshold },
+    },
+    transaction,
+  });
+
+  if (device.revokedAt || flaggedEventsInWindow < threshold) {
+    return {
+      quarantined: false,
+      flaggedEventsInWindow,
+      threshold,
+      windowMinutes: Math.round(windowMs / 60000),
+    };
+  }
+
+  const revokedAt = new Date();
+  await device.update({ revokedAt }, { transaction });
+  return {
+    quarantined: true,
+    reason: 'too_many_high_suspicion_events',
+    flaggedEventsInWindow,
+    threshold,
+    windowMinutes: Math.round(windowMs / 60000),
+    revokedAt: revokedAt.toISOString(),
+    deviceId: device.id,
+    deviceUuid: device.deviceUuid,
+    deviceName: device.deviceName,
+    message: `Thiết bị bị khóa tự động vì có ${flaggedEventsInWindow} event nghi vấn cao trong ${Math.round(windowMs / 60000)} phút. Hãy kiểm tra Bảo Mật và pair lại Desktop Tracker trước khi tiếp tục.`,
+  };
+}
+
 async function ingestBatch(userId, payload) {
   const baseline = await getUserActivityBaseline(userId);
 
@@ -275,16 +314,19 @@ async function ingestBatch(userId, payload) {
     }
     await device.update({ lastSequence: maxSequence, lastSyncAt: new Date(), ...patternState }, { transaction });
     const flaggedCount = events.filter((event) => event.suspicionScore >= fraudDetection.LIMITS.highSuspicionThreshold).length;
+    const quarantine = await evaluateDeviceQuarantine(device, transaction);
     return {
       count: created.length,
       deviceId: device.id,
       signatureValid: signature.valid,
       signatureFlag: signature.flag,
       flaggedCount,
+      quarantine,
       realtime: buildRealtimeActivityUpdate(userId, lastStat, events, {
         deviceId: device.id,
         flaggedCount,
         signatureValid: signature.valid,
+        quarantine,
       }),
     };
   });

@@ -5,6 +5,7 @@ const api = axios.create({
 });
 
 const AUTH_UPDATED_EVENT = 'workrank:auth-updated';
+const AUTH_EXPIRED_EVENT = 'workrank:auth-expired';
 let refreshPromise = null;
 
 function storeAuth(data) {
@@ -15,10 +16,17 @@ function storeAuth(data) {
   return token;
 }
 
-function clearAuth() {
+function clearAuth(options = {}) {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token: null } }));
+  if (options.expired) {
+    window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, {
+      detail: {
+        message: options.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+      },
+    }));
+  }
 }
 
 function isAuthEndpoint(url = '') {
@@ -103,12 +111,10 @@ api.interceptors.response.use(
         original.headers = { ...(original.headers || {}), Authorization: `Bearer ${token}` };
         return api(original);
       } catch {
-        clearAuth();
-        if (window.location.pathname !== '/login') window.location.href = '/login';
+        clearAuth({ expired: true });
       }
     } else if (err.response?.status === 401 && String(original.url || '').includes('/api/auth/refresh-token')) {
-      clearAuth();
-      if (window.location.pathname !== '/login') window.location.href = '/login';
+      clearAuth({ expired: true });
     }
     return Promise.reject(err);
   }
@@ -188,6 +194,7 @@ export const leaderboard = {
 
 export const security = {
   anomalies: (days = 1) => api.get(`/api/security/anomalies?days=${days}`),
+  events: (days = 1, limit = 50) => api.get(`/api/security/events?days=${days}&limit=${limit}`),
   devices: (includeRevoked = true) => api.get(`/api/security/devices?includeRevoked=${includeRevoked}`),
   revokeDevice: (id) => api.post(`/api/security/devices/${id}/revoke`),
   restoreDevice: (id) => api.post(`/api/security/devices/${id}/restore`),

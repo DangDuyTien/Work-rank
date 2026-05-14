@@ -23,9 +23,15 @@ async function anomalies(req, res) {
   res.json(await securityService.anomalySummary(days));
 }
 
+async function events(req, res) {
+  const days = Math.min(30, Math.max(1, Number(req.query.days || 1)));
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit || 50)));
+  res.json({ data: await securityService.recentSuspiciousEvents({ days, limit }) });
+}
+
 async function baseline(req, res) {
   const days = Math.min(30, Math.max(1, Number(req.query.days || 7)));
   res.json(await securityService.userBaseline(req.params.userId, days));
 }
 
-module.exports = { listDevices, revokeDevice, restoreDevice, anomalies, baseline };
+module.exports = { listDevices, revokeDevice, restoreDevice, anomalies, events, baseline };

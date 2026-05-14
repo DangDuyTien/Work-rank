@@ -8,7 +8,7 @@
 
 const ONLINE_THRESHOLD_MS = 20_000; // consider desktop offline after 20s without heartbeat
 
-// userId → { lastHeartbeat, tracking, deviceUuid, deviceName, platform, error }
+// userId → { lastHeartbeat, tracking, trackingStartedAt, sessionId, deviceUuid, deviceName, platform, error }
 const registry = new Map();
 
 /**
@@ -18,6 +18,8 @@ function heartbeat(userId, payload = {}) {
   registry.set(String(userId), {
     lastHeartbeat: Date.now(),
     tracking: !!payload.tracking,
+    trackingStartedAt: payload.tracking && payload.trackingStartedAt ? payload.trackingStartedAt : null,
+    sessionId: payload.tracking && payload.sessionId ? payload.sessionId : null,
     deviceUuid: payload.deviceUuid || null,
     deviceName: payload.deviceName || null,
     platform: payload.platform || null,
@@ -42,6 +44,8 @@ function getStatus(userId) {
   return {
     online: true,
     tracking: entry.tracking,
+    trackingStartedAt: entry.trackingStartedAt,
+    sessionId: entry.sessionId,
     deviceUuid: entry.deviceUuid,
     deviceName: entry.deviceName,
     platform: entry.platform,
@@ -50,14 +54,4 @@ function getStatus(userId) {
   };
 }
 
-/**
- * Mark a desktop tracker as stopped (e.g. when web sends stop command).
- */
-function setTracking(userId, tracking) {
-  const entry = registry.get(String(userId));
-  if (entry) {
-    entry.tracking = !!tracking;
-  }
-}
-
-module.exports = { heartbeat, getStatus, setTracking };
+module.exports = { heartbeat, getStatus };

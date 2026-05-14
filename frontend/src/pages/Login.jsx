@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
-import { connectSocket } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
+import { Activity, Eye, EyeOff, LockKeyhole } from 'lucide-react';
 
 const S = {
   page: {
@@ -56,10 +56,19 @@ export default function Login() {
   const [name, setName]     = useState('');
   const [email, setEmail]   = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user, setUser, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const message = sessionStorage.getItem('workrank_auth_message');
+    if (message) {
+      setError(message);
+      sessionStorage.removeItem('workrank_auth_message');
+    }
+  }, []);
 
   useEffect(() => {
     if (!authLoading && user) navigate('/dashboard', { replace: true });
@@ -73,13 +82,11 @@ export default function Login() {
       const fn   = isRegister ? auth.register : auth.login;
       const data = isRegister ? { name, email, password } : { email, password };
       const res  = await fn(data);
-      const token = res.data.accessToken || res.data.token;
       const user = res.data.user || res.data;
       if (user) setUser(user);
-      connectSocket(token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || (err.request ? 'Không kết nối được backend. Hãy bật backend ở http://localhost:5001' : 'Something went wrong'));
+      setError(err.response?.data?.message || err.response?.data?.error || (err.request ? 'Không kết nối được backend. Hãy bật backend ở http://localhost:5001' : 'Có lỗi xảy ra'));
     }
     setLoading(false);
   };
@@ -87,9 +94,9 @@ export default function Login() {
   if (authLoading || user) return null;
 
   return (
-    <div style={S.page}>
+    <div className="login-page" style={S.page}>
       {/* ── LEFT BRAND PANEL ── */}
-      <div style={S.left}>
+      <div className="login-brand-panel" style={S.left}>
         {/* Logo */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
@@ -98,9 +105,7 @@ export default function Login() {
               background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
+              <Activity size={16} color="#fff" strokeWidth={2.5} />
             </div>
             <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>WorkRank</span>
           </div>
@@ -114,7 +119,7 @@ export default function Login() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="login-brand-stats" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {statItems.map(s => (
             <div key={s.u} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 3, height: 32, background: '#3b82f6', borderRadius: 2, flexShrink: 0 }} />
@@ -127,13 +132,13 @@ export default function Login() {
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+        <div className="login-brand-footer" style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
           © 2024 WorkRank Realtime. High-Performance Monitoring.
         </div>
       </div>
 
       {/* ── RIGHT FORM PANEL ── */}
-      <div style={S.right}>
+      <div className="login-form-panel" style={S.right}>
         <div style={S.formWrap}>
           <div style={{ marginBottom: 36 }}>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
@@ -155,7 +160,7 @@ export default function Login() {
                 <input
                   style={S.input}
                   type="text" value={name} required
-                  placeholder="John Doe"
+                  placeholder="Nguyễn Văn A"
                   onChange={e => setName(e.target.value)}
                   onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
                   onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
@@ -167,7 +172,7 @@ export default function Login() {
               <input
                 style={S.input}
                 type="email" value={email} required
-                placeholder="user@company.com"
+                placeholder="ten@congty.com"
                 onChange={e => setEmail(e.target.value)}
                 onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
                 onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
@@ -178,18 +183,39 @@ export default function Login() {
                 <label style={{ ...S.label, marginBottom: 0 }}>Mật khẩu</label>
                 {!isRegister && (
                   <span style={{ fontSize: 12, color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
-                    Quên mật khẩu?
+                    Liên hệ quản trị viên
                   </span>
                 )}
               </div>
-              <input
-                style={S.input}
-                type="password" value={password} required
-                placeholder="••••••••"
-                onChange={e => setPassword(e.target.value)}
-                onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  style={{ ...S.input, paddingRight: 44 }}
+                  type={showPassword ? 'text' : 'password'} value={password} required
+                  placeholder="Nhập mật khẩu"
+                  onChange={e => setPassword(e.target.value)}
+                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  onClick={() => setShowPassword((value) => !value)}
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    padding: 4,
+                  }}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -216,10 +242,7 @@ export default function Login() {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 28 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+            <LockKeyhole size={12} color="#94a3b8" />
             <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>KẾT NỐI BẢO MẬT</span>
           </div>
         </div>

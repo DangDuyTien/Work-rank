@@ -32,6 +32,7 @@ let pressedKeys = new Set();
 let totalKeystrokes = 0;
 let totalClicks = 0;
 let score = 0;
+let trackingStartedAt = null;
 let accessToken = null;
 let refreshToken = null;
 let sessionId = null;
@@ -245,6 +246,11 @@ function connectSocket() {
     // Immediately send updated status back
     sendHeartbeat();
   });
+
+  desktopSocket.on('security:device:quarantined', (payload) => {
+    debugLog('Device quarantined by backend:', payload);
+    quarantineCurrentDevice(payload);
+  });
 }
 
 function disconnectSocket() {
@@ -259,6 +265,8 @@ function sendHeartbeat() {
   if (!desktopSocket?.connected) return;
   desktopSocket.emit('desktop:heartbeat', {
     tracking,
+    trackingStartedAt: tracking ? trackingStartedAt : null,
+    sessionId: tracking ? sessionId : null,
     deviceUuid: DEVICE_UUID,
     deviceName: DEVICE_NAME,
     platform: PLATFORM,
@@ -268,6 +276,38 @@ function sendHeartbeat() {
     clicks: totalClicks,
     score,
   });
+}
+
+function stopInputCapture() {
+  if (interval) {
+    clearInterval(interval);
+    interval = null;
+  }
+  try {
+    uIOhook.removeAllListeners('keydown');
+    uIOhook.removeAllListeners('keyup');
+    uIOhook.removeAllListeners('mousedown');
+    uIOhook.removeAllListeners('mousemove');
+    uIOhook.stop();
+  } catch (error) {
+    console.warn('Failed to stop input hook:', error.message);
+  }
+}
+
+function quarantineCurrentDevice(payload = {}) {
+  if (payload.deviceUuid && payload.deviceUuid !== DEVICE_UUID) return;
+  const message = payload.message || 'Desktop Tracker bị khóa do dữ liệu nghi vấn. Hãy liên hệ admin để pair lại thiết bị.';
+  tracking = false;
+  trackingStartedAt = null;
+  lastError = message;
+  sessionId = null;
+  keystrokes = 0;
+  clicks = 0;
+  mouseMoves = 0;
+  stopInputCapture();
+  emitPingResult({ connected: false, error: message, quarantined: true });
+  emitStatus({ connected: false, error: message, quarantined: true });
+  sendHeartbeat();
 }
 
 function startHeartbeat() {
@@ -294,6 +334,8 @@ async function sendHttpHeartbeat() {
       },
 	      body: JSON.stringify({
 	        tracking,
+	        trackingStartedAt: tracking ? trackingStartedAt : null,
+	        sessionId: tracking ? sessionId : null,
 	        deviceUuid: DEVICE_UUID,
 	        deviceName: DEVICE_NAME,
 	        platform: PLATFORM,
@@ -437,6 +479,10 @@ async function sendPing() {
     sendHeartbeat();
   } catch (error) {
     debugLog('flush failed', error.message);
+    if (error.message === 'Device revoked' || error.message.includes('quarantine') || error.message.includes('khóa')) {
+      quarantineCurrentDevice({ message: error.message });
+      return;
+    }
     emitPingResult({ connected: false, error: error.message });
     emitStatus({ connected: false, error: error.message });
   }
@@ -493,6 +539,7 @@ async function startTracking() {
   pressedKeys = new Set();
   lastActivity = Date.now();
   lastFlushAt = Date.now();
+  trackingStartedAt = new Date().toISOString();
 
   try {
     if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) {
@@ -501,6 +548,7 @@ async function startTracking() {
 	      lastError = ACCESSIBILITY_ERROR;
 	      emitPingResult({ connected: false, error: ACCESSIBILITY_ERROR });
 	      tracking = false;
+	      trackingStartedAt = null;
 	      emitStatus({ connected: false, error: ACCESSIBILITY_ERROR });
 	      sendHeartbeat(); // Report status change
 	      await sendHttpHeartbeat();
@@ -531,6 +579,7 @@ async function startTracking() {
 	    console.error('Failed to start desktop tracking:', err.message);
 	    lastError = err.message;
 	    tracking = false;
+	    trackingStartedAt = null;
     emitPingResult({ connected: false, error: err.message });
 	    emitStatus({ connected: false, error: err.message });
 	    sendHeartbeat(); // Report error
@@ -541,20 +590,14 @@ async function startTracking() {
 async function stopTracking() {
   if (!tracking) return;
   await sendPing();
+  const quarantined = Boolean(lastError && (
+    lastError === 'Device revoked' ||
+    lastError.includes('quarantine') ||
+    lastError.includes('khóa')
+  ));
   tracking = false;
-  if (interval) {
-    clearInterval(interval);
-    interval = null;
-  }
-  try {
-    uIOhook.removeAllListeners('keydown');
-    uIOhook.removeAllListeners('keyup');
-    uIOhook.removeAllListeners('mousedown');
-    uIOhook.removeAllListeners('mousemove');
-    uIOhook.stop();
-  } catch (error) {
-    console.warn('Failed to stop input hook:', error.message);
-  }
+  trackingStartedAt = null;
+  stopInputCapture();
   if (sessionId) {
     try {
       await apiRequest('/api/activity/session/end', { method: 'POST', body: JSON.stringify({ sessionId }) });
@@ -564,8 +607,8 @@ async function stopTracking() {
       sessionId = null;
     }
   }
-  emitStatus({ connected: true });
-  lastError = null;
+  emitStatus({ connected: !quarantined, error: quarantined ? lastError : null });
+  if (!quarantined) lastError = null;
   sendHeartbeat(); // Report tracking stopped
 	  await sendHttpHeartbeat();
 	}
@@ -610,6 +653,7 @@ async function applyProtocolAuth(rawUrl) {
     totalKeystrokes = 0;
     totalClicks = 0;
     score = 0;
+    trackingStartedAt = null;
   }
 
   saveRuntimeState({ authSource: 'protocol', loginEmail: null });
@@ -697,4 +741,4 @@ ipcMain.handle('toggle', async () => {
   emitStatus({ connected: true });
   return { tracking };
 });
-ipcMain.handle('get-status', () => ({ tracking, keystrokes: totalKeystrokes, mouse_clicks: totalClicks, score }));
+ipcMain.handle('get-status', () => ({ tracking, trackingStartedAt, keystrokes: totalKeystrokes, mouse_clicks: totalClicks, score }));

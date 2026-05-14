@@ -108,6 +108,59 @@ test('security anomalies endpoint hoạt động', async () => {
   assert.ok(res.body.flagCounts && typeof res.body.flagCounts === 'object');
 });
 
+test('security events endpoint trả danh sách event nghi vấn', async () => {
+  const token = await authToken();
+  const res = await agent.get('/api/security/events?days=7&limit=10').set('Authorization', `Bearer ${token}`);
+  assert.equal(res.status, 200, res.text);
+  assert.ok(Array.isArray(res.body.data));
+});
+
+test('auto-quarantine khóa device sau nhiều event nghi vấn cao', async () => {
+  const token = await authToken();
+  const deviceUuid = `quarantine-${Date.now()}`;
+  const start = await agent.post('/api/activity/session/start')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ deviceUuid, deviceName: deviceUuid, platform: 'macos' });
+  assert.equal(start.status, 201, start.text);
+
+  let lastBatch = null;
+  for (let sequence = 1; sequence <= 5; sequence += 1) {
+    const payload = signedPayload(start.body.deviceSecret, {
+      deviceUuid,
+      deviceName: deviceUuid,
+      platform: 'macos',
+      deviceSecret: start.body.deviceSecret,
+      sessionId: start.body.session.id,
+      events: [{
+        timestamp: new Date().toISOString(),
+        activeSeconds: 10,
+        idleSeconds: 0,
+        keystrokeCount: 0,
+        mouseClickCount: 500,
+        mouseMoveCount: 0,
+        sequence,
+      }],
+    });
+    lastBatch = await agent.post('/api/activity/batch').set('Authorization', `Bearer ${token}`).send(payload);
+    assert.equal(lastBatch.status, 201, lastBatch.text);
+    assert.equal(lastBatch.body.flaggedCount, 1);
+  }
+
+  assert.equal(lastBatch.body.quarantine.quarantined, true);
+  assert.equal(lastBatch.body.quarantine.flaggedEventsInWindow, 5);
+
+  const rejected = await agent.post('/api/activity/batch').set('Authorization', `Bearer ${token}`).send(signedPayload(start.body.deviceSecret, {
+    deviceUuid,
+    deviceName: deviceUuid,
+    platform: 'macos',
+    deviceSecret: start.body.deviceSecret,
+    sessionId: start.body.session.id,
+    events: [{ timestamp: new Date().toISOString(), activeSeconds: 1, idleSeconds: 0, keystrokeCount: 1, mouseClickCount: 1, mouseMoveCount: 1, sequence: 6 }],
+  }));
+  assert.equal(rejected.status, 403, rejected.text);
+  assert.equal(rejected.body.message, 'Device revoked');
+});
+
 test('level endpoint trả đủ mốc 0-50 theo tổng gõ và click', async () => {
   const token = await authToken();
   const user = await User.findOne({ where: { email } });

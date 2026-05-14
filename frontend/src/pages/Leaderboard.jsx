@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { leaderboard as leaderboardApi, groups as groupsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ArrowRight, ChevronLeft, ChevronRight, Globe2, Search, Trophy, Users } from 'lucide-react';
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' },
@@ -43,7 +44,13 @@ function Avatar({name,size=36,idx=0}) {
 }
 
 const PAGE_SIZE = 10;
-let globalLeaderboardCache = [];
+
+function localDateKey(value = new Date()) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function Leaderboard() {
   const navigate = useNavigate();
@@ -54,21 +61,26 @@ export default function Leaderboard() {
 
   const [activeTab, setActiveTab] = useState(initialGroupId ? 'group' : 'global');
   const [range, setRange]   = useState('today');
-  const [users, setUsers]   = useState(globalLeaderboardCache);
+  const [users, setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);
   const [now, setNow]       = useState(new Date());
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
+  const requestIdRef = useRef(0);
 
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
 
-  // Sync cache
   useEffect(() => {
-    globalLeaderboardCache = users;
-  }, [users]);
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   // Fetch groups for the dropdown
   useEffect(() => {
@@ -85,6 +97,9 @@ export default function Leaderboard() {
   }, [activeTab]);
 
   const fetchData = async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setUsers([]);
     setLoading(true);
     try {
       let res;
@@ -94,31 +109,14 @@ export default function Leaderboard() {
         res = await leaderboardApi.group(selectedGroupId, range);
       }
       if (res) {
-        const fetchedData = res.data || [];
-        setUsers(prevUsers => {
-          const fetchedMap = new Map(fetchedData.map(u => [String(u.user_id || u.id), u]));
-          const prevMap = new Map(prevUsers.map(u => [String(u.user_id || u.id), u]));
-          
-          const allUserIds = new Set([...fetchedMap.keys(), ...prevMap.keys()]);
-          return Array.from(allUserIds).map(id => {
-            const u = fetchedMap.get(id) || {};
-            const existing = prevMap.get(id);
-            
-            if (!existing) return u;
-            if (!fetchedMap.has(id)) return existing;
-            
-            return {
-              ...u,
-              keystrokeCount: Math.max(Number(existing.keystrokeCount || 0), Number(u.keystrokeCount || 0)),
-              mouseClickCount: Math.max(Number(existing.mouseClickCount || 0), Number(u.mouseClickCount || 0)),
-              score: Math.max(Number(existing.score || 0), Number(u.score || 0)),
-            };
-          });
-        });
+        if (requestId !== requestIdRef.current) return;
+        setUsers(res.data || []);
         setPage(1);
       }
-    } catch (err) { console.error(err); }
-    setLoading(false);
+    } catch (err) {
+      if (requestId === requestIdRef.current) console.error(err);
+    }
+    if (requestId === requestIdRef.current) setLoading(false);
   };
 
   useEffect(() => {
@@ -128,7 +126,17 @@ export default function Leaderboard() {
   // Real-time socket listener
   useEffect(() => {
     if (!socket) return;
+    const eventBelongsToCurrentView = (data = {}) => {
+      if (range === 'today' && data.statDate && data.statDate !== localDateKey()) return false;
+      if (activeTab === 'group') {
+        if (!selectedGroupId) return false;
+        return String(data.teamId || '') === String(selectedGroupId);
+      }
+      return true;
+    };
+
     const handleActivity = (data) => {
+      if (!eventBelongsToCurrentView(data)) return;
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
         const totals = data.totals || null;
@@ -170,6 +178,7 @@ export default function Leaderboard() {
       });
     };
     const handleStatus = (data) => {
+      if (activeTab === 'group' && selectedGroupId && data.teamId && String(data.teamId) !== String(selectedGroupId)) return;
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
         const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
@@ -191,7 +200,7 @@ export default function Leaderboard() {
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
     };
-  }, [socket]);
+  }, [socket, activeTab, selectedGroupId, range]);
 
   const top1 = users[0], top2 = users[1], top3 = users[2];
   const filtered = users.filter(u=>(u.name||'').toLowerCase().includes(search.toLowerCase()));
@@ -207,7 +216,7 @@ export default function Leaderboard() {
   };
 
   return (
-    <div style={{fontFamily:"'Space Grotesk',system-ui,sans-serif",maxWidth:1100,margin:'0 auto'}}>
+    <div className="leaderboard-page" style={{fontFamily:"'Space Grotesk',system-ui,sans-serif",maxWidth:1100,margin:'0 auto'}}>
       
       {/* ── HEADER ── */}
       <div style={{marginBottom:28}}>
@@ -215,26 +224,28 @@ export default function Leaderboard() {
           <div>
             <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'3px 10px',borderRadius:4,background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.25)',marginBottom:12}}>
               <div style={{width:5,height:5,borderRadius:'50%',background:'#3b82f6'}}/>
-              <span style={{fontSize:10,fontWeight:800,color:'#3b82f6',letterSpacing:'0.1em'}}>RANKING SYSTEM</span>
+              <span style={{fontSize:10,fontWeight:800,color:'#3b82f6',letterSpacing:'0.1em'}}>HỆ THỐNG XẾP HẠNG</span>
             </div>
             <h1 style={{fontSize:32,fontWeight:900,margin:'0 0 6px',letterSpacing:'-0.8px',lineHeight:1}}>
               Bảng Xếp Hạng <span style={{color:'#3b82f6',fontStyle:'italic'}}>{activeTab === 'global' ? 'Toàn Cầu' : 'Nhóm'}</span>
             </h1>
           </div>
 
-          <div style={{display: 'flex', gap: 20, alignItems: 'center'}}>
+          <div className="leaderboard-controls" style={{display: 'flex', gap: 20, alignItems: 'center'}}>
             {/* Tab Switcher */}
             <div style={{display:'flex',background:'rgba(15,23,42,0.04)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:6,padding:3,gap:2}}>
               <button onClick={() => setActiveTab('global')} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='global'?'#2563eb':'transparent',
                 color:activeTab==='global'?'#fff':'#64748b',transition:'all .15s',
-              }}>🌍 Toàn Cầu</button>
+                display:'flex',alignItems:'center',gap:6,
+              }}><Globe2 size={14} /> Toàn Cầu</button>
               <button onClick={() => setActiveTab('group')} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='group'?'#2563eb':'transparent',
                 color:activeTab==='group'?'#fff':'#64748b',transition:'all .15s',
-              }}>👥 Nhóm</button>
+                display:'flex',alignItems:'center',gap:6,
+              }}><Users size={14} /> Nhóm</button>
             </div>
 
             {/* Time Range Filter */}
@@ -253,7 +264,7 @@ export default function Leaderboard() {
       </div>
 
       {activeTab === 'group' && (
-        <div style={{...CARD, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16}}>
+        <div className="leaderboard-group-filter" style={{...CARD, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16}}>
           <span style={{fontSize: 13, fontWeight: 700, color: '#64748b'}}>CHỌN NHÓM:</span>
           {myGroups.length > 0 ? (
             <select 
@@ -268,18 +279,18 @@ export default function Leaderboard() {
               {myGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           ) : (
-            <div style={{fontSize: 13, color: '#64748b'}}>Bạn chưa tham gia nhóm nào. <span onClick={() => navigate('/groups')} style={{color: '#3b82f6', cursor: 'pointer', fontWeight: 700}}>Đến trang Nhóm →</span></div>
+            <div style={{fontSize: 13, color: '#64748b'}}>Bạn chưa tham gia nhóm nào. <span onClick={() => navigate('/groups')} style={{display:'inline-flex',alignItems:'center',gap:4,color: '#3b82f6', cursor: 'pointer', fontWeight: 700}}>Đến trang Nhóm <ArrowRight size={13} /></span></div>
           )}
         </div>
       )}
 
       {/* ── TREND BAR ── */}
-      <div style={{...CARD,padding:'12px 20px',marginBottom:20,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div className="leaderboard-trend" style={{...CARD,padding:'12px 20px',marginBottom:20,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <div style={{width:7,height:7,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 8px #22c55e88'}}/>
           <span style={{fontSize:11,fontWeight:700,color:'#22c55e',textTransform:'uppercase',letterSpacing:'0.08em'}}>Xu Hướng Hoạt Động</span>
           <span style={{fontSize:11,color:'#64748b',marginLeft:6}}>
-            AVG ACTIVITY SCORE: <span style={{color:'#0f172a',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{Number(avgScore).toLocaleString()} PTS</span>
+            ĐIỂM HOẠT ĐỘNG TB: <span style={{color:'#0f172a',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{Number(avgScore).toLocaleString()} điểm</span>
           </span>
         </div>
         <div style={{fontSize:11,color:'#64748b',fontWeight:600}}>
@@ -289,10 +300,10 @@ export default function Leaderboard() {
 
       {/* ── PODIUM ── */}
       {!loading && users.length >= 1 && (
-        <div style={{...CARD,padding:'28px 24px',marginBottom:20,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'end'}}>
+        <div className="leaderboard-podium" style={{...CARD,padding:'28px 24px',marginBottom:20,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'end'}}>
           <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,height:200}}>
             {top2 && (
-              <div onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
                   <Avatar name={top2.name} size={44} idx={1}/>
                   <div style={{position:'absolute',bottom:-6,right:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
@@ -303,8 +314,8 @@ export default function Leaderboard() {
               </div>
             )}
             {top1 && (
-              <div onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
-                <div style={{fontSize:18}}>🏆</div>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
+                <Trophy size={18} color="#f59e0b" fill="#f59e0b" />
                 <div style={{position:'relative'}}>
                   <Avatar name={top1.name} size={52} idx={0}/>
                   <div style={{position:'absolute',bottom:-6,right:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
@@ -315,7 +326,7 @@ export default function Leaderboard() {
               </div>
             )}
             {top3 && (
-              <div onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top3.user_id}`); } }} onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
                   <Avatar name={top3.name} size={40} idx={2}/>
                   <div style={{position:'absolute',bottom:-6,right:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
@@ -331,7 +342,7 @@ export default function Leaderboard() {
             {users.slice(3, 8).map((u,i)=>{
               const rank=i+4;
               return (
-                <div key={u.user_id} onClick={()=>navigate(`/users/${u.user_id}`)}
+                <div key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)}
                   style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(15,23,42,0.03)',borderRadius:5,border:'1px solid rgba(15,23,42,0.08)',cursor:'pointer',transition:'background .15s'}}
                 >
                   <div style={{width:22,height:22,borderRadius:4,background:'rgba(15,23,42,0.06)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#64748b',flexShrink:0}}>{rank}</div>
@@ -346,49 +357,58 @@ export default function Leaderboard() {
       )}
 
       {/* ── BOTTOM TABLE ── */}
-      <div style={{...CARD,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+      <div className="leaderboard-table-card" style={{...CARD,overflow:'hidden',display:'flex',flexDirection:'column'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <span style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em'}}>Danh Sách Thứ Hạng</span>
           </div>
           <div style={{position:'relative'}}>
-            <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}} placeholder="Tìm kiếm..."
-              style={{background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:5,padding:'7px 12px',fontSize:12,color:'#1e293b',outline:'none',width:180}}
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+            <input
+              aria-label="Tìm kiếm người dùng"
+              value={searchInput}
+              onChange={e=>setSearchInput(e.target.value)}
+              placeholder="Tìm người dùng..."
+              style={{background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:5,padding:'7px 12px 7px 30px',fontSize:12,color:'#1e293b',outline:'none',width:200}}
             />
           </div>
         </div>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
-          <thead>
-            <tr style={{borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
-              {['Hạng','Thành Viên','Gõ Phím','Click','Tổng Điểm'].map(h=>(
-                <th key={h} style={{padding:'10px 18px',textAlign:h==='Hạng'?'left':'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={5} style={{padding:'52px',textAlign:'center',color:'#94a3b8'}}>Đang tải...</td></tr>
-            ) : paginated.map((u,i)=>{
-              const rank = (page-1)*PAGE_SIZE + i + 1;
-              const sc = Number(u.score||0);
-              return (
-                <tr key={u.user_id} onClick={()=>navigate(`/users/${u.user_id}`)} style={{borderBottom:'1px solid rgba(15,23,42,0.04)',cursor:'pointer'}}>
-                  <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#64748b'}}>{rank}</div></td>
-                  <td style={{padding:'12px 18px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><Avatar name={u.name} size={30} idx={rank-1}/><div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{u.name}</div></div></td>
-                  <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:'#1e293b'}}>{fmtNum(u.keystrokeCount)}</div></td>
-                  <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,color:'#64748b'}}>{fmtNum(u.mouseClickCount)}</div></td>
-                  <td style={{padding:'12px 18px',textAlign:'right'}}><span style={{fontSize:15,fontWeight:900,color:'#3b82f6'}}>{fmtScore(sc)}</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="leaderboard-table-scroll">
+          <table style={{width:'100%',minWidth:720,borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
+                {['Hạng','Thành Viên','Gõ Phím','Click','Tổng Điểm'].map(h=>(
+                  <th key={h} style={{padding:'10px 18px',textAlign:h==='Hạng'?'left':'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} style={{padding:'52px',textAlign:'center',color:'#94a3b8'}}>Đang tải...</td></tr>
+              ) : paginated.length === 0 ? (
+                <tr><td colSpan={5} style={{padding:'52px',textAlign:'center',color:'#94a3b8'}}>Không có người dùng phù hợp</td></tr>
+              ) : paginated.map((u,i)=>{
+                const rank = (page-1)*PAGE_SIZE + i + 1;
+                const sc = Number(u.score||0);
+                return (
+                  <tr key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)} style={{borderBottom:'1px solid rgba(15,23,42,0.04)',cursor:'pointer'}}>
+                    <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#64748b'}}>{rank}</div></td>
+                    <td style={{padding:'12px 18px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><Avatar name={u.name} size={30} idx={rank-1}/><div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{u.name}</div></div></td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:'#1e293b'}}>{fmtNum(u.keystrokeCount)}</div></td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,color:'#64748b'}}>{fmtNum(u.mouseClickCount)}</div></td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><span style={{fontSize:15,fontWeight:900,color:'#3b82f6'}}>{fmtScore(sc)}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         {/* Pagination */}
         <div style={{padding:'12px 18px',borderTop:'1px solid rgba(15,23,42,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:12,color:'#64748b'}}>Trang {page} / {totalPages}</span>
           <div style={{display:'flex',gap:8}}>
-            <button disabled={page<=1} onClick={()=>setPage(p=>p-1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:'pointer'}}>←</button>
-            <button disabled={page>=totalPages} onClick={()=>setPage(p=>p+1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:'pointer'}}>→</button>
+            <button aria-label="Trang trước" disabled={page<=1} onClick={()=>setPage(p=>p-1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:'pointer',display:'flex',alignItems:'center'}}><ChevronLeft size={15} /></button>
+            <button aria-label="Trang sau" disabled={page>=totalPages} onClick={()=>setPage(p=>p+1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:'pointer',display:'flex',alignItems:'center'}}><ChevronRight size={15} /></button>
           </div>
         </div>
       </div>

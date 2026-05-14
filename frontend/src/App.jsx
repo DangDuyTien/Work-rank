@@ -2,7 +2,9 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TrackingProvider } from './context/TrackingContext';
+import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
+import { Construction } from 'lucide-react';
 
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -30,9 +32,9 @@ const AdminRoute = ({ children }) => {
 // Placeholder pages for sidebar nav items
 const ComingSoon = ({ title }) => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
-    <div style={{ fontSize: 48 }}>🚧</div>
+    <Construction size={48} color="#f59e0b" />
     <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{title}</h2>
-    <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>Coming soon — under construction</p>
+    <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>Chức năng đang được hoàn thiện</p>
   </div>
 );
 
@@ -45,33 +47,35 @@ const PageFallback = () => (
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TrackingProvider>
-                    <Layout />
-                  </TrackingProvider>
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="tracker" element={<Tracker />} />
-              <Route path="leaderboard" element={<Leaderboard />} />
-              <Route path="groups" element={<Groups />} />
-              <Route path="performance" element={<ComingSoon title="Performance Analytics" />} />
+      <UiProvider>
+        <AuthProvider>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <TrackingProvider>
+                      <Layout />
+                    </TrackingProvider>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="tracker" element={<Tracker />} />
+                <Route path="leaderboard" element={<Leaderboard />} />
+                <Route path="groups" element={<Groups />} />
+              <Route path="performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
               <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
-              <Route path="settings" element={<ComingSoon title="Settings" />} />
-              <Route path="users/:id" element={<UserDetail />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </AuthProvider>
+              <Route path="settings" element={<ComingSoon title="Cài Đặt" />} />
+                <Route path="users/:id" element={<UserDetail />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </AuthProvider>
+      </UiProvider>
     </BrowserRouter>
   );
 }
