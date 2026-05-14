@@ -13,24 +13,24 @@ export default function UserRow({ user, formatDuration, showRank }) {
   const status = user.status || 'offline';
 
   return (
-    <tr className="border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer" onClick={() => navigate(`/users/${user.user_id}`)}>
+    <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50" onClick={() => navigate(`/users/${user.user_id}`)}>
       <td className="px-6 py-4 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-bold">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
           {user.name?.charAt(0).toUpperCase()}
         </div>
-        <span className="font-medium">{user.name}</span>
+        <span className="font-medium text-slate-900">{user.name}</span>
       </td>
       <td className="px-6 py-4">
         <span className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${statusColors[status]}`} />
-          <span className="text-sm capitalize">{status}</span>
+          <span className="text-sm capitalize text-slate-600">{status}</span>
         </span>
       </td>
-      <td className="px-6 py-4 text-right font-mono">{Number(user.keystrokes || user.total_keystrokes || 0).toLocaleString()}</td>
-      <td className="px-6 py-4 text-right font-mono">{Number(user.mouse_clicks || user.total_mouse_clicks || 0).toLocaleString()}</td>
-      <td className="px-6 py-4 text-right font-mono">{formatDuration(user.active_seconds || user.total_active_seconds || 0)}</td>
+      <td className="px-6 py-4 text-right font-mono text-slate-800">{Number(user.keystrokes || user.total_keystrokes || 0).toLocaleString()}</td>
+      <td className="px-6 py-4 text-right font-mono text-slate-800">{Number(user.mouse_clicks || user.total_mouse_clicks || 0).toLocaleString()}</td>
+      <td className="px-6 py-4 text-right font-mono text-slate-800">{formatDuration(user.active_seconds || user.total_active_seconds || 0)}</td>
       <td className="px-6 py-4 text-right">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600/20 text-primary-400 font-bold">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 font-bold text-blue-700">
           {user.score || 0}
         </span>
       </td>

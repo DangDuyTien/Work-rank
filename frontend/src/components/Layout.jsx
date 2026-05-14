@@ -79,28 +79,30 @@ export default function Layout() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      height: '100vh', background: '#0d1117',
-      color: '#e6edf3',
+      height: '100vh', background: '#f8fafc',
+      color: '#0f172a',
       fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
       overflow: 'hidden',
     }}>
       <style>{`
         @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
         @keyframes slide-down { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        .top-nav-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* ─── TOP NAVBAR ─── */}
       <header style={{
         height: 52, flexShrink: 0,
-        background: '#0d1117',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        background: '#ffffff',
+        borderBottom: '1px solid rgba(15,23,42,0.08)',
         display: 'flex', alignItems: 'center',
         padding: '0 24px', gap: 0,
         position: 'relative', zIndex: 100,
+        overflow: 'hidden',
       }}>
 
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 32, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
           <div style={{
             width: 26, height: 26, borderRadius: 5,
             background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
@@ -111,7 +113,7 @@ export default function Layout() {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkRank</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkRank</div>
           </div>
         </div>
 
@@ -119,12 +121,27 @@ export default function Layout() {
         <div style={{
           fontSize: 13, fontWeight: 700, color: '#3b82f6',
           marginRight: 24, letterSpacing: '-0.2px', flexShrink: 0,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          maxWidth: 170,
         }}>
           {pageTitle}
         </div>
 
         {/* Nav Links */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+        <nav
+          className="top-nav-scroll"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flex: 1,
+            minWidth: 0,
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {NAV_LINKS.filter(link => !link.adminOnly || isAdmin).map(({ to, label }) => {
             const active = location.pathname === to || location.pathname.startsWith(to + '/');
             return (
@@ -134,15 +151,20 @@ export default function Layout() {
                 style={{
                   padding: '6px 14px',
                   fontSize: 13, fontWeight: active ? 700 : 500,
-                  color: active ? '#fff' : '#6b7280',
+                  color: active ? '#2563eb' : '#64748b',
                   textDecoration: 'none',
                   borderRadius: 5,
-                  background: 'transparent',
+                  background: active ? 'rgba(37,99,235,0.08)' : 'transparent',
                   position: 'relative',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  flex: '0 0 auto',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1,
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#d1d5db'; }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#6b7280'; }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#475569'; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#64748b'; }}
               >
                 {label}
                 {/* Active underline */}
@@ -161,12 +183,18 @@ export default function Layout() {
             style={({ isActive }) => ({
               padding: '6px 14px',
               fontSize: 13, fontWeight: isActive ? 700 : 500,
-              color: location.pathname.startsWith('/users') ? '#fff' : '#6b7280',
+              color: location.pathname.startsWith('/users') ? '#2563eb' : '#64748b',
               textDecoration: 'none', borderRadius: 5,
+              background: location.pathname.startsWith('/users') ? 'rgba(37,99,235,0.08)' : 'transparent',
+              display: 'inline-flex',
+              alignItems: 'center',
+              flex: '0 0 auto',
+              whiteSpace: 'nowrap',
+              lineHeight: 1,
               position: 'relative', transition: 'color 0.15s',
             })}
-            onMouseEnter={e => { if (!location.pathname.startsWith('/users')) e.currentTarget.style.color = '#d1d5db'; }}
-            onMouseLeave={e => { if (!location.pathname.startsWith('/users')) e.currentTarget.style.color = '#6b7280'; }}
+            onMouseEnter={e => { if (!location.pathname.startsWith('/users')) e.currentTarget.style.color = '#475569'; }}
+            onMouseLeave={e => { if (!location.pathname.startsWith('/users')) e.currentTarget.style.color = '#64748b'; }}
           >
             Hồ Sơ Người Dùng
             {location.pathname.startsWith('/users') && (
@@ -176,7 +204,7 @@ export default function Layout() {
         </nav>
 
         {/* Right side actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
 
           {/* Tracking status pill */}
           {tracking && (
@@ -189,6 +217,7 @@ export default function Layout() {
                 border: '1px solid rgba(34,197,94,0.3)',
                 cursor: 'pointer', transition: 'background 0.15s',
                 marginRight: 6,
+                flexShrink: 0,
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(34,197,94,0.18)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(34,197,94,0.1)'}
@@ -213,6 +242,8 @@ export default function Layout() {
                 boxShadow: '0 2px 10px rgba(59,130,246,0.3)',
                 transition: 'all 0.2s',
                 marginRight: 6,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(59,130,246,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(59,130,246,0.3)'; e.currentTarget.style.transform = 'none'; }}
@@ -222,17 +253,17 @@ export default function Layout() {
           )}
 
           {/* Bell */}
-          <button style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', borderRadius: 5, transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.background = 'none'; }}
+          <button style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 5, transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.background = 'rgba(15,23,42,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'none'; }}
           ><BellIcon /></button>
 
           {/* Settings */}
           <button
             onClick={() => navigate('/settings')}
-            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', borderRadius: 5, transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.background = 'none'; }}
+            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 5, transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.background = 'rgba(15,23,42,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'none'; }}
           ><GearIcon /></button>
 
           {/* Avatar + Dropdown */}
@@ -254,26 +285,26 @@ export default function Layout() {
             {dropOpen && (
               <div style={{
                 position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                width: 180, background: '#161b27',
-                border: '1px solid rgba(255,255,255,0.1)',
+                width: 180, background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
                 borderRadius: 6, overflow: 'hidden',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+                boxShadow: '0 16px 40px rgba(15,23,42,0.18)',
                 animation: 'slide-down 0.15s ease',
                 zIndex: 200,
               }}>
                 {tracking && (
                   <button
                     onClick={() => { stopTrack(); setDropOpen(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', borderBottom: '1px solid rgba(15,23,42,0.08)', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                   >■ Dừng Theo Dõi</button>
                 )}
                 <button
                   onClick={handleLogout}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.background = 'none'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'none'; }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                   Đăng xuất
@@ -298,18 +329,18 @@ export default function Layout() {
 
         {/* Footer */}
         <footer style={{
-          borderTop: '1px solid rgba(255,255,255,0.05)',
+          borderTop: '1px solid rgba(15,23,42,0.06)',
           padding: '10px 36px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          fontSize: 11, color: '#374151',
-          background: '#0d1117', flexShrink: 0,
+          fontSize: 11, color: '#94a3b8',
+          background: '#ffffff', flexShrink: 0,
         }}>
           <span>© 2024 WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
           <div style={{ display: 'flex', gap: 20 }}>
             {['Chính sách bảo mật', 'Điều khoản dịch vụ', 'Tài liệu API'].map(t => (
               <span key={t} style={{ cursor: 'pointer', transition: 'color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.color = '#9ca3af'}
-                onMouseLeave={e => e.currentTarget.style.color = '#374151'}
+                onMouseEnter={e => e.currentTarget.style.color = '#475569'}
+                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
               >{t}</span>
             ))}
           </div>

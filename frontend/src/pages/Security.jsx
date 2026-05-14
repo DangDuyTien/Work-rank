@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { security } from '../services/api';
 
-const card = { background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 18 };
-const muted = { color: '#6b7280', fontSize: 12, fontWeight: 600 };
-const value = { color: '#f8fafc', fontSize: 28, fontWeight: 800, marginTop: 8 };
+const card = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', borderRadius: 10, padding: 18 };
+const muted = { color: '#64748b', fontSize: 12, fontWeight: 600 };
+const value = { color: '#0f172a', fontSize: 28, fontWeight: 800, marginTop: 8 };
 
 function FlagList({ flags = {} }) {
   const rows = Object.entries(flags).sort((a, b) => b[1] - a[1]);
   if (!rows.length) return <div style={muted}>Không có flag nghi vấn.</div>;
   return rows.map(([flag, count]) => (
-    <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-      <span style={{ color: '#d1d5db', fontSize: 13 }}>{flag}</span>
+    <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+      <span style={{ color: '#475569', fontSize: 13 }}>{flag}</span>
       <span style={{ color: '#f87171', fontWeight: 800 }}>{count}</span>
     </div>
   ));
@@ -44,13 +44,13 @@ export default function Security() {
     await load();
   };
 
-  if (loading) return <div style={{ color: '#94a3b8' }}>Đang tải security dashboard...</div>;
+  if (loading) return <div style={{ color: '#64748b' }}>Đang tải security dashboard...</div>;
   if (error) return <div style={{ color: '#f87171' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div>
-        <h1 style={{ margin: 0, fontSize: 26, color: '#f8fafc' }}>Security & Anti-cheat</h1>
+        <h1 style={{ margin: 0, fontSize: 26, color: '#0f172a' }}>Security & Anti-cheat</h1>
         <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: 14 }}>Theo dõi anomaly, device secret, revoke/restore thiết bị nghi vấn.</p>
       </div>
 
@@ -63,12 +63,12 @@ export default function Security() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14 }}>
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#e5e7eb', fontSize: 16 }}>Flag breakdown</h2>
+          <h2 style={{ margin: '0 0 12px', color: '#1e293b', fontSize: 16 }}>Flag breakdown</h2>
           <FlagList flags={anomalies.flagCounts} />
         </div>
 
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#e5e7eb', fontSize: 16 }}>Device management</h2>
+          <h2 style={{ margin: '0 0 12px', color: '#1e293b', fontSize: 16 }}>Device management</h2>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -82,10 +82,10 @@ export default function Security() {
               </thead>
               <tbody>
                 {devices.map((device) => (
-                  <tr key={device.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <td style={{ padding: '10px 8px', color: '#e5e7eb' }}>{device.deviceName}<div style={{ color: '#64748b', fontSize: 11 }}>{device.deviceUuid}</div></td>
-                    <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>{device.User?.email || '—'}</td>
-                    <td style={{ padding: '10px 8px', color: '#94a3b8' }}>{device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleString() : '—'}</td>
+                  <tr key={device.id} style={{ borderTop: '1px solid rgba(15,23,42,0.08)' }}>
+                    <td style={{ padding: '10px 8px', color: '#1e293b' }}>{device.deviceName}<div style={{ color: '#64748b', fontSize: 11 }}>{device.deviceUuid}</div></td>
+                    <td style={{ padding: '10px 8px', color: '#334155' }}>{device.User?.email || '—'}</td>
+                    <td style={{ padding: '10px 8px', color: '#64748b' }}>{device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleString() : '—'}</td>
                     <td style={{ padding: '10px 8px' }}><span style={{ color: device.revokedAt ? '#f87171' : '#22c55e', fontWeight: 800 }}>{device.revokedAt ? 'Revoked' : 'Active'}</span></td>
                     <td style={{ padding: '10px 8px', textAlign: 'right' }}>
                       <button onClick={() => toggleDevice(device)} style={{ background: device.revokedAt ? '#16a34a' : '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 10px', cursor: 'pointer', fontWeight: 800 }}>

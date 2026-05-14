@@ -10,8 +10,8 @@ export default function StatsCard({ label, value, color }) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-      <p className="text-sm text-gray-400 mb-1">{label}</p>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm">
+      <p className="mb-1 text-sm font-medium text-slate-500">{label}</p>
       <p className="text-3xl font-bold">{value}</p>
       <div className={`h-1 mt-4 rounded-full bg-gradient-to-r ${colors[color] || colors.blue}`} />
     </div>

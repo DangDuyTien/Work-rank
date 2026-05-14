@@ -7,11 +7,11 @@ import { useAuth } from '../context/AuthContext';
 const S = {
   page: {
     minHeight: '100vh', display: 'flex', alignItems: 'stretch',
-    background: '#0d1117', fontFamily: "'Space Grotesk', system-ui, sans-serif",
+    background: '#f8fafc', fontFamily: "'Space Grotesk', system-ui, sans-serif",
   },
   left: {
-    width: 420, flexShrink: 0, background: '#0a0f1a',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
+    width: 420, flexShrink: 0, background: 'linear-gradient(180deg,#eff6ff 0%,#ffffff 100%)',
+    borderRight: '1px solid rgba(15,23,42,0.08)',
     display: 'flex', flexDirection: 'column',
     padding: '48px 40px', justifyContent: 'space-between',
   },
@@ -20,13 +20,13 @@ const S = {
     padding: '48px 60px',
   },
   formWrap: { width: '100%', maxWidth: 400 },
-  label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280',
+  label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b',
     textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 },
   input: {
-    width: '100%', background: '#111827',
-    border: '1px solid rgba(255,255,255,0.1)',
+    width: '100%', background: '#ffffff',
+    border: '1px solid rgba(15,23,42,0.12)',
     borderRadius: 6, padding: '12px 14px',
-    color: '#f1f5f9', fontSize: 14, fontWeight: 500,
+    color: '#0f172a', fontSize: 14, fontWeight: 500,
     fontFamily: "'Space Grotesk', system-ui, sans-serif",
     outline: 'none', boxSizing: 'border-box',
     transition: 'border-color 0.2s',
@@ -41,7 +41,7 @@ const S = {
   err: {
     background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
     borderRadius: 6, padding: '10px 14px', fontSize: 13,
-    color: '#f87171', marginBottom: 20,
+    color: '#dc2626', marginBottom: 20,
   },
 };
 
@@ -102,13 +102,13 @@ export default function Login() {
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>WorkRank</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>WorkRank</span>
           </div>
 
-          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', lineHeight: 1.3, margin: '0 0 14px', letterSpacing: '-0.5px' }}>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, margin: '0 0 14px', letterSpacing: '-0.5px' }}>
             Giám Sát<br />Hiệu Suất<br />Thời Gian Thực
           </h2>
-          <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
             Theo dõi gõ phím, click chuột và thời gian hoạt động của cả nhóm — trực tiếp.
           </p>
         </div>
@@ -119,15 +119,15 @@ export default function Login() {
             <div key={s.u} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 3, height: 32, background: '#3b82f6', borderRadius: 2, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.4px' }}>{s.v}</div>
-                <div style={{ fontSize: 11, color: '#4b5563', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.u}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>{s.v}</div>
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.u}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>
+        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
           © 2024 WorkRank Realtime. High-Performance Monitoring.
         </div>
       </div>
@@ -136,10 +136,10 @@ export default function Login() {
       <div style={S.right}>
         <div style={S.formWrap}>
           <div style={{ marginBottom: 36 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
               {isRegister ? 'Tạo Tài Khoản' : 'Truy Cập An Toàn'}
             </h1>
-            <p style={{ fontSize: 14, color: '#4b5563', margin: 0, fontWeight: 500 }}>
+            <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontWeight: 500 }}>
               {isRegister
                 ? 'Thiết lập tài khoản WorkRank của bạn.'
                 : 'Nhập thông tin đăng nhập để vào bảng điều khiển.'}
@@ -158,7 +158,7 @@ export default function Login() {
                   placeholder="John Doe"
                   onChange={e => setName(e.target.value)}
                   onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
                 />
               </div>
             )}
@@ -170,7 +170,7 @@ export default function Login() {
                 placeholder="user@company.com"
                 onChange={e => setEmail(e.target.value)}
                 onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
               />
             </div>
             <div style={{ marginBottom: 24 }}>
@@ -188,7 +188,7 @@ export default function Login() {
                 placeholder="••••••••"
                 onChange={e => setPassword(e.target.value)}
                 onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
               />
             </div>
 
@@ -203,9 +203,9 @@ export default function Login() {
             </button>
           </form>
 
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '24px 0' }} />
+          <div style={{ height: 1, background: 'rgba(15,23,42,0.08)', margin: '24px 0' }} />
 
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#4b5563', margin: 0 }}>
+          <p style={{ textAlign: 'center', fontSize: 13, color: '#64748b', margin: 0 }}>
             {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
             <button
               onClick={() => setIsRegister(!isRegister)}
@@ -216,11 +216,11 @@ export default function Login() {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 28 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            <span style={{ fontSize: 11, color: '#374151', fontWeight: 600, letterSpacing: '0.04em' }}>KẾT NỐI BẢO MẬT</span>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>KẾT NỐI BẢO MẬT</span>
           </div>
         </div>
       </div>

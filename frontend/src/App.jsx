@@ -31,13 +31,13 @@ const AdminRoute = ({ children }) => {
 const ComingSoon = ({ title }) => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
     <div style={{ fontSize: 48 }}>🚧</div>
-    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#e2e8f0', margin: 0 }}>{title}</h2>
-    <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Coming soon — under construction</p>
+    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{title}</h2>
+    <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>Coming soon — under construction</p>
   </div>
 );
 
 const PageFallback = () => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#4b5563', fontSize: 14 }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#64748b', fontSize: 14 }}>
     Đang tải...
   </div>
 );

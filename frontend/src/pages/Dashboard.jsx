@@ -38,7 +38,7 @@ const STATUS_CONFIG = {
   active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.4)', color: '#22c55e', dot: '#22c55e' },
   online: { label: 'Trực tuyến', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.4)', color: '#60a5fa', dot: '#60a5fa' },
   idle:   { label: 'Không hoạt động', bg: 'rgba(234,179,8,0.1)', border: 'rgba(234,179,8,0.4)', color: '#eab308', dot: '#eab308' },
-  offline:{ label: 'Ngoại tuyến', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.3)', color: '#6b7280', dot: '#6b7280' },
+  offline:{ label: 'Ngoại tuyến', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.3)', color: '#64748b', dot: '#64748b' },
 };
 
 const RANGES = [
@@ -228,8 +228,8 @@ export default function Dashboard() {
 
   const buildSub = (current, prev) => {
     const pct = calcChange(current, prev);
-    if (pct === null) return { text: '— chưa có dữ liệu so sánh', color: '#6b7280', icon: null };
-    if (pct === 0) return { text: `— ổn định so với ${rangeLabel}`, color: '#6b7280', icon: null };
+    if (pct === null) return { text: '— chưa có dữ liệu so sánh', color: '#64748b', icon: null };
+    if (pct === 0) return { text: `— ổn định so với ${rangeLabel}`, color: '#64748b', icon: null };
     if (pct > 0) return { text: `+${pct}% so với ${rangeLabel}`, color: '#22c55e', icon: 'up' };
     return { text: `${pct}% so với ${rangeLabel}`, color: '#ef4444', icon: 'down' };
   };
@@ -249,15 +249,15 @@ export default function Dashboard() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>Tổng Quan</h1>
-          <p style={{ fontSize: 12, color: '#6b7280', margin: '3px 0 0', fontWeight: 500 }}>
+          <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0', fontWeight: 500 }}>
             Hoạt động thời gian thực của toàn bộ nhóm
           </p>
         </div>
 
         <div style={{
           display: 'flex',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(15,23,42,0.04)',
+          border: '1px solid rgba(15,23,42,0.08)',
           borderRadius: 6,
           padding: 3,
           gap: 2,
@@ -274,7 +274,7 @@ export default function Dashboard() {
                 fontSize: 12,
                 fontWeight: 600,
                 background: range === key ? '#3b82f6' : 'transparent',
-                color: range === key ? '#fff' : '#6b7280',
+                color: range === key ? '#fff' : '#64748b',
                 transition: 'all 0.15s ease',
                 boxShadow: range === key ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
               }}
@@ -288,17 +288,17 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
         {STAT_CARDS.map((card, i) => (
           <div key={i} style={{
-            background: '#161b27',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: '#ffffff',
+            border: '1px solid rgba(15,23,42,0.08)',
             borderRadius: 6,
             padding: '20px 22px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{card.label}</span>
-              <span style={{ color: '#374151' }}><card.icon /></span>
+              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{card.label}</span>
+              <span style={{ color: '#94a3b8' }}><card.icon /></span>
             </div>
-            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.8px', color: '#f9fafb', lineHeight: 1 }}>
-              {loading ? <span style={{ color: '#1f2937' }}>—</span> : card.value}
+            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.8px', color: '#0f172a', lineHeight: 1 }}>
+              {loading ? <span style={{ color: '#cbd5e1' }}>—</span> : card.value}
             </div>
             <div style={{ marginTop: 10, fontSize: 12, color: card.sub.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
               {card.sub.icon === 'up' && <TrendUp />}
@@ -310,15 +310,15 @@ export default function Dashboard() {
       </div>
 
       <div style={{
-        background: '#161b27',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: '#ffffff',
+        border: '1px solid rgba(15,23,42,0.08)',
         borderRadius: 6,
         overflow: 'hidden',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid rgba(15,23,42,0.08)',
         }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Hoạt Động Thời Gian Thực</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -328,19 +328,19 @@ export default function Dashboard() {
               boxShadow: liveFlash ? '0 0 10px #22c55e' : '0 0 6px #22c55e66',
               transition: 'box-shadow 0.3s',
             }} />
-            <span style={{ fontSize: 12, color: '#6b7280', fontFamily: "'JetBrains Mono', 'SF Mono', monospace" }}>Cập nhật trực tiếp</span>
+            <span style={{ fontSize: 12, color: '#64748b', fontFamily: "'JetBrains Mono', 'SF Mono', monospace" }}>Cập nhật trực tiếp</span>
           </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                 {['Người dùng', 'Trạng thái', 'Gõ phím/phút', 'Click/phút', 'Thời gian hoạt động', 'Điểm'].map(h => (
                   <th key={h} style={{
                     padding: '10px 20px',
                     textAlign: h === 'Người dùng' || h === 'Trạng thái' ? 'left' : 'right',
-                    fontSize: 11, fontWeight: 600, color: '#4b5563',
+                    fontSize: 11, fontWeight: 600, color: '#64748b',
                     textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}>{h}</th>
                 ))}
@@ -348,9 +348,9 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#374151', fontSize: 14 }}>Đang tải...</td></tr>
+                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>Đang tải...</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#374151', fontSize: 14 }}>Chưa có hoạt động nào</td></tr>
+                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>Chưa có hoạt động nào</td></tr>
               ) : users.map((u) => {
                 const status = (u.status || 'offline').toLowerCase();
                 const sc = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
@@ -362,7 +362,7 @@ export default function Dashboard() {
                 return (
                   <tr
                     key={u.user_id}
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
+                    style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
                     onClick={() => navigate(`/users/${u.user_id}`)}
                   >
                     <td style={{ padding: '14px 20px' }}>
@@ -373,7 +373,7 @@ export default function Dashboard() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 11, fontWeight: 800, color: '#fff',
                         }}>{initials}</div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{u.name}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{u.name}</span>
                       </div>
                     </td>
                     <td style={{ padding: '14px 20px' }}>
@@ -387,13 +387,13 @@ export default function Dashboard() {
                         {sc.label}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#cbd5e1', fontWeight: 600 }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#334155', fontWeight: 600 }}>
                       {kpm.toLocaleString()}
                     </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#cbd5e1', fontWeight: 600 }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#334155', fontWeight: 600 }}>
                       {cpm.toLocaleString()}
                     </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#94a3b8' }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#64748b' }}>
                       {formatDuration(activeSecs)}
                     </td>
                     <td style={{ padding: '14px 20px', textAlign: 'right' }}>

@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
   active:  { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.4)',  color: '#22c55e', dot: '#22c55e' },
   online:  { label: 'Trực tuyến',     bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.4)', color: '#60a5fa', dot: '#60a5fa' },
   idle:    { label: 'Không HĐ',       bg: 'rgba(234,179,8,0.12)',  border: 'rgba(234,179,8,0.4)',  color: '#eab308', dot: '#eab308' },
-  offline: { label: 'Ngoại tuyến',    bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.3)',color: '#6b7280', dot: '#6b7280' },
+  offline: { label: 'Ngoại tuyến',    bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.3)',color: '#64748b', dot: '#64748b' },
 };
 
 
@@ -92,7 +92,7 @@ function applyLevelDelta(info, delta = {}, payload = {}) {
 }
 
 
-const HEAT_COLORS = ['#161b27', '#0d3a26', '#166534', '#15803d', '#22c55e'];
+const HEAT_COLORS = ['#eef2f7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e'];
 const TIMELINE_BUCKET_MINUTES = 15;
 
 function timelineBucketMinute(minuteOfDay) {
@@ -213,14 +213,14 @@ export default function UserDetail() {
   }, [socket, id]);
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#4b5563' }}>
-      <div style={{ width: 18, height: 18, border: '2px solid #374151', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#64748b' }}>
+      <div style={{ width: 18, height: 18, border: '2px solid #94a3b8', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <span style={{ fontSize: 14 }}>Loading profile...</span>
     </div>
   );
   if (!user) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#4b5563' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#64748b' }}>
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <p style={{ fontSize: 14, margin: 0 }}>User not found</p>
     </div>
@@ -278,7 +278,7 @@ export default function UserDetail() {
     };
   });
 
-  const CARD = { background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6 };
+  const CARD = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 6 };
 
   return (
     <div>
@@ -288,12 +288,12 @@ export default function UserDetail() {
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           background: 'none', border: 'none', cursor: 'pointer',
-          color: '#6b7280', fontSize: 13, fontWeight: 600, marginBottom: 22, padding: 0,
+          color: '#64748b', fontSize: 13, fontWeight: 600, marginBottom: 22, padding: 0,
           fontFamily: "'Space Grotesk', system-ui, sans-serif",
           transition: 'color 0.15s',
         }}
-        onMouseEnter={e => e.currentTarget.style.color = '#e2e8f0'}
-        onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
+        onMouseEnter={e => e.currentTarget.style.color = '#1e293b'}
+        onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         Quay lại Bảng Xếp Hạng
@@ -316,15 +316,15 @@ export default function UserDetail() {
             <div style={{
               position: 'absolute', bottom: -4, right: -4,
               width: 18, height: 18, borderRadius: '50%',
-              background: sc.dot, border: '3px solid #111827',
+              background: sc.dot, border: '3px solid #ffffff',
             }} />
           </div>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>{user.name}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, color: '#4b5563', fontWeight: 600 }}>ID: WR-{String(id).padStart(4,'0')}</span>
-              <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#374151' }} />
-              <span style={{ fontSize: 12, color: '#4b5563', fontWeight: 600 }}>{user.email}</span>
+              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>ID: WR-{String(id).padStart(4,'0')}</span>
+              <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#94a3b8' }} />
+              <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{user.email}</span>
             </div>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 10,
@@ -340,17 +340,17 @@ export default function UserDetail() {
 
         {/* Current Status Card */}
         <div style={{ ...CARD, padding: '20px 20px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 16 }}>
             Trạng Thái Hiện Tại
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
             <div style={{ fontSize: 28, fontWeight: 900, color: sc.color, letterSpacing: '-0.5px' }}>{sc.label}</div>
-            <div style={{ fontSize: 12, color: '#4b5563', fontWeight: 600 }}>
+            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
               Phiên: {fmtDur(stats?.total_active_seconds || 0)}
             </div>
           </div>
           {/* Progress bar */}
-          <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ height: 4, background: 'rgba(15,23,42,0.08)', borderRadius: 2, overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: 2,
               width: `${Math.min(100, score)}%`,
@@ -359,7 +359,7 @@ export default function UserDetail() {
             }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-            <span style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>Điểm Hoạt Động</span>
+            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Điểm Hoạt Động</span>
             <span style={{ fontSize: 11, color: scoreColor, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>{score.toFixed(1)}</span>
           </div>
         </div>
@@ -370,33 +370,33 @@ export default function UserDetail() {
         <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 22, alignItems: 'stretch' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 18 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
                 Level Tài Khoản
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <div style={{ fontSize: 44, fontWeight: 900, color: '#f1f5f9', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
+                <div style={{ fontSize: 44, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
                   {levelView.level}
                 </div>
-                <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 800 }}>/ {levelView.maxLevel}</div>
+                <div style={{ fontSize: 13, color: '#64748b', fontWeight: 800 }}>/ {levelView.maxLevel}</div>
               </div>
-              <div style={{ fontSize: 12, color: '#4b5563', fontWeight: 600, marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginTop: 8 }}>
                 Tổng {fmtNum(levelView.totalActions)} thao tác gõ + click
               </div>
             </div>
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-                <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 700 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
                   Level {levelView.level}
                 </span>
                 <span style={{ fontSize: 11, color: '#60a5fa', fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>
                   {Math.round(levelView.progressPercent)}%
                 </span>
-                <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 700 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
                   Level {Math.min(levelView.maxLevel, levelView.level + 1)}
                 </span>
               </div>
-              <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: 'rgba(255,255,255,0.06)' }}>
+              <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: 'rgba(15,23,42,0.08)' }}>
                 <div style={{
                   width: `${levelView.progressPercent}%`,
                   height: '100%',
@@ -406,13 +406,13 @@ export default function UserDetail() {
                 }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, gap: 10 }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
                   Gõ: {fmtNum(levelView.totalKeystrokes)}
                 </span>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
                   Click: {fmtNum(levelView.totalMouseClicks)}
                 </span>
-                <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 700 }}>
+                <span style={{ fontSize: 11, color: '#1e293b', fontWeight: 700 }}>
                   Còn {fmtNum(levelView.remainingActions)}
                 </span>
               </div>
@@ -422,14 +422,14 @@ export default function UserDetail() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Bảng Mốc Level</h2>
-              <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 600 }}>Level N = 10 tỉ x (N / 50)^3 thao tác</span>
+              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Level N = 10 tỉ x (N / 50)^3 thao tác</span>
             </div>
-            <div style={{ maxHeight: 250, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6 }}>
+            <div style={{ maxHeight: 250, overflowY: 'auto', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 6 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead style={{ position: 'sticky', top: 0, background: '#111827', zIndex: 1 }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#ffffff', zIndex: 1 }}>
                   <tr>
                     {['Level', 'Tổng gõ + click cần đạt', 'Trạng thái'].map((head) => (
-                      <th key={head} style={{ textAlign: 'left', padding: '9px 12px', color: '#6b7280', fontSize: 11, fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <th key={head} style={{ textAlign: 'left', padding: '9px 12px', color: '#64748b', fontSize: 11, fontWeight: 800, borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
                         {head}
                       </th>
                     ))}
@@ -445,13 +445,13 @@ export default function UserDetail() {
                       <tr key={milestoneLevel} style={{
                         background: current ? 'rgba(59,130,246,0.12)' : reached ? 'rgba(34,197,94,0.06)' : 'transparent',
                       }}>
-                        <td style={{ padding: '8px 12px', color: current ? '#60a5fa' : reached ? '#22c55e' : '#94a3b8', fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
+                        <td style={{ padding: '8px 12px', color: current ? '#60a5fa' : reached ? '#22c55e' : '#64748b', fontWeight: 800, borderBottom: '1px solid rgba(15,23,42,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
                           {milestoneLevel}
                         </td>
-                        <td style={{ padding: '8px 12px', color: '#e2e8f0', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
+                        <td style={{ padding: '8px 12px', color: '#1e293b', fontWeight: 700, borderBottom: '1px solid rgba(15,23,42,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
                           {requiredActions.toLocaleString()}
                         </td>
-                        <td style={{ padding: '8px 12px', color: reached ? '#22c55e' : '#6b7280', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '8px 12px', color: reached ? '#22c55e' : '#64748b', fontWeight: 700, borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
                           {current ? 'Hiện tại' : reached ? 'Đã đạt' : `Còn ${fmtNum(requiredActions - levelView.totalActions)}`}
                         </td>
                       </tr>
@@ -469,14 +469,14 @@ export default function UserDetail() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>Biểu Đồ Năng Suất</h2>
-            <p style={{ fontSize: 11, color: '#4b5563', margin: 0, fontWeight: 500 }}>Khối lượng hoạt động 12 tháng qua (Gõ phím & Click)</p>
+            <p style={{ fontSize: 11, color: '#64748b', margin: 0, fontWeight: 500 }}>Khối lượng hoạt động 12 tháng qua (Gõ phím & Click)</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 600 }}>Ít hơn</span>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Ít hơn</span>
             {HEAT_COLORS.map((c, i) => (
-              <div key={i} style={{ width: 11, height: 11, borderRadius: 2, background: c, border: '1px solid rgba(255,255,255,0.05)' }} />
+              <div key={i} style={{ width: 11, height: 11, borderRadius: 2, background: c, border: '1px solid rgba(15,23,42,0.06)' }} />
             ))}
-            <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 600 }}>Nhiều hơn</span>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Nhiều hơn</span>
           </div>
         </div>
         {/* Grid */}
@@ -489,7 +489,7 @@ export default function UserDetail() {
                   style={{
                     width: 11, height: 11, borderRadius: 2,
                     background: HEAT_COLORS[cell.level] || HEAT_COLORS[0],
-                    border: '1px solid rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(15,23,42,0.04)',
                     cursor: cell.count > 0 ? 'pointer' : 'default',
                     transition: 'transform 0.1s',
                   }}
@@ -510,13 +510,13 @@ export default function UserDetail() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>Hoạt Động Mỗi 15 Phút Hôm Nay</h2>
-              <p style={{ fontSize: 11, color: '#4b5563', margin: 0, fontWeight: 500 }}>Tốc độ gõ phím & click theo từng khoảng 15 phút</p>
+              <p style={{ fontSize: 11, color: '#64748b', margin: 0, fontWeight: 500 }}>Tốc độ gõ phím & click theo từng khoảng 15 phút</p>
             </div>
             <div style={{ display: 'flex', gap: 14 }}>
               {[{ color: '#3b82f6', label: 'Gõ phím' }, { color: '#a78bfa', label: 'Clicks' }].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: l.color }} />
-                  <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{l.label}</span>
+                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{l.label}</span>
                 </div>
               ))}
             </div>
@@ -533,12 +533,12 @@ export default function UserDetail() {
                   <stop offset="100%" stopColor="#a78bfa" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={chartTickInterval} minTickGap={28} />
-              <YAxis tick={{ fill: '#4b5563', fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.04)" vertical={false} />
+              <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={chartTickInterval} minTickGap={28} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
               <Tooltip
-                contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12, color: '#e2e8f0' }}
-                cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+                contentStyle={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 6, fontSize: 12, color: '#1e293b' }}
+                cursor={{ stroke: 'rgba(15,23,42,0.1)', strokeWidth: 1 }}
               />
               <Area type="monotone" dataKey="keystrokes" stroke="#3b82f6" strokeWidth={2} fill="url(#gk)" name="Gõ phím" dot={false} />
               <Area type="monotone" dataKey="clicks"     stroke="#a78bfa" strokeWidth={2} fill="url(#gc)" name="Clicks"  dot={false} />
@@ -553,14 +553,14 @@ export default function UserDetail() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 38, fontWeight: 900, color: '#f1f5f9', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
+            <div style={{ fontSize: 38, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
               {fmtNum((stats?.total_keystrokes || 0) + (stats?.total_mouse_clicks || 0))}
             </div>
-            <div style={{ fontSize: 12, color: '#4b5563', fontWeight: 600, marginTop: 8 }}>Thao tác trong một ngày</div>
+            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginTop: 8 }}>Thao tác trong một ngày</div>
           </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16, marginTop: 16 }}>
-            <div style={{ fontSize: 11, color: '#4b5563', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Thực Hiện Lúc</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>
+          <div style={{ borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 16, marginTop: 16 }}>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Thực Hiện Lúc</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>
               {new Date().toLocaleDateString('vi-VN', { month: 'long', day: 'numeric', year: 'numeric' })}
             </div>
           </div>
@@ -572,30 +572,30 @@ export default function UserDetail() {
         <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 16px' }}>Các phiên hoạt động gần đây</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {recentSessions.length === 0 ? (
-            <div style={{ padding: '14px 0', color: '#4b5563', fontSize: 13 }}>Chưa có phiên hoạt động nào.</div>
+            <div style={{ padding: '14px 0', color: '#64748b', fontSize: 13 }}>Chưa có phiên hoạt động nào.</div>
           ) : recentSessions.map((s, i) => (
             <div
               key={i}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '14px 0',
-                borderBottom: i < recentSessions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                borderBottom: i < recentSessions.length - 1 ? '1px solid rgba(15,23,42,0.06)' : 'none',
               }}
             >
               <div style={{
                 width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                background: s.active ? '#22c55e' : '#374151',
+                background: s.active ? '#22c55e' : '#94a3b8',
                 boxShadow: s.active ? '0 0 8px #22c55e88' : 'none',
               }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#e2e8f0', marginBottom: 2 }}>{s.name}</div>
-                <div style={{ fontSize: 11, color: '#4b5563', fontWeight: 600, fontFamily: "'JetBrains Mono',monospace" }}>{s.time}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>{s.name}</div>
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, fontFamily: "'JetBrains Mono',monospace" }}>{s.time}</div>
               </div>
               <div style={{
                 padding: '4px 12px', borderRadius: 4,
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                fontSize: 12, fontWeight: 700, color: '#94a3b8',
+                background: 'rgba(15,23,42,0.04)',
+                border: '1px solid rgba(15,23,42,0.08)',
+                fontSize: 12, fontWeight: 700, color: '#64748b',
                 fontFamily: "'JetBrains Mono',monospace",
                 whiteSpace: 'nowrap',
               }}>

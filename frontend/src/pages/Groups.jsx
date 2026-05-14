@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { groups as groupsApi } from '../services/api';
 
 const CARD = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: '#ffffff',
+  border: '1px solid rgba(15,23,42,0.08)',
   borderRadius: 6,
   padding: 24,
+  boxShadow: '0 12px 32px rgba(15,23,42,0.05)',
   transition: 'all 0.2s ease',
 };
 
@@ -93,16 +94,16 @@ export default function Groups() {
           <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.8px' }}>
             Nhóm <span style={{ color: '#3b82f6', fontStyle: 'italic' }}>Của Tôi</span>
           </h1>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontWeight: 500 }}>
             Tạo hoặc tham gia nhóm để đua top cùng bạn bè và đồng nghiệp.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => setShowJoin(true)}
-            style={{ ...BUTTON, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            style={{ ...BUTTON, background: 'rgba(15,23,42,0.06)', color: '#0f172a', border: '1px solid rgba(15,23,42,0.12)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,23,42,0.12)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.06)'}
           >
             Tham Gia Nhóm
           </button>
@@ -118,12 +119,12 @@ export default function Groups() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: '#4b5563' }}>Đang tải danh sách nhóm...</div>
+        <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>Đang tải danh sách nhóm...</div>
       ) : groups.length === 0 ? (
         <div style={{ ...CARD, textAlign: 'center', padding: '60px 24px' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>👥</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f1f5f9', margin: '0 0 8px' }}>Bạn chưa tham gia nhóm nào</h2>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 24px' }}>Hãy bắt đầu bằng cách tạo nhóm mới hoặc nhập mã mời từ bạn bè.</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 8px' }}>Bạn chưa tham gia nhóm nào</h2>
+          <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 24px' }}>Hãy bắt đầu bằng cách tạo nhóm mới hoặc nhập mã mời từ bạn bè.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
@@ -145,16 +146,16 @@ export default function Groups() {
                   {g.role === 'owner' ? 'CHỦ NHÓM' : 'THÀNH VIÊN'}
                 </div>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', margin: '0 0 4px' }}>{g.name}</h3>
-              <p style={{ fontSize: 13, color: '#4b5563', margin: '0 0 16px', lineHeight: 1.5, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>{g.name}</h3>
+              <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px', lineHeight: 1.5, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
               
-              <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 16 }}>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 16 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: '#4b5563', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Thành viên</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#e2e8f0' }}>{g.member_count}</div>
+                  <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Thành viên</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{g.member_count}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: '#4b5563', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Mã mời</div>
+                  <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Mã mời</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6', fontFamily: 'monospace' }}>{g.invite_code}</div>
                 </div>
               </div>
@@ -186,30 +187,30 @@ export default function Groups() {
 
       {/* Create Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ ...CARD, width: '100%', maxWidth: 400, background: '#161b22' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff' }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px' }}>Tạo Nhóm Mới</h2>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 8 }}>Tên nhóm *</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Tên nhóm *</label>
                 <input
                   required
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a' }}
                 />
               </div>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 8 }}>Mô tả</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Mô tả</label>
                 <textarea
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', height: 80, resize: 'none' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#4b5563' }}>Hủy</button>
+                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#64748b' }}>Hủy</button>
                 <button type="submit" style={{ ...BUTTON, flex: 1, background: '#3b82f6', color: '#fff' }}>Tạo Nhóm</button>
               </div>
             </form>
@@ -219,23 +220,23 @@ export default function Groups() {
 
       {/* Join Modal */}
       {showJoin && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ ...CARD, width: '100%', maxWidth: 400, background: '#161b22' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff' }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px' }}>Tham Gia Nhóm</h2>
             <form onSubmit={handleJoin}>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 8 }}>Mã mời (Invite Code)</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Mã mời (Invite Code)</label>
                 <input
                   required
                   placeholder="Ví dụ: WR-XXXXXX"
                   value={inviteCode}
                   onChange={e => setInviteCode(e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center', fontSize: 18, fontWeight: 700, fontFamily: 'monospace' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: 6, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 700, fontFamily: 'monospace' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#4b5563' }}>Hủy</button>
+                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, background: 'transparent', color: '#64748b' }}>Hủy</button>
                 <button type="submit" style={{ ...BUTTON, flex: 1, background: '#22c55e', color: '#fff' }}>Tham Gia</button>
               </div>
             </form>
