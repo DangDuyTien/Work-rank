@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { sequelize, User, DailyStat, ActivityEvent } = require('../models');
 const fraudDetection = require('./fraudDetection.service');
+const { resolveUserPresence } = require('./userPresence.service');
 const { calculateFocusScore } = require('../utils/score');
 
 function today() {
@@ -141,8 +142,12 @@ async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
   }).slice(0, limit);
 
   return ranked.map((row, index) => {
+    const userPresence = resolveUserPresence(row.id);
     return {
       ...row,
+      accountStatus: row.status || 'active',
+      presence: userPresence,
+      presenceStatus: userPresence,
       score: row.focusScore,
       rankPosition: index + 1
     };

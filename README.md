@@ -11,8 +11,8 @@ WorkRank là một hệ thống giám sát hiệu suất và theo dõi hoạt đ
 
 Dự án được chia làm 3 thành phần chính hoạt động đồng bộ với nhau:
 
-1. **🌐 Web Frontend (`/frontend`)**: Giao diện quản lý, Dashboard xem realtime, Leaderboard, và Tracker (chạy nền trên trình duyệt). Xây dựng bằng React + Vite.
-2. **🖥️ Desktop App (`/desktop-app`)**: Ứng dụng theo dõi hoạt động toàn hệ thống (bắt phím/chuột kể cả khi không mở trình duyệt). Xây dựng bằng Electron + uIOhook.
+1. **🌐 Web Frontend (`/frontend`)**: Giao diện quản lý, Dashboard, Leaderboard và màn hình điều khiển Tracker. Web không tự đếm phím/click để tránh đếm trùng.
+2. **🖥️ Desktop App (`/desktop-app`)**: Nguồn tracking duy nhất, theo dõi hoạt động toàn hệ thống (bắt phím/chuột trong cả trình duyệt và app khác). Xây dựng bằng Electron + uIOhook.
 3. **⚙️ Backend API (`/backend`)**: Xử lý logic, lưu trữ dữ liệu, và quản lý kết nối Socket.IO. Xây dựng bằng Node.js + Express + Sequelize (MySQL).
 
 ---
@@ -20,9 +20,9 @@ Dự án được chia làm 3 thành phần chính hoạt động đồng bộ v
 ## ✨ Tính năng Nổi bật
 
 - **⚡ Real-time Sync**: Trạng thái người dùng (Online/Offline/Idle) và dữ liệu hoạt động được cập nhật theo thời gian thực trên toàn hệ thống thông qua Socket.IO.
-- **🔄 Đa Nền Tảng & Hợp Nhất Dữ Liệu**: Người dùng có thể bật tracking trên cả Web và Desktop. Hệ thống tự động gộp (aggregate) dữ liệu thành một profile thống nhất.
+- **🔄 Desktop-only Tracking**: Web chỉ bật/tắt và hiển thị trạng thái, Desktop Tracker là nguồn duy nhất gửi activity lên backend.
 - **🚀 Auto-launch Desktop Tracker**: Web có khả năng nhận diện trạng thái của Desktop App. Khi bật tracking trên Web, Desktop App sẽ tự động khởi chạy và đồng bộ.
-- **🛡 Cơ Chế Chống Gian Lận (Anti-cheat)**: Mọi dữ liệu tracking gửi từ client (Web/Desktop) đều được ký mã hóa bằng **HMAC SHA-256** để chống giả mạo payload, kết hợp với hệ thống sequence number chống Replay Attack.
+- **🛡 Cơ Chế Chống Gian Lận (Anti-cheat)**: Activity batch từ Desktop được ký mã hóa bằng **HMAC SHA-256** để chống giả mạo payload, kết hợp với sequence number chống Replay Attack.
 - **🏆 Bảng Xếp Hạng (Leaderboard)**: Xếp hạng năng suất nhân viên theo ngày, tuần, tháng hoặc theo nhóm (Teams).
 
 ---
@@ -70,13 +70,25 @@ npm run dev
 cd desktop-app
 npm install
 
+# Đăng ký protocol workrank:// để web có thể mở Desktop App trên macOS
+npm run install-protocol:mac
+
 # Chạy thử Desktop App trong môi trường dev
 npm start
-
-# Build ra file cài đặt (.exe, .dmg, .AppImage)
-npm run build
 ```
 *(Lưu ý: Trên macOS, bạn cần cấp quyền Accessibility cho Terminal hoặc ứng dụng để bắt được sự kiện phím/chuột toàn cầu).*
+
+---
+
+## 🔁 Flow Tracking Hiện Tại
+
+1. Người dùng đăng nhập web và bấm **Bắt đầu** ở `/tracker`.
+2. Web mở `workrank://start` kèm access token hiện tại, đồng thời gửi socket command nếu Desktop Tracker đang online.
+3. Desktop Tracker nhận token, kết nối Socket.IO với `clientType: desktop`, mở session thiết bị và bắt phím/click toàn hệ thống bằng `uiohook-napi`.
+4. Desktop gửi activity qua `POST /api/activity/batch` bằng payload có HMAC + sequence.
+5. Backend validate thiết bị, chữ ký, sequence, anti-cheat rồi cộng vào `daily_stats`, `work_sessions`, `activity_events`.
+6. Backend phát `activity:user:update`, `desktop:status`, `dashboard:overview:update`, `leaderboard:update`; web chỉ nhận và hiển thị.
+7. Nếu một tab/build cũ cố gửi activity từ web (`appVersion: web` hoặc `deviceUuid` dạng `web-*`), backend trả `202 ignored` và không cộng số liệu.
 
 ---
 

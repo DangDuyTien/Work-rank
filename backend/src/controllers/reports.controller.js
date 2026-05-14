@@ -2,14 +2,71 @@ const { Op } = require('sequelize');
 const { DailyStat, ActivityEvent, WorkSession } = require('../models');
 const fraudDetection = require('../services/fraudDetection.service');
 
+const MAX_LEVEL = 50;
+const LEVEL_MAX_ACTIONS = 10_000_000_000;
+const LEVEL_CURVE_POWER = 3;
+
 function dateOnly(value = new Date()) {
   return value.toISOString().slice(0, 10);
 }
 
-function dayBounds(date = dateOnly()) {
+function levelThreshold(level) {
+  const safeLevel = Math.min(MAX_LEVEL, Math.max(0, Number(level || 0)));
+  return Math.round(LEVEL_MAX_ACTIONS * Math.pow(safeLevel / MAX_LEVEL, LEVEL_CURVE_POWER));
+}
+
+function buildLevelMilestones() {
+  return Array.from({ length: MAX_LEVEL + 1 }, (_, level) => ({
+    level,
+    requiredActions: levelThreshold(level),
+  }));
+}
+
+function buildLevelReport(totalKeystrokes, totalMouseClicks) {
+  const totalActions = Number(totalKeystrokes || 0) + Number(totalMouseClicks || 0);
+  const milestones = buildLevelMilestones();
+  let level = 0;
+
+  for (let nextLevel = MAX_LEVEL; nextLevel >= 0; nextLevel -= 1) {
+    if (totalActions >= levelThreshold(nextLevel)) {
+      level = nextLevel;
+      break;
+    }
+  }
+
+  const currentLevelActions = levelThreshold(level);
+  const nextLevelActions = level >= MAX_LEVEL ? currentLevelActions : levelThreshold(level + 1);
+  const span = Math.max(1, nextLevelActions - currentLevelActions);
+  const progressPercent = level >= MAX_LEVEL
+    ? 100
+    : Math.min(100, Math.max(0, ((totalActions - currentLevelActions) / span) * 100));
+
   return {
-    start: new Date(`${date}T00:00:00.000Z`),
-    end: new Date(`${date}T23:59:59.999Z`),
+    level,
+    maxLevel: MAX_LEVEL,
+    totalActions,
+    totalKeystrokes: Number(totalKeystrokes || 0),
+    totalMouseClicks: Number(totalMouseClicks || 0),
+    currentLevelActions,
+    nextLevelActions,
+    remainingActions: Math.max(0, nextLevelActions - totalActions),
+    progressPercent,
+    milestones,
+  };
+}
+
+function timezoneOffsetMinutes(value) {
+  const parsed = Number(value || 0);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(840, Math.max(-840, parsed));
+}
+
+function dayBounds(date = dateOnly(), offsetMinutes = 0) {
+  const start = new Date(`${date}T00:00:00.000Z`);
+  start.setUTCMinutes(start.getUTCMinutes() + offsetMinutes);
+  return {
+    start,
+    end: new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1),
   };
 }
 
@@ -25,9 +82,21 @@ async function userToday(req, res) {
   res.json({ data: stat ? [stat] : [] });
 }
 
+async function userLevel(req, res) {
+  const where = { userId: req.params.id };
+  const [totalKeystrokes, totalMouseClicks] = await Promise.all([
+    DailyStat.sum('keystrokeCount', { where }),
+    DailyStat.sum('mouseClickCount', { where }),
+  ]);
+
+  res.json({ data: buildLevelReport(totalKeystrokes, totalMouseClicks) });
+}
+
 async function userTimeline(req, res) {
   const date = req.query.date || dateOnly();
-  const bounds = dayBounds(date);
+  const offsetMinutes = timezoneOffsetMinutes(req.query.timezoneOffsetMinutes);
+  const granularity = ['minute', 'quarter'].includes(req.query.granularity) ? req.query.granularity : 'hour';
+  const bounds = dayBounds(date, offsetMinutes);
   const events = await ActivityEvent.findAll({
     where: {
       userId: req.params.id,
@@ -36,17 +105,35 @@ async function userTimeline(req, res) {
     },
     raw: true,
   });
-  const byHour = new Map();
+  const buckets = new Map();
   for (const event of events) {
-    const hour = new Date(event.eventTime).getUTCHours();
-    const row = byHour.get(hour) || { hour, keystrokes: 0, mouse_clicks: 0, active_seconds: 0, idle_seconds: 0 };
+    const localTime = new Date(new Date(event.eventTime).getTime() - offsetMinutes * 60 * 1000);
+    const hour = localTime.getUTCHours();
+    const minuteOfDay = hour * 60 + localTime.getUTCMinutes();
+    const bucketMinute = granularity === 'quarter' ? Math.floor(minuteOfDay / 15) * 15 : minuteOfDay;
+    const key = granularity === 'hour' ? hour : bucketMinute;
+    const row = buckets.get(key) || {
+      hour: granularity === 'hour' ? hour : Math.floor(bucketMinute / 60),
+      ...(granularity !== 'hour' ? {
+        minute: bucketMinute,
+        time: `${String(Math.floor(bucketMinute / 60)).padStart(2, '0')}:${String(bucketMinute % 60).padStart(2, '0')}`,
+      } : {}),
+      keystrokes: 0,
+      mouse_clicks: 0,
+      active_seconds: 0,
+      idle_seconds: 0,
+    };
     row.keystrokes += Number(event.keystrokeCount || 0);
     row.mouse_clicks += Number(event.mouseClickCount || 0);
     row.active_seconds += Number(event.activeSeconds || 0);
     row.idle_seconds += Number(event.idleSeconds || 0);
-    byHour.set(hour, row);
+    buckets.set(key, row);
   }
-  res.json({ data: Array.from(byHour.values()).sort((a, b) => a.hour - b.hour) });
+  const sortKey = granularity === 'hour' ? 'hour' : 'minute';
+  res.json({
+    granularity,
+    data: Array.from(buckets.values()).sort((a, b) => Number(a[sortKey]) - Number(b[sortKey])),
+  });
 }
 
 async function userHeatmap(req, res) {
@@ -100,4 +187,4 @@ async function exportCsv(req, res) {
   res.send([header.join(','), ...body].join('\n'));
 }
 
-module.exports = { userDaily, userToday, userTimeline, userHeatmap, userSessions, userWeekly, userMonthly, exportCsv };
+module.exports = { userDaily, userToday, userLevel, userTimeline, userHeatmap, userSessions, userWeekly, userMonthly, exportCsv };

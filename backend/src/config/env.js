@@ -9,7 +9,7 @@ const env = {
   jwtSecret: process.env.JWT_SECRET || 'change-me-access-secret',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || 'change-me-refresh-secret',
-  refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+  refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
   bcryptRounds: Number(process.env.BCRYPT_ROUNDS || 12),
   db: {
     host: process.env.DB_HOST || 'localhost',

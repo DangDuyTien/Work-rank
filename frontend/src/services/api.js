@@ -4,11 +4,40 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
 });
 
+const AUTH_UPDATED_EVENT = 'workrank:auth-updated';
+let refreshPromise = null;
+
 function storeAuth(data) {
   const token = data.accessToken || data.token;
   if (token) localStorage.setItem('token', token);
   if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+  if (token) window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token } }));
   return token;
+}
+
+function clearAuth() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token: null } }));
+}
+
+function isAuthEndpoint(url = '') {
+  return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token'].some((path) => String(url).includes(path));
+}
+
+async function refreshStoredAuth() {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) throw new Error('Missing refresh token');
+
+  if (!refreshPromise) {
+    refreshPromise = axios.post('/api/auth/refresh-token', { refreshToken }, {
+      baseURL: import.meta.env.VITE_API_URL || '',
+    }).then((res) => storeAuth(res.data)).finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
 }
 
 function unwrapArray(payload) {
@@ -65,11 +94,21 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
+  async (err) => {
+    const original = err.config || {};
+    if (err.response?.status === 401 && !original._retry && !isAuthEndpoint(original.url)) {
+      try {
+        original._retry = true;
+        const token = await refreshStoredAuth();
+        original.headers = { ...(original.headers || {}), Authorization: `Bearer ${token}` };
+        return api(original);
+      } catch {
+        clearAuth();
+        if (window.location.pathname !== '/login') window.location.href = '/login';
+      }
+    } else if (err.response?.status === 401 && String(original.url || '').includes('/api/auth/refresh-token')) {
+      clearAuth();
+      if (window.location.pathname !== '/login') window.location.href = '/login';
     }
     return Promise.reject(err);
   }
@@ -78,7 +117,15 @@ api.interceptors.response.use(
 export const auth = {
   register: async (data) => { const res = await api.post('/api/auth/register', data); storeAuth(res.data); return res; },
   login: async (data) => { const res = await api.post('/api/auth/login', data); storeAuth(res.data); return res; },
-  logout: () => api.post('/api/auth/logout'),
+  refreshSession: refreshStoredAuth,
+  clearLocalSession: clearAuth,
+  logout: async () => {
+    try {
+      return await api.post('/api/auth/logout');
+    } finally {
+      clearAuth();
+    }
+  },
   me: () => api.get('/api/auth/me'),
 };
 
@@ -92,8 +139,16 @@ export const activity = {
     const row = unwrapArray(res.data)[0] || {};
     return { ...res, data: normalizeStat(row) };
   },
-  timeline: async (id, date) => {
-    const qs = date ? `?date=${encodeURIComponent(date)}` : '';
+  level: async (id) => {
+    const res = await api.get(`/api/reports/users/${id}/level`);
+    return { ...res, data: res.data?.data || res.data || {} };
+  },
+  timeline: async (id, date, granularity = 'hour') => {
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (granularity) params.set('granularity', granularity);
+    params.set('timezoneOffsetMinutes', String(new Date().getTimezoneOffset()));
+    const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await api.get(`/api/reports/users/${id}/timeline${qs}`);
     return { ...res, data: unwrapArray(res.data) };
   },
@@ -105,10 +160,13 @@ export const activity = {
     const res = await api.get(`/api/reports/users/${id}/sessions?limit=${limit}`);
     return { ...res, data: unwrapArray(res.data) };
   },
-  batch: (data) => api.post('/api/activity/batch', data),
-  startSession: (data) => api.post('/api/activity/session/start', data),
-  endSession: (sessionId) => api.post('/api/activity/session/end', { sessionId }),
-  desktopStatus: () => api.get('/api/activity/desktop-status'),
+  desktopStatus: () => api.get('/api/activity/desktop-status', {
+    headers: { 'Cache-Control': 'no-store' },
+  }),
+  desktopLaunch: (action) => api.post('/api/activity/desktop-launch', {
+    action,
+    refreshToken: localStorage.getItem('refreshToken'),
+  }),
 };
 
 export const dashboard = {

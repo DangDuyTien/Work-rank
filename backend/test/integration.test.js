@@ -71,10 +71,52 @@ test('activity batch ký HMAC được nhận', async () => {
   assert.equal(batch.body.flaggedCount, 0);
 });
 
+test('activity batch từ web bị bỏ qua để tránh đếm trùng desktop', async () => {
+  const token = await authToken();
+  const before = await agent.get('/api/activity/me/today').set('Authorization', `Bearer ${token}`);
+  assert.equal(before.status, 200, before.text);
+  const beforeKeys = Number(before.body.stat?.keystrokeCount || 0);
+  const deviceUuid = `web-${Date.now()}`;
+  const start = await agent.post('/api/activity/session/start')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ deviceUuid, deviceName: deviceUuid, platform: 'macos', appVersion: 'web' });
+  assert.equal(start.status, 201, start.text);
+  const payload = signedPayload(start.body.deviceSecret, {
+    deviceUuid,
+    deviceName: deviceUuid,
+    platform: 'macos',
+    appVersion: 'web',
+    deviceSecret: start.body.deviceSecret,
+    sessionId: start.body.session.id,
+    events: [{ timestamp: new Date().toISOString(), activeSeconds: 5, idleSeconds: 0, keystrokeCount: 99, mouseClickCount: 99, mouseMoveCount: 0, sequence: 1 }],
+  });
+  const batch = await agent.post('/api/activity/batch').set('Authorization', `Bearer ${token}`).send(payload);
+  assert.equal(batch.status, 202, batch.text);
+  assert.equal(batch.body.ignored, true);
+  await agent.post('/api/activity/session/end').set('Authorization', `Bearer ${token}`).send({ sessionId: start.body.session.id });
+  const after = await agent.get('/api/activity/me/today').set('Authorization', `Bearer ${token}`);
+  assert.equal(after.status, 200, after.text);
+  const afterKeys = Number(after.body.stat?.keystrokeCount || 0);
+  assert.equal(afterKeys, beforeKeys);
+});
+
 test('security anomalies endpoint hoạt động', async () => {
   const token = await authToken();
   const res = await agent.get('/api/security/anomalies?days=1').set('Authorization', `Bearer ${token}`);
   assert.equal(res.status, 200, res.text);
   assert.ok(Number.isFinite(Number(res.body.totalEvents)));
   assert.ok(res.body.flagCounts && typeof res.body.flagCounts === 'object');
+});
+
+test('level endpoint trả đủ mốc 0-50 theo tổng gõ và click', async () => {
+  const token = await authToken();
+  const user = await User.findOne({ where: { email } });
+  const res = await agent.get(`/api/reports/users/${user.id}/level`).set('Authorization', `Bearer ${token}`);
+  assert.equal(res.status, 200, res.text);
+  assert.equal(res.body.data.maxLevel, 50);
+  assert.equal(res.body.data.milestones.length, 51);
+  assert.equal(res.body.data.milestones[0].requiredActions, 0);
+  assert.equal(res.body.data.milestones[1].requiredActions, 80000);
+  assert.equal(res.body.data.milestones[50].requiredActions, 10000000000);
+  assert.ok(res.body.data.level >= 0 && res.body.data.level <= 50);
 });

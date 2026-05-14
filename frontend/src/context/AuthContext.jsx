@@ -11,16 +11,19 @@ export function AuthProvider({ children }) {
 
   const fetchMe = async () => {
     const token = localStorage.getItem('token');
-    if (!token) {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!token && !refreshToken) {
       setUser(null);
       setLoading(false);
       return;
     }
 
     try {
+      if (!token && refreshToken) await auth.refreshSession();
       const res = await auth.me();
       setUser(res.data.user);
     } catch (err) {
+      auth.clearLocalSession();
       setUser(null);
     } finally {
       setLoading(false);
@@ -31,6 +34,21 @@ export function AuthProvider({ children }) {
     fetchMe();
     return () => disconnectSocket();
   }, []);
+
+  useEffect(() => {
+    const handleAuthUpdated = (event) => {
+      const token = event.detail?.token || localStorage.getItem('token');
+      disconnectSocket();
+      if (user && token) {
+        setSocket(connectSocket(token));
+      } else {
+        if (!token) setUser(null);
+        setSocket(null);
+      }
+    };
+    window.addEventListener('workrank:auth-updated', handleAuthUpdated);
+    return () => window.removeEventListener('workrank:auth-updated', handleAuthUpdated);
+  }, [user]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');

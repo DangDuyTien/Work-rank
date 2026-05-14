@@ -104,12 +104,14 @@ export default function Dashboard() {
           const u = fetchedMap.get(id) || {};
           const existing = prevMap.get(id);
           
-          if (!existing) return { ...u, status: 'offline' };
+          if (!existing) return u;
           if (!fetchedMap.has(id)) return existing; // Keep realtime-only users
           
           return {
             ...u,
-            status: existing.status !== 'offline' ? existing.status : 'offline',
+            status: u.status || existing.status || 'offline',
+            presence: u.presence || u.status || existing.presence || existing.status || 'offline',
+            presenceStatus: u.presenceStatus || u.presence || u.status || existing.presenceStatus || existing.status || 'offline',
             keystrokeCount: Math.max(Number(existing.keystrokeCount || 0), Number(u.keystrokeCount || 0)),
             mouseClickCount: Math.max(Number(existing.mouseClickCount || 0), Number(u.mouseClickCount || 0)),
             activeSeconds: Math.max(Number(existing.activeSeconds || 0), Number(u.activeSeconds || 0)),
@@ -200,7 +202,13 @@ export default function Dashboard() {
         const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
         if (idx >= 0) {
           const next = [...prev];
-          next[idx] = { ...next[idx], status: data.status || 'online' };
+          const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
+          next[idx] = {
+            ...next[idx],
+            status: nextStatus,
+            presence: nextStatus,
+            presenceStatus: nextStatus,
+          };
           return next;
         }
         return prev;

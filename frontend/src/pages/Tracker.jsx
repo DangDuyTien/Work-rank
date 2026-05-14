@@ -45,17 +45,20 @@ const DesktopIcon = () => (
 export default function Tracker() {
   const { user } = useAuth();
   const {
-    tracking, seconds, localKeys, localClicks,
+    tracking, seconds,
     totalKeys, totalClicks, score, connected,
     desktopLaunchStatus, scoreHistory, formatNum, formatTime, toggle,
-    desktopOnline, desktopTracking, desktopInfo,
+    desktopOnline, desktopTracking, desktopInfo, startTrack,
   } = useTracking();
 
   const maxBar = Math.max(...scoreHistory, 1);
-  const displayKeys = totalKeys + localKeys;
-  const displayClicks = totalClicks + localClicks;
+  const displayKeys = totalKeys;
+  const displayClicks = totalClicks;
   const keysPerHr = seconds > 0 ? Math.round((displayKeys / seconds) * 3600) : 0;
   const keysPerHrStr = keysPerHr >= 1000 ? (keysPerHr / 1000).toFixed(1) + 'k' : keysPerHr;
+  const showDesktopAction = !desktopOnline || (tracking && desktopOnline && !desktopTracking);
+  const desktopActionLabel = desktopOnline ? 'Bật' : 'Mở';
+  const sourceLabel = desktopOnline && desktopTracking ? 'Desktop' : 'Chờ desktop';
 
   return (
     <div style={{
@@ -115,9 +118,43 @@ export default function Tracker() {
             Desktop Tracker: {desktopOnline ? (desktopTracking ? 'Đang chạy' : 'Online (tạm dừng)') : 'Offline'}
           </span>
           {desktopOnline && desktopInfo?.deviceName && (
-            <span style={{ fontSize: 10, color: '#4b5563', marginLeft: 'auto' }}>
+            <span style={{
+              fontSize: 10,
+              color: '#4b5563',
+              marginLeft: showDesktopAction ? 0 : 'auto',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
               {desktopInfo.deviceName}
             </span>
+          )}
+          {showDesktopAction && (
+            <button
+              type="button"
+              data-no-track="true"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void startTrack({ launchDesktop: true });
+              }}
+              style={{
+                marginLeft: 'auto',
+                flexShrink: 0,
+                height: 24,
+                padding: '0 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(59,130,246,0.5)',
+                background: 'rgba(59,130,246,0.14)',
+                color: '#93c5fd',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {desktopActionLabel}
+            </button>
           )}
         </div>
 
@@ -215,7 +252,7 @@ export default function Tracker() {
                   </>
                 ) : (
                   <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>
-                    {tracking ? `+${localKeys} session` : '— Paused'}
+                    {tracking ? sourceLabel : '— Paused'}
                   </span>
                 )}
               </div>
@@ -235,7 +272,7 @@ export default function Tracker() {
               <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1 }}>{formatNum(displayClicks)}</div>
               <div style={{ marginTop: 6 }}>
                 <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>
-                  {tracking ? `+${localClicks} session` : '— Avg pace'}
+                  {tracking ? sourceLabel : '— Avg pace'}
                 </span>
               </div>
               {desktopOnline && desktopTracking && (

@@ -158,8 +158,9 @@ Server phát:
 
 Client có thể gửi:
 
-- `activity:heartbeat`
 - `user:status`
+- `desktop:heartbeat` từ Desktop Tracker
+- `desktop:command` từ Web để start/stop Desktop Tracker
 
 ## Riêng tư & bảo mật
 

@@ -345,10 +345,8 @@ Lưu ý: bảng này chỉ lưu số lượng, không lưu nội dung phím.
 
 ### 7.1 Client gửi lên
 
-- `activity:heartbeat`
-- `activity:batch`
-- `session:start`
-- `session:end`
+- `desktop:heartbeat`
+- `desktop:command`
 - `user:status`
 
 ### 7.2 Server phát xuống
@@ -357,6 +355,7 @@ Lưu ý: bảng này chỉ lưu số lượng, không lưu nội dung phím.
 - `leaderboard:update`
 - `user:status:update`
 - `activity:user:update`
+- `desktop:status`
 - `system:notification`
 
 ### 7.3 Payload activity đề xuất

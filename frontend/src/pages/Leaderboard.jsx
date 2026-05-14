@@ -139,10 +139,14 @@ export default function Leaderboard() {
         if (idx >= 0) {
           const next = [...prev];
           const existing = next[idx];
+          const status = data.presence || data.presenceStatus || data.status || existing.status || 'active';
           next[idx] = { 
             ...existing,
             ...data,
             name: data.name || existing.name,
+            status,
+            presence: status,
+            presenceStatus: status,
             keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys,
             mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks,
             score: totals ? Number(totals.focusScore || data.score || 0) : (Number(existing.score) || 0) + (deltaKeys + deltaClicks) * 0.1
@@ -154,6 +158,9 @@ export default function Leaderboard() {
           ...data,
           user_id: userId,
           name: data.name || `User #${userId}`,
+          status: data.presence || data.presenceStatus || data.status || 'active',
+          presence: data.presence || data.presenceStatus || data.status || 'active',
+          presenceStatus: data.presence || data.presenceStatus || data.status || 'active',
           keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : deltaKeys,
           mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : deltaClicks,
           score: totals ? Number(totals.focusScore || data.score || 0) : (deltaKeys + deltaClicks) * 0.1
@@ -162,8 +169,28 @@ export default function Leaderboard() {
         return next.sort((a,b) => Number(b.score||0) - Number(a.score||0));
       });
     };
+    const handleStatus = (data) => {
+      setUsers(prev => {
+        const userId = String(data.userId || data.user_id);
+        const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
+        const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
+        if (idx < 0) return prev;
+        const next = [...prev];
+        next[idx] = {
+          ...next[idx],
+          status: nextStatus,
+          presence: nextStatus,
+          presenceStatus: nextStatus,
+        };
+        return next;
+      });
+    };
     socket.on('activity:user:update', handleActivity);
-    return () => { socket.off('activity:user:update', handleActivity); };
+    socket.on('user:status:update', handleStatus);
+    return () => {
+      socket.off('activity:user:update', handleActivity);
+      socket.off('user:status:update', handleStatus);
+    };
   }, [socket]);
 
   const top1 = users[0], top2 = users[1], top3 = users[2];

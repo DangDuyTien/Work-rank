@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
 import { connectSocket } from '../services/socket';
@@ -59,7 +59,11 @@ export default function Login() {
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) navigate('/dashboard', { replace: true });
+  }, [authLoading, navigate, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,8 +74,6 @@ export default function Login() {
       const data = isRegister ? { name, email, password } : { email, password };
       const res  = await fn(data);
       const token = res.data.accessToken || res.data.token;
-      if (token) localStorage.setItem('token', token);
-      if (res.data.refreshToken) localStorage.setItem('refreshToken', res.data.refreshToken);
       const user = res.data.user || res.data;
       if (user) setUser(user);
       connectSocket(token);
@@ -81,6 +83,8 @@ export default function Login() {
     }
     setLoading(false);
   };
+
+  if (authLoading || user) return null;
 
   return (
     <div style={S.page}>

@@ -6,6 +6,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const router = express.Router();
 router.use(auth);
 router.get('/users/:id/today', asyncHandler(controller.userToday));
+router.get('/users/:id/level', asyncHandler(controller.userLevel));
 router.get('/users/:id/daily', asyncHandler(controller.userDaily));
 router.get('/users/:id/timeline', asyncHandler(controller.userTimeline));
 router.get('/users/:id/heatmap', asyncHandler(controller.userHeatmap));

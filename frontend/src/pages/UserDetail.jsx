@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { activity, users as usersApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -16,6 +17,7 @@ const STATUS_CONFIG = {
 
 function fmtNum(n) {
   n = Number(n) || 0;
+  if (n >= 1000000000) return (n / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
   if (n >= 1000)    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   return n.toLocaleString();
@@ -26,35 +28,109 @@ function fmtDur(s) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+function localDateKey(value = new Date()) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function minuteLabel(minuteOfDay) {
+  const hour = Math.floor(minuteOfDay / 60);
+  const minute = minuteOfDay % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function hydrateLevelInfo(info = {}) {
+  const milestones = Array.isArray(info.milestones) ? info.milestones : [];
+  const maxLevel = Number(info.maxLevel || 50);
+  const totalActions = Number(info.totalActions || 0);
+  let level = Number(info.level || 0);
+
+  if (milestones.length) {
+    level = milestones.reduce((current, milestone) => (
+      totalActions >= Number(milestone.requiredActions || 0) ? Number(milestone.level || current) : current
+    ), 0);
+  }
+
+  const current = milestones.find((milestone) => Number(milestone.level) === level);
+  const next = milestones.find((milestone) => Number(milestone.level) === level + 1);
+  const currentLevelActions = Number(current?.requiredActions ?? info.currentLevelActions ?? 0);
+  const nextLevelActions = Number(next?.requiredActions ?? info.nextLevelActions ?? currentLevelActions);
+  const span = Math.max(1, nextLevelActions - currentLevelActions);
+  const progressPercent = level >= maxLevel
+    ? 100
+    : Math.min(100, Math.max(0, ((totalActions - currentLevelActions) / span) * 100));
+
+  return {
+    ...info,
+    milestones,
+    maxLevel,
+    level,
+    totalActions,
+    totalKeystrokes: Number(info.totalKeystrokes || 0),
+    totalMouseClicks: Number(info.totalMouseClicks || 0),
+    currentLevelActions,
+    nextLevelActions,
+    remainingActions: Math.max(0, nextLevelActions - totalActions),
+    progressPercent,
+  };
+}
+
+function applyLevelDelta(info, delta = {}, payload = {}) {
+  if (!info) return info;
+  const deltaKeys = Number(delta.keystrokeCount ?? payload.keystrokes ?? 0);
+  const deltaClicks = Number(delta.mouseClickCount ?? payload.clicks ?? 0);
+  if (deltaKeys + deltaClicks <= 0) return info;
+
+  return hydrateLevelInfo({
+    ...info,
+    totalKeystrokes: Number(info.totalKeystrokes || 0) + deltaKeys,
+    totalMouseClicks: Number(info.totalMouseClicks || 0) + deltaClicks,
+    totalActions: Number(info.totalActions || 0) + deltaKeys + deltaClicks,
+  });
+}
+
 
 const HEAT_COLORS = ['#161b27', '#0d3a26', '#166534', '#15803d', '#22c55e'];
+const TIMELINE_BUCKET_MINUTES = 15;
+
+function timelineBucketMinute(minuteOfDay) {
+  return Math.floor(Number(minuteOfDay || 0) / TIMELINE_BUCKET_MINUTES) * TIMELINE_BUCKET_MINUTES;
+}
 
 
 export default function UserDetail() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const { socket } = useAuth();
   const [user, setUser]         = useState(null);
   const [stats, setStats]       = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [heatmapData, setHeatmapData] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [levelInfo, setLevelInfo] = useState(null);
   const [loading, setLoading]   = useState(true);
+  const [chartNow, setChartNow] = useState(new Date());
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [uRes, sRes, tRes, hRes, sessionRes] = await Promise.all([
+        const today = localDateKey();
+        const [uRes, sRes, tRes, hRes, sessionRes, levelRes] = await Promise.all([
           usersApi.get(id),
           activity.userStats(id, 'today'),
-          activity.timeline(id),
+          activity.timeline(id, today, 'quarter'),
           activity.heatmap(id),
           activity.sessions(id, 10),
+          activity.level(id),
         ]);
         setUser(uRes.data);
         setStats(sRes.data);
         setTimeline(tRes.data || []);
         setHeatmapData(hRes.data || []);
         setSessions(sessionRes.data || []);
+        setLevelInfo(hydrateLevelInfo(levelRes.data));
       } catch (err) {
         console.error('Failed to fetch user detail:', err);
       }
@@ -62,6 +138,79 @@ export default function UserDetail() {
     };
     fetchAll();
   }, [id]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setChartNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return undefined;
+
+    const sameUser = (payload = {}) => String(payload.userId || payload.user_id || payload.id) === String(id);
+    const updatePresence = (payload = {}) => {
+      if (!sameUser(payload)) return;
+      const nextStatus = payload.presence || payload.presenceStatus || payload.status || 'online';
+      setUser((prev) => prev ? {
+        ...prev,
+        ...payload,
+        id: prev.id,
+        user_id: prev.user_id,
+        status: nextStatus,
+        presence: nextStatus,
+        presenceStatus: nextStatus,
+      } : prev);
+    };
+
+    const updateActivity = (payload = {}) => {
+      if (!sameUser(payload)) return;
+      updatePresence(payload);
+      if (payload.totals) {
+        setStats((prev) => ({
+          ...(prev || {}),
+          total_active_seconds: Number(payload.totals.activeSeconds || 0),
+          total_idle_seconds: Number(payload.totals.idleSeconds || 0),
+          total_keystrokes: Number(payload.totals.keystrokeCount || 0),
+          total_mouse_clicks: Number(payload.totals.mouseClickCount || 0),
+          score: Number(payload.totals.focusScore || payload.score || 0),
+        }));
+      }
+      const delta = payload.delta || {};
+      setLevelInfo((prev) => applyLevelDelta(prev, delta, payload));
+      const eventTime = payload.lastEventAt ? new Date(payload.lastEventAt) : new Date();
+      const minute = timelineBucketMinute(eventTime.getHours() * 60 + eventTime.getMinutes());
+      setTimeline((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((row) => Number(row.minute) === minute);
+        const current = idx >= 0 ? next[idx] : {
+          minute,
+          hour: Math.floor(minute / 60),
+          time: minuteLabel(minute),
+          keystrokes: 0,
+          mouse_clicks: 0,
+          active_seconds: 0,
+          idle_seconds: 0,
+        };
+        const updated = {
+          ...current,
+          keystrokes: Number(current.keystrokes || 0) + Number(delta.keystrokeCount || payload.keystrokes || 0),
+          mouse_clicks: Number(current.mouse_clicks || 0) + Number(delta.mouseClickCount || payload.clicks || 0),
+          active_seconds: Number(current.active_seconds || 0) + Number(delta.activeSeconds || 0),
+          idle_seconds: Number(current.idle_seconds || 0) + Number(delta.idleSeconds || 0),
+        };
+        if (idx >= 0) next[idx] = updated;
+        else next.push(updated);
+        return next.sort((a, b) => Number(a.minute || 0) - Number(b.minute || 0));
+      });
+    };
+
+    socket.on('user:status:update', updatePresence);
+    socket.on('activity:user:update', updateActivity);
+    return () => {
+      socket.off('user:status:update', updatePresence);
+      socket.off('activity:user:update', updateActivity);
+    };
+  }, [socket, id]);
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: '#4b5563' }}>
@@ -77,7 +226,7 @@ export default function UserDetail() {
     </div>
   );
 
-  const status   = (user.status || 'offline').toLowerCase();
+  const status   = (user.presence || user.presenceStatus || user.status || 'offline').toLowerCase();
   const sc       = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
   const initials = (user.name || 'U').substring(0, 2).toUpperCase();
   const score    = Number(stats?.score || 0);
@@ -98,16 +247,21 @@ export default function UserDetail() {
     return weeks;
   })();
 
-  // Chart data: convert timeline to 24-hr area chart
-  const chartData = Array.from({ length: 17 }, (_, i) => {
-    const hour = i + 7;
-    const row  = timeline.find(t => Number(t.hour) === hour);
+  // Chart data: 15-minute activity buckets for today.
+  const currentMinute = chartNow.getHours() * 60 + chartNow.getMinutes();
+  const currentBucket = timelineBucketMinute(currentMinute);
+  const minuteMap = new Map(timeline.map((row) => [Number(row.minute), row]));
+  const chartData = Array.from({ length: Math.floor(currentBucket / TIMELINE_BUCKET_MINUTES) + 1 }, (_, index) => {
+    const minute = index * TIMELINE_BUCKET_MINUTES;
+    const row = minuteMap.get(minute);
     return {
-      time: `${String(hour).padStart(2,'0')}:00`,
+      time: minuteLabel(minute),
       keystrokes: row ? Number(row.keystrokes) : 0,
       clicks:     row ? Number(row.mouse_clicks) : 0,
     };
   });
+  const chartTickInterval = Math.max(1, Math.floor(chartData.length / 6));
+  const levelView = hydrateLevelInfo(levelInfo || {});
 
   const recentSessions = sessions.map((session, index) => {
     const started = session.startedAt ? new Date(session.startedAt) : null;
@@ -211,6 +365,105 @@ export default function UserDetail() {
         </div>
       </div>
 
+      {/* ── LEVELS ── */}
+      <div style={{ ...CARD, padding: '20px 22px', marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 22, alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 18 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+                Level Tài Khoản
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <div style={{ fontSize: 44, fontWeight: 900, color: '#f1f5f9', letterSpacing: '-1px', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1 }}>
+                  {levelView.level}
+                </div>
+                <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 800 }}>/ {levelView.maxLevel}</div>
+              </div>
+              <div style={{ fontSize: 12, color: '#4b5563', fontWeight: 600, marginTop: 8 }}>
+                Tổng {fmtNum(levelView.totalActions)} thao tác gõ + click
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+                <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 700 }}>
+                  Level {levelView.level}
+                </span>
+                <span style={{ fontSize: 11, color: '#60a5fa', fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>
+                  {Math.round(levelView.progressPercent)}%
+                </span>
+                <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 700 }}>
+                  Level {Math.min(levelView.maxLevel, levelView.level + 1)}
+                </span>
+              </div>
+              <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', background: 'rgba(255,255,255,0.06)' }}>
+                <div style={{
+                  width: `${levelView.progressPercent}%`,
+                  height: '100%',
+                  borderRadius: 4,
+                  background: 'linear-gradient(90deg, #22c55e, #3b82f6)',
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, gap: 10 }}>
+                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                  Gõ: {fmtNum(levelView.totalKeystrokes)}
+                </span>
+                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                  Click: {fmtNum(levelView.totalMouseClicks)}
+                </span>
+                <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 700 }}>
+                  Còn {fmtNum(levelView.remainingActions)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Bảng Mốc Level</h2>
+              <span style={{ fontSize: 11, color: '#4b5563', fontWeight: 600 }}>Level N = 10 tỉ x (N / 50)^3 thao tác</span>
+            </div>
+            <div style={{ maxHeight: 250, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#111827', zIndex: 1 }}>
+                  <tr>
+                    {['Level', 'Tổng gõ + click cần đạt', 'Trạng thái'].map((head) => (
+                      <th key={head} style={{ textAlign: 'left', padding: '9px 12px', color: '#6b7280', fontSize: 11, fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                        {head}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {levelView.milestones.map((milestone) => {
+                    const milestoneLevel = Number(milestone.level || 0);
+                    const requiredActions = Number(milestone.requiredActions || 0);
+                    const reached = levelView.totalActions >= requiredActions;
+                    const current = milestoneLevel === levelView.level;
+                    return (
+                      <tr key={milestoneLevel} style={{
+                        background: current ? 'rgba(59,130,246,0.12)' : reached ? 'rgba(34,197,94,0.06)' : 'transparent',
+                      }}>
+                        <td style={{ padding: '8px 12px', color: current ? '#60a5fa' : reached ? '#22c55e' : '#94a3b8', fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
+                          {milestoneLevel}
+                        </td>
+                        <td style={{ padding: '8px 12px', color: '#e2e8f0', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono',monospace" }}>
+                          {requiredActions.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '8px 12px', color: reached ? '#22c55e' : '#6b7280', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          {current ? 'Hiện tại' : reached ? 'Đã đạt' : `Còn ${fmtNum(requiredActions - levelView.totalActions)}`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── HEATMAP ── */}
       <div style={{ ...CARD, padding: '20px 22px', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -256,8 +509,8 @@ export default function UserDetail() {
         <div style={{ ...CARD, padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
-              <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>Hoạt Động Theo Giờ Hôm Nay</h2>
-              <p style={{ fontSize: 11, color: '#4b5563', margin: 0, fontWeight: 500 }}>Tốc độ gõ phím & click theo giờ</p>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>Hoạt Động Mỗi 15 Phút Hôm Nay</h2>
+              <p style={{ fontSize: 11, color: '#4b5563', margin: 0, fontWeight: 500 }}>Tốc độ gõ phím & click theo từng khoảng 15 phút</p>
             </div>
             <div style={{ display: 'flex', gap: 14 }}>
               {[{ color: '#3b82f6', label: 'Gõ phím' }, { color: '#a78bfa', label: 'Clicks' }].map(l => (
@@ -281,14 +534,14 @@ export default function UserDetail() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={3} />
+              <XAxis dataKey="time" tick={{ fill: '#4b5563', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={chartTickInterval} minTickGap={28} />
               <YAxis tick={{ fill: '#4b5563', fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
               <Tooltip
                 contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12, color: '#e2e8f0' }}
                 cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
               />
-              <Area type="monotone" dataKey="keystrokes" stroke="#3b82f6" strokeWidth={2} fill="url(#gk)" name="Keystrokes" dot={false} />
-              <Area type="monotone" dataKey="clicks"     stroke="#a78bfa" strokeWidth={2} fill="url(#gc)" name="Clicks"     dot={false} />
+              <Area type="monotone" dataKey="keystrokes" stroke="#3b82f6" strokeWidth={2} fill="url(#gk)" name="Gõ phím" dot={false} />
+              <Area type="monotone" dataKey="clicks"     stroke="#a78bfa" strokeWidth={2} fill="url(#gc)" name="Clicks"  dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
