@@ -13,6 +13,7 @@ User.init(
     role: { type: DataTypes.ENUM('admin', 'manager', 'user'), allowNull: false, defaultValue: 'user' },
     teamId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'team_id' },
     isVerified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_verified' },
+    isSimulated: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_simulated' },
     status: { type: DataTypes.ENUM('active', 'inactive'), allowNull: false, defaultValue: 'active' },
     lastSeenAt: { type: DataTypes.DATE, allowNull: true, field: 'last_seen_at' },
   },

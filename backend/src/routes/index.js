@@ -10,5 +10,6 @@ router.use('/leaderboard', require('./leaderboard.routes'));
 router.use('/groups', require('./groups.routes'));
 router.use('/reports', require('./reports.routes'));
 router.use('/security', require('./security.routes'));
+router.use('/simulation', require('./simulation.routes'));
 
 module.exports = router;

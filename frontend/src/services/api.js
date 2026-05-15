@@ -230,6 +230,13 @@ export const security = {
   baseline: (userId, days = 7) => api.get(`/api/security/users/${userId}/baseline?days=${days}`),
 };
 
+export const simulation = {
+  status: () => api.get('/api/simulation/status'),
+  start: (data = {}) => api.post('/api/simulation/start', data),
+  stop: () => api.post('/api/simulation/stop'),
+  tick: () => api.post('/api/simulation/tick'),
+};
+
 export const groups = {
   list: async () => {
     const res = await api.get('/api/groups');

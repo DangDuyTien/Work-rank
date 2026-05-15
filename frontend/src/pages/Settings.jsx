@@ -1,18 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   BadgeCheck,
   Bell,
+  Bot,
   CheckCircle2,
   Database,
   KeyRound,
   Mail,
   Monitor,
   Palette,
+  Play,
+  RefreshCw,
   RotateCcw,
   Save,
   ShieldCheck,
+  Square,
   Timer,
   Trash2,
   Trophy,
@@ -21,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
-import { auth } from '../services/api';
+import { auth, simulation } from '../services/api';
 import { removeStoredAvatar } from '../utils/avatar';
 import {
   getAppSettings,
@@ -51,6 +55,15 @@ function statusLabel(status) {
 
 function settingValue(settings, section, key) {
   return settings?.[section]?.[key];
+}
+
+function formatSimulationTime(value) {
+  if (!value) return 'Chưa chạy';
+  return new Date(value).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 function SettingSection({ icon: Icon, title, desc, children, className = '' }) {
@@ -93,14 +106,39 @@ function ToggleRow({ icon: Icon, title, desc, checked, onChange }) {
 export default function Settings() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { user, setUser, isAdmin } = useAuth();
+  const { user, setUser, isAdmin, socket } = useAuth();
   const [settings, setSettings] = useState(getAppSettings);
   const [profile, setProfile] = useState({ name: user?.name || '', email: user?.email || '' });
   const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [simulationStatus, setSimulationStatus] = useState(null);
+  const [simulationTarget, setSimulationTarget] = useState(50);
+  const [simulationBusy, setSimulationBusy] = useState(false);
 
   useEffect(() => subscribeAppSettings(setSettings), []);
+
+  const loadSimulationStatus = useCallback(async (options = {}) => {
+    if (!isAdmin) return;
+    try {
+      const res = await simulation.status();
+      setSimulationStatus(res.data || null);
+      if (res.data?.targetCount) setSimulationTarget(Number(res.data.targetCount));
+    } catch (err) {
+      if (!options.silent) toast(err.response?.data?.message || 'Không tải được trạng thái mô phỏng.', { type: 'error' });
+    }
+  }, [isAdmin, toast]);
+
+  useEffect(() => {
+    loadSimulationStatus({ silent: true });
+  }, [loadSimulationStatus]);
+
+  useEffect(() => {
+    if (!isAdmin || !socket) return undefined;
+    const handleStatus = (status) => setSimulationStatus(status || null);
+    socket.on('simulation:status', handleStatus);
+    return () => socket.off('simulation:status', handleStatus);
+  }, [isAdmin, socket]);
 
   useEffect(() => {
     setProfile({ name: user?.name || '', email: user?.email || '' });
@@ -202,6 +240,48 @@ export default function Settings() {
     toast('Đã khôi phục tùy chọn mặc định.', { type: 'success' });
   };
 
+  const startSimulation = async () => {
+    setSimulationBusy(true);
+    try {
+      const res = await simulation.start({
+        targetCount: simulationTarget,
+        intervalSeconds: 30,
+      });
+      setSimulationStatus(res.data || null);
+      toast('Đã bật mô phỏng hoạt động.', { type: 'success' });
+    } catch (err) {
+      toast(err.response?.data?.message || 'Không bật được mô phỏng.', { type: 'error' });
+    } finally {
+      setSimulationBusy(false);
+    }
+  };
+
+  const stopSimulation = async () => {
+    setSimulationBusy(true);
+    try {
+      const res = await simulation.stop();
+      setSimulationStatus(res.data || null);
+      toast('Đã tắt mô phỏng hoạt động.', { type: 'success' });
+    } catch (err) {
+      toast(err.response?.data?.message || 'Không tắt được mô phỏng.', { type: 'error' });
+    } finally {
+      setSimulationBusy(false);
+    }
+  };
+
+  const tickSimulation = async () => {
+    setSimulationBusy(true);
+    try {
+      const res = await simulation.tick();
+      setSimulationStatus(res.data || null);
+      toast('Đã tạo một nhịp hoạt động mô phỏng.', { type: 'success' });
+    } catch (err) {
+      toast(err.response?.data?.message || 'Không tạo được nhịp mô phỏng.', { type: 'error' });
+    } finally {
+      setSimulationBusy(false);
+    }
+  };
+
   return (
     <div className="settings-page">
       <header className="settings-hero">
@@ -264,6 +344,82 @@ export default function Settings() {
             </div>
           </form>
         </SettingSection>
+
+        {isAdmin && (
+          <SettingSection
+            icon={Bot}
+            title="Mô phỏng hoạt động"
+            desc="Admin bật/tắt nhóm tài khoản có ID thật để tạo nhịp online, idle, click và phím theo khung giờ."
+            className="settings-card-wide"
+          >
+            <div className="settings-readonly-grid">
+              <div>
+                <span>Trạng thái</span>
+                <strong>{simulationStatus?.running ? 'Đang chạy' : 'Đang tắt'}</strong>
+              </div>
+              <div>
+                <span>Tài khoản</span>
+                <strong>{Number(simulationStatus?.simulatedUserCount || 0).toLocaleString()} / {Number(simulationStatus?.targetCount || simulationTarget || 50).toLocaleString()}</strong>
+              </div>
+              <div>
+                <span>Đang có tín hiệu</span>
+                <strong>{Number(simulationStatus?.activePresenceCount || 0).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="settings-readonly-grid" style={{ marginTop: 10 }}>
+              <div>
+                <span>Nhịp gần nhất</span>
+                <strong>{formatSimulationTime(simulationStatus?.lastTickAt)}</strong>
+              </div>
+              <div>
+                <span>Giờ VN</span>
+                <strong>{simulationStatus?.lastSummary?.localHour ?? '--'}h</strong>
+              </div>
+              <div>
+                <span>Event mới</span>
+                <strong>{Number(simulationStatus?.lastSummary?.generatedEvents || 0).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="settings-form" style={{ marginTop: 12 }}>
+              <label>
+                <span>Số tài khoản bot</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={simulationTarget}
+                  onChange={(event) => setSimulationTarget(Math.min(100, Math.max(1, Number(event.target.value || 1))))}
+                />
+              </label>
+              {simulationStatus?.lastError && (
+                <div className="dashboard-error" role="alert" style={{ margin: 0 }}>
+                  {simulationStatus.lastError}
+                </div>
+              )}
+              <div className="settings-actions">
+                <button type="button" className="settings-secondary-button" onClick={() => loadSimulationStatus()} disabled={simulationBusy}>
+                  <RefreshCw size={15} />
+                  Làm mới
+                </button>
+                <button type="button" className="settings-secondary-button" onClick={tickSimulation} disabled={simulationBusy}>
+                  <Play size={15} />
+                  Chạy 1 nhịp
+                </button>
+                {simulationStatus?.running ? (
+                  <button type="button" className="settings-primary-button" onClick={stopSimulation} disabled={simulationBusy}>
+                    <Square size={15} />
+                    Tắt bot
+                  </button>
+                ) : (
+                  <button type="button" className="settings-primary-button" onClick={startSimulation} disabled={simulationBusy}>
+                    <Play size={15} />
+                    Bật bot
+                  </button>
+                )}
+              </div>
+            </div>
+          </SettingSection>
+        )}
 
         <SettingSection
           icon={ShieldCheck}
