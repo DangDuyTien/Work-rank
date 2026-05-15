@@ -67,6 +67,18 @@ function actionLabel(action) {
   return action || 'Theo dõi';
 }
 
+function SectionHeader({ title, subtitle, action }) {
+  return (
+    <div className="security-section-head">
+      <div>
+        <h2 className="security-section-title">{title}</h2>
+        {subtitle && <p className="security-section-subtitle">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default function Security() {
   const { socket } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -139,6 +151,9 @@ export default function Security() {
   if (loading && !anomalies) return <PageState title="Đang tải trang bảo mật..." />;
   if (error && !anomalies) return <PageState type="error" title="Không tải được dữ liệu bảo mật" description={error} onRetry={load} />;
 
+  const isClean = Number(anomalies?.flaggedEvents || 0) === 0 && Number(anomalies?.quarantinedDevices || 0) === 0;
+  const hasWarnings = Number(anomalies?.warningEvents || 0) > 0;
+
   return (
     <div className="security-page" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div className="security-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
@@ -176,22 +191,57 @@ export default function Security() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
-        <div style={card}><div style={muted}>Tổng lượt dữ liệu</div><div style={value}>{anomalies?.totalEvents || 0}</div></div>
-        <div style={card}><div style={muted}>Cảnh báo nhẹ</div><div style={{ ...value, color: '#f59e0b' }}>{anomalies?.warningEvents || 0}</div></div>
-        <div style={card}><div style={muted}>Nghi vấn cao</div><div style={{ ...value, color: '#ef4444' }}>{anomalies?.flaggedEvents || 0}</div></div>
-        <div style={card}><div style={muted}>Điểm nghi vấn TB</div><div style={value}>{anomalies?.averageSuspicionScore || 0}</div></div>
-        <div style={card}><div style={muted}>Thiết bị bị khóa</div><div style={{ ...value, color: '#b91c1c' }}>{anomalies?.quarantinedDevices || 0}</div></div>
-      </div>
+      {anomalies && (
+        <section className="security-section" style={{
+          borderColor: isClean ? 'rgba(34,197,94,0.24)' : hasWarnings ? 'rgba(245,158,11,0.24)' : 'rgba(239,68,68,0.24)',
+          background: isClean
+            ? 'linear-gradient(90deg, rgba(240,253,244,0.95), #ffffff)'
+            : hasWarnings
+              ? 'linear-gradient(90deg, rgba(255,251,235,0.95), #ffffff)'
+              : 'linear-gradient(90deg, rgba(254,242,242,0.95), #ffffff)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: isClean ? '#22c55e' : hasWarnings ? '#f59e0b' : '#ef4444',
+              boxShadow: isClean ? '0 0 12px rgba(34,197,94,0.45)' : 'none',
+              flexShrink: 0,
+            }} />
+            <div>
+              <div style={{ color: isClean ? '#16a34a' : hasWarnings ? '#b45309' : '#dc2626', fontSize: 14, fontWeight: 900 }}>
+                {isClean ? 'Trạng thái xanh' : hasWarnings ? 'Có cảnh báo cần theo dõi' : 'Có rủi ro cần xử lý'}
+              </div>
+              <div style={{ color: '#475569', fontSize: 13, marginTop: 3, fontWeight: 600 }}>
+                {isClean
+                  ? 'Chưa ghi nhận nghi vấn cao hoặc thiết bị bị khóa trong khoảng thời gian đang chọn.'
+                  : `Đang có ${anomalies.warningEvents || 0} cảnh báo nhẹ, ${anomalies.flaggedEvents || 0} nghi vấn cao.`}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
-      <div className="security-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14 }}>
+      <section className="security-section">
+        <SectionHeader title="Tổng quan" subtitle="Các chỉ số chính trong khoảng thời gian đang chọn." />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
+          <div style={card}><div style={muted}>Tổng lượt dữ liệu</div><div style={value}>{anomalies?.totalEvents || 0}</div></div>
+          <div style={card}><div style={muted}>Cảnh báo nhẹ</div><div style={{ ...value, color: '#f59e0b' }}>{anomalies?.warningEvents || 0}</div></div>
+          <div style={card}><div style={muted}>Nghi vấn cao</div><div style={{ ...value, color: '#ef4444' }}>{anomalies?.flaggedEvents || 0}</div></div>
+          <div style={card}><div style={muted}>Điểm nghi vấn TB</div><div style={value}>{anomalies?.averageSuspicionScore || 0}</div></div>
+          <div style={card}><div style={muted}>Thiết bị bị khóa</div><div style={{ ...value, color: '#b91c1c' }}>{anomalies?.quarantinedDevices || 0}</div></div>
+        </div>
+      </section>
+
+      <div className="security-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, alignItems: 'start' }}>
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 16 }}>Các dấu hiệu nghi vấn</h2>
+          <SectionHeader title="Dấu hiệu" subtitle="Nhóm lỗi được phát hiện nhiều nhất." />
           <FlagList flags={anomalies?.flagCounts} />
         </div>
 
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 16 }}>Quản lý thiết bị</h2>
+          <SectionHeader title="Thiết bị" subtitle="Khóa hoặc mở lại các tracker đã pair." />
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -238,12 +288,11 @@ export default function Security() {
         </div>
       </div>
 
-      <div style={card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <div>
-            <h2 style={{ margin: 0, color: '#0f172a', fontSize: 16 }}>Bằng chứng event nghi vấn gần đây</h2>
-            <p style={{ margin: '5px 0 0', color: '#94a3b8', fontSize: 12 }}>Hiển thị tối đa 50 event có điểm nghi vấn lớn hơn 0 trong khoảng đã chọn.</p>
-          </div>
+      <section className="security-section">
+        <SectionHeader
+          title="Event nghi vấn"
+          subtitle="Tối đa 50 event có điểm nghi vấn lớn hơn 0 trong khoảng đã chọn."
+          action={(
           <button
             type="button"
             onClick={load}
@@ -251,7 +300,8 @@ export default function Security() {
           >
             Làm mới
           </button>
-        </div>
+          )}
+        />
         {events.length === 0 ? (
           <EmptyState title="Chưa có event nghi vấn" description="Khoảng thời gian này chưa phát hiện dữ liệu bất thường cần kiểm tra." />
         ) : (
@@ -296,7 +346,7 @@ export default function Security() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

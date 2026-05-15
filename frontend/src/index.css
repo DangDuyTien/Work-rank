@@ -119,14 +119,43 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   grid-template-columns: 320px minmax(340px, 400px);
   align-items: flex-start;
   justify-content: center;
-  gap: 0;
-  width: min(100%, 720px);
+  gap: 16px;
+  width: min(100%, 760px);
   margin: 2rem auto 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.security-section {
   background: #ffffff;
   border: 1px solid rgba(15,23,42,0.08);
   border-radius: 8px;
-  box-shadow: 0 32px 80px rgba(15,23,42,0.08);
-  overflow: hidden;
+  padding: 16px;
+  box-shadow: 0 8px 28px rgba(15,23,42,0.05);
+}
+
+.security-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.security-section-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.security-section-subtitle {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* ── Mobile ── */
@@ -210,12 +239,12 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
     justify-items: center !important;
     width: min(100%, 400px) !important;
     margin-top: 1rem !important;
+    gap: 14px !important;
   }
   .pomodoro-card {
     width: 100% !important;
     max-width: 400px !important;
     border-left: none !important;
-    border-top: 1px solid rgba(15,23,42,0.08) !important;
   }
 }
 
@@ -251,6 +280,8 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   .tracker-card { width: 100% !important; max-width: 340px !important; }
   .pomodoro-card { max-width: 340px !important; }
   .tracker-page-shell { max-width: 340px !important; }
+  .security-section { padding: 14px !important; }
+  .security-section-head { flex-direction: column !important; align-items: stretch !important; }
   .security-main-grid table { min-width: 720px !important; }
   .user-detail-session-row { align-items: flex-start !important; flex-wrap: wrap !important; }
 }
