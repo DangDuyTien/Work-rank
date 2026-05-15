@@ -7,12 +7,17 @@ const TrackingContext = createContext(null);
 const DESKTOP_PROTOCOL = 'workrank';
 const COMMAND_CONFIRM_TIMEOUT_MS = 8_000;
 
+function getDesktopApiUrl() {
+  return (import.meta.env.VITE_API_URL || window.location.origin).replace(/\/+$/, '');
+}
+
 function buildDesktopTrackerUrl(action) {
   const params = new URLSearchParams();
   const token = localStorage.getItem('token');
   const refreshToken = localStorage.getItem('refreshToken');
   if (token) params.set('token', token);
   if (refreshToken) params.set('refreshToken', refreshToken);
+  params.set('apiUrl', getDesktopApiUrl());
   params.set('ts', String(Date.now()));
   return `${DESKTOP_PROTOCOL}://${action}?${params.toString()}`;
 }

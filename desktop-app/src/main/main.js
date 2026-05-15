@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const { uIOhook } = require('uiohook-napi');
 const { io: ioClient } = require('socket.io-client');
 
-const API = process.env.API_URL || 'http://localhost:5001';
+let apiBaseUrl = normalizeApiUrl(process.env.API_URL || 'http://localhost:5001');
 const LOGIN_EMAIL = process.env.WORKRANK_EMAIL || 'admin@workrank.local';
 const LOGIN_PASSWORD = process.env.WORKRANK_PASSWORD || 'Admin@123456';
 const DEVICE_UUID = process.env.WORKRANK_DEVICE_UUID || `${process.platform}-${require('os').hostname()}`;
@@ -45,6 +45,25 @@ const pendingProtocolUrls = [];
 // Socket.IO connection to backend
 let desktopSocket = null;
 let heartbeatInterval = null;
+
+function normalizeApiUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    return url.origin;
+  } catch {
+    return raw.replace(/\/+$/, '');
+  }
+}
+
+function setApiBaseUrl(value) {
+  const next = normalizeApiUrl(value);
+  if (!next || next === apiBaseUrl) return false;
+  apiBaseUrl = next;
+  disconnectSocket();
+  return true;
+}
 
 function debugLog(...args) {
   if (DEBUG) console.log('[workrank-debug]', ...args);
@@ -144,6 +163,7 @@ function saveRuntimeState(extra = {}) {
     deviceSecret,
     sequence: Number(sequence || 0),
     authUserId,
+    apiUrl: apiBaseUrl,
   };
   if (authUserId) {
     next.deviceStateByUser = {
@@ -204,7 +224,7 @@ function connectSocket() {
   if (!accessToken) return;
 
   debugLog('Connecting desktop socket to backend...');
-  desktopSocket = ioClient(API, {
+  desktopSocket = ioClient(apiBaseUrl, {
     auth: {
       token: accessToken,
       clientType: 'desktop', // identifies this as desktop client
@@ -326,7 +346,7 @@ function stopHeartbeat() {
 async function sendHttpHeartbeat() {
   if (!accessToken) return;
   try {
-    await fetch(`${API}/api/activity/desktop-status`, {
+    await fetch(`${apiBaseUrl}/api/activity/desktop-status`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -357,7 +377,7 @@ async function refreshAccessToken() {
     throw error;
   }
 
-  const res = await fetch(`${API}/api/auth/refresh-token`, {
+  const res = await fetch(`${apiBaseUrl}/api/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -378,7 +398,7 @@ async function refreshAccessToken() {
 }
 
 async function apiRequest(pathname, options = {}, retryAuth = true) {
-  const res = await fetch(`${API}${pathname}`, {
+  const res = await fetch(`${apiBaseUrl}${pathname}`, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), ...(options.headers || {}) },
   });
@@ -395,6 +415,7 @@ async function apiRequest(pathname, options = {}, retryAuth = true) {
 async function ensureAuth() {
   if (accessToken) return;
   const state = loadSecureState();
+  if (!process.env.API_URL && state.apiUrl) setApiBaseUrl(state.apiUrl);
   const savedAuthUserId = state.authUserId || getJwtSubject(state.accessToken);
   const canUseSavedAuth = Boolean(state.accessToken && (state.authSource === 'protocol' || !state.loginEmail || state.loginEmail === LOGIN_EMAIL));
   const savedDevice = getUserDeviceState(state, savedAuthUserId);
@@ -628,6 +649,11 @@ async function applyProtocolAuth(rawUrl) {
   }
 
   const nextAccessToken = parsed.searchParams.get('token') || parsed.searchParams.get('accessToken');
+  const nextApiUrl = parsed.searchParams.get('apiUrl') || parsed.searchParams.get('api');
+  if (nextApiUrl) {
+    const apiChanged = setApiBaseUrl(nextApiUrl);
+    if (apiChanged && tracking) await stopTracking();
+  }
   if (!nextAccessToken) return;
 
   const state = loadSecureState();
