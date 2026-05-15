@@ -65,6 +65,10 @@ const PROFILE_GALLERY_IMAGES = [
   'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=360&q=80',
 ];
 
+const PROFILE_GALLERY_STORAGE_PREFIX = 'workrank:profile-gallery:';
+const FEATURED_BADGE_LIMIT = 4;
+const FEATURED_BADGE_STORAGE_PREFIX = 'workrank:featured-badges:';
+
 const RANK_TIERS = [
   {
     min: 45,
@@ -289,7 +293,7 @@ function decodeImage(dataUrl) {
   });
 }
 
-async function resizeAvatarFile(file) {
+async function resizeSquareImageFile(file, size = 320) {
   if (!file) throw new Error('Chưa chọn ảnh.');
   const lowerName = String(file.name || '').toLowerCase();
   if (file.type.includes('heic') || file.type.includes('heif') || /\.(heic|heif)$/.test(lowerName)) {
@@ -312,7 +316,6 @@ async function resizeAvatarFile(file) {
     return dataUrl;
   }
 
-  const size = 320;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx || image.width <= 0 || image.height <= 0) {
@@ -329,6 +332,14 @@ async function resizeAvatarFile(file) {
   } catch {
     return dataUrl;
   }
+}
+
+function resizeAvatarFile(file) {
+  return resizeSquareImageFile(file, 320);
+}
+
+function resizeGalleryFile(file) {
+  return resizeSquareImageFile(file, 480);
 }
 
 function hydrateLevelInfo(info = {}) {
@@ -458,6 +469,46 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
   ];
 }
 
+function profileGalleryStorageKey(userId) {
+  return `${PROFILE_GALLERY_STORAGE_PREFIX}${userId || 'guest'}`;
+}
+
+function loadProfileGallery(userId) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(profileGalleryStorageKey(userId)) || '[]');
+    const customImages = Array.isArray(parsed) ? parsed : [];
+    return PROFILE_GALLERY_IMAGES.map((fallback, index) => customImages[index] || fallback);
+  } catch {
+    return PROFILE_GALLERY_IMAGES;
+  }
+}
+
+function saveProfileGallery(userId, images) {
+  const next = PROFILE_GALLERY_IMAGES.map((fallback, index) => images[index] || fallback);
+  const customOnly = next.map((image, index) => (image === PROFILE_GALLERY_IMAGES[index] ? '' : image));
+  localStorage.setItem(profileGalleryStorageKey(userId), JSON.stringify(customOnly));
+  return next;
+}
+
+function featuredBadgeStorageKey(userId) {
+  return `${FEATURED_BADGE_STORAGE_PREFIX}${userId || 'guest'}`;
+}
+
+function loadFeaturedBadgeLabels(userId) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(featuredBadgeStorageKey(userId)) || '[]');
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFeaturedBadgeLabels(userId, labels) {
+  const next = labels.slice(0, FEATURED_BADGE_LIMIT);
+  localStorage.setItem(featuredBadgeStorageKey(userId), JSON.stringify(next));
+  return next;
+}
+
 function buildPowerScore({ levelView, score, currentStreak, todayActions }) {
   const levelScore = Number(levelView.level || 0) * 1000;
   const focusScore = Math.round(Number(score || 0) * 12);
@@ -582,6 +633,8 @@ export default function UserDetail() {
   const navigate = useNavigate();
   const { socket, user: authUser } = useAuth();
   const avatarInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const gallerySlotRef = useRef(PROFILE_GALLERY_IMAGES.length - 1);
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [timeline, setTimeline] = useState([]);
@@ -590,6 +643,10 @@ export default function UserDetail() {
   const [levelInfo, setLevelInfo] = useState(null);
   const [localAvatarUrl, setLocalAvatarUrl] = useState('');
   const [avatarError, setAvatarError] = useState('');
+  const [galleryImages, setGalleryImages] = useState(PROFILE_GALLERY_IMAGES);
+  const [galleryError, setGalleryError] = useState('');
+  const [featuredBadgeLabels, setFeaturedBadgeLabels] = useState([]);
+  const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [chartNow, setChartNow] = useState(new Date());
 
@@ -636,6 +693,10 @@ export default function UserDetail() {
   useEffect(() => {
     setLocalAvatarUrl(getStoredAvatar(id));
     setAvatarError('');
+    setGalleryImages(loadProfileGallery(id));
+    setGalleryError('');
+    setFeaturedBadgeLabels(loadFeaturedBadgeLabels(id));
+    setBadgeEditorOpen(false);
   }, [id]);
 
   useEffect(() => {
@@ -790,8 +851,17 @@ export default function UserDetail() {
   const status = (user.presence || user.presenceStatus || user.status || 'offline').toLowerCase();
   const sc = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
   const isVerified = Boolean(user.isVerified || user.verified || user.is_verified);
-  const featuredBadges = badges.filter((badge) => badge.unlocked).slice(0, 3);
   const canEditAvatar = String(authUser?.id || '') === String(user.id || id);
+  const canCustomizeProfile = Boolean(authUser);
+  const unlockedBadgeList = badges.filter((badge) => badge.unlocked);
+  const selectedFeaturedLabels = (featuredBadgeLabels.length ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
+    .filter((label, index, list) => list.indexOf(label) === index)
+    .filter((label) => unlockedBadgeList.some((badge) => badge.label === label))
+    .slice(0, FEATURED_BADGE_LIMIT);
+  const featuredBadges = selectedFeaturedLabels
+    .map((label) => unlockedBadgeList.find((badge) => badge.label === label))
+    .filter(Boolean);
+  const featuredBadgeSlots = Array.from({ length: FEATURED_BADGE_LIMIT }, (_, index) => featuredBadges[index] || null);
   const photoUrl = localAvatarUrl || user.avatarUrl || user.photoUrl || user.imageUrl || '';
   const avatarInitials = initialsFromName(user.name || `User #${id}`);
   const avatarHueValue = avatarHue(user.name, user.id || id);
@@ -850,6 +920,45 @@ export default function UserDetail() {
       setAvatarError('');
     } catch (error) {
       setAvatarError(error.message || 'Không đổi được ảnh đại diện.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const toggleFeaturedBadge = (label) => {
+    if (!canCustomizeProfile) return;
+    setFeaturedBadgeLabels((current) => {
+      const base = (current.length ? current : selectedFeaturedLabels)
+        .filter((item, index, list) => list.indexOf(item) === index)
+        .filter((item) => unlockedBadgeList.some((badge) => badge.label === item));
+      const exists = base.includes(label);
+      const next = exists
+        ? base.filter((item) => item !== label)
+        : base.length >= FEATURED_BADGE_LIMIT ? base : [...base, label];
+      return saveFeaturedBadgeLabels(user.id || id, next);
+    });
+  };
+
+  const openGalleryPicker = (index) => {
+    if (!canCustomizeProfile) return;
+    gallerySlotRef.current = index;
+    galleryInputRef.current?.click();
+  };
+
+  const handleGalleryPick = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const dataUrl = await resizeGalleryFile(file);
+      setGalleryImages((current) => {
+        const next = [...current];
+        next[gallerySlotRef.current] = dataUrl;
+        return saveProfileGallery(user.id || id, next);
+      });
+      setGalleryError('');
+    } catch (error) {
+      setGalleryError(error.message || 'Không thêm được ảnh giới thiệu.');
     } finally {
       event.target.value = '';
     }
@@ -976,17 +1085,31 @@ export default function UserDetail() {
 
         {/* ── GIỚI THIỆU BẢN THÂN (GALLERY) ── */}
         <div className="profile-gallery-grid" aria-label="Ảnh giới thiệu cá nhân">
-          {PROFILE_GALLERY_IMAGES.map((imageUrl, index) => (
-            <div key={imageUrl} className="profile-gallery-cell">
+          {galleryImages.map((imageUrl, index) => (
+            <div key={`${index}-${imageUrl.slice(0, 24)}`} className="profile-gallery-cell">
               <img src={imageUrl} alt={`Ảnh giới thiệu ${index + 1}`} />
-              {canEditAvatar && index === PROFILE_GALLERY_IMAGES.length - 1 && (
-                <button type="button" className="profile-gallery-add">
+              {canCustomizeProfile && (
+                <button
+                  type="button"
+                  className={index === PROFILE_GALLERY_IMAGES.length - 1 ? 'profile-gallery-add' : 'profile-gallery-change'}
+                  onClick={() => openGalleryPicker(index)}
+                >
                   <ImagePlus size={16} strokeWidth={2.5} />
-                  <span>Thêm ảnh</span>
+                  <span>{index === PROFILE_GALLERY_IMAGES.length - 1 ? 'Thêm ảnh' : 'Đổi ảnh'}</span>
                 </button>
               )}
             </div>
           ))}
+          {canCustomizeProfile && (
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+              className="profile-avatar-input"
+              onChange={handleGalleryPick}
+            />
+          )}
+          {galleryError && <div className="profile-gallery-error">{galleryError}</div>}
         </div>
       </section>
 
@@ -1019,20 +1142,67 @@ export default function UserDetail() {
             </div>
           </div>
 
-          {featuredBadges.length > 0 && (
+          {(featuredBadges.length > 0 || canCustomizeProfile) && (
             <div className="profile-achievement-panel">
-              <div className="profile-achievement-title">Huy hiệu nổi bật</div>
+              <div className="profile-achievement-header">
+                <div>
+                  <div className="profile-achievement-title">Huy hiệu nổi bật</div>
+                  <span>{featuredBadges.length}/{FEATURED_BADGE_LIMIT} slot đang dùng</span>
+                </div>
+                {canCustomizeProfile && unlockedBadgeList.length > 0 && (
+                  <button
+                    type="button"
+                    className="profile-achievement-edit"
+                    onClick={() => setBadgeEditorOpen((open) => !open)}
+                  >
+                    {badgeEditorOpen ? 'Đóng' : 'Chỉnh huy hiệu'}
+                  </button>
+                )}
+              </div>
               <div className="profile-achievement-strip">
-                {featuredBadges.map((badge) => {
-                  const Icon = badge.icon;
+                {featuredBadgeSlots.map((badge, index) => {
+                  const Icon = badge?.icon;
                   return (
-                    <span key={badge.label} className="profile-achievement-pill">
-                      <Icon size={14} strokeWidth={2.5} />
-                      {badge.label}
+                    <span key={badge?.label || `empty-${index}`} className={badge ? 'profile-achievement-pill' : 'profile-achievement-pill is-empty'}>
+                      {badge ? (
+                        <>
+                          <Icon size={14} strokeWidth={2.5} />
+                          {badge.label}
+                        </>
+                      ) : (
+                        <>
+                          <Star size={14} strokeWidth={2.5} />
+                          Chọn huy hiệu
+                        </>
+                      )}
                     </span>
                   );
                 })}
               </div>
+              {badgeEditorOpen && canCustomizeProfile && (
+                <div className="profile-badge-editor">
+                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu đã mở khóa để ghim ở đây.</div>
+                  <div className="profile-badge-editor-grid">
+                    {badges.map((badge) => {
+                      const Icon = badge.icon;
+                      const selected = selectedFeaturedLabels.includes(badge.label);
+                      return (
+                        <button
+                          key={badge.label}
+                          type="button"
+                          className={selected ? 'profile-badge-choice is-selected' : badge.unlocked ? 'profile-badge-choice' : 'profile-badge-choice is-locked'}
+                          disabled={!badge.unlocked}
+                          onClick={() => toggleFeaturedBadge(badge.label)}
+                        >
+                          <Icon size={15} strokeWidth={2.4} />
+                          <span>{badge.label}</span>
+                          <em>{selected ? 'Đang ghim' : badge.unlocked ? 'Có thể chọn' : 'Chưa mở'}</em>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
