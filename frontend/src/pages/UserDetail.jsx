@@ -43,6 +43,7 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
+import VerifiedBadge from '../components/VerifiedBadge';
 
 const UserActivityChart = lazy(() => import('../components/UserActivityChart'));
 
@@ -381,26 +382,13 @@ function StatusPill({ statusConfig }) {
 }
 
 function VerifiedMark({ size = 20 }) {
-  const badgeSize = Math.max(14, size);
   return (
     <span
-      className="profile-verified-mark"
       title="Tích xanh được quản trị viên cấp"
       aria-label="Đã được cấp tích xanh"
-      style={{ width: badgeSize, height: badgeSize }}
+      style={{ display: 'inline-flex', alignItems: 'center' }}
     >
-      <svg
-        viewBox="0 0 16 16"
-        width={Math.round(badgeSize * 0.72)}
-        height={Math.round(badgeSize * 0.72)}
-        aria-hidden="true"
-        focusable="false"
-      >
-        <path
-          d="M6.45 10.55 3.75 7.85 2.55 9.05l3.9 3.9 7-7-1.2-1.2-5.8 5.8Z"
-          fill="#ffffff"
-        />
-      </svg>
+      <VerifiedBadge size={size} />
     </span>
   );
 }

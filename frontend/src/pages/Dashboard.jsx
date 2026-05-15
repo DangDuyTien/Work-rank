@@ -16,6 +16,22 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
+import VerifiedBadge from '../components/VerifiedBadge';
+
+const VERIFIED_STORAGE_KEY = 'workrank:verified-users';
+function loadVerifiedUsers() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(VERIFIED_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function isVerifiedUser(user, verifiedUsers) {
+  const userId = String(user.user_id || user.id || '');
+  return Boolean(user.verified || user.isVerified || verifiedUsers.includes(userId));
+}
 
 const STATUS_CONFIG = {
   active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.35)', color: '#16a34a', dot: '#22c55e' },
@@ -110,9 +126,13 @@ export default function Dashboard() {
   const { socket } = useAuth();
   const navigate = useNavigate();
   const [range, setRange] = useState('today');
-  const [users, setUsers] = useState([]);
   const [totals, setTotals] = useState({ keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
   const [prevTotals, setPrevTotals] = useState(null);
+  const [viewMode, setViewMode] = useState('list');
+  const [users, setUsers] = useState([]);
+  const [verifiedUsers, setVerifiedUsers] = useState(() => loadVerifiedUsers());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [now, setNow] = useState(new Date());
   const [liveFlash, setLiveFlash] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -164,6 +184,16 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const syncVerifiedUsers = () => setVerifiedUsers(loadVerifiedUsers());
+    window.addEventListener('storage', syncVerifiedUsers);
+    window.addEventListener('workrank:verified-users-updated', syncVerifiedUsers);
+    return () => {
+      window.removeEventListener('storage', syncVerifiedUsers);
+      window.removeEventListener('workrank:verified-users-updated', syncVerifiedUsers);
+    };
   }, []);
 
   useEffect(() => {
@@ -482,8 +512,10 @@ export default function Dashboard() {
                           {avatarUrl ? <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${user.id}`}`} /> : initials}
                         </div>
                         <div>
-                          <div className="dashboard-user-name">{user.name || `User #${user.id}`}</div>
-                          <div className="dashboard-user-meta">{user.email || 'Không có email'}</div>
+                          <div className="dashboard-user-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {user.name || `User #${user.id}`}
+                            {isVerifiedUser(user, verifiedUsers) && <VerifiedBadge size={14} />}
+                          </div>
                         </div>
                       </div>
                     </td>

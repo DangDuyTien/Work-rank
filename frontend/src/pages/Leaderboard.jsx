@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getStoredAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, Users } from 'lucide-react';
+import VerifiedBadge from '../components/VerifiedBadge';
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' },
@@ -57,40 +58,7 @@ function saveVerifiedUsers(userIds) {
 }
 
 function VerifiedMark({ size = 15 }) {
-  const badgeSize = Math.max(14, size);
-  return (
-    <span
-      title="Tích xanh được quản trị viên cấp"
-      aria-label="Đã được cấp tích xanh"
-      style={{
-        width: badgeSize,
-        height: badgeSize,
-        borderRadius: '50%',
-        background: '#1877f2',
-        border: '2px solid #ffffff',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        lineHeight: 1,
-        boxShadow: '0 1px 2px rgba(15,23,42,0.16), 0 0 0 1px rgba(24,119,242,0.18)',
-        flexShrink: 0,
-      }}
-    >
-      <svg
-        viewBox="0 0 16 16"
-        width={Math.round(badgeSize * 0.72)}
-        height={Math.round(badgeSize * 0.72)}
-        aria-hidden="true"
-        focusable="false"
-        style={{ display: 'block' }}
-      >
-        <path
-          d="M6.45 10.55 3.75 7.85 2.55 9.05l3.9 3.9 7-7-1.2-1.2-5.8 5.8Z"
-          fill="#ffffff"
-        />
-      </svg>
-    </span>
-  );
+  return <VerifiedBadge size={size} />;
 }
 
 function Avatar({ userId, name, size = 36, idx = 0 }) {
@@ -202,6 +170,7 @@ export default function Leaderboard() {
   const [now, setNow]       = useState(new Date());
   const [verifiedUsers, setVerifiedUsers] = useState(() => loadVerifiedUsers());
   const [verificationPending, setVerificationPending] = useState({});
+  const [showRuleModal, setShowRuleModal] = useState(false);
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
@@ -468,9 +437,96 @@ export default function Leaderboard() {
                 }}>{label}</button>
               ))}
             </div>
+
+            {/* Verified Badge Rule Tooltip Button */}
+            <div style={{ position: 'relative', display: 'inline-block', marginLeft: 4 }}>
+              <button
+                type="button"
+                onClick={() => setShowRuleModal(true)}
+                style={{
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  width:28,height:28,borderRadius:'50%',
+                  background:'rgba(59,130,246,0.1)',border:'1px solid rgba(59,130,246,0.2)',
+                  color:'#3b82f6',fontSize:14,fontWeight:900,cursor:'pointer',
+                  padding: 0, outline: 'none', transition: 'transform 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                ?
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* RENDER RULE MODAL */}
+      {showRuleModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
+          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div 
+            style={{
+              background: '#ffffff', borderRadius: 20, width: '100%', maxWidth: 420,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', overflow: 'hidden',
+              animation: 'modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ position: 'relative', padding: '32px 24px 24px', textAlign: 'center', background: 'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0) 100%)' }}>
+              <button 
+                onClick={() => setShowRuleModal(false)}
+                style={{
+                  position: 'absolute', top: 16, right: 16, width: 32, height: 32,
+                  borderRadius: '50%', background: 'rgba(15,23,42,0.05)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#64748b'
+                }}
+              >
+                ✕
+              </button>
+              
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: '#fff', boxShadow: '0 8px 16px rgba(59,130,246,0.15)', marginBottom: 16 }}>
+                <Crown size={32} color="#f59e0b" strokeWidth={2.5} />
+              </div>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>Đặc Quyền Tích Xanh</h2>
+              <p style={{ margin: '8px 0 0', fontSize: 14, color: '#64748b', lineHeight: 1.5 }}>
+                Luật chơi dành cho các cao thủ cày cuốc trên bảng xếp hạng toàn cầu.
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '0 24px 32px' }}>
+              <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ marginTop: 2 }}>
+                    <VerifiedBadge size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: '#1e293b' }}>Top 3 BXH Tháng</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
+                      Hệ thống sẽ <strong>tự động cấp Tích Xanh miễn phí</strong> vĩnh viễn cho 3 người dùng đứng đầu danh sách (Top 1, 2 và 3) tổng kết vào cuối mỗi tháng.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setShowRuleModal(false)}
+                style={{
+                  width: '100%', marginTop: 20, padding: '12px', borderRadius: 10,
+                  background: '#0f172a', color: '#fff', border: 'none',
+                  fontSize: 14, fontWeight: 800, cursor: 'pointer'
+                }}
+              >
+                Đã Rõ Luật Chơi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'group' && (
         <div className="leaderboard-group-filter" style={{...CARD, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16}}>
@@ -510,7 +566,7 @@ export default function Leaderboard() {
       {/* ── PODIUM ── */}
       {!loading && users.length >= 1 && (
         <div className="leaderboard-podium" style={{...CARD,padding:'28px 24px',marginBottom:20,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'end'}}>
-          <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,height:200}}>
+          <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,minHeight:260}}>
             {top2 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
@@ -530,7 +586,7 @@ export default function Leaderboard() {
             )}
             {top1 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
-                <Trophy size={18} color="#f59e0b" fill="#f59e0b" />
+                <Crown size={22} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 4 }} />
                 <div style={{position:'relative'}}>
                   <Avatar userId={top1.user_id || top1.id} name={top1.name} size={52} idx={0}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
@@ -617,8 +673,8 @@ export default function Leaderboard() {
           <table style={{width:'100%',minWidth:720,borderCollapse:'collapse'}}>
             <thead>
               <tr style={{borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
-                {['Hạng','Thành Viên','Gõ Phím','Click','Điểm Tổng'].map(h=>(
-                  <th key={h} style={{padding:'10px 18px',textAlign:h==='Hạng'?'left':'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</th>
+                {['Hạng','Người Dùng','Gõ Phím','Click','Điểm Tổng'].map(h=>(
+                  <th key={h} style={{padding:'10px 18px',textAlign:(h==='Hạng' || h==='Người Dùng')?'left':'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</th>
                 ))}
               </tr>
             </thead>

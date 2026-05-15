@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Bell, LogOut, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
+import { Activity, Bell, Coffee, LogOut, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getStoredAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import BrandMark from './BrandMark';
+import VerifiedBadge from './VerifiedBadge';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
@@ -77,6 +78,7 @@ export default function Layout() {
   const [pageVisible, setPageVisible] = useState(true);
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [donateOpen, setDonateOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [securityAlert, setSecurityAlert] = useState(null);
   const [accountAvatarUrl, setAccountAvatarUrl] = useState('');
@@ -647,6 +649,19 @@ export default function Layout() {
           <button
             type="button"
             className="app-icon-action"
+            aria-label="Mời Cà Phê"
+            onClick={() => setDonateOpen(true)}
+            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', borderRadius: 5, transition: 'transform 0.15s ease' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+            title="Ủng hộ Dev 1 ly cà phê"
+          >
+            <Coffee size={17} />
+          </button>
+
+          <button
+            type="button"
+            className="app-icon-action"
             aria-label="Cài đặt"
             onClick={() => navigate('/settings')}
             style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 5 }}
@@ -685,6 +700,11 @@ export default function Layout() {
                   }}
                 />
               ) : accountInitials}
+
+              {/* Demo: Hiển thị luôn Tích Xanh đè lên Avatar góc dưới phải */}
+              <div style={{ position: 'absolute', bottom: -6, right: -6, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
+                <VerifiedBadge size={14} />
+              </div>
             </button>
 
             {dropOpen && (
@@ -755,7 +775,13 @@ export default function Layout() {
           }}
         >
           <span>© 2024 WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
-          <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#3b82f6', textDecoration: 'none', fontWeight: 800 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              Liên hệ Developer
+            </a>
             {['Chính sách bảo mật', 'Điều khoản dịch vụ', 'Tài liệu API'].map((item) => (
               <span key={item}>{item}</span>
             ))}
@@ -783,6 +809,90 @@ export default function Layout() {
           );
         })}
       </nav>
+
+      {/* Donate Modal */}
+      {donateOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(15,23,42,0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }} onClick={() => setDonateOpen(false)}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: 16,
+            width: 400,
+            maxWidth: '100%',
+            overflow: 'hidden',
+            boxShadow: '0 24px 80px rgba(15,23,42,0.2)',
+            animation: 'slide-down 0.2s ease',
+            fontFamily: "'Space Grotesk', sans-serif",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '24px 24px 16px', textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Coffee size={28} />
+              </div>
+              <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 900, color: '#0f172a' }}>Mời Dev ly cà phê nhé!</h2>
+              <p style={{ margin: 0, color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>
+                WorkRank được duy trì hoàn toàn miễn phí. Bất kỳ khoản donate nào của bạn đều giúp server sống khỏe hơn.
+              </p>
+            </div>
+            
+            <div style={{ padding: '0 24px 24px' }}>
+              <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: 16, textAlign: 'center', marginBottom: 20 }}>
+                <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 8 }}>Quét mã Momo / VNPay</div>
+                <div style={{ width: 140, height: 140, background: '#e2e8f0', margin: '0 auto', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 12 }}>
+                  [Hình QR Code]
+                </div>
+              </div>
+              
+              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(99,102,241,0.1))', padding: 16, borderRadius: 12, border: '1px solid rgba(59,130,246,0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <VerifiedBadge size={18} />
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>Đặc quyền Supporter</span>
+                </div>
+                <div style={{ color: '#475569', fontSize: 12, lineHeight: 1.5, fontWeight: 600 }}>
+                  Sau khi ủng hộ, tên của bạn sẽ có <strong>Tích Xanh</strong> giống hệt Twitter trên Leaderboard và Profile để mọi người cùng chiêm ngưỡng!
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24, textAlign: 'center' }}>
+                <a 
+                  href="https://www.facebook.com/ddyn.fz/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '10px 20px', borderRadius: 999,
+                    background: '#1877F2', color: '#fff', 
+                    fontSize: 14, fontWeight: 800, textDecoration: 'none',
+                    boxShadow: '0 4px 12px rgba(24,119,242,0.3)',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Inbox Developer
+                </a>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+              <button
+                type="button"
+                onClick={() => setDonateOpen(false)}
+                style={{ flex: 1, padding: '16px', background: 'none', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+              >
+                Để sau nhé
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
