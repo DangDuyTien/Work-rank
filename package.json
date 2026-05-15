@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "node scripts/dev.js",
     "backend:dev": "npm --prefix backend run dev",
     "frontend:dev": "npm --prefix frontend run dev",
     "desktop:dev": "npm --prefix desktop-app run dev",

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Bell, Coffee, LogOut, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
+import { Activity, Bell, Coffee, LogOut, MessageCircle, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getStoredAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
