@@ -36,7 +36,6 @@ import {
   Shell,
   ShieldCheck,
   Snail,
-  Sparkles,
   Star,
   Squirrel,
   Target,
@@ -398,14 +397,13 @@ function VerifiedMark({ size = 20 }) {
 
 function DevPill() {
   return (
-    <span
-      className="profile-dev-pill"
-      title="Vật phẩm hiếm: Dev"
-      aria-label="Vật phẩm hiếm: Dev"
-    >
-      <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
-      <span className="profile-dev-label">Dev</span>
-      <Sparkles className="profile-dev-spark" size={12} strokeWidth={2.5} aria-hidden="true" />
+    <span className="profile-dev-badge" title="Vật phẩm hiếm: Dev" aria-label="Vật phẩm hiếm: Dev">
+      <span className="profile-dev-wing is-left" aria-hidden="true" />
+      <span className="profile-dev-pill">
+        <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
+        <span className="profile-dev-label">Dev</span>
+      </span>
+      <span className="profile-dev-wing is-right" aria-hidden="true" />
     </span>
   );
 }

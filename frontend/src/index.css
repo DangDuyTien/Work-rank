@@ -1253,18 +1253,78 @@ textarea:focus-visible,
   box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
 }
 
-.profile-dev-pill {
-  --dev-gold: #facc15;
-  --dev-gold-deep: #b45309;
-  --dev-ember: #f97316;
-  --dev-ink: #3b2504;
+.profile-dev-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 28px;
+  height: 32px;
+  padding: 0 14px;
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 auto;
+}
+
+.profile-dev-wing {
+  width: 28px;
+  height: 22px;
+  position: absolute;
+  top: 50%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0 22%, rgba(224, 242, 254, 0.88) 22% 44%, rgba(125, 211, 252, 0.68) 44% 100%);
+  clip-path: polygon(100% 50%, 67% 6%, 37% 16%, 12% 37%, 0 66%, 34% 61%, 54% 79%, 76% 70%);
+  filter: drop-shadow(0 6px 10px rgba(14, 165, 233, 0.16));
+}
+
+.profile-dev-wing::before,
+.profile-dev-wing::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.22);
+  transform-origin: right center;
+}
+
+.profile-dev-wing::before {
+  width: 19px;
+  height: 1px;
+  right: 4px;
+  top: 8px;
+  transform: rotate(-16deg);
+}
+
+.profile-dev-wing::after {
+  width: 16px;
+  height: 1px;
+  right: 5px;
+  top: 14px;
+  transform: rotate(13deg);
+}
+
+.profile-dev-wing.is-left {
+  left: 0;
+  transform: translateY(-50%) rotate(-10deg);
+}
+
+.profile-dev-wing.is-right {
+  right: 0;
+  transform: translateY(-50%) scaleX(-1) rotate(-10deg);
+}
+
+.profile-dev-pill {
+  --dev-diamond: #67e8f9;
+  --dev-diamond-deep: #075985;
+  --dev-ice: #ecfeff;
+  --dev-ink: #083344;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 29px;
   margin-top: 0;
-  padding: 0 11px 0 10px;
+  padding: 0 13px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 900;
@@ -1272,17 +1332,19 @@ textarea:focus-visible,
   white-space: nowrap;
   color: var(--dev-ink);
   background:
-    linear-gradient(135deg, rgba(255, 251, 235, 0.98) 0%, rgba(254, 243, 199, 0.96) 34%, rgba(250, 204, 21, 0.88) 100%) padding-box,
-    linear-gradient(135deg, #fff7ad 0%, var(--dev-gold) 28%, var(--dev-ember) 62%, #fef3c7 100%) border-box;
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.98) 36%, rgba(186, 230, 253, 0.94) 100%) padding-box,
+    conic-gradient(from 145deg, #ffffff 0deg, #cffafe 48deg, #38bdf8 122deg, #0ea5e9 170deg, #e0f2fe 226deg, #67e8f9 304deg, #ffffff 360deg) border-box;
   border: 1px solid transparent;
   box-shadow:
-    0 7px 18px rgba(180, 83, 9, 0.18),
-    0 0 0 1px rgba(255, 247, 173, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    inset 0 -1px 0 rgba(146, 64, 14, 0.18);
+    0 8px 18px rgba(14, 165, 233, 0.15),
+    0 0 24px rgba(103, 232, 249, 0.24),
+    0 0 0 1px rgba(224, 242, 254, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(2, 132, 199, 0.16);
   cursor: default;
   position: relative;
   overflow: hidden;
+  z-index: 2;
   isolation: isolate;
   transform: translateZ(0);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
@@ -1300,14 +1362,13 @@ textarea:focus-visible,
 }
 
 .profile-dev-icon {
-  color: var(--dev-gold-deep);
-  filter: drop-shadow(0 1px 2px rgba(180, 83, 9, 0.25));
+  color: var(--dev-diamond-deep);
+  filter: drop-shadow(0 1px 1px rgba(14, 165, 233, 0.22));
 }
 
-.profile-dev-spark {
-  color: #f59e0b;
-  margin-left: 1px;
-  filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.8));
+.profile-dev-label {
+  color: #083344;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.78), 0 0 10px rgba(103, 232, 249, 0.28);
 }
 
 .profile-dev-pill::before {
@@ -1317,10 +1378,13 @@ textarea:focus-visible,
   z-index: 0;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.9) 0 8%, transparent 18%),
-    radial-gradient(circle at 82% 70%, rgba(251, 191, 36, 0.5) 0 10%, transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 58%);
-  opacity: 0.72;
+    linear-gradient(118deg, transparent 0 20%, rgba(255, 255, 255, 0.42) 20% 21%, transparent 21% 100%),
+    linear-gradient(64deg, transparent 0 64%, rgba(14, 165, 233, 0.16) 64% 65%, transparent 65% 100%),
+    linear-gradient(155deg, transparent 0 42%, rgba(255, 255, 255, 0.24) 42% 43%, transparent 43% 100%),
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.98) 0 8%, transparent 19%),
+    radial-gradient(circle at 78% 70%, rgba(103, 232, 249, 0.42) 0 9%, transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 58%);
+  opacity: 0.88;
   pointer-events: none;
 }
 
@@ -1335,39 +1399,41 @@ textarea:focus-visible,
   background: linear-gradient(
     115deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.16) 24%,
+    rgba(224, 242, 254, 0.18) 24%,
     rgba(255, 255, 255, 0.95) 46%,
-    rgba(254, 240, 138, 0.95) 54%,
-    rgba(255, 255, 255, 0.18) 70%,
+    rgba(186, 230, 253, 0.95) 54%,
+    rgba(224, 242, 254, 0.2) 70%,
     transparent 100%
   );
-  transform: translateX(-170%) rotate(14deg);
+  transform: translateX(-180%) rotate(14deg);
   opacity: 0;
   pointer-events: none;
-  animation: dev-legendary-shimmer 3.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: dev-legendary-shimmer 4.3s cubic-bezier(0.45, 0, 0.2, 1) infinite;
 }
 
 @keyframes dev-legendary-idle {
   0%, 100% {
     box-shadow:
-      0 7px 18px rgba(180, 83, 9, 0.18),
-      0 0 0 1px rgba(255, 247, 173, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.78),
-      inset 0 -1px 0 rgba(146, 64, 14, 0.18);
+      0 8px 18px rgba(14, 165, 233, 0.15),
+      0 0 24px rgba(103, 232, 249, 0.24),
+      0 0 0 1px rgba(224, 242, 254, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(2, 132, 199, 0.16);
   }
   50% {
     box-shadow:
-      0 9px 22px rgba(180, 83, 9, 0.22),
-      0 0 18px rgba(250, 204, 21, 0.26),
-      inset 0 1px 0 rgba(255, 255, 255, 0.86),
-      inset 0 -1px 0 rgba(146, 64, 14, 0.16);
+      0 10px 24px rgba(14, 165, 233, 0.19),
+      0 0 30px rgba(103, 232, 249, 0.36),
+      0 0 0 1px rgba(186, 230, 253, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.98),
+      inset 0 -1px 0 rgba(2, 132, 199, 0.14);
   }
 }
 
 @keyframes dev-legendary-shimmer {
   0%, 58% {
     opacity: 0;
-    transform: translateX(-170%) rotate(14deg);
+    transform: translateX(-180%) rotate(14deg);
   }
   66% {
     opacity: 0.96;
