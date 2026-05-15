@@ -56,6 +56,15 @@ const STATUS_CONFIG = {
   offline: { label: 'Ngoại tuyến', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.25)', color: '#64748b', dot: '#94a3b8' },
 };
 
+const PROFILE_GALLERY_IMAGES = [
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=360&q=80',
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=360&q=80',
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=360&q=80',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=360&q=80',
+  'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=360&q=80',
+  'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=360&q=80',
+];
+
 const RANK_TIERS = [
   {
     min: 45,
@@ -905,9 +914,9 @@ export default function UserDetail() {
         Quay lại
       </button>
 
-      <section className="profile-hero" style={{ padding: 22, display: 'flex', gap: 24, alignItems: 'stretch', marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
-          <div style={{ position: 'relative' }}>
+      <section className="profile-hero">
+        <div className="profile-hero-profile">
+          <div className="profile-photo-shell">
             {canEditAvatar ? (
               <button
                 type="button"
@@ -935,8 +944,8 @@ export default function UserDetail() {
             {avatarError && <div className="profile-avatar-error">{avatarError}</div>}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 116 }}>
-            <div className="profile-rank-strip" style={{ marginBottom: 4 }}>
+          <div className="profile-identity-copy">
+            <div className="profile-rank-strip">
               <div className="profile-eyebrow">
                 <Crown size={15} />
                 {rank.tier}
@@ -947,16 +956,16 @@ export default function UserDetail() {
                 totalActions={levelView.totalActions}
               />
             </div>
-            <div className="profile-name-line" style={{ marginBottom: 4 }}>
-              <h1 style={{ fontSize: 26, margin: 0, lineHeight: 1.2 }}>{user.name || `User #${id}`}</h1>
+            <div className="profile-name-line">
+              <h1>{user.name || `User #${id}`}</h1>
               {isVerified && <VerifiedMark size={23} />}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: '#64748b', fontWeight: 600, marginBottom: 14 }}>
+            <div className="profile-identity-meta">
               <span className="profile-rank-title">{rank.title}</span>
-              <span style={{ opacity: 0.3 }}>|</span>
+              <span>|</span>
               <span>ID: WR-{String(user.id || id).padStart(4, '0')}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="profile-presence-row">
               <StatusPill statusConfig={sc} />
               {(user.email === 'tien@gmail.com' || Number(user.id || id) === 8 || (user.name || '').toLowerCase() === 'dang duy tien') && (
                 <DevPill />
@@ -966,38 +975,18 @@ export default function UserDetail() {
         </div>
 
         {/* ── GIỚI THIỆU BẢN THÂN (GALLERY) ── */}
-        <div style={{ width: 440, height: 160, marginLeft: 'auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 6, borderRadius: 12, overflow: 'hidden', flexShrink: 0, alignSelf: 'center' }}>
-          <div style={{ position: 'relative' }}>
-            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" alt="Intro 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.7), transparent 60%)' }} />
-            <div style={{ position: 'absolute', bottom: 10, left: 12, color: '#fff' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Góc làm việc</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Setup hàng ngày.</div>
+        <div className="profile-gallery-grid" aria-label="Ảnh giới thiệu cá nhân">
+          {PROFILE_GALLERY_IMAGES.map((imageUrl, index) => (
+            <div key={imageUrl} className="profile-gallery-cell">
+              <img src={imageUrl} alt={`Ảnh giới thiệu ${index + 1}`} />
+              {canEditAvatar && index === PROFILE_GALLERY_IMAGES.length - 1 && (
+                <button type="button" className="profile-gallery-add">
+                  <ImagePlus size={16} strokeWidth={2.5} />
+                  <span>Thêm ảnh</span>
+                </button>
+              )}
             </div>
-          </div>
-          <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=200&q=80" alt="Intro 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'relative' }}>
-            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=200&q=80" alt="Intro 3" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {canEditAvatar && (
-              <div 
-                style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
-                onMouseOver={e => {
-                  e.currentTarget.style.background = 'rgba(15,23,42,0.65)';
-                  e.currentTarget.querySelector('span').style.transform = 'scale(1.06)';
-                  e.currentTarget.querySelector('span').style.background = 'rgba(255,255,255,0.25)';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.background = 'rgba(15,23,42,0.25)';
-                  e.currentTarget.querySelector('span').style.transform = 'scale(1)';
-                  e.currentTarget.querySelector('span').style.background = 'rgba(255,255,255,0.15)';
-                }}
-              >
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', padding: '8px 14px', background: 'rgba(255,255,255,0.15)', borderRadius: 24, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.3s ease', border: '1px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-                  <ImagePlus size={15} strokeWidth={2.5} /> Thêm ảnh
-                </span>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
       </section>
 
