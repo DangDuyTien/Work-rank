@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   avatarHue,
   initialsFromName,
+  removeStoredAvatar,
+  setStoredAvatar,
 } from '../utils/avatar';
 import {
   Activity,
@@ -614,7 +616,7 @@ function RecordCard({ icon: Icon, label, value, detail, strong }) {
 export default function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { socket, user: authUser } = useAuth();
+  const { socket, user: authUser, setUser: setAuthUser } = useAuth();
   const avatarInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const gallerySlotRef = useRef(PROFILE_GALLERY_IMAGES.length - 1);
@@ -703,6 +705,11 @@ export default function UserDetail() {
       if (preferenceResult.status === 'fulfilled') {
         const preferences = preferenceResult.value.data || {};
         setLocalAvatarUrl(preferences.avatarData || '');
+        if (preferences.avatarData) {
+          setStoredAvatar(id, preferences.avatarData);
+        } else {
+          removeStoredAvatar(id);
+        }
         setFeaturedBadgeLabels(normalizeFeaturedBadgeLabels(preferences.featuredBadges));
         setHasFeaturedBadgePreference(Boolean(preferences.hasFeaturedBadgesPreference));
       } else {
@@ -879,7 +886,7 @@ export default function UserDetail() {
     .map((label) => unlockedBadgeList.find((badge) => badge.label === label))
     .filter(Boolean);
   const featuredBadgeSlots = Array.from({ length: FEATURED_BADGE_LIMIT }, (_, index) => featuredBadges[index] || null);
-  const photoUrl = localAvatarUrl || user.avatarUrl || user.photoUrl || user.imageUrl || '';
+  const photoUrl = localAvatarUrl || user.avatarData || user.avatarUrl || user.photoUrl || user.imageUrl || '';
   const avatarInitials = initialsFromName(user.name || `User #${id}`);
   const avatarHueValue = avatarHue(user.name, user.id || id);
   const CurrentAnimalIcon = currentAnimal.icon;
@@ -930,14 +937,29 @@ export default function UserDetail() {
     const file = event.target.files?.[0];
     if (!file) return;
     const previousAvatar = localAvatarUrl;
+    const profileUserId = user.id || id;
 
     try {
       const dataUrl = await resizeAvatarFile(file);
       setLocalAvatarUrl(dataUrl);
+      setStoredAvatar(profileUserId, dataUrl);
+      setUser((current) => (current ? { ...current, avatarData: dataUrl } : current));
+      if (canEditAvatar) {
+        setAuthUser((current) => (current ? { ...current, avatarData: dataUrl } : current));
+      }
       await usersApi.updateProfilePreferences(user.id || id, { avatarData: dataUrl });
       setAvatarError('');
     } catch (error) {
       setLocalAvatarUrl(previousAvatar);
+      if (previousAvatar) {
+        setStoredAvatar(profileUserId, previousAvatar);
+      } else {
+        removeStoredAvatar(profileUserId);
+      }
+      setUser((current) => (current ? { ...current, avatarData: previousAvatar || null } : current));
+      if (canEditAvatar) {
+        setAuthUser((current) => (current ? { ...current, avatarData: previousAvatar || null } : current));
+      }
       setAvatarError(profileSaveError(error, 'Không đổi được ảnh đại diện.'));
     } finally {
       event.target.value = '';
@@ -1000,6 +1022,11 @@ export default function UserDetail() {
           onError={() => {
             if (localAvatarUrl) {
               setLocalAvatarUrl('');
+              removeStoredAvatar(user.id || id);
+              setUser((current) => (current ? { ...current, avatarData: null } : current));
+              if (canEditAvatar) {
+                setAuthUser((current) => (current ? { ...current, avatarData: null } : current));
+              }
               if (canEditAvatar) {
                 usersApi.updateProfilePreferences(user.id || id, { avatarData: null }).catch(() => {});
               }

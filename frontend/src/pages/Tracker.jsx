@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
-import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { getAppSettings, subscribeAppSettings } from '../utils/settings';
 import BrandMark from '../components/BrandMark';
 import {
@@ -199,7 +199,8 @@ export default function Tracker() {
   const [desktopConsentChecked, setDesktopConsentChecked] = useState(false);
   const [desktopDownloadStarted, setDesktopDownloadStarted] = useState(false);
   const [desktopDownloadError, setDesktopDownloadError] = useState('');
-  const avatarUrl = getStoredAvatar(user?.id);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
+  const avatarUrl = getUserAvatar(user);
   const {
     tracking, seconds,
     activeSecondsToday, totalKeys, totalClicks, score, connected,
@@ -213,6 +214,12 @@ export default function Tracker() {
   const keysPerHr = activeSecondsToday > 0 ? Math.round((displayKeys / activeSecondsToday) * 3600) : 0;
   const keysPerHrStr = keysPerHr >= 1000 ? (keysPerHr / 1000).toFixed(1) + 'k' : keysPerHr;
   const showDesktopAction = !desktopOnline || (tracking && desktopOnline && !desktopTracking);
+
+  useEffect(() => {
+    const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
+    window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+  }, []);
   const desktopActionLabel = desktopOnline ? 'Bật' : 'Mở';
   const sourceLabel = desktopOnline && desktopTracking ? 'Desktop' : 'Chờ desktop';
   const mainActionLabel = trackingState === 'starting'
@@ -734,7 +741,7 @@ export default function Tracker() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               fontSize: 13, fontWeight: 800, flexShrink: 0,
               boxShadow: '0 0 0 2px rgba(59,130,246,0.3)',
-            }}>
+            }} data-avatar-refresh={avatarRefreshKey}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt={`Ảnh đại diện ${user?.name || 'Người dùng'}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               ) : initialsFromName(user?.name || 'U')}

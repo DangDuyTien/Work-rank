@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, Bell, Coffee, LogOut, MessageCircle, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
-import { AVATAR_UPDATED_EVENT, getStoredAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
+import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
 import BrandMark from './BrandMark';
 import VerifiedBadge from './VerifiedBadge';
@@ -70,6 +70,12 @@ function notificationTone(type) {
   if (type === 'success' || type === 'pomodoro') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
   if (type === 'contest') return { dot: '#d97706', bg: 'rgba(217,119,6,0.1)' };
   return { dot: '#2563eb', bg: 'rgba(37,99,235,0.08)' };
+}
+
+function isVerifiedAccount(user) {
+  const value = user?.isVerified ?? user?.is_verified ?? user?.verified;
+  if (value === true || value === 1 || value === '1') return true;
+  return typeof value === 'string' && value.toLowerCase() === 'true';
 }
 
 export default function Layout() {
@@ -275,7 +281,7 @@ export default function Layout() {
 
   useEffect(() => {
     const userId = user?.id;
-    setAccountAvatarUrl(getStoredAvatar(userId));
+    setAccountAvatarUrl(getUserAvatar(user));
     const handler = (event) => {
       if (String(event.detail?.userId || '') === String(userId || '')) {
         setAccountAvatarUrl(event.detail?.avatarUrl || '');
@@ -283,10 +289,11 @@ export default function Layout() {
     };
     window.addEventListener(AVATAR_UPDATED_EVENT, handler);
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, handler);
-  }, [user?.id]);
+  }, [user]);
 
   const pageTitle = PAGE_TITLES[location.pathname] || 'WorkRank Realtime';
   const accountInitials = initialsFromName(user?.name || user?.email || '??');
+  const accountVerified = isVerifiedAccount(user);
 
   return (
     <div style={{
@@ -715,6 +722,7 @@ export default function Layout() {
                 width: 32,
                 height: 32,
                 borderRadius: 6,
+                position: 'relative',
                 background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
                 border: '2px solid rgba(59,130,246,0.4)',
                 display: 'flex',
@@ -738,10 +746,11 @@ export default function Layout() {
                 />
               ) : accountInitials}
 
-              {/* Demo: Hiển thị luôn Tích Xanh đè lên Avatar góc dưới phải */}
-              <div style={{ position: 'absolute', bottom: -6, right: -6, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
-                <VerifiedBadge size={14} />
-              </div>
+              {accountVerified && (
+                <div style={{ position: 'absolute', bottom: -6, right: -6, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
+                  <VerifiedBadge size={14} />
+                </div>
+              )}
             </button>
 
             {dropOpen && (

@@ -7,8 +7,9 @@ const { io: ioClient } = require('socket.io-client');
 
 const DEFAULT_API_URL = 'https://workrank-duy-tien.onrender.com';
 let apiBaseUrl = normalizeApiUrl(process.env.API_URL || DEFAULT_API_URL);
-const LOGIN_EMAIL = process.env.WORKRANK_EMAIL || 'admin@workrank.local';
-const LOGIN_PASSWORD = process.env.WORKRANK_PASSWORD || 'Admin@123456';
+const LOGIN_EMAIL = process.env.WORKRANK_EMAIL || '';
+const LOGIN_PASSWORD = process.env.WORKRANK_PASSWORD || '';
+const HAS_ENV_LOGIN = Boolean(LOGIN_EMAIL && LOGIN_PASSWORD);
 const DEVICE_UUID = process.env.WORKRANK_DEVICE_UUID || `${process.platform}-${require('os').hostname()}`;
 const DEVICE_NAME = process.env.WORKRANK_DEVICE_NAME || require('os').hostname();
 const PLATFORM_MAP = { darwin: 'macos', win32: 'windows', linux: 'linux' };
@@ -466,7 +467,13 @@ async function ensureAuth() {
   const state = loadSecureState();
   if (!process.env.API_URL && state.apiUrl) setApiBaseUrl(state.apiUrl);
   const savedAuthUserId = state.authUserId || getJwtSubject(state.accessToken);
-  const canUseSavedAuth = Boolean(state.accessToken && (state.authSource === 'protocol' || !state.loginEmail || state.loginEmail === LOGIN_EMAIL));
+  const canUseSavedAuth = Boolean(
+    state.accessToken
+    && (
+      state.authSource === 'protocol'
+      || (HAS_ENV_LOGIN && state.authSource === 'env' && state.loginEmail === LOGIN_EMAIL)
+    )
+  );
   const savedDevice = getUserDeviceState(state, savedAuthUserId);
   accessToken = canUseSavedAuth ? state.accessToken || null : null;
   refreshToken = canUseSavedAuth ? state.refreshToken || null : null;
@@ -475,6 +482,11 @@ async function ensureAuth() {
   if (accessToken) {
     connectSocket();
     return;
+  }
+  if (!HAS_ENV_LOGIN) {
+    const error = new Error('Desktop Tracker chưa có phiên đăng nhập. Hãy mở app từ web WorkRank bằng nút "Mở Desktop" để truyền đúng tài khoản.');
+    error.statusCode = 401;
+    throw error;
   }
   const login = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: LOGIN_EMAIL, password: LOGIN_PASSWORD }) });
   accessToken = login.accessToken;

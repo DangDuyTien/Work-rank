@@ -13,6 +13,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchMe = async () => {
+    if (location.pathname === '/login') {
+      auth.clearLocalSession();
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     const token = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refreshToken');
     if (!token && !refreshToken) {

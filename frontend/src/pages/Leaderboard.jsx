@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -46,10 +46,10 @@ function VerifiedMark({ size = 15 }) {
   return <VerifiedBadge size={size} />;
 }
 
-function Avatar({ userId, name, size = 36, idx = 0 }) {
-  const avatarUrl = getStoredAvatar(userId);
+function Avatar({ user, userId, name, size = 36, idx = 0, refreshKey = 0 }) {
+  const avatarUrl = getUserAvatar(user || { id: userId }, userId);
   return (
-    <div style={{ position: 'relative', width:size, height:size, flexShrink:0 }}>
+    <div data-avatar-refresh={refreshKey} style={{ position: 'relative', width:size, height:size, flexShrink:0 }}>
       <div style={{
         width:size,height:size,borderRadius:6,flexShrink:0,
         background:AVATAR_GRADS[idx%AVATAR_GRADS.length],
@@ -160,12 +160,19 @@ export default function Leaderboard() {
   const [now, setNow]       = useState(new Date());
   const [verificationPending, setVerificationPending] = useState({});
   const [showRuleModal, setShowRuleModal] = useState(false);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
   const requestIdRef = useRef(0);
 
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
+
+  useEffect(() => {
+    const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
+    window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -543,7 +550,7 @@ export default function Leaderboard() {
             {top2 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
-                  <Avatar userId={top2.user_id || top2.id} name={top2.name} size={44} idx={1}/>
+                  <Avatar user={top2} userId={top2.user_id || top2.id} name={top2.name} size={44} idx={1} refreshKey={avatarRefreshKey}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#64748b',textAlign:'center'}}>
@@ -561,7 +568,7 @@ export default function Leaderboard() {
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
                 <Crown size={22} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 4 }} />
                 <div style={{position:'relative'}}>
-                  <Avatar userId={top1.user_id || top1.id} name={top1.name} size={52} idx={0}/>
+                  <Avatar user={top1} userId={top1.user_id || top1.id} name={top1.name} size={52} idx={0} refreshKey={avatarRefreshKey}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>
@@ -578,7 +585,7 @@ export default function Leaderboard() {
             {top3 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top3.user_id}`); } }} onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
-                  <Avatar userId={top3.user_id || top3.id} name={top3.name} size={40} idx={2}/>
+                  <Avatar user={top3} userId={top3.user_id || top3.id} name={top3.name} size={40} idx={2} refreshKey={avatarRefreshKey}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>
@@ -602,7 +609,7 @@ export default function Leaderboard() {
                   style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(15,23,42,0.03)',borderRadius:5,border:'1px solid rgba(15,23,42,0.08)',cursor:'pointer',transition:'background .15s'}}
                 >
                   <div style={{width:22,height:22,borderRadius:4,background:'rgba(15,23,42,0.06)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#64748b',flexShrink:0}}>{rank}</div>
-                  <Avatar userId={u.user_id || u.id} name={u.name} size={28} idx={rank-1}/>
+                  <Avatar user={u} userId={u.user_id || u.id} name={u.name} size={28} idx={rank-1} refreshKey={avatarRefreshKey}/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                       <span style={{overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
@@ -668,7 +675,7 @@ export default function Leaderboard() {
                     <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#64748b'}}>{rank}</div></td>
                     <td style={{padding:'12px 18px'}}>
                       <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
-                        <Avatar userId={u.user_id || u.id} name={u.name} size={30} idx={rank-1}/>
+                        <Avatar user={u} userId={u.user_id || u.id} name={u.name} size={30} idx={rank-1} refreshKey={avatarRefreshKey}/>
                         <div style={{minWidth:0,display:'flex',flexDirection:'column',gap:5}}>
                           <div style={{display:'flex',alignItems:'center',gap:5,minWidth:0}}>
                             <span style={{fontSize:13,fontWeight:700,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:190}}>{u.name}</span>

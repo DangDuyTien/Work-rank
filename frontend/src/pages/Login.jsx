@@ -72,8 +72,11 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user) navigate('/dashboard', { replace: true });
-  }, [authLoading, navigate, user]);
+    if (!authLoading && user) {
+      auth.clearLocalSession();
+      setUser(null);
+    }
+  }, [authLoading, setUser, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,7 +84,8 @@ export default function Login() {
     setLoading(true);
     try {
       const fn   = isRegister ? auth.register : auth.login;
-      const data = isRegister ? { name, email, password } : { email, password };
+      const trimmedEmail = email.trim().toLowerCase();
+      const data = isRegister ? { name: name.trim(), email: trimmedEmail, password } : { email: trimmedEmail, password };
       const res  = await fn(data);
       const user = res.data.user || res.data;
       if (user) setUser(user);
@@ -169,7 +173,7 @@ export default function Login() {
               <label style={S.label}>Email công việc</label>
               <input
                 style={S.input}
-                type="text" value={email} required
+                type="email" value={email} required
                 placeholder="user@company.com"
                 onChange={e => setEmail(e.target.value)}
                 onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}

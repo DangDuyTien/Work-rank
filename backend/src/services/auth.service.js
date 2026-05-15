@@ -2,15 +2,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const env = require('../config/env');
-const { User } = require('../models');
+const { User, UserProfilePreference } = require('../models');
 const { signAccessToken, signRefreshToken } = require('../utils/token');
 const sanitizeUser = require('../utils/sanitizeUser');
+
+async function userPayload(user) {
+  const payload = sanitizeUser(user);
+  const preference = await UserProfilePreference.findByPk(user.id);
+  return {
+    ...payload,
+    avatarData: preference?.avatarData || null,
+  };
+}
 
 async function issueTokens(user) {
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
   await user.update({ lastSeenAt: new Date() });
-  return { accessToken, refreshToken, user: sanitizeUser(user) };
+  return { accessToken, refreshToken, user: await userPayload(user) };
 }
 
 async function register({ name, email, password, teamId }) {
@@ -85,9 +94,9 @@ async function updateProfile(user, payload = {}) {
     updates.email = email;
   }
 
-  if (!Object.keys(updates).length) return { user: sanitizeUser(user) };
+  if (!Object.keys(updates).length) return { user: await userPayload(user) };
   await user.update(updates);
-  return { user: sanitizeUser(user) };
+  return { user: await userPayload(user) };
 }
 
 async function changePassword(user, { currentPassword, newPassword }) {
@@ -103,4 +112,4 @@ async function changePassword(user, { currentPassword, newPassword }) {
   return { ok: true };
 }
 
-module.exports = { register, login, refresh, logout, updateProfile, changePassword };
+module.exports = { register, login, refresh, logout, updateProfile, changePassword, userPayload };

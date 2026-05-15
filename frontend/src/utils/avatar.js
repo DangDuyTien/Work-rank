@@ -30,6 +30,11 @@ export function removeStoredAvatar(userId) {
   }));
 }
 
+export function getUserAvatar(user = {}, fallbackUserId = '') {
+  const userId = user?.id || user?.user_id || user?.userId || fallbackUserId;
+  return getStoredAvatar(userId) || user?.avatarData || user?.avatarUrl || user?.photoUrl || user?.imageUrl || '';
+}
+
 export function initialsFromName(name) {
   const parts = String(name || 'User').trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return `${parts[0][0] || ''}${parts[parts.length - 1][0] || ''}`.toUpperCase();

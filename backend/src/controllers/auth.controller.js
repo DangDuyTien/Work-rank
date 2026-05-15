@@ -1,5 +1,4 @@
 const authService = require('../services/auth.service');
-const sanitizeUser = require('../utils/sanitizeUser');
 
 async function register(req, res) {
   const result = await authService.register(req.validated.body);
@@ -22,7 +21,7 @@ async function logout(req, res) {
 }
 
 async function me(req, res) {
-  res.json({ user: sanitizeUser(req.user) });
+  res.json({ user: await authService.userPayload(req.user) });
 }
 
 async function updateMe(req, res) {

@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { sequelize, User, DailyStat, ActivityEvent } = require('../models');
+const { sequelize, User, DailyStat, ActivityEvent, UserProfilePreference } = require('../models');
 const fraudDetection = require('./fraudDetection.service');
 const { resolveUserPresence } = require('./userPresence.service');
 const { calculateFocusScore, calculateRankScore } = require('../utils/score');
@@ -40,10 +40,13 @@ function statWhereForRange(range) {
   return { statDate: { [Op.gte]: dates.start, [Op.lte]: dates.end } };
 }
 
-function userInclude(teamId) {
+function userInclude(teamId, options = {}) {
   const where = { status: 'active' };
   if (teamId) where.teamId = teamId;
-  return { model: User, attributes: ['id', 'name', 'email', 'role', 'teamId', 'isVerified', 'status'], where };
+  const include = options.withProfile
+    ? [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }]
+    : [];
+  return { model: User, attributes: ['id', 'name', 'email', 'role', 'teamId', 'isVerified', 'status'], where, include };
 }
 
 function aggregateRows(rows) {
@@ -105,7 +108,7 @@ async function overview({ range = 'today', teamId } = {}) {
 async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
   const rows = await DailyStat.findAll({
     where: statWhereForRange(range),
-    include: [userInclude(teamId)],
+    include: [userInclude(teamId, { withProfile: true })],
   });
 
   const byUser = new Map();
@@ -113,8 +116,11 @@ async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
     const plain = row.toJSON();
     const user = plain.User;
     if (!user) continue;
+    const avatarData = user.UserProfilePreference?.avatarData || null;
+    delete user.UserProfilePreference;
     const existing = byUser.get(String(user.id)) || {
       ...user,
+      avatarData,
       user_id: user.id,
       activeSeconds: 0,
       idleSeconds: 0,

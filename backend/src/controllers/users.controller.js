@@ -49,6 +49,17 @@ function serializeProfilePreference(preference) {
   };
 }
 
+function serializeUserWithProfile(user) {
+  const plain = sanitizeUser(user);
+  const preference = plain.UserProfilePreference || plain.userProfilePreference || null;
+  delete plain.UserProfilePreference;
+  delete plain.userProfilePreference;
+  return decorateUserPresence({
+    ...plain,
+    avatarData: preference?.avatarData || null,
+  });
+}
+
 function serializeProfileImage(image) {
   return {
     slot: image.slot,
@@ -57,14 +68,19 @@ function serializeProfileImage(image) {
 }
 
 async function list(req, res) {
-  const users = await User.findAll({ order: [['createdAt', 'DESC']] });
-  res.json({ data: users.map((user) => decorateUserPresence(sanitizeUser(user))) });
+  const users = await User.findAll({
+    order: [['createdAt', 'DESC']],
+    include: [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }],
+  });
+  res.json({ data: users.map(serializeUserWithProfile) });
 }
 
 async function getById(req, res) {
-  const user = await User.findByPk(req.params.id);
+  const user = await User.findByPk(req.params.id, {
+    include: [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }],
+  });
   if (!user) return res.status(404).json({ message: 'User not found' });
-  return res.json({ user: decorateUserPresence(sanitizeUser(user)) });
+  return res.json({ user: serializeUserWithProfile(user) });
 }
 
 async function create(req, res) {

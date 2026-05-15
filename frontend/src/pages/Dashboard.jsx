@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { dashboard, leaderboard } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
 import {
   Activity,
@@ -126,6 +126,7 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const prevRef = useRef(null);
   const requestIdRef = useRef(0);
 
@@ -177,6 +178,12 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData(range);
   }, [fetchData, range]);
+
+  useEffect(() => {
+    const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
+    window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
+  }, []);
 
   useEffect(() => {
     if (!socket) return undefined;
@@ -469,7 +476,7 @@ export default function Dashboard() {
                 </tr>
               ) : tableRows.map((user) => {
                 const sc = statusConfig(user.status);
-                const avatarUrl = getStoredAvatar(user.id) || user.avatarUrl || user.photoUrl || user.imageUrl || '';
+                const avatarUrl = getUserAvatar(user);
                 const initials = initialsFromName(user.name || `User #${user.id}`);
                 return (
                   <tr
@@ -486,7 +493,7 @@ export default function Dashboard() {
                   >
                     <td>
                       <div className="dashboard-user-cell">
-                        <div className="dashboard-avatar">
+                        <div className="dashboard-avatar" data-avatar-refresh={avatarRefreshKey}>
                           {avatarUrl ? <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${user.id}`}`} /> : initials}
                         </div>
                         <div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { getUserAvatar, initialsFromName } from '../utils/avatar';
 
 const statusColors = {
   active: 'bg-green-500',
@@ -13,7 +13,7 @@ export default function UserRow({ user, formatDuration, showRank }) {
   const navigate = useNavigate();
   const status = user.status || 'offline';
   const userId = user.user_id || user.id;
-  const avatarUrl = getStoredAvatar(userId);
+  const avatarUrl = getUserAvatar(user, userId);
 
   return (
     <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50" onClick={() => navigate(`/users/${user.user_id}`)}>
