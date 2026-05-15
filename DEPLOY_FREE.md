@@ -76,6 +76,26 @@ https://workrank-duy-tien.onrender.com
 
 Nếu lần đầu mở hơi chậm là bình thường vì Render Free có cold start.
 
+## 5.1. Cấu hình file cài Desktop Tracker cho Windows
+
+Nút `Đồng ý và tải về` trên web trỏ tới:
+
+```text
+/downloads/WorkRank%20Tracker-Setup-1.0.0-x64.exe
+```
+
+Render sẽ tải được nếu có một trong các cách sau:
+
+1. Commit file installer vào `frontend/public/downloads/WorkRank Tracker-Setup-1.0.0-x64.exe`. Khi Render build frontend, file này được copy sang `frontend/dist/downloads` và backend sẽ tải được qua `/downloads/...`.
+2. Hoặc upload file `desktop-app/release/WorkRank Tracker-Setup-1.0.0-x64.exe` lên một nơi public như GitHub Release, Cloudflare R2 hoặc S3.
+3. Nếu dùng link public riêng, vào Render -> service `workrank-duy-tien` -> Environment, set:
+
+```env
+DESKTOP_WINDOWS_DOWNLOAD_URL=https://link-public-to/WorkRank%20Tracker-Setup-1.0.0-x64.exe
+```
+
+Sau đó redeploy service. Nếu không có file trong repo và không set biến này, trang tải sẽ báo `Desktop installer not found`.
+
 ## 6. Mỗi lần sửa code
 
 ```bash

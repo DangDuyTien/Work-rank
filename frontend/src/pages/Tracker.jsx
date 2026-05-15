@@ -198,6 +198,7 @@ export default function Tracker() {
   const [desktopConsentOpen, setDesktopConsentOpen] = useState(false);
   const [desktopConsentChecked, setDesktopConsentChecked] = useState(false);
   const [desktopDownloadStarted, setDesktopDownloadStarted] = useState(false);
+  const [desktopDownloadError, setDesktopDownloadError] = useState('');
   const avatarUrl = getStoredAvatar(user?.id);
   const {
     tracking, seconds,
@@ -253,6 +254,7 @@ export default function Tracker() {
     if (options.launchDesktop && !desktopOnline) {
       setDesktopConsentChecked(false);
       setDesktopDownloadStarted(false);
+      setDesktopDownloadError('');
       setDesktopConsentOpen(true);
       return false;
     }
@@ -264,7 +266,25 @@ export default function Tracker() {
     setDesktopConsentOpen(false);
   };
 
-  const downloadDesktopTracker = () => {
+  const downloadDesktopTracker = async () => {
+    setDesktopDownloadError('');
+    const shouldPreflight = DESKTOP_WINDOWS_DOWNLOAD_URL.startsWith('/')
+      || DESKTOP_WINDOWS_DOWNLOAD_URL.startsWith(window.location.origin);
+    if (shouldPreflight) {
+      try {
+        const response = await fetch(DESKTOP_WINDOWS_DOWNLOAD_URL, {
+          method: 'HEAD',
+          cache: 'no-store',
+          redirect: 'manual',
+        });
+        if (response.status >= 400) {
+          setDesktopDownloadError('Server chưa có file cài đặt Windows. Admin cần upload file .exe và set DESKTOP_WINDOWS_DOWNLOAD_URL trên Render.');
+          return;
+        }
+      } catch {
+        // Some browsers block preflight for cross-origin redirects; still try the actual download.
+      }
+    }
     setDesktopDownloadStarted(true);
     window.open(DESKTOP_WINDOWS_DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
   };
@@ -580,6 +600,7 @@ export default function Tracker() {
                       e.stopPropagation();
                       setDesktopConsentChecked(false);
                       setDesktopDownloadStarted(false);
+                      setDesktopDownloadError('');
                       setDesktopConsentOpen(true);
                     }}
                     style={{
@@ -1250,6 +1271,22 @@ export default function Tracker() {
                   Tôi đã đọc cảnh báo và đồng ý cài WorkRank Tracker với phạm vi dữ liệu ở trên.
                 </span>
               </label>
+
+              {desktopDownloadError && (
+                <div style={{
+                  marginBottom: 14,
+                  border: '1px solid rgba(220,38,38,0.2)',
+                  background: 'rgba(254,242,242,0.85)',
+                  color: '#b91c1c',
+                  borderRadius: 8,
+                  padding: '10px 11px',
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  fontWeight: 750,
+                }}>
+                  {desktopDownloadError}
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
                 <button

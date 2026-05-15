@@ -21,15 +21,50 @@ const DESKTOP_DOWNLOAD_REDIRECTS = {
 
 function desktopDownloadPath(fileName) {
   if (!DOWNLOADABLE_DESKTOP_FILES.has(fileName)) return null;
+  const candidates = [];
   const configuredDir = process.env.DESKTOP_DOWNLOAD_DIR;
-  let downloadDir = path.resolve(__dirname, '../../desktop-app/release');
   if (configuredDir) {
-    downloadDir = path.isAbsolute(configuredDir) ? configuredDir : path.resolve(process.cwd(), configuredDir);
-    if (!fs.existsSync(downloadDir)) {
-      downloadDir = path.resolve(__dirname, '../..', configuredDir);
-    }
+    const primaryDir = path.isAbsolute(configuredDir) ? configuredDir : path.resolve(process.cwd(), configuredDir);
+    candidates.push(path.join(primaryDir, fileName));
+    candidates.push(path.join(path.resolve(__dirname, '../..', configuredDir), fileName));
   }
-  return path.join(downloadDir, fileName);
+  candidates.push(
+    path.resolve(__dirname, '../../desktop-app/release', fileName),
+    path.resolve(__dirname, '../../frontend/dist/downloads', fileName),
+    path.resolve(__dirname, '../../frontend/public/downloads', fileName),
+  );
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+function renderMissingDesktopInstaller(req, res) {
+  const wantsJson = String(req.get('accept') || '').includes('application/json');
+  const message = 'Desktop installer not found';
+  const hint = 'Upload WorkRank Tracker installer to a public URL and set DESKTOP_WINDOWS_DOWNLOAD_URL on Render, or put the file in DESKTOP_DOWNLOAD_DIR.';
+  if (wantsJson) return res.status(503).json({ message, hint });
+  return res.status(503).type('html').send(`<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WorkRank Tracker chưa sẵn sàng tải</title>
+    <style>
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; }
+      main { max-width: 560px; margin: 12vh auto; padding: 28px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 18px 50px rgba(15,23,42,.08); }
+      h1 { margin: 0 0 10px; font-size: 24px; }
+      p { color: #475569; line-height: 1.55; }
+      code { background: #eef2ff; color: #1d4ed8; padding: 2px 6px; border-radius: 5px; }
+      a { color: #2563eb; font-weight: 800; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Chưa có file cài WorkRank Tracker</h1>
+      <p>Server đã nhận yêu cầu tải app Windows, nhưng chưa tìm thấy file installer và cũng chưa có link redirect.</p>
+      <p>Admin cần upload file <code>WorkRank Tracker-Setup-1.0.0-x64.exe</code> lên GitHub Release/R2/S3, sau đó set biến môi trường <code>DESKTOP_WINDOWS_DOWNLOAD_URL</code> trên Render rồi redeploy.</p>
+      <p><a href="/">Quay lại WorkRank</a></p>
+    </main>
+  </body>
+</html>`);
 }
 
 app.use(helmet({
@@ -53,7 +88,7 @@ app.get('/downloads/:fileName', (req, res) => {
   if (!filePath || !fs.existsSync(filePath)) {
     const redirectUrl = DESKTOP_DOWNLOAD_REDIRECTS[req.params.fileName];
     if (redirectUrl) return res.redirect(302, redirectUrl);
-    return res.status(404).json({ message: 'Desktop installer not found' });
+    return renderMissingDesktopInstaller(req, res);
   }
   return res.download(filePath, req.params.fileName);
 });
