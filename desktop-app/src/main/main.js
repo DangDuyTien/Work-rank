@@ -3,7 +3,6 @@ const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage } = require(
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { uIOhook } = require('uiohook-napi');
 const { io: ioClient } = require('socket.io-client');
 
 let apiBaseUrl = normalizeApiUrl(process.env.API_URL || 'http://localhost:5001');
@@ -45,6 +44,17 @@ const pendingProtocolUrls = [];
 // Socket.IO connection to backend
 let desktopSocket = null;
 let heartbeatInterval = null;
+let uIOhook = null;
+
+function getInputHook() {
+  if (uIOhook) return uIOhook;
+  try {
+    ({ uIOhook } = require('uiohook-napi'));
+    return uIOhook;
+  } catch (error) {
+    throw new Error(`Không tải được bộ đếm phím/chuột: ${error.message}. Hãy chạy "npm install" trong desktop-app trên đúng máy Windows rồi mở lại app.`);
+  }
+}
 
 function normalizeApiUrl(value) {
   const raw = String(value || '').trim();
@@ -72,14 +82,27 @@ function debugLog(...args) {
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) app.quit();
 
+function isProtocolUrl(value) {
+  return String(value || '').toLowerCase().startsWith(`${PROTOCOL}://`);
+}
+
 function registerProtocolClient() {
   if (process.env.WORKRANK_SKIP_PROTOCOL_REGISTER === 'true') return;
   const devAppPath = app.getAppPath();
   const isDevElectron = process.defaultApp || process.execPath.includes(`${path.sep}node_modules${path.sep}electron${path.sep}`);
   if (isDevElectron) {
+    if (process.platform === 'win32') {
+      const ok = app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [devAppPath]);
+      if (!ok) {
+        console.warn(`Dev protocol handler is not registered. Run "npm run install-protocol:win" in ${devAppPath}.`);
+      }
+      return;
+    }
     const devHandlerApp = process.env.WORKRANK_PROTOCOL_HANDLER_APP || '/Applications/WorkRank Tracker Dev.app';
-    if (!fs.existsSync(devHandlerApp)) {
+    if (process.platform === 'darwin' && !fs.existsSync(devHandlerApp)) {
       console.warn(`Dev protocol handler is not installed. Run "npm run install-protocol:mac" in ${devAppPath}.`);
+    } else if (process.platform !== 'darwin') {
+      console.warn(`Dev protocol handler is not installed for ${process.platform}.`);
     }
   } else {
     app.setAsDefaultProtocolClient(PROTOCOL);
@@ -102,7 +125,7 @@ function queueProtocolUrl(url) {
 }
 
 for (const arg of process.argv) {
-  if (arg.startsWith(`${PROTOCOL}://`)) queueProtocolUrl(arg);
+  if (isProtocolUrl(arg)) queueProtocolUrl(arg);
 }
 
 function statePath() {
@@ -303,6 +326,7 @@ function stopInputCapture() {
     clearInterval(interval);
     interval = null;
   }
+  if (!uIOhook) return;
   try {
     uIOhook.removeAllListeners('keydown');
     uIOhook.removeAllListeners('keyup');
@@ -565,48 +589,49 @@ async function startTracking() {
   try {
     if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) {
       systemPreferences.isTrustedAccessibilityClient(true);
-	      console.warn(ACCESSIBILITY_ERROR);
-	      lastError = ACCESSIBILITY_ERROR;
-	      emitPingResult({ connected: false, error: ACCESSIBILITY_ERROR });
-	      tracking = false;
-	      trackingStartedAt = null;
-	      emitStatus({ connected: false, error: ACCESSIBILITY_ERROR });
-	      sendHeartbeat(); // Report status change
-	      await sendHttpHeartbeat();
-	      return;
-	    }
+      console.warn(ACCESSIBILITY_ERROR);
+      lastError = ACCESSIBILITY_ERROR;
+      emitPingResult({ connected: false, error: ACCESSIBILITY_ERROR });
+      tracking = false;
+      trackingStartedAt = null;
+      emitStatus({ connected: false, error: ACCESSIBILITY_ERROR });
+      sendHeartbeat(); // Report status change
+      await sendHttpHeartbeat();
+      return;
+    }
 
-	    await ensureSession();
-	    debugLog('session ensured', { sessionId });
-	    await sendHttpHeartbeat();
-	    uIOhook.removeAllListeners('keydown');
-    uIOhook.removeAllListeners('keyup');
-    uIOhook.removeAllListeners('mousedown');
-    uIOhook.removeAllListeners('mousemove');
-    uIOhook.on('keydown', onKeyDown);
-    uIOhook.on('keyup', onKeyUp);
-    uIOhook.on('mousedown', onMouseDown);
-    uIOhook.on('mousemove', onMouseMove);
-    uIOhook.start();
+    const inputHook = getInputHook();
+    await ensureSession();
+    debugLog('session ensured', { sessionId });
+    await sendHttpHeartbeat();
+    inputHook.removeAllListeners('keydown');
+    inputHook.removeAllListeners('keyup');
+    inputHook.removeAllListeners('mousedown');
+    inputHook.removeAllListeners('mousemove');
+    inputHook.on('keydown', onKeyDown);
+    inputHook.on('keyup', onKeyUp);
+    inputHook.on('mousedown', onMouseDown);
+    inputHook.on('mousemove', onMouseMove);
+    inputHook.start();
     debugLog('uiohook started');
 
     interval = setInterval(sendPing, PING_INTERVAL);
     debugLog('flush interval started', { intervalMs: PING_INTERVAL });
-	    emitPingResult({ connected: true });
-	    emitStatus({ connected: true });
-	    sendHeartbeat(); // Report tracking started
-	    await sendHttpHeartbeat();
-	  } catch (err) {
-	    console.error('Failed to start desktop tracking:', err.message);
-	    lastError = err.message;
-	    tracking = false;
-	    trackingStartedAt = null;
+    emitPingResult({ connected: true });
+    emitStatus({ connected: true });
+    sendHeartbeat(); // Report tracking started
+    await sendHttpHeartbeat();
+  } catch (err) {
+    console.error('Failed to start desktop tracking:', err.message);
+    lastError = err.message;
+    tracking = false;
+    trackingStartedAt = null;
     emitPingResult({ connected: false, error: err.message });
-	    emitStatus({ connected: false, error: err.message });
-	    sendHeartbeat(); // Report error
-	    await sendHttpHeartbeat();
-	  }
-	}
+    emitStatus({ connected: false, error: err.message });
+    sendHeartbeat(); // Report error
+    await sendHttpHeartbeat();
+  }
+}
 
 async function stopTracking() {
   if (!tracking) return;
@@ -718,7 +743,7 @@ async function logoutAndClose() {
 }
 
 app.on('second-instance', (_event, argv) => {
-  const protocolUrl = argv.find((arg) => arg.startsWith(`${PROTOCOL}://`));
+  const protocolUrl = argv.find(isProtocolUrl);
   if (protocolUrl) void handleProtocolUrl(protocolUrl);
   else focusMainWindow();
 });

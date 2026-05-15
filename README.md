@@ -73,10 +73,13 @@ npm install
 # Đăng ký protocol workrank:// để web có thể mở Desktop App trên macOS
 npm run install-protocol:mac
 
+# Trên Windows, dùng lệnh này để web mở được Desktop App
+npm run install-protocol:win
+
 # Chạy thử Desktop App trong môi trường dev
 npm start
 ```
-*(Lưu ý: Trên macOS, bạn cần cấp quyền Accessibility cho Terminal hoặc ứng dụng để bắt được sự kiện phím/chuột toàn cầu).*
+*(Lưu ý: Trên macOS, bạn cần cấp quyền Accessibility cho Terminal hoặc ứng dụng để bắt được sự kiện phím/chuột toàn cầu. Trên Windows, nếu muốn đếm thao tác trong app chạy quyền Administrator thì Desktop App cũng cần chạy cùng quyền Administrator).*
 
 ---
 

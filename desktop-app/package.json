@@ -6,7 +6,9 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "install-protocol:mac": "node scripts/install-macos-protocol-handler.js"
+    "install-protocol:mac": "node scripts/install-macos-protocol-handler.js",
+    "install-protocol:win": "node scripts/install-windows-protocol-handler.js",
+    "install-protocol:windows": "node scripts/install-windows-protocol-handler.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
