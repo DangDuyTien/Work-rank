@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
 import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { getAppSettings, subscribeAppSettings } from '../utils/settings';
 import BrandMark from '../components/BrandMark';
 import {
   AlertTriangle,
@@ -59,7 +60,11 @@ function getPomodoroModeSeconds(preset, mode) {
   return preset.focusSeconds;
 }
 
-function createPomodoroState(presetKey = POMODORO_PRESETS[0].key, mode = 'focus') {
+function getDefaultPomodoroPresetKey() {
+  return getAppSettings().pomodoro?.defaultPreset || POMODORO_PRESETS[0].key;
+}
+
+function createPomodoroState(presetKey = getDefaultPomodoroPresetKey(), mode = 'focus') {
   const preset = getPomodoroPreset(presetKey);
   return {
     presetKey: preset.key,
@@ -188,6 +193,7 @@ function playPomodoroChime() {
 export default function Tracker() {
   const { user, logout } = useAuth();
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
+  const [appSettings, setAppSettings] = useState(getAppSettings);
   const avatarUrl = getStoredAvatar(user?.id);
   const {
     tracking, seconds,
@@ -239,6 +245,8 @@ export default function Tracker() {
       ? `Sẵn sàng: ${POMODORO_MODES[pomodoro.mode]?.label || 'Phiên mới'}`
       : pomodoro.startedOnce ? 'Tạm dừng' : 'Sẵn sàng';
 
+  useEffect(() => subscribeAppSettings(setAppSettings), []);
+
   useEffect(() => {
     localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify({
       presetKey: pomodoro.presetKey,
@@ -270,8 +278,8 @@ export default function Tracker() {
 
   useEffect(() => {
     if (!pomodoro.completedAt) return;
-    playPomodoroChime();
-  }, [pomodoro.completedAt]);
+    if (appSettings.notifications?.sound) playPomodoroChime();
+  }, [appSettings.notifications?.sound, pomodoro.completedAt]);
 
   useEffect(() => {
     const originalTitle = document.title;
@@ -303,8 +311,14 @@ export default function Tracker() {
   };
 
   const togglePomodoro = () => {
-    if (!pomodoro.running && pomodoro.mode === 'focus' && !tracking && !trackingPending) {
-      void startTrack({ launchDesktop: true });
+    if (
+      !pomodoro.running
+      && pomodoro.mode === 'focus'
+      && !tracking
+      && !trackingPending
+      && appSettings.tracker?.autoStartWithPomodoro
+    ) {
+      void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
     }
     setPomodoro((prev) => {
       const running = !prev.running;

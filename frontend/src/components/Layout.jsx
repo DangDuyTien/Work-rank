@@ -4,6 +4,7 @@ import { Activity, Bell, Coffee, LogOut, MessageCircle, Monitor, Play, Settings,
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getStoredAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
+import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
 import BrandMark from './BrandMark';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -21,9 +22,11 @@ const PAGE_TITLES = {
   '/groups': 'WorkRank Realtime',
   '/tracker': 'WorkRank Realtime',
   '/security': 'Bảo Mật & Chống Gian Lận',
+  '/settings': 'Cài Đặt',
 };
 
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
+const NOTIFICATIONS_CLEARED_EVENT = 'workrank:notifications-cleared';
 const CONTEST_STORAGE_KEY = 'workrank:group-contests:v1';
 const ACTION_MILESTONES = [500, 1000, 2500, 5000, 10000, 25000, 50000];
 
@@ -82,11 +85,13 @@ export default function Layout() {
   const [notifications, setNotifications] = useState([]);
   const [securityAlert, setSecurityAlert] = useState(null);
   const [accountAvatarUrl, setAccountAvatarUrl] = useState('');
+  const [appSettings, setAppSettings] = useState(getAppSettings);
   const dropRef = useRef(null);
   const notificationRef = useRef(null);
 
   const addNotification = useCallback((item) => {
     if (!user?.id) return;
+    if (!shouldStoreNotification(item.type || 'info', appSettings)) return;
     setNotifications((prev) => {
       if (item.dedupeKey && prev.some((notification) => notification.dedupeKey === item.dedupeKey)) return prev;
       const next = [{
@@ -103,9 +108,18 @@ export default function Layout() {
       persistNotifications(user.id, next);
       return next;
     });
-  }, [user?.id]);
+  }, [appSettings, user?.id]);
 
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.read).length, [notifications]);
+
+  useEffect(() => subscribeAppSettings(setAppSettings), []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.workrankDensity = appSettings.appearance?.density || 'comfortable';
+    root.dataset.workrankReduceMotion = appSettings.appearance?.reduceMotion ? 'true' : 'false';
+    root.dataset.workrankContrast = appSettings.appearance?.highContrast ? 'true' : 'false';
+  }, [appSettings]);
 
   const markNotificationsRead = useCallback(() => {
     if (!user?.id) return;
@@ -143,12 +157,24 @@ export default function Layout() {
   }, [user?.id]);
 
   useEffect(() => {
+    const handler = (event) => {
+      const targetUserId = String(event.detail?.userId || '');
+      if (!targetUserId || targetUserId === String(user?.id || '')) {
+        setNotifications([]);
+      }
+    };
+    window.addEventListener(NOTIFICATIONS_CLEARED_EVENT, handler);
+    return () => window.removeEventListener(NOTIFICATIONS_CLEARED_EVENT, handler);
+  }, [user?.id]);
+
+  useEffect(() => {
     if (!socket) return undefined;
     let timer = null;
     const handler = (payload) => {
       const isOwnAlert = String(payload?.userId || payload?.user_id || '') === String(user?.id || '')
         || (payload?.email && String(payload.email).toLowerCase() === String(user?.email || '').toLowerCase());
       if (!isAdmin && !isOwnAlert) return;
+      if (!appSettings.notifications?.security) return;
 
       setSecurityAlert(payload);
       addNotification({
@@ -167,7 +193,7 @@ export default function Layout() {
       if (timer) clearTimeout(timer);
       socket.off('security:device:quarantined', handler);
     };
-  }, [addNotification, isAdmin, socket, user?.email, user?.id]);
+  }, [addNotification, appSettings.notifications?.security, isAdmin, socket, user?.email, user?.id]);
 
   useEffect(() => {
     if (!socket || !user?.id) return undefined;
@@ -233,7 +259,7 @@ export default function Layout() {
   }, [addNotification, user?.id]);
 
   useEffect(() => {
-    if (!user?.id || tracking || trackingPending || location.pathname === '/tracker') return undefined;
+    if (!user?.id || tracking || trackingPending || location.pathname === '/tracker' || !appSettings.notifications?.trackerIdle) return undefined;
     const timer = window.setTimeout(() => {
       addNotification({
         type: 'warning',
@@ -245,7 +271,7 @@ export default function Layout() {
       });
     }, 90000);
     return () => window.clearTimeout(timer);
-  }, [addNotification, location.pathname, tracking, trackingPending, user?.id]);
+  }, [addNotification, appSettings.notifications?.trackerIdle, location.pathname, tracking, trackingPending, user?.id]);
 
   useEffect(() => {
     const userId = user?.id;
@@ -664,7 +690,18 @@ export default function Layout() {
             className="app-icon-action"
             aria-label="Cài đặt"
             onClick={() => navigate('/settings')}
-            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 5 }}
+            style={{
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: location.pathname === '/settings' ? 'rgba(37,99,235,0.08)' : 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: location.pathname === '/settings' ? '#2563eb' : '#64748b',
+              borderRadius: 5,
+            }}
           >
             <Settings size={17} />
           </button>

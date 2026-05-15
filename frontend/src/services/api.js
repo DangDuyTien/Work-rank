@@ -145,6 +145,8 @@ export const auth = {
     }
   },
   me: () => api.get('/api/auth/me'),
+  updateProfile: (data) => api.patch('/api/auth/me', data),
+  changePassword: (data) => api.patch('/api/auth/password', data),
 };
 
 export const activity = {

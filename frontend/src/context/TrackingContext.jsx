@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { activity as activityApi } from '../services/api';
+import { getAppSettings, subscribeAppSettings } from '../utils/settings';
 
 const TrackingContext = createContext(null);
 const DESKTOP_PROTOCOL = 'workrank';
@@ -70,6 +71,7 @@ export function TrackingProvider({ children }) {
   const [desktopTracking, setDesktopTracking] = useState(false);
   const [desktopTrackingStartedAt, setDesktopTrackingStartedAt] = useState(null);
   const [desktopInfo, setDesktopInfo] = useState(null);
+  const [appSettings, setAppSettings] = useState(getAppSettings);
 
   const latestSocketRef = useRef(socket);
   const desktopOnlineRef = useRef(false);
@@ -77,6 +79,8 @@ export function TrackingProvider({ children }) {
   const trackingStateRef = useRef('idle');
   const commandTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
+
+  useEffect(() => subscribeAppSettings(setAppSettings), []);
 
   const setTrackingState = useCallback((nextState) => {
     trackingStateRef.current = nextState;
@@ -341,7 +345,7 @@ export function TrackingProvider({ children }) {
   }, [clearCommandTimeout, fetchDesktopStatus, setTrackingState, updateDesktopLaunchStatus]);
 
   const startTrack = useCallback(async (options = {}) => {
-    const { launchDesktop = true } = options;
+    const launchDesktop = options.launchDesktop ?? Boolean(appSettings.tracker?.autoLaunchDesktop);
     const currentState = trackingStateRef.current;
     if (currentState === 'active' || currentState === 'starting') return false;
 
@@ -368,7 +372,7 @@ export function TrackingProvider({ children }) {
     }
 
     return true;
-  }, [armCommandTimeout, sendDesktopCommand, setTrackingState, updateDesktopLaunchStatus]);
+  }, [appSettings.tracker?.autoLaunchDesktop, armCommandTimeout, sendDesktopCommand, setTrackingState, updateDesktopLaunchStatus]);
 
   const stopTrack = useCallback(async (options = {}) => {
     const { stopDesktop = true } = options;

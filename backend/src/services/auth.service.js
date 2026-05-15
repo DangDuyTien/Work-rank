@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const env = require('../config/env');
 const { User } = require('../models');
 const { signAccessToken, signRefreshToken } = require('../utils/token');
@@ -63,5 +64,43 @@ async function logout(user) {
   await user.update({ lastSeenAt: new Date() });
 }
 
-module.exports = { register, login, refresh, logout };
+async function updateProfile(user, payload = {}) {
+  const updates = {};
+  const name = String(payload.name || '').trim();
+  const email = String(payload.email || '').trim().toLowerCase();
 
+  if (name) updates.name = name;
+  if (email && email !== String(user.email || '').toLowerCase()) {
+    const existing = await User.findOne({
+      where: {
+        email,
+        id: { [Op.ne]: user.id },
+      },
+    });
+    if (existing) {
+      const error = new Error('Email already registered');
+      error.statusCode = 409;
+      throw error;
+    }
+    updates.email = email;
+  }
+
+  if (!Object.keys(updates).length) return { user: sanitizeUser(user) };
+  await user.update(updates);
+  return { user: sanitizeUser(user) };
+}
+
+async function changePassword(user, { currentPassword, newPassword }) {
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    const error = new Error('Current password is incorrect');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, env.bcryptRounds);
+  await user.update({ passwordHash, lastSeenAt: new Date() });
+  return { ok: true };
+}
+
+module.exports = { register, login, refresh, logout, updateProfile, changePassword };

@@ -59,7 +59,7 @@ const STATUS_CONFIG = {
 const RANK_TIERS = [
   {
     min: 45,
-    tier: 'Legend',
+    tier: 'Huyền thoại',
     title: 'Huyền thoại WorkRank',
     color: '#7c3aed',
     soft: 'rgba(124,58,237,0.04)',
@@ -74,7 +74,7 @@ const RANK_TIERS = [
   },
   {
     min: 35,
-    tier: 'Diamond',
+    tier: 'Kim cương',
     title: 'Đấu sĩ năng suất',
     color: '#0891b2',
     soft: 'rgba(8,145,178,0.04)',
@@ -89,7 +89,7 @@ const RANK_TIERS = [
   },
   {
     min: 25,
-    tier: 'Platinum',
+    tier: 'Bạch kim',
     title: 'Cao thủ tập trung',
     color: '#2563eb',
     soft: 'rgba(37,99,235,0.04)',
@@ -104,7 +104,7 @@ const RANK_TIERS = [
   },
   {
     min: 15,
-    tier: 'Gold',
+    tier: 'Vàng',
     title: 'Chiến binh bền bỉ',
     color: '#d97706',
     soft: 'rgba(217,119,6,0.04)',
@@ -119,7 +119,7 @@ const RANK_TIERS = [
   },
   {
     min: 7,
-    tier: 'Silver',
+    tier: 'Bạc',
     title: 'Người tăng tốc',
     color: '#64748b',
     soft: 'rgba(100,116,139,0.04)',
@@ -134,7 +134,7 @@ const RANK_TIERS = [
   },
   {
     min: 0,
-    tier: 'Bronze',
+    tier: 'Đồng',
     title: 'Tân binh tiềm năng',
     color: '#b45309',
     soft: 'rgba(180,83,9,0.04)',
@@ -488,6 +488,58 @@ function DevPill() {
   );
 }
 
+function RankGuide({ items, currentLevel, totalActions }) {
+  const nextRank = items.find((item) => !item.unlocked);
+
+  return (
+    <div className="profile-rank-help">
+      <button
+        type="button"
+        className="profile-rank-help-trigger"
+        aria-label="Xem cách lên các bậc rank"
+      >
+        ?
+      </button>
+      <div className="profile-rank-help-popover" role="tooltip">
+        <div className="profile-rank-help-head">
+          <div>
+            <strong>Cách lên bậc rank</strong>
+            <span>Cấp {currentLevel} · {fmtNum(totalActions)} thao tác</span>
+          </div>
+        </div>
+        <p>
+          Rank tăng theo cấp. Cấp được tính từ tổng thao tác tích lũy gồm gõ phím và click chuột.
+        </p>
+        <div className="profile-rank-guide-list">
+          {items.map((item) => (
+            <div
+              key={item.tier}
+              className={item.current ? 'profile-rank-guide-item is-current' : item.unlocked ? 'profile-rank-guide-item is-unlocked' : 'profile-rank-guide-item'}
+              style={{ '--tier-color': item.color, '--tier-bg': item.badgeBg }}
+            >
+              <span className="profile-rank-guide-dot" />
+              <div>
+                <strong>{item.tier}</strong>
+                <span>
+                  {item.min === 0
+                    ? 'Bắt đầu từ cấp 0'
+                    : `Cần cấp ${item.min}${item.requiredActions > 0 ? ` · ${fmtNum(item.requiredActions)} thao tác` : ''}`}
+                </span>
+              </div>
+              <em>{item.current ? 'Hiện tại' : item.unlocked ? 'Đã mở' : 'Chưa mở'}</em>
+            </div>
+          ))}
+        </div>
+        <div className="profile-rank-help-next">
+          {nextRank
+            ? `Mốc kế tiếp: ${nextRank.tier} ở cấp ${nextRank.min}.`
+            : 'Bạn đang ở bậc rank cao nhất.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MetricCard({ icon: Icon, label, value, detail, tone = '#0891b2' }) {
   return (
     <div className="profile-metric-card">
@@ -836,6 +888,15 @@ export default function UserDetail() {
     '--rank-progress': rank.progress,
     '--rank-badge-bg': rank.badgeBg,
   };
+  const rankGuideItems = [...RANK_TIERS].reverse().map((tier) => {
+    const milestone = levelView.milestones.find((item) => Number(item.level) === Number(tier.min));
+    return {
+      ...tier,
+      requiredActions: Number(milestone?.requiredActions || 0),
+      unlocked: Number(levelView.level || 0) >= Number(tier.min || 0),
+      current: rank.tier === tier.tier,
+    };
+  });
 
   return (
     <div className="profile-page" style={rankThemeStyle}>
@@ -875,9 +936,16 @@ export default function UserDetail() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 116 }}>
-            <div className="profile-eyebrow" style={{ marginBottom: 4 }}>
-              <Crown size={15} />
-              {rank.tier}
+            <div className="profile-rank-strip" style={{ marginBottom: 4 }}>
+              <div className="profile-eyebrow">
+                <Crown size={15} />
+                {rank.tier}
+              </div>
+              <RankGuide
+                items={rankGuideItems}
+                currentLevel={levelView.level}
+                totalActions={levelView.totalActions}
+              />
             </div>
             <div className="profile-name-line" style={{ marginBottom: 4 }}>
               <h1 style={{ fontSize: 26, margin: 0, lineHeight: 1.2 }}>{user.name || `User #${id}`}</h1>
@@ -935,29 +1003,47 @@ export default function UserDetail() {
 
       {/* ── THÔNG TIN ĐƯỢC ĐẨY XUỐNG DƯỚI ── */}
       <section className="profile-summary-card">
-        <div className="profile-name-block">
-          <div className="profile-chip-row" style={{ marginTop: 0 }}>
-            <span className="profile-title-chip"><BadgeCheck size={13} /> {unlockedBadges}/{badges.length} danh hiệu</span>
-            <span className="profile-title-chip"><PawPrint size={13} /> {unlockedAnimals}/{animalCollection.length} thú sưu tầm</span>
-            <span className="profile-title-chip"><Flame size={13} /> Chuỗi {currentStreak} ngày</span>
+        <div className="profile-summary-main">
+          <div className="profile-summary-head">
+            <div>
+              <div className="profile-section-kicker">Tổng quan năng lực</div>
+              <h2>Huy hiệu và nhịp duy trì</h2>
+            </div>
+            <span>Cấp {levelView.level}</span>
           </div>
-          {(isVerified || featuredBadges.length > 0) && (
-            <div className="profile-achievement-strip" style={{ marginTop: 16 }}>
-              {isVerified && (
-                <span className="profile-achievement-pill is-verified">
-                  <VerifiedMark size={15} />
-                  Đã cấp tích xanh
-                </span>
-              )}
-              {featuredBadges.map((badge) => {
-                const Icon = badge.icon;
-                return (
-                  <span key={badge.label} className="profile-achievement-pill">
-                    <Icon size={13} strokeWidth={2.5} />
-                    {badge.label}
-                  </span>
-                );
-              })}
+
+          <div className="profile-summary-stat-grid">
+            <div className="profile-summary-stat">
+              <BadgeCheck size={17} strokeWidth={2.4} />
+              <span>Danh hiệu</span>
+              <strong>{unlockedBadges}/{badges.length}</strong>
+            </div>
+            <div className="profile-summary-stat">
+              <PawPrint size={17} strokeWidth={2.4} />
+              <span>Thú sưu tầm</span>
+              <strong>{unlockedAnimals}/{animalCollection.length}</strong>
+            </div>
+            <div className="profile-summary-stat">
+              <Flame size={17} strokeWidth={2.4} />
+              <span>Chuỗi ngày</span>
+              <strong>{currentStreak}</strong>
+            </div>
+          </div>
+
+          {featuredBadges.length > 0 && (
+            <div className="profile-achievement-panel">
+              <div className="profile-achievement-title">Huy hiệu nổi bật</div>
+              <div className="profile-achievement-strip">
+                {featuredBadges.map((badge) => {
+                  const Icon = badge.icon;
+                  return (
+                    <span key={badge.label} className="profile-achievement-pill">
+                      <Icon size={14} strokeWidth={2.5} />
+                      {badge.label}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

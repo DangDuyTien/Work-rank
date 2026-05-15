@@ -25,4 +25,14 @@ async function me(req, res) {
   res.json({ user: sanitizeUser(req.user) });
 }
 
-module.exports = { register, login, refreshToken, logout, me };
+async function updateMe(req, res) {
+  const result = await authService.updateProfile(req.user, req.validated.body);
+  res.json(result);
+}
+
+async function changePassword(req, res) {
+  const result = await authService.changePassword(req.user, req.validated.body);
+  res.json(result);
+}
+
+module.exports = { register, login, refreshToken, logout, me, updateMe, changePassword };

@@ -13,6 +13,7 @@ const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const UserDetail = lazy(() => import('./pages/UserDetail'));
 const Groups = lazy(() => import('./pages/Groups'));
 const Security = lazy(() => import('./pages/Security'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -67,9 +68,9 @@ export default function App() {
                 <Route path="tracker" element={<Tracker />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="groups" element={<Groups />} />
-              <Route path="performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
-              <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
-              <Route path="settings" element={<ComingSoon title="Cài Đặt" />} />
+                <Route path="performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
+                <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
+                <Route path="settings" element={<Settings />} />
                 <Route path="users/:id" element={<UserDetail />} />
               </Route>
             </Routes>
