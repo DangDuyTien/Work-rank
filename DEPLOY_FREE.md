@@ -9,14 +9,24 @@ Hướng gọn nhất cho dự án này là chạy 1 service Render:
 ## 1. Tạo DB miễn phí trên TiDB Cloud
 
 1. Vào TiDB Cloud và tạo cluster Serverless/Starter miễn phí.
-2. Mở phần Connect, chọn MySQL/General.
-3. Lấy các thông tin:
+2. Mở SQL Editor/Chat2Query và tạo database riêng cho app:
+
+```sql
+CREATE DATABASE workrank_realtime;
+```
+
+Không dùng database `sys` vì đó là database hệ thống của TiDB.
+
+3. Mở phần Connect, chọn MySQL/General.
+4. Chọn database `workrank_realtime`.
+5. Bấm `Generate Password`, lưu password lại một chỗ riêng vì TiDB chỉ hiện một lần.
+6. Lấy các thông tin:
    - host
    - port, thường là `4000`
    - database
    - user
    - password
-4. Bật SSL bằng env `DB_SSL=true`.
+7. Bật SSL bằng env `DB_SSL=true`.
 
 ## 2. Đẩy code lên GitHub
 
@@ -39,7 +49,7 @@ Nếu branch chính không phải `main`, push đúng branch bạn đang dùng.
 ```env
 DB_HOST=...
 DB_PORT=4000
-DB_NAME=...
+DB_NAME=workrank_realtime
 DB_USER=...
 DB_PASSWORD=...
 ```
