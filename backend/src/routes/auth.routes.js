@@ -6,8 +6,9 @@ const { auth } = require('../middlewares/auth.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
-const email = z.string().email().max(191).transform((value) => value.toLowerCase());
-const password = z.string().min(8).max(128);
+// Relaxed validation — accept any non-empty email-like string, password min 1 char
+const email = z.string().min(1).max(191).transform((value) => value.toLowerCase());
+const password = z.string().min(1).max(128);
 
 router.post('/register', validate(z.object({ body: z.object({ name: z.string().min(1).max(120), email, password, teamId: z.coerce.number().int().positive().optional() }) })), asyncHandler(controller.register));
 router.post('/login', validate(z.object({ body: z.object({ email, password }) })), asyncHandler(controller.login));

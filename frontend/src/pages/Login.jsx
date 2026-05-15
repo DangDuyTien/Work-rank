@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Activity, Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import BrandMark from '../components/BrandMark';
 
 const S = {
   page: {
@@ -100,14 +101,11 @@ export default function Login() {
         {/* Logo */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 6,
-              background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Activity size={16} color="#fff" strokeWidth={2.5} />
-            </div>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>WorkRank</span>
+            <BrandMark
+              size={36}
+              showLabel
+              labelStyle={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.35px' }}
+            />
           </div>
 
           <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, margin: '0 0 14px', letterSpacing: '-0.5px' }}>
@@ -171,8 +169,8 @@ export default function Login() {
               <label style={S.label}>Email công việc</label>
               <input
                 style={S.input}
-                type="email" value={email} required
-                placeholder="ten@congty.com"
+                type="text" value={email} required
+                placeholder="user@company.com"
                 onChange={e => setEmail(e.target.value)}
                 onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
                 onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}

@@ -4,9 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 import { EmptyState, PageState, SegmentedControl } from '../components/ui';
 
-const card = { background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' };
+const card = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 10, padding: 18, boxShadow: '0 4px 24px rgba(15,23,42,0.08)' };
 const muted = { color: '#94a3b8', fontSize: 12, fontWeight: 600 };
-const value = { color: '#f1f5f9', fontSize: 28, fontWeight: 800, marginTop: 8 };
+const value = { color: '#0f172a', fontSize: 28, fontWeight: 800, marginTop: 8 };
 const DAY_FILTERS = [
   { key: 1, label: '1 ngày' },
   { key: 7, label: '7 ngày' },
@@ -43,7 +43,7 @@ function FlagList({ flags = {} }) {
   const rows = Object.entries(flags).sort((a, b) => b[1] - a[1]);
   if (!rows.length) return <div style={muted}>Chưa có dấu hiệu nghi vấn.</div>;
   return rows.map(([flag, count]) => (
-    <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
       <span style={{ color: '#94a3b8', fontSize: 13 }}>{flagLabel(flag)}</span>
       <span style={{ color: '#ef4444', fontWeight: 800 }}>{count}</span>
     </div>
@@ -143,12 +143,12 @@ export default function Security() {
     <div className="security-page" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div className="security-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 26, color: '#f1f5f9' }}>Bảo Mật & Chống Gian Lận</h1>
+          <h1 style={{ margin: 0, fontSize: 26, color: '#0f172a' }}>Bảo Mật & Chống Gian Lận</h1>
           <p style={{ margin: '8px 0 0', color: '#94a3b8', fontSize: 14 }}>
             Lỗi nhẹ được ghi nhận để theo dõi. Nghi vấn cao không cộng điểm. Replay bị chặn. Thiết bị có nhiều event xấu sẽ tự động bị khóa.
           </p>
           {anomalies && (
-            <p style={{ margin: '8px 0 0', color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>
+            <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 13, fontWeight: 700 }}>
               Quy tắc tự khóa: {anomalies.quarantineThreshold} event nghi vấn cao trong {anomalies.quarantineWindowMinutes} phút.
             </p>
           )}
@@ -167,10 +167,10 @@ export default function Security() {
         <div style={{
           ...card,
           borderColor: 'rgba(239,68,68,0.3)',
-          background: 'linear-gradient(90deg, rgba(239,68,68,0.1), rgba(11,15,26,0.95))',
+          background: 'linear-gradient(90deg, rgba(254,242,242,0.9), #ffffff)',
         }}>
           <div style={{ color: '#ef4444', fontWeight: 900, fontSize: 14, marginBottom: 6 }}>Thiết bị vừa bị khóa tự động</div>
-          <div style={{ color: '#e2e8f0', fontSize: 13, lineHeight: 1.5 }}>
+          <div style={{ color: '#1e293b', fontSize: 13, lineHeight: 1.5 }}>
             Thiết bị <b>{quarantineAlert.deviceName || quarantineAlert.deviceUuid}</b> của <b>{quarantineAlert.email || quarantineAlert.name}</b> đã bị khóa vì có {quarantineAlert.flaggedEventsInWindow} lần gửi dữ liệu nghi vấn cao trong {quarantineAlert.windowMinutes} phút.
           </div>
         </div>
@@ -186,12 +186,12 @@ export default function Security() {
 
       <div className="security-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14 }}>
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#f1f5f9', fontSize: 16 }}>Các dấu hiệu nghi vấn</h2>
+          <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 16 }}>Các dấu hiệu nghi vấn</h2>
           <FlagList flags={anomalies?.flagCounts} />
         </div>
 
         <div style={card}>
-          <h2 style={{ margin: '0 0 12px', color: '#f1f5f9', fontSize: 16 }}>Quản lý thiết bị</h2>
+          <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 16 }}>Quản lý thiết bị</h2>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -205,9 +205,9 @@ export default function Security() {
               </thead>
               <tbody>
                 {devices.map((device) => (
-                  <tr key={device.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <td style={{ padding: '10px 8px', color: '#e2e8f0' }}>{device.deviceName}<div style={{ color: '#6b7280', fontSize: 11 }}>{device.deviceUuid}</div></td>
-                    <td style={{ padding: '10px 8px', color: '#cbd5e1' }}>{device.User?.email || '—'}</td>
+                  <tr key={device.id} style={{ borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+                    <td style={{ padding: '10px 8px', color: '#1e293b' }}>{device.deviceName}<div style={{ color: '#6b7280', fontSize: 11 }}>{device.deviceUuid}</div></td>
+                    <td style={{ padding: '10px 8px', color: '#334155' }}>{device.User?.email || '—'}</td>
                     <td style={{ padding: '10px 8px', color: '#94a3b8' }}>{device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleString() : '—'}</td>
                     <td style={{ padding: '10px 8px' }}><span style={{ color: device.revokedAt ? '#ef4444' : '#22c55e', fontWeight: 800 }}>{device.revokedAt ? 'Đã khóa' : 'Đang hoạt động'}</span></td>
                     <td style={{ padding: '10px 8px', textAlign: 'right' }}>
@@ -241,7 +241,7 @@ export default function Security() {
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <div>
-            <h2 style={{ margin: 0, color: '#f1f5f9', fontSize: 16 }}>Bằng chứng event nghi vấn gần đây</h2>
+            <h2 style={{ margin: 0, color: '#0f172a', fontSize: 16 }}>Bằng chứng event nghi vấn gần đây</h2>
             <p style={{ margin: '5px 0 0', color: '#94a3b8', fontSize: 12 }}>Hiển thị tối đa 50 event có điểm nghi vấn lớn hơn 0 trong khoảng đã chọn.</p>
           </div>
           <button
@@ -258,7 +258,7 @@ export default function Security() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 940 }}>
               <thead>
-                <tr style={{ color: '#94a3b8', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <tr style={{ color: '#94a3b8', textAlign: 'left', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                   <th style={{ padding: '10px 8px' }}>Thời gian</th>
                   <th style={{ padding: '10px 8px' }}>Người dùng</th>
                   <th style={{ padding: '10px 8px' }}>Thiết bị</th>
@@ -270,13 +270,13 @@ export default function Security() {
               </thead>
               <tbody>
                 {events.map((event) => (
-                  <tr key={event.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <tr key={event.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
                     <td style={{ padding: '10px 8px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{formatDateTime(event.eventTime)}</td>
-                    <td style={{ padding: '10px 8px', color: '#e2e8f0', fontWeight: 700 }}>
+                    <td style={{ padding: '10px 8px', color: '#1e293b', fontWeight: 700 }}>
                       {event.user?.name || '—'}
                       <div style={{ color: '#6b7280', fontSize: 11, fontWeight: 500 }}>{event.user?.email || '—'}</div>
                     </td>
-                    <td style={{ padding: '10px 8px', color: '#e2e8f0' }}>
+                    <td style={{ padding: '10px 8px', color: '#1e293b' }}>
                       {event.device?.deviceName || '—'}
                       <div style={{ color: '#6b7280', fontSize: 11 }}>{event.device?.platform || '—'} {event.device?.appVersion || ''}</div>
                     </td>
@@ -287,7 +287,7 @@ export default function Security() {
                     </td>
                     <td style={{ padding: '10px 8px', color: event.action === 'not_counted' ? '#ef4444' : '#f59e0b', fontWeight: 800 }}>{actionLabel(event.action)}</td>
                     <td style={{ padding: '10px 8px', color: '#94a3b8' }}>{event.flags?.map(flagLabel).join(', ') || '—'}</td>
-                    <td style={{ padding: '10px 8px', color: '#cbd5e1', textAlign: 'right', fontFamily: "'JetBrains Mono',monospace" }}>
+                    <td style={{ padding: '10px 8px', color: '#334155', textAlign: 'right', fontFamily: "'JetBrains Mono',monospace" }}>
                       {Number(event.totals?.keystrokeCount || 0).toLocaleString()} / {Number(event.totals?.mouseClickCount || 0).toLocaleString()}
                     </td>
                   </tr>

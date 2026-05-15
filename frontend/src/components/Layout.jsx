@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, Bell, LogOut, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
+import { AVATAR_UPDATED_EVENT, getStoredAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
+import BrandMark from './BrandMark';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
@@ -20,6 +22,52 @@ const PAGE_TITLES = {
   '/security': 'Bảo Mật & Chống Gian Lận',
 };
 
+const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
+const CONTEST_STORAGE_KEY = 'workrank:group-contests:v1';
+const ACTION_MILESTONES = [500, 1000, 2500, 5000, 10000, 25000, 50000];
+
+function notificationStorageKey(userId) {
+  return `workrank:notifications:${userId || 'guest'}`;
+}
+
+function loadNotifications(userId) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(notificationStorageKey(userId)) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistNotifications(userId, notifications) {
+  localStorage.setItem(notificationStorageKey(userId), JSON.stringify(notifications));
+}
+
+function localDateKey(value = new Date()) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatNotificationTime(value) {
+  const date = value ? new Date(value) : new Date();
+  const now = Date.now();
+  const diffMinutes = Math.max(0, Math.floor((now - date.getTime()) / 60000));
+  if (diffMinutes < 1) return 'Vừa xong';
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+  if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} giờ trước`;
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+}
+
+function notificationTone(type) {
+  if (type === 'warning' || type === 'security') return { dot: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
+  if (type === 'danger') return { dot: '#dc2626', bg: 'rgba(220,38,38,0.08)' };
+  if (type === 'success' || type === 'pomodoro') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
+  if (type === 'contest') return { dot: '#d97706', bg: 'rgba(217,119,6,0.1)' };
+  return { dot: '#2563eb', bg: 'rgba(37,99,235,0.08)' };
+}
+
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,8 +76,50 @@ export default function Layout() {
 
   const [pageVisible, setPageVisible] = useState(true);
   const [dropOpen, setDropOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const [securityAlert, setSecurityAlert] = useState(null);
+  const [accountAvatarUrl, setAccountAvatarUrl] = useState('');
   const dropRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  const addNotification = useCallback((item) => {
+    if (!user?.id) return;
+    setNotifications((prev) => {
+      if (item.dedupeKey && prev.some((notification) => notification.dedupeKey === item.dedupeKey)) return prev;
+      const next = [{
+        id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        type: item.type || 'info',
+        title: item.title || 'Thông báo',
+        message: item.message || '',
+        actionTo: item.actionTo || '',
+        actionLabel: item.actionLabel || 'Mở',
+        dedupeKey: item.dedupeKey || '',
+        createdAt: item.createdAt || new Date().toISOString(),
+        read: false,
+      }, ...prev].slice(0, 40);
+      persistNotifications(user.id, next);
+      return next;
+    });
+  }, [user?.id]);
+
+  const unreadCount = useMemo(() => notifications.filter((notification) => !notification.read).length, [notifications]);
+
+  const markNotificationsRead = useCallback(() => {
+    if (!user?.id) return;
+    setNotifications((prev) => {
+      if (!prev.some((notification) => !notification.read)) return prev;
+      const next = prev.map((notification) => ({ ...notification, read: true }));
+      persistNotifications(user.id, next);
+      return next;
+    });
+  }, [user?.id]);
+
+  const clearNotifications = useCallback(() => {
+    if (!user?.id) return;
+    setNotifications([]);
+    persistNotifications(user.id, []);
+  }, [user?.id]);
 
   useEffect(() => {
     setPageVisible(false);
@@ -40,16 +130,33 @@ export default function Layout() {
   useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) setNotifOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   useEffect(() => {
+    setNotifications(loadNotifications(user?.id));
+  }, [user?.id]);
+
+  useEffect(() => {
     if (!socket) return undefined;
     let timer = null;
     const handler = (payload) => {
+      const isOwnAlert = String(payload?.userId || payload?.user_id || '') === String(user?.id || '')
+        || (payload?.email && String(payload.email).toLowerCase() === String(user?.email || '').toLowerCase());
+      if (!isAdmin && !isOwnAlert) return;
+
       setSecurityAlert(payload);
+      addNotification({
+        type: isAdmin ? 'security' : 'danger',
+        title: isAdmin ? 'Thiết bị bị khóa' : 'Tracker của bạn bị khóa',
+        message: `${payload.deviceName || payload.deviceUuid || 'Thiết bị'} có ${payload.flaggedEventsInWindow || 0} event nghi vấn cao trong ${payload.windowMinutes || 0} phút.`,
+        actionTo: isAdmin ? '/security' : '/tracker',
+        actionLabel: isAdmin ? 'Xem bảo mật' : 'Xem tracker',
+        dedupeKey: `security:${payload.deviceId || payload.deviceUuid || payload.email || Date.now()}:${payload.createdAt || payload.windowStartedAt || localDateKey()}`,
+      });
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => setSecurityAlert(null), 12000);
     };
@@ -58,18 +165,109 @@ export default function Layout() {
       if (timer) clearTimeout(timer);
       socket.off('security:device:quarantined', handler);
     };
-  }, [socket]);
+  }, [addNotification, isAdmin, socket, user?.email, user?.id]);
+
+  useEffect(() => {
+    if (!socket || !user?.id) return undefined;
+    const handleActivity = (data = {}) => {
+      const userId = String(data.userId || data.user_id || '');
+      if (userId !== String(user.id)) return;
+      const totals = data.totals || data;
+      const actions = Number(totals.keystrokeCount || totals.keystrokes || 0)
+        + Number(totals.mouseClickCount || totals.clicks || 0);
+      const milestone = [...ACTION_MILESTONES].reverse().find((value) => actions >= value);
+      if (!milestone) return;
+      addNotification({
+        type: 'success',
+        title: `Đạt ${milestone.toLocaleString()} thao tác`,
+        message: `Bạn đã đạt mốc ${milestone.toLocaleString()} thao tác hôm nay. Tiếp tục giữ nhịp để tăng hạng.`,
+        actionTo: `/users/${user.id}`,
+        actionLabel: 'Xem hồ sơ',
+        dedupeKey: `activity:${user.id}:${localDateKey()}:${milestone}`,
+      });
+    };
+    socket.on('activity:user:update', handleActivity);
+    return () => socket.off('activity:user:update', handleActivity);
+  }, [addNotification, socket, user?.id]);
+
+  useEffect(() => {
+    const handler = (event) => {
+      addNotification(event.detail || {});
+    };
+    window.addEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
+    return () => window.removeEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
+  }, [addNotification]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const checkContests = () => {
+      try {
+        const contests = JSON.parse(localStorage.getItem(CONTEST_STORAGE_KEY) || '[]');
+        if (!Array.isArray(contests)) return;
+        contests.forEach((contest) => {
+          const inContest = [...(contest.teamA || []), ...(contest.teamB || [])]
+            .some((member) => String(member.id) === String(user.id));
+          if (!inContest || new Date(contest.endAt).getTime() > Date.now()) return;
+          addNotification({
+            type: 'contest',
+            title: 'Cuộc thi đã kết thúc',
+            message: `${contest.name || 'Cuộc thi nhóm'} đã đến giờ chốt điểm. Vào trang Nhóm để cập nhật kết quả.`,
+            actionTo: '/groups',
+            actionLabel: 'Xem cuộc thi',
+            dedupeKey: `contest-ended:${contest.id}:${user.id}`,
+          });
+        });
+      } catch {
+        // Ignore malformed local contest cache.
+      }
+    };
+    checkContests();
+    const timer = window.setInterval(checkContests, 30000);
+    window.addEventListener('storage', checkContests);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('storage', checkContests);
+    };
+  }, [addNotification, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || tracking || trackingPending || location.pathname === '/tracker') return undefined;
+    const timer = window.setTimeout(() => {
+      addNotification({
+        type: 'warning',
+        title: 'Tracker chưa chạy',
+        message: 'Bạn đang mở WorkRank nhưng Desktop Tracker chưa ghi nhận phiên làm việc.',
+        actionTo: '/tracker',
+        actionLabel: 'Mở tracker',
+        dedupeKey: `tracker-idle:${user.id}:${localDateKey()}`,
+      });
+    }, 90000);
+    return () => window.clearTimeout(timer);
+  }, [addNotification, location.pathname, tracking, trackingPending, user?.id]);
+
+  useEffect(() => {
+    const userId = user?.id;
+    setAccountAvatarUrl(getStoredAvatar(userId));
+    const handler = (event) => {
+      if (String(event.detail?.userId || '') === String(userId || '')) {
+        setAccountAvatarUrl(event.detail?.avatarUrl || '');
+      }
+    };
+    window.addEventListener(AVATAR_UPDATED_EVENT, handler);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, handler);
+  }, [user?.id]);
 
   const pageTitle = PAGE_TITLES[location.pathname] || 'WorkRank Realtime';
+  const accountInitials = initialsFromName(user?.name || user?.email || '??');
 
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      background: '#0d1117',
-      color: '#e6edf3',
-      fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+      background: '#f8fafc',
+      color: '#0f172a',
+      fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
       overflow: 'hidden',
     }}>
       <style>{`
@@ -122,34 +320,25 @@ export default function Layout() {
       <header
         className="app-header"
         style={{
-          height: 56,
+          height: 52,
           flexShrink: 0,
-          background: 'rgba(11,15,26,0.95)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          background: '#ffffff',
+          borderBottom: '1px solid rgba(15,23,42,0.08)',
           display: 'flex',
           alignItems: 'center',
-          padding: '0 28px',
+          padding: '0 24px',
           gap: 0,
           position: 'sticky',
           top: 0,
           zIndex: 100,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
-          <div style={{
-            width: 26,
-            height: 26,
-            borderRadius: 5,
-            background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <Activity size={13} color="#fff" strokeWidth={2.5} />
-          </div>
-          <div className="app-brand-label" style={{ fontSize: 14, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkRank</div>
+        <div style={{ display: 'flex', alignItems: 'center', marginRight: 24, flexShrink: 0 }}>
+          <BrandMark
+            size={28}
+            showLabel
+            labelStyle={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.3px' }}
+          />
         </div>
 
         <div
@@ -194,11 +383,11 @@ export default function Layout() {
                   padding: '6px 14px',
                   fontSize: 13,
                   fontWeight: active ? 700 : 500,
-                  color: active ? '#fff' : '#6b7280',
+                  color: active ? '#2563eb' : '#64748b',
                   textDecoration: 'none',
-                  borderRadius: 6,
-                  background: active ? 'rgba(59,130,246,0.15)' : 'transparent',
-                  border: active ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent',
+                  borderRadius: 5,
+                  background: active ? 'rgba(37,99,235,0.08)' : 'transparent',
+                  border: '1px solid transparent',
                   position: 'relative',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -218,11 +407,11 @@ export default function Layout() {
               padding: '6px 14px',
               fontSize: 13,
               fontWeight: location.pathname.startsWith('/users') ? 700 : 500,
-              color: location.pathname.startsWith('/users') ? '#fff' : '#6b7280',
+              color: location.pathname.startsWith('/users') ? '#2563eb' : '#64748b',
               textDecoration: 'none',
-              borderRadius: 6,
-              background: location.pathname.startsWith('/users') ? 'rgba(59,130,246,0.15)' : 'transparent',
-              border: location.pathname.startsWith('/users') ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent',
+              borderRadius: 5,
+              background: location.pathname.startsWith('/users') ? 'rgba(37,99,235,0.08)' : 'transparent',
+              border: '1px solid transparent',
               display: 'inline-flex',
               alignItems: 'center',
               flex: '0 0 auto',
@@ -232,7 +421,7 @@ export default function Layout() {
               transition: 'all 0.15s ease',
             }}
           >
-            Hồ Sơ Người Dùng
+            Hồ Sơ Cá Nhân
           </NavLink>
         </nav>
 
@@ -292,14 +481,168 @@ export default function Layout() {
             </button>
           )}
 
-          <button
-            type="button"
-            className="app-icon-action"
-            aria-label="Thông báo"
-            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 5 }}
-          >
-            <Bell size={17} />
-          </button>
+          <div ref={notificationRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="app-icon-action"
+              aria-label="Thông báo"
+              onClick={() => {
+                const nextOpen = !notifOpen;
+                setNotifOpen(nextOpen);
+                if (nextOpen) markNotificationsRead();
+              }}
+              style={{
+                position: 'relative',
+                width: 34,
+                height: 34,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: notifOpen ? 'rgba(37,99,235,0.08)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: notifOpen ? '#2563eb' : '#64748b',
+                borderRadius: 5,
+              }}
+            >
+              <Bell size={17} />
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  minWidth: 15,
+                  height: 15,
+                  padding: '0 4px',
+                  borderRadius: 999,
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: '2px solid #ffffff',
+                  fontSize: 9,
+                  fontWeight: 900,
+                  lineHeight: '11px',
+                  textAlign: 'center',
+                }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: -42,
+                width: 340,
+                maxWidth: 'calc(100vw - 24px)',
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 8,
+                overflow: 'hidden',
+                boxShadow: '0 18px 48px rgba(15,23,42,0.18)',
+                animation: 'slide-down 0.15s ease',
+                zIndex: 220,
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 14px',
+                  borderBottom: '1px solid rgba(15,23,42,0.08)',
+                }}>
+                  <div>
+                    <div style={{ color: '#0f172a', fontSize: 13, fontWeight: 900 }}>Thông báo</div>
+                    <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700 }}>
+                      {notifications.length ? `${notifications.length} mục gần nhất` : 'Chưa có thông báo'}
+                    </div>
+                  </div>
+                  {notifications.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearNotifications}
+                      style={{
+                        border: '1px solid rgba(15,23,42,0.1)',
+                        background: '#f8fafc',
+                        color: '#64748b',
+                        borderRadius: 5,
+                        padding: '5px 8px',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        fontWeight: 800,
+                      }}
+                    >
+                      Xóa hết
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: 18, color: '#64748b', fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>
+                      Các thông báo cá nhân như Pomodoro, mốc thao tác, cuộc thi nhóm và trạng thái tracker sẽ xuất hiện ở đây.
+                    </div>
+                  ) : notifications.map((notification) => {
+                    const tone = notificationTone(notification.type);
+                    return (
+                      <button
+                        key={notification.id}
+                        type="button"
+                        onClick={() => {
+                          if (notification.actionTo) navigate(notification.actionTo);
+                          setNotifOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          padding: '12px 14px',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(15,23,42,0.06)',
+                          background: notification.read ? '#ffffff' : 'rgba(37,99,235,0.035)',
+                          cursor: notification.actionTo ? 'pointer' : 'default',
+                          textAlign: 'left',
+                          fontFamily: "'Space Grotesk',sans-serif",
+                        }}
+                      >
+                        <span style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 6,
+                          background: tone.bg,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          marginTop: 1,
+                        }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: tone.dot }} />
+                        </span>
+                        <span style={{ minWidth: 0, flex: 1 }}>
+                          <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                            <strong style={{ color: '#0f172a', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>
+                              {notification.title}
+                            </strong>
+                            <span style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              {formatNotificationTime(notification.createdAt)}
+                            </span>
+                          </span>
+                          <span style={{ display: 'block', marginTop: 3, color: '#64748b', fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
+                            {notification.message}
+                          </span>
+                          {notification.actionTo && (
+                            <span style={{ display: 'block', marginTop: 6, color: '#2563eb', fontSize: 11, fontWeight: 900 }}>
+                              {notification.actionLabel || 'Mở'}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
             type="button"
@@ -331,7 +674,17 @@ export default function Layout() {
                 fontWeight: 800,
               }}
             >
-              {(user?.name || user?.email || '??').slice(0, 2).toUpperCase()}
+              {accountAvatarUrl ? (
+                <img
+                  src={accountAvatarUrl}
+                  alt="Ảnh đại diện"
+                  style={{ width: '100%', height: '100%', borderRadius: 4, objectFit: 'cover' }}
+                  onError={() => {
+                    removeStoredAvatar(user?.id);
+                    setAccountAvatarUrl('');
+                  }}
+                />
+              ) : accountInitials}
             </button>
 
             {dropOpen && (
@@ -378,9 +731,9 @@ export default function Layout() {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '32px 40px',
+            padding: '32px 36px',
             opacity: pageVisible ? 1 : 0,
-            transform: pageVisible ? 'translateY(0)' : 'translateY(8px)',
+            transform: pageVisible ? 'translateY(0)' : 'translateY(6px)',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
           }}
         >
@@ -390,14 +743,14 @@ export default function Layout() {
         <footer
           className="app-footer"
           style={{
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: '1px solid rgba(15,23,42,0.06)',
             padding: '10px 36px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: 11,
             color: '#94a3b8',
-            background: 'rgba(11,15,26,0.95)',
+            background: '#ffffff',
             flexShrink: 0,
           }}
         >

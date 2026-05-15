@@ -1,40 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboard, leaderboard } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { calculateRankScore } from '../utils/scoring';
 import {
-  Keyboard as KeyIcon,
-  Mouse as MouseIcon2,
-  TrendingDown as TrendDown,
-  TrendingUp as TrendUp,
-  Users as UsersIcon,
+  Activity,
+  AlertCircle,
+  Clock3,
+  Keyboard,
+  Monitor,
+  Mouse,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.4)', color: '#22c55e', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.4)', color: '#60a5fa', dot: '#60a5fa' },
-  idle:   { label: 'Không hoạt động', bg: 'rgba(234,179,8,0.1)', border: 'rgba(234,179,8,0.4)', color: '#eab308', dot: '#eab308' },
-  offline:{ label: 'Ngoại tuyến', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.3)', color: '#64748b', dot: '#64748b' },
+  active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.35)', color: '#16a34a', dot: '#22c55e' },
+  online: { label: 'Trực tuyến', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.35)', color: '#2563eb', dot: '#3b82f6' },
+  idle: { label: 'Không hoạt động', bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.35)', color: '#ca8a04', dot: '#eab308' },
+  offline: { label: 'Ngoại tuyến', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.25)', color: '#64748b', dot: '#94a3b8' },
 };
 
 const RANGES = [
-  { key: 'today', label: 'Hôm nay' },
-  { key: 'week', label: 'Tuần này' },
-  { key: 'month', label: 'Tháng này' },
+  { key: 'today', label: 'Hôm nay', description: 'Dữ liệu trong ngày hiện tại' },
+  { key: 'week', label: 'Tuần này', description: 'Tổng hợp từ đầu tuần' },
+  { key: 'month', label: 'Tháng này', description: 'Tổng hợp từ đầu tháng' },
 ];
 
-function formatNum(n) {
-  n = Number(n) || 0;
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+function formatNum(value) {
+  const n = Number(value) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   return n.toLocaleString();
 }
+
 function formatDuration(seconds) {
-  seconds = Number(seconds) || 0;
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const safe = Number(seconds) || 0;
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  if (h >= 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function calcChange(current, previous) {
@@ -49,30 +58,90 @@ function localDateKey(value = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function statusConfig(status) {
+  return STATUS_CONFIG[String(status || 'offline').toLowerCase()] || STATUS_CONFIG.offline;
+}
+
+function buildDelta(current, previous, label = 'lần cập nhật trước') {
+  const pct = calcChange(current, previous);
+  if (pct === null) return { text: 'Chưa có dữ liệu so sánh', tone: 'neutral', icon: null };
+  if (pct === 0) return { text: `Ổn định so với ${label}`, tone: 'neutral', icon: null };
+  if (pct > 0) return { text: `+${pct}% so với ${label}`, tone: 'up', icon: TrendingUp };
+  return { text: `${pct}% so với ${label}`, tone: 'down', icon: TrendingDown };
+}
+
+function getErrorMessage(error) {
+  return error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Không tải được dữ liệu dashboard';
+}
+
+function StatSkeleton() {
+  return (
+    <div className="dashboard-stat-card is-loading">
+      <div className="dashboard-skeleton" style={{ width: '44%', height: 12 }} />
+      <div className="dashboard-skeleton" style={{ width: '68%', height: 34, marginTop: 16 }} />
+      <div className="dashboard-skeleton" style={{ width: '52%', height: 10, marginTop: 14 }} />
+    </div>
+  );
+}
+
+function StatCard({ card, loading }) {
+  if (loading) return <StatSkeleton />;
+  const DeltaIcon = card.delta.icon;
+  const Icon = card.icon;
+  return (
+    <div className="dashboard-stat-card">
+      <div className="dashboard-stat-topline">
+        <span>{card.label}</span>
+        <div className="dashboard-stat-icon" style={{ color: card.color, background: card.iconBg }}>
+          <Icon size={17} strokeWidth={2.4} />
+        </div>
+      </div>
+      <div className="dashboard-stat-value">{card.value}</div>
+      <div className={`dashboard-stat-delta ${card.delta.tone}`}>
+        {DeltaIcon && <DeltaIcon size={12} strokeWidth={2.5} />}
+        <span>{card.delta.text}</span>
+      </div>
+      {card.note && <div className="dashboard-stat-note">{card.note}</div>}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { socket } = useAuth();
+  const navigate = useNavigate();
   const [range, setRange] = useState('today');
   const [users, setUsers] = useState([]);
   const [totals, setTotals] = useState({ keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
   const [prevTotals, setPrevTotals] = useState(null);
   const [liveFlash, setLiveFlash] = useState(false);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
   const prevRef = useRef(null);
   const requestIdRef = useRef(0);
 
-  const fetchData = async (selectedRange) => {
+  const fetchData = useCallback(async (selectedRange, options = {}) => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
-    setUsers([]);
-    setLoading(true);
+    const background = options.background === true;
+
+    if (!background) {
+      setUsers([]);
+      setLoading(true);
+      setPrevTotals(null);
+      prevRef.current = null;
+    } else {
+      setRefreshing(true);
+    }
+    setError('');
+
     try {
-      const [res, overviewRes] = await Promise.all([
+      const [leaderboardRes, overviewRes] = await Promise.all([
         leaderboard.get(selectedRange),
         dashboard.overview(selectedRange),
       ]);
       if (requestId !== requestIdRef.current) return;
-      setUsers(res.data || []);
 
       const overview = overviewRes.data || {};
       const newTotals = {
@@ -82,25 +151,27 @@ export default function Dashboard() {
         online: Number(overview.activeUsersNow || 0),
       };
 
-      if (prevRef.current) {
-        setPrevTotals(prevRef.current);
-      }
+      setUsers(leaderboardRes.data || []);
+      if (prevRef.current) setPrevTotals(prevRef.current);
       prevRef.current = newTotals;
       setTotals(newTotals);
+      setLastUpdatedAt(new Date());
     } catch (err) {
-      if (requestId === requestIdRef.current) console.error('Failed to fetch dashboard data:', err);
+      if (requestId === requestIdRef.current) setError(getErrorMessage(err));
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-    if (requestId === requestIdRef.current) setLoading(false);
-  };
+  }, []);
 
-  // Fetch initial leaderboard data
   useEffect(() => {
     fetchData(range);
-  }, [range]);
+  }, [fetchData, range]);
 
-  // Setup real-time socket listeners
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) return undefined;
     let flashTimer = null;
 
     const eventBelongsToRange = (data = {}) => {
@@ -108,57 +179,85 @@ export default function Dashboard() {
       return !data.statDate || data.statDate === localDateKey();
     };
 
-    const handleActivity = (data) => {
+    const handleActivity = (data = {}) => {
       if (!eventBelongsToRange(data)) return;
       setLiveFlash(true);
+      setLastUpdatedAt(new Date());
       if (flashTimer) window.clearTimeout(flashTimer);
-      flashTimer = window.setTimeout(() => setLiveFlash(false), 600);
+      flashTimer = window.setTimeout(() => setLiveFlash(false), 650);
+
       const delta = data.delta || {};
-      setTotals(prev => ({
+      setTotals((prev) => ({
         ...prev,
         keystrokes: prev.keystrokes + Number(delta.keystrokeCount ?? data.keystrokes ?? 0),
         clicks: prev.clicks + Number(delta.mouseClickCount ?? data.clicks ?? 0),
         activeSeconds: prev.activeSeconds + Number(delta.activeSeconds ?? 0),
       }));
-      setUsers(prev => {
-        const userId = String(data.userId || data.user_id);
+
+      setUsers((prev) => {
+        const userId = String(data.userId || data.user_id || '');
+        if (!userId) return prev;
         const totals = data.totals || null;
-        const delta = data.delta || {};
         const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
         const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
         const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
-        const status = data.presence || data.status || 'active';
-        const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
+        const deltaIdleSeconds = Number(delta.idleSeconds ?? data.idleSeconds ?? 0);
+        const nextStatus = data.presence || data.status || 'active';
+        const idx = prev.findIndex((user) => String(user.user_id || user.id) === userId);
+
         if (idx >= 0) {
           const next = [...prev];
           const existing = next[idx];
-          next[idx] = { 
+          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys;
+          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks;
+          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds || existing.total_active_seconds) || 0) + deltaActiveSeconds;
+          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(existing.idleSeconds || existing.total_idle_seconds) || 0) + deltaIdleSeconds;
+          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? existing.focusScore ?? 0);
+          const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
+          next[idx] = {
             ...existing,
             ...data,
             name: data.name || existing.name,
-            keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys,
-            mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks,
-            activeSeconds: totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds) || 0) + deltaActiveSeconds,
-            score: totals ? Number(totals.focusScore || data.score || 0) : (Number(existing.score) || 0) + (deltaKeys + deltaClicks) * 0.1,
-            status
+            keystrokeCount,
+            mouseClickCount,
+            activeSeconds,
+            idleSeconds,
+            total_active_seconds: activeSeconds,
+            total_idle_seconds: idleSeconds,
+            focusScore,
+            score,
+            status: nextStatus,
           };
           return next;
         }
-        return [...prev, { 
-          ...data, 
-          user_id: userId, 
-          status,
+
+        const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
+        const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
+        const activeSeconds = totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds;
+        const idleSeconds = totals ? Number(totals.idleSeconds || 0) : deltaIdleSeconds;
+        const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore || 0);
+        const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
+
+        return [...prev, {
+          ...data,
+          user_id: userId,
+          status: nextStatus,
           name: data.name || `User #${userId}`,
-          keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : deltaKeys,
-          mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : deltaClicks,
-          activeSeconds: totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds,
-          score: totals ? Number(totals.focusScore || data.score || 0) : (deltaKeys + deltaClicks) * 0.1
+          keystrokeCount,
+          mouseClickCount,
+          activeSeconds,
+          idleSeconds,
+          total_active_seconds: activeSeconds,
+          total_idle_seconds: idleSeconds,
+          focusScore,
+          score,
         }];
       });
     };
 
     const handleOverview = (overview = {}) => {
       if (range !== 'today') return;
+      setLastUpdatedAt(new Date());
       setTotals({
         keystrokes: Number(overview.totalKeystrokes || 0),
         clicks: Number(overview.totalMouseClicks || 0),
@@ -167,22 +266,15 @@ export default function Dashboard() {
       });
     };
 
-    const handleStatus = (data) => {
-      setUsers(prev => {
-        const userId = String(data.userId || data.user_id);
-        const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
-        if (idx >= 0) {
-          const next = [...prev];
-          const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
-          next[idx] = {
-            ...next[idx],
-            status: nextStatus,
-            presence: nextStatus,
-            presenceStatus: nextStatus,
-          };
-          return next;
-        }
-        return prev;
+    const handleStatus = (data = {}) => {
+      setUsers((prev) => {
+        const userId = String(data.userId || data.user_id || '');
+        const idx = prev.findIndex((user) => String(user.user_id || user.id) === userId);
+        if (idx < 0) return prev;
+        const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
+        const next = [...prev];
+        next[idx] = { ...next[idx], status: nextStatus, presence: nextStatus, presenceStatus: nextStatus };
+        return next;
       });
     };
 
@@ -198,208 +290,215 @@ export default function Dashboard() {
     };
   }, [socket, range]);
 
-  const rangeLabel = 'lần cập nhật trước';
+  const rangeMeta = RANGES.find((item) => item.key === range) || RANGES[0];
+  const activeUsers = users.filter((user) => ['active', 'online'].includes(String(user.status || user.presence || '').toLowerCase())).length;
+  const averageScore = users.length ? Math.round(users.reduce((sum, user) => sum + Number(user.score ?? calculateRankScore(user)), 0) / users.length) : 0;
+  const lastUpdatedText = lastUpdatedAt
+    ? lastUpdatedAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : 'Chưa cập nhật';
 
-  const buildSub = (current, prev) => {
-    const pct = calcChange(current, prev);
-    if (pct === null) return { text: '— chưa có dữ liệu so sánh', color: '#64748b', icon: null };
-    if (pct === 0) return { text: `— ổn định so với ${rangeLabel}`, color: '#64748b', icon: null };
-    if (pct > 0) return { text: `+${pct}% so với ${rangeLabel}`, color: '#22c55e', icon: 'up' };
-    return { text: `${pct}% so với ${rangeLabel}`, color: '#ef4444', icon: 'down' };
-  };
+  const statCards = useMemo(() => ([
+    {
+      label: 'Đang online',
+      value: totals.online.toLocaleString(),
+      delta: buildDelta(totals.online, prevTotals?.online),
+      note: `${activeUsers.toLocaleString()} người có tín hiệu hiện tại`,
+      icon: Users,
+      color: '#2563eb',
+      iconBg: 'rgba(37,99,235,0.1)',
+    },
+    {
+      label: 'Thời gian active',
+      value: formatDuration(totals.activeSeconds),
+      delta: buildDelta(totals.activeSeconds, prevTotals?.activeSeconds),
+      note: `${rangeMeta.description}`,
+      icon: Clock3,
+      color: '#16a34a',
+      iconBg: 'rgba(22,163,74,0.1)',
+    },
+    {
+      label: 'Gõ phím',
+      value: formatNum(totals.keystrokes),
+      delta: buildDelta(totals.keystrokes, prevTotals?.keystrokes),
+      note: 'Không lưu nội dung phím',
+      icon: Keyboard,
+      color: '#7c3aed',
+      iconBg: 'rgba(124,58,237,0.1)',
+    },
+    {
+      label: 'Click chuột',
+      value: formatNum(totals.clicks),
+      delta: buildDelta(totals.clicks, prevTotals?.clicks),
+      note: `Điểm tổng TB: ${averageScore.toLocaleString()}`,
+      icon: Mouse,
+      color: '#ea580c',
+      iconBg: 'rgba(234,88,12,0.1)',
+    },
+  ]), [activeUsers, averageScore, prevTotals, rangeMeta.description, totals]);
 
-  const onlineSub  = buildSub(totals.online, prevTotals?.online);
-  const keysSub    = buildSub(totals.keystrokes, prevTotals?.keystrokes);
-  const clicksSub  = buildSub(totals.clicks, prevTotals?.clicks);
-
-  const STAT_CARDS = [
-    { label: 'Người dùng đang online', value: totals.online.toLocaleString(), sub: onlineSub, icon: UsersIcon },
-    { label: 'Tổng số lần gõ phím',    value: formatNum(totals.keystrokes),   sub: keysSub,  icon: KeyIcon },
-    { label: 'Tổng số lần click',      value: formatNum(totals.clicks),       sub: clicksSub,icon: MouseIcon2 },
-  ];
+  const tableRows = users.map((user) => {
+    const activeSeconds = Number(user.activeSeconds || user.active_seconds || user.total_active_seconds || 0);
+    const idleSeconds = Number(user.idleSeconds || user.idle_seconds || user.total_idle_seconds || 0);
+    const keystrokeCount = Number(user.keystrokeCount || user.keystrokes || 0);
+    const mouseClickCount = Number(user.mouseClickCount || user.mouse_clicks || 0);
+    const focusScore = Number(user.focusScore || 0);
+    const activeMinutes = Math.max(1, activeSeconds / 60);
+    return {
+      ...user,
+      id: user.user_id || user.id,
+      status: user.status || user.presence || user.presenceStatus || 'offline',
+      activeSeconds,
+      idleSeconds,
+      kpm: activeSeconds > 0 ? Math.round(keystrokeCount / activeMinutes) : 0,
+      cpm: activeSeconds > 0 ? Math.round(mouseClickCount / activeMinutes) : 0,
+      score: Number(user.score ?? calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore })),
+    };
+  });
 
   return (
-    <div>
-      <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+    <div className="dashboard-page">
+      <section className="dashboard-hero">
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>Tổng Quan</h1>
-          <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0', fontWeight: 500 }}>
-            Hoạt động thời gian thực của toàn bộ nhóm
-          </p>
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: '3px 0 0', fontWeight: 600 }}>
-            Số liệu hoạt động lấy từ Desktop Tracker; phần so sánh là với lần cập nhật gần nhất trong phiên xem hiện tại.
+          <div className="dashboard-eyebrow">
+            <Activity size={14} />
+            Dashboard realtime
+          </div>
+          <h1>Tổng quan hoạt động</h1>
+          <p>
+            Theo dõi trạng thái làm việc của nhóm từ Desktop Tracker. Web chỉ hiển thị dữ liệu đã được backend xác nhận.
           </p>
         </div>
 
-        <div style={{
-          display: 'flex',
-          background: 'rgba(15,23,42,0.04)',
-          border: '1px solid rgba(15,23,42,0.08)',
-          borderRadius: 6,
-          padding: 3,
-          gap: 2,
-        }}>
-          {RANGES.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setRange(key)}
-              style={{
-                padding: '7px 14px',
-                borderRadius: 5,
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 600,
-                background: range === key ? '#3b82f6' : 'transparent',
-                color: range === key ? '#fff' : '#64748b',
-                transition: 'all 0.15s ease',
-                boxShadow: range === key ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="dashboard-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
-        {STAT_CARDS.map((card, i) => (
-          <div key={i}
-            style={{
-              background: '#111827',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 8,
-              padding: '20px 22px',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              cursor: 'default',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 32px rgba(59,130,246,0.15)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'none';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+        <div className="dashboard-hero-actions">
+          <div className="dashboard-range-control" role="group" aria-label="Khoảng thời gian dashboard">
+            {RANGES.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={range === key}
+                onClick={() => setRange(key)}
+                className={range === key ? 'active' : ''}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="dashboard-refresh-button"
+            disabled={refreshing || loading}
+            onClick={() => fetchData(range, { background: true })}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{card.label}</span>
-              <span style={{ color: '#4b5563' }}><card.icon size={16} /></span>
-            </div>
-            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.8px', color: '#0f172a', lineHeight: 1 }}>
-              {loading ? <span style={{ color: '#cbd5e1' }}>—</span> : card.value}
-            </div>
-            <div style={{ marginTop: 10, fontSize: 12, color: card.sub.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-              {card.sub.icon === 'up' && <TrendUp size={11} strokeWidth={2.5} />}
-              {card.sub.icon === 'down' && <TrendDown size={11} strokeWidth={2.5} />}
-              {card.sub.text}
-            </div>
-          </div>
-        ))}
+            <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
+            Làm mới
+          </button>
+        </div>
+      </section>
+
+      <div className="dashboard-source-strip">
+        <div>
+          <Monitor size={15} />
+          <span>Nguồn dữ liệu: Desktop Tracker</span>
+        </div>
+        <div>
+          <span className={`dashboard-live-dot ${liveFlash ? 'flash' : ''}`} />
+          <span>Cập nhật: {lastUpdatedText}</span>
+        </div>
       </div>
 
-      <div style={{
-        background: '#111827',
-        border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 8,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#f8fafc' }}>Hoạt Động Thời Gian Thực</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: '50%',
-              background: '#22c55e',
-              boxShadow: liveFlash ? '0 0 12px #22c55e' : '0 0 6px rgba(34,197,94,0.5)',
-              animation: 'pulse-dot 2s ease infinite',
-              transition: 'box-shadow 0.3s',
-            }} />
-            <span style={{ fontSize: 12, color: '#64748b', fontFamily: "'JetBrains Mono', 'SF Mono', monospace" }}>Cập nhật trực tiếp</span>
+      {error && (
+        <div className="dashboard-error" role="alert">
+          <AlertCircle size={17} />
+          <span>{error}</span>
+          <button type="button" onClick={() => fetchData(range)}>Thử lại</button>
+        </div>
+      )}
+
+      <section className="dashboard-stat-grid">
+        {statCards.map((card) => <StatCard key={card.label} card={card} loading={loading && !error} />)}
+      </section>
+
+      <section className="dashboard-live-card">
+        <div className="dashboard-table-header">
+          <div>
+            <h2>Hoạt động thời gian thực</h2>
+            <p>{tableRows.length ? `${tableRows.length} người dùng trong bảng xếp hạng hiện tại` : 'Chưa có dữ liệu cho khoảng thời gian này'}</p>
+          </div>
+          <div className="dashboard-table-status">
+            <span className={`dashboard-live-dot ${liveFlash ? 'flash' : ''}`} />
+            <span>Live</span>
           </div>
         </div>
 
-        <div className="dashboard-realtime-table" style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse' }}>
+        <div className="dashboard-realtime-table">
+          <table>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                {['Người dùng', 'Trạng thái', 'Gõ phím/phút', 'Click/phút', 'Thời gian hoạt động', 'Điểm'].map(h => (
-                  <th key={h} style={{
-                    padding: '10px 20px',
-                    textAlign: h === 'Người dùng' || h === 'Trạng thái' ? 'left' : 'right',
-                    fontSize: 11, fontWeight: 600, color: '#64748b',
-                    textTransform: 'uppercase', letterSpacing: '0.06em',
-                  }}>{h}</th>
+              <tr>
+                {['Người dùng', 'Trạng thái', 'Gõ/phút', 'Click/phút', 'Thời gian active', 'Điểm tổng'].map((heading) => (
+                  <th key={heading} className={heading === 'Người dùng' || heading === 'Trạng thái' ? 'left' : 'right'}>
+                    {heading}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>Đang tải...</td></tr>
-              ) : users.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>Chưa có hoạt động nào</td></tr>
-              ) : users.map((u) => {
-                const status = (u.status || 'offline').toLowerCase();
-                const sc = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
-                const initials = (u.name || 'U').substring(0, 2).toUpperCase();
-                const activeSecs = Number(u.activeSeconds || 0);
-                const activeMins = Math.max(1, activeSecs / 60);
-                const kpm = activeSecs > 0 ? Math.round(Number(u.keystrokeCount || 0) / activeMins) : 0;
-                const cpm = activeSecs > 0 ? Math.round(Number(u.mouseClickCount || 0) / activeMins) : 0;
+              {loading && !error ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index}>
+                    <td colSpan={6}><div className="dashboard-row-skeleton" /></td>
+                  </tr>
+                ))
+              ) : tableRows.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="dashboard-empty-state">
+                      <Monitor size={28} />
+                      <strong>Chưa có hoạt động realtime</strong>
+                      <span>Mở Desktop Tracker để bắt đầu gửi dữ liệu gõ phím, click và thời gian active.</span>
+                      <button type="button" onClick={() => navigate('/tracker')}>Mở Tracker</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : tableRows.map((user) => {
+                const sc = statusConfig(user.status);
+                const avatarUrl = getStoredAvatar(user.id) || user.avatarUrl || user.photoUrl || user.imageUrl || '';
+                const initials = initialsFromName(user.name || `User #${user.id}`);
                 return (
                   <tr
-                    key={u.user_id}
+                    key={user.id}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        navigate(`/users/${u.user_id}`);
+                        navigate(`/users/${user.id}`);
                       }
                     }}
-                    style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onClick={() => navigate(`/users/${u.user_id}`)}
+                    onClick={() => navigate(`/users/${user.id}`)}
                   >
-                    <td style={{ padding: '14px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 32, height: 32, borderRadius: 5,
-                          background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 11, fontWeight: 800, color: '#fff',
-                        }}>{initials}</div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{u.name}</span>
+                    <td>
+                      <div className="dashboard-user-cell">
+                        <div className="dashboard-avatar">
+                          {avatarUrl ? <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${user.id}`}`} /> : initials}
+                        </div>
+                        <div>
+                          <div className="dashboard-user-name">{user.name || `User #${user.id}`}</div>
+                          <div className="dashboard-user-meta">{user.email || 'Không có email'}</div>
+                        </div>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '4px 10px', borderRadius: 4,
-                        background: sc.bg, border: `1px solid ${sc.border}`,
-                        fontSize: 11, fontWeight: 700, color: sc.color,
-                      }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: sc.dot }} />
+                    <td>
+                      <span className="dashboard-status-pill" style={{ color: sc.color, background: sc.bg, borderColor: sc.border }}>
+                        <span style={{ background: sc.dot }} />
                         {sc.label}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#334155', fontWeight: 600 }}>
-                      {kpm.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#334155', fontWeight: 600 }}>
-                      {cpm.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#64748b' }}>
-                      {formatDuration(activeSecs)}
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                      <span style={{
-                        fontSize: 14, fontWeight: 800,
-                        color: Number(u.score || 0) >= 90 ? '#22c55e' : Number(u.score || 0) >= 70 ? '#60a5fa' : '#f59e0b',
-                      }}>
-                        {Number(u.score || 0).toFixed(1)}
+                    <td className="right mono">{user.kpm.toLocaleString()}</td>
+                    <td className="right mono">{user.cpm.toLocaleString()}</td>
+                    <td className="right mono muted">{formatDuration(user.activeSeconds)}</td>
+                    <td className="right">
+                      <span className="dashboard-score" data-tone={user.score >= 850 ? 'good' : user.score >= 600 ? 'ok' : 'warn'}>
+                        {user.score.toFixed(1)}
                       </span>
                     </td>
                   </tr>
@@ -408,7 +507,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStoredAvatar, initialsFromName } from '../utils/avatar';
 
 const statusColors = {
   active: 'bg-green-500',
@@ -11,12 +12,16 @@ const statusColors = {
 export default function UserRow({ user, formatDuration, showRank }) {
   const navigate = useNavigate();
   const status = user.status || 'offline';
+  const userId = user.user_id || user.id;
+  const avatarUrl = getStoredAvatar(userId);
 
   return (
     <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50" onClick={() => navigate(`/users/${user.user_id}`)}>
       <td className="px-6 py-4 flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-          {user.name?.charAt(0).toUpperCase()}
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold text-white">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${userId}`}`} className="h-full w-full object-cover" />
+          ) : initialsFromName(user.name || `User #${userId}`)}
         </div>
         <span className="font-medium text-slate-900">{user.name}</span>
       </td>

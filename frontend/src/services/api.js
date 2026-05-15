@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { calculateRankScore } from '../utils/scoring';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -60,7 +61,15 @@ function normalizeLeaderboardRow(row, index = 0) {
   const idleSeconds = Number(row.idleSeconds ?? row.idle_seconds ?? row.total_idle_seconds ?? 0);
   const keystrokes = Number(row.keystrokeCount ?? row.keystrokes ?? row.total_keystrokes ?? 0);
   const clicks = Number(row.mouseClickCount ?? row.mouse_clicks ?? row.total_mouse_clicks ?? 0);
-  const score = Number(row.focusScore ?? row.score ?? 0);
+  const focusScore = Number(row.focusScore ?? row.focus_score ?? 0);
+  const fallbackScore = calculateRankScore({
+    activeSeconds,
+    idleSeconds,
+    keystrokeCount: keystrokes,
+    mouseClickCount: clicks,
+    focusScore,
+  });
+  const score = Number(row.score ?? fallbackScore);
   return {
     ...row,
     user_id: user.id ?? row.userId ?? row.user_id,
@@ -68,9 +77,12 @@ function normalizeLeaderboardRow(row, index = 0) {
     name: user.name || row.name || 'Unknown User',
     email: user.email || row.email || '',
     role: user.role || row.role || 'user',
+    isVerified: Boolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified),
+    verified: Boolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified),
     accountStatus: user.status || row.accountStatus || row.status || 'active',
     status: row.presence || row.presenceStatus || row.status || 'offline',
     rank: row.rankPosition || index + 1,
+    focusScore,
     score,
     total_keystrokes: keystrokes,
     total_mouse_clicks: clicks,
@@ -232,6 +244,8 @@ export const users = {
       data: unwrapArray(res.data).map((user) => ({
         ...user,
         user_id: user.id,
+        isVerified: Boolean(user.isVerified ?? user.is_verified),
+        verified: Boolean(user.isVerified ?? user.is_verified),
         accountStatus: user.status || 'active',
         status: user.presence || user.presenceStatus || 'offline',
       })),
@@ -246,6 +260,8 @@ export const users = {
         data: {
           ...user,
           user_id: user.id,
+          isVerified: Boolean(user.isVerified ?? user.is_verified),
+          verified: Boolean(user.isVerified ?? user.is_verified),
           accountStatus: user.status || 'active',
           status: user.presence || user.presenceStatus || 'offline',
         },
@@ -254,6 +270,21 @@ export const users = {
       if (err.response?.status === 403) return { data: { id, user_id: id, name: `User #${id}`, accountStatus: 'active', status: 'offline' } };
       throw err;
     }
+  },
+  update: async (id, data) => {
+    const res = await api.patch(`/api/users/${id}`, data);
+    const user = res.data?.user || res.data || {};
+    return {
+      ...res,
+      data: {
+        ...user,
+        user_id: user.id,
+        isVerified: Boolean(user.isVerified ?? user.is_verified),
+        verified: Boolean(user.isVerified ?? user.is_verified),
+        accountStatus: user.status || 'active',
+        status: user.presence || user.presenceStatus || 'offline',
+      },
+    };
   },
 };
 

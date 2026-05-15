@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { leaderboard as leaderboardApi, groups as groupsApi } from '../services/api';
+import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, ChevronLeft, ChevronRight, Globe2, Search, Trophy, Users } from 'lucide-react';
+import { getStoredAvatar, initialsFromName } from '../utils/avatar';
+import { calculateRankScore } from '../utils/scoring';
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, Users } from 'lucide-react';
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' },
@@ -30,16 +32,137 @@ const AVATAR_GRADS = [
   'linear-gradient(135deg,#a78bfa,#7c3aed)',
 ];
 
-function Avatar({name,size=36,idx=0}) {
+const BADGE_STYLES = {
+  champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
+  weekly: { bg: 'rgba(37,99,235,0.12)', border: 'rgba(37,99,235,0.26)', color: '#2563eb', icon: Medal },
+  monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
+  top: { bg: 'rgba(14,165,233,0.11)', border: 'rgba(14,165,233,0.24)', color: '#0284c7', icon: ShieldCheck },
+  streak: { bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.26)', color: '#ea580c', icon: Flame },
+  volume: { bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.24)', color: '#16a34a', icon: BadgeCheck },
+};
+const VERIFIED_STORAGE_KEY = 'workrank:verified-users';
+
+function loadVerifiedUsers() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(VERIFIED_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveVerifiedUsers(userIds) {
+  localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(userIds));
+  window.dispatchEvent(new Event('workrank:verified-users-updated'));
+}
+
+function VerifiedMark({ size = 15 }) {
+  const badgeSize = Math.max(14, size);
   return (
-    <div style={{
-      width:size,height:size,borderRadius:6,flexShrink:0,
-      background:AVATAR_GRADS[idx%AVATAR_GRADS.length],
-      display:'flex',alignItems:'center',justifyContent:'center',
-      fontSize:size*.34,fontWeight:900,color:'#fff',letterSpacing:'-0.5px',
-    }}>
-      {(name||'U').substring(0,2).toUpperCase()}
+    <span
+      title="Tích xanh được quản trị viên cấp"
+      aria-label="Đã được cấp tích xanh"
+      style={{
+        width: badgeSize,
+        height: badgeSize,
+        borderRadius: '50%',
+        background: '#1877f2',
+        border: '2px solid #ffffff',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
+        boxShadow: '0 1px 2px rgba(15,23,42,0.16), 0 0 0 1px rgba(24,119,242,0.18)',
+        flexShrink: 0,
+      }}
+    >
+      <svg
+        viewBox="0 0 16 16"
+        width={Math.round(badgeSize * 0.72)}
+        height={Math.round(badgeSize * 0.72)}
+        aria-hidden="true"
+        focusable="false"
+        style={{ display: 'block' }}
+      >
+        <path
+          d="M6.45 10.55 3.75 7.85 2.55 9.05l3.9 3.9 7-7-1.2-1.2-5.8 5.8Z"
+          fill="#ffffff"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function Avatar({ userId, name, size = 36, idx = 0 }) {
+  const avatarUrl = getStoredAvatar(userId);
+  return (
+    <div style={{ position: 'relative', width:size, height:size, flexShrink:0 }}>
+      <div style={{
+        width:size,height:size,borderRadius:6,flexShrink:0,
+        background:AVATAR_GRADS[idx%AVATAR_GRADS.length],
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:size*.34,fontWeight:900,color:'#fff',letterSpacing:0,overflow:'hidden',
+      }}>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={`Ảnh đại diện ${name || `User #${userId}`}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        ) : initialsFromName(name || `User #${userId}`)}
+      </div>
     </div>
+  );
+}
+
+function userActions(user = {}) {
+  return Number(user.keystrokeCount || user.keystrokes || 0) + Number(user.mouseClickCount || user.mouse_clicks || 0);
+}
+
+function isVerifiedRanker(user, verifiedUsers) {
+  const userId = String(user.user_id || user.id || '');
+  return Boolean(user.verified || user.isVerified || verifiedUsers.includes(userId));
+}
+
+function rankBadges(user, rank, range) {
+  const actions = userActions(user);
+  const badges = [];
+  if (rank === 1) {
+    if (range === 'week') badges.push({ key: 'weekly', label: 'Nhất tuần', style: 'weekly' });
+    else if (range === 'month') badges.push({ key: 'monthly', label: 'Nhất tháng', style: 'monthly' });
+    else badges.push({ key: 'champion', label: 'Top 1 ngày', style: 'champion' });
+  } else if (rank <= 3) {
+    badges.push({ key: 'top3', label: `Top ${rank}`, style: 'top' });
+  } else if (rank <= 10) {
+    badges.push({ key: 'top10', label: 'Top 10', style: 'top' });
+  }
+  if (actions >= 10000) badges.push({ key: '10k', label: '10K thao tác', style: 'volume' });
+  else if (actions >= 5000) badges.push({ key: '5k', label: '5K thao tác', style: 'volume' });
+  if (Number(user.focusScore || 0) >= 90) badges.push({ key: 'focus', label: 'Tập trung', style: 'streak' });
+  return badges.slice(0, 3);
+}
+
+function RankBadge({ badge, compact = false }) {
+  const style = BADGE_STYLES[badge.style] || BADGE_STYLES.top;
+  const Icon = style.icon;
+  return (
+    <span
+      title={badge.label}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: compact ? 3 : 4,
+        maxWidth: '100%',
+        padding: compact ? '3px 6px' : '4px 8px',
+        borderRadius: 999,
+        border: `1px solid ${style.border}`,
+        background: style.bg,
+        color: style.color,
+        fontSize: compact ? 9 : 10,
+        fontWeight: 900,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <Icon size={compact ? 10 : 11} strokeWidth={2.6} />
+      {badge.label}
+    </span>
   );
 }
 
@@ -52,10 +175,20 @@ function localDateKey(value = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function sortByRankScore(rows) {
+  return [...rows].sort((a, b) => {
+    const scoreDiff = Number(b.score || 0) - Number(a.score || 0);
+    if (scoreDiff) return scoreDiff;
+    const focusDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
+    if (focusDiff) return focusDiff;
+    return Number(b.activeSeconds || b.total_active_seconds || 0) - Number(a.activeSeconds || a.total_active_seconds || 0);
+  });
+}
+
 export default function Leaderboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { socket } = useAuth();
+  const { socket, isAdmin } = useAuth();
   const searchParams = new URLSearchParams(location.search);
   const initialGroupId = searchParams.get('groupId');
 
@@ -67,12 +200,24 @@ export default function Leaderboard() {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);
   const [now, setNow]       = useState(new Date());
+  const [verifiedUsers, setVerifiedUsers] = useState(() => loadVerifiedUsers());
+  const [verificationPending, setVerificationPending] = useState({});
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
   const requestIdRef = useRef(0);
 
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
+
+  useEffect(() => {
+    const syncVerifiedUsers = () => setVerifiedUsers(loadVerifiedUsers());
+    window.addEventListener('storage', syncVerifiedUsers);
+    window.addEventListener('workrank:verified-users-updated', syncVerifiedUsers);
+    return () => {
+      window.removeEventListener('storage', syncVerifiedUsers);
+      window.removeEventListener('workrank:verified-users-updated', syncVerifiedUsers);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -123,6 +268,46 @@ export default function Leaderboard() {
     fetchData();
   }, [range, activeTab, selectedGroupId]);
 
+  const updateLocalVerification = (userId, nextVerified) => {
+    const id = String(userId);
+    setVerifiedUsers((prev) => {
+      const exists = prev.includes(id);
+      const next = nextVerified
+        ? (exists ? prev : [...prev, id])
+        : prev.filter((storedId) => storedId !== id);
+      saveVerifiedUsers(next);
+      return next;
+    });
+    setUsers((prev) => prev.map((row) => (
+      String(row.user_id || row.id) === id
+        ? { ...row, isVerified: nextVerified, verified: nextVerified }
+        : row
+    )));
+  };
+
+  const toggleVerifiedUser = async (event, user) => {
+    event.stopPropagation();
+    const userId = user.user_id || user.id;
+    if (!userId || verificationPending[String(userId)]) return;
+
+    const nextVerified = !isVerifiedRanker(user, verifiedUsers);
+    updateLocalVerification(userId, nextVerified);
+    setVerificationPending((prev) => ({ ...prev, [String(userId)]: true }));
+    try {
+      const res = await usersApi.update(userId, { isVerified: nextVerified });
+      const savedVerified = Boolean(res.data?.isVerified ?? res.data?.verified ?? nextVerified);
+      updateLocalVerification(userId, savedVerified);
+    } catch (err) {
+      console.error('Could not update user verification:', err);
+    } finally {
+      setVerificationPending((prev) => {
+        const next = { ...prev };
+        delete next[String(userId)];
+        return next;
+      });
+    }
+  };
+
   // Real-time socket listener
   useEffect(() => {
     if (!socket) return;
@@ -143,11 +328,19 @@ export default function Leaderboard() {
         const delta = data.delta || {};
         const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
         const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
+        const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
+        const deltaIdleSeconds = Number(delta.idleSeconds ?? data.idleSeconds ?? 0);
         const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
         if (idx >= 0) {
           const next = [...prev];
           const existing = next[idx];
           const status = data.presence || data.presenceStatus || data.status || existing.status || 'active';
+          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys;
+          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks;
+          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds || existing.total_active_seconds) || 0) + deltaActiveSeconds;
+          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(existing.idleSeconds || existing.total_idle_seconds) || 0) + deltaIdleSeconds;
+          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? existing.focusScore ?? 0);
+          const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
           next[idx] = { 
             ...existing,
             ...data,
@@ -155,13 +348,24 @@ export default function Leaderboard() {
             status,
             presence: status,
             presenceStatus: status,
-            keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys,
-            mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks,
-            score: totals ? Number(totals.focusScore || data.score || 0) : (Number(existing.score) || 0) + (deltaKeys + deltaClicks) * 0.1
+            keystrokeCount,
+            mouseClickCount,
+            activeSeconds,
+            idleSeconds,
+            total_active_seconds: activeSeconds,
+            total_idle_seconds: idleSeconds,
+            focusScore,
+            score,
           };
-          return next.sort((a,b) => Number(b.score||0) - Number(a.score||0));
+          return sortByRankScore(next);
         }
         // Fallback for new user not yet in DB
+        const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
+        const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
+        const activeSeconds = totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds;
+        const idleSeconds = totals ? Number(totals.idleSeconds || 0) : deltaIdleSeconds;
+        const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore || 0);
+        const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
         const newUser = {
           ...data,
           user_id: userId,
@@ -169,12 +373,17 @@ export default function Leaderboard() {
           status: data.presence || data.presenceStatus || data.status || 'active',
           presence: data.presence || data.presenceStatus || data.status || 'active',
           presenceStatus: data.presence || data.presenceStatus || data.status || 'active',
-          keystrokeCount: totals ? Number(totals.keystrokeCount || 0) : deltaKeys,
-          mouseClickCount: totals ? Number(totals.mouseClickCount || 0) : deltaClicks,
-          score: totals ? Number(totals.focusScore || data.score || 0) : (deltaKeys + deltaClicks) * 0.1
+          keystrokeCount,
+          mouseClickCount,
+          activeSeconds,
+          idleSeconds,
+          total_active_seconds: activeSeconds,
+          total_idle_seconds: idleSeconds,
+          focusScore,
+          score,
         };
         const next = [...prev, newUser];
-        return next.sort((a,b) => Number(b.score||0) - Number(a.score||0));
+        return sortByRankScore(next);
       });
     };
     const handleStatus = (data) => {
@@ -206,13 +415,13 @@ export default function Leaderboard() {
   const filtered = users.filter(u=>(u.name||'').toLowerCase().includes(search.toLowerCase()));
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
-  const avgScore   = users.length ? Math.round(users.reduce((a,u)=>a+Number(u.keystrokeCount||0)+Number(u.mouseClickCount||0),0)/users.length) : 0;
+  const avgScore   = users.length ? Math.round(users.reduce((a,u)=>a+Number(u.score||0),0)/users.length) : 0;
   const timeStr = now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const CARD = {
-    background: '#111827',
-    border: '1px solid rgba(255,255,255,0.07)',
-    borderRadius: 8,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+    background: '#ffffff',
+    border: '1px solid rgba(15,23,42,0.08)',
+    borderRadius: 6,
+    boxShadow: '0 12px 32px rgba(15,23,42,0.05)',
   };
 
   return (
@@ -233,28 +442,28 @@ export default function Leaderboard() {
 
           <div className="leaderboard-controls" style={{display: 'flex', gap: 20, alignItems: 'center'}}>
             {/* Tab Switcher */}
-            <div style={{display:'flex',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:3,gap:2}}>
+            <div style={{display:'flex',background:'rgba(15,23,42,0.04)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:6,padding:3,gap:2}}>
               <button onClick={() => setActiveTab('global')} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='global'?'#2563eb':'transparent',
-                color:activeTab==='global'?'#fff':'#94a3b8',transition:'all .15s',
+                color:activeTab==='global'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><Globe2 size={14} /> Toàn Cầu</button>
               <button onClick={() => setActiveTab('group')} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='group'?'#2563eb':'transparent',
-                color:activeTab==='group'?'#fff':'#94a3b8',transition:'all .15s',
+                color:activeTab==='group'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><Users size={14} /> Nhóm</button>
             </div>
 
             {/* Time Range Filter */}
-            <div style={{display:'flex',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:3,gap:2}}>
+            <div style={{display:'flex',background:'rgba(15,23,42,0.04)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:6,padding:3,gap:2}}>
               {RANGES.map(({key,label})=>(
                 <button key={key} onClick={()=>setRange(key)} style={{
                   padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                   background:range===key?'#3b82f6':'transparent',
-                  color:range===key?'#fff':'#94a3b8',transition:'all .15s',
+                  color:range===key?'#fff':'#64748b',transition:'all .15s',
                   boxShadow:range===key?'0 2px 8px rgba(59,130,246,.3)':'none',
                 }}>{label}</button>
               ))}
@@ -265,14 +474,14 @@ export default function Leaderboard() {
 
       {activeTab === 'group' && (
         <div className="leaderboard-group-filter" style={{...CARD, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16}}>
-          <span style={{fontSize: 13, fontWeight: 700, color: '#94a3b8'}}>CHỌN NHÓM:</span>
+          <span style={{fontSize: 13, fontWeight: 700, color: '#64748b'}}>CHỌN NHÓM:</span>
           {myGroups.length > 0 ? (
             <select 
               value={selectedGroupId} 
               onChange={e => setSelectedGroupId(e.target.value)}
               style={{
-                background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#f1f5f9', padding: '8px 12px', borderRadius: 6, outline: 'none',
+                background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
+                color: '#0f172a', padding: '8px 12px', borderRadius: 6, outline: 'none',
                 fontSize: 14, fontWeight: 600, minWidth: 200
               }}
             >
@@ -289,12 +498,12 @@ export default function Leaderboard() {
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <div style={{width:7,height:7,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 8px rgba(34,197,94,0.6)',animation:'pulse-dot 2s ease infinite'}}/>
           <span style={{fontSize:11,fontWeight:700,color:'#22c55e',textTransform:'uppercase',letterSpacing:'0.08em'}}>Xu Hướng Hoạt Động</span>
-          <span style={{fontSize:11,color:'#6b7280',marginLeft:6}}>
-            ĐIỂM HOẠT ĐỘNG TB: <span style={{color:'#e2e8f0',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{Number(avgScore).toLocaleString()} điểm</span>
+          <span style={{fontSize:11,color:'#64748b',marginLeft:6}}>
+            ĐIỂM CẠNH TRANH TB: <span style={{color:'#0f172a',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{Number(avgScore).toLocaleString()} điểm</span>
           </span>
         </div>
-        <div style={{fontSize:11,color:'#6b7280',fontWeight:600}}>
-          Cập nhật lúc: <span style={{color:'#e2e8f0',fontFamily:"'JetBrains Mono',monospace"}}>{timeStr}</span>
+        <div style={{fontSize:11,color:'#64748b',fontWeight:600}}>
+          Cập nhật lúc: <span style={{color:'#1e293b',fontFamily:"'JetBrains Mono',monospace"}}>{timeStr}</span>
         </div>
       </div>
 
@@ -305,11 +514,17 @@ export default function Leaderboard() {
             {top2 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
-                  <Avatar name={top2.name} size={44} idx={1}/>
-                  <div style={{position:'absolute',bottom:-6,right:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
+                  <Avatar userId={top2.user_id || top2.id} name={top2.name} size={44} idx={1}/>
+                  <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
                 </div>
-                <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textAlign:'center'}}>{(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}</div>
-                <div style={{fontSize:14,fontWeight:900,color:'#94a3b8',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top2.score)}</div>
+                <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#64748b',textAlign:'center'}}>
+                  {(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {isVerifiedRanker(top2, verifiedUsers) && <VerifiedMark size={13} />}
+                </div>
+                <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
+                  {rankBadges(top2, 2, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                </div>
+                <div style={{fontSize:14,fontWeight:900,color:'#64748b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top2.score)}</div>
                 <div style={{width:'100%',height:90,background:'linear-gradient(180deg,rgba(148,163,184,0.15),rgba(148,163,184,0.05))',border:'1px solid rgba(148,163,184,0.2)',borderRadius:'4px 4px 0 0'}}/>
               </div>
             )}
@@ -317,10 +532,16 @@ export default function Leaderboard() {
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
                 <Trophy size={18} color="#f59e0b" fill="#f59e0b" />
                 <div style={{position:'relative'}}>
-                  <Avatar name={top1.name} size={52} idx={0}/>
-                  <div style={{position:'absolute',bottom:-6,right:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
+                  <Avatar userId={top1.user_id || top1.id} name={top1.name} size={52} idx={0}/>
+                  <div style={{position:'absolute',bottom:-6,left:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
                 </div>
-                <div style={{fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>{(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}</div>
+                <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>
+                  {(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {isVerifiedRanker(top1, verifiedUsers) && <VerifiedMark size={14} />}
+                </div>
+                <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
+                  {rankBadges(top1, 1, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                </div>
                 <div style={{fontSize:18,fontWeight:900,color:'#f59e0b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top1.score)}</div>
                 <div style={{width:'100%',height:130,background:'linear-gradient(180deg,rgba(245,158,11,0.18),rgba(245,158,11,0.05))',border:'1px solid rgba(245,158,11,0.25)',borderRadius:'4px 4px 0 0'}}/>
               </div>
@@ -328,10 +549,16 @@ export default function Leaderboard() {
             {top3 && (
               <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top3.user_id}`); } }} onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
                 <div style={{position:'relative'}}>
-                  <Avatar name={top3.name} size={40} idx={2}/>
-                  <div style={{position:'absolute',bottom:-6,right:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
+                  <Avatar userId={top3.user_id || top3.id} name={top3.name} size={40} idx={2}/>
+                  <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
                 </div>
-                <div style={{fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>{(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}</div>
+                <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>
+                  {(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {isVerifiedRanker(top3, verifiedUsers) && <VerifiedMark size={13} />}
+                </div>
+                <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
+                  {rankBadges(top3, 3, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                </div>
                 <div style={{fontSize:14,fontWeight:900,color:'#d97706',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top3.score)}</div>
                 <div style={{width:'100%',height:70,background:'linear-gradient(180deg,rgba(180,83,9,0.15),rgba(180,83,9,0.05))',border:'1px solid rgba(180,83,9,0.2)',borderRadius:'4px 4px 0 0'}}/>
               </div>
@@ -343,11 +570,19 @@ export default function Leaderboard() {
               const rank=i+4;
               return (
                 <div key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)}
-                  style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(255,255,255,0.03)',borderRadius:6,border:'1px solid rgba(255,255,255,0.06)',cursor:'pointer',transition:'background .15s'}}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(15,23,42,0.03)',borderRadius:5,border:'1px solid rgba(15,23,42,0.08)',cursor:'pointer',transition:'background .15s'}}
                 >
-                  <div style={{width:22,height:22,borderRadius:4,background:'rgba(255,255,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#94a3b8',flexShrink:0}}>{rank}</div>
-                  <Avatar name={u.name} size={28} idx={rank-1}/>
-                  <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:'#e2e8f0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</div></div>
+                  <div style={{width:22,height:22,borderRadius:4,background:'rgba(15,23,42,0.06)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#64748b',flexShrink:0}}>{rank}</div>
+                  <Avatar userId={u.user_id || u.id} name={u.name} size={28} idx={rank-1}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                      <span style={{overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+                      {isVerifiedRanker(u, verifiedUsers) && <VerifiedMark size={12} />}
+                    </div>
+                    <div style={{display:'flex',gap:4,marginTop:4,overflow:'hidden'}}>
+                      {rankBadges(u, rank, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                    </div>
+                  </div>
                   <div style={{fontSize:14,fontWeight:800,color:'#60a5fa',fontFamily:"'JetBrains Mono',monospace",flexShrink:0}}>{fmtScore(u.score)}</div>
                 </div>
               );
@@ -360,16 +595,21 @@ export default function Leaderboard() {
       <div className="leaderboard-table-card" style={{...CARD,overflow:'hidden',display:'flex',flexDirection:'column'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:11,fontWeight:700,color:'#6b7280',textTransform:'uppercase',letterSpacing:'0.08em'}}>Danh Sách Thứ Hạng</span>
+            <span style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em'}}>Danh Sách Thứ Hạng</span>
+            {isAdmin && (
+              <span style={{fontSize:11,fontWeight:700,color:'#1877f2',background:'rgba(24,119,242,0.08)',border:'1px solid rgba(24,119,242,0.18)',borderRadius:999,padding:'4px 8px'}}>
+                Tích xanh do admin cấp
+              </span>
+            )}
           </div>
           <div style={{position:'relative'}}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input
               aria-label="Tìm kiếm người dùng"
               value={searchInput}
               onChange={e=>setSearchInput(e.target.value)}
               placeholder="Tìm người dùng..."
-              style={{background:'#1f2937',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px 7px 30px',fontSize:12,color:'#f1f5f9',outline:'none',width:200}}
+              style={{background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:5,padding:'7px 12px 7px 30px',fontSize:12,color:'#1e293b',outline:'none',width:200}}
             />
           </div>
         </div>
@@ -377,8 +617,8 @@ export default function Leaderboard() {
           <table style={{width:'100%',minWidth:720,borderCollapse:'collapse'}}>
             <thead>
               <tr style={{borderBottom:'1px solid rgba(15,23,42,0.06)'}}>
-                {['Hạng','Thành Viên','Gõ Phím','Click','Tổng Điểm'].map(h=>(
-                  <th key={h} style={{padding:'10px 18px',textAlign:h==='Hạng'?'left':'right',fontSize:10,fontWeight:700,color:'#6b7280',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</th>
+                {['Hạng','Thành Viên','Gõ Phím','Click','Điểm Tổng'].map(h=>(
+                  <th key={h} style={{padding:'10px 18px',textAlign:h==='Hạng'?'left':'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -390,13 +630,58 @@ export default function Leaderboard() {
               ) : paginated.map((u,i)=>{
                 const rank = (page-1)*PAGE_SIZE + i + 1;
                 const sc = Number(u.score||0);
+                const verified = isVerifiedRanker(u, verifiedUsers);
+                const badges = rankBadges(u, rank, range);
+                const userId = u.user_id || u.id;
+                const isUpdatingVerification = Boolean(verificationPending[String(userId)]);
                 return (
                   <tr key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)} style={{borderBottom:'1px solid rgba(15,23,42,0.04)',cursor:'pointer'}}>
-                    <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#6b7280'}}>{rank}</div></td>
-                    <td style={{padding:'12px 18px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><Avatar name={u.name} size={30} idx={rank-1}/><div style={{fontSize:13,fontWeight:600,color:'#e2e8f0'}}>{u.name}</div></div></td>
-                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:'#e2e8f0',fontFamily:"'JetBrains Mono',monospace"}}>{fmtNum(u.keystrokeCount)}</div></td>
-                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,color:'#94a3b8',fontFamily:"'JetBrains Mono',monospace"}}>{fmtNum(u.mouseClickCount)}</div></td>
-                    <td style={{padding:'12px 18px',textAlign:'right'}}><span style={{fontSize:15,fontWeight:900,color:'#60a5fa'}}>{fmtScore(sc)}</span></td>
+                    <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#64748b'}}>{rank}</div></td>
+                    <td style={{padding:'12px 18px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
+                        <Avatar userId={u.user_id || u.id} name={u.name} size={30} idx={rank-1}/>
+                        <div style={{minWidth:0,display:'flex',flexDirection:'column',gap:5}}>
+                          <div style={{display:'flex',alignItems:'center',gap:5,minWidth:0}}>
+                            <span style={{fontSize:13,fontWeight:700,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:190}}>{u.name}</span>
+                            {verified && <VerifiedMark size={13} />}
+                          </div>
+                          {badges.length > 0 && (
+                            <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+                              {badges.map((badge) => <RankBadge key={badge.key} badge={badge} />)}
+                            </div>
+                          )}
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              data-no-track="true"
+                              disabled={isUpdatingVerification}
+                              onClick={(event) => toggleVerifiedUser(event, u)}
+                              style={{
+                                alignSelf: 'flex-start',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '4px 8px',
+                                borderRadius: 999,
+                                border: verified ? '1px solid rgba(24,119,242,0.24)' : '1px solid rgba(100,116,139,0.22)',
+                                background: verified ? 'rgba(24,119,242,0.08)' : 'rgba(15,23,42,0.04)',
+                                color: verified ? '#1877f2' : '#64748b',
+                                fontSize: 10,
+                                fontWeight: 900,
+                                cursor: isUpdatingVerification ? 'wait' : 'pointer',
+                                opacity: isUpdatingVerification ? 0.65 : 1,
+                              }}
+                            >
+                              <BadgeCheck size={11} strokeWidth={2.8} />
+                              {verified ? 'Gỡ tích xanh' : 'Cấp tích xanh'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:'#1e293b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtNum(u.keystrokeCount)}</div></td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><div style={{fontSize:13,color:'#64748b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtNum(u.mouseClickCount)}</div></td>
+                    <td style={{padding:'12px 18px',textAlign:'right'}}><span style={{fontSize:15,fontWeight:900,color:'#3b82f6'}}>{fmtScore(sc)}</span></td>
                   </tr>
                 );
               })}
@@ -405,10 +690,10 @@ export default function Leaderboard() {
         </div>
         {/* Pagination */}
         <div style={{padding:'12px 18px',borderTop:'1px solid rgba(15,23,42,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:12,color:'#6b7280'}}>Trang {page} / {totalPages}</span>
+          <span style={{fontSize:12,color:'#64748b'}}>Trang {page} / {totalPages}</span>
           <div style={{display:'flex',gap:8}}>
-            <button aria-label="Trang trước" disabled={page<=1} onClick={()=>setPage(p=>p-1)} style={{padding:'5px 12px',borderRadius:5,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',color:'#e2e8f0',cursor:page<=1?'not-allowed':'pointer',opacity:page<=1?0.4:1,display:'flex',alignItems:'center'}}><ChevronLeft size={15} /></button>
-            <button aria-label="Trang sau" disabled={page>=totalPages} onClick={()=>setPage(p=>p+1)} style={{padding:'5px 12px',borderRadius:5,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',color:'#e2e8f0',cursor:page>=totalPages?'not-allowed':'pointer',opacity:page>=totalPages?0.4:1,display:'flex',alignItems:'center'}}><ChevronRight size={15} /></button>
+            <button aria-label="Trang trước" disabled={page<=1} onClick={()=>setPage(p=>p-1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:page<=1?'not-allowed':'pointer',opacity:page<=1?0.4:1,display:'flex',alignItems:'center'}}><ChevronLeft size={15} /></button>
+            <button aria-label="Trang sau" disabled={page>=totalPages} onClick={()=>setPage(p=>p+1)} style={{padding:'5px 12px',borderRadius:4,background:'rgba(15,23,42,0.06)',border:'1px solid rgba(15,23,42,0.08)',color:'#0f172a',cursor:page>=totalPages?'not-allowed':'pointer',opacity:page>=totalPages?0.4:1,display:'flex',alignItems:'center'}}><ChevronRight size={15} /></button>
           </div>
         </div>
       </div>

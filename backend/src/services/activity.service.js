@@ -1,6 +1,6 @@
 const { Op, UniqueConstraintError } = require('sequelize');
 const { sequelize, Device, WorkSession, ActivityEvent, DailyStat } = require('../models');
-const { calculateFocusScore } = require('../utils/score');
+const { calculateFocusScore, calculateRankScore } = require('../utils/score');
 const { generateSecret, hashSecret } = require('../utils/crypto');
 const fraudDetection = require('./fraudDetection.service');
 
@@ -202,6 +202,7 @@ function buildRealtimeActivityUpdate(userId, stat, events, extra = {}) {
     mouseClickCount: Number(stat?.mouseClickCount || 0),
     focusScore: Number(stat?.focusScore || 0),
   };
+  totals.score = calculateRankScore(totals);
   const lastEventAt = events.reduce((latest, event) => {
     const value = event.eventTime ? new Date(event.eventTime).getTime() : 0;
     return value > latest ? value : latest;
@@ -220,7 +221,7 @@ function buildRealtimeActivityUpdate(userId, stat, events, extra = {}) {
     keystrokeCount: totals.keystrokeCount,
     mouseClickCount: totals.mouseClickCount,
     focusScore: totals.focusScore,
-    score: totals.focusScore,
+    score: totals.score,
     keystrokes: delta.keystrokeCount,
     clicks: delta.mouseClickCount,
     mouseMoves: delta.mouseMoveCount,

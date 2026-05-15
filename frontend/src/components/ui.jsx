@@ -5,10 +5,10 @@ export function Card({ children, style, ...props }) {
   return (
     <div
       style={{
-        background: '#111827',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: '#ffffff',
+        border: '1px solid rgba(15,23,42,0.08)',
         borderRadius: 8,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        boxShadow: '0 4px 24px rgba(15,23,42,0.08)',
         ...style,
       }}
       {...props}
@@ -22,7 +22,7 @@ export function EmptyState({ icon: Icon = Inbox, title, description, action }) {
   return (
     <div style={{ textAlign: 'center', padding: '44px 24px', color: '#94a3b8' }}>
       <Icon size={40} color="#3b82f6" style={{ marginBottom: 14 }} />
-      <h2 style={{ margin: '0 0 8px', color: '#f1f5f9', fontSize: 18, fontWeight: 800 }}>{title}</h2>
+      <h2 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: 18, fontWeight: 800 }}>{title}</h2>
       {description && <p style={{ margin: '0 auto 18px', maxWidth: 420, fontSize: 13, lineHeight: 1.5 }}>{description}</p>}
       {action}
     </div>
@@ -81,8 +81,8 @@ export function SegmentedControl({ options, value, onChange, ariaLabel }) {
       aria-label={ariaLabel}
       style={{
         display: 'flex',
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(15,23,42,0.04)',
+        border: '1px solid rgba(15,23,42,0.08)',
         borderRadius: 6,
         padding: 3,
         gap: 2,

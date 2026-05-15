@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const { sequelize, User, DailyStat, ActivityEvent } = require('../models');
 const fraudDetection = require('./fraudDetection.service');
 const { resolveUserPresence } = require('./userPresence.service');
-const { calculateFocusScore } = require('../utils/score');
+const { calculateFocusScore, calculateRankScore } = require('../utils/score');
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -43,7 +43,7 @@ function statWhereForRange(range) {
 function userInclude(teamId) {
   const where = { status: 'active' };
   if (teamId) where.teamId = teamId;
-  return { model: User, attributes: ['id', 'name', 'email', 'role', 'teamId', 'status'], where };
+  return { model: User, attributes: ['id', 'name', 'email', 'role', 'teamId', 'isVerified', 'status'], where };
 }
 
 function aggregateRows(rows) {
@@ -132,12 +132,19 @@ async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
     byUser.set(String(user.id), existing);
   }
 
-  const ranked = Array.from(byUser.values()).map((row) => ({
-    ...row,
-    focusScore: calculateFocusScore(row.activeSeconds, row.idleSeconds),
-  })).sort((a, b) => {
-    const scoreDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
+  const ranked = Array.from(byUser.values()).map((row) => {
+    const focusScore = calculateFocusScore(row.activeSeconds, row.idleSeconds);
+    const score = calculateRankScore({ ...row, focusScore });
+    return {
+      ...row,
+      focusScore,
+      score,
+    };
+  }).sort((a, b) => {
+    const scoreDiff = Number(b.score || 0) - Number(a.score || 0);
     if (scoreDiff) return scoreDiff;
+    const focusDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
+    if (focusDiff) return focusDiff;
     return Number(b.activeSeconds || 0) - Number(a.activeSeconds || 0);
   }).slice(0, limit);
 
@@ -148,7 +155,7 @@ async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
       accountStatus: row.status || 'active',
       presence: userPresence,
       presenceStatus: userPresence,
-      score: row.focusScore,
+      score: row.score,
       rankPosition: index + 1
     };
   });
