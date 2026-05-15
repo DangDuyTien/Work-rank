@@ -9,12 +9,45 @@ function getBearerToken(req) {
   return header.startsWith('Bearer ') ? header.slice(7) : '';
 }
 
-function buildDesktopUrl(action, accessToken, refreshToken) {
+function normalizeOrigin(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw.replace(/\/+$/, '');
+  }
+}
+
+function getRequestOrigin(req) {
+  const forwardedProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim();
+  const forwardedHost = String(req.get('x-forwarded-host') || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol;
+  const host = forwardedHost || req.get('host');
+  return host ? `${protocol}://${host}` : '';
+}
+
+function getDesktopApiUrl(req) {
+  return normalizeOrigin(
+    req.validated.body.apiUrl ||
+    process.env.PUBLIC_API_URL ||
+    process.env.API_URL ||
+    getRequestOrigin(req) ||
+    process.env.CLIENT_URL
+  );
+}
+
+function buildDesktopUrl(action, accessToken, refreshToken, apiUrl) {
   const params = new URLSearchParams();
   if (accessToken) params.set('token', accessToken);
   if (refreshToken) params.set('refreshToken', refreshToken);
+  if (apiUrl) params.set('apiUrl', apiUrl);
   params.set('ts', String(Date.now()));
   return `${DESKTOP_PROTOCOL}://${action}?${params.toString()}`;
+}
+
+function quoteWindowsCmdArg(value) {
+  return `"${String(value).replace(/"/g, '""')}"`;
 }
 
 function openDesktopUrl(url) {
@@ -23,11 +56,18 @@ function openDesktopUrl(url) {
   if (process.platform === 'darwin') {
     child = spawn('open', [url], options);
   } else if (process.platform === 'win32') {
-    child = spawn('cmd', ['/c', 'start', '', url], options);
+    child = spawn('cmd.exe', ['/d', '/s', '/c', `start "" ${quoteWindowsCmdArg(url)}`], options);
   } else {
     child = spawn('xdg-open', [url], options);
   }
+  child.on('error', (error) => {
+    console.warn('Failed to open desktop protocol on server:', error.message);
+  });
   child.unref();
+}
+
+function shouldOpenDesktopOnServer() {
+  return process.env.WORKRANK_SERVER_OPEN_DESKTOP === 'true';
 }
 
 function emitRealtime(req, realtime) {
@@ -140,9 +180,10 @@ async function meToday(req, res) {
 
 async function launchDesktop(req, res) {
   const action = req.validated.body.action;
-  const url = buildDesktopUrl(action, getBearerToken(req), req.validated.body.refreshToken);
-  openDesktopUrl(url);
-  res.status(202).json({ ok: true, action });
+  const url = buildDesktopUrl(action, getBearerToken(req), req.validated.body.refreshToken, getDesktopApiUrl(req));
+  const launchedOnServer = shouldOpenDesktopOnServer();
+  if (launchedOnServer) openDesktopUrl(url);
+  res.status(202).json({ ok: true, action, url, launchedOnServer });
 }
 
 module.exports = { startSession, endSession, ingestBatch, ingestEvent, meToday, launchDesktop };

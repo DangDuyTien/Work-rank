@@ -1,516 +1,670 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WorkRank Tracker</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: #0b1326;
-      color: #ffffff;
       width: 100vw;
       height: 100vh;
       overflow: hidden;
+      background: #f8fafc;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       user-select: none;
       -webkit-app-region: drag;
     }
+    button { font: inherit; }
 
-    /* Header */
-    .header {
+    .window {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+    }
+    .topbar {
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      background: #060e20;
+      padding: 0 16px 0 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
-    .header-logo {
+    .brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
-    .header-logo .dot {
-      width: 10px;
-      height: 10px;
+    .brand-dot {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: #00e676;
-      box-shadow: 0 0 8px #00e67666;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+      flex: 0 0 auto;
     }
-    .header-logo span {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
+    .brand-title {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+      color: #0f172a;
     }
-    .header-actions {
+    .window-actions {
       display: flex;
+      align-items: center;
       gap: 6px;
       -webkit-app-region: no-drag;
     }
-    .header-actions button {
-      background: none;
-      border: none;
-      color: #6b7280;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      font-size: 13px;
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #64748b;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s;
-    }
-    .header-actions button:hover {
-      background: #1f2937;
-      color: #e5e7eb;
-    }
-    .header-actions .close:hover {
-      background: #ef4444;
-      color: white;
-    }
-
-    /* Main content */
-    .content {
-      padding: 24px 24px 0;
-      display: flex;
-      flex-direction: column;
-      height: calc(100vh - 56px);
-    }
-
-    /* Main Tracker */
-    .tracker-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 0 20px;
-    }
-    .tracker-btn {
-      width: 104px;
-      height: 104px;
-      border-radius: 22px;
-      border: none;
-      cursor: pointer;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      -webkit-app-region: no-drag;
-    }
-    .tracker-btn.tracking {
-      background: linear-gradient(135deg, #2e5bff, #1a3fcc);
-      box-shadow: 0 0 30px #2e5bff55, 0 0 60px #2e5bff33;
-    }
-    .tracker-btn.tracking:hover {
-      box-shadow: 0 0 40px #2e5bff77, 0 0 80px #2e5bff44;
-      transform: scale(1.03);
-    }
-    .tracker-btn.stopped {
-      background: linear-gradient(135deg, #4b5563, #374151);
-      box-shadow: 0 0 10px #37415155;
-    }
-    .tracker-btn.stopped:hover {
-      transform: scale(1.03);
-    }
-    .tracker-btn .inner {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: white;
-      transition: all 0.2s;
-    }
-    .tracker-btn.stopped .inner {
-      clip-path: polygon(35% 20%, 80% 50%, 35% 80%);
-      border-radius: 0;
-      background: white;
-      width: 0;
-      height: 0;
-      border-left: 18px solid #9ca3af;
-      border-top: 12px solid transparent;
-      border-bottom: 12px solid transparent;
-      background: none;
-    }
-    .tracker-label {
-      margin-top: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .tracker-label.tracking { color: #2e5bff; }
-    .tracker-label.stopped { color: #9ca3af; }
-
-    .session-info {
-      margin-top: 16px;
-      text-align: center;
-    }
-    .session-info .label {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-bottom: 4px;
-    }
-    .session-info .timer {
-      font-size: 36px;
-      font-weight: 700;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      letter-spacing: 2px;
-      background: linear-gradient(180deg, #ffffff, #94a3b8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* Status bar */
-    .status-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 12px;
-      font-size: 12px;
-    }
-    .status-bar .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-    }
-    .status-bar .dot.online { background: #00e676; box-shadow: 0 0 6px #00e67666; }
-    .status-bar .dot.offline { background: #ef4444; box-shadow: 0 0 6px #ef444466; }
-    .status-bar .status-text { color: #6b7280; }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 16px;
-    }
-    .stat-card {
-      background: #131b2e;
-      border: 1px solid #1a2540;
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .stat-card .stat-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 500;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-    .stat-card .stat-header svg { width: 14px; height: 14px; opacity: 0.6; }
-    .stat-card .stat-value {
-      font-size: 26px;
+      font-size: 16px;
       font-weight: 800;
-      letter-spacing: -0.5px;
+      transition: background 0.15s, color 0.15s;
     }
-    .stat-card .stat-change {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-top: 4px;
-    }
-    .stat-card .stat-change.up { color: #00e676; }
-    .stat-card .stat-change.neutral { color: #6b7280; }
+    .icon-btn:hover { background: #f1f5f9; color: #0f172a; }
+    .icon-btn.close:hover { background: #dc2626; color: #fff; }
 
-    /* Score Section */
-    .score-section {
-      background: #131b2e;
-      border: 1px solid #1a2540;
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 12px;
+    .content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .status-card {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+    .status-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+    .eyebrow {
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .status-title {
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.1;
+      color: #0f172a;
+    }
+    .status-desc {
+      margin-top: 5px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .toggle-btn {
+      min-width: 94px;
+      height: 38px;
+      border: 0;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.28);
+    }
+    .toggle-btn.stopped { background: #2563eb; }
+    .toggle-btn.tracking { background: #dc2626; box-shadow: 0 10px 28px rgba(220, 38, 38, 0.22); }
+    .toggle-btn:active { transform: translateY(1px); }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 8px;
+    }
+    .metric {
+      min-width: 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+    .metric-label {
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .metric-value {
+      margin-top: 6px;
+      color: #0f172a;
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-value.time {
+      font-size: 20px;
+      font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    }
+    .connection {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 8px;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
     }
-    .score-section .score-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .score-section .score-left .dot {
+    .connection-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #00e676;
-      box-shadow: 0 0 6px #00e67666;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
     }
-    .score-section .score-label {
-      font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 2px;
+    .connection.offline .connection-dot {
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
     }
-    .score-section .score-value {
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .score-section .mini-chart {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 28px;
-    }
-    .score-section .mini-chart .bar {
-      width: 5px;
-      border-radius: 2px 2px 0 0;
-      background: #2e5bff;
-      opacity: 0.6;
-      transition: height 0.3s;
-    }
-    .score-section .mini-chart .bar.high { opacity: 1; }
-    .score-section .mini-chart .bar.max { background: #00e676; opacity: 1; }
 
-    /* User Footer */
-    .user-footer {
+    .notice {
+      overflow: hidden;
+    }
+    .notice-main {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 11px;
+      align-items: start;
+      padding: 13px 14px;
+      background: #fffbeb;
+      border-bottom: 1px solid #fde68a;
+    }
+    .notice-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f59e0b;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .notice h2 {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.25;
+      color: #92400e;
+    }
+    .notice p {
+      margin-top: 4px;
+      color: #78350f;
+      font-size: 12px;
+      line-height: 1.42;
+    }
+    .notice-actions {
+      display: flex;
+      gap: 8px;
+      padding: 11px 14px 13px;
+      background: #ffffff;
+    }
+    .secondary-btn {
+      height: 32px;
+      border: 1px solid #d7b56d;
+      border-radius: 7px;
+      padding: 0 11px;
+      background: #ffffff;
+      color: #92400e;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .secondary-btn:hover { background: #fffbeb; }
+    .secondary-btn[hidden] { display: none; }
+
+    .section {
+      padding: 13px 14px 14px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #0f172a;
+    }
+    .section-note {
+      margin-top: 4px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .data-grid {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .data-row {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+    .data-mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .data-row.blocked .data-mark {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .data-row strong {
+      display: block;
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+    .data-row span {
+      display: block;
+      margin-top: 2px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.32;
+    }
+
+    .connection-details {
+      display: grid;
+      gap: 7px;
+      margin-top: 11px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .connection-details strong {
+      color: #0f172a;
+      font-weight: 800;
+    }
+
+    .footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 0;
-      margin-top: auto;
-      border-top: 1px solid #1a2540;
+      gap: 12px;
+      padding: 12px 2px 0;
+      border-top: 1px solid #e5e7eb;
     }
-    .user-footer .user-left {
+    .footer-user {
+      min-width: 0;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .user-footer .avatar {
-      width: 36px;
-      height: 36px;
+    .avatar {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2e5bff, #7c3aed);
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-weight: 900;
       font-size: 14px;
-      font-weight: 700;
-      color: white;
+      flex: 0 0 auto;
     }
-    .user-footer .user-name {
-      font-size: 13px;
-      font-weight: 600;
+    .footer-name {
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .user-footer .user-role {
+    .footer-role {
+      margin-top: 2px;
+      color: #64748b;
       font-size: 11px;
-      color: #6b7280;
-      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .user-footer .logout-btn {
-      background: none;
-      border: 1px solid #1a2540;
-      color: #6b7280;
-      width: 32px;
-      height: 32px;
+    .logout-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #e5e7eb;
       border-radius: 8px;
+      background: #ffffff;
+      color: #64748b;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s;
-      -webkit-app-region: no-drag;
+      flex: 0 0 auto;
     }
-    .user-footer .logout-btn:hover {
-      background: #1f2937;
-      color: #ef4444;
-      border-color: #ef444433;
-    }
+    .logout-btn:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #1a2540; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <div class="header">
-    <div class="header-logo">
-      <div class="dot"></div>
-      <span>WorkRank</span>
-    </div>
-    <div class="header-actions">
-      <button onclick="window.electronAPI.minimize()">─</button>
-      <button class="close" onclick="window.electronAPI.close()">✕</button>
-    </div>
-  </div>
-
-  <!-- Content -->
-  <div class="content">
-    <!-- Main Tracker -->
-    <div class="tracker-section">
-      <button class="tracker-btn stopped" id="trackerBtn" onclick="toggle()">
-        <div class="inner"></div>
-      </button>
-      <div class="tracker-label stopped" id="trackerLabel">START</div>
-
-      <div class="session-info">
-        <div class="label">SESSION ACTIVE</div>
-        <div class="timer" id="timer">00:00:00</div>
+  <div class="window">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div class="brand-title">WorkRank</div>
       </div>
-
-      <div class="status-bar">
-        <div class="dot online" id="statusDot"></div>
-        <span class="status-text" id="statusText">Connected — Tracking</span>
+      <div class="window-actions">
+        <button class="icon-btn" onclick="window.electronAPI.minimize()" aria-label="Thu nhỏ">-</button>
+        <button class="icon-btn close" onclick="window.electronAPI.close()" aria-label="Đóng">×</button>
       </div>
-    </div>
+    </header>
 
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 6V4m12 2V4M8 12h8m-4 4h4"/></svg>
-          Keystrokes
+    <main class="content">
+      <section class="card status-card">
+        <div class="status-head">
+          <div>
+            <div class="eyebrow">Desktop Tracker</div>
+            <h1 class="status-title" id="stateTitle">Đang kiểm tra</h1>
+            <p class="status-desc" id="stateDesc">WorkRank chờ kết nối và quyền hệ thống.</p>
+          </div>
+          <button class="toggle-btn stopped" id="toggleBtn" onclick="toggle()">Bắt đầu</button>
         </div>
-        <div class="stat-value" id="keystrokesVal">0</div>
-        <div class="stat-change neutral" id="keystrokesChange">— Avg pace</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15a6 6 0 1 1-12 0 6 6 0 0 1 12 0z"/><path d="M19 9a6 6 0 0 0-6-6M21 13a8 8 0 0 1-8 8"/></svg>
-          Clicks
-        </div>
-        <div class="stat-value" id="clicksVal">0</div>
-        <div class="stat-change neutral" id="clicksChange">— Avg pace</div>
-      </div>
-    </div>
 
-    <!-- Score -->
-    <div class="score-section">
-      <div class="score-left">
-        <div class="dot"></div>
-        <div>
-          <div class="score-label">Productivity Score</div>
-          <div class="score-value" id="scoreVal">0</div>
+        <div class="status-row">
+          <div class="metric">
+            <div class="metric-label">Phiên</div>
+            <div class="metric-value time" id="timer">00:00:00</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Gõ phím</div>
+            <div class="metric-value" id="keystrokesVal">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Click</div>
+            <div class="metric-value" id="clicksVal">0</div>
+          </div>
         </div>
-      </div>
-      <div class="mini-chart" id="miniChart">
-        <div class="bar" style="height:8px"></div>
-        <div class="bar" style="height:14px"></div>
-        <div class="bar high" style="height:20px"></div>
-        <div class="bar max" style="height:28px"></div>
-        <div class="bar high" style="height:22px"></div>
-        <div class="bar" style="height:16px"></div>
-      </div>
-    </div>
 
-    <!-- User Footer -->
-    <div class="user-footer">
-      <div class="user-left">
-        <div class="avatar">A</div>
-        <div>
-          <div class="user-name" id="userName">Alex Chen</div>
-          <div class="user-role" id="userRole">Backend Eng</div>
+        <div class="connection" id="connectionLine">
+          <div class="connection-dot"></div>
+          <span id="statusText">Đang kiểm tra kết nối</span>
         </div>
-      </div>
-      <button class="logout-btn" onclick="window.electronAPI.logout()" title="Logout">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
+      </section>
+
+      <section class="card notice">
+        <div class="notice-main">
+          <div class="notice-icon">!</div>
+          <div>
+            <h2 id="noticeTitle">Cảnh báo quyền macOS</h2>
+            <p id="noticeText">macOS cần quyền Accessibility để WorkRank đếm phím/click ngoài trình duyệt. Ứng dụng không đọc nội dung bạn gõ.</p>
+          </div>
+        </div>
+        <div class="notice-actions">
+          <button class="secondary-btn" id="settingsBtn" onclick="openAccessibilitySettings()">Mở Accessibility</button>
+          <button class="secondary-btn" onclick="reloadPrivacyInfo()">Kiểm tra lại quyền</button>
+        </div>
+      </section>
+
+      <section class="card section">
+        <h2 class="section-title">Dữ liệu WorkRank có ghi nhận</h2>
+        <p class="section-note">Chỉ gửi số liệu tổng hợp phục vụ tính phiên làm việc và chống giả mạo.</p>
+        <div class="data-grid">
+          <div class="data-row">
+            <div class="data-mark">1</div>
+            <div><strong>Số lần gõ phím</strong><span>Chỉ là tổng số phím, không lưu ký tự hay nội dung.</span></div>
+          </div>
+          <div class="data-row">
+            <div class="data-mark">2</div>
+            <div><strong>Số lần click chuột</strong><span>Chỉ ghi nhận tổng số click, không theo dõi vị trí chuột.</span></div>
+          </div>
+          <div class="data-row">
+            <div class="data-mark">3</div>
+            <div><strong>Thời gian active/idle</strong><span>Tính thời gian đang làm việc hoặc không thao tác.</span></div>
+          </div>
+          <div class="data-row">
+            <div class="data-mark">4</div>
+            <div><strong>Thiết bị và phiên làm việc</strong><span>Device ID, session ID, sequence và chữ ký chống giả mạo.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <h2 class="section-title">Dữ liệu WorkRank không ghi nhận</h2>
+        <p class="section-note">Các loại dữ liệu nhạy cảm này không được đọc, không gửi lên server.</p>
+        <div class="data-grid">
+          <div class="data-row blocked">
+            <div class="data-mark">×</div>
+            <div><strong>Nội dung phím đã gõ</strong><span>Không biết bạn gõ chữ gì, mật khẩu gì, hay nội dung tin nhắn.</span></div>
+          </div>
+          <div class="data-row blocked">
+            <div class="data-mark">×</div>
+            <div><strong>Màn hình, webcam, micro</strong><span>Không chụp màn hình, không quay màn hình, không ghi âm.</span></div>
+          </div>
+          <div class="data-row blocked">
+            <div class="data-mark">×</div>
+            <div><strong>Clipboard và file cá nhân</strong><span>Không đọc copy/paste, thư mục, tài liệu hoặc ảnh cá nhân.</span></div>
+          </div>
+          <div class="data-row blocked">
+            <div class="data-mark">×</div>
+            <div><strong>Tên app, website đang mở</strong><span>Không theo dõi lịch sử duyệt web hay cửa sổ bạn đang xem.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <h2 class="section-title">Kết nối hiện tại</h2>
+        <p class="section-note">Thông tin này giúp người dùng kiểm tra app đang gửi dữ liệu về đúng server.</p>
+        <div class="connection-details">
+          <div><strong>API:</strong> <span id="privacyApiUrl">Đang tải...</span></div>
+          <div><strong>Thiết bị:</strong> <span id="privacyDevice">Đang tải...</span></div>
+          <div><strong>Phiên bản:</strong> <span id="privacyVersion">Đang tải...</span></div>
+          <div><strong>Protocol:</strong> <span id="privacyProtocol">Đang tải...</span></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-user">
+          <div class="avatar">W</div>
+          <div>
+            <div class="footer-name">WorkRank Tracker</div>
+            <div class="footer-role" id="scoreText">Điểm phiên: 0</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="window.electronAPI.logout()" title="Logout" aria-label="Logout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </footer>
+    </main>
   </div>
 
   <script>
     let tracking = false;
     let timerInterval = null;
-    let seconds = 0;
-    let totalKeys = 0;
-    let totalClicks = 0;
-    let lastKeys = 0;
-    let lastClicks = 0;
+    let sessionStartedAt = null;
+    let privacyInfo = null;
 
-    function formatTime(s) {
-      const h = String(Math.floor(s / 3600)).padStart(2, '0');
-      const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-      const sec = String(s % 60).padStart(2, '0');
-      return `${h}:${m}:${sec}`;
+    function formatTime(seconds) {
+      const safe = Math.max(0, Number(seconds || 0));
+      const h = String(Math.floor(safe / 3600)).padStart(2, '0');
+      const m = String(Math.floor((safe % 3600) / 60)).padStart(2, '0');
+      const s = String(safe % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
     }
 
-    function formatNum(n) {
-      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'm';
-      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    function formatNum(value) {
+      const n = Number(value || 0);
+      if (n >= 1000000) return `${(n / 1000000).toFixed(1)}m`;
+      if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
       return n.toLocaleString();
     }
 
-    function applyTrackingState(nextTracking, connected = true, error = '') {
+    function updateTimer() {
+      if (!tracking || !sessionStartedAt) {
+        document.getElementById('timer').textContent = '00:00:00';
+        return;
+      }
+      const startedMs = Date.parse(sessionStartedAt);
+      if (!Number.isFinite(startedMs)) {
+        document.getElementById('timer').textContent = '00:00:00';
+        return;
+      }
+      document.getElementById('timer').textContent = formatTime(Math.floor((Date.now() - startedMs) / 1000));
+    }
+
+    function setTimerRunning(startedAt) {
+      sessionStartedAt = startedAt || new Date().toISOString();
+      if (timerInterval) clearInterval(timerInterval);
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function stopTimer() {
+      sessionStartedAt = null;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      updateTimer();
+    }
+
+    function applyTrackingState(nextTracking, connected = true, error = '', startedAt = null) {
       tracking = Boolean(nextTracking);
-      const btn = document.getElementById('trackerBtn');
-      const lbl = document.getElementById('trackerLabel');
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
+      const title = document.getElementById('stateTitle');
+      const desc = document.getElementById('stateDesc');
+      const btn = document.getElementById('toggleBtn');
+      const connection = document.getElementById('connectionLine');
+      const statusText = document.getElementById('statusText');
+
+      btn.className = tracking ? 'toggle-btn tracking' : 'toggle-btn stopped';
+      btn.textContent = tracking ? 'Dừng' : 'Bắt đầu';
+      connection.className = connected ? 'connection' : 'connection offline';
 
       if (tracking) {
-        btn.className = 'tracker-btn tracking';
-        lbl.className = 'tracker-label tracking';
-        lbl.textContent = 'TRACKING';
-        dot.className = connected ? 'dot online' : 'dot offline';
-        text.textContent = connected ? 'Connected — Tracking' : (error || 'Disconnected');
-        if (!timerInterval) {
-          timerInterval = setInterval(() => {
-            seconds++;
-            document.getElementById('timer').textContent = formatTime(seconds);
-          }, 1000);
-        }
+        title.textContent = 'Đang ghi nhận';
+        desc.textContent = 'Desktop Tracker đang gửi số liệu tổng hợp về WorkRank.';
+        statusText.textContent = connected ? 'Đã kết nối - đang tracking' : (error || 'Mất kết nối');
+        setTimerRunning(startedAt || sessionStartedAt);
       } else {
-        btn.className = 'tracker-btn stopped';
-        lbl.className = 'tracker-label stopped';
-        lbl.textContent = 'START';
-        dot.className = connected ? 'dot online' : 'dot offline';
-        text.textContent = connected ? 'Connected — Paused' : (error || 'Disconnected');
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
+        title.textContent = 'Đang tạm dừng';
+        desc.textContent = 'Không ghi nhận thao tác cho đến khi bạn bấm bắt đầu hoặc web gửi lệnh.';
+        statusText.textContent = connected ? 'Đã kết nối - đang tạm dừng' : (error || 'Chưa kết nối');
+        stopTimer();
       }
     }
 
-    function updateStats(data) {
-      if (data.keystrokes !== undefined) {
-        totalKeys = data.keystrokes;
-        document.getElementById('keystrokesVal').textContent = formatNum(data.keystrokes);
-      }
-      if (data.mouse_clicks !== undefined) {
-        totalClicks = data.mouse_clicks;
-        document.getElementById('clicksVal').textContent = formatNum(data.mouse_clicks);
-      }
-      if (data.score !== undefined) {
-        document.getElementById('scoreVal').textContent = data.score;
-      }
-
-      // Update status dot
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
-      if (data.connected !== false) {
-        dot.className = 'dot online';
-        text.textContent = tracking ? 'Connected — Tracking' : 'Connected — Paused';
-      } else {
-        dot.className = 'dot offline';
-        text.textContent = data.error || 'Disconnected';
+    function updateStats(data = {}) {
+      if (data.keystrokes !== undefined) document.getElementById('keystrokesVal').textContent = formatNum(data.keystrokes);
+      if (data.mouse_clicks !== undefined) document.getElementById('clicksVal').textContent = formatNum(data.mouse_clicks);
+      if (data.score !== undefined) document.getElementById('scoreText').textContent = `Điểm phiên: ${formatNum(data.score)}`;
+      if (data.connected === false) {
+        document.getElementById('connectionLine').className = 'connection offline';
+        document.getElementById('statusText').textContent = data.error || 'Chưa kết nối';
       }
     }
 
     async function toggle() {
-      const res = await window.electronAPI.toggle();
-      applyTrackingState(res.tracking, true);
+      const result = await window.electronAPI.toggle();
+      applyTrackingState(result.tracking, true);
     }
 
-    // Auto-start on load
-    window.electronAPI.getStatus().then((s) => {
-      applyTrackingState(s.tracking, true);
-      updateStats(s);
+    function updateNotice() {
+      if (!privacyInfo) return;
+      const title = document.getElementById('noticeTitle');
+      const text = document.getElementById('noticeText');
+      const settingsBtn = document.getElementById('settingsBtn');
+
+      if (privacyInfo.platform === 'macos') {
+        settingsBtn.hidden = false;
+        if (privacyInfo.accessibilityTrusted) {
+          title.textContent = 'macOS đã cấp quyền Accessibility';
+          text.textContent = 'WorkRank chỉ đếm số lần thao tác. App không đọc nội dung phím, không chụp màn hình và không đọc clipboard.';
+        } else {
+          title.textContent = 'Cảnh báo quyền macOS';
+          text.textContent = 'Cần cấp Accessibility để đếm phím/click ngoài trình duyệt. App không đọc nội dung bạn gõ.';
+        }
+        return;
+      }
+
+      settingsBtn.hidden = true;
+      title.textContent = 'Minh bạch dữ liệu';
+      text.textContent = 'WorkRank chỉ gửi số liệu tổng hợp: số lần gõ, click, active/idle và thông tin phiên.';
+    }
+
+    async function reloadPrivacyInfo() {
+      privacyInfo = await window.electronAPI.getPrivacyInfo();
+      document.getElementById('privacyApiUrl').textContent = privacyInfo.apiUrl || 'Chưa cấu hình';
+      document.getElementById('privacyDevice').textContent = `${privacyInfo.deviceName || 'Unknown'} (${privacyInfo.platform || 'unknown'})`;
+      document.getElementById('privacyVersion').textContent = `${privacyInfo.appName || 'WorkRank Tracker'} ${privacyInfo.appVersion || ''}`.trim();
+      document.getElementById('privacyProtocol').textContent = `${privacyInfo.protocol || 'workrank://'} ${privacyInfo.protocolRegistered ? 'đã đăng ký' : 'chưa đăng ký'}`;
+      updateNotice();
+    }
+
+    async function openAccessibilitySettings() {
+      await window.electronAPI.openAccessibilitySettings();
+    }
+
+    reloadPrivacyInfo().catch((error) => console.warn('Could not load privacy info:', error));
+
+    window.electronAPI.getStatus().then((status) => {
+      applyTrackingState(status.tracking, true, '', status.trackingStartedAt);
+      updateStats(status);
     });
 
     window.electronAPI.onStatus((data) => {
-      applyTrackingState(data.tracking, data.connected !== false, data.error);
+      applyTrackingState(data.tracking, data.connected !== false, data.error || '', data.trackingStartedAt);
       updateStats(data);
+      reloadPrivacyInfo().catch(() => {});
     });
+
     window.electronAPI.onPing((data) => updateStats(data));
   </script>
 </body>

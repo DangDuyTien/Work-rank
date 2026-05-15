@@ -115,6 +115,33 @@ test('security events endpoint trả danh sách event nghi vấn', async () => {
   assert.ok(Array.isArray(res.body.data));
 });
 
+test('activity batch bị chặn nếu session không thuộc device gửi dữ liệu', async () => {
+  const token = await authToken();
+  const suffix = Date.now();
+  const deviceA = `session-a-${suffix}`;
+  const deviceB = `session-b-${suffix}`;
+  const startA = await agent.post('/api/activity/session/start')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ deviceUuid: deviceA, deviceName: deviceA, platform: 'macos' });
+  assert.equal(startA.status, 201, startA.text);
+  const startB = await agent.post('/api/activity/session/start')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ deviceUuid: deviceB, deviceName: deviceB, platform: 'macos' });
+  assert.equal(startB.status, 201, startB.text);
+
+  const payload = signedPayload(startB.body.deviceSecret, {
+    deviceUuid: deviceB,
+    deviceName: deviceB,
+    platform: 'macos',
+    deviceSecret: startB.body.deviceSecret,
+    sessionId: startA.body.session.id,
+    events: [{ timestamp: new Date().toISOString(), activeSeconds: 5, idleSeconds: 0, keystrokeCount: 1, mouseClickCount: 1, mouseMoveCount: 0, sequence: 1 }],
+  });
+  const batch = await agent.post('/api/activity/batch').set('Authorization', `Bearer ${token}`).send(payload);
+  assert.equal(batch.status, 403, batch.text);
+  assert.equal(batch.body.message, 'Session device mismatch');
+});
+
 test('auto-quarantine khóa device sau nhiều event nghi vấn cao', async () => {
   const token = await authToken();
   const deviceUuid = `quarantine-${Date.now()}`;

@@ -71,6 +71,41 @@ async function findPairedDeviceForIngest(userId, payload, transaction) {
   return device;
 }
 
+async function validateSessionsForIngest(userId, deviceId, payload, transaction) {
+  const sessionIds = new Set();
+  if (payload.sessionId) sessionIds.add(Number(payload.sessionId));
+  for (const event of payload.events || []) {
+    if (event.sessionId) sessionIds.add(Number(event.sessionId));
+  }
+  if (!sessionIds.size) return;
+
+  const sessions = await WorkSession.findAll({
+    where: { id: Array.from(sessionIds), userId },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+  const byId = new Map(sessions.map((session) => [Number(session.id), session]));
+
+  for (const sessionId of sessionIds) {
+    const session = byId.get(sessionId);
+    if (!session) {
+      const error = new Error('Session not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    if (Number(session.deviceId) !== Number(deviceId)) {
+      const error = new Error('Session device mismatch');
+      error.statusCode = 403;
+      throw error;
+    }
+    if (session.status !== 'running') {
+      const error = new Error('Session is not running');
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+}
+
 async function startSession(userId, payload) {
   const { device, deviceSecret } = await findOrCreateDevice(userId, payload);
   const endedAt = new Date();
@@ -159,10 +194,11 @@ async function getUserActivityBaseline(userId) {
 }
 
 function normalizeEvent(userId, device, payload, event, signatureValid, sequenceCheck, baseline) {
+  const sessionId = event.sessionId || payload.sessionId || null;
   const raw = {
     userId,
     deviceId: device.id,
-    sessionId: event.sessionId || payload.sessionId || null,
+    sessionId,
     eventTime: event.timestamp ? new Date(event.timestamp) : new Date(),
     sequence: event.sequence || null,
     activeSeconds: event.activeSeconds || 0,
@@ -172,7 +208,9 @@ function normalizeEvent(userId, device, payload, event, signatureValid, sequence
     mouseMoveCount: event.mouseMoveCount || 0,
     metadataJson: event.metadata || null,
   };
-  const analysis = fraudDetection.analyzeEvent(event, device, signatureValid, sequenceCheck, baseline);
+  const analysis = fraudDetection.analyzeEvent(event, device, signatureValid, sequenceCheck, baseline, {
+    hasSessionId: Boolean(sessionId),
+  });
   const trusted = fraudDetection.applyTrustPenalty(raw, analysis);
   return {
     ...trusted,
@@ -274,6 +312,7 @@ async function ingestBatch(userId, payload) {
 
   return sequelize.transaction(async (transaction) => {
     const device = await findPairedDeviceForIngest(userId, payload, transaction);
+    await validateSessionsForIngest(userId, device.id, payload, transaction);
     const signature = fraudDetection.verifyBatchSignature(device, payload);
     let previousSequence = Number(device.lastSequence || 0);
     const events = payload.events.map((event) => {

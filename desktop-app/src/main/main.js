@@ -1,11 +1,12 @@
 require('dotenv').config();
-const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { io: ioClient } = require('socket.io-client');
 
-let apiBaseUrl = normalizeApiUrl(process.env.API_URL || 'http://localhost:5001');
+const DEFAULT_API_URL = 'https://workrank-duy-tien.onrender.com';
+let apiBaseUrl = normalizeApiUrl(process.env.API_URL || DEFAULT_API_URL);
 const LOGIN_EMAIL = process.env.WORKRANK_EMAIL || 'admin@workrank.local';
 const LOGIN_PASSWORD = process.env.WORKRANK_PASSWORD || 'Admin@123456';
 const DEVICE_UUID = process.env.WORKRANK_DEVICE_UUID || `${process.platform}-${require('os').hostname()}`;
@@ -22,7 +23,6 @@ let mainWindow = null;
 let tracking = false;
 let keystrokes = 0;
 let clicks = 0;
-let mouseMoves = 0;
 let interval = null;
 let lastActivity = Date.now();
 let lastFlushAt = Date.now();
@@ -240,6 +240,33 @@ function emitStatus(extra = {}) {
   }
 }
 
+function getPrivacyInfo() {
+  return {
+    appName: app.getName(),
+    appVersion: app.getVersion(),
+    apiUrl: apiBaseUrl,
+    deviceName: DEVICE_NAME,
+    deviceUuid: DEVICE_UUID,
+    platform: PLATFORM,
+    protocol: `${PROTOCOL}://`,
+    protocolRegistered: app.isDefaultProtocolClient(PROTOCOL),
+    accessibilityTrusted: process.platform === 'darwin' ? systemPreferences.isTrustedAccessibilityClient(false) : true,
+    collects: [
+      'Số lần gõ phím',
+      'Số lần click chuột',
+      'Thời gian active/idle',
+      'Thông tin thiết bị để chống giả mạo',
+    ],
+    doesNotCollect: [
+      'Nội dung phím đã gõ',
+      'Ảnh chụp màn hình',
+      'Clipboard',
+      'File cá nhân',
+      'Lịch sử duyệt web',
+    ],
+  };
+}
+
 // ─── Socket.IO connection to backend ──────────────────────────────────────────
 
 function connectSocket() {
@@ -331,7 +358,6 @@ function stopInputCapture() {
     uIOhook.removeAllListeners('keydown');
     uIOhook.removeAllListeners('keyup');
     uIOhook.removeAllListeners('mousedown');
-    uIOhook.removeAllListeners('mousemove');
     uIOhook.stop();
   } catch (error) {
     console.warn('Failed to stop input hook:', error.message);
@@ -347,7 +373,6 @@ function quarantineCurrentDevice(payload = {}) {
   sessionId = null;
   keystrokes = 0;
   clicks = 0;
-  mouseMoves = 0;
   stopInputCapture();
   emitPingResult({ connected: false, error: message, quarantined: true });
   emitStatus({ connected: false, error: message, quarantined: true });
@@ -491,11 +516,11 @@ async function sendPing() {
     idleSeconds,
     keystrokeCount: keystrokes || 0,
     mouseClickCount: clicks || 0,
-    mouseMoveCount: mouseMoves || 0,
+    mouseMoveCount: 0,
     sequence: sequence + 1,
   };
   debugLog('flush tick', event);
-  if (!event.keystrokeCount && !event.mouseClickCount && !event.mouseMoveCount && !idleSeconds) {
+  if (!event.keystrokeCount && !event.mouseClickCount && !idleSeconds) {
     lastFlushAt = now;
     debugLog('flush skipped: no delta');
     return;
@@ -519,7 +544,6 @@ async function sendPing() {
     emitStatus({ connected: true });
     keystrokes = 0;
     clicks = 0;
-    mouseMoves = 0;
     // Send heartbeat after successful ping so web gets updated status
     sendHeartbeat();
   } catch (error) {
@@ -564,13 +588,6 @@ function onMouseDown() {
   lastActivity = Date.now();
 }
 
-function onMouseMove() {
-  if (!tracking) return;
-  mouseMoves++;
-  if (mouseMoves === 1 || mouseMoves % 100 === 0) debugLog('mouse moves', { mouseMoves });
-  lastActivity = Date.now();
-}
-
 async function startTracking() {
   if (tracking) return;
   debugLog('start requested');
@@ -579,7 +596,6 @@ async function startTracking() {
   emitStatus({ connected: true });
   keystrokes = 0;
   clicks = 0;
-  mouseMoves = 0;
   lastKeyTimes = {};
   pressedKeys = new Set();
   lastActivity = Date.now();
@@ -607,11 +623,9 @@ async function startTracking() {
     inputHook.removeAllListeners('keydown');
     inputHook.removeAllListeners('keyup');
     inputHook.removeAllListeners('mousedown');
-    inputHook.removeAllListeners('mousemove');
     inputHook.on('keydown', onKeyDown);
     inputHook.on('keyup', onKeyUp);
     inputHook.on('mousedown', onMouseDown);
-    inputHook.on('mousemove', onMouseMove);
     inputHook.start();
     debugLog('uiohook started');
 
@@ -700,7 +714,6 @@ async function applyProtocolAuth(rawUrl) {
   if (authChanged) {
     keystrokes = 0;
     clicks = 0;
-    mouseMoves = 0;
     totalKeystrokes = 0;
     totalClicks = 0;
     score = 0;
@@ -763,7 +776,7 @@ app.whenReady().then(() => {
     title: 'WorkRank Tracker',
     frame: false,
     transparent: false,
-    backgroundColor: '#0b1326',
+    backgroundColor: '#f8fafc',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
   });
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -793,3 +806,9 @@ ipcMain.handle('toggle', async () => {
   return { tracking };
 });
 ipcMain.handle('get-status', () => ({ tracking, trackingStartedAt, keystrokes: totalKeystrokes, mouse_clicks: totalClicks, score }));
+ipcMain.handle('get-privacy-info', () => getPrivacyInfo());
+ipcMain.handle('open-accessibility-settings', async () => {
+  if (process.platform !== 'darwin') return false;
+  await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility');
+  return true;
+});

@@ -22,9 +22,8 @@ function buildDesktopTrackerUrl(action) {
   return `${DESKTOP_PROTOCOL}://${action}?${params.toString()}`;
 }
 
-function triggerDesktopTracker(action) {
+function openDesktopTrackerUrl(url) {
   try {
-    const url = buildDesktopTrackerUrl(action);
     const link = document.createElement('a');
     link.href = url;
     link.style.display = 'none';
@@ -43,10 +42,23 @@ function triggerDesktopTracker(action) {
   }
 }
 
-async function launchDesktopTracker(action) {
-  triggerDesktopTracker(action);
+function triggerDesktopTracker(action) {
+  const url = buildDesktopTrackerUrl(action);
+  openDesktopTrackerUrl(url);
+  return url;
+}
+
+async function requestDesktopLaunchUrl(action) {
+  const res = await activityApi.desktopLaunch(action, { apiUrl: getDesktopApiUrl() });
+  return res.data?.url || '';
+}
+
+async function launchDesktopTracker(action, onUrl) {
+  const url = triggerDesktopTracker(action);
+  if (onUrl) onUrl(url);
   try {
-    await activityApi.desktopLaunch(action);
+    const backendUrl = await requestDesktopLaunchUrl(action);
+    if (backendUrl && backendUrl !== url && onUrl) onUrl(backendUrl);
   } catch (err) {
     console.warn('Could not launch desktop tracker via backend fallback:', err.message);
   }
@@ -71,6 +83,7 @@ export function TrackingProvider({ children }) {
   const [connected, setConnected] = useState(true);
   const [desktopLaunchStatus, setDesktopLaunchStatus] = useState('');
   const [desktopLaunchStatusType, setDesktopLaunchStatusType] = useState('info');
+  const [desktopLaunchUrl, setDesktopLaunchUrl] = useState('');
   const [scoreHistory, setScoreHistory] = useState([3, 5, 4, 7, 6, 8]);
   const [desktopOnline, setDesktopOnline] = useState(false);
   const [desktopTracking, setDesktopTracking] = useState(false);
@@ -341,7 +354,7 @@ export function TrackingProvider({ children }) {
 
       if (action === 'start') {
         setTrackingState('error');
-        updateDesktopLaunchStatus('Desktop Tracker chưa phản hồi. Web không tự đếm nữa, hãy mở Desktop Tracker và cấp quyền Accessibility.', 'error');
+        updateDesktopLaunchStatus('Desktop Tracker chưa phản hồi. Hãy mở lại từ nút bên dưới; nếu dùng macOS thì cấp quyền Accessibility cho WorkRank Tracker.', 'error');
       } else {
         setTrackingState('idle');
         updateDesktopLaunchStatus('Chưa nhận được xác nhận dừng từ Desktop Tracker. Web đã chuyển về trạng thái chờ.', 'warning');
@@ -363,7 +376,7 @@ export function TrackingProvider({ children }) {
     armCommandTimeout('start');
 
     if (launchDesktop) {
-      void launchDesktopTracker('start');
+      void launchDesktopTracker('start', setDesktopLaunchUrl);
     }
 
     if (desktopOnlineRef.current) {
@@ -388,7 +401,7 @@ export function TrackingProvider({ children }) {
     armCommandTimeout('stop');
 
     if (stopDesktop) {
-      void launchDesktopTracker('stop');
+      void launchDesktopTracker('stop', setDesktopLaunchUrl);
     }
 
     if (desktopOnlineRef.current) {
@@ -453,6 +466,8 @@ export function TrackingProvider({ children }) {
     desktopOnline,
     desktopTracking,
     desktopInfo,
+    desktopLaunchUrl,
+    openDesktopTrackerUrl,
     formatNum,
     formatTime,
     startTrack,

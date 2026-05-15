@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -9,6 +10,24 @@ const { notFound, errorHandler } = require('./middlewares/error.middleware');
 const { authLimiter, activityLimiter, apiLimiter } = require('./middlewares/rateLimit.middleware');
 
 const app = express();
+const DOWNLOADABLE_DESKTOP_FILES = new Set([
+  'WorkRank Tracker-Setup-1.0.0-x64.exe',
+  'WorkRank Tracker-Portable-1.0.0-x64.exe',
+]);
+
+function desktopDownloadPath(fileName) {
+  if (!DOWNLOADABLE_DESKTOP_FILES.has(fileName)) return null;
+  const configuredDir = process.env.DESKTOP_DOWNLOAD_DIR;
+  let downloadDir = path.resolve(__dirname, '../../desktop-app/release');
+  if (configuredDir) {
+    downloadDir = path.isAbsolute(configuredDir) ? configuredDir : path.resolve(process.cwd(), configuredDir);
+    if (!fs.existsSync(downloadDir)) {
+      downloadDir = path.resolve(__dirname, '../..', configuredDir);
+    }
+  }
+  return path.join(downloadDir, fileName);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -25,6 +44,13 @@ app.use('/api/auth', authLimiter);
 app.use('/api/activity', activityLimiter);
 app.use('/api', apiLimiter);
 app.use('/api', routes);
+app.get('/downloads/:fileName', (req, res) => {
+  const filePath = desktopDownloadPath(req.params.fileName);
+  if (!filePath || !fs.existsSync(filePath)) {
+    return res.status(404).json({ message: 'Desktop installer not found' });
+  }
+  return res.download(filePath, req.params.fileName);
+});
 
 if (process.env.NODE_ENV === 'production') {
   const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');

@@ -6,6 +6,7 @@ const repoAppDir = path.resolve(__dirname, '..');
 const electronBin = path.join(repoAppDir, 'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron');
 const electronApp = path.join(repoAppDir, 'node_modules/electron/dist/Electron.app');
 const targetApp = process.env.WORKRANK_PROTOCOL_HANDLER_APP || '/Applications/WorkRank Tracker Dev.app';
+const defaultApiUrl = process.env.API_URL || 'https://workrank-duy-tien.onrender.com';
 const macosDir = path.join(targetApp, 'Contents/MacOS');
 const plistPath = path.join(targetApp, 'Contents/Info.plist');
 const executablePath = path.join(macosDir, 'WorkRankTrackerDev');
@@ -98,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     process.arguments = [repoAppDir] + (url.map { [$0] } ?? [])
     var env = ProcessInfo.processInfo.environment
     if env["API_URL"] == nil {
-      env["API_URL"] = "http://localhost:5001"
+      env["API_URL"] = ${JSON.stringify(defaultApiUrl)}
     }
     env["WORKRANK_SKIP_PROTOCOL_REGISTER"] = "true"
     process.environment = env

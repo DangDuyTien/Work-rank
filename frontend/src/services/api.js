@@ -183,9 +183,10 @@ export const activity = {
   desktopStatus: () => api.get('/api/activity/desktop-status', {
     headers: { 'Cache-Control': 'no-store' },
   }),
-  desktopLaunch: (action) => api.post('/api/activity/desktop-launch', {
+  desktopLaunch: (action, options = {}) => api.post('/api/activity/desktop-launch', {
     action,
     refreshToken: localStorage.getItem('refreshToken'),
+    ...options,
   }),
 };
 

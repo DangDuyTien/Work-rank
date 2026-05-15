@@ -2,19 +2,81 @@
   "name": "workrank-realtime-desktop",
   "version": "1.0.0",
   "description": "WorkRank Realtime - Desktop Activity Tracker",
+  "author": "WorkRank",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "icon:win": "node scripts/create-windows-icon.js",
+    "dist:win": "npm run icon:win && electron-builder --win --x64",
+    "dist:win:dir": "npm run icon:win && electron-builder --win --x64 --dir",
     "install-protocol:mac": "node scripts/install-macos-protocol-handler.js",
     "install-protocol:win": "node scripts/install-windows-protocol-handler.js",
     "install-protocol:windows": "node scripts/install-windows-protocol-handler.js"
   },
+  "build": {
+    "appId": "local.workrank.tracker",
+    "productName": "WorkRank Tracker",
+    "copyright": "Copyright © 2026 WorkRank",
+    "icon": "build/icon.ico",
+    "directories": {
+      "output": "release"
+    },
+    "npmRebuild": false,
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/uiohook-napi/**"
+    ],
+    "protocols": [
+      {
+        "name": "WorkRank Tracker Protocol",
+        "schemes": [
+          "workrank"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WorkRank Tracker"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}-${arch}.${ext}"
+    }
+  },
   "dependencies": {
     "axios": "^1.6.7",
     "dotenv": "^17.4.2",
-    "electron": "^28.2.0",
     "socket.io-client": "^4.8.3",
     "uiohook-napi": "^1.5.4"
+  },
+  "devDependencies": {
+    "electron": "^40.10.0",
+    "electron-builder": "^26.8.1"
   }
 }

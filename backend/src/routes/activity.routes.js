@@ -72,10 +72,14 @@ const deviceFields = {
 
 router.post('/session/start', auth, validate(z.object({ body: z.object({ ...deviceFields, startedAt: z.string().datetime().optional() }) })), asyncHandler(controller.startSession));
 router.post('/session/end', auth, validate(z.object({ body: z.object({ sessionId: z.coerce.number().int().positive() }) })), asyncHandler(controller.endSession));
-router.post('/batch', auth, validate(z.object({ body: z.object({ ...deviceFields, sessionId: z.coerce.number().int().positive().optional(), events: z.array(event).min(1).max(500), signature: z.string().length(64).optional() }) })), asyncHandler(controller.ingestBatch));
+router.post('/batch', auth, validate(z.object({ body: z.object({ ...deviceFields, sessionId: z.coerce.number().int().positive().optional(), events: z.array(event).min(1).max(60), signature: z.string().length(64).optional() }) })), asyncHandler(controller.ingestBatch));
 router.post('/events', auth, validate(z.object({ body: z.object({ ...deviceFields, ...event.shape }) })), asyncHandler(controller.ingestEvent));
 router.get('/me/today', auth, asyncHandler(controller.meToday));
-router.post('/desktop-launch', auth, validate(z.object({ body: z.object({ action: desktopAction, refreshToken: z.string().min(1).optional().nullable() }) })), asyncHandler(controller.launchDesktop));
+router.post('/desktop-launch', auth, validate(z.object({ body: z.object({
+  action: desktopAction,
+  refreshToken: z.string().min(1).optional().nullable(),
+  apiUrl: z.string().min(1).optional().nullable(),
+}) })), asyncHandler(controller.launchDesktop));
 
 // Desktop status heartbeat (desktop app POSTs every ~10s)
 router.post('/desktop-status', auth, (req, res) => {

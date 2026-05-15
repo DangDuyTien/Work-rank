@@ -1,16 +1,21 @@
 const { signPayload, safeEqual, hashSecret } = require('../utils/crypto');
 
 const LIMITS = {
-  maxClicksPerSecond: 8,
-  maxKeysPerSecond: 15,
-  maxMovesPerSecond: 120,
+  maxClicksPerSecond: 12,
+  maxKeysPerSecond: 22,
+  maxCombinedActionsPerSecond: 30,
+  maxActionsPerEvent: 360,
+  maxActiveSecondsPerEvent: 30,
+  maxIdleSecondsPerEvent: 600,
+  maxSequenceGap: 300,
   maxClockSkewMs: 5 * 60 * 1000,
+  maxEventBacktrackMs: 10 * 1000,
   highSuspicionThreshold: 60,
+  minClicksForRepeatedPattern: 8,
   repeatedPatternThreshold: 4,
-  clickOnlyStreakThreshold: 5,
   intervalToleranceMs: 350,
-  baselineMinActiveDays: 3,
-  baselineSpikeMultiplier: 4,
+  baselineMinActiveDays: 5,
+  baselineSpikeMultiplier: 6,
   quarantineHighSuspicionEvents: 5,
   quarantineWindowMs: 10 * 60 * 1000,
 };
@@ -32,12 +37,17 @@ function verifyBatchSignature(device, payload) {
   return safeEqual(expected, payload.signature) ? { valid: true } : { valid: false, flag: 'invalid_signature' };
 }
 
+function numberValue(value) {
+  return Math.max(0, Number(value || 0));
+}
+
 function isClickOnly(event) {
-  return (event.mouseClickCount || 0) > 0 && (event.keystrokeCount || 0) === 0 && (event.mouseMoveCount || 0) === 0;
+  return (event.mouseClickCount || 0) > 0 && (event.keystrokeCount || 0) === 0;
 }
 
 function isRepeatedPattern(event, device, eventTime) {
   if (!device.lastEventAt || device.lastClickCount === null || device.lastActiveSeconds === null) return false;
+  if (Number(event.mouseClickCount || 0) < LIMITS.minClicksForRepeatedPattern) return false;
   const intervalMs = Math.abs(eventTime.getTime() - new Date(device.lastEventAt).getTime());
   const expectedMs = Number(device.lastActiveSeconds || 0) * 1000;
   const intervalStable = expectedMs > 0 && Math.abs(intervalMs - expectedMs) <= LIMITS.intervalToleranceMs;
@@ -51,16 +61,26 @@ function analyzeSequence(event, previousSequence) {
   const sequence = Number(event.sequence || 0);
   if (!sequence) return { ok: false, flag: 'missing_sequence' };
   if (sequence <= Number(previousSequence || 0)) return { ok: false, flag: 'replayed_or_old_sequence' };
+  const gap = sequence - Number(previousSequence || 0);
+  if (gap > LIMITS.maxSequenceGap) return { ok: true, flag: 'large_sequence_gap', gap };
   return { ok: true };
 }
 
-function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true }, baseline = null) {
+function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true }, baseline = null, context = {}) {
   const flags = [];
-  const totalSeconds = Math.max(1, (event.activeSeconds || 0) + (event.idleSeconds || 0));
-  const clickRate = (event.mouseClickCount || 0) / totalSeconds;
-  const keyRate = (event.keystrokeCount || 0) / totalSeconds;
-  const moveRate = (event.mouseMoveCount || 0) / totalSeconds;
+  const activeSeconds = numberValue(event.activeSeconds);
+  const idleSeconds = numberValue(event.idleSeconds);
+  const keystrokeCount = numberValue(event.keystrokeCount);
+  const mouseClickCount = numberValue(event.mouseClickCount);
+  const totalSeconds = Math.max(1, activeSeconds + idleSeconds);
+  const actionWindowSeconds = Math.max(1, activeSeconds || totalSeconds);
+  const actionCount = keystrokeCount + mouseClickCount;
+  const clickRate = mouseClickCount / actionWindowSeconds;
+  const keyRate = keystrokeCount / actionWindowSeconds;
+  const combinedActionRate = actionCount / actionWindowSeconds;
   const eventTime = event.timestamp ? new Date(event.timestamp) : new Date();
+  const lastEventAt = device.lastEventAt ? new Date(device.lastEventAt) : null;
+  const repeatedPattern = isRepeatedPattern(event, device, eventTime);
   let suspicionScore = 0;
 
   if (!signatureValid) {
@@ -74,6 +94,17 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
   if (!sequenceCheck.ok) {
     flags.push(sequenceCheck.flag);
     suspicionScore += 75;
+  } else if (sequenceCheck.flag) {
+    flags.push(sequenceCheck.flag);
+    suspicionScore += 20;
+  }
+  if (!context.hasSessionId) {
+    flags.push('missing_session');
+    suspicionScore += 30;
+  }
+  if (lastEventAt && eventTime.getTime() < lastEventAt.getTime() - LIMITS.maxEventBacktrackMs) {
+    flags.push('event_time_out_of_order');
+    suspicionScore += 40;
   }
   if (clickRate > LIMITS.maxClicksPerSecond) {
     flags.push('high_click_rate');
@@ -83,33 +114,37 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
     flags.push('high_key_rate');
     suspicionScore += 35;
   }
-  if (moveRate > LIMITS.maxMovesPerSecond) {
-    flags.push('high_mouse_move_rate');
-    suspicionScore += 20;
+  if (combinedActionRate > LIMITS.maxCombinedActionsPerSecond) {
+    flags.push('high_combined_action_rate');
+    suspicionScore += 40;
   }
-  if ((event.mouseClickCount || 0) >= 30 && (event.mouseMoveCount || 0) === 0) {
-    flags.push('clicks_without_mouse_movement');
+  if (actionCount > LIMITS.maxActionsPerEvent) {
+    flags.push('too_many_actions_in_event');
+    suspicionScore += 45;
+  }
+  if (activeSeconds > LIMITS.maxActiveSecondsPerEvent) {
+    flags.push('active_window_too_large');
     suspicionScore += 30;
   }
-  if (isClickOnly(event)) {
-    flags.push('click_only_event');
-    suspicionScore += 15;
+  if (idleSeconds > LIMITS.maxIdleSecondsPerEvent) {
+    flags.push('idle_window_too_large');
+    suspicionScore += 20;
   }
-  if ((event.activeSeconds || 0) > 0 && (event.keystrokeCount || 0) === 0 && (event.mouseClickCount || 0) === 0 && (event.mouseMoveCount || 0) === 0) {
+  if (actionCount > 0 && activeSeconds === 0) {
+    flags.push('input_without_active_time');
+    suspicionScore += 45;
+  }
+  if (activeSeconds > 0 && keystrokeCount === 0 && mouseClickCount === 0) {
     flags.push('active_without_input');
     suspicionScore += 15;
   }
-  if (isRepeatedPattern(event, device, eventTime)) {
+  if (repeatedPattern) {
     flags.push('robotic_repeated_click_pattern');
     suspicionScore += 35;
   }
-  if (Number(device.repeatedClickPatternCount || 0) >= LIMITS.repeatedPatternThreshold) {
+  if (repeatedPattern && Number(device.repeatedClickPatternCount || 0) >= LIMITS.repeatedPatternThreshold) {
     flags.push('repeated_click_pattern_streak');
     suspicionScore += 40;
-  }
-  if (Number(device.clickOnlyStreakCount || 0) >= LIMITS.clickOnlyStreakThreshold) {
-    flags.push('click_only_streak');
-    suspicionScore += 50;
   }
   if (baseline && baseline.activeDays >= LIMITS.baselineMinActiveDays) {
     const baselineClickRate = baseline.avgClicksPerActiveSecond || 0;
