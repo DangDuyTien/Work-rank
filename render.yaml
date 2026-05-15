@@ -5,7 +5,6 @@ services:
     plan: free
     region: singapore
     buildCommand: npm --prefix backend ci && npm --prefix frontend ci && npm --prefix frontend run build
-    preDeployCommand: npm --prefix backend run db:migrate
     startCommand: npm --prefix backend start
     healthCheckPath: /api/health
     autoDeployTrigger: commit
