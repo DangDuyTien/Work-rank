@@ -18,6 +18,9 @@ const env = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     dialect: process.env.DB_DIALECT || 'mysql',
+    ssl: process.env.DB_SSL === 'true',
+    sslRejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+    sslCaPath: process.env.DB_SSL_CA_PATH || '',
     logging: process.env.DB_LOGGING === 'true' ? console.log : false,
   },
 };

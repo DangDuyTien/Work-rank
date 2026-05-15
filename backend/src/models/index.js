@@ -5,6 +5,8 @@ const Device = require('./Device');
 const WorkSession = require('./WorkSession');
 const ActivityEvent = require('./ActivityEvent');
 const DailyStat = require('./DailyStat');
+const UserProfileImage = require('./UserProfileImage');
+const UserProfilePreference = require('./UserProfilePreference');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -28,4 +30,20 @@ ActivityEvent.belongsTo(WorkSession, { foreignKey: 'sessionId' });
 User.hasMany(DailyStat, { foreignKey: 'userId' });
 DailyStat.belongsTo(User, { foreignKey: 'userId' });
 
-module.exports = { sequelize, Team, User, Device, WorkSession, ActivityEvent, DailyStat };
+User.hasMany(UserProfileImage, { foreignKey: 'userId' });
+UserProfileImage.belongsTo(User, { foreignKey: 'userId' });
+
+User.hasOne(UserProfilePreference, { foreignKey: 'userId' });
+UserProfilePreference.belongsTo(User, { foreignKey: 'userId' });
+
+module.exports = {
+  sequelize,
+  Team,
+  User,
+  Device,
+  WorkSession,
+  ActivityEvent,
+  DailyStat,
+  UserProfileImage,
+  UserProfilePreference,
+};

@@ -288,6 +288,23 @@ export const users = {
       },
     };
   },
+  profilePreferences: async (id) => {
+    const res = await api.get(`/api/users/${id}/profile-preferences`);
+    return { ...res, data: res.data?.data || {} };
+  },
+  updateProfilePreferences: async (id, data) => {
+    const res = await api.patch(`/api/users/${id}/profile-preferences`, data);
+    return { ...res, data: res.data?.data || {} };
+  },
+  gallery: async (id) => {
+    const res = await api.get(`/api/users/${id}/gallery`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
+  updateGalleryImage: async (id, slot, imageData) => {
+    const res = await api.put(`/api/users/${id}/gallery/${slot}`, { imageData });
+    return { ...res, data: res.data?.image || res.data?.data || res.data };
+  },
+  removeGalleryImage: (id, slot) => api.delete(`/api/users/${id}/gallery/${slot}`),
 };
 
 export { storeAuth };

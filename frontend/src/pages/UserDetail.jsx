@@ -4,10 +4,7 @@ import { activity, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   avatarHue,
-  getStoredAvatar,
   initialsFromName,
-  removeStoredAvatar,
-  setStoredAvatar,
 } from '../utils/avatar';
 import {
   Activity,
@@ -65,9 +62,7 @@ const PROFILE_GALLERY_IMAGES = [
   'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=360&q=80',
 ];
 
-const PROFILE_GALLERY_STORAGE_PREFIX = 'workrank:profile-gallery:';
 const FEATURED_BADGE_LIMIT = 4;
-const FEATURED_BADGE_STORAGE_PREFIX = 'workrank:featured-badges:';
 
 const RANK_TIERS = [
   {
@@ -469,44 +464,32 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
   ];
 }
 
-function profileGalleryStorageKey(userId) {
-  return `${PROFILE_GALLERY_STORAGE_PREFIX}${userId || 'guest'}`;
+function normalizeFeaturedBadgeLabels(labels) {
+  return (Array.isArray(labels) ? labels : [])
+    .map((label) => String(label || '').trim())
+    .filter(Boolean)
+    .filter((label, index, list) => list.indexOf(label) === index)
+    .slice(0, FEATURED_BADGE_LIMIT);
 }
 
-function loadProfileGallery(userId) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(profileGalleryStorageKey(userId)) || '[]');
-    const customImages = Array.isArray(parsed) ? parsed : [];
-    return PROFILE_GALLERY_IMAGES.map((fallback, index) => customImages[index] || fallback);
-  } catch {
-    return PROFILE_GALLERY_IMAGES;
-  }
-}
-
-function saveProfileGallery(userId, images) {
-  const next = PROFILE_GALLERY_IMAGES.map((fallback, index) => images[index] || fallback);
-  const customOnly = next.map((image, index) => (image === PROFILE_GALLERY_IMAGES[index] ? '' : image));
-  localStorage.setItem(profileGalleryStorageKey(userId), JSON.stringify(customOnly));
+function buildProfileGallery(images = []) {
+  const next = [...PROFILE_GALLERY_IMAGES];
+  if (!Array.isArray(images)) return next;
+  images.forEach((image) => {
+    const slot = Number(image?.slot);
+    const imageData = image?.imageData || image?.image_data;
+    if (Number.isInteger(slot) && slot >= 0 && slot < next.length && imageData) {
+      next[slot] = imageData;
+    }
+  });
   return next;
 }
 
-function featuredBadgeStorageKey(userId) {
-  return `${FEATURED_BADGE_STORAGE_PREFIX}${userId || 'guest'}`;
-}
-
-function loadFeaturedBadgeLabels(userId) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(featuredBadgeStorageKey(userId)) || '[]');
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveFeaturedBadgeLabels(userId, labels) {
-  const next = labels.slice(0, FEATURED_BADGE_LIMIT);
-  localStorage.setItem(featuredBadgeStorageKey(userId), JSON.stringify(next));
-  return next;
+function profileSaveError(error, fallback) {
+  const status = error?.response?.status;
+  if (status === 403) return 'Bạn chỉ có thể chỉnh hồ sơ của mình.';
+  if (status === 413) return 'Ảnh quá lớn để gửi lên server. Hãy chọn ảnh nhẹ hơn.';
+  return error?.response?.data?.message || error?.message || fallback;
 }
 
 function buildPowerScore({ levelView, score, currentStreak, todayActions }) {
@@ -646,7 +629,9 @@ export default function UserDetail() {
   const [galleryImages, setGalleryImages] = useState(PROFILE_GALLERY_IMAGES);
   const [galleryError, setGalleryError] = useState('');
   const [featuredBadgeLabels, setFeaturedBadgeLabels] = useState([]);
+  const [hasFeaturedBadgePreference, setHasFeaturedBadgePreference] = useState(false);
   const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
+  const [badgeEditorError, setBadgeEditorError] = useState('');
   const [loading, setLoading] = useState(true);
   const [chartNow, setChartNow] = useState(new Date());
 
@@ -691,12 +676,44 @@ export default function UserDetail() {
   }, []);
 
   useEffect(() => {
-    setLocalAvatarUrl(getStoredAvatar(id));
+    let mounted = true;
+
+    setLocalAvatarUrl('');
     setAvatarError('');
-    setGalleryImages(loadProfileGallery(id));
+    setGalleryImages(PROFILE_GALLERY_IMAGES);
     setGalleryError('');
-    setFeaturedBadgeLabels(loadFeaturedBadgeLabels(id));
+    setFeaturedBadgeLabels([]);
+    setHasFeaturedBadgePreference(false);
+    setBadgeEditorError('');
     setBadgeEditorOpen(false);
+
+    const fetchProfileCustomization = async () => {
+      const [galleryResult, preferenceResult] = await Promise.allSettled([
+        usersApi.gallery(id),
+        usersApi.profilePreferences(id),
+      ]);
+      if (!mounted) return;
+
+      if (galleryResult.status === 'fulfilled') {
+        setGalleryImages(buildProfileGallery(galleryResult.value.data));
+      } else {
+        console.error('Failed to fetch profile gallery:', galleryResult.reason);
+      }
+
+      if (preferenceResult.status === 'fulfilled') {
+        const preferences = preferenceResult.value.data || {};
+        setLocalAvatarUrl(preferences.avatarData || '');
+        setFeaturedBadgeLabels(normalizeFeaturedBadgeLabels(preferences.featuredBadges));
+        setHasFeaturedBadgePreference(Boolean(preferences.hasFeaturedBadgesPreference));
+      } else {
+        console.error('Failed to fetch profile preferences:', preferenceResult.reason);
+      }
+    };
+
+    fetchProfileCustomization();
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -852,9 +869,9 @@ export default function UserDetail() {
   const sc = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
   const isVerified = Boolean(user.isVerified || user.verified || user.is_verified);
   const canEditAvatar = String(authUser?.id || '') === String(user.id || id);
-  const canCustomizeProfile = Boolean(authUser);
+  const canCustomizeProfile = canEditAvatar || authUser?.role === 'admin';
   const unlockedBadgeList = badges.filter((badge) => badge.unlocked);
-  const selectedFeaturedLabels = (featuredBadgeLabels.length ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
+  const selectedFeaturedLabels = (hasFeaturedBadgePreference ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
     .filter((label, index, list) => list.indexOf(label) === index)
     .filter((label) => unlockedBadgeList.some((badge) => badge.label === label))
     .slice(0, FEATURED_BADGE_LIMIT);
@@ -912,31 +929,40 @@ export default function UserDetail() {
   const handleAvatarPick = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const previousAvatar = localAvatarUrl;
 
     try {
       const dataUrl = await resizeAvatarFile(file);
-      setStoredAvatar(user.id || id, dataUrl);
       setLocalAvatarUrl(dataUrl);
+      await usersApi.updateProfilePreferences(user.id || id, { avatarData: dataUrl });
       setAvatarError('');
     } catch (error) {
-      setAvatarError(error.message || 'Không đổi được ảnh đại diện.');
+      setLocalAvatarUrl(previousAvatar);
+      setAvatarError(profileSaveError(error, 'Không đổi được ảnh đại diện.'));
     } finally {
       event.target.value = '';
     }
   };
 
-  const toggleFeaturedBadge = (label) => {
+  const toggleFeaturedBadge = async (label) => {
     if (!canCustomizeProfile) return;
-    setFeaturedBadgeLabels((current) => {
-      const base = (current.length ? current : selectedFeaturedLabels)
-        .filter((item, index, list) => list.indexOf(item) === index)
-        .filter((item) => unlockedBadgeList.some((badge) => badge.label === item));
-      const exists = base.includes(label);
-      const next = exists
-        ? base.filter((item) => item !== label)
-        : base.length >= FEATURED_BADGE_LIMIT ? base : [...base, label];
-      return saveFeaturedBadgeLabels(user.id || id, next);
-    });
+    const base = normalizeFeaturedBadgeLabels(hasFeaturedBadgePreference ? featuredBadgeLabels : selectedFeaturedLabels)
+      .filter((item) => unlockedBadgeList.some((badge) => badge.label === item));
+    const exists = base.includes(label);
+    const next = exists
+      ? base.filter((item) => item !== label)
+      : base.length >= FEATURED_BADGE_LIMIT ? base : [...base, label];
+
+    setFeaturedBadgeLabels(next);
+    setHasFeaturedBadgePreference(true);
+    setBadgeEditorError('');
+    try {
+      await usersApi.updateProfilePreferences(user.id || id, { featuredBadges: next });
+    } catch (error) {
+      setFeaturedBadgeLabels(base);
+      setHasFeaturedBadgePreference(hasFeaturedBadgePreference);
+      setBadgeEditorError(profileSaveError(error, 'Không lưu được huy hiệu nổi bật.'));
+    }
   };
 
   const openGalleryPicker = (index) => {
@@ -948,17 +974,17 @@ export default function UserDetail() {
   const handleGalleryPick = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const slot = gallerySlotRef.current;
+    const previousImages = galleryImages;
 
     try {
       const dataUrl = await resizeGalleryFile(file);
-      setGalleryImages((current) => {
-        const next = [...current];
-        next[gallerySlotRef.current] = dataUrl;
-        return saveProfileGallery(user.id || id, next);
-      });
+      setGalleryImages((current) => current.map((imageUrl, index) => (index === slot ? dataUrl : imageUrl)));
+      await usersApi.updateGalleryImage(user.id || id, slot, dataUrl);
       setGalleryError('');
     } catch (error) {
-      setGalleryError(error.message || 'Không thêm được ảnh giới thiệu.');
+      setGalleryImages(previousImages);
+      setGalleryError(profileSaveError(error, 'Không thêm được ảnh giới thiệu.'));
     } finally {
       event.target.value = '';
     }
@@ -973,8 +999,10 @@ export default function UserDetail() {
           alt={`Ảnh đại diện ${user.name || `User #${id}`}`}
           onError={() => {
             if (localAvatarUrl) {
-              removeStoredAvatar(user.id || id);
               setLocalAvatarUrl('');
+              if (canEditAvatar) {
+                usersApi.updateProfilePreferences(user.id || id, { avatarData: null }).catch(() => {});
+              }
             }
             setAvatarError('Ảnh này không hiển thị được trong trình duyệt. Hãy thử JPG hoặc PNG khác.');
           }}
@@ -1182,6 +1210,7 @@ export default function UserDetail() {
               {badgeEditorOpen && canCustomizeProfile && (
                 <div className="profile-badge-editor">
                   <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu đã mở khóa để ghim ở đây.</div>
+                  {badgeEditorError && <div className="profile-badge-editor-error">{badgeEditorError}</div>}
                   <div className="profile-badge-editor-grid">
                     {badges.map((badge) => {
                       const Icon = badge.icon;
