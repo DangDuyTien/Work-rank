@@ -41,21 +41,6 @@ const BADGE_STYLES = {
   streak: { bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.26)', color: '#ea580c', icon: Flame },
   volume: { bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.24)', color: '#16a34a', icon: BadgeCheck },
 };
-const VERIFIED_STORAGE_KEY = 'workrank:verified-users';
-
-function loadVerifiedUsers() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(VERIFIED_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveVerifiedUsers(userIds) {
-  localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(userIds));
-  window.dispatchEvent(new Event('workrank:verified-users-updated'));
-}
 
 function VerifiedMark({ size = 15 }) {
   return <VerifiedBadge size={size} />;
@@ -83,9 +68,14 @@ function userActions(user = {}) {
   return Number(user.keystrokeCount || user.keystrokes || 0) + Number(user.mouseClickCount || user.mouse_clicks || 0);
 }
 
-function isVerifiedRanker(user, verifiedUsers) {
-  const userId = String(user.user_id || user.id || '');
-  return Boolean(user.verified || user.isVerified || verifiedUsers.includes(userId));
+function toVerifiedBool(value) {
+  if (value === true || value === 1 || value === '1') return true;
+  if (typeof value === 'string' && value.toLowerCase() === 'true') return true;
+  return false;
+}
+
+function isVerifiedRanker(user) {
+  return toVerifiedBool(user.verified ?? user.isVerified ?? user.is_verified);
 }
 
 function rankBadges(user, rank, range) {
@@ -168,7 +158,6 @@ export default function Leaderboard() {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);
   const [now, setNow]       = useState(new Date());
-  const [verifiedUsers, setVerifiedUsers] = useState(() => loadVerifiedUsers());
   const [verificationPending, setVerificationPending] = useState({});
   const [showRuleModal, setShowRuleModal] = useState(false);
 
@@ -177,16 +166,6 @@ export default function Leaderboard() {
   const requestIdRef = useRef(0);
 
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
-
-  useEffect(() => {
-    const syncVerifiedUsers = () => setVerifiedUsers(loadVerifiedUsers());
-    window.addEventListener('storage', syncVerifiedUsers);
-    window.addEventListener('workrank:verified-users-updated', syncVerifiedUsers);
-    return () => {
-      window.removeEventListener('storage', syncVerifiedUsers);
-      window.removeEventListener('workrank:verified-users-updated', syncVerifiedUsers);
-    };
-  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -239,14 +218,6 @@ export default function Leaderboard() {
 
   const updateLocalVerification = (userId, nextVerified) => {
     const id = String(userId);
-    setVerifiedUsers((prev) => {
-      const exists = prev.includes(id);
-      const next = nextVerified
-        ? (exists ? prev : [...prev, id])
-        : prev.filter((storedId) => storedId !== id);
-      saveVerifiedUsers(next);
-      return next;
-    });
     setUsers((prev) => prev.map((row) => (
       String(row.user_id || row.id) === id
         ? { ...row, isVerified: nextVerified, verified: nextVerified }
@@ -259,15 +230,17 @@ export default function Leaderboard() {
     const userId = user.user_id || user.id;
     if (!userId || verificationPending[String(userId)]) return;
 
-    const nextVerified = !isVerifiedRanker(user, verifiedUsers);
+    const previousVerified = isVerifiedRanker(user);
+    const nextVerified = !previousVerified;
     updateLocalVerification(userId, nextVerified);
     setVerificationPending((prev) => ({ ...prev, [String(userId)]: true }));
     try {
       const res = await usersApi.update(userId, { isVerified: nextVerified });
-      const savedVerified = Boolean(res.data?.isVerified ?? res.data?.verified ?? nextVerified);
+      const savedVerified = toVerifiedBool(res.data?.isVerified ?? res.data?.verified ?? nextVerified);
       updateLocalVerification(userId, savedVerified);
     } catch (err) {
       console.error('Could not update user verification:', err);
+      updateLocalVerification(userId, previousVerified);
     } finally {
       setVerificationPending((prev) => {
         const next = { ...prev };
@@ -575,7 +548,7 @@ export default function Leaderboard() {
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#64748b',textAlign:'center'}}>
                   {(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
-                  {isVerifiedRanker(top2, verifiedUsers) && <VerifiedMark size={13} />}
+                  {isVerifiedRanker(top2) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top2, 2, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -593,7 +566,7 @@ export default function Leaderboard() {
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>
                   {(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
-                  {isVerifiedRanker(top1, verifiedUsers) && <VerifiedMark size={14} />}
+                  {isVerifiedRanker(top1) && <VerifiedMark size={14} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top1, 1, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -610,7 +583,7 @@ export default function Leaderboard() {
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>
                   {(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
-                  {isVerifiedRanker(top3, verifiedUsers) && <VerifiedMark size={13} />}
+                  {isVerifiedRanker(top3) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top3, 3, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -633,7 +606,7 @@ export default function Leaderboard() {
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                       <span style={{overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
-                      {isVerifiedRanker(u, verifiedUsers) && <VerifiedMark size={12} />}
+                      {isVerifiedRanker(u) && <VerifiedMark size={12} />}
                     </div>
                     <div style={{display:'flex',gap:4,marginTop:4,overflow:'hidden'}}>
                       {rankBadges(u, rank, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -686,7 +659,7 @@ export default function Leaderboard() {
               ) : paginated.map((u,i)=>{
                 const rank = (page-1)*PAGE_SIZE + i + 1;
                 const sc = Number(u.score||0);
-                const verified = isVerifiedRanker(u, verifiedUsers);
+                const verified = isVerifiedRanker(u);
                 const badges = rankBadges(u, rank, range);
                 const userId = u.user_id || u.id;
                 const isUpdatingVerification = Boolean(verificationPending[String(userId)]);

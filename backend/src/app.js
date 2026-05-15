@@ -14,6 +14,10 @@ const DOWNLOADABLE_DESKTOP_FILES = new Set([
   'WorkRank Tracker-Setup-1.0.0-x64.exe',
   'WorkRank Tracker-Portable-1.0.0-x64.exe',
 ]);
+const DESKTOP_DOWNLOAD_REDIRECTS = {
+  'WorkRank Tracker-Setup-1.0.0-x64.exe': process.env.DESKTOP_WINDOWS_DOWNLOAD_URL,
+  'WorkRank Tracker-Portable-1.0.0-x64.exe': process.env.DESKTOP_WINDOWS_PORTABLE_DOWNLOAD_URL,
+};
 
 function desktopDownloadPath(fileName) {
   if (!DOWNLOADABLE_DESKTOP_FILES.has(fileName)) return null;
@@ -47,6 +51,8 @@ app.use('/api', routes);
 app.get('/downloads/:fileName', (req, res) => {
   const filePath = desktopDownloadPath(req.params.fileName);
   if (!filePath || !fs.existsSync(filePath)) {
+    const redirectUrl = DESKTOP_DOWNLOAD_REDIRECTS[req.params.fileName];
+    if (redirectUrl) return res.redirect(302, redirectUrl);
     return res.status(404).json({ message: 'Desktop installer not found' });
   }
   return res.download(filePath, req.params.fileName);

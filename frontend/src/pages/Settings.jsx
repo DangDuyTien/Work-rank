@@ -251,7 +251,7 @@ export default function Settings() {
             <div className="settings-readonly-grid">
               <div><span>Vai trò</span><strong>{roleLabel(user?.role)}</strong></div>
               <div><span>Trạng thái</span><strong>{statusLabel(user?.status)}</strong></div>
-              <div><span>Tích xanh</span><strong>{user?.isVerified ? 'Đã cấp' : 'Chưa cấp'}</strong></div>
+              <div><span>Tích xanh</span><strong>{user?.isVerified === true || user?.isVerified === 1 || user?.isVerified === '1' ? 'Đã cấp' : 'Chưa cấp'}</strong></div>
             </div>
             <div className="settings-actions">
               <button type="submit" className="settings-primary-button" disabled={!profileDirty || savingProfile}>

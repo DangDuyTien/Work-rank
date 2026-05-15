@@ -31,3 +31,7 @@ services:
         generateValue: true
       - key: REFRESH_TOKEN_SECRET
         generateValue: true
+      - key: VITE_DESKTOP_WINDOWS_DOWNLOAD_URL
+        value: /downloads/WorkRank%20Tracker-Setup-1.0.0-x64.exe
+      - key: DESKTOP_WINDOWS_DOWNLOAD_URL
+        sync: false

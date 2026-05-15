@@ -571,21 +571,52 @@ export default function Tracker() {
                 </div>
               )}
               {desktopLaunchUrl && (desktopLaunchStatusType === 'warning' || desktopLaunchStatusType === 'error') && (
-                <a
-                  href={desktopLaunchUrl}
-                  data-no-track="true"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    display: 'inline-flex',
-                    marginTop: 8,
-                    color: '#2563eb',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    textDecoration: 'none',
-                  }}
-                >
-                  Mở Desktop Tracker thủ công
-                </a>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDesktopConsentChecked(false);
+                      setDesktopDownloadStarted(false);
+                      setDesktopConsentOpen(true);
+                    }}
+                    style={{
+                      height: 27,
+                      padding: '0 9px',
+                      borderRadius: 6,
+                      border: '1px solid rgba(37,99,235,0.28)',
+                      background: 'rgba(37,99,235,0.1)',
+                      color: '#2563eb',
+                      fontSize: 11,
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Tải app Windows
+                  </button>
+                  <a
+                    href={desktopLaunchUrl}
+                    data-no-track="true"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      height: 27,
+                      padding: '0 9px',
+                      borderRadius: 6,
+                      border: '1px solid rgba(100,116,139,0.18)',
+                      background: '#ffffff',
+                      color: '#64748b',
+                      fontSize: 11,
+                      fontWeight: 900,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Mở app đã cài
+                  </a>
+                </div>
               )}
               {!tracking && activeSecondsToday > 0 && (
                 <div style={{ marginTop: 7, fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
@@ -1195,7 +1226,7 @@ export default function Tracker() {
                 fontWeight: 700,
                 marginBottom: 14,
               }}>
-                Windows có thể hiện cảnh báo khi cài file mới. Hãy chỉ tiếp tục nếu file được tải từ trang WorkRank chính thức.
+                Nếu máy chưa cài app, hãy bấm tải file .exe trước. Nút mở app đã cài chỉ hoạt động sau khi Windows đã cài WorkRank Tracker và đăng ký giao thức workrank://.
               </div>
 
               <label style={{
@@ -1220,7 +1251,7 @@ export default function Tracker() {
                 </span>
               </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.35fr', gap: 9 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
                 <button
                   type="button"
                   data-no-track="true"
@@ -1241,9 +1272,27 @@ export default function Tracker() {
                 <button
                   type="button"
                   data-no-track="true"
+                  onClick={openInstalledDesktopTracker}
+                  style={{
+                    height: 40,
+                    borderRadius: 7,
+                    border: '1px solid rgba(37,99,235,0.22)',
+                    background: '#ffffff',
+                    color: '#2563eb',
+                    fontSize: 13,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Đã cài, mở app
+                </button>
+                <button
+                  type="button"
+                  data-no-track="true"
                   disabled={!desktopConsentChecked}
                   onClick={downloadDesktopTracker}
                   style={{
+                    gridColumn: '1 / -1',
                     height: 40,
                     borderRadius: 7,
                     border: 'none',

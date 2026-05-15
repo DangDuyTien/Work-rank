@@ -867,7 +867,7 @@ export default function UserDetail() {
 
   const status = (user.presence || user.presenceStatus || user.status || 'offline').toLowerCase();
   const sc = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
-  const isVerified = Boolean(user.isVerified || user.verified || user.is_verified);
+  const isVerified = user.isVerified === true || user.verified === true || user.is_verified === true || user.isVerified === 1 || user.verified === 1 || user.is_verified === 1 || user.isVerified === '1' || user.verified === '1' || user.is_verified === '1';
   const canEditAvatar = String(authUser?.id || '') === String(user.id || id);
   const canCustomizeProfile = canEditAvatar || authUser?.role === 'admin';
   const unlockedBadgeList = badges.filter((badge) => badge.unlocked);

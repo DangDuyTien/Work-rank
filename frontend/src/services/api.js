@@ -55,6 +55,16 @@ function unwrapArray(payload) {
   return [];
 }
 
+function toBoolean(value) {
+  if (value === true || value === 1 || value === '1') return true;
+  if (typeof value === 'string' && value.toLowerCase() === 'true') return true;
+  return false;
+}
+
+function normalizeVerified(user = {}, row = {}) {
+  return toBoolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified);
+}
+
 function normalizeLeaderboardRow(row, index = 0) {
   const user = row.User || row.user || row;
   const activeSeconds = Number(row.activeSeconds ?? row.active_seconds ?? row.total_active_seconds ?? 0);
@@ -77,8 +87,8 @@ function normalizeLeaderboardRow(row, index = 0) {
     name: user.name || row.name || 'Unknown User',
     email: user.email || row.email || '',
     role: user.role || row.role || 'user',
-    isVerified: Boolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified),
-    verified: Boolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified),
+    isVerified: normalizeVerified(user, row),
+    verified: normalizeVerified(user, row),
     accountStatus: user.status || row.accountStatus || row.status || 'active',
     status: row.presence || row.presenceStatus || row.status || 'offline',
     rank: row.rankPosition || index + 1,
@@ -247,8 +257,8 @@ export const users = {
       data: unwrapArray(res.data).map((user) => ({
         ...user,
         user_id: user.id,
-        isVerified: Boolean(user.isVerified ?? user.is_verified),
-        verified: Boolean(user.isVerified ?? user.is_verified),
+        isVerified: normalizeVerified(user),
+        verified: normalizeVerified(user),
         accountStatus: user.status || 'active',
         status: user.presence || user.presenceStatus || 'offline',
       })),
@@ -263,8 +273,8 @@ export const users = {
         data: {
           ...user,
           user_id: user.id,
-          isVerified: Boolean(user.isVerified ?? user.is_verified),
-          verified: Boolean(user.isVerified ?? user.is_verified),
+          isVerified: normalizeVerified(user),
+          verified: normalizeVerified(user),
           accountStatus: user.status || 'active',
           status: user.presence || user.presenceStatus || 'offline',
         },
@@ -282,8 +292,8 @@ export const users = {
       data: {
         ...user,
         user_id: user.id,
-        isVerified: Boolean(user.isVerified ?? user.is_verified),
-        verified: Boolean(user.isVerified ?? user.is_verified),
+        isVerified: normalizeVerified(user),
+        verified: normalizeVerified(user),
         accountStatus: user.status || 'active',
         status: user.presence || user.presenceStatus || 'offline',
       },

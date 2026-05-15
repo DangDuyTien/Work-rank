@@ -18,19 +18,8 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 
-const VERIFIED_STORAGE_KEY = 'workrank:verified-users';
-function loadVerifiedUsers() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(VERIFIED_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    return [];
-  }
-}
-
-function isVerifiedUser(user, verifiedUsers) {
-  const userId = String(user.user_id || user.id || '');
-  return Boolean(user.verified || user.isVerified || verifiedUsers.includes(userId));
+function isVerifiedUser(user) {
+  return user.verified === true || user.isVerified === true || user.verified === 1 || user.isVerified === 1 || user.verified === '1' || user.isVerified === '1';
 }
 
 const STATUS_CONFIG = {
@@ -130,7 +119,6 @@ export default function Dashboard() {
   const [prevTotals, setPrevTotals] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [users, setUsers] = useState([]);
-  const [verifiedUsers, setVerifiedUsers] = useState(() => loadVerifiedUsers());
   const [searchQuery, setSearchQuery] = useState('');
   const [now, setNow] = useState(new Date());
   const [liveFlash, setLiveFlash] = useState(false);
@@ -184,16 +172,6 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     }
-  }, []);
-
-  useEffect(() => {
-    const syncVerifiedUsers = () => setVerifiedUsers(loadVerifiedUsers());
-    window.addEventListener('storage', syncVerifiedUsers);
-    window.addEventListener('workrank:verified-users-updated', syncVerifiedUsers);
-    return () => {
-      window.removeEventListener('storage', syncVerifiedUsers);
-      window.removeEventListener('workrank:verified-users-updated', syncVerifiedUsers);
-    };
   }, []);
 
   useEffect(() => {
@@ -514,7 +492,7 @@ export default function Dashboard() {
                         <div>
                           <div className="dashboard-user-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             {user.name || `User #${user.id}`}
-                            {isVerifiedUser(user, verifiedUsers) && <VerifiedBadge size={14} />}
+                            {isVerifiedUser(user) && <VerifiedBadge size={14} />}
                           </div>
                         </div>
                       </div>
