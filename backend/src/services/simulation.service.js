@@ -10,6 +10,8 @@ const DEFAULT_INTERVAL_MS = 30_000;
 const MAX_TARGET_COUNT = 100;
 const MIN_INTERVAL_MS = 10_000;
 const STATUS_TTL_MS = 90_000;
+const ONLINE_MIN_MS = 30 * 60 * 1000;
+const ONLINE_MAX_MS = 60 * 60 * 1000;
 
 const VIETNAMESE_NAMES = [
   'Nguyen Minh Anh',
@@ -95,6 +97,7 @@ const state = {
   lastTickAt: null,
   lastError: null,
   lastSummary: null,
+  lifecycleByUser: new Map(),
   presenceByUser: new Map(),
 };
 
@@ -180,22 +183,6 @@ function scheduleProfile(value = new Date()) {
   };
 }
 
-function shuffle(list) {
-  const next = [...list];
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j], next[i]];
-  }
-  return next;
-}
-
-function chooseActiveUsers(users, profile) {
-  const jitter = (Math.random() - 0.5) * 0.14;
-  const activeRatio = clamp(profile.activeRatio + jitter, 0, 0.95);
-  const count = clamp(Math.round(users.length * activeRatio), profile.activeRatio > 0.1 ? 1 : 0, users.length);
-  return new Set(shuffle(users).slice(0, count).map((user) => String(user.id)));
-}
-
 function initials(name) {
   return String(name || 'WR')
     .normalize('NFD')
@@ -206,6 +193,79 @@ function initials(name) {
     .map((part) => part[0])
     .join('')
     .toUpperCase() || 'WR';
+}
+
+function randomOnlineDurationMs() {
+  return randomInt(ONLINE_MIN_MS, ONLINE_MAX_MS);
+}
+
+function randomOfflineDurationMs(profile) {
+  if (profile.hour >= 22 || profile.hour < 6) return randomInt(70, 210) * 60 * 1000;
+  if (profile.isWeekend) return randomInt(35, 140) * 60 * 1000;
+  if (profile.hour >= 12 && profile.hour < 13) return randomInt(20, 65) * 60 * 1000;
+  if (profile.activeRatio >= 0.7) return randomInt(5, 25) * 60 * 1000;
+  if (profile.activeRatio >= 0.35) return randomInt(12, 45) * 60 * 1000;
+  return randomInt(30, 110) * 60 * 1000;
+}
+
+function createInitialLifecycle(profile, currentTime) {
+  const nowMs = currentTime.getTime();
+  const startsOnline = Math.random() < clamp(profile.activeRatio + 0.08, 0.08, 0.9);
+  if (startsOnline) {
+    return {
+      mode: 'online',
+      onlineUntil: nowMs + randomOnlineDurationMs(),
+      offlineUntil: null,
+      changedAt: nowMs,
+    };
+  }
+  return {
+    mode: 'offline',
+    onlineUntil: null,
+    offlineUntil: nowMs + randomOfflineDurationMs(profile),
+    changedAt: nowMs,
+  };
+}
+
+function resolveLifecycle(user, profile, currentTime) {
+  const userId = String(user.id);
+  const nowMs = currentTime.getTime();
+  const previous = state.lifecycleByUser.get(userId);
+  let lifecycle = previous || createInitialLifecycle(profile, currentTime);
+
+  if (lifecycle.mode === 'online' && nowMs >= Number(lifecycle.onlineUntil || 0)) {
+    lifecycle = {
+      mode: 'offline',
+      onlineUntil: null,
+      offlineUntil: nowMs + randomOfflineDurationMs(profile),
+      changedAt: nowMs,
+    };
+  } else if (lifecycle.mode === 'offline' && nowMs >= Number(lifecycle.offlineUntil || 0)) {
+    lifecycle = {
+      mode: 'online',
+      onlineUntil: nowMs + randomOnlineDurationMs(),
+      offlineUntil: null,
+      changedAt: nowMs,
+    };
+  }
+
+  state.lifecycleByUser.set(userId, lifecycle);
+  return {
+    lifecycle,
+    changed: !previous || previous.mode !== lifecycle.mode,
+  };
+}
+
+function onlinePresenceForTick(profile) {
+  const idleChance = clamp(profile.idleRatio + 0.04 + Math.random() * 0.08, 0.08, 0.42);
+  return Math.random() < idleChance ? 'idle' : 'active';
+}
+
+function pruneLifecycleForUsers(users) {
+  const ids = new Set(users.map((user) => String(user.id)));
+  for (const userId of state.lifecycleByUser.keys()) {
+    if (!ids.has(userId)) state.lifecycleByUser.delete(userId);
+  }
 }
 
 function avatarData(name, index) {
@@ -487,9 +547,10 @@ async function tick(options = {}) {
   const currentTime = new Date();
   const profile = scheduleProfile(currentTime);
   const users = await ensureSimulationUsers(state.targetCount);
-  const activeIds = chooseActiveUsers(users, profile);
+  pruneLifecycleForUsers(users);
   const summary = {
     totalUsers: users.length,
+    onlineUsers: 0,
     activeUsers: 0,
     idleUsers: 0,
     offlineUsers: 0,
@@ -499,14 +560,17 @@ async function tick(options = {}) {
   };
 
   for (const user of users) {
-    const shouldBeActive = activeIds.has(String(user.id));
-    if (!shouldBeActive) {
-      await markUserOffline(user, currentTime);
+    const { lifecycle, changed } = resolveLifecycle(user, profile, currentTime);
+    if (lifecycle.mode === 'offline') {
+      if (changed || state.presenceByUser.get(String(user.id)) !== 'offline') {
+        await markUserOffline(user, currentTime);
+      }
       summary.offlineUsers += 1;
       continue;
     }
 
-    const status = Math.random() < 0.12 ? 'idle' : 'active';
+    summary.onlineUsers += 1;
+    const status = onlinePresenceForTick(profile);
     simulationPresence.setStatus(user.id, status, { ttlMs: STATUS_TTL_MS });
     publishPresence(user, status);
 
@@ -572,6 +636,7 @@ async function stop() {
     await markUserOffline(user, currentTime);
   }
   simulationPresence.clear();
+  state.lifecycleByUser.clear();
   state.presenceByUser.clear();
   if (state.io) state.io.to('dashboard').emit('simulation:status', await getStatus());
   return getStatus();
@@ -592,6 +657,8 @@ async function getStatus() {
     lastSummary: state.lastSummary,
     simulatedUserCount: await countSimulatedUsers(),
     activePresenceCount: simulationPresence.activeCount(),
+    lifecycleOnlineCount: Array.from(state.lifecycleByUser.values()).filter((item) => item.mode === 'online').length,
+    lifecycleOfflineCount: Array.from(state.lifecycleByUser.values()).filter((item) => item.mode === 'offline').length,
   };
 }
 
