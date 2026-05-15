@@ -1091,7 +1091,15 @@ textarea:focus-visible,
   flex-direction: column;
   gap: 16px;
   --rank-color: #b45309;
-  --rank-soft: rgba(180, 83, 9, 0.12);
+  --rank-soft: rgba(180, 83, 9, 0.04);
+  --rank-accent-2: #d97706;
+  --rank-accent-3: #f97316;
+  --rank-border: rgba(180, 83, 9, 0.1);
+  --rank-glow: 0 12px 28px rgba(180,83,9,0.04), 0 0 12px rgba(249,115,22,0.025);
+  --rank-hero-bg: radial-gradient(circle at 14% 12%, rgba(249,115,22,0.05), transparent 32%), radial-gradient(circle at 78% 16%, rgba(217,119,6,0.035), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fffefb 54%, #fffaf7 100%);
+  --rank-card-bg: linear-gradient(145deg, #ffffff 0%, #fffefb 62%, #fffaf7 100%);
+  --rank-progress: linear-gradient(90deg, rgba(180,83,9,0.68) 0%, rgba(245,158,11,0.72) 56%, rgba(254,215,170,0.9) 100%);
+  --rank-badge-bg: linear-gradient(135deg, rgba(180,83,9,0.035), rgba(249,115,22,0.025), rgba(255,255,255,0.98));
 }
 
 .profile-page-state {
@@ -1137,13 +1145,30 @@ textarea:focus-visible,
   align-items: stretch;
   justify-content: space-between;
   gap: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rank-border);
   border-radius: 8px;
-  background:
-    radial-gradient(circle at top left, var(--rank-soft), transparent 36%),
-    linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  background: var(--rank-hero-bg);
+  box-shadow: var(--rank-glow);
   padding: 22px;
+}
+
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(120deg, transparent 0 32%, rgba(255, 255, 255, 0.34) 32% 33%, transparent 33% 100%),
+    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--rank-accent-3) 5%, transparent), transparent 32%);
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.profile-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .profile-identity {
@@ -1158,10 +1183,10 @@ textarea:focus-visible,
   height: 116px;
   position: relative;
   flex-shrink: 0;
-  border: 3px solid #ffffff;
+  border: 3px solid rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   background: #e2e8f0;
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.13);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--rank-color) 8%, rgba(15, 23, 42, 0.07));
   --avatar-hue: 28;
 }
 
@@ -1251,66 +1276,6 @@ textarea:focus-visible,
   border: 3px solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
-}
-
-.profile-dev-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  padding: 0 14px;
-  position: relative;
-  isolation: isolate;
-  flex: 0 0 auto;
-}
-
-.profile-dev-wing {
-  width: 28px;
-  height: 22px;
-  position: absolute;
-  top: 50%;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.9;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0 22%, rgba(224, 242, 254, 0.88) 22% 44%, rgba(125, 211, 252, 0.68) 44% 100%);
-  clip-path: polygon(100% 50%, 67% 6%, 37% 16%, 12% 37%, 0 66%, 34% 61%, 54% 79%, 76% 70%);
-  filter: drop-shadow(0 6px 10px rgba(14, 165, 233, 0.16));
-}
-
-.profile-dev-wing::before,
-.profile-dev-wing::after {
-  content: '';
-  position: absolute;
-  border-radius: 999px;
-  background: rgba(14, 165, 233, 0.22);
-  transform-origin: right center;
-}
-
-.profile-dev-wing::before {
-  width: 19px;
-  height: 1px;
-  right: 4px;
-  top: 8px;
-  transform: rotate(-16deg);
-}
-
-.profile-dev-wing::after {
-  width: 16px;
-  height: 1px;
-  right: 5px;
-  top: 14px;
-  transform: rotate(13deg);
-}
-
-.profile-dev-wing.is-left {
-  left: 0;
-  transform: translateY(-50%) rotate(-10deg);
-}
-
-.profile-dev-wing.is-right {
-  right: 0;
-  transform: translateY(-50%) scaleX(-1) rotate(-10deg);
 }
 
 .profile-dev-pill {
@@ -1472,11 +1437,29 @@ textarea:focus-visible,
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--rank-color);
+  color: color-mix(in srgb, var(--rank-color) 86%, #475569);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.profile-eyebrow {
+  width: fit-content;
+  min-height: 28px;
+  border: 1px solid var(--rank-border);
+  border-radius: 999px;
+  background: var(--rank-badge-bg);
+  padding: 0 11px;
+  box-shadow:
+    0 5px 12px color-mix(in srgb, var(--rank-color) 5%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.profile-rank-title {
+  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  font-weight: 900;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--rank-accent-3) 6%, transparent);
 }
 
 .profile-name-line {
@@ -1606,15 +1589,33 @@ textarea:focus-visible,
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
+.profile-summary-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 16px;
+  border: 1px solid var(--rank-border);
+  border-radius: 8px;
+  background: var(--rank-card-bg);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--rank-color) 3%, rgba(15, 23, 42, 0.03));
+  padding: 24px;
+}
+
 .profile-power-card {
   width: 260px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--rank-border);
   border-radius: 8px;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 80% 12%, color-mix(in srgb, var(--rank-accent-3) 5%, transparent), transparent 34%),
+    rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 7px 18px color-mix(in srgb, var(--rank-color) 3%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
   padding: 18px;
 }
 
@@ -1657,10 +1658,10 @@ textarea:focus-visible,
 .profile-chart-card,
 .profile-heatmap-card,
 .profile-session-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--rank-border) 74%, rgba(15, 23, 42, 0.08));
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.045);
+  background: var(--rank-card-bg);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--rank-color) 4%, rgba(15, 23, 42, 0.035));
 }
 
 .profile-metric-card {
@@ -1724,7 +1725,8 @@ textarea:focus-visible,
 
 .profile-title-main > svg {
   flex-shrink: 0;
-  color: #f59e0b;
+  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  filter: drop-shadow(0 6px 12px color-mix(in srgb, var(--rank-color) 7%, transparent));
 }
 
 .profile-title-main h2,
@@ -1752,8 +1754,11 @@ textarea:focus-visible,
   margin-top: 16px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--rank-color) 10%, #ffffff);
-  color: var(--rank-color);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 12%, transparent);
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.8), transparent 36%),
+    color-mix(in srgb, var(--rank-color) 4%, #ffffff);
+  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
   font-size: 12px;
   font-weight: 900;
 }
@@ -1778,8 +1783,9 @@ textarea:focus-visible,
 
 .profile-badge.is-unlocked {
   border-style: solid;
-  border-color: rgba(245, 158, 11, 0.28);
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.11), rgba(255, 255, 255, 0.95));
+  border-color: color-mix(in srgb, var(--rank-color) 14%, rgba(15, 23, 42, 0.08));
+  background: var(--rank-badge-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   opacity: 1;
 }
 
@@ -1796,7 +1802,9 @@ textarea:focus-visible,
 }
 
 .profile-badge.is-unlocked .profile-badge-icon {
-  color: #d97706;
+  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--rank-color) 5%, transparent);
 }
 
 .profile-badge strong {
@@ -1992,10 +2000,10 @@ textarea:focus-visible,
 .profile-session-count {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 12%, rgba(15, 23, 42, 0.08));
   border-radius: 999px;
-  background: #f8fafc;
-  color: #475569;
+  background: color-mix(in srgb, var(--rank-color) 4%, #ffffff);
+  color: color-mix(in srgb, var(--rank-color) 86%, #475569);
   padding: 6px 10px;
   font-size: 11px;
   font-weight: 900;
@@ -2006,16 +2014,16 @@ textarea:focus-visible,
   overflow: hidden;
   margin-top: 16px;
   border-radius: 999px;
-  background: #e8eef6;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: color-mix(in srgb, var(--rank-color) 4%, #edf2f7);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .profile-progress-bar span {
   height: 100%;
   display: block;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2563eb 0%, #06b6d4 58%, #22c55e 100%);
-  box-shadow: 0 0 14px rgba(37, 99, 235, 0.28);
+  background: var(--rank-progress);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rank-color) 9%, transparent);
   transition: width 0.4s ease;
 }
 
@@ -2035,12 +2043,14 @@ textarea:focus-visible,
 }
 
 .profile-milestone.is-reached {
-  background: rgba(34, 197, 94, 0.08);
+  border-color: color-mix(in srgb, var(--rank-color) 8%, rgba(15, 23, 42, 0.08));
+  background: color-mix(in srgb, var(--rank-color) 2.5%, #ffffff);
 }
 
 .profile-milestone.is-current {
-  border-color: color-mix(in srgb, var(--rank-color) 28%, rgba(15, 23, 42, 0.08));
-  background: color-mix(in srgb, var(--rank-color) 10%, #ffffff);
+  border-color: color-mix(in srgb, var(--rank-color) 14%, rgba(15, 23, 42, 0.08));
+  background: var(--rank-badge-bg);
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--rank-color) 3%, transparent);
 }
 
 .profile-milestone-dot {
@@ -2058,12 +2068,16 @@ textarea:focus-visible,
 }
 
 .profile-milestone.is-reached .profile-milestone-dot {
-  color: #16a34a;
+  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
 }
 
 .profile-milestone.is-current .profile-milestone-dot {
-  background: var(--rank-color);
-  color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 16%, rgba(15, 23, 42, 0.08));
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.98), transparent 35%),
+    color-mix(in srgb, var(--rank-color) 9%, #ffffff);
+  color: color-mix(in srgb, var(--rank-color) 88%, #334155);
+  box-shadow: 0 7px 14px color-mix(in srgb, var(--rank-color) 8%, transparent);
 }
 
 .profile-milestone strong,
@@ -2358,6 +2372,10 @@ textarea:focus-visible,
 
   .profile-identity {
     align-items: flex-start;
+  }
+
+  .profile-summary-card {
+    flex-direction: column;
   }
 
   .profile-power-card {

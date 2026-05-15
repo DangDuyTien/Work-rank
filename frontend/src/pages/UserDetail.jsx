@@ -57,12 +57,96 @@ const STATUS_CONFIG = {
 };
 
 const RANK_TIERS = [
-  { min: 45, tier: 'Legend', title: 'Huyền thoại WorkRank', color: '#7c3aed', soft: 'rgba(124,58,237,0.12)' },
-  { min: 35, tier: 'Diamond', title: 'Đấu sĩ năng suất', color: '#0891b2', soft: 'rgba(8,145,178,0.12)' },
-  { min: 25, tier: 'Platinum', title: 'Cao thủ tập trung', color: '#2563eb', soft: 'rgba(37,99,235,0.12)' },
-  { min: 15, tier: 'Gold', title: 'Chiến binh bền bỉ', color: '#d97706', soft: 'rgba(217,119,6,0.14)' },
-  { min: 7, tier: 'Silver', title: 'Người tăng tốc', color: '#64748b', soft: 'rgba(100,116,139,0.12)' },
-  { min: 0, tier: 'Bronze', title: 'Tân binh tiềm năng', color: '#b45309', soft: 'rgba(180,83,9,0.12)' },
+  {
+    min: 45,
+    tier: 'Legend',
+    title: 'Huyền thoại WorkRank',
+    color: '#7c3aed',
+    soft: 'rgba(124,58,237,0.04)',
+    accent2: '#ec4899',
+    accent3: '#22d3ee',
+    border: 'rgba(124,58,237,0.1)',
+    glow: '0 12px 30px rgba(124,58,237,0.045), 0 0 14px rgba(236,72,153,0.03)',
+    heroBg: 'radial-gradient(circle at 12% 12%, rgba(236,72,153,0.045), transparent 32%), radial-gradient(circle at 72% 18%, rgba(34,211,238,0.045), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fffefe 54%, #fffafd 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fffefe 62%, #fffafd 100%)',
+    progress: 'linear-gradient(90deg, rgba(139,92,246,0.72) 0%, rgba(240,171,252,0.72) 54%, rgba(103,232,249,0.72) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(124,58,237,0.04), rgba(236,72,153,0.025), rgba(255,255,255,0.98))',
+  },
+  {
+    min: 35,
+    tier: 'Diamond',
+    title: 'Đấu sĩ năng suất',
+    color: '#0891b2',
+    soft: 'rgba(8,145,178,0.04)',
+    accent2: '#38bdf8',
+    accent3: '#67e8f9',
+    border: 'rgba(8,145,178,0.1)',
+    glow: '0 12px 30px rgba(14,165,233,0.045), 0 0 14px rgba(103,232,249,0.04)',
+    heroBg: 'radial-gradient(circle at 14% 12%, rgba(103,232,249,0.065), transparent 32%), radial-gradient(circle at 76% 18%, rgba(56,189,248,0.045), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fcfeff 54%, #f9fdff 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fcfeff 62%, #f9fdff 100%)',
+    progress: 'linear-gradient(90deg, rgba(8,145,178,0.7) 0%, rgba(125,211,252,0.72) 52%, rgba(207,250,254,0.86) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(8,145,178,0.04), rgba(103,232,249,0.035), rgba(255,255,255,0.98))',
+  },
+  {
+    min: 25,
+    tier: 'Platinum',
+    title: 'Cao thủ tập trung',
+    color: '#2563eb',
+    soft: 'rgba(37,99,235,0.04)',
+    accent2: '#60a5fa',
+    accent3: '#94a3b8',
+    border: 'rgba(37,99,235,0.1)',
+    glow: '0 12px 30px rgba(37,99,235,0.04), 0 0 14px rgba(148,163,184,0.035)',
+    heroBg: 'radial-gradient(circle at 14% 12%, rgba(96,165,250,0.055), transparent 33%), radial-gradient(circle at 76% 18%, rgba(148,163,184,0.045), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fcfeff 54%, #fafbfc 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fcfeff 62%, #fafbfc 100%)',
+    progress: 'linear-gradient(90deg, rgba(37,99,235,0.68) 0%, rgba(147,197,253,0.72) 52%, rgba(226,232,240,0.9) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(37,99,235,0.035), rgba(148,163,184,0.03), rgba(255,255,255,0.98))',
+  },
+  {
+    min: 15,
+    tier: 'Gold',
+    title: 'Chiến binh bền bỉ',
+    color: '#d97706',
+    soft: 'rgba(217,119,6,0.04)',
+    accent2: '#f59e0b',
+    accent3: '#facc15',
+    border: 'rgba(217,119,6,0.11)',
+    glow: '0 12px 30px rgba(217,119,6,0.045), 0 0 14px rgba(250,204,21,0.035)',
+    heroBg: 'radial-gradient(circle at 14% 12%, rgba(250,204,21,0.055), transparent 32%), radial-gradient(circle at 78% 16%, rgba(245,158,11,0.045), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fffefb 54%, #fffaf6 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fffefb 62%, #fffaf6 100%)',
+    progress: 'linear-gradient(90deg, rgba(217,119,6,0.7) 0%, rgba(251,191,36,0.72) 52%, rgba(253,230,138,0.86) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(217,119,6,0.04), rgba(250,204,21,0.03), rgba(255,255,255,0.98))',
+  },
+  {
+    min: 7,
+    tier: 'Silver',
+    title: 'Người tăng tốc',
+    color: '#64748b',
+    soft: 'rgba(100,116,139,0.04)',
+    accent2: '#94a3b8',
+    accent3: '#cbd5e1',
+    border: 'rgba(100,116,139,0.1)',
+    glow: '0 12px 28px rgba(100,116,139,0.04), 0 0 14px rgba(203,213,225,0.04)',
+    heroBg: 'radial-gradient(circle at 14% 12%, rgba(203,213,225,0.085), transparent 33%), radial-gradient(circle at 76% 18%, rgba(148,163,184,0.045), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fdfefe 54%, #fafbfc 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fdfefe 62%, #fafbfc 100%)',
+    progress: 'linear-gradient(90deg, rgba(100,116,139,0.66) 0%, rgba(203,213,225,0.74) 58%, rgba(241,245,249,0.95) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(100,116,139,0.035), rgba(203,213,225,0.045), rgba(255,255,255,0.98))',
+  },
+  {
+    min: 0,
+    tier: 'Bronze',
+    title: 'Tân binh tiềm năng',
+    color: '#b45309',
+    soft: 'rgba(180,83,9,0.04)',
+    accent2: '#d97706',
+    accent3: '#f97316',
+    border: 'rgba(180,83,9,0.1)',
+    glow: '0 12px 28px rgba(180,83,9,0.04), 0 0 12px rgba(249,115,22,0.025)',
+    heroBg: 'radial-gradient(circle at 14% 12%, rgba(249,115,22,0.05), transparent 32%), radial-gradient(circle at 78% 16%, rgba(217,119,6,0.035), transparent 30%), linear-gradient(135deg, #ffffff 0%, #fffefb 54%, #fffaf7 100%)',
+    cardBg: 'linear-gradient(145deg, #ffffff 0%, #fffefb 62%, #fffaf7 100%)',
+    progress: 'linear-gradient(90deg, rgba(180,83,9,0.68) 0%, rgba(245,158,11,0.72) 56%, rgba(254,215,170,0.9) 100%)',
+    badgeBg: 'linear-gradient(135deg, rgba(180,83,9,0.035), rgba(249,115,22,0.025), rgba(255,255,255,0.98))',
+  },
 ];
 
 const ANIMAL_ICON_SEQUENCE = [Cat, Rabbit, Squirrel, Bird, Fish, Turtle, Dog, Snail, Bug, Rat, Shell, PawPrint];
@@ -397,13 +481,9 @@ function VerifiedMark({ size = 20 }) {
 
 function DevPill() {
   return (
-    <span className="profile-dev-badge" title="Vật phẩm hiếm: Dev" aria-label="Vật phẩm hiếm: Dev">
-      <span className="profile-dev-wing is-left" aria-hidden="true" />
-      <span className="profile-dev-pill">
-        <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
-        <span className="profile-dev-label">Dev</span>
-      </span>
-      <span className="profile-dev-wing is-right" aria-hidden="true" />
+    <span className="profile-dev-pill" title="Vật phẩm hiếm: Dev" aria-label="Vật phẩm hiếm: Dev">
+      <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
+      <span className="profile-dev-label">Dev</span>
     </span>
   );
 }
@@ -744,8 +824,21 @@ export default function UserDetail() {
     </>
   );
 
+  const rankThemeStyle = {
+    '--rank-color': rank.color,
+    '--rank-soft': rank.soft,
+    '--rank-accent-2': rank.accent2,
+    '--rank-accent-3': rank.accent3,
+    '--rank-border': rank.border,
+    '--rank-glow': rank.glow,
+    '--rank-hero-bg': rank.heroBg,
+    '--rank-card-bg': rank.cardBg,
+    '--rank-progress': rank.progress,
+    '--rank-badge-bg': rank.badgeBg,
+  };
+
   return (
-    <div className="profile-page" style={{ '--rank-color': rank.color, '--rank-soft': rank.soft }}>
+    <div className="profile-page" style={rankThemeStyle}>
       <button type="button" className="profile-back-button" onClick={() => navigate(-1)} style={{ marginBottom: 4 }}>
         <ChevronLeft size={15} strokeWidth={2.5} />
         Quay lại
@@ -791,7 +884,7 @@ export default function UserDetail() {
               {isVerified && <VerifiedMark size={23} />}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: '#64748b', fontWeight: 600, marginBottom: 14 }}>
-              <span style={{ color: rank.color }}>{rank.title}</span>
+              <span className="profile-rank-title">{rank.title}</span>
               <span style={{ opacity: 0.3 }}>|</span>
               <span>ID: WR-{String(user.id || id).padStart(4, '0')}</span>
             </div>
@@ -841,11 +934,7 @@ export default function UserDetail() {
       </section>
 
       {/* ── THÔNG TIN ĐƯỢC ĐẨY XUỐNG DƯỚI ── */}
-      <section style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        padding: 24, background: '#ffffff', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)',
-        boxShadow: '0 4px 20px rgba(15,23,42,0.03)', gap: 24, marginBottom: 16
-      }}>
+      <section className="profile-summary-card">
         <div className="profile-name-block">
           <div className="profile-chip-row" style={{ marginTop: 0 }}>
             <span className="profile-title-chip"><BadgeCheck size={13} /> {unlockedBadges}/{badges.length} danh hiệu</span>
