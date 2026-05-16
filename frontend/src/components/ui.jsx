@@ -7,8 +7,8 @@ export function Card({ children, style, ...props }) {
       style={{
         background: '#ffffff',
         border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 8,
-        boxShadow: '0 4px 24px rgba(15,23,42,0.08)',
+        borderRadius: 0,
+        boxShadow: 'none',
         ...style,
       }}
       {...props}
@@ -21,7 +21,7 @@ export function Card({ children, style, ...props }) {
 export function EmptyState({ icon: Icon = Inbox, title, description, action }) {
   return (
     <div style={{ textAlign: 'center', padding: '44px 24px', color: '#94a3b8' }}>
-      <Icon size={40} color="#3b82f6" style={{ marginBottom: 14 }} />
+      <Icon size={40} color="#38bdf8" style={{ marginBottom: 14 }} />
       <h2 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: 18, fontWeight: 800 }}>{title}</h2>
       {description && <p style={{ margin: '0 auto 18px', maxWidth: 420, fontSize: 13, lineHeight: 1.5 }}>{description}</p>}
       {action}
@@ -38,8 +38,8 @@ export function PageState({ type = 'loading', title, description, onRetry }) {
           <div style={{
             width: 24,
             height: 24,
-            border: '3px solid rgba(59,130,246,0.2)',
-            borderTopColor: '#3b82f6',
+            border: '3px solid rgba(56,189,248,0.2)',
+            borderTopColor: '#38bdf8',
             borderRadius: '50%',
             margin: '0 auto 14px',
             animation: 'spin 0.8s linear infinite',
@@ -55,10 +55,10 @@ export function PageState({ type = 'loading', title, description, onRetry }) {
             onClick={onRetry}
             style={{
               marginTop: 14,
-              border: '1px solid rgba(59,130,246,0.3)',
-              background: 'rgba(59,130,246,0.1)',
-              color: '#3b82f6',
-              borderRadius: 6,
+              border: '1px solid rgba(56,189,248,0.3)',
+              background: 'rgba(56,189,248,0.1)',
+              color: '#38bdf8',
+              borderRadius: 0,
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: 13,
@@ -83,7 +83,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel }) {
         display: 'flex',
         background: 'rgba(15,23,42,0.04)',
         border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 6,
+        borderRadius: 0,
         padding: 3,
         gap: 2,
       }}
@@ -97,12 +97,12 @@ export function SegmentedControl({ options, value, onChange, ariaLabel }) {
             onClick={() => onChange(option.key)}
             style={{
               padding: '7px 14px',
-              borderRadius: 5,
+              borderRadius: 0,
               border: 'none',
               cursor: 'pointer',
               fontSize: 12,
               fontWeight: 700,
-              background: active ? '#3b82f6' : 'transparent',
+              background: active ? '#38bdf8' : 'transparent',
               color: active ? '#ffffff' : '#94a3b8',
               whiteSpace: 'nowrap',
             }}

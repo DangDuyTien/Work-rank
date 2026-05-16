@@ -27,7 +27,7 @@ export default function UserActivityChart({ chartData, chartTickInterval }) {
         <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} interval={chartTickInterval} minTickGap={28} />
         <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
         <Tooltip
-          contentStyle={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 6, fontSize: 12, color: '#1e293b' }}
+          contentStyle={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 0, fontSize: 12, color: '#1e293b' }}
           cursor={{ stroke: 'rgba(15,23,42,0.1)', strokeWidth: 1 }}
         />
         <Area type="monotone" dataKey="keystrokes" stroke="#0891b2" strokeWidth={2} fill="url(#gk)" name="Gõ phím" dot={false} />

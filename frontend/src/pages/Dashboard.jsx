@@ -24,7 +24,7 @@ function isVerifiedUser(user) {
 
 const STATUS_CONFIG = {
   active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.35)', color: '#16a34a', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.35)', color: '#2563eb', dot: '#3b82f6' },
+  online: { label: 'Trực tuyến', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.35)', color: '#38bdf8', dot: '#38bdf8' },
   idle: { label: 'Không hoạt động', bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.35)', color: '#ca8a04', dot: '#eab308' },
   offline: { label: 'Ngoại tuyến', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.25)', color: '#64748b', dot: '#94a3b8' },
 };
@@ -319,8 +319,8 @@ export default function Dashboard() {
       delta: buildDelta(totals.online, prevTotals?.online),
       note: `${activeUsers.toLocaleString()} người có tín hiệu hiện tại`,
       icon: Users,
-      color: '#2563eb',
-      iconBg: 'rgba(37,99,235,0.1)',
+      color: '#38bdf8',
+      iconBg: 'rgba(56,189,248,0.1)',
     },
     {
       label: 'Thời gian active',

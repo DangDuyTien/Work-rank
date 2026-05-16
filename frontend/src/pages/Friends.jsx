@@ -21,14 +21,14 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 
 const STATUS_META = {
   active: { label: 'Đang hoạt động', color: '#16a34a', bg: 'rgba(22,163,74,0.1)', border: 'rgba(22,163,74,0.28)', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', color: '#2563eb', bg: 'rgba(37,99,235,0.1)', border: 'rgba(37,99,235,0.25)', dot: '#3b82f6' },
+  online: { label: 'Trực tuyến', color: '#38bdf8', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.25)', dot: '#38bdf8' },
   idle: { label: 'Tạm nghỉ', color: '#ca8a04', bg: 'rgba(234,179,8,0.13)', border: 'rgba(234,179,8,0.3)', dot: '#eab308' },
   offline: { label: 'Ngoại tuyến', color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.22)', dot: '#94a3b8' },
 };
 
 const BUTTON_BASE = {
   minHeight: 34,
-  borderRadius: 6,
+  borderRadius: 0,
   border: '1px solid transparent',
   padding: '0 12px',
   cursor: 'pointer',
@@ -65,9 +65,9 @@ function Avatar({ user, size = 42 }) {
     <div style={{
       width: size,
       height: size,
-      borderRadius: 8,
+      borderRadius: 0,
       overflow: 'hidden',
-      background: 'linear-gradient(135deg,#2563eb,#0891b2)',
+      background: '#38bdf8',
       color: '#ffffff',
       display: 'flex',
       alignItems: 'center',
@@ -90,7 +90,7 @@ function PresencePill({ status }) {
       alignItems: 'center',
       gap: 6,
       minHeight: 24,
-      borderRadius: 999,
+      borderRadius: 0,
       border: `1px solid ${meta.border}`,
       background: meta.bg,
       color: meta.color,
@@ -129,7 +129,7 @@ function FriendCard({ item, busy, onRemove, onOpen }) {
   return (
     <article style={{
       border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 8,
+      borderRadius: 0,
       padding: 14,
       display: 'grid',
       gap: 12,
@@ -143,7 +143,7 @@ function FriendCard({ item, busy, onRemove, onOpen }) {
         <button
           type="button"
           onClick={() => onOpen(user)}
-          style={{ ...BUTTON_BASE, borderColor: 'rgba(37,99,235,0.18)', background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}
+          style={{ ...BUTTON_BASE, borderColor: 'rgba(56,189,248,0.18)', background: 'rgba(56,189,248,0.08)', color: '#38bdf8' }}
         >
           <Eye size={14} />
           Hồ sơ
@@ -167,7 +167,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
   return (
     <div style={{
       border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 8,
+      borderRadius: 0,
       padding: 12,
       display: 'flex',
       alignItems: 'center',
@@ -240,7 +240,7 @@ function SearchResult({ user, state, busy, onSend, onAcceptIncoming, onOpen }) {
   return (
     <div style={{
       border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 8,
+      borderRadius: 0,
       padding: 12,
       display: 'flex',
       alignItems: 'center',
@@ -265,8 +265,8 @@ function SearchResult({ user, state, busy, onSend, onAcceptIncoming, onOpen }) {
           style={{
             ...BUTTON_BASE,
             minHeight: 32,
-            borderColor: disabled ? 'rgba(15,23,42,0.1)' : 'rgba(37,99,235,0.24)',
-            background: disabled ? '#f8fafc' : '#2563eb',
+            borderColor: disabled ? 'rgba(15,23,42,0.1)' : 'rgba(56,189,248,0.24)',
+            background: disabled ? '#f8fafc' : '#38bdf8',
             color: disabled ? '#94a3b8' : '#ffffff',
             opacity: busy ? 0.65 : 1,
           }}
@@ -487,7 +487,7 @@ export default function Friends() {
         }}
       >
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 999, background: 'rgba(37,99,235,0.08)', color: '#2563eb', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 0, background: 'rgba(56,189,248,0.08)', color: '#38bdf8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
             <Users size={14} />
             Kết nối cá nhân
           </div>
@@ -518,12 +518,12 @@ export default function Friends() {
 
       <section className="friends-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
         {[
-          ['Bạn bè', friendRows.length, '#2563eb'],
+          ['Bạn bè', friendRows.length, '#38bdf8'],
           ['Đang online', onlineCount, '#16a34a'],
           ['Lời mời đến', incoming.length, '#d97706'],
           ['Đã gửi', outgoing.length, '#64748b'],
         ].map(([label, value, color]) => (
-          <Card key={label} style={{ padding: 14, boxShadow: '0 10px 28px rgba(15,23,42,0.045)' }}>
+          <Card key={label} style={{ padding: 14, boxShadow: 'none' }}>
             <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 900, textTransform: 'uppercase' }}>{label}</div>
             <strong style={{ display: 'block', color, fontSize: 24, marginTop: 4 }}>{Number(value).toLocaleString()}</strong>
           </Card>
@@ -571,7 +571,7 @@ export default function Friends() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Nhập tên, email hoặc WR-0001..."
-                style={{ width: '100%', minHeight: 40, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 6, padding: '0 12px 0 36px', outline: 'none', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
+                style={{ width: '100%', minHeight: 40, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, padding: '0 12px 0 36px', outline: 'none', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
               />
             </div>
 
@@ -608,7 +608,7 @@ export default function Friends() {
             <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 17, fontWeight: 900 }}>Lời mời kết bạn</h2>
             <div style={{ display: 'grid', gap: 10 }}>
               {incoming.length === 0 ? (
-                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 8, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 0, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
                   Chưa có lời mời mới.
                 </div>
               ) : incoming.map((row) => (
@@ -629,7 +629,7 @@ export default function Friends() {
             <h3 style={{ margin: '0 0 10px', color: '#475569', fontSize: 13, fontWeight: 900 }}>Đã gửi</h3>
             <div style={{ display: 'grid', gap: 10 }}>
               {outgoing.length === 0 ? (
-                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 8, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 0, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
                   Không có lời mời đang chờ.
                 </div>
               ) : outgoing.map((row) => (

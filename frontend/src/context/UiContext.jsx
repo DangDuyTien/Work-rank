@@ -14,7 +14,7 @@ const TOAST_COLOR = {
   success: '#16a34a',
   error: '#dc2626',
   warning: '#d97706',
-  info: '#2563eb',
+  info: '#38bdf8',
 };
 
 export function UiProvider({ children }) {
@@ -89,8 +89,8 @@ export function UiProvider({ children }) {
                 background: '#ffffff',
                 border: '1px solid rgba(15,23,42,0.12)',
                 borderLeft: `4px solid ${color}`,
-                borderRadius: 8,
-                boxShadow: '0 18px 42px rgba(15,23,42,0.18)',
+                borderRadius: 0,
+                boxShadow: 'none',
                 padding: '12px 12px',
               }}
             >
@@ -145,8 +145,8 @@ export function UiProvider({ children }) {
               maxWidth: 420,
               background: '#ffffff',
               border: '1px solid rgba(15,23,42,0.12)',
-              borderRadius: 8,
-              boxShadow: '0 24px 70px rgba(15,23,42,0.24)',
+              borderRadius: 0,
+              boxShadow: 'none',
               padding: 20,
             }}
           >
@@ -154,12 +154,12 @@ export function UiProvider({ children }) {
               <div style={{
                 width: 34,
                 height: 34,
-                borderRadius: 8,
+                borderRadius: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: confirmState.tone === 'danger' ? 'rgba(220,38,38,0.1)' : 'rgba(37,99,235,0.1)',
-                color: confirmState.tone === 'danger' ? '#dc2626' : '#2563eb',
+                background: confirmState.tone === 'danger' ? 'rgba(220,38,38,0.1)' : 'rgba(56,189,248,0.1)',
+                color: confirmState.tone === 'danger' ? '#dc2626' : '#38bdf8',
                 flexShrink: 0,
               }}>
                 <AlertTriangle size={18} />
@@ -196,7 +196,7 @@ export function UiProvider({ children }) {
                 onClick={() => closeConfirm(true)}
                 style={{
                   border: 'none',
-                  background: confirmState.tone === 'danger' ? '#dc2626' : '#2563eb',
+                  background: confirmState.tone === 'danger' ? '#dc2626' : '#38bdf8',
                   color: '#ffffff',
                   borderRadius: 6,
                   padding: '9px 14px',

@@ -75,7 +75,7 @@ function notificationTone(type) {
   if (type === 'danger') return { dot: '#dc2626', bg: 'rgba(220,38,38,0.08)' };
   if (type === 'success' || type === 'pomodoro') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
   if (type === 'contest') return { dot: '#d97706', bg: 'rgba(217,119,6,0.1)' };
-  return { dot: '#2563eb', bg: 'rgba(37,99,235,0.08)' };
+  return { dot: '#38bdf8', bg: 'rgba(56,189,248,0.08)' };
 }
 
 function isVerifiedAccount(user) {
@@ -315,7 +315,7 @@ export default function Layout() {
       height: '100vh',
       background: '#f8fafc',
       color: '#0f172a',
-      fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
+      fontFamily: "'JetBrains Mono', monospace",
       overflow: 'hidden',
     }}>
       <style>{`
@@ -335,8 +335,8 @@ export default function Layout() {
           background: '#ffffff',
           border: '1px solid rgba(220,38,38,0.28)',
           borderLeft: '4px solid #dc2626',
-          borderRadius: 8,
-          boxShadow: '0 18px 42px rgba(15,23,42,0.18)',
+          borderRadius: 0,
+          boxShadow: 'none',
           padding: '14px 16px',
         }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#991b1b', marginBottom: 4 }}>
@@ -353,7 +353,7 @@ export default function Layout() {
               border: '1px solid rgba(220,38,38,0.22)',
               background: 'rgba(220,38,38,0.06)',
               color: '#b91c1c',
-              borderRadius: 6,
+              borderRadius: 0,
               padding: '6px 10px',
               fontSize: 12,
               fontWeight: 800,
@@ -394,7 +394,7 @@ export default function Layout() {
           style={{
             fontSize: 13,
             fontWeight: 700,
-            color: '#3b82f6',
+            color: '#38bdf8',
             marginRight: 24,
             letterSpacing: '-0.2px',
             flexShrink: 0,
@@ -435,10 +435,10 @@ export default function Layout() {
                   minWidth: to === '/friends' ? 74 : 'auto',
                   fontSize: 13,
                   fontWeight: active ? 700 : 500,
-                  color: active ? '#2563eb' : '#64748b',
+                  color: active ? '#38bdf8' : '#64748b',
                   textDecoration: 'none',
-                  borderRadius: 5,
-                  background: active ? 'rgba(37,99,235,0.08)' : 'transparent',
+                  borderRadius: 0,
+                  background: active ? 'rgba(56,189,248,0.08)' : 'transparent',
                   border: '1px solid transparent',
                   position: 'relative',
                   display: 'inline-flex',
@@ -461,10 +461,10 @@ export default function Layout() {
               padding: '6px 14px',
               fontSize: 13,
               fontWeight: location.pathname.startsWith('/users') ? 700 : 500,
-              color: location.pathname.startsWith('/users') ? '#2563eb' : '#64748b',
+              color: location.pathname.startsWith('/users') ? '#38bdf8' : '#64748b',
               textDecoration: 'none',
-              borderRadius: 5,
-              background: location.pathname.startsWith('/users') ? 'rgba(37,99,235,0.08)' : 'transparent',
+              borderRadius: 0,
+              background: location.pathname.startsWith('/users') ? 'rgba(56,189,248,0.08)' : 'transparent',
               border: '1px solid transparent',
               display: 'inline-flex',
               alignItems: 'center',
@@ -490,7 +490,7 @@ export default function Layout() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '5px 12px',
-                borderRadius: 5,
+                borderRadius: 0,
                 background: 'rgba(34,197,94,0.1)',
                 border: '1px solid rgba(34,197,94,0.3)',
                 cursor: 'pointer',
@@ -516,14 +516,14 @@ export default function Layout() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '6px 14px',
-                borderRadius: 5,
-                background: 'linear-gradient(135deg,#3b82f6,#2563eb)',
+                borderRadius: 0,
+                background: '#38bdf8',
                 border: 'none',
                 cursor: trackingPending ? 'wait' : 'pointer',
                 color: '#fff',
                 fontSize: 12,
                 fontWeight: 700,
-                boxShadow: '0 2px 10px rgba(59,130,246,0.3)',
+                boxShadow: 'none',
                 marginRight: 6,
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
@@ -552,11 +552,11 @@ export default function Layout() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: notifOpen ? 'rgba(37,99,235,0.08)' : 'none',
+                background: notifOpen ? 'rgba(56,189,248,0.08)' : 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: notifOpen ? '#2563eb' : '#64748b',
-                borderRadius: 5,
+                color: notifOpen ? '#38bdf8' : '#64748b',
+                borderRadius: 0,
               }}
             >
               <Bell size={17} />
@@ -568,7 +568,7 @@ export default function Layout() {
                   minWidth: 15,
                   height: 15,
                   padding: '0 4px',
-                  borderRadius: 999,
+                  borderRadius: 0,
                   background: '#ef4444',
                   color: '#ffffff',
                   border: '2px solid #ffffff',
@@ -591,9 +591,9 @@ export default function Layout() {
                 maxWidth: 'calc(100vw - 24px)',
                 background: '#ffffff',
                 border: '1px solid rgba(15,23,42,0.12)',
-                borderRadius: 8,
+                borderRadius: 0,
                 overflow: 'hidden',
-                boxShadow: '0 18px 48px rgba(15,23,42,0.18)',
+                boxShadow: 'none',
                 animation: 'slide-down 0.15s ease',
                 zIndex: 220,
               }}>
@@ -618,7 +618,7 @@ export default function Layout() {
                         border: '1px solid rgba(15,23,42,0.1)',
                         background: '#f8fafc',
                         color: '#64748b',
-                        borderRadius: 5,
+                        borderRadius: 0,
                         padding: '5px 8px',
                         cursor: 'pointer',
                         fontSize: 11,
@@ -653,16 +653,16 @@ export default function Layout() {
                           padding: '12px 14px',
                           border: 'none',
                           borderBottom: '1px solid rgba(15,23,42,0.06)',
-                          background: notification.read ? '#ffffff' : 'rgba(37,99,235,0.035)',
+                          background: notification.read ? '#ffffff' : 'rgba(56,189,248,0.035)',
                           cursor: notification.actionTo ? 'pointer' : 'default',
                           textAlign: 'left',
-                          fontFamily: "'Space Grotesk',sans-serif",
+                          fontFamily: "'JetBrains Mono',monospace",
                         }}
                       >
                         <span style={{
                           width: 26,
                           height: 26,
-                          borderRadius: 6,
+                          borderRadius: 0,
                           background: tone.bg,
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -685,7 +685,7 @@ export default function Layout() {
                             {notification.message}
                           </span>
                           {notification.actionTo && (
-                            <span style={{ display: 'block', marginTop: 6, color: '#2563eb', fontSize: 11, fontWeight: 900 }}>
+                            <span style={{ display: 'block', marginTop: 6, color: '#38bdf8', fontSize: 11, fontWeight: 900 }}>
                               {notification.actionLabel || 'Mở'}
                             </span>
                           )}
@@ -703,7 +703,7 @@ export default function Layout() {
             className="app-icon-action"
             aria-label="Mời Cà Phê"
             onClick={() => setDonateOpen(true)}
-            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', borderRadius: 5, transition: 'transform 0.15s ease' }}
+            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', borderRadius: 0, transition: 'transform 0.15s ease' }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'none'}
             title="Ủng hộ Dev 1 ly cà phê"
@@ -722,11 +722,11 @@ export default function Layout() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: location.pathname === '/settings' ? 'rgba(37,99,235,0.08)' : 'none',
+              background: location.pathname === '/settings' ? 'rgba(56,189,248,0.08)' : 'none',
               border: 'none',
               cursor: 'pointer',
-              color: location.pathname === '/settings' ? '#2563eb' : '#64748b',
-              borderRadius: 5,
+              color: location.pathname === '/settings' ? '#38bdf8' : '#64748b',
+              borderRadius: 0,
             }}
           >
             <Settings size={17} />
@@ -740,10 +740,10 @@ export default function Layout() {
               style={{
                 width: 32,
                 height: 32,
-                borderRadius: 6,
+                borderRadius: 0,
                 position: 'relative',
-                background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
-                border: '2px solid rgba(59,130,246,0.4)',
+                background: '#38bdf8',
+                border: '2px solid rgba(56,189,248,0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -757,7 +757,7 @@ export default function Layout() {
                 <img
                   src={accountAvatarUrl}
                   alt="Ảnh đại diện"
-                  style={{ width: '100%', height: '100%', borderRadius: 4, objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', borderRadius: 0, objectFit: 'cover' }}
                   onError={() => {
                     removeStoredAvatar(user?.id);
                     setAccountAvatarUrl('');
@@ -780,9 +780,9 @@ export default function Layout() {
                 width: 180,
                 background: '#ffffff',
                 border: '1px solid rgba(15,23,42,0.12)',
-                borderRadius: 6,
+                borderRadius: 0,
                 overflow: 'hidden',
-                boxShadow: '0 16px 40px rgba(15,23,42,0.18)',
+                boxShadow: 'none',
                 animation: 'slide-down 0.15s ease',
                 zIndex: 200,
               }}>
@@ -790,7 +790,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={() => { void stopTrack(); setDropOpen(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', borderBottom: '1px solid rgba(15,23,42,0.08)', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', borderBottom: '1px solid rgba(15,23,42,0.08)', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", textAlign: 'left' }}
                   >
                     <Square size={10} fill="currentColor" strokeWidth={0} />
                     Dừng Theo Dõi
@@ -799,7 +799,7 @@ export default function Layout() {
                 <button
                   type="button"
                   onClick={() => { void logout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 13, fontWeight: 600, fontFamily: "'JetBrains Mono',monospace", textAlign: 'left' }}
                 >
                   <LogOut size={14} />
                   Đăng xuất
@@ -841,7 +841,7 @@ export default function Layout() {
         >
           <span>© 2024 WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#3b82f6', textDecoration: 'none', fontWeight: 800 }}>
+            <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8', textDecoration: 'none', fontWeight: 800 }}>
               <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
@@ -868,8 +868,8 @@ export default function Layout() {
               onClick={(event) => goToNav(event, to)}
               className="mobile-bottom-link"
               style={{
-                color: active ? '#2563eb' : '#64748b',
-                background: active ? 'rgba(37,99,235,0.08)' : 'transparent',
+                color: active ? '#38bdf8' : '#64748b',
+                background: active ? 'rgba(56,189,248,0.08)' : 'transparent',
               }}
             >
               <Icon size={18} strokeWidth={2.2} />
@@ -884,19 +884,18 @@ export default function Layout() {
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9999,
           background: 'rgba(15,23,42,0.6)',
-          backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 20,
         }} onClick={() => setDonateOpen(false)}>
           <div style={{
             background: '#ffffff',
-            borderRadius: 16,
+            borderRadius: 0,
             width: 400,
             maxWidth: '100%',
             overflow: 'hidden',
-            boxShadow: '0 24px 80px rgba(15,23,42,0.2)',
+            boxShadow: 'none',
             animation: 'slide-down 0.2s ease',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'JetBrains Mono', monospace",
           }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: '24px 24px 16px', textAlign: 'center' }}>
               <div style={{ width: 56, height: 56, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
@@ -909,14 +908,14 @@ export default function Layout() {
             </div>
             
             <div style={{ padding: '0 24px 24px' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: 16, textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 0, padding: 16, textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 8 }}>Quét mã Momo / VNPay</div>
-                <div style={{ width: 140, height: 140, background: '#e2e8f0', margin: '0 auto', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 12 }}>
+                <div style={{ width: 140, height: 140, background: '#e2e8f0', margin: '0 auto', borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 12 }}>
                   [Hình QR Code]
                 </div>
               </div>
               
-              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(99,102,241,0.1))', padding: 16, borderRadius: 12, border: '1px solid rgba(59,130,246,0.2)' }}>
+              <div style={{ background: 'rgba(56,189,248,0.08)', padding: 16, borderRadius: 0, border: '1px solid rgba(56,189,248,0.2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <VerifiedBadge size={18} />
                   <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>Đặc quyền Supporter</span>
@@ -933,10 +932,10 @@ export default function Layout() {
                   rel="noopener noreferrer" 
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '10px 20px', borderRadius: 999,
+                    padding: '10px 20px', borderRadius: 0,
                     background: '#1877F2', color: '#fff', 
                     fontSize: 14, fontWeight: 800, textDecoration: 'none',
-                    boxShadow: '0 4px 12px rgba(24,119,242,0.3)',
+                    boxShadow: 'none',
                     transition: 'transform 0.2s'
                   }}
                   onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}

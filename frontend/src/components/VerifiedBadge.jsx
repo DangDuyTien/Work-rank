@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function VerifiedBadge({ size = 16, color = '#0064e0', className = '', style = {} }) {
+export default function VerifiedBadge({ size = 16, color = '#38bdf8', className = '', style = {} }) {
   // Tạo hình sao với nhiều nếp cứa và nhọn hơn
   const numSpikes = 14;
   const outerRadius = 11.6;

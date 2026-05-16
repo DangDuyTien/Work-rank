@@ -4,7 +4,7 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 
 const statusColors = {
   active: 'bg-green-500',
-  online: 'bg-blue-500',
+  online: 'bg-sky-400',
   idle: 'bg-yellow-500',
   offline: 'bg-gray-500',
 };
@@ -18,7 +18,7 @@ export default function UserRow({ user, formatDuration, showRank }) {
   return (
     <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50" onClick={() => navigate(`/users/${user.user_id}`)}>
       <td className="px-6 py-4 flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold text-white">
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-sky-400 text-sm font-bold text-white">
           {avatarUrl ? (
             <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${userId}`}`} className="h-full w-full object-cover" />
           ) : initialsFromName(user.name || `User #${userId}`)}
@@ -35,7 +35,7 @@ export default function UserRow({ user, formatDuration, showRank }) {
       <td className="px-6 py-4 text-right font-mono text-slate-800">{Number(user.mouse_clicks || user.total_mouse_clicks || 0).toLocaleString()}</td>
       <td className="px-6 py-4 text-right font-mono text-slate-800">{formatDuration(user.active_seconds || user.total_active_seconds || 0)}</td>
       <td className="px-6 py-4 text-right">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 font-bold text-blue-700">
+        <span className="inline-flex h-8 w-8 items-center justify-center bg-sky-50 font-bold text-sky-600">
           {user.score || 0}
         </span>
       </td>

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 import { EmptyState, PageState, SegmentedControl } from '../components/ui';
 
-const card = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 10, padding: 18, boxShadow: '0 4px 24px rgba(15,23,42,0.08)' };
+const card = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 0, padding: 18, boxShadow: 'none' };
 const muted = { color: '#94a3b8', fontSize: 12, fontWeight: 600 };
 const value = { color: '#0f172a', fontSize: 28, fontWeight: 800, marginTop: 8 };
 const DAY_FILTERS = [
@@ -257,7 +257,7 @@ export default function Security() {
         <div style={{
           ...card,
           borderColor: 'rgba(239,68,68,0.3)',
-          background: 'linear-gradient(90deg, rgba(254,242,242,0.9), #ffffff)',
+          background: 'rgba(254,242,242,0.9)',
         }}>
           <div style={{ color: '#ef4444', fontWeight: 900, fontSize: 14, marginBottom: 6 }}>Thiết bị vừa bị khóa tự động</div>
           <div style={{ color: '#1e293b', fontSize: 13, lineHeight: 1.5 }}>
@@ -270,10 +270,10 @@ export default function Security() {
         <section className="security-section" style={{
           borderColor: isClean ? 'rgba(34,197,94,0.24)' : hasWarnings ? 'rgba(245,158,11,0.24)' : 'rgba(239,68,68,0.24)',
           background: isClean
-            ? 'linear-gradient(90deg, rgba(240,253,244,0.95), #ffffff)'
+            ? 'rgba(240,253,244,0.95)'
             : hasWarnings
-              ? 'linear-gradient(90deg, rgba(255,251,235,0.95), #ffffff)'
-              : 'linear-gradient(90deg, rgba(254,242,242,0.95), #ffffff)',
+              ? 'rgba(255,251,235,0.95)'
+              : 'rgba(254,242,242,0.95)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{
@@ -281,7 +281,7 @@ export default function Security() {
               height: 10,
               borderRadius: '50%',
               background: isClean ? '#22c55e' : hasWarnings ? '#f59e0b' : '#ef4444',
-              boxShadow: isClean ? '0 0 12px rgba(34,197,94,0.45)' : 'none',
+boxShadow: 'none',
               flexShrink: 0,
             }} />
             <div>
@@ -327,8 +327,8 @@ export default function Security() {
               Có dấu hiệu lệch chuẩn nhưng chưa đủ mạnh để loại điểm. Nếu lặp lại nhiều lần trên cùng user/device thì mới cần xử lý.
             </p>
           </div>
-          <div style={{ ...card, borderColor: 'rgba(37,99,235,0.16)', background: 'rgba(37,99,235,0.05)' }}>
-            <div style={{ color: '#2563eb', fontWeight: 900, fontSize: 14 }}>Admin nên check gì?</div>
+          <div style={{ ...card, borderColor: 'rgba(56,189,248,0.16)', background: 'rgba(56,189,248,0.05)' }}>
+            <div style={{ color: '#38bdf8', fontWeight: 900, fontSize: 14 }}>Admin nên check gì?</div>
             <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 13, lineHeight: 1.5 }}>
               Xem user, thiết bị, thời gian, dấu hiệu chính và số gõ/click. Với lỗi chữ ký/sequence/session thì ưu tiên cài lại hoặc pair lại app.
             </p>
@@ -371,7 +371,7 @@ export default function Security() {
                           background: device.revokedAt ? '#16a34a' : '#dc2626',
                           color: '#fff',
                           border: 'none',
-                          borderRadius: 6,
+                          borderRadius: 0,
                           padding: '8px 10px',
                           cursor: pendingDeviceId === device.id ? 'wait' : 'pointer',
                           fontWeight: 800,
@@ -405,7 +405,7 @@ export default function Security() {
             <button
               type="button"
               onClick={load}
-              style={{ border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 800 }}
+              style={{ border: '1px solid rgba(56,189,248,0.3)', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', borderRadius: 0, padding: '8px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 800 }}
             >
               Làm mới
             </button>
@@ -427,7 +427,7 @@ export default function Security() {
                   style={{
                     border: `1px solid ${meta.border}`,
                     background: severity === 'red' ? 'rgba(254,242,242,0.55)' : 'rgba(255,251,235,0.55)',
-                    borderRadius: 8,
+                    borderRadius: 0,
                     padding: 14,
                   }}
                 >
@@ -439,7 +439,7 @@ export default function Security() {
                           alignItems: 'center',
                           height: 24,
                           padding: '0 8px',
-                          borderRadius: 999,
+                          borderRadius: 0,
                           background: meta.bg,
                           color: meta.color,
                           fontSize: 11,
@@ -461,7 +461,7 @@ export default function Security() {
                         {(event.flags || []).map((flag) => (
                           <span key={flag} title={flag} style={{
                             padding: '4px 7px',
-                            borderRadius: 999,
+                            borderRadius: 0,
                             background: '#ffffff',
                             border: '1px solid rgba(15,23,42,0.08)',
                             color: '#64748b',

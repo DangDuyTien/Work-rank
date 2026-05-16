@@ -128,11 +128,11 @@ export default function Tracker() {
       <div className="tracker-card" style={{
         width: 320,
         background: '#ffffff',
-        borderRadius: 8,
+        borderRadius: 0,
         border: '1px solid rgba(15,23,42,0.08)',
-        boxShadow: '0 18px 50px rgba(15,23,42,0.07)',
+        boxShadow: 'none',
         overflow: 'hidden',
-        fontFamily: "'Space Grotesk', -apple-system, system-ui, sans-serif",
+        fontFamily: "'JetBrains Mono', monospace",
         color: '#0f172a',
       }}>
 
@@ -151,7 +151,7 @@ export default function Tracker() {
           </div>
           <span style={{
             padding: '4px 8px',
-            borderRadius: 5,
+            borderRadius: 0,
             background: connected ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
             color: connected ? '#16a34a' : '#dc2626',
             fontSize: 10,
@@ -168,10 +168,10 @@ export default function Tracker() {
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 16px',
           background: desktopOnline && tracking
-            ? 'linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))'
+            ? 'rgba(34,197,94,0.08)'
             : desktopOnline
-            ? 'linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))'
-            : 'linear-gradient(90deg, rgba(15,23,42,0.06), rgba(255,255,255,0.02))',
+            ? 'rgba(245,158,11,0.08)'
+            : 'rgba(15,23,42,0.03)',
           borderBottom: '1px solid rgba(15,23,42,0.04)',
         }}>
           <span style={{ color: desktopOnline && tracking ? '#22c55e' : desktopOnline ? '#f59e0b' : '#6b7280', display: 'flex' }}>
@@ -211,10 +211,10 @@ export default function Tracker() {
                 flexShrink: 0,
                 height: 24,
                 padding: '0 10px',
-                borderRadius: 6,
-                border: '1px solid rgba(59,130,246,0.5)',
-                background: 'rgba(59,130,246,0.14)',
-                color: '#2563eb',
+                borderRadius: 0,
+                border: '1px solid rgba(56,189,248,0.5)',
+                background: 'rgba(56,189,248,0.14)',
+                color: '#38bdf8',
                 fontSize: 11,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -233,8 +233,8 @@ export default function Tracker() {
             <div style={{ position: 'relative', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {tracking && (
                 <div style={{
-                  position: 'absolute', inset: -6, borderRadius: 12,
-                  background: 'rgba(59,130,246,0.15)',
+                  position: 'absolute', inset: -6, borderRadius: 0,
+                  background: 'rgba(56,189,248,0.15)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
               )}
@@ -254,15 +254,13 @@ export default function Tracker() {
                 }}
                 disabled={trackingPending}
                 style={{
-                  width: 112, height: 112, borderRadius: 12, border: 'none',
+                  width: 112, height: 112, borderRadius: 0, border: 'none',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: tracking
-                    ? 'linear-gradient(145deg, #3b82f6, #2563eb)'
-                    : 'linear-gradient(145deg, #ffffff, #ffffff)',
-                  boxShadow: tracking
-                    ? '0 8px 32px rgba(59,130,246,0.45), inset 0 1px 0 rgba(15,23,42,0.12)'
-                    : '0 4px 16px rgba(15,23,42,0.08), inset 0 1px 0 rgba(15,23,42,0.04)',
-                  color: tracking ? '#ffffff' : '#3b82f6',
+                    ? '#38bdf8'
+                    : '#ffffff',
+                  boxShadow: 'none',
+                  color: tracking ? '#ffffff' : '#38bdf8',
                   opacity: trackingPending ? 0.72 : 1,
                   cursor: trackingPending ? 'wait' : 'pointer',
                   transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -281,7 +279,7 @@ export default function Tracker() {
                 {tracking ? <StopIcon /> : <PlayIcon />}
                 <span style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: tracking ? 'rgba(255,255,255,0.92)' : '#2563eb',
+                  color: tracking ? 'rgba(255,255,255,0.92)' : '#38bdf8',
                 }}>
                   {mainActionLabel}
                 </span>
@@ -293,7 +291,7 @@ export default function Tracker() {
               <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4, letterSpacing: '0.05em' }}>Phiên từ Desktop</div>
               <div style={{
                 fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
-                letterSpacing: '0.04em', color: tracking ? '#3b82f6' : '#6b7280', transition: 'color 0.3s',
+                letterSpacing: '0.04em', color: tracking ? '#38bdf8' : '#6b7280', transition: 'color 0.3s',
               }}>
                 {formatTime(seconds)}
               </div>
@@ -329,10 +327,10 @@ export default function Tracker() {
                     style={{
                       height: 27,
                       padding: '0 9px',
-                      borderRadius: 6,
-                      border: '1px solid rgba(37,99,235,0.28)',
-                      background: 'rgba(37,99,235,0.1)',
-                      color: '#2563eb',
+                      borderRadius: 0,
+                      border: '1px solid rgba(56,189,248,0.28)',
+                      background: 'rgba(56,189,248,0.1)',
+                      color: '#38bdf8',
                       fontSize: 11,
                       fontWeight: 900,
                       cursor: 'pointer',
@@ -349,7 +347,7 @@ export default function Tracker() {
                       alignItems: 'center',
                       height: 27,
                       padding: '0 9px',
-                      borderRadius: 6,
+                      borderRadius: 0,
                       border: '1px solid rgba(100,116,139,0.18)',
                       background: '#ffffff',
                       color: '#64748b',
@@ -373,7 +371,7 @@ export default function Tracker() {
           {/* Stats Row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             {/* Keystrokes */}
-            <div style={{ background: '#f8fafc', borderRadius: 6, padding: '14px 14px 12px', border: '1px solid rgba(15,23,42,0.08)' }}>
+            <div style={{ background: '#f8fafc', borderRadius: 0, padding: '14px 14px 12px', border: '1px solid rgba(15,23,42,0.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Gõ phím</span>
                 <span style={{ color: '#4b6a9e' }}><KeyboardIcon /></span>
@@ -399,7 +397,7 @@ export default function Tracker() {
             </div>
 
             {/* Clicks */}
-            <div style={{ background: '#f8fafc', borderRadius: 6, padding: '14px 14px 12px', border: '1px solid rgba(15,23,42,0.08)' }}>
+            <div style={{ background: '#f8fafc', borderRadius: 0, padding: '14px 14px 12px', border: '1px solid rgba(15,23,42,0.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Click chuột</span>
                 <span style={{ color: '#4b6a9e' }}><MouseIcon /></span>
@@ -420,7 +418,7 @@ export default function Tracker() {
 
           {/* Productivity Score */}
           <div style={{
-            background: 'rgba(15,23,42,0.03)', borderRadius: 6, padding: '14px 14px 12px',
+            background: 'rgba(15,23,42,0.03)', borderRadius: 0, padding: '14px 14px 12px',
             border: '1px solid rgba(15,23,42,0.06)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
@@ -436,7 +434,7 @@ export default function Tracker() {
                 <div key={i} style={{
                   width: 6, height: `${(h / maxBar) * 28}px`,
                   borderRadius: '3px 3px 0 0',
-                  background: i === scoreHistory.length - 1 ? '#22c55e' : '#3b82f6',
+                  background: i === scoreHistory.length - 1 ? '#22c55e' : '#38bdf8',
                   opacity: i >= scoreHistory.length - 2 ? 1 : 0.4,
                   transition: 'height 0.4s ease',
                 }} />
@@ -452,11 +450,11 @@ export default function Tracker() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 6,
-              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+              width: 34, height: 34, borderRadius: 0,
+              background: '#38bdf8',
               display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               fontSize: 13, fontWeight: 800, flexShrink: 0,
-              boxShadow: '0 0 0 2px rgba(59,130,246,0.3)',
+              boxShadow: 'none',
             }} data-avatar-refresh={avatarRefreshKey}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt={`Ảnh đại diện ${user?.name || 'Người dùng'}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -495,7 +493,6 @@ export default function Tracker() {
             justifyContent: 'center',
             padding: 18,
             background: 'rgba(15,23,42,0.48)',
-            backdropFilter: 'blur(8px)',
           }}
         >
           <div
@@ -504,9 +501,9 @@ export default function Tracker() {
               width: 'min(420px, calc(100vw - 32px))',
               minHeight: 420,
               background: '#ffffff',
-              borderRadius: 8,
+              borderRadius: 0,
               border: '1px solid rgba(15,23,42,0.08)',
-              boxShadow: '0 24px 70px rgba(15,23,42,0.26)',
+              boxShadow: 'none',
               color: '#0f172a',
               overflow: 'hidden',
             }}
@@ -525,7 +522,7 @@ export default function Tracker() {
                   alignItems: 'center',
                   gap: 7,
                   padding: '5px 8px',
-                  borderRadius: 6,
+                  borderRadius: 0,
                   background: 'rgba(217,119,6,0.1)',
                   color: '#b45309',
                   fontSize: 11,
@@ -564,7 +561,7 @@ export default function Tracker() {
                 style={{
                   width: 34,
                   height: 34,
-                  borderRadius: 6,
+                  borderRadius: 0,
                   border: '1px solid rgba(15,23,42,0.1)',
                   background: '#f8fafc',
                   color: '#64748b',
@@ -587,12 +584,12 @@ export default function Tracker() {
                 marginBottom: 12,
               }}>
                 <div style={{
-                  border: '1px solid rgba(37,99,235,0.16)',
-                  background: 'rgba(37,99,235,0.06)',
-                  borderRadius: 8,
+                  border: '1px solid rgba(56,189,248,0.16)',
+                  background: 'rgba(56,189,248,0.06)',
+                  borderRadius: 0,
                   padding: 12,
                 }}>
-                  <div style={{ color: '#2563eb', marginBottom: 8, display: 'flex' }}>
+                  <div style={{ color: '#38bdf8', marginBottom: 8, display: 'flex' }}>
                     <KeyboardIcon />
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 900 }}>Gõ phím</div>
@@ -601,12 +598,12 @@ export default function Tracker() {
                   </div>
                 </div>
                 <div style={{
-                  border: '1px solid rgba(37,99,235,0.16)',
-                  background: 'rgba(37,99,235,0.06)',
-                  borderRadius: 8,
+                  border: '1px solid rgba(56,189,248,0.16)',
+                  background: 'rgba(56,189,248,0.06)',
+                  borderRadius: 0,
                   padding: 12,
                 }}>
-                  <div style={{ color: '#2563eb', marginBottom: 8, display: 'flex' }}>
+                  <div style={{ color: '#38bdf8', marginBottom: 8, display: 'flex' }}>
                     <MouseIcon />
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 900 }}>Click chuột</div>
@@ -619,7 +616,7 @@ export default function Tracker() {
               <div style={{
                 border: '1px solid rgba(22,163,74,0.18)',
                 background: 'rgba(22,163,74,0.07)',
-                borderRadius: 8,
+                borderRadius: 0,
                 padding: '12px 13px',
                 marginBottom: 12,
               }}>
@@ -652,7 +649,7 @@ export default function Tracker() {
               <div style={{
                 border: '1px solid rgba(217,119,6,0.2)',
                 background: 'rgba(217,119,6,0.08)',
-                borderRadius: 8,
+                borderRadius: 0,
                 padding: '11px 12px',
                 color: '#92400e',
                 fontSize: 12,
@@ -668,7 +665,7 @@ export default function Tracker() {
                 alignItems: 'flex-start',
                 gap: 10,
                 padding: '11px 12px',
-                borderRadius: 8,
+                borderRadius: 0,
                 border: '1px solid rgba(15,23,42,0.1)',
                 background: '#f8fafc',
                 cursor: 'pointer',
@@ -678,7 +675,7 @@ export default function Tracker() {
                   type="checkbox"
                   checked={desktopConsentChecked}
                   onChange={(e) => setDesktopConsentChecked(e.target.checked)}
-                  style={{ marginTop: 2, width: 16, height: 16, accentColor: '#2563eb', flexShrink: 0 }}
+                  style={{ marginTop: 2, width: 16, height: 16, accentColor: '#38bdf8', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: 12, lineHeight: 1.45, color: '#334155', fontWeight: 700 }}>
                   Tôi đã đọc cảnh báo và đồng ý cài WorkRank Tracker với phạm vi dữ liệu ở trên.
@@ -691,7 +688,7 @@ export default function Tracker() {
                   border: '1px solid rgba(220,38,38,0.2)',
                   background: 'rgba(254,242,242,0.85)',
                   color: '#b91c1c',
-                  borderRadius: 8,
+                  borderRadius: 0,
                   padding: '10px 11px',
                   fontSize: 12,
                   lineHeight: 1.45,
@@ -708,7 +705,7 @@ export default function Tracker() {
                   onClick={closeDesktopConsent}
                   style={{
                     height: 40,
-                    borderRadius: 7,
+                    borderRadius: 0,
                     border: '1px solid rgba(15,23,42,0.1)',
                     background: '#ffffff',
                     color: '#475569',
@@ -725,10 +722,10 @@ export default function Tracker() {
                   onClick={openInstalledDesktopTracker}
                   style={{
                     height: 40,
-                    borderRadius: 7,
-                    border: '1px solid rgba(37,99,235,0.22)',
+                    borderRadius: 0,
+                    border: '1px solid rgba(56,189,248,0.22)',
                     background: '#ffffff',
-                    color: '#2563eb',
+                    color: '#38bdf8',
                     fontSize: 13,
                     fontWeight: 900,
                     cursor: 'pointer',
@@ -744,14 +741,14 @@ export default function Tracker() {
                   style={{
                     gridColumn: '1 / -1',
                     height: 40,
-                    borderRadius: 7,
+                    borderRadius: 0,
                     border: 'none',
-                    background: desktopConsentChecked ? '#2563eb' : '#cbd5e1',
+                    background: desktopConsentChecked ? '#38bdf8' : '#cbd5e1',
                     color: '#ffffff',
                     fontSize: 13,
                     fontWeight: 900,
                     cursor: desktopConsentChecked ? 'pointer' : 'not-allowed',
-                    boxShadow: desktopConsentChecked ? '0 10px 24px rgba(37,99,235,0.28)' : 'none',
+                    boxShadow: 'none',
                   }}
                 >
                   Đồng ý và tải về
@@ -779,7 +776,7 @@ export default function Tracker() {
                       flexShrink: 0,
                       height: 30,
                       padding: '0 10px',
-                      borderRadius: 6,
+                      borderRadius: 0,
                       border: '1px solid rgba(22,163,74,0.25)',
                       background: '#ffffff',
                       color: '#15803d',

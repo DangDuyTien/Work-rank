@@ -8,7 +8,7 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 
 const STATUS_META = {
   active: { label: 'Active', color: '#16a34a', dot: '#22c55e' },
-  online: { label: 'Online', color: '#2563eb', dot: '#3b82f6' },
+  online: { label: 'Online', color: '#38bdf8', dot: '#38bdf8' },
   idle: { label: 'Tạm nghỉ', color: '#ca8a04', dot: '#eab308' },
   offline: { label: 'Offline', color: '#94a3b8', dot: '#94a3b8' },
 };

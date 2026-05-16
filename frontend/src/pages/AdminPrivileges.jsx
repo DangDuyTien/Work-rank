@@ -36,8 +36,8 @@ const LEGACY_PRIVILEGE_BADGE_LABELS = new Set(['Tích xanh đặc quyền', ...P
 const CARD = {
   background: '#ffffff',
   border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 8,
-  boxShadow: '0 12px 32px rgba(15,23,42,0.045)',
+  borderRadius: 0,
+  boxShadow: 'none',
 };
 
 function isVerified(user = {}) {
@@ -50,9 +50,9 @@ function Avatar({ user }) {
     <div style={{
       width: 38,
       height: 38,
-      borderRadius: 8,
+      borderRadius: 0,
       overflow: 'hidden',
-      background: 'linear-gradient(135deg,#2563eb,#7c3aed)',
+      background: '#38bdf8',
       color: '#ffffff',
       display: 'flex',
       alignItems: 'center',
@@ -182,7 +182,7 @@ export default function AdminPrivileges() {
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 16 }}>
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 999, background: 'rgba(37,99,235,0.08)', color: '#2563eb', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 0, background: 'rgba(56,189,248,0.08)', color: '#38bdf8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
             <BadgeCheck size={14} />
             Quản trị đặc quyền
           </div>
@@ -210,7 +210,7 @@ export default function AdminPrivileges() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Tìm theo tên, email hoặc WR-0001..."
-            style={{ width: '100%', minHeight: 38, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 6, padding: '0 12px 0 34px', outline: 'none', fontSize: 13, fontWeight: 700 }}
+            style={{ width: '100%', minHeight: 38, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, padding: '0 12px 0 34px', outline: 'none', fontSize: 13, fontWeight: 700 }}
           />
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -227,8 +227,8 @@ export default function AdminPrivileges() {
               style={{
                 minHeight: 34,
                 border: '1px solid rgba(15,23,42,0.1)',
-                borderRadius: 6,
-                background: filter === key ? '#2563eb' : '#ffffff',
+                borderRadius: 0,
+                background: '#38bdf8',
                 color: filter === key ? '#ffffff' : '#64748b',
                 padding: '0 12px',
                 fontSize: 12,
@@ -243,7 +243,7 @@ export default function AdminPrivileges() {
             type="button"
             onClick={loadData}
             disabled={loading}
-            style={{ minHeight: 34, border: '1px solid rgba(37,99,235,0.16)', borderRadius: 6, background: 'rgba(37,99,235,0.06)', color: '#2563eb', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 900, cursor: loading ? 'wait' : 'pointer' }}
+            style={{ minHeight: 34, border: '1px solid rgba(56,189,248,0.16)', borderRadius: 0, background: 'rgba(56,189,248,0.06)', color: '#38bdf8', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 900, cursor: loading ? 'wait' : 'pointer' }}
           >
             <RefreshCw size={14} />
             Làm mới
@@ -291,10 +291,10 @@ export default function AdminPrivileges() {
                         alignItems: 'center',
                         gap: 5,
                         minHeight: 30,
-                        border: active ? '1px solid rgba(37,99,235,0.34)' : '1px solid rgba(15,23,42,0.1)',
-                        borderRadius: 999,
-                        background: active ? 'rgba(37,99,235,0.09)' : '#ffffff',
-                        color: active ? '#2563eb' : '#64748b',
+                        border: active ? '1px solid rgba(56,189,248,0.34)' : '1px solid rgba(15,23,42,0.1)',
+                        borderRadius: 0,
+                        background: active ? 'rgba(56,189,248,0.09)' : '#ffffff',
+                        color: active ? '#38bdf8' : '#64748b',
                         padding: '0 10px',
                         fontSize: 11,
                         fontWeight: 900,
@@ -316,7 +316,7 @@ export default function AdminPrivileges() {
                   style={{
                     minHeight: 34,
                     border: isVerified(user) ? '1px solid rgba(24,119,242,0.28)' : '1px solid rgba(15,23,42,0.1)',
-                    borderRadius: 6,
+                    borderRadius: 0,
                     background: isVerified(user) ? 'rgba(24,119,242,0.08)' : '#ffffff',
                     color: isVerified(user) ? '#1877f2' : '#64748b',
                     padding: '0 11px',
@@ -339,7 +339,7 @@ export default function AdminPrivileges() {
                     width: 34,
                     height: 34,
                     border: '1px solid rgba(15,23,42,0.1)',
-                    borderRadius: 6,
+                    borderRadius: 0,
                     background: '#ffffff',
                     color: '#64748b',
                     display: 'inline-flex',
