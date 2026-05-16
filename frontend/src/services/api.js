@@ -213,11 +213,21 @@ export const leaderboard = {
   get: async (range = 'daily') => {
     const apiRange = range === 'today' ? 'daily' : range === 'week' ? 'weekly' : range === 'month' ? 'monthly' : range;
     const res = await api.get(`/api/leaderboard/${apiRange}`);
-    return { ...res, data: unwrapArray(res.data).map(normalizeLeaderboardRow) };
+    return {
+      ...res,
+      data: unwrapArray(res.data).map(normalizeLeaderboardRow),
+      currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
+      totalRanked: Number(res.data?.totalRanked || 0),
+    };
   },
   group: async (groupId, range = 'today') => {
     const res = await api.get(`/api/leaderboard/team/${groupId}?range=${range}`);
-    return { ...res, data: unwrapArray(res.data).map(normalizeLeaderboardRow) };
+    return {
+      ...res,
+      data: unwrapArray(res.data).map(normalizeLeaderboardRow),
+      currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
+      totalRanked: Number(res.data?.totalRanked || 0),
+    };
   },
 };
 

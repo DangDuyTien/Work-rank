@@ -212,7 +212,7 @@ export default function Dashboard() {
       setUsers((prev) => {
         const userId = String(data.userId || data.user_id || '');
         if (!userId) return prev;
-        const totals = data.totals || null;
+        const totals = range === 'today' ? data.totals || null : null;
         const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
         const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
         const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);

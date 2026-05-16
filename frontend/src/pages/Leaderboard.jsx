@@ -146,7 +146,7 @@ function sortByRankScore(rows) {
 export default function Leaderboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { socket, isAdmin } = useAuth();
+  const { socket, isAdmin, user } = useAuth();
   const searchParams = new URLSearchParams(location.search);
   const initialGroupId = searchParams.get('groupId');
 
@@ -161,6 +161,8 @@ export default function Leaderboard() {
   const [verificationPending, setVerificationPending] = useState({});
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
+  const [currentUserRank, setCurrentUserRank] = useState(null);
+  const [totalRanked, setTotalRanked] = useState(0);
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
@@ -211,6 +213,8 @@ export default function Leaderboard() {
       if (res) {
         if (requestId !== requestIdRef.current) return;
         setUsers(res.data || []);
+        setCurrentUserRank(res.currentUserRank || null);
+        setTotalRanked(Number(res.totalRanked || res.data?.length || 0));
         setPage(1);
       }
     } catch (err) {
@@ -230,6 +234,11 @@ export default function Leaderboard() {
         ? { ...row, isVerified: nextVerified, verified: nextVerified }
         : row
     )));
+    setCurrentUserRank((prev) => (
+      prev && String(prev.user_id || prev.id) === id
+        ? { ...prev, isVerified: nextVerified, verified: nextVerified }
+        : prev
+    ));
   };
 
   const toggleVerifiedUser = async (event, user) => {
@@ -271,9 +280,10 @@ export default function Leaderboard() {
 
     const handleActivity = (data) => {
       if (!eventBelongsToCurrentView(data)) return;
+      const currentAuthUserId = String(user?.id || '');
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
-        const totals = data.totals || null;
+        const totals = range === 'today' ? data.totals || null : null;
         const delta = data.delta || {};
         const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
         const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
@@ -334,12 +344,45 @@ export default function Leaderboard() {
         const next = [...prev, newUser];
         return sortByRankScore(next);
       });
+      if (currentAuthUserId && String(data.userId || data.user_id) === currentAuthUserId) {
+        setCurrentUserRank((prev) => {
+          if (!prev) return prev;
+          const totals = range === 'today' ? data.totals || null : null;
+          const delta = data.delta || {};
+          const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
+          const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
+          const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
+          const deltaIdleSeconds = Number(delta.idleSeconds ?? data.idleSeconds ?? 0);
+          const status = data.presence || data.presenceStatus || data.status || prev.status || 'active';
+          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(prev.keystrokeCount) || 0) + deltaKeys;
+          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(prev.mouseClickCount) || 0) + deltaClicks;
+          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(prev.activeSeconds || prev.total_active_seconds) || 0) + deltaActiveSeconds;
+          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(prev.idleSeconds || prev.total_idle_seconds) || 0) + deltaIdleSeconds;
+          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? prev.focusScore ?? 0);
+          const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
+          return {
+            ...prev,
+            ...data,
+            status,
+            presence: status,
+            presenceStatus: status,
+            keystrokeCount,
+            mouseClickCount,
+            activeSeconds,
+            idleSeconds,
+            total_active_seconds: activeSeconds,
+            total_idle_seconds: idleSeconds,
+            focusScore,
+            score,
+          };
+        });
+      }
     };
     const handleStatus = (data) => {
       if (activeTab === 'group' && selectedGroupId && data.teamId && String(data.teamId) !== String(selectedGroupId)) return;
+      const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
-        const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
         const idx = prev.findIndex(u => String(u.user_id || u.id) === userId);
         if (idx < 0) return prev;
         const next = [...prev];
@@ -351,6 +394,14 @@ export default function Leaderboard() {
         };
         return next;
       });
+      if (String(data.userId || data.user_id) === String(user?.id || '')) {
+        setCurrentUserRank((prev) => prev ? {
+          ...prev,
+          status: nextStatus,
+          presence: nextStatus,
+          presenceStatus: nextStatus,
+        } : prev);
+      }
     };
     socket.on('activity:user:update', handleActivity);
     socket.on('user:status:update', handleStatus);
@@ -358,7 +409,7 @@ export default function Leaderboard() {
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
     };
-  }, [socket, activeTab, selectedGroupId, range]);
+  }, [socket, activeTab, selectedGroupId, range, user?.id]);
 
   const top1 = users[0], top2 = users[1], top3 = users[2];
   const filtered = users.filter(u=>(u.name||'').toLowerCase().includes(search.toLowerCase()));
@@ -525,6 +576,92 @@ export default function Leaderboard() {
             </select>
           ) : (
             <div style={{fontSize: 13, color: '#64748b'}}>Bạn chưa tham gia nhóm nào. <span onClick={() => navigate('/groups')} style={{display:'inline-flex',alignItems:'center',gap:4,color: '#3b82f6', cursor: 'pointer', fontWeight: 700}}>Đến trang Nhóm <ArrowRight size={13} /></span></div>
+          )}
+        </div>
+      )}
+
+      {!loading && (
+        <div
+          style={{
+            ...CARD,
+            padding: '14px 18px',
+            marginBottom: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            borderColor: currentUserRank ? 'rgba(37,99,235,0.22)' : 'rgba(15,23,42,0.08)',
+            background: currentUserRank ? 'linear-gradient(135deg, rgba(37,99,235,0.06), #ffffff)' : '#ffffff',
+          }}
+        >
+          {currentUserRank ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <div style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 8,
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 15,
+                  fontWeight: 900,
+                  flexShrink: 0,
+                }}>
+                  #{currentUserRank.rankPosition || currentUserRank.rank || '--'}
+                </div>
+                <Avatar
+                  user={currentUserRank}
+                  userId={currentUserRank.user_id || currentUserRank.id}
+                  name={currentUserRank.name}
+                  size={38}
+                  idx={Number(currentUserRank.rankPosition || 1) - 1}
+                  refreshKey={avatarRefreshKey}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Hạng của bạn · {currentUserRank.name}
+                    </span>
+                    {isVerifiedRanker(currentUserRank) && <VerifiedMark size={14} />}
+                  </div>
+                  <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: '#64748b', fontSize: 11, fontWeight: 800 }}>
+                    <span>{fmtNum(currentUserRank.keystrokeCount)} phím</span>
+                    <span>{fmtNum(currentUserRank.mouseClickCount)} click</span>
+                    <span>{fmtScore(currentUserRank.score)} điểm</span>
+                    {Number(totalRanked || 0) > 0 && <span>/ {Number(totalRanked).toLocaleString()} người có điểm</span>}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/users/${currentUserRank.user_id || currentUserRank.id}`)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  border: '1px solid rgba(37,99,235,0.18)',
+                  background: '#ffffff',
+                  color: '#2563eb',
+                  borderRadius: 6,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                Mở hồ sơ
+                <ArrowRight size={14} />
+              </button>
+            </>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#64748b', fontSize: 13, fontWeight: 800 }}>
+              <Trophy size={17} color="#94a3b8" />
+              Bạn chưa có điểm trong khoảng thời gian này.
+            </div>
           )}
         </div>
       )}

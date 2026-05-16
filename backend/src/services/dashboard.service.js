@@ -105,7 +105,19 @@ async function overview({ range = 'today', teamId } = {}) {
   };
 }
 
-async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
+function decorateRankedRow(row, index) {
+  const userPresence = resolveUserPresence(row.id);
+  return {
+    ...row,
+    accountStatus: row.status || 'active',
+    presence: userPresence,
+    presenceStatus: userPresence,
+    score: row.score,
+    rankPosition: index + 1,
+  };
+}
+
+async function leaderboard({ range = 'today', teamId, limit = 20, currentUserId, withCurrentUserRank = false } = {}) {
   const rows = await DailyStat.findAll({
     where: statWhereForRange(range),
     include: [userInclude(teamId, { withProfile: true })],
@@ -152,19 +164,21 @@ async function leaderboard({ range = 'today', teamId, limit = 20 } = {}) {
     const focusDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
     if (focusDiff) return focusDiff;
     return Number(b.activeSeconds || 0) - Number(a.activeSeconds || 0);
-  }).slice(0, limit);
+  }).map(decorateRankedRow);
 
-  return ranked.map((row, index) => {
-    const userPresence = resolveUserPresence(row.id);
-    return {
-      ...row,
-      accountStatus: row.status || 'active',
-      presence: userPresence,
-      presenceStatus: userPresence,
-      score: row.score,
-      rankPosition: index + 1
-    };
-  });
+  const data = ranked.slice(0, limit);
+  if (!withCurrentUserRank) return data;
+
+  const currentUserRank = currentUserId
+    ? ranked.find((row) => String(row.id || row.user_id) === String(currentUserId)) || null
+    : null;
+
+  return {
+    data,
+    currentUserRank,
+    totalRanked: ranked.length,
+    range: normalizeRange(range),
+  };
 }
 
 async function heatmap({ days = 365, teamId } = {}) {
