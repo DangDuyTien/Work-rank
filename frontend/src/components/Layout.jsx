@@ -268,15 +268,16 @@ export default function Layout() {
       const fallbackInterval = window.setInterval(() => {
         try {
           const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-          if (!raw || !JSON.parse(raw).running) { document.title = DEFAULT_TITLE; ; return; }
-          const endsAt = Number(JSON.parse(raw).endsAt || 0);
+          if (!raw) { document.title = DEFAULT_TITLE; return; }
+          const parsed = JSON.parse(raw);
+          if (!parsed.running) { document.title = DEFAULT_TITLE; return; }
+          const endsAt = Number(parsed.endsAt || 0);
           if (!endsAt) return;
           const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-          if (rem <= 0) { document.title = DEFAULT_TITLE; ; return; }
+          if (rem <= 0) { document.title = DEFAULT_TITLE; return; }
           const m = String(Math.floor(rem / 60)).padStart(2, '0');
           const s = String(rem % 60).padStart(2, '0');
           if (document.title !== m + ':' + s + ' · Pomodoro') document.title = m + ':' + s + ' · Pomodoro';
-          ;
         } catch {}
       }, 1000);
       return () => { window.clearInterval(fallbackInterval); document.title = DEFAULT_TITLE; };
@@ -285,20 +286,19 @@ export default function Layout() {
     worker.onmessage = () => {
       try {
         const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; return; }
+        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; return; }
         const parsed = JSON.parse(raw);
         const running = Boolean(parsed.running);
-        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; return; }
+        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; return; }
         prevRunning = true;
         const endsAt = Number(parsed.endsAt || 0);
-        if (!endsAt) { document.title = DEFAULT_TITLE; ; return; }
+        if (!endsAt) { document.title = DEFAULT_TITLE; return; }
         const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-        if (rem <= 0) { document.title = DEFAULT_TITLE; ; return; }
+        if (rem <= 0) { document.title = DEFAULT_TITLE; return; }
         const m = String(Math.floor(rem / 60)).padStart(2, '0');
         const s = String(rem % 60).padStart(2, '0');
         document.title = m + ':' + s + ' · Pomodoro';
-        ;
-      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; }
+      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; }
     };
     worker.postMessage(null);
     return () => { worker.terminate(); document.title = DEFAULT_TITLE; };
@@ -905,7 +905,7 @@ export default function Layout() {
             flexShrink: 0,
           }}
         >
-          <span>© 2024 WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
+          <span>© {new Date().getFullYear()} WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8', textDecoration: 'none', fontWeight: 800 }}>
               <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="currentColor">

@@ -79,11 +79,98 @@ export function vibrateDevice(pattern = [200, 100, 200]) {
 }
 
 let pipWindow = null;
+let pipToken = 0;
+let pipInterval = null;
+const PIP_TICK_KEY = 'workrank:pomodoro-state';
+const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
+
+function pipTick() {
+  if (!pipWindow || pipWindow.closed) { stopPipInterval(); return; }
+  try {
+    const raw = localStorage.getItem(PIP_TICK_KEY);
+    if (!raw) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    const p = JSON.parse(raw);
+    if (!p || !p.running) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    const endsAt = Number(p.endsAt || 0);
+    if (!endsAt) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    if (rem <= 0) {
+      const newFocusCount = (p.mode || 'focus') === 'focus'
+        ? Number(p.completedFocusCount || 0) + 1
+        : Number(p.completedFocusCount || 0);
+      const nextMode = (p.mode || 'focus') === 'focus'
+        ? (newFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
+        : 'focus';
+      const nextPreset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
+      const nextTotal = (nextMode === 'focus' ? nextPreset[0] : nextMode === 'shortBreak' ? nextPreset[1] : nextPreset[2]) * 60;
+      const completed = {
+        presetKey: p.presetKey,
+        mode: nextMode,
+        remainingSeconds: nextTotal,
+        running: false,
+        completedFocusCount: newFocusCount,
+        completedAt: Date.now(),
+        startedOnce: false,
+        endsAt: null,
+        notified: true,
+      };
+      localStorage.setItem(PIP_TICK_KEY, JSON.stringify(completed));
+      try {
+        const settingsRaw = localStorage.getItem('workrank:app-settings');
+        const appSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
+        const sound = appSettings.notifications?.sound !== false;
+        const notif = appSettings.notifications?.pomodoro !== false;
+        const volume = Number(appSettings.pomodoro?.volume) || 0.12;
+        if (sound) playPomodoroChime(volume);
+        if (notif && document.hidden && Notification.permission === 'granted') {
+          const label = nextMode === 'focus' ? 'Tập trung' : nextMode === 'shortBreak' ? 'Nghỉ ngắn' : 'Nghỉ dài';
+          sendBrowserNotification('Pomodoro kết thúc', {
+            body: 'Đã chuyển sang: ' + label,
+            tag: 'pomodoro-completed',
+            data: { url: '/pomodoro' },
+          });
+        }
+        vibrateDevice([200, 100, 200]);
+      } catch {}
+      pipWindow.postMessage({ type: 'pip-close' }, '*');
+      return;
+    }
+
+    const minutes = String(Math.floor(rem / 60)).padStart(2, '0');
+    const seconds = String(rem % 60).padStart(2, '0');
+    const mode = p.mode || 'focus';
+    const focusCount = Number(p.completedFocusCount || 0);
+    const preset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
+    const total = (mode === 'focus' ? preset[0] : mode === 'shortBreak' ? preset[1] : preset[2]) * 60;
+
+    pipWindow.postMessage({
+      type: 'pip-tick',
+      minutes,
+      seconds,
+      mode,
+      focusCount,
+      rem,
+      total,
+    }, '*');
+  } catch {}
+}
+
+function startPipInterval() {
+  if (pipInterval) return;
+  pipTick();
+  pipInterval = setInterval(pipTick, 200);
+}
+
+function stopPipInterval() {
+  if (pipInterval) { clearInterval(pipInterval); pipInterval = null; }
+}
 
 export function openPipWindow() {
   if (!('documentPictureInPicture' in window)) return false;
-  if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return true; }
+  if (pipWindow && !pipWindow.closed) { pipWindow.focus(); startPipInterval(); return true; }
+  const token = ++pipToken;
   window.documentPictureInPicture.requestWindow({ width: 310, height: 240 }).then((win) => {
+    if (token !== pipToken) { try { win.close(); } catch {} return; }
     pipWindow = win;
     win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -138,51 +225,42 @@ body{
 <div id="foot"><span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span></div>
 </div></div>
 <script>
-var KEY='workrank:pomodoro-state';
-var PRESETS={classic:[25,5,15],deep:[50,10,25],sprint:[15,3,10]};
 function cell(d){return '<div class="c"><div class="h t"><span class="n">'+d+'</span></div><div class="h b"><span class="n">'+d+'</span></div></div>'}
-function clock(mm,ss){return cell(mm[0])+cell(mm[1])+'<span class="sep">:</span>'+cell(ss[0])+cell(ss[1])}
-function tick(){
-  try{
-    var raw=localStorage.getItem(KEY);
-    if(!raw)return;
-    var p=JSON.parse(raw);
-    if(!p||!p.running){window.close();return}
-    var e=Number(p.endsAt||0);
-    if(!e){window.close();return}
-    var r=Math.max(0,Math.ceil((e-Date.now())/1000));
-    if(r<=0){window.close();return}
-    var mm=String(Math.floor(r/60)).padStart(2,'0');
-    var ss=String(r%60).padStart(2,'0');
-    var c=p.mode==='focus'?'#38bdf8':p.mode==='shortBreak'?'#16a34a':'#d97706';
-    var cl=document.getElementById('clock');if(cl)cl.innerHTML=clock(mm,ss);
-    var lb=document.getElementById('label');if(lb)lb.textContent=p.mode==='focus'?'Tập trung':p.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài';
-    var focusCount=Number(p.completedFocusCount||0);
-    var done=p.mode==='longBreak'?4:focusCount%4;
-    var steps='';
-    for(var i=0;i<4;i++){
-      var sc=i<done?'#22c55e':(p.mode==='focus'&&i===(focusCount%4)?c:'rgba(255,255,255,0.07)');
-      steps+='<span class="d" style="background:'+sc+'"></span>';
-    }
-    var ft=document.getElementById('foot');if(ft)ft.innerHTML='<span>'+(focusCount%4+1)+'/4</span>'+steps+'<span>'+Math.floor(r/60)+'p</span>';
-    var preset=PRESETS[p.presetKey]||PRESETS.classic;
-    var total=(p.mode==='focus'?preset[0]:p.mode==='shortBreak'?preset[1]:preset[2])*60;
-    var deg=(r/total)*360;
-    var rg=document.getElementById('ring');if(rg)rg.style.background='conic-gradient('+c+' '+deg+'deg, rgba(255,255,255,0.05) 0deg)';
-  }catch(err){console.warn('pip:',err)}
+function clock(m,s){return cell(m[0])+cell(m[1])+'<span class="sep">:</span>'+cell(s[0])+cell(s[1])}
+function upd(d){
+  if(d.type==='pip-close'){window.close();return}
+  if(d.type!=='pip-tick')return
+  var cl=document.getElementById('clock');if(cl)cl.innerHTML=clock(d.minutes,d.seconds)
+  var lb=document.getElementById('label');if(lb)lb.textContent=d.mode==='focus'?'Tập trung':d.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài'
+  var fc=Number(d.focusCount||0)
+  var dn=d.mode==='longBreak'?4:fc%4
+  var st=''
+  for(var i=0;i<4;i++){
+    var c=d.mode==='focus'?'#38bdf8':d.mode==='shortBreak'?'#16a34a':'#d97706'
+    var sc=i<dn?'#22c55e':(d.mode==='focus'&&i===(fc%4)?c:'rgba(255,255,255,0.07)')
+    st+='<span class="d" style="background:'+sc+'"></span>'
+  }
+  var ft=document.getElementById('foot');if(ft)ft.innerHTML='<span>'+(fc%4+1)+'/4</span>'+st+'<span>'+Math.floor(d.rem/60)+'p</span>'
+  var deg=(d.rem/(Number(d.total)||1))*360
+  var col=d.mode==='focus'?'#38bdf8':d.mode==='shortBreak'?'#16a34a':'#d97706'
+  var rg=document.getElementById('ring');if(rg)rg.style.background='conic-gradient('+col+' '+deg+'deg, rgba(255,255,255,0.05) 0deg)'
 }
-tick();
-setInterval(tick,200);
-document.body.onclick=function(){window.close()};
+window.addEventListener('message',function(e){upd(e.data)})
+document.body.onclick=function(){window.close()}
 </script>
 </body></html>`);
     win.document.close();
-    win.addEventListener('pagehide', () => { pipWindow = null; });
+    startPipInterval();
+    win.addEventListener('pagehide', () => {
+      if (pipWindow === win) { pipWindow = null; stopPipInterval(); }
+    });
   }).catch(() => {});
   return true;
 }
 
 export function closePipWindow() {
+  pipToken++;
+  stopPipInterval();
   if (pipWindow && !pipWindow.closed) {
     try { pipWindow.close(); } catch {}
   }

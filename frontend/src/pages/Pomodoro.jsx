@@ -69,6 +69,18 @@ function loadPomodoroState() {
     const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
     if (!raw) return createPomodoroState();
     const parsed = JSON.parse(raw);
+    if (parsed.notified || (!parsed.running && Number(parsed.completedAt || 0) > 0)) {
+      return {
+        presetKey: parsed.presetKey || 'classic',
+        mode: parsed.mode || 'focus',
+        remainingSeconds: Math.max(0, Number(parsed.remainingSeconds || 0)),
+        running: false,
+        completedFocusCount: Math.max(0, Number(parsed.completedFocusCount || 0)),
+        completedAt: Number(parsed.completedAt || 0),
+        startedOnce: Boolean(parsed.startedOnce),
+        endsAt: null,
+      };
+    }
     const preset = getPomodoroPreset(parsed.presetKey);
     const mode = POMODORO_MODES[parsed.mode] ? parsed.mode : 'focus';
     const fallbackRemaining = getPomodoroModeSeconds(preset, mode);
@@ -218,7 +230,7 @@ export default function Pomodoro() {
   }, [pomodoro.remainingSeconds, pomodoro.running, appSettings.pomodoro?.volume]);
 
   useEffect(() => {
-    if (!pomodoro.completedAt) return;
+    if (!pomodoro.completedAt || pomodoro.notified) return;
     if (appSettings.notifications?.sound) {
       playPomodoroChime(appSettings.pomodoro?.volume ?? 0.12);
     }
