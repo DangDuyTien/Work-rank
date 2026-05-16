@@ -1,13 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
-import { getAppSettings, subscribeAppSettings } from '../utils/settings';
+import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
+import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice } from '../utils/notifications';
 import {
+  Bell,
+  BellOff,
   Coffee,
+  Monitor,
   Pause,
   Play,
   RotateCcw,
+  Settings,
   SkipForward,
   Timer,
+  Volume2,
 } from 'lucide-react';
 
 const TimerIcon = () => <Timer size={16} />;
@@ -146,28 +152,7 @@ function completePomodoroStep(state) {
   };
 }
 
-function playPomodoroChime() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
-    gain.connect(ctx.destination);
-    [660, 880].forEach((frequency, index) => {
-      const oscillator = ctx.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + index * 0.12);
-      oscillator.connect(gain);
-      oscillator.start(ctx.currentTime + index * 0.12);
-      oscillator.stop(ctx.currentTime + 0.45 + index * 0.12);
-    });
-    window.setTimeout(() => ctx.close(), 800);
-  } catch {
-  }
-}
+
 
 export default function Pomodoro() {
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
@@ -189,6 +174,7 @@ export default function Pomodoro() {
   const pomodoroCycle = Math.min(4, (pomodoro.completedFocusCount % 4) + 1);
   const completedInCurrentCycle = pomodoro.mode === 'longBreak' ? 4 : pomodoro.completedFocusCount % 4;
   const pomodoroTrackingReady = tracking;
+  const [pomodoroSettingsOpen, setPomodoroSettingsOpen] = useState(false);
   const pomodoroStatus = pomodoro.running
     ? 'Đang chạy'
     : pomodoro.completedAt
@@ -228,8 +214,25 @@ export default function Pomodoro() {
 
   useEffect(() => {
     if (!pomodoro.completedAt) return;
-    if (appSettings.notifications?.sound) playPomodoroChime();
-  }, [appSettings.notifications?.sound, pomodoro.completedAt]);
+    if (appSettings.notifications?.sound) {
+      playPomodoroChime(appSettings.pomodoro?.volume ?? 0.12);
+    }
+    if (document.hidden) {
+      requestNotificationPermission().then((permission) => {
+        if (permission !== 'granted') return;
+        const nextLabel = POMODORO_MODES[pomodoro.mode]?.label || '';
+        sendBrowserNotification(
+          pomodoro.mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
+          {
+            body: `Đã chuyển sang: ${nextLabel}`,
+            tag: `pomodoro-${pomodoro.completedAt}`,
+            data: { url: '/pomodoro' },
+          }
+        );
+      });
+    }
+    vibrateDevice([200, 100, 200]);
+  }, [pomodoro.completedAt, pomodoro.mode, appSettings.notifications?.sound, appSettings.pomodoro?.volume]);
 
   useEffect(() => {
     const originalTitle = document.title;
@@ -460,6 +463,146 @@ export default function Pomodoro() {
               </button>
             )}
           </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <button
+              type="button"
+              data-no-track="true"
+              aria-label="Cài đặt Pomodoro"
+              onClick={() => setPomodoroSettingsOpen((v) => !v)}
+              style={{
+                height: 28,
+                padding: '0 8px',
+                borderRadius: 0,
+                border: pomodoroSettingsOpen ? '1px solid rgba(56,189,248,0.4)' : '1px solid rgba(15,23,42,0.08)',
+                background: pomodoroSettingsOpen ? 'rgba(56,189,248,0.08)' : '#f8fafc',
+                color: pomodoroSettingsOpen ? '#38bdf8' : '#64748b',
+                cursor: 'pointer',
+                fontSize: 11,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <Settings size={13} />
+              Cài đặt
+            </button>
+          </div>
+
+          {pomodoroSettingsOpen && (
+            <div style={{
+              border: '1px solid rgba(15,23,42,0.08)',
+              borderRadius: 0,
+              padding: '12px 14px',
+              background: '#f8fafc',
+              marginBottom: 14,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', marginBottom: 10 }}>
+                Tùy chọn Pomodoro
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  cursor: 'pointer',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {appSettings.notifications?.sound ? <Volume2 size={13} /> : <Volume2 size={13} />}
+                    Âm báo
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(appSettings.notifications?.sound)}
+                    onChange={(e) => {
+                      saveAppSettings({
+                        ...appSettings,
+                        notifications: { ...appSettings.notifications, sound: e.target.checked },
+                      });
+                    }}
+                  />
+                </label>
+
+                {appSettings.notifications?.sound && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, color: '#475569' }}>
+                    <Volume2 size={13} />
+                    <span style={{ minWidth: 34 }}>Âm lượng</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={Math.round((appSettings.pomodoro?.volume ?? 0.12) * 100)}
+                      onChange={(e) => {
+                        const val = Number(e.target.value) / 100;
+                        saveAppSettings({
+                          ...appSettings,
+                          pomodoro: { ...appSettings.pomodoro, volume: val },
+                        });
+                      }}
+                      style={{ flex: 1, height: 4 }}
+                    />
+                    <span style={{ minWidth: 30, textAlign: 'right', color: '#64748b' }}>
+                      {Math.round((appSettings.pomodoro?.volume ?? 0.12) * 100)}%
+                    </span>
+                  </div>
+                )}
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  cursor: 'pointer',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {appSettings.notifications?.pomodoro ? <Bell size={13} /> : <BellOff size={13} />}
+                    Thông báo
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(appSettings.notifications?.pomodoro)}
+                    onChange={(e) => {
+                      saveAppSettings({
+                        ...appSettings,
+                        notifications: { ...appSettings.notifications, pomodoro: e.target.checked },
+                      });
+                    }}
+                  />
+                </label>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  cursor: 'pointer',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Monitor size={13} />
+                    Tự bật tracker
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(appSettings.tracker?.autoStartWithPomodoro)}
+                    onChange={(e) => {
+                      saveAppSettings({
+                        ...appSettings,
+                        tracker: { ...appSettings.tracker, autoStartWithPomodoro: e.target.checked },
+                      });
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 16 }}>
             {Array.from({ length: 4 }).map((_, index) => {

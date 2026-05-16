@@ -16,6 +16,7 @@ export const DEFAULT_APP_SETTINGS = {
   },
   pomodoro: {
     defaultPreset: 'classic',
+    volume: 0.12,
   },
   appearance: {
     density: 'comfortable',

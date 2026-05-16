@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
+import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
 import VerifiedBadge from './VerifiedBadge';
@@ -232,11 +233,28 @@ export default function Layout() {
 
   useEffect(() => {
     const handler = (event) => {
-      addNotification(event.detail || {});
+      const detail = event.detail || {};
+      addNotification(detail);
+      const allowed = shouldStoreNotification(detail.type || 'info', appSettings);
+      if (!allowed) return;
+      if (document.hidden && ('Notification' in window)) {
+        requestNotificationPermission().then((permission) => {
+          if (permission === 'granted') {
+            sendBrowserNotification(detail.title || 'WorkRank', {
+              body: detail.message || '',
+              tag: detail.dedupeKey || `notif-${Date.now()}`,
+              data: { url: detail.actionTo || '/' },
+            });
+          }
+        });
+      }
+      if (detail.type === 'pomodoro') {
+        vibrateDevice([200, 100, 200]);
+      }
     };
     window.addEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
     return () => window.removeEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
-  }, [addNotification]);
+  }, [addNotification, appSettings]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
