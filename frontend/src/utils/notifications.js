@@ -79,8 +79,6 @@ export function vibrateDevice(pattern = [200, 100, 200]) {
 }
 
 let pipWindow = null;
-let pipTimer = null;
-const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
 
 export function openPipWindow() {
   if (!('documentPictureInPicture' in window)) return false;
@@ -136,54 +134,50 @@ body{
 <body>
 <div id="ring"><div id="inner">
 <div id="label">Tập trung</div>
-<div id="clock"></div>
-<div id="foot"></div>
+<div id="clock"><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><span class="sep">:</span><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div></div>
+<div id="foot"><span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span></div>
 </div></div>
+<script>
+var KEY='workrank:pomodoro-state';
+function cell(d){return '<div class="c"><div class="h t"><span class="n">'+d+'</span></div><div class="h b"><span class="n">'+d+'</span></div></div>'}
+function clock(mm,ss){return cell(mm[0])+cell(mm[1])+'<span class="sep">:</span>'+cell(ss[0])+cell(ss[1])}
+function tick(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(!raw){window.close();return}
+    var p=JSON.parse(raw);
+    if(!p||!p.running){window.close();return}
+    var e=Number(p.endsAt||0);
+    if(!e){window.close();return}
+    var r=Math.max(0,Math.ceil((e-Date.now())/1000));
+    if(r<=0){window.close();return}
+    var mm=String(Math.floor(r/60)).padStart(2,'0');
+    var ss=String(r%60).padStart(2,'0');
+    var c=p.mode==='focus'?'#38bdf8':p.mode==='shortBreak'?'#16a34a':'#d97706';
+    var cl=document.getElementById('clock');if(cl)cl.innerHTML=clock(mm,ss);
+    var lb=document.getElementById('label');if(lb)lb.textContent=p.mode==='focus'?'Tập trung':p.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài';
+    var done=p.mode==='longBreak'?4:p.completedFocusCount%4;
+    var steps='';
+    for(var i=0;i<4;i++){
+      var sc=i<done?'#22c55e':p.mode==='focus'&&i===done%4?c:'rgba(255,255,255,0.07)';
+      steps+='<span class="d" style="background:'+sc+'"></span>';
+    }
+    var ft=document.getElementById('foot');if(ft)ft.innerHTML='<span>'+(done%4+1)+'/4</span>'+steps+'<span>'+Math.round(r/60)+'p</span>';
+    var rg=document.getElementById('ring');if(rg)rg.style.background='conic-gradient('+c+' 0deg, rgba(56,189,248,0.05) 360deg)';
+  }catch(e){console.warn('pip:',e);window.close()}
+}
+tick();
+setInterval(tick,1000);
+document.body.onclick=function(){window.close()};
+</script>
 </body></html>`);
     win.document.close();
-
-    function cell(d){return '<div class="c"><div class="h t"><span class="n">'+d+'</span></div><div class="h b"><span class="n">'+d+'</span></div></div>'}
-    function clock(mm,ss){return cell(mm[0])+cell(mm[1])+'<span class="sep">:</span>'+cell(ss[0])+cell(ss[1])}
-
-    function tick(){
-      try{
-        var raw=localStorage.getItem(POMODORO_STORAGE_KEY)
-        if(!raw){closePipWindow();return}
-        var p=JSON.parse(raw)
-        if(!p||!p.running){closePipWindow();return}
-        var e=Number(p.endsAt||0)
-        if(!e){closePipWindow();return}
-        var r=Math.max(0,Math.ceil((e-Date.now())/1000))
-        if(r<=0){closePipWindow();return}
-        playTickSound(0.12)
-        var mm=String(Math.floor(r/60)).padStart(2,'0')
-        var ss=String(r%60).padStart(2,'0')
-        var c=p.mode==='focus'?'#38bdf8':p.mode==='shortBreak'?'#16a34a':'#d97706'
-        var doc=win.document
-        if(!doc.body)return
-        var cl=doc.getElementById('clock');if(cl)cl.innerHTML=clock(mm,ss)
-        var lb=doc.getElementById('label');if(lb)lb.textContent=p.mode==='focus'?'Tập trung':p.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài'
-        var done=p.mode==='longBreak'?4:p.completedFocusCount%4
-        var steps=''
-        for(var i=0;i<4;i++){
-          var sc=i<done?'#22c55e':p.mode==='focus'&&i===done%4?c:'rgba(255,255,255,0.07)'
-          steps+='<span class="d" style="background:'+sc+'"></span>'
-        }
-        var ft=doc.getElementById('foot');if(ft)ft.innerHTML='<span>'+(done%4+1)+'/4</span>'+steps+'<span>'+Math.round(r/60)+'p</span>'
-        var rg=doc.getElementById('ring');if(rg)rg.style.background='conic-gradient('+c+' 0deg, rgba(56,189,248,0.05) 360deg)'
-      }catch(e){console.warn(e)}
-    }
-
-    tick();
-    pipTimer = setInterval(tick, 1000);
-    win.document.body.onclick = closePipWindow;
-    win.addEventListener('pagehide', () => { pipWindow = null; if (pipTimer) clearInterval(pipTimer); pipTimer = null; });
+    win.addEventListener('pagehide', () => { pipWindow = null; });
   }).catch(() => {});
   return true;
 }
 
 export function closePipWindow() {
-  if (pipTimer) { clearInterval(pipTimer); pipTimer = null; }
   if (pipWindow && !pipWindow.closed) {
     try { pipWindow.close(); } catch {}
   }
