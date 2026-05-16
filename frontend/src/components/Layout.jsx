@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
-import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
+import { sendBrowserNotification, vibrateDevice, requestNotificationPermission, tickPip } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
 import VerifiedBadge from './VerifiedBadge';
@@ -34,6 +34,7 @@ const PAGE_TITLES = {
 
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const NOTIFICATIONS_CLEARED_EVENT = 'workrank:notifications-cleared';
+const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
 const CONTEST_STORAGE_KEY = 'workrank:group-contests:v1';
 const ACTION_MILESTONES = [500, 1000, 2500, 5000, 10000, 25000, 50000];
 
@@ -255,6 +256,53 @@ export default function Layout() {
     window.addEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
     return () => window.removeEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
   }, [addNotification, appSettings]);
+
+  useEffect(() => {
+    const DEFAULT_TITLE = 'WorkRank Realtime';
+    const blob = new Blob([`self.onmessage=()=>setInterval(()=>postMessage(1),1000)`], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    let worker = null;
+    try { worker = new Worker(url); } catch {}
+    URL.revokeObjectURL(url);
+    if (!worker) {
+      const fallbackInterval = window.setInterval(() => {
+        try {
+          const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
+          if (!raw || !JSON.parse(raw).running) { document.title = DEFAULT_TITLE; tickPip(); return; }
+          const endsAt = Number(JSON.parse(raw).endsAt || 0);
+          if (!endsAt) return;
+          const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+          if (rem <= 0) { document.title = DEFAULT_TITLE; tickPip(); return; }
+          const m = String(Math.floor(rem / 60)).padStart(2, '0');
+          const s = String(rem % 60).padStart(2, '0');
+          if (document.title !== m + ':' + s + ' · Pomodoro') document.title = m + ':' + s + ' · Pomodoro';
+          tickPip();
+        } catch {}
+      }, 1000);
+      return () => { window.clearInterval(fallbackInterval); document.title = DEFAULT_TITLE; };
+    }
+    let prevRunning = false;
+    worker.onmessage = () => {
+      try {
+        const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
+        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); return; }
+        const parsed = JSON.parse(raw);
+        const running = Boolean(parsed.running);
+        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); return; }
+        prevRunning = true;
+        const endsAt = Number(parsed.endsAt || 0);
+        if (!endsAt) { document.title = DEFAULT_TITLE; tickPip(); return; }
+        const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+        if (rem <= 0) { document.title = DEFAULT_TITLE; tickPip(); return; }
+        const m = String(Math.floor(rem / 60)).padStart(2, '0');
+        const s = String(rem % 60).padStart(2, '0');
+        document.title = m + ':' + s + ' · Pomodoro';
+        tickPip();
+      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); }
+    };
+    worker.postMessage(null);
+    return () => { worker.terminate(); document.title = DEFAULT_TITLE; };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return undefined;

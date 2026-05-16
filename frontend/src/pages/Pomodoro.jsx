@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
-import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice } from '../utils/notifications';
+import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
 import {
   Bell,
   BellOff,
@@ -234,16 +234,6 @@ export default function Pomodoro() {
     vibrateDevice([200, 100, 200]);
   }, [pomodoro.completedAt, pomodoro.mode, appSettings.notifications?.sound, appSettings.pomodoro?.volume]);
 
-  useEffect(() => {
-    const originalTitle = document.title;
-    if (pomodoro.running) {
-      document.title = `${formatPomodoroTime(pomodoro.remainingSeconds)} · ${pomodoroModeMeta.label}`;
-    }
-    return () => {
-      document.title = originalTitle;
-    };
-  }, [pomodoro.running, pomodoro.remainingSeconds, pomodoroModeMeta.label]);
-
   const setPomodoroPreset = (presetKey) => {
     setPomodoro(createPomodoroState(presetKey));
   };
@@ -264,6 +254,9 @@ export default function Pomodoro() {
   };
 
   const togglePomodoro = () => {
+    if (!pomodoro.running) {
+      requestNotificationPermission();
+    }
     if (
       !pomodoro.running
       && pomodoro.mode === 'focus'
@@ -464,7 +457,30 @@ export default function Pomodoro() {
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 8 }}>
+            <button
+              type="button"
+              data-no-track="true"
+              aria-label="Cửa sổ nổi"
+              onClick={() => { if (isPipOpen()) closePipWindow(); else openPipWindow(); }}
+              style={{
+                height: 28,
+                padding: '0 8px',
+                borderRadius: 0,
+                border: isPipOpen() ? '1px solid rgba(56,189,248,0.4)' : '1px solid rgba(15,23,42,0.08)',
+                background: isPipOpen() ? 'rgba(56,189,248,0.08)' : '#f8fafc',
+                color: isPipOpen() ? '#38bdf8' : '#64748b',
+                cursor: 'pointer',
+                fontSize: 11,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              {isPipOpen() ? 'Ẩn' : 'Nổi'}
+            </button>
             <button
               type="button"
               data-no-track="true"
