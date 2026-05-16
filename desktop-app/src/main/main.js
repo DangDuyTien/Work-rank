@@ -18,6 +18,7 @@ const PING_INTERVAL = Number(process.env.PING_INTERVAL || 5000);
 const HEARTBEAT_INTERVAL = 10_000; // send heartbeat every 10s
 const PROTOCOL = 'workrank';
 const ACCESSIBILITY_ERROR = 'Cần cấp quyền Accessibility cho WorkRank Tracker Dev để bắt phím ngoài trình duyệt';
+const UNPAIRED_ERROR = 'Desktop Tracker chưa kết nối với tài khoản web. Hãy mở trang Tracker trên WorkRank rồi bấm "Mở" hoặc "Đã cài, mở app".';
 const DEBUG = process.env.WORKRANK_DEBUG === 'true';
 
 let mainWindow = null;
@@ -53,7 +54,13 @@ function getInputHook() {
     ({ uIOhook } = require('uiohook-napi'));
     return uIOhook;
   } catch (error) {
-    throw new Error(`Không tải được bộ đếm phím/chuột: ${error.message}. Hãy chạy "npm install" trong desktop-app trên đúng máy Windows rồi mở lại app.`);
+    const next = new Error(
+      process.platform === 'win32'
+        ? `Không tải được bộ đếm phím/chuột trên Windows: ${error.message}. Hãy cài Microsoft Visual C++ Redistributable 2015-2022 x64, sau đó cài lại WorkRank Tracker bản Setup x64 mới.`
+        : `Không tải được bộ đếm phím/chuột: ${error.message}.`
+    );
+    next.cause = error;
+    throw next;
   }
 }
 
@@ -174,6 +181,21 @@ function getUserDeviceState(state, userId) {
     deviceSecret: saved?.deviceSecret || state.deviceSecret || null,
     sequence: Number(saved?.sequence ?? state.sequence ?? 0),
   };
+}
+
+function hasUsableSavedAuth(state = {}) {
+  return Boolean(
+    state.accessToken
+    && (
+      state.authSource === 'protocol'
+      || (HAS_ENV_LOGIN && state.authSource === 'env' && state.loginEmail === LOGIN_EMAIL)
+    )
+  );
+}
+
+function canAutoStartWithoutProtocol() {
+  if (HAS_ENV_LOGIN) return true;
+  return hasUsableSavedAuth(loadSecureState());
 }
 
 function saveRuntimeState(extra = {}) {
@@ -467,13 +489,7 @@ async function ensureAuth() {
   const state = loadSecureState();
   if (!process.env.API_URL && state.apiUrl) setApiBaseUrl(state.apiUrl);
   const savedAuthUserId = state.authUserId || getJwtSubject(state.accessToken);
-  const canUseSavedAuth = Boolean(
-    state.accessToken
-    && (
-      state.authSource === 'protocol'
-      || (HAS_ENV_LOGIN && state.authSource === 'env' && state.loginEmail === LOGIN_EMAIL)
-    )
-  );
+  const canUseSavedAuth = hasUsableSavedAuth(state);
   const savedDevice = getUserDeviceState(state, savedAuthUserId);
   accessToken = canUseSavedAuth ? state.accessToken || null : null;
   refreshToken = canUseSavedAuth ? state.refreshToken || null : null;
@@ -484,7 +500,7 @@ async function ensureAuth() {
     return;
   }
   if (!HAS_ENV_LOGIN) {
-    const error = new Error('Desktop Tracker chưa có phiên đăng nhập. Hãy mở app từ web WorkRank bằng nút "Mở Desktop" để truyền đúng tài khoản.');
+    const error = new Error(UNPAIRED_ERROR);
     error.statusCode = 401;
     throw error;
   }
@@ -722,6 +738,7 @@ async function applyProtocolAuth(rawUrl) {
   sessionId = authChanged ? null : sessionId;
   deviceSecret = authChanged ? savedDevice.deviceSecret : (deviceSecret || savedDevice.deviceSecret);
   sequence = authChanged ? savedDevice.sequence : Math.max(Number(sequence || 0), Number(savedDevice.sequence || 0));
+  lastError = null;
 
   if (authChanged) {
     keystrokes = 0;
@@ -799,8 +816,13 @@ app.whenReady().then(() => {
   const startupUrls = pendingProtocolUrls.splice(0);
   if (startupUrls.length) {
     for (const url of startupUrls) void handleProtocolUrl(url);
-  } else if (shouldAutoStart) {
+  } else if (shouldAutoStart && canAutoStartWithoutProtocol()) {
     setTimeout(startTracking, 1000);
+  } else {
+    lastError = UNPAIRED_ERROR;
+    mainWindow.webContents.once('did-finish-load', () => {
+      emitStatus({ connected: false, error: lastError });
+    });
   }
 });
 
@@ -817,7 +839,15 @@ ipcMain.handle('toggle', async () => {
   emitStatus({ connected: true });
   return { tracking };
 });
-ipcMain.handle('get-status', () => ({ tracking, trackingStartedAt, keystrokes: totalKeystrokes, mouse_clicks: totalClicks, score }));
+ipcMain.handle('get-status', () => ({
+  tracking,
+  trackingStartedAt,
+  keystrokes: totalKeystrokes,
+  mouse_clicks: totalClicks,
+  score,
+  connected: Boolean(accessToken),
+  error: lastError,
+}));
 ipcMain.handle('get-privacy-info', () => getPrivacyInfo());
 ipcMain.handle('open-accessibility-settings', async () => {
   if (process.platform !== 'darwin') return false;

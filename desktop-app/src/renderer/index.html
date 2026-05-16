@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WorkRank Tracker</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&display=swap');
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: #f8fafc;
+      background: #ffffff;
       color: #0f172a;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
       user-select: none;
       -webkit-app-region: drag;
     }
@@ -25,59 +25,53 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: #f8fafc;
+      background: #ffffff;
     }
     .topbar {
-      height: 56px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px 0 18px;
+      padding: 0 14px;
       background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      border-bottom: 1px solid rgba(15,23,42,0.08);
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: 0;
     }
     .brand-dot {
-      width: 12px;
-      height: 12px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
-      flex: 0 0 auto;
     }
     .brand-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 900;
-      letter-spacing: 0;
       white-space: nowrap;
       color: #0f172a;
     }
     .window-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       -webkit-app-region: no-drag;
     }
     .icon-btn {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border: 0;
-      border-radius: 7px;
       background: transparent;
       color: #64748b;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      font-weight: 800;
-      transition: background 0.15s, color 0.15s;
+      font-size: 15px;
+      font-weight: 700;
     }
     .icon-btn:hover { background: #f1f5f9; color: #0f172a; }
     .icon-btn.close:hover { background: #dc2626; color: #fff; }
@@ -86,16 +80,14 @@
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      padding: 14px 16px 16px;
+      padding: 12px 14px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
       -webkit-app-region: no-drag;
     }
     .card {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border: 1px solid rgba(15,23,42,0.08);
       background: #ffffff;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
 
     .status-card {
@@ -111,93 +103,85 @@
     }
     .eyebrow {
       color: #64748b;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
+      font-size: 9px;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .status-title {
       margin-top: 4px;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 900;
-      letter-spacing: 0;
       line-height: 1.1;
       color: #0f172a;
     }
     .status-desc {
-      margin-top: 5px;
+      margin-top: 4px;
       color: #64748b;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.35;
     }
     .toggle-btn {
-      min-width: 94px;
-      height: 38px;
+      min-width: 90px;
+      height: 36px;
       border: 0;
-      border-radius: 8px;
-      background: #2563eb;
+      background: #38bdf8;
       color: #fff;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
-      letter-spacing: 0;
-      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.28);
     }
-    .toggle-btn.stopped { background: #2563eb; }
-    .toggle-btn.tracking { background: #dc2626; box-shadow: 0 10px 28px rgba(220, 38, 38, 0.22); }
-    .toggle-btn:active { transform: translateY(1px); }
+    .toggle-btn.stopped { background: #38bdf8; }
+    .toggle-btn.tracking { background: #dc2626; }
+    .toggle-btn:active { opacity: 0.85; }
 
     .status-row {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: rgba(15,23,42,0.08);
+      border: 1px solid rgba(15,23,42,0.08);
     }
     .metric {
       min-width: 0;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
       padding: 10px;
-      background: #f8fafc;
+      background: #ffffff;
     }
     .metric-label {
       color: #64748b;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
-      letter-spacing: 0.06em;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
       white-space: nowrap;
     }
     .metric-value {
       margin-top: 6px;
       color: #0f172a;
-      font-size: 21px;
+      font-size: 20px;
       line-height: 1;
       font-weight: 900;
-      letter-spacing: 0;
       font-variant-numeric: tabular-nums;
     }
     .metric-value.time {
-      font-size: 20px;
-      font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+      font-size: 18px;
     }
     .connection {
       display: flex;
       align-items: center;
       gap: 8px;
       color: #64748b;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
     }
     .connection-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
     }
     .connection.offline .connection-dot {
       background: #ef4444;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
     }
 
     .notice {
@@ -205,98 +189,93 @@
     }
     .notice-main {
       display: grid;
-      grid-template-columns: 32px 1fr;
-      gap: 11px;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
       align-items: start;
-      padding: 13px 14px;
+      padding: 12px 14px;
       background: #fffbeb;
       border-bottom: 1px solid #fde68a;
     }
     .notice-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 28px;
+      height: 28px;
       background: #f59e0b;
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 900;
     }
     .notice h2 {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 900;
-      letter-spacing: 0;
       line-height: 1.25;
       color: #92400e;
     }
     .notice p {
-      margin-top: 4px;
+      margin-top: 3px;
       color: #78350f;
-      font-size: 12px;
-      line-height: 1.42;
+      font-size: 11px;
+      line-height: 1.4;
     }
     .notice-actions {
       display: flex;
       gap: 8px;
-      padding: 11px 14px 13px;
+      padding: 10px 14px 12px;
       background: #ffffff;
     }
     .secondary-btn {
-      height: 32px;
-      border: 1px solid #d7b56d;
-      border-radius: 7px;
-      padding: 0 11px;
+      height: 30px;
+      border: 1px solid rgba(15,23,42,0.12);
+      padding: 0 10px;
       background: #ffffff;
-      color: #92400e;
+      color: #0f172a;
       cursor: pointer;
-      font-size: 11px;
-      font-weight: 900;
+      font-size: 10px;
+      font-weight: 800;
     }
-    .secondary-btn:hover { background: #fffbeb; }
+    .secondary-btn:hover { background: #f8fafc; }
     .secondary-btn[hidden] { display: none; }
 
     .section {
-      padding: 13px 14px 14px;
+      padding: 12px 14px 14px;
     }
     .section-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 900;
-      letter-spacing: 0;
       color: #0f172a;
     }
     .section-note {
-      margin-top: 4px;
+      margin-top: 3px;
       color: #64748b;
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1.35;
     }
     .data-grid {
-      margin-top: 12px;
+      margin-top: 10px;
       display: grid;
-      gap: 8px;
+      gap: 1px;
+      background: rgba(15,23,42,0.08);
+      border: 1px solid rgba(15,23,42,0.08);
     }
     .data-row {
       display: grid;
-      grid-template-columns: 24px 1fr;
-      gap: 9px;
+      grid-template-columns: 22px 1fr;
+      gap: 8px;
       align-items: start;
-      padding: 10px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #f8fafc;
+      padding: 9px 10px;
+      background: #ffffff;
     }
     .data-mark {
-      width: 24px;
-      height: 24px;
-      border-radius: 7px;
+      width: 22px;
+      height: 22px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #dcfce7;
       color: #15803d;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
     }
     .data-row.blocked .data-mark {
@@ -306,7 +285,7 @@
     .data-row strong {
       display: block;
       color: #0f172a;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
       line-height: 1.25;
     }
@@ -314,16 +293,16 @@
       display: block;
       margin-top: 2px;
       color: #64748b;
-      font-size: 11px;
-      line-height: 1.32;
+      font-size: 10px;
+      line-height: 1.3;
     }
 
     .connection-details {
       display: grid;
-      gap: 7px;
-      margin-top: 11px;
+      gap: 6px;
+      margin-top: 10px;
       color: #64748b;
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1.35;
       word-break: break-word;
     }
@@ -337,31 +316,30 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 2px 0;
-      border-top: 1px solid #e5e7eb;
+      padding: 10px 2px 0;
+      border-top: 1px solid rgba(15,23,42,0.08);
     }
     .footer-user {
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
     .avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      width: 32px;
+      height: 32px;
+      background: #38bdf8;
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 13px;
       flex: 0 0 auto;
     }
     .footer-name {
       color: #0f172a;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
       white-space: nowrap;
       overflow: hidden;
@@ -370,16 +348,15 @@
     .footer-role {
       margin-top: 2px;
       color: #64748b;
-      font-size: 11px;
+      font-size: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .logout-btn {
-      width: 34px;
-      height: 34px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(15,23,42,0.08);
       background: #ffffff;
       color: #64748b;
       cursor: pointer;
@@ -390,9 +367,9 @@
     }
     .logout-btn:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
 
-    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -520,7 +497,7 @@
           </div>
         </div>
         <button class="logout-btn" onclick="window.electronAPI.logout()" title="Logout" aria-label="Logout">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </footer>
     </main>
@@ -655,7 +632,7 @@
     reloadPrivacyInfo().catch((error) => console.warn('Could not load privacy info:', error));
 
     window.electronAPI.getStatus().then((status) => {
-      applyTrackingState(status.tracking, true, '', status.trackingStartedAt);
+      applyTrackingState(status.tracking, status.connected !== false, status.error || '', status.trackingStartedAt);
       updateStats(status);
     });
 

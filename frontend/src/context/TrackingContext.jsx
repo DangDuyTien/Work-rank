@@ -24,12 +24,7 @@ function buildDesktopTrackerUrl(action) {
 
 function openDesktopTrackerUrl(url) {
   try {
-    const link = document.createElement('a');
-    link.href = url;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    window.location.href = url;
     window.setTimeout(() => {
       const frame = document.createElement('iframe');
       frame.style.display = 'none';
