@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import { Construction } from 'lucide-react';
 
 const Login = lazy(() => import('./pages/Login'));
+const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Tracker = lazy(() => import('./pages/Tracker'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
@@ -54,9 +55,9 @@ export default function App() {
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <Routes>
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route
-                path="/"
                 element={
                   <ProtectedRoute>
                     <TrackingProvider>
@@ -65,18 +66,18 @@ export default function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="leaderboard" element={<Leaderboard />} />
-                <Route path="groups" element={<Groups />} />
-                <Route path="friends" element={<Friends />} />
-                <Route path="tracker" element={<Tracker />} />
-                <Route path="performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
-                <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
-                <Route path="admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="users/:id" element={<UserDetail />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/groups" element={<Groups />} />
+                <Route path="/friends" element={<Friends />} />
+                <Route path="/tracker" element={<Tracker />} />
+                <Route path="/performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
+                <Route path="/security" element={<AdminRoute><Security /></AdminRoute>} />
+                <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/users/:id" element={<UserDetail />} />
               </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </AuthProvider>
