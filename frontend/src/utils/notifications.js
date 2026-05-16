@@ -71,10 +71,7 @@ function clockHTML(mm, ss) { return cell(mm[0]) + cell(mm[1]) + '<span class="se
 function updatePipDOM(data) {
   const pw = pipWindow;
   if (!pw || pw.closed) return;
-  if (pw.__clock) pw.__clock.innerHTML = clockHTML(data.mm, data.ss);
-  if (pw.__label) pw.__label.textContent = data.label;
-  if (pw.__foot) pw.__foot.innerHTML = data.foot;
-  if (pw.__ring) pw.__ring.style.background = data.ring;
+  if (pw.__upd) pw.__upd(clockHTML(data.mm, data.ss), data.label, data.foot, data.ring);
 }
 
 function pipTick() {
@@ -226,10 +223,13 @@ body{
 <div id="foot"><span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span></div>
 </div></div>
 <script>
-window.__clock=document.getElementById('clock')
-window.__label=document.getElementById('label')
-window.__foot=document.getElementById('foot')
-window.__ring=document.getElementById('ring')
+window.__upd=function(h,l,f,r){
+  var e;
+  e=document.getElementById('clock');if(e)e.innerHTML=h
+  e=document.getElementById('label');if(e)e.textContent=l
+  e=document.getElementById('foot');if(e)e.innerHTML=f
+  e=document.getElementById('ring');if(e)e.style.background=r
+}
 document.body.onclick=function(){window.close()}
 </script>
 </body></html>`);
