@@ -1266,7 +1266,11 @@ export default function UserDetail() {
                 {privilegeBadges.map((badge) => {
                   const Icon = badge.icon;
                   return (
-                    <span key={badge.label} className="profile-privilege-pill" title={badge.desc}>
+                    <span
+                      key={badge.label}
+                      className={`profile-privilege-pill${badge.label === 'Đối tác WorkRank' ? ' is-partner' : ''}`}
+                      title={badge.desc}
+                    >
                       <Icon size={13} strokeWidth={2.6} />
                       {badge.label}
                     </span>

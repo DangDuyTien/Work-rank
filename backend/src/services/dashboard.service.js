@@ -67,6 +67,36 @@ function aggregateRows(rows) {
   }, { activeSeconds: 0, idleSeconds: 0, keystrokeCount: 0, mouseClickCount: 0, sessionCount: 0 });
 }
 
+function isMissingTableError(error) {
+  return error?.parent?.code === 'ER_NO_SUCH_TABLE'
+    || error?.original?.code === 'ER_NO_SUCH_TABLE'
+    || /doesn't exist|no such table/i.test(String(error?.message || ''));
+}
+
+async function countActiveUsersNow({ activeSince, teamId, teamInclude }) {
+  try {
+    return await UserMinuteStat.count({
+      distinct: true,
+      col: 'user_id',
+      where: { bucketStartAt: { [Op.gte]: activeSince } },
+      include: teamInclude,
+    });
+  } catch (error) {
+    if (!isMissingTableError(error)) throw error;
+    console.warn('user_minute_stats table missing; falling back to activity_events for active users count.');
+    const trustedWhere = {
+      eventTime: { [Op.gte]: activeSince },
+      suspicionScore: { [Op.lt]: fraudDetection.LIMITS.highSuspicionThreshold },
+    };
+    return ActivityEvent.count({
+      distinct: true,
+      col: 'user_id',
+      where: trustedWhere,
+      include: teamId ? [{ model: User, attributes: [], where: { teamId } }] : [],
+    });
+  }
+}
+
 async function overview(options = {}) {
   const range = normalizeRange(options.range || 'today');
   const teamId = options.teamId ? Number(options.teamId) : null;
@@ -102,12 +132,7 @@ async function overviewUncached({ range = 'today', teamId } = {}) {
   const totals = totalsRows[0] || {};
   const activeSince = new Date(Date.now() - 2 * 60 * 1000);
   const teamInclude = teamId ? [{ model: User, attributes: [], where: { teamId } }] : [];
-  const activeUsersNow = await UserMinuteStat.count({
-    distinct: true,
-    col: 'user_id',
-    where: { bucketStartAt: { [Op.gte]: activeSince } },
-    include: teamInclude,
-  });
+  const activeUsersNow = await countActiveUsersNow({ activeSince, teamId, teamInclude });
   const suspiciousEventsToday = await ActivityEvent.count({
     where: {
       eventTime: { [Op.gte]: new Date(`${statDate}T00:00:00.000Z`) },
@@ -235,6 +260,20 @@ function leaderboardBaseSql({ hasTeam, hasUserIds, hasSearch } = {}) {
   `;
 }
 
+function normalizeFeaturedBadges(value) {
+  if (Array.isArray(value)) return value.map((label) => String(label || '').trim()).filter(Boolean);
+  if (!value) return [];
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.map((label) => String(label || '').trim()).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function mapLeaderboardRow(row, index) {
   return decorateRankedRow({
     id: row.user_id,
@@ -245,6 +284,7 @@ function mapLeaderboardRow(row, index) {
     teamId: row.team_id,
     isVerified: Boolean(row.is_verified),
     verified: Boolean(row.is_verified),
+    featuredBadges: normalizeFeaturedBadges(row.featured_badges),
     accountStatus: row.account_status,
     activeSeconds: Number(row.active_seconds || 0),
     idleSeconds: Number(row.idle_seconds || 0),
@@ -297,9 +337,11 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
   const baseSql = leaderboardBaseSql(baseOptions);
   const rows = await sequelize.query(`
     ${baseSql}
-    SELECT * FROM ranked
-    WHERE rank_position > :offset
-      AND rank_position <= (:offset + :limit)
+    SELECT ranked.*, upp.featured_badges_json AS featured_badges
+    FROM ranked
+    LEFT JOIN user_profile_preferences upp ON upp.user_id = ranked.user_id
+    WHERE ranked.rank_position > :offset
+      AND ranked.rank_position <= (:offset + :limit)
     ORDER BY rank_position ASC
   `, {
     replacements,
@@ -314,8 +356,10 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
   if (currentUserId) {
     const currentRows = await sequelize.query(`
       ${baseSql}
-      SELECT * FROM ranked
-      WHERE user_id = :currentUserId
+      SELECT ranked.*, upp.featured_badges_json AS featured_badges
+      FROM ranked
+      LEFT JOIN user_profile_preferences upp ON upp.user_id = ranked.user_id
+      WHERE ranked.user_id = :currentUserId
       LIMIT 1
     `, {
       replacements: { ...replacements, currentUserId: Number(currentUserId) },

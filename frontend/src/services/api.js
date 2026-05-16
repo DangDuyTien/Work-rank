@@ -91,6 +91,13 @@ function normalizeLeaderboardRow(row, index = 0) {
     avatarUrl: user.avatarUrl || row.avatarUrl || '',
     photoUrl: user.photoUrl || row.photoUrl || '',
     imageUrl: user.imageUrl || row.imageUrl || '',
+    featuredBadges: Array.isArray(row.featuredBadges)
+      ? row.featuredBadges
+      : Array.isArray(row.featured_badges)
+        ? row.featured_badges
+        : Array.isArray(user.featuredBadges)
+          ? user.featuredBadges
+          : [],
     isVerified: normalizeVerified(user, row),
     verified: normalizeVerified(user, row),
     accountStatus: user.status || row.accountStatus || row.status || 'active',

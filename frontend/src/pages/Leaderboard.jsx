@@ -35,6 +35,7 @@ const AVATAR_GRADS = [
 
 const BADGE_STYLES = {
   dev: { bg: 'linear-gradient(135deg, rgba(236,254,255,0.96), rgba(125,211,252,0.3), rgba(255,255,255,0.92))', border: 'rgba(34,211,238,0.62)', color: '#075985', icon: Code },
+  partner: { bg: 'linear-gradient(135deg, rgba(236,253,245,0.98), rgba(45,212,191,0.24), rgba(254,249,195,0.64))', border: 'rgba(20,184,166,0.5)', color: '#047857', icon: ShieldCheck },
   champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
   weekly: { bg: 'rgba(37,99,235,0.12)', border: 'rgba(37,99,235,0.26)', color: '#2563eb', icon: Medal },
   monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
@@ -86,8 +87,51 @@ function isDevRanker(user = {}) {
   return email === 'tien@gmail.com' || id === 8 || name === 'dang duy tien';
 }
 
+function hasFeaturedBadge(user = {}, label) {
+  const badges = Array.isArray(user.featuredBadges)
+    ? user.featuredBadges
+    : Array.isArray(user.featured_badges)
+      ? user.featured_badges
+      : [];
+  return badges.some((badge) => String(badge || '').trim() === label);
+}
+
+function isPartnerRanker(user = {}) {
+  return hasFeaturedBadge(user, 'Đối tác WorkRank');
+}
+
 function devRankerStyle(user, variant = 'row') {
-  if (!isDevRanker(user)) return {};
+  const isDev = isDevRanker(user);
+  const isPartner = isPartnerRanker(user);
+  if (!isDev && !isPartner) return {};
+  if (isPartner && !isDev) {
+    if (variant === 'table') {
+      return {
+        background: 'linear-gradient(90deg, rgba(236,253,245,0.98), rgba(45,212,191,0.18) 30%, rgba(254,249,195,0.22) 58%, rgba(255,255,255,0.98) 88%)',
+        backgroundSize: '220% 100%',
+        boxShadow: 'inset 4px 0 0 rgba(20,184,166,0.82), inset -1px 0 0 rgba(245,158,11,0.18), inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -1px 0 rgba(20,184,166,0.16), 0 0 18px rgba(20,184,166,0.12)',
+        animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+      };
+    }
+    if (variant === 'podium') {
+      return {
+        padding: '10px 8px 0',
+        borderRadius: 8,
+        border: '1px solid rgba(20,184,166,0.46)',
+        background: 'radial-gradient(circle at 28% 16%, rgba(255,255,255,0.94) 0 10%, transparent 24%), linear-gradient(145deg, rgba(236,253,245,0.9), rgba(45,212,191,0.16), rgba(254,249,195,0.36))',
+        backgroundSize: '160% 160%, 220% 100%',
+        boxShadow: '0 12px 30px rgba(20,184,166,0.12), 0 0 22px rgba(245,158,11,0.12), inset 0 0 0 1px rgba(255,255,255,0.82)',
+        animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+      };
+    }
+    return {
+      background: 'linear-gradient(90deg, rgba(236,253,245,0.96), rgba(45,212,191,0.15), rgba(255,255,255,0.94))',
+      backgroundSize: '220% 100%',
+      border: '1px solid rgba(20,184,166,0.42)',
+      boxShadow: '0 8px 22px rgba(20,184,166,0.1), 0 0 18px rgba(245,158,11,0.1), inset 0 0 0 1px rgba(255,255,255,0.76)',
+      animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+    };
+  }
   if (variant === 'table') {
     return {
       background: 'linear-gradient(90deg, rgba(236,254,255,0.98), rgba(103,232,249,0.24) 30%, rgba(191,219,254,0.18) 58%, rgba(255,255,255,0.98) 86%)',
@@ -120,6 +164,7 @@ function rankBadges(user, rank, range) {
   const actions = userActions(user);
   const badges = [];
   if (isDevRanker(user)) badges.push({ key: 'dev', label: 'Dev', style: 'dev' });
+  if (isPartnerRanker(user)) badges.push({ key: 'partner', label: 'Đối tác', style: 'partner' });
   if (rank === 1) {
     if (range === 'week') badges.push({ key: 'weekly', label: 'Nhất tuần', style: 'weekly' });
     else if (range === 'month') badges.push({ key: 'monthly', label: 'Nhất tháng', style: 'monthly' });
@@ -132,7 +177,7 @@ function rankBadges(user, rank, range) {
   if (actions >= 10000) badges.push({ key: '10k', label: '10K thao tác', style: 'volume' });
   else if (actions >= 5000) badges.push({ key: '5k', label: '5K thao tác', style: 'volume' });
   if (Number(user.focusScore || 0) >= 90) badges.push({ key: 'focus', label: 'Tập trung', style: 'streak' });
-  return badges.slice(0, isDevRanker(user) ? 4 : 3);
+  return badges.slice(0, (isDevRanker(user) || isPartnerRanker(user)) ? 4 : 3);
 }
 
 function RankBadge({ badge, compact = false }) {
@@ -141,7 +186,7 @@ function RankBadge({ badge, compact = false }) {
   return (
     <span
       title={badge.label}
-      className={badge.style === 'dev' ? 'leaderboard-dev-badge' : undefined}
+      className={badge.style === 'dev' || badge.style === 'partner' ? 'leaderboard-dev-badge' : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -156,7 +201,7 @@ function RankBadge({ badge, compact = false }) {
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: 'nowrap',
-        ...(badge.style === 'dev' ? { backgroundSize: '220% 100%', animation: 'leaderboard-dev-badge-flow 5.4s ease-in-out infinite' } : {}),
+        ...(badge.style === 'dev' || badge.style === 'partner' ? { backgroundSize: '220% 100%', animation: 'leaderboard-dev-badge-flow 5.4s ease-in-out infinite' } : {}),
       }}
     >
       <Icon size={compact ? 10 : 11} strokeWidth={2.6} />

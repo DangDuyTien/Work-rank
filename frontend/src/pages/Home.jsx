@@ -1,36 +1,77 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  Code2,
+  Download,
+  Flame,
+  MousePointerClick,
+  ShieldCheck,
+  TimerReset,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const featureItems = [
-  { label: 'Realtime', text: 'Theo dõi phím, click và thời gian hoạt động theo từng phiên.' },
-  { label: 'Leaderboard', text: 'Bảng xếp hạng theo ngày, tuần, tháng cho cá nhân và nhóm.' },
-  { label: 'Pomodoro', text: 'Đồng hồ tập trung tích hợp, tự động bắt đầu tracker khi focus.' },
-  { label: 'Desktop', text: 'Tracker chạy trên máy người dùng, dữ liệu rõ nguồn và trạng thái.' },
-  { label: 'Security', text: 'Cảnh báo bất thường, khóa thiết bị và kiểm tra chống gian lận.' },
-  { label: 'Nhóm', text: 'Tạo team, thi đấu năng suất và theo dõi tiến độ cùng đồng nghiệp.' },
+const metrics = [
+  { value: '2.5s', label: 'chu kỳ đồng bộ' },
+  { value: '99.9%', label: 'uptime dashboard' },
+  { value: '30d', label: 'raw event retention' },
 ];
 
-const faqData = [
-  { q: 'WorkRank hoạt động thế nào?', a: 'WorkRank ghi nhận số phím bấm, click chuột và thời gian hoạt động qua Desktop Tracker. Dữ liệu được đồng bộ realtime lên dashboard để bạn và team theo dõi năng suất.' },
-  { q: 'Desktop Tracker có an toàn không?', a: 'Tracker chỉ ghi số lượng phím/click, không ghi nội dung. Dữ liệu được mã hóa và chỉ chủ sở hữu mới xem được chi tiết.' },
-  { q: 'Làm sao để bắt đầu?', a: 'Tạo tài khoản, tải Desktop Tracker về máy, chạy ứng dụng và bắt đầu tracking. Không cần cấu hình phức tạp.' },
-  { q: 'Có hỗ trợ làm việc nhóm không?', a: 'Có. Bạn có thể tạo nhóm, mời thành viên, thi đấu năng suất qua leaderboard và theo dõi tiến độ theo ngày/tuần/tháng.' },
+const features = [
+  {
+    icon: Activity,
+    title: 'Realtime tracker',
+    text: 'Theo dõi nhịp làm việc theo phiên, trạng thái online và tổng thao tác trong ngày.',
+  },
+  {
+    icon: Trophy,
+    title: 'Leaderboard nhanh',
+    text: 'Xếp hạng theo ngày, tuần, tháng với phân trang backend và query đã tối ưu.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Chống gian lận',
+    text: 'Chấm điểm nghi vấn, khóa thiết bị bất thường và lưu dấu vết để admin kiểm tra.',
+  },
+  {
+    icon: TimerReset,
+    title: 'Pomodoro liền mạch',
+    text: 'Đồng hồ tập trung gắn với tracker để giữ nhịp làm việc mà không cần tab phụ.',
+  },
+];
+
+const leaderboardRows = [
+  { rank: 1, name: 'Đặng Duy Tiến', score: '4,314', badge: 'Dev' },
+  { rank: 2, name: 'Minh Anh', score: '3,280', badge: 'Top ngày' },
+  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Nhóm A' },
+];
+
+const timeline = [
+  { time: '09:00', value: 62 },
+  { time: '10:00', value: 84 },
+  { time: '11:00', value: 52 },
+  { time: '13:00', value: 91 },
+  { time: '14:00', value: 74 },
+  { time: '15:00', value: 88 },
 ];
 
 function useScrollReveal() {
   useEffect(() => {
-    const els = document.querySelectorAll('[data-reveal]');
+    const els = document.querySelectorAll('[data-wr-reveal]');
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-          }
+          if (entry.isIntersecting) entry.target.classList.add('is-visible');
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.12 }
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
@@ -47,163 +88,237 @@ export default function Home() {
   const { user } = useAuth();
   const isSignedIn = Boolean(user);
   const primaryTo = isSignedIn ? '/dashboard' : '/login';
-  const [openFAQ, setOpenFAQ] = useState(null);
+  const [activeTerminal, setActiveTerminal] = useState('curl');
 
   useScrollReveal();
 
   return (
-    <main className="home-page">
-      <header className="home-nav">
-        <Link to="/" className="home-wordmark" aria-label="WorkRank">
-          <span className="home-logo-block">W</span>
-          orkRank
+    <main className="wr-home-page">
+      <header className="wr-home-nav">
+        <Link to="/" className="wr-home-brand" aria-label="WorkRank">
+          <span>W</span>
+          <strong>WorkRank</strong>
         </Link>
-        <nav className="home-nav-menu" aria-label="WorkRank home navigation">
+        <nav className="wr-home-links" aria-label="Điều hướng trang chủ">
           <Link to="/dashboard">Dashboard</Link>
           <Link to="/leaderboard">Xếp hạng</Link>
           <Link to="/pomodoro">Pomodoro</Link>
           <Link to="/tracker">Tracker</Link>
           <Link to="/groups">Nhóm</Link>
         </nav>
-        <Link className="home-download-button" to={primaryTo}>
-          {isSignedIn ? firstName(user) : 'Bắt đầu'}
-          <ChevronRight size={14} strokeWidth={2} />
+        <Link className="wr-home-nav-action" to={primaryTo}>
+          {isSignedIn ? firstName(user) : 'Vào app'}
+          <ChevronRight size={16} strokeWidth={2.4} />
         </Link>
       </header>
 
-      <section className="home-hero">
-        <div className="home-hero-content">
-          <div className="home-announcement" data-reveal>
-            <span>Mới</span>
-            <p>Desktop tracker cho Windows, macOS và Linux.</p>
-            <Link to="/tracker">Chi tiết <ChevronRight size={12} strokeWidth={2} /></Link>
-          </div>
-
-          <h1 className="home-hero-heading" data-reveal>
-            <span className="home-hero-prompt">$</span>
-            <span className="home-hero-title">WorkRank</span>
-            <span className="home-heading-sub">realtime workspace tracker</span>
-          </h1>
-
-          <p className="home-lead" data-reveal>
-            Dashboard, tracker, bảng xếp hạng và nhóm trong một giao diện gọn.
-            Dùng cho team muốn thấy nhịp làm việc mà không cần báo cáo thủ công.
-          </p>
-
-          <div className="home-hero-actions" data-reveal>
-            <Link className="home-primary-action" to={primaryTo}>
-              {isSignedIn ? 'Vào app' : 'Đăng nhập'}
-              <ChevronRight size={14} strokeWidth={2.5} />
-            </Link>
-            <Link className="home-secondary-action" to="/leaderboard">Xem xếp hạng</Link>
-            <Link className="home-secondary-action" to="/pomodoro">Pomodoro</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-terminal" data-reveal>
-        <div className="home-term-window">
-          <div className="home-term-bar">
-            <div className="home-term-dots">
-              <span className="home-term-dot home-term-red"></span>
-              <span className="home-term-dot home-term-yellow"></span>
-              <span className="home-term-dot home-term-green"></span>
-            </div>
-            <span className="home-term-title">workrank@local — api/status</span>
-          </div>
-          <div className="home-term-body">
-            <div className="home-term-line"><span className="home-prompt">$</span> curl -s https://workrank.local/api/status</div>
-            <div className="home-term-line home-out"><span className="home-prompt">→</span> 8 users online · 2.5s cycle · 0 alerts</div>
-            <div className="home-term-line home-out"><span className="home-prompt">→</span> tracker: active (desktop: 12, web: 4)</div>
-            <div className="home-term-line home-out"><span className="home-prompt">→</span> uptime: 127d 14h 32m</div>
-            <div className="home-term-line"><span className="home-prompt">$</span> <span className="home-cursor">_</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-stats" data-reveal>
-        <div className="home-stats-inner">
-          <div className="home-stat-item">
-            <span className="home-stat-value">127</span>
-            <span className="home-stat-label">days uptime</span>
-          </div>
-          <div className="home-stat-item">
-            <span className="home-stat-value">8</span>
-            <span className="home-stat-label">users online</span>
-          </div>
-          <div className="home-stat-item">
-            <span className="home-stat-value">2.5s</span>
-            <span className="home-stat-label">sync cycle</span>
-          </div>
-          <div className="home-stat-item">
-            <span className="home-stat-value">0</span>
-            <span className="home-stat-label">active alerts</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-feature-band" data-reveal>
-        <h2 className="home-section-title">Tính năng</h2>
-        <div className="home-feature-grid">
-          {featureItems.map((item) => (
-            <article key={item.label} className="home-feature-item">
-              <h3>{item.label}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="home-cta-band" data-reveal>
-        <div className="home-cta-inner">
-          <p className="home-cta-text">
-            <span className="home-cta-prompt">&gt;</span> Sẵn sàng theo dõi năng suất?
-          </p>
-          <Link className="home-cta-button" to={primaryTo}>
-            {isSignedIn ? 'Vào Dashboard' : 'Tạo tài khoản miễn phí'}
-            <ChevronRight size={14} strokeWidth={2.5} />
-          </Link>
-        </div>
-      </section>
-
-      <section className="home-faq-band" data-reveal>
-        <h2 className="home-section-title">FAQ</h2>
-        <div className="home-faq-list">
-          {faqData.map((item) => (
-            <div
-              key={item.q}
-              className={'home-faq-item' + (openFAQ === item.q ? ' is-open' : '')}
-              onClick={() => setOpenFAQ(openFAQ === item.q ? null : item.q)}
-            >
-              <div className="home-faq-head">
-                <span className="home-faq-marker">{openFAQ === item.q ? '–' : '>'}</span>
-                <span>{item.q}</span>
+      <section className="wr-home-hero">
+        <div className="wr-hero-visual" aria-hidden="true">
+          <div className="wr-preview-shell">
+            <div className="wr-preview-topbar">
+              <div className="wr-preview-brand">
+                <span></span>
+                WorkRank Live
               </div>
-              {openFAQ === item.q && (
-                <p className="home-faq-answer">{item.a}</p>
-              )}
+              <div className="wr-preview-status">
+                <span></span>
+                realtime
+              </div>
             </div>
-          ))}
+            <div className="wr-preview-grid">
+              <div className="wr-preview-panel wr-preview-panel-main">
+                <div className="wr-panel-head">
+                  <span>Hoạt động hôm nay</span>
+                  <strong>4,314</strong>
+                </div>
+                <div className="wr-activity-chart">
+                  {timeline.map((item) => (
+                    <span key={item.time} style={{ height: `${item.value}%` }}></span>
+                  ))}
+                </div>
+                <div className="wr-chart-labels">
+                  {timeline.map((item) => <span key={item.time}>{item.time}</span>)}
+                </div>
+              </div>
+
+              <div className="wr-preview-panel wr-preview-rank">
+                <div className="wr-panel-head">
+                  <span>Top ngày</span>
+                  <Trophy size={17} />
+                </div>
+                {leaderboardRows.map((row) => (
+                  <div className="wr-rank-row" key={row.rank}>
+                    <b>{row.rank}</b>
+                    <div>
+                      <strong>{row.name}</strong>
+                      <span>{row.badge}</span>
+                    </div>
+                    <em>{row.score}</em>
+                  </div>
+                ))}
+              </div>
+
+              <div className="wr-preview-panel wr-preview-tiles">
+                <div className="wr-mini-tile">
+                  <MousePointerClick size={16} />
+                  <strong>926</strong>
+                  <span>click</span>
+                </div>
+                <div className="wr-mini-tile">
+                  <Code2 size={16} />
+                  <strong>3.2k</strong>
+                  <span>phím</span>
+                </div>
+                <div className="wr-mini-tile">
+                  <Clock3 size={16} />
+                  <strong>6h 12m</strong>
+                  <span>active</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="home-faq-foot">
-          WorkRank được duy trì miễn phí. Mọi thắc mắc liên hệ qua Facebook.
-        </p>
+
+        <div className="wr-home-hero-content">
+          <div className="wr-home-pill" data-wr-reveal>
+            <span>New</span>
+            Desktop tracker cho Windows, macOS và Linux
+          </div>
+          <h1 data-wr-reveal>
+            WorkRank
+            <span> realtime workspace tracker</span>
+          </h1>
+          <p data-wr-reveal>
+            Dashboard gọn cho team muốn xem nhịp làm việc, xếp hạng, Pomodoro và trạng thái tracker trong một nơi.
+            Không cần báo cáo thủ công, không kéo dữ liệu nặng lên trình duyệt.
+          </p>
+          <div className="wr-home-actions" data-wr-reveal>
+            <Link className="wr-home-primary" to={primaryTo}>
+              {isSignedIn ? 'Vào Dashboard' : 'Đăng nhập để bắt đầu'}
+              <ArrowRight size={17} strokeWidth={2.5} />
+            </Link>
+            <Link className="wr-home-secondary" to="/leaderboard">
+              <Trophy size={16} />
+              Xem xếp hạng
+            </Link>
+            <Link className="wr-home-secondary" to="/tracker">
+              <Download size={16} />
+              Tải tracker
+            </Link>
+          </div>
+        </div>
       </section>
 
-      <footer className="home-footer">
-        <div className="home-footer-inner">
-          <div className="home-footer-brand">
-            <strong>WorkRank</strong>
-            <span>realtime workspace tracker</span>
+      <section className="wr-home-metrics" data-wr-reveal>
+        {metrics.map((metric) => (
+          <div className="wr-metric" key={metric.label}>
+            <strong>{metric.value}</strong>
+            <span>{metric.label}</span>
           </div>
-          <div className="home-footer-links">
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/leaderboard">Xếp hạng</Link>
-            <Link to="/pomodoro">Pomodoro</Link>
-            <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer">Liên hệ</a>
-          </div>
-          <span className="home-footer-copy">&copy; 2026 WorkRank</span>
+        ))}
+      </section>
+
+      <section className="wr-home-section wr-home-product" data-wr-reveal>
+        <div className="wr-section-copy">
+          <span className="wr-section-kicker">Product</span>
+          <h2>Từ tracker đến leaderboard trong một luồng rõ ràng.</h2>
+          <p>
+            Dữ liệu được gom theo phút/ngày, cache ngắn hạn và phân trang ở backend. Giao diện chỉ lấy phần cần hiển thị nên mở trang nhanh hơn khi user tăng.
+          </p>
         </div>
+        <div className="wr-command-card">
+          <div className="wr-command-tabs">
+            {['curl', 'npm', 'desktop'].map((tab) => (
+              <button
+                type="button"
+                key={tab}
+                className={activeTerminal === tab ? 'is-active' : ''}
+                onClick={() => setActiveTerminal(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="wr-command-line">
+            <span>$</span>
+            {activeTerminal === 'curl' && 'curl -s https://workrank.local/api/status'}
+            {activeTerminal === 'npm' && 'npm run dev --workspace workrank-realtime'}
+            {activeTerminal === 'desktop' && 'workrank://open?tracker=desktop'}
+          </div>
+          <div className="wr-command-output">
+            <CheckCircle2 size={16} />
+            online users cached · leaderboard paginated · socket batched
+          </div>
+        </div>
+      </section>
+
+      <section className="wr-home-section wr-feature-section" data-wr-reveal>
+        <div className="wr-section-head">
+          <span className="wr-section-kicker">Workspace</span>
+          <h2>Đủ công cụ cho team vận hành hằng ngày.</h2>
+        </div>
+        <div className="wr-feature-grid">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <article className="wr-feature-card" key={feature.title}>
+                <div className="wr-feature-icon"><Icon size={20} strokeWidth={2.4} /></div>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="wr-home-section wr-workflow-section" data-wr-reveal>
+        <div className="wr-workflow-copy">
+          <span className="wr-section-kicker">Flow</span>
+          <h2>Một màn hình đủ để biết team đang chạy ra sao.</h2>
+        </div>
+        <div className="wr-workflow-list">
+          <div>
+            <span><Activity size={17} /></span>
+            <strong>Tracker ghi nhận</strong>
+            <p>Desktop app gửi batch hoạt động thay vì đẩy từng event rời rạc.</p>
+          </div>
+          <div>
+            <span><BarChart3 size={17} /></span>
+            <strong>Backend tổng hợp</strong>
+            <p>Summary theo phút/ngày, cache dashboard và rank để giảm tải DB.</p>
+          </div>
+          <div>
+            <span><Users size={17} /></span>
+            <strong>Team theo dõi</strong>
+            <p>Dashboard, nhóm và leaderboard lấy dữ liệu phân trang đã tối ưu.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="wr-home-final" data-wr-reveal>
+        <div>
+          <span><Flame size={18} /></span>
+          <h2>Bắt đầu theo dõi năng suất ngay hôm nay.</h2>
+          <p>Vào dashboard nếu bạn đã đăng nhập, hoặc mở tracker để đồng bộ phiên làm việc đầu tiên.</p>
+        </div>
+        <Link className="wr-home-primary" to={primaryTo}>
+          {isSignedIn ? 'Mở dashboard' : 'Đăng nhập'}
+          <ArrowRight size={17} strokeWidth={2.5} />
+        </Link>
+      </section>
+
+      <footer className="wr-home-footer">
+        <div className="wr-home-brand">
+          <span>W</span>
+          <strong>WorkRank</strong>
+        </div>
+        <div>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/leaderboard">Xếp hạng</Link>
+          <Link to="/pomodoro">Pomodoro</Link>
+          <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer">Liên hệ</a>
+        </div>
+        <small>2026 · realtime workspace tracker</small>
       </footer>
     </main>
   );

@@ -80,17 +80,65 @@ module.exports = {
     await addIndexIfMissing(queryInterface, 'work_sessions', ['user_id', 'status', 'started_at'], {
       name: 'work_sessions_user_status_started_idx',
     });
+    await addIndexIfMissing(queryInterface, 'work_sessions', ['user_id', 'started_at'], {
+      name: 'work_sessions_user_started_idx',
+    });
     await addIndexIfMissing(queryInterface, 'devices', ['user_id', 'last_sync_at'], {
       name: 'devices_user_last_sync_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'devices', ['last_sync_at'], {
+      name: 'devices_last_sync_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'devices', ['revoked_at'], {
+      name: 'devices_revoked_at_idx',
     });
     await addIndexIfMissing(queryInterface, 'users', ['status', 'team_id'], {
       name: 'users_status_team_idx',
     });
+    await addIndexIfMissing(queryInterface, 'users', ['team_id', 'status'], {
+      name: 'users_team_status_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'users', ['created_at', 'id'], {
+      name: 'users_created_id_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'teams', ['owner_id'], {
+      name: 'teams_owner_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'activity_events', ['suspicion_score', 'event_time'], {
+      name: 'activity_events_suspicion_time_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'friendships', ['status', 'requester_id', 'updated_at'], {
+      name: 'friendships_status_requester_updated_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'friendships', ['status', 'addressee_id', 'updated_at'], {
+      name: 'friendships_status_addressee_updated_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'friendships', ['status', 'requester_id', 'created_at'], {
+      name: 'friendships_status_requester_created_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'friendships', ['status', 'addressee_id', 'created_at'], {
+      name: 'friendships_status_addressee_created_idx',
+    });
+    await addIndexIfMissing(queryInterface, 'profile_likes', ['target_user_id', 'liked_date'], {
+      name: 'profile_likes_target_date_idx',
+    });
   },
 
   async down(queryInterface) {
+    await removeIndexIfExists(queryInterface, 'profile_likes', 'profile_likes_target_date_idx');
+    await removeIndexIfExists(queryInterface, 'friendships', 'friendships_status_addressee_created_idx');
+    await removeIndexIfExists(queryInterface, 'friendships', 'friendships_status_requester_created_idx');
+    await removeIndexIfExists(queryInterface, 'friendships', 'friendships_status_addressee_updated_idx');
+    await removeIndexIfExists(queryInterface, 'friendships', 'friendships_status_requester_updated_idx');
+    await removeIndexIfExists(queryInterface, 'activity_events', 'activity_events_suspicion_time_idx');
+    await removeIndexIfExists(queryInterface, 'teams', 'teams_owner_idx');
+    await removeIndexIfExists(queryInterface, 'users', 'users_created_id_idx');
+    await removeIndexIfExists(queryInterface, 'users', 'users_team_status_idx');
     await removeIndexIfExists(queryInterface, 'users', 'users_status_team_idx');
+    await removeIndexIfExists(queryInterface, 'devices', 'devices_revoked_at_idx');
+    await removeIndexIfExists(queryInterface, 'devices', 'devices_last_sync_idx');
     await removeIndexIfExists(queryInterface, 'devices', 'devices_user_last_sync_idx');
+    await removeIndexIfExists(queryInterface, 'work_sessions', 'work_sessions_user_started_idx');
     await removeIndexIfExists(queryInterface, 'work_sessions', 'work_sessions_user_status_started_idx');
     await removeIndexIfExists(queryInterface, 'activity_events', 'activity_events_device_security_idx');
     await removeIndexIfExists(queryInterface, 'activity_events', 'activity_events_time_user_idx');

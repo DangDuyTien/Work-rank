@@ -15,6 +15,12 @@ function floorToMinute(value) {
   return date;
 }
 
+function isMissingTableError(error) {
+  return error?.parent?.code === 'ER_NO_SUCH_TABLE'
+    || error?.original?.code === 'ER_NO_SUCH_TABLE'
+    || /doesn't exist|no such table/i.test(String(error?.message || ''));
+}
+
 async function findOrCreateDevice(userId, payload, options = {}) {
   const allowCreate = options.allowCreate !== false;
   const existing = await Device.findOne({ where: { userId, deviceUuid: payload.deviceUuid } });
@@ -181,11 +187,18 @@ async function upsertDailyStat(userId, eventTime, delta, transaction) {
 
 async function upsertMinuteStat(userId, bucketStartAt, delta, transaction) {
   const bucket = floorToMinute(bucketStartAt);
-  let stat = await UserMinuteStat.findOne({
-    where: { userId, bucketStartAt: bucket },
-    transaction,
-    lock: transaction?.LOCK.UPDATE,
-  });
+  let stat;
+  try {
+    stat = await UserMinuteStat.findOne({
+      where: { userId, bucketStartAt: bucket },
+      transaction,
+      lock: transaction?.LOCK.UPDATE,
+    });
+  } catch (error) {
+    if (!isMissingTableError(error)) throw error;
+    console.warn('user_minute_stats table missing; skipping minute summary write. Run migrations to enable optimized summaries.');
+    return null;
+  }
 
   if (!stat) {
     try {
@@ -455,12 +468,26 @@ async function todayStats(userId) {
 async function realtimeUsers() {
   return cache.rememberJson('workrank:online-users:5m', 5, async () => {
     const since = new Date(Date.now() - 5 * 60 * 1000);
-    return UserMinuteStat.findAll({
-      attributes: ['userId', [sequelize.fn('MAX', sequelize.col('bucket_start_at')), 'lastEventAt']],
-      where: { bucketStartAt: { [Op.gte]: since } },
-      group: ['userId'],
-      raw: true,
-    });
+    try {
+      return await UserMinuteStat.findAll({
+        attributes: ['userId', [sequelize.fn('MAX', sequelize.col('bucket_start_at')), 'lastEventAt']],
+        where: { bucketStartAt: { [Op.gte]: since } },
+        group: ['userId'],
+        raw: true,
+      });
+    } catch (error) {
+      if (!isMissingTableError(error)) throw error;
+      console.warn('user_minute_stats table missing; falling back to activity_events for realtime users.');
+      return ActivityEvent.findAll({
+        attributes: ['userId', [sequelize.fn('MAX', sequelize.col('event_time')), 'lastEventAt']],
+        where: {
+          eventTime: { [Op.gte]: since },
+          suspicionScore: { [Op.lt]: fraudDetection.LIMITS.highSuspicionThreshold },
+        },
+        group: ['userId'],
+        raw: true,
+      });
+    }
   });
 }
 
