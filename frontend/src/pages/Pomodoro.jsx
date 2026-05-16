@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
-import { playPomodoroChime, playTickSound, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
+import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
 import {
   Bell,
   BellOff,
@@ -79,6 +79,7 @@ function loadPomodoroState() {
         completedAt: Number(parsed.completedAt || 0),
         startedOnce: Boolean(parsed.startedOnce),
         endsAt: null,
+        notified: Boolean(parsed.notified),
       };
     }
     const preset = getPomodoroPreset(parsed.presetKey);
@@ -218,16 +219,28 @@ export default function Pomodoro() {
         if (remainingSeconds > 0) {
           return { ...prev, remainingSeconds };
         }
+        try {
+          const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
+          const stored = raw ? JSON.parse(raw) : {};
+          if (stored.notified) {
+            return {
+              presetKey: stored.presetKey || prev.presetKey,
+              mode: stored.mode || prev.mode,
+              remainingSeconds: Math.max(0, Number(stored.remainingSeconds || 0)),
+              running: false,
+              completedFocusCount: Math.max(0, Number(stored.completedFocusCount || 0)),
+              completedAt: Number(stored.completedAt || 0),
+              startedOnce: false,
+              endsAt: null,
+              notified: true,
+            };
+          }
+        } catch {}
         return completePomodoroStep(prev);
       });
     }, 1000);
     return () => window.clearInterval(timer);
   }, [pomodoro.running]);
-
-  useEffect(() => {
-    if (!pomodoro.running || pomodoro.remainingSeconds <= 0) return;
-    playTickSound(appSettings.pomodoro?.volume ?? 0.12);
-  }, [pomodoro.remainingSeconds, pomodoro.running, appSettings.pomodoro?.volume]);
 
   useEffect(() => {
     if (!pomodoro.completedAt || pomodoro.notified) return;

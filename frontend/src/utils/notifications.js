@@ -32,25 +32,6 @@ export function playPomodoroChime(volume = 0.12) {
   }
 }
 
-export function playTickSound(volume = 0.12) {
-  try {
-    const ctx = getAudioContext();
-    const gain = ctx.createGain();
-    const vol = Math.max(0, Math.min(1, volume)) * 0.18;
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(vol, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    gain.connect(ctx.destination);
-    const o = ctx.createOscillator();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(1200, now);
-    o.frequency.exponentialRampToValueAtTime(800, now + 0.05);
-    o.connect(gain);
-    o.start(now);
-    o.stop(now + 0.06);
-  } catch {}
-}
-
 export function requestNotificationPermission() {
   if (!('Notification' in window)) return Promise.resolve('denied');
   if (Notification.permission === 'granted') return Promise.resolve('granted');
@@ -84,15 +65,27 @@ let pipInterval = null;
 const PIP_TICK_KEY = 'workrank:pomodoro-state';
 const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
 
+function cell(d) { return '<div class="c"><div class="h t"><span class="n">' + d + '</span></div><div class="h b"><span class="n">' + d + '</span></div></div>'; }
+function clockHTML(mm, ss) { return cell(mm[0]) + cell(mm[1]) + '<span class="sep">:</span>' + cell(ss[0]) + cell(ss[1]); }
+
+function updatePipDOM(data) {
+  const pw = pipWindow;
+  if (!pw || pw.closed) return;
+  if (pw.__clock) pw.__clock.innerHTML = clockHTML(data.mm, data.ss);
+  if (pw.__label) pw.__label.textContent = data.label;
+  if (pw.__foot) pw.__foot.innerHTML = data.foot;
+  if (pw.__ring) pw.__ring.style.background = data.ring;
+}
+
 function pipTick() {
   if (!pipWindow || pipWindow.closed) { stopPipInterval(); return; }
   try {
     const raw = localStorage.getItem(PIP_TICK_KEY);
-    if (!raw) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    if (!raw) { try { closePipWindow(); } catch {} return; }
     const p = JSON.parse(raw);
-    if (!p || !p.running) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    if (!p || !p.running) { try { closePipWindow(); } catch {} return; }
     const endsAt = Number(p.endsAt || 0);
-    if (!endsAt) { pipWindow.postMessage({ type: 'pip-close' }, '*'); return; }
+    if (!endsAt) { try { closePipWindow(); } catch {} return; }
     const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
     if (rem <= 0) {
       const newFocusCount = (p.mode || 'focus') === 'focus'
@@ -132,26 +125,34 @@ function pipTick() {
         }
         vibrateDevice([200, 100, 200]);
       } catch {}
-      pipWindow.postMessage({ type: 'pip-close' }, '*');
+      try { closePipWindow(); } catch {}
       return;
     }
 
-    const minutes = String(Math.floor(rem / 60)).padStart(2, '0');
-    const seconds = String(rem % 60).padStart(2, '0');
+    const mm = String(Math.floor(rem / 60)).padStart(2, '0');
+    const ss = String(rem % 60).padStart(2, '0');
     const mode = p.mode || 'focus';
     const focusCount = Number(p.completedFocusCount || 0);
     const preset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
     const total = (mode === 'focus' ? preset[0] : mode === 'shortBreak' ? preset[1] : preset[2]) * 60;
+    const col = mode === 'focus' ? '#38bdf8' : mode === 'shortBreak' ? '#16a34a' : '#d97706';
+    const done = mode === 'longBreak' ? 4 : focusCount % 4;
+    var steps = '';
+    for (var i = 0; i < 4; i++) {
+      var sc = i < done ? '#22c55e' : (mode === 'focus' && i === (focusCount % 4) ? col : 'rgba(255,255,255,0.07)');
+      steps += '<span class="d" style="background:' + sc + '"></span>';
+    }
+    const label = mode === 'focus' ? 'Tập trung' : mode === 'shortBreak' ? 'Nghỉ ngắn' : 'Nghỉ dài';
+    const deg = (rem / (total || 1)) * 360;
+    const footHTML = '<span>' + (focusCount % 4 + 1) + '/4</span>' + steps + '<span>' + Math.floor(rem / 60) + 'p</span>';
 
-    pipWindow.postMessage({
-      type: 'pip-tick',
-      minutes,
-      seconds,
-      mode,
-      focusCount,
-      rem,
-      total,
-    }, '*');
+    updatePipDOM({
+      mm: mm,
+      ss: ss,
+      label: label,
+      foot: footHTML,
+      ring: 'conic-gradient(' + col + ' ' + deg + 'deg, rgba(255,255,255,0.05) 0deg)',
+    });
   } catch {}
 }
 
@@ -225,32 +226,15 @@ body{
 <div id="foot"><span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span></div>
 </div></div>
 <script>
-function cell(d){return '<div class="c"><div class="h t"><span class="n">'+d+'</span></div><div class="h b"><span class="n">'+d+'</span></div></div>'}
-function clock(m,s){return cell(m[0])+cell(m[1])+'<span class="sep">:</span>'+cell(s[0])+cell(s[1])}
-function upd(d){
-  if(d.type==='pip-close'){window.close();return}
-  if(d.type!=='pip-tick')return
-  var cl=document.getElementById('clock');if(cl)cl.innerHTML=clock(d.minutes,d.seconds)
-  var lb=document.getElementById('label');if(lb)lb.textContent=d.mode==='focus'?'Tập trung':d.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài'
-  var fc=Number(d.focusCount||0)
-  var dn=d.mode==='longBreak'?4:fc%4
-  var st=''
-  for(var i=0;i<4;i++){
-    var c=d.mode==='focus'?'#38bdf8':d.mode==='shortBreak'?'#16a34a':'#d97706'
-    var sc=i<dn?'#22c55e':(d.mode==='focus'&&i===(fc%4)?c:'rgba(255,255,255,0.07)')
-    st+='<span class="d" style="background:'+sc+'"></span>'
-  }
-  var ft=document.getElementById('foot');if(ft)ft.innerHTML='<span>'+(fc%4+1)+'/4</span>'+st+'<span>'+Math.floor(d.rem/60)+'p</span>'
-  var deg=(d.rem/(Number(d.total)||1))*360
-  var col=d.mode==='focus'?'#38bdf8':d.mode==='shortBreak'?'#16a34a':'#d97706'
-  var rg=document.getElementById('ring');if(rg)rg.style.background='conic-gradient('+col+' '+deg+'deg, rgba(255,255,255,0.05) 0deg)'
-}
-window.addEventListener('message',function(e){upd(e.data)})
+window.__clock=document.getElementById('clock')
+window.__label=document.getElementById('label')
+window.__foot=document.getElementById('foot')
+window.__ring=document.getElementById('ring')
 document.body.onclick=function(){window.close()}
 </script>
 </body></html>`);
     win.document.close();
-    startPipInterval();
+    setTimeout(startPipInterval, 50);
     win.addEventListener('pagehide', () => {
       if (pipWindow === win) { pipWindow = null; stopPipInterval(); }
     });
