@@ -3,6 +3,7 @@ const env = require('../config/env');
 const { User, UserProfileImage, UserProfilePreference } = require('../models');
 const sanitizeUser = require('../utils/sanitizeUser');
 const { decorateUserPresence } = require('../services/userPresence.service');
+const profileLikeService = require('../services/profileLike.service');
 
 const GALLERY_SLOT_COUNT = 6;
 const FEATURED_BADGE_LIMIT = 4;
@@ -183,6 +184,32 @@ async function removeGalleryImage(req, res) {
   return res.status(204).send();
 }
 
+async function getProfileLikes(req, res) {
+  try {
+    const data = await profileLikeService.getProfileLikes({
+      viewerId: req.user.id,
+      targetUserId: req.params.id,
+    });
+    return res.json({ data });
+  } catch (error) {
+    if (error.status) return res.status(error.status).json({ message: error.message });
+    throw error;
+  }
+}
+
+async function likeProfile(req, res) {
+  try {
+    const data = await profileLikeService.likeProfile({
+      likerId: req.user.id,
+      targetUserId: req.params.id,
+    });
+    return res.status(data.created ? 201 : 200).json({ data });
+  } catch (error) {
+    if (error.status) return res.status(error.status).json({ message: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   list,
   getById,
@@ -194,4 +221,6 @@ module.exports = {
   gallery,
   updateGalleryImage,
   removeGalleryImage,
+  getProfileLikes,
+  likeProfile,
 };

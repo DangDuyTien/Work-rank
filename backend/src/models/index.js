@@ -9,6 +9,7 @@ const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
 const SimulationSetting = require('./SimulationSetting');
 const Friendship = require('./Friendship');
+const ProfileLike = require('./ProfileLike');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -43,6 +44,11 @@ User.hasMany(Friendship, { as: 'ReceivedFriendships', foreignKey: 'addresseeId' 
 Friendship.belongsTo(User, { as: 'Requester', foreignKey: 'requesterId' });
 Friendship.belongsTo(User, { as: 'Addressee', foreignKey: 'addresseeId' });
 
+User.hasMany(ProfileLike, { as: 'GivenProfileLikes', foreignKey: 'likerId' });
+User.hasMany(ProfileLike, { as: 'ReceivedProfileLikes', foreignKey: 'targetUserId' });
+ProfileLike.belongsTo(User, { as: 'Liker', foreignKey: 'likerId' });
+ProfileLike.belongsTo(User, { as: 'TargetUser', foreignKey: 'targetUserId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -55,4 +61,5 @@ module.exports = {
   UserProfilePreference,
   SimulationSetting,
   Friendship,
+  ProfileLike,
 };

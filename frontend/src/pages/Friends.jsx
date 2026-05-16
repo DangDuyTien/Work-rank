@@ -292,6 +292,7 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [friendLoadError, setFriendLoadError] = useState('');
   const [busyKey, setBusyKey] = useState('');
 
   const loadData = useCallback(async (options = {}) => {
@@ -299,16 +300,32 @@ export default function Friends() {
     if (background) setRefreshing(true);
     else setLoading(true);
     setError('');
+    setFriendLoadError('');
     try {
-      const [friendRes, requestRes, userRes] = await Promise.all([
+      const [friendRes, requestRes, userRes] = await Promise.allSettled([
         friendsApi.list(),
         friendsApi.requests(),
         usersApi.list(),
       ]);
-      setFriendRows(friendRes.data || []);
-      setIncoming(requestRes.data?.incoming || []);
-      setOutgoing(requestRes.data?.outgoing || []);
-      setAllUsers(userRes.data || []);
+      if (userRes.status !== 'fulfilled') throw userRes.reason;
+
+      setAllUsers(userRes.value.data || []);
+
+      if (friendRes.status === 'fulfilled') {
+        setFriendRows(friendRes.value.data || []);
+      } else {
+        setFriendRows([]);
+        setFriendLoadError('Chưa tải được danh sách bạn bè. Kiểm tra bảng friendships trên database.');
+      }
+
+      if (requestRes.status === 'fulfilled') {
+        setIncoming(requestRes.value.data?.incoming || []);
+        setOutgoing(requestRes.value.data?.outgoing || []);
+      } else {
+        setIncoming([]);
+        setOutgoing([]);
+        setFriendLoadError('Chưa tải được dữ liệu lời mời. Kiểm tra bảng friendships trên database.');
+      }
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Không tải được dữ liệu bạn bè';
       setError(message);
@@ -480,6 +497,14 @@ export default function Friends() {
           Làm mới
         </button>
       </section>
+
+      {friendLoadError && (
+        <Card style={{ padding: 12, borderColor: 'rgba(217,119,6,0.22)', background: 'rgba(245,158,11,0.07)', boxShadow: 'none' }}>
+          <div style={{ color: '#92400e', fontSize: 12, fontWeight: 800, lineHeight: 1.5 }}>
+            {friendLoadError}
+          </div>
+        </Card>
+      )}
 
       <section className="friends-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
         {[

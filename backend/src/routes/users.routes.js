@@ -8,6 +8,8 @@ router.use(auth);
 router.get('/', asyncHandler(controller.list));
 router.get('/:id/profile-preferences', asyncHandler(controller.getProfilePreferences));
 router.patch('/:id/profile-preferences', asyncHandler(controller.updateProfilePreferences));
+router.get('/:id/profile-likes', asyncHandler(controller.getProfileLikes));
+router.post('/:id/profile-likes', asyncHandler(controller.likeProfile));
 router.get('/:id/gallery', asyncHandler(controller.gallery));
 router.put('/:id/gallery/:slot', asyncHandler(controller.updateGalleryImage));
 router.delete('/:id/gallery/:slot', asyncHandler(controller.removeGalleryImage));

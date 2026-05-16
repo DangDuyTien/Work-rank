@@ -364,6 +364,14 @@ export const users = {
     const res = await api.get(`/api/users/${id}/gallery`);
     return { ...res, data: unwrapArray(res.data) };
   },
+  profileLikes: async (id) => {
+    const res = await api.get(`/api/users/${id}/profile-likes`);
+    return { ...res, data: res.data?.data || {} };
+  },
+  likeProfile: async (id) => {
+    const res = await api.post(`/api/users/${id}/profile-likes`);
+    return { ...res, data: res.data?.data || {} };
+  },
   updateGalleryImage: async (id, slot, imageData) => {
     const res = await api.put(`/api/users/${id}/gallery/${slot}`, { imageData });
     return { ...res, data: res.data?.image || res.data?.data || res.data };

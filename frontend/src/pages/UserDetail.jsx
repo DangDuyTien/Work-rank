@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { activity, users as usersApi } from '../services/api';
+import { activity, friends as friendsApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   avatarHue,
@@ -24,6 +24,7 @@ import {
   Flame,
   Fish,
   Gauge,
+  Heart,
   ImagePlus,
   Keyboard,
   Medal,
@@ -41,6 +42,8 @@ import {
   Timer,
   Trophy,
   Turtle,
+  UserCheck,
+  UserPlus,
   UserRound,
   Zap,
 } from 'lucide-react';
@@ -644,6 +647,12 @@ export default function UserDetail() {
   const [hasFeaturedBadgePreference, setHasFeaturedBadgePreference] = useState(false);
   const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
   const [badgeEditorError, setBadgeEditorError] = useState('');
+  const [profileLikes, setProfileLikes] = useState({ totalCount: 0, todayCount: 0, likedToday: false, canLikeToday: false });
+  const [heartPending, setHeartPending] = useState(false);
+  const [heartError, setHeartError] = useState('');
+  const [friendshipState, setFriendshipState] = useState({ status: 'none', requestId: null });
+  const [friendPending, setFriendPending] = useState(false);
+  const [friendError, setFriendError] = useState('');
   const [loading, setLoading] = useState(true);
   const [chartNow, setChartNow] = useState(new Date());
 
@@ -683,6 +692,54 @@ export default function UserDetail() {
   }, [id]);
 
   useEffect(() => {
+    let mounted = true;
+    setFriendshipState({ status: 'none', requestId: null });
+    setFriendError('');
+
+    if (!authUser?.id || String(authUser.id) === String(id)) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const loadFriendshipState = async () => {
+      const [friendResult, requestResult] = await Promise.allSettled([
+        friendsApi.list(),
+        friendsApi.requests(),
+      ]);
+      if (!mounted) return;
+
+      const targetId = String(id);
+      const friendRows = friendResult.status === 'fulfilled' ? friendResult.value.data || [] : [];
+      const requests = requestResult.status === 'fulfilled' ? requestResult.value.data || {} : {};
+      const incoming = requests.incoming || [];
+      const outgoing = requests.outgoing || [];
+
+      const friend = friendRows.find((row) => String(row.friend?.id || row.friend?.user_id || '') === targetId);
+      if (friend) {
+        setFriendshipState({ status: 'friend', requestId: friend.friendshipId || friend.id || null });
+      } else {
+        const incomingRequest = incoming.find((row) => String(row.friend?.id || row.friend?.user_id || '') === targetId);
+        const outgoingRequest = outgoing.find((row) => String(row.friend?.id || row.friend?.user_id || '') === targetId);
+        if (incomingRequest) {
+          setFriendshipState({ status: 'incoming', requestId: incomingRequest.friendshipId || incomingRequest.id || null });
+        } else if (outgoingRequest) {
+          setFriendshipState({ status: 'outgoing', requestId: outgoingRequest.friendshipId || outgoingRequest.id || null });
+        }
+      }
+
+      if (friendResult.status === 'rejected' || requestResult.status === 'rejected') {
+        setFriendError('Chưa tải được trạng thái kết bạn.');
+      }
+    };
+
+    loadFriendshipState();
+    return () => {
+      mounted = false;
+    };
+  }, [authUser?.id, id]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => setChartNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
@@ -698,11 +755,13 @@ export default function UserDetail() {
     setHasFeaturedBadgePreference(false);
     setBadgeEditorError('');
     setBadgeEditorOpen(false);
+    setHeartError('');
 
     const fetchProfileCustomization = async () => {
-      const [galleryResult, preferenceResult] = await Promise.allSettled([
+      const [galleryResult, preferenceResult, likesResult] = await Promise.allSettled([
         usersApi.gallery(id),
         usersApi.profilePreferences(id),
+        usersApi.profileLikes(id),
       ]);
       if (!mounted) return;
 
@@ -724,6 +783,17 @@ export default function UserDetail() {
         setHasFeaturedBadgePreference(Boolean(preferences.hasFeaturedBadgesPreference));
       } else {
         console.error('Failed to fetch profile preferences:', preferenceResult.reason);
+      }
+
+      if (likesResult.status === 'fulfilled') {
+        setProfileLikes({
+          totalCount: Number(likesResult.value.data?.totalCount || 0),
+          todayCount: Number(likesResult.value.data?.todayCount || 0),
+          likedToday: Boolean(likesResult.value.data?.likedToday),
+          canLikeToday: Boolean(likesResult.value.data?.canLikeToday),
+        });
+      } else {
+        console.error('Failed to fetch profile likes:', likesResult.reason);
       }
     };
 
@@ -890,6 +960,8 @@ export default function UserDetail() {
   const isVerified = user.isVerified === true || user.verified === true || user.is_verified === true || user.isVerified === 1 || user.verified === 1 || user.is_verified === 1 || user.isVerified === '1' || user.verified === '1' || user.is_verified === '1';
   const canEditAvatar = String(authUser?.id || '') === String(user.id || id);
   const canCustomizeProfile = canEditAvatar || authUser?.role === 'admin';
+  const canHeartProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
+  const canFriendProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const unlockedBadgeList = badges.filter((badge) => badge.unlocked);
   const selectableBadgeList = authUser?.role === 'admin'
     ? [...PRIVILEGE_BADGES, ...unlockedBadgeList.filter((badge) => !PRIVILEGE_BADGES.some((item) => item.label === badge.label))]
@@ -1028,6 +1100,58 @@ export default function UserDetail() {
     }
   };
 
+  const handleHeartProfile = async () => {
+    if (!canHeartProfile || !profileLikes.canLikeToday || heartPending) return;
+    setHeartPending(true);
+    setHeartError('');
+    try {
+      const res = await usersApi.likeProfile(user.id || id);
+      setProfileLikes({
+        totalCount: Number(res.data?.totalCount || 0),
+        todayCount: Number(res.data?.todayCount || 0),
+        likedToday: Boolean(res.data?.likedToday),
+        canLikeToday: Boolean(res.data?.canLikeToday),
+      });
+    } catch (error) {
+      setHeartError(error.response?.data?.message || error.message || 'Không tim được hồ sơ này.');
+    } finally {
+      setHeartPending(false);
+    }
+  };
+
+  const handleFriendProfile = async () => {
+    if (!canFriendProfile || friendPending || ['friend', 'outgoing'].includes(friendshipState.status)) return;
+    setFriendPending(true);
+    setFriendError('');
+    try {
+      if (friendshipState.status === 'incoming' && friendshipState.requestId) {
+        await friendsApi.accept(friendshipState.requestId);
+        setFriendshipState((current) => ({ ...current, status: 'friend' }));
+      } else {
+        const res = await friendsApi.sendRequest(user.id || id);
+        setFriendshipState({
+          status: res.data?.status === 'accepted' ? 'friend' : 'outgoing',
+          requestId: res.data?.friendshipId || res.data?.id || null,
+        });
+      }
+    } catch (error) {
+      setFriendError(error.response?.data?.message || error.message || 'Không gửi được lời mời kết bạn.');
+    } finally {
+      setFriendPending(false);
+    }
+  };
+
+  const FriendIcon = friendshipState.status === 'friend' ? UserCheck : friendshipState.status === 'outgoing' ? Clock3 : UserPlus;
+  const friendLabel = friendPending
+    ? 'Đang xử lý...'
+    : friendshipState.status === 'friend'
+      ? 'Bạn bè'
+      : friendshipState.status === 'outgoing'
+        ? 'Đã gửi lời mời'
+        : friendshipState.status === 'incoming'
+          ? 'Chấp nhận kết bạn'
+          : 'Kết bạn';
+
   const avatarVisual = (
     <>
       {photoUrl ? (
@@ -1150,7 +1274,38 @@ export default function UserDetail() {
               {(user.email === 'tien@gmail.com' || Number(user.id || id) === 8 || (user.name || '').toLowerCase() === 'dang duy tien') && (
                 <DevPill />
               )}
+              {canFriendProfile && (
+                <button
+                  type="button"
+                  className={`profile-friend-button is-${friendshipState.status}`}
+                  disabled={friendPending || ['friend', 'outgoing'].includes(friendshipState.status)}
+                  onClick={handleFriendProfile}
+                >
+                  <FriendIcon size={14} strokeWidth={2.6} />
+                  {friendLabel}
+                </button>
+              )}
+              {canHeartProfile ? (
+                <button
+                  type="button"
+                  className={profileLikes.likedToday ? 'profile-heart-button is-liked' : 'profile-heart-button'}
+                  disabled={heartPending || !profileLikes.canLikeToday}
+                  onClick={handleHeartProfile}
+                  title={profileLikes.likedToday ? 'Hôm nay bạn đã tim hồ sơ này' : 'Tim hồ sơ này'}
+                >
+                  <Heart size={14} fill={profileLikes.likedToday ? 'currentColor' : 'none'} strokeWidth={2.6} />
+                  {heartPending ? 'Đang tim...' : profileLikes.likedToday ? 'Đã tim' : 'Tim'}
+                </button>
+              ) : (
+                <span className="profile-heart-readonly">
+                  <Heart size={14} fill="currentColor" strokeWidth={2.6} />
+                  Lượt tim
+                </span>
+              )}
+              <span className="profile-heart-count">{fmtNum(profileLikes.totalCount)} lượt tim</span>
             </div>
+            {friendError && <div className="profile-friend-error">{friendError}</div>}
+            {heartError && <div className="profile-heart-error">{heartError}</div>}
           </div>
         </div>
 
