@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
 import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
@@ -233,6 +233,24 @@ export default function Pomodoro() {
     }
     vibrateDevice([200, 100, 200]);
   }, [pomodoro.completedAt, pomodoro.mode, appSettings.notifications?.sound, appSettings.pomodoro?.volume]);
+
+  const runningRef = useRef(pomodoro.running);
+  runningRef.current = pomodoro.running;
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && runningRef.current) {
+        openPipWindow();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (runningRef.current) {
+        openPipWindow();
+      }
+    };
+  }, []);
 
   const setPomodoroPreset = (presetKey) => {
     setPomodoro(createPomodoroState(presetKey));

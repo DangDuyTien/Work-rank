@@ -61,54 +61,112 @@ export function vibrateDevice(pattern = [200, 100, 200]) {
 
 let pipWindow = null;
 const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
-const MODE_LABELS = { focus: 'Tập trung', shortBreak: 'Nghỉ ngắn', longBreak: 'Nghỉ dài' };
-
-function updatePipContent() {
-  if (!pipWindow || pipWindow.closed) return;
-  try {
-    const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-    if (!raw) { closePipWindow(); return; }
-    const parsed = JSON.parse(raw);
-    if (!parsed.running) { closePipWindow(); return; }
-    const endsAt = Number(parsed.endsAt || 0);
-    if (!endsAt) { closePipWindow(); return; }
-    const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-    if (remaining <= 0) { closePipWindow(); return; }
-    const m = String(Math.floor(remaining / 60)).padStart(2, '0');
-    const s = String(remaining % 60).padStart(2, '0');
-    const mode = parsed.mode || 'focus';
-    const doc = pipWindow.document;
-    const timeEl = doc.getElementById('pip-time');
-    const labelEl = doc.getElementById('pip-label');
-    if (timeEl) timeEl.textContent = m + ':' + s;
-    if (labelEl) labelEl.textContent = MODE_LABELS[mode] || 'Tập trung';
-  } catch { closePipWindow(); }
-}
 
 export function openPipWindow() {
   if (!('documentPictureInPicture' in window)) return false;
   if (pipWindow && !pipWindow.closed) { pipWindow.focus(); return true; }
-  window.documentPictureInPicture.requestWindow({ width: 240, height: 150 }).then((win) => {
+  window.documentPictureInPicture.requestWindow({ width: 300, height: 220 }).then((win) => {
     pipWindow = win;
     win.document.write(`<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<head><meta charset="utf-8">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0f172a;color:#fff;font-family:'JetBrains Mono','SF Mono',monospace;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;user-select:none}
-#pip-label{font-size:13px;color:#38bdf8;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
-#pip-time{font-size:56px;font-weight:900;line-height:1;margin-top:6px;letter-spacing:-1px}
-#pip-sub{font-size:11px;color:#64748b;margin-top:4px;font-weight:600}
-</style></head>
+body{
+  background:#0f172a;height:100vh;overflow:hidden;user-select:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:1px solid rgba(56,189,248,0.15);font-family:'JetBrains Mono',monospace;
+}
+.pip-ring{
+  width:172px;height:172px;border-radius:0;
+  padding:8px;display:flex;align-items:center;justify-content:center;
+  transition:background .3s;
+}
+.pip-inner{
+  width:100%;height:100%;border-radius:0;
+  background:#0f172a;border:1px solid rgba(56,189,248,0.08);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#pip-label{
+  font-size:10px;font-weight:900;color:#38bdf8;
+  text-transform:uppercase;letter-spacing:.12em;line-height:1;
+}
+#pip-time{
+  font-family:'Orbitron','JetBrains Mono',monospace;
+  font-size:48px;font-weight:900;line-height:1;margin-top:10px;
+  color:#ffffff;letter-spacing:1px;
+  text-shadow:0 0 6px rgba(56,189,248,0.12);
+}
+.pip-footer{
+  display:flex;gap:12px;margin-top:10px;align-items:center;
+}
+.pip-dot{
+  width:16px;height:16px;border-radius:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;font-weight:900;line-height:1;
+}
+#pip-bar{
+  display:flex;gap:4px;align-items:center;
+}
+#pip-bar span{
+  width:18px;height:5px;border-radius:0;display:block;
+}
+</style>
+</head>
 <body>
+<div class="pip-ring" id="pip-ring">
+<div class="pip-inner">
 <div id="pip-label">Tập trung</div>
 <div id="pip-time">25:00</div>
-<div id="pip-sub">Pomodoro · Nhấp để đóng</div>
-<script>document.body.onclick=()=>window.close()</script>
+<div class="pip-footer">
+<div class="pip-dot" id="pip-step">1</div>
+<div class="pip-dot" id="pip-progress">0%</div>
+</div>
+</div>
+</div>
+<script>
+var KEY='workrank:pomodoro-state';
+var PRESETS={classic:1500,deep:3000,sprint:900};
+var BREAKS={classic:300,deep:600,sprint:180};
+var LONGS={classic:900,deep:1500,sprint:600};
+var PCOLORS={focus:'#38bdf8',shortBreak:'#16a34a',longBreak:'#d97706'};
+function tick(){
+  try{
+    var raw=localStorage.getItem(KEY);if(!raw){window.close();return}
+    var p=JSON.parse(raw);if(!p.running){window.close();return}
+    var e=Number(p.endsAt||0);if(!e){window.close();return}
+    var r=Math.max(0,Math.ceil((e-Date.now())/1000));if(r<=0){window.close();return}
+    var pk=p.presetKey||'classic'
+    var total=p.mode==='longBreak'?LONGS[pk]:p.mode==='shortBreak'?BREAKS[pk]:PRESETS[pk]
+    if(!total)total=1500
+    var pct=Math.min(100,Math.round((total-r)/total*100))
+    var mm=String(Math.floor(r/60)).padStart(2,'0')
+    var ss=String(r%60).padStart(2,'0')
+    var c=PCOLORS[p.mode]||'#38bdf8'
+    document.getElementById('pip-time').textContent=mm+':'+ss
+    document.getElementById('pip-label').textContent=(p.mode==='focus'?'Tập trung':p.mode==='shortBreak'?'Nghỉ ngắn':'Nghỉ dài')
+    document.getElementById('pip-step').textContent=(p.completedFocusCount%4)+1+'/4'
+    document.getElementById('pip-progress').textContent=pct+'%'
+    document.getElementById('pip-ring').style.background='conic-gradient('+c+' '+pct*3.6+'deg, rgba(56,189,248,0.06) 0deg)'
+    var bar=document.getElementById('pip-bar')
+    if(!bar.innerHTML){
+      var html='';for(var i=0;i<4;i++)html+='<span id="bs'+i+'"></span>'
+      bar.innerHTML=html
+    }
+    var done=p.mode==='longBreak'?4:p.completedFocusCount%4
+    for(var i=0;i<4;i++){
+      var el=document.getElementById('bs'+i)
+      if(el)el.style.background=i<done?'#22c55e':i===(done%4)&&p.mode==='focus'?c:'rgba(255,255,255,0.08)'
+    }
+  }catch(e){window.close()}
+}
+tick();setInterval(tick,1000);
+document.body.onclick=function(){window.close()}
+</script>
 </body></html>`);
     win.document.close();
     win.addEventListener('pagehide', () => { pipWindow = null; });
-    updatePipContent();
   }).catch(() => {});
   return true;
 }
@@ -125,5 +183,6 @@ export function isPipOpen() {
 }
 
 export function tickPip() {
-  updatePipContent();
+  if (!pipWindow || pipWindow.closed) return;
+  try { pipWindow.document.getElementById('pip-time'); } catch { pipWindow = null; }
 }
