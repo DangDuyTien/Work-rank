@@ -4,7 +4,7 @@ import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi }
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
-import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Gem, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Code, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 
 const RANGES = [
@@ -34,7 +34,7 @@ const AVATAR_GRADS = [
 ];
 
 const BADGE_STYLES = {
-  dev: { bg: 'linear-gradient(135deg, rgba(236,254,255,0.96), rgba(125,211,252,0.3), rgba(255,255,255,0.92))', border: 'rgba(34,211,238,0.62)', color: '#075985', icon: Gem },
+  dev: { bg: 'linear-gradient(135deg, rgba(236,254,255,0.96), rgba(125,211,252,0.3), rgba(255,255,255,0.92))', border: 'rgba(34,211,238,0.62)', color: '#075985', icon: Code },
   champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
   weekly: { bg: 'rgba(37,99,235,0.12)', border: 'rgba(37,99,235,0.26)', color: '#2563eb', icon: Medal },
   monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
@@ -91,7 +91,9 @@ function devRankerStyle(user, variant = 'row') {
   if (variant === 'table') {
     return {
       background: 'linear-gradient(90deg, rgba(236,254,255,0.98), rgba(103,232,249,0.24) 30%, rgba(191,219,254,0.18) 58%, rgba(255,255,255,0.98) 86%)',
+      backgroundSize: '220% 100%',
       boxShadow: 'inset 4px 0 0 rgba(34,211,238,0.88), inset -1px 0 0 rgba(14,165,233,0.24), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(34,211,238,0.2), 0 0 18px rgba(103,232,249,0.16)',
+      animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
     };
   }
   if (variant === 'podium') {
@@ -100,13 +102,17 @@ function devRankerStyle(user, variant = 'row') {
       borderRadius: 8,
       border: '1px solid rgba(34,211,238,0.58)',
       background: 'radial-gradient(circle at 26% 16%, rgba(255,255,255,0.94) 0 10%, transparent 24%), linear-gradient(145deg, rgba(236,254,255,0.88), rgba(103,232,249,0.18), rgba(255,255,255,0.76))',
+      backgroundSize: '160% 160%, 220% 100%',
       boxShadow: '0 12px 30px rgba(14,165,233,0.14), 0 0 24px rgba(103,232,249,0.18), inset 0 0 0 1px rgba(255,255,255,0.8)',
+      animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
     };
   }
   return {
     background: 'linear-gradient(90deg, rgba(236,254,255,0.94), rgba(103,232,249,0.18), rgba(255,255,255,0.92))',
+    backgroundSize: '220% 100%',
     border: '1px solid rgba(34,211,238,0.52)',
     boxShadow: '0 8px 22px rgba(14,165,233,0.11), 0 0 18px rgba(103,232,249,0.13), inset 0 0 0 1px rgba(255,255,255,0.74)',
+    animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
   };
 }
 
@@ -135,6 +141,7 @@ function RankBadge({ badge, compact = false }) {
   return (
     <span
       title={badge.label}
+      className={badge.style === 'dev' ? 'leaderboard-dev-badge' : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -149,6 +156,7 @@ function RankBadge({ badge, compact = false }) {
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: 'nowrap',
+        ...(badge.style === 'dev' ? { backgroundSize: '220% 100%', animation: 'leaderboard-dev-badge-flow 5.4s ease-in-out infinite' } : {}),
       }}
     >
       <Icon size={compact ? 10 : 11} strokeWidth={2.6} />

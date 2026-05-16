@@ -102,6 +102,54 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   50% { box-shadow: 0 0 20px rgba(59,130,246,0.7); }
 }
 
+@keyframes leaderboard-dev-frame-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: saturate(1.08) brightness(1.015);
+  }
+}
+
+@keyframes leaderboard-dev-badge-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 0 0 0 rgba(34, 211, 238, 0);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.32);
+  }
+}
+
+.leaderboard-dev-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.leaderboard-dev-badge::after {
+  content: '';
+  position: absolute;
+  inset: -60% auto -60% -45%;
+  width: 38%;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.72) 48%, transparent 100%);
+  opacity: 0.36;
+  pointer-events: none;
+  transform: translateX(-160%) rotate(10deg);
+  animation: leaderboard-dev-badge-shine 5.4s ease-in-out infinite;
+}
+
+@keyframes leaderboard-dev-badge-shine {
+  0%, 55% {
+    transform: translateX(-160%) rotate(10deg);
+  }
+  78%, 100% {
+    transform: translateX(440%) rotate(10deg);
+  }
+}
+
 /* ── Utility classes ── */
 .mono { font-family: 'JetBrains Mono', 'SF Mono', monospace; }
 
