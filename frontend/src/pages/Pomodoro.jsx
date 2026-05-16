@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
-import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
+import { playPomodoroChime, playTickSound, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
 import {
   Bell,
   BellOff,
@@ -211,6 +211,11 @@ export default function Pomodoro() {
     }, 1000);
     return () => window.clearInterval(timer);
   }, [pomodoro.running]);
+
+  useEffect(() => {
+    if (!pomodoro.running || pomodoro.remainingSeconds <= 0) return;
+    playTickSound(appSettings.pomodoro?.volume ?? 0.12);
+  }, [pomodoro.remainingSeconds, pomodoro.running, appSettings.pomodoro?.volume]);
 
   useEffect(() => {
     if (!pomodoro.completedAt) return;

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
-import { sendBrowserNotification, vibrateDevice, requestNotificationPermission, tickPip } from '../utils/notifications';
+import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
 import VerifiedBadge from './VerifiedBadge';
@@ -268,15 +268,15 @@ export default function Layout() {
       const fallbackInterval = window.setInterval(() => {
         try {
           const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-          if (!raw || !JSON.parse(raw).running) { document.title = DEFAULT_TITLE; tickPip(); return; }
+          if (!raw || !JSON.parse(raw).running) { document.title = DEFAULT_TITLE; ; return; }
           const endsAt = Number(JSON.parse(raw).endsAt || 0);
           if (!endsAt) return;
           const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-          if (rem <= 0) { document.title = DEFAULT_TITLE; tickPip(); return; }
+          if (rem <= 0) { document.title = DEFAULT_TITLE; ; return; }
           const m = String(Math.floor(rem / 60)).padStart(2, '0');
           const s = String(rem % 60).padStart(2, '0');
           if (document.title !== m + ':' + s + ' · Pomodoro') document.title = m + ':' + s + ' · Pomodoro';
-          tickPip();
+          ;
         } catch {}
       }, 1000);
       return () => { window.clearInterval(fallbackInterval); document.title = DEFAULT_TITLE; };
@@ -285,20 +285,20 @@ export default function Layout() {
     worker.onmessage = () => {
       try {
         const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); return; }
+        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; return; }
         const parsed = JSON.parse(raw);
         const running = Boolean(parsed.running);
-        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); return; }
+        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; return; }
         prevRunning = true;
         const endsAt = Number(parsed.endsAt || 0);
-        if (!endsAt) { document.title = DEFAULT_TITLE; tickPip(); return; }
+        if (!endsAt) { document.title = DEFAULT_TITLE; ; return; }
         const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-        if (rem <= 0) { document.title = DEFAULT_TITLE; tickPip(); return; }
+        if (rem <= 0) { document.title = DEFAULT_TITLE; ; return; }
         const m = String(Math.floor(rem / 60)).padStart(2, '0');
         const s = String(rem % 60).padStart(2, '0');
         document.title = m + ':' + s + ' · Pomodoro';
-        tickPip();
-      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; tickPip(); }
+        ;
+      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; ; }
     };
     worker.postMessage(null);
     return () => { worker.terminate(); document.title = DEFAULT_TITLE; };
