@@ -1,10 +1,9 @@
 const { Op } = require('sequelize');
-const { Friendship, User, UserProfilePreference } = require('../models');
+const { Friendship, User } = require('../models');
 const sanitizeUser = require('../utils/sanitizeUser');
 const { decorateUserPresence } = require('./userPresence.service');
 
 const userAttributes = ['id', 'name', 'email', 'role', 'teamId', 'isVerified', 'isSimulated', 'status', 'lastSeenAt'];
-const userInclude = [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }];
 
 function normalizeId(value) {
   const id = Number(value);
@@ -54,8 +53,8 @@ async function findExistingBetween(userId, targetUserId) {
 
 function friendshipInclude() {
   return [
-    { model: User, as: 'Requester', attributes: userAttributes, include: userInclude },
-    { model: User, as: 'Addressee', attributes: userAttributes, include: userInclude },
+    { model: User, as: 'Requester', attributes: userAttributes },
+    { model: User, as: 'Addressee', attributes: userAttributes },
   ];
 }
 

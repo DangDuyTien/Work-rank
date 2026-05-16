@@ -295,6 +295,10 @@ export default function Friends() {
   const [friendLoadError, setFriendLoadError] = useState('');
   const [busyKey, setBusyKey] = useState('');
 
+  const requestErrorMessage = (reason, fallback) => (
+    reason?.response?.data?.message || reason?.response?.data?.error || reason?.message || fallback
+  );
+
   const loadData = useCallback(async (options = {}) => {
     const background = options.background === true;
     if (background) setRefreshing(true);
@@ -315,7 +319,10 @@ export default function Friends() {
         setFriendRows(friendRes.value.data || []);
       } else {
         setFriendRows([]);
-        setFriendLoadError('Chưa tải được danh sách bạn bè. Kiểm tra bảng friendships trên database.');
+        setFriendLoadError(requestErrorMessage(
+          friendRes.reason,
+          'Chưa tải được danh sách bạn bè. Kiểm tra bảng friendships trên database.'
+        ));
       }
 
       if (requestRes.status === 'fulfilled') {
@@ -324,7 +331,10 @@ export default function Friends() {
       } else {
         setIncoming([]);
         setOutgoing([]);
-        setFriendLoadError('Chưa tải được dữ liệu lời mời. Kiểm tra bảng friendships trên database.');
+        setFriendLoadError(requestErrorMessage(
+          requestRes.reason,
+          'Chưa tải được dữ liệu lời mời. Kiểm tra bảng friendships trên database.'
+        ));
       }
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || 'Không tải được dữ liệu bạn bè';
