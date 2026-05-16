@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
+  Code,
   Crown,
   Eye,
   Medal,
@@ -17,16 +18,20 @@ import { users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 
-const FEATURED_BADGE_LIMIT = 4;
+const PRIVILEGE_BADGE_LIMIT = 4;
+const PROFILE_BADGE_STORAGE_LIMIT = 12;
 
 const PRIVILEGE_BADGES = [
-  { label: 'Tích xanh đặc quyền', icon: BadgeCheck },
+  { label: 'Dev đặc quyền', icon: Code },
+  { label: 'Người đóng góp', icon: Medal },
+  { label: 'Nhà sáng lập', icon: Trophy },
   { label: 'Thành viên VIP', icon: Crown },
   { label: 'Đối tác WorkRank', icon: ShieldCheck },
   { label: 'Người nổi bật', icon: Star },
-  { label: 'Nhà sáng lập', icon: Trophy },
-  { label: 'Hỗ trợ cộng đồng', icon: Medal },
 ];
+
+const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.label));
+const LEGACY_PRIVILEGE_BADGE_LABELS = new Set(['Tích xanh đặc quyền', ...PRIVILEGE_BADGE_LABELS]);
 
 const CARD = {
   background: '#ffffff',
@@ -62,7 +67,15 @@ function Avatar({ user }) {
 }
 
 function normalizeBadges(value) {
-  return Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).slice(0, FEATURED_BADGE_LIMIT) : [];
+  return Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).slice(0, PROFILE_BADGE_STORAGE_LIMIT) : [];
+}
+
+function isPrivilegeBadgeLabel(label) {
+  return PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
+}
+
+function isManagedPrivilegeBadgeLabel(label) {
+  return LEGACY_PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
 }
 
 export default function AdminPrivileges() {
@@ -140,12 +153,15 @@ export default function AdminPrivileges() {
   const toggleBadge = async (user, label) => {
     const userId = String(user.id);
     const current = normalizeBadges(badgeByUser[userId]);
-    const exists = current.includes(label);
-    if (!exists && current.length >= FEATURED_BADGE_LIMIT) {
-      toast(`Mỗi hồ sơ chỉ ghim tối đa ${FEATURED_BADGE_LIMIT} huy hiệu.`, { type: 'warning' });
+    const currentPrivileges = current.filter(isPrivilegeBadgeLabel);
+    const otherBadges = current.filter((item) => !isManagedPrivilegeBadgeLabel(item));
+    const exists = currentPrivileges.includes(label);
+    if (!exists && currentPrivileges.length >= PRIVILEGE_BADGE_LIMIT) {
+      toast(`Mỗi hồ sơ chỉ có tối đa ${PRIVILEGE_BADGE_LIMIT} huy hiệu đặc quyền.`, { type: 'warning' });
       return;
     }
-    const next = exists ? current.filter((item) => item !== label) : [...current, label];
+    const nextPrivileges = exists ? currentPrivileges.filter((item) => item !== label) : [...currentPrivileges, label];
+    const next = [...nextPrivileges, ...otherBadges].slice(0, PROFILE_BADGE_STORAGE_LIMIT);
     setUserSaving(userId, true);
     setBadgeByUser((state) => ({ ...state, [userId]: next }));
     try {
@@ -160,7 +176,7 @@ export default function AdminPrivileges() {
   };
 
   const verifiedCount = users.filter(isVerified).length;
-  const privilegedCount = Object.values(badgeByUser).filter((items) => normalizeBadges(items).length > 0).length;
+  const privilegedCount = Object.values(badgeByUser).filter((items) => normalizeBadges(items).some(isPrivilegeBadgeLabel)).length;
 
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 16 }}>
@@ -172,7 +188,7 @@ export default function AdminPrivileges() {
           </div>
           <h1 style={{ margin: '12px 0 8px', fontSize: 28, lineHeight: 1.1, color: '#0f172a' }}>Tích xanh và huy hiệu người dùng</h1>
           <p style={{ margin: 0, color: '#64748b', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>
-            Cấp tích xanh, ghim huy hiệu đặc quyền và mở hồ sơ để kiểm tra hiển thị.
+            Cấp tích xanh cho khung trên, cấp huy hiệu đặc quyền riêng cho khung ảnh hồ sơ.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -242,7 +258,7 @@ export default function AdminPrivileges() {
           <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 800 }}>Không có người dùng phù hợp.</div>
         ) : filteredUsers.map((user) => {
           const userId = String(user.id);
-          const selectedBadges = normalizeBadges(badgeByUser[userId]);
+          const selectedBadges = normalizeBadges(badgeByUser[userId]).filter(isPrivilegeBadgeLabel);
           const pending = Boolean(saving[userId]);
           return (
             <article key={userId} className="admin-privilege-row" style={{ ...CARD, padding: 14, display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) minmax(260px, 1.35fr) auto', alignItems: 'center', gap: 14 }}>

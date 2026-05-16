@@ -1,11 +1,18 @@
 const { Op, UniqueConstraintError } = require('sequelize');
-const { sequelize, Device, WorkSession, ActivityEvent, DailyStat } = require('../models');
+const { sequelize, Device, WorkSession, ActivityEvent, DailyStat, UserMinuteStat } = require('../models');
 const { calculateFocusScore, calculateRankScore } = require('../utils/score');
 const { generateSecret, hashSecret } = require('../utils/crypto');
 const fraudDetection = require('./fraudDetection.service');
+const cache = require('./cache.service');
 
 function toDateOnly(value) {
   return value.toISOString().slice(0, 10);
+}
+
+function floorToMinute(value) {
+  const date = new Date(value);
+  date.setUTCSeconds(0, 0);
+  return date;
 }
 
 async function findOrCreateDevice(userId, payload, options = {}) {
@@ -138,7 +145,7 @@ async function endSession(userId, sessionId) {
 }
 
 async function upsertDailyStat(userId, eventTime, delta, transaction) {
-  const statDate = toDateOnly(eventTime);
+  const statDate = typeof eventTime === 'string' ? eventTime : toDateOnly(eventTime);
   let stat = await DailyStat.findOne({
     where: { userId, statDate },
     transaction,
@@ -168,6 +175,47 @@ async function upsertDailyStat(userId, eventTime, delta, transaction) {
     focusScore: calculateFocusScore(activeSeconds, idleSeconds),
     keystrokeCount: Number(stat.keystrokeCount || 0) + Number(delta.keystrokeCount || 0),
     mouseClickCount: Number(stat.mouseClickCount || 0) + Number(delta.mouseClickCount || 0),
+  }, { transaction });
+  return stat;
+}
+
+async function upsertMinuteStat(userId, bucketStartAt, delta, transaction) {
+  const bucket = floorToMinute(bucketStartAt);
+  let stat = await UserMinuteStat.findOne({
+    where: { userId, bucketStartAt: bucket },
+    transaction,
+    lock: transaction?.LOCK.UPDATE,
+  });
+
+  if (!stat) {
+    try {
+      stat = await UserMinuteStat.create({
+        userId,
+        bucketStartAt: bucket,
+        statDate: toDateOnly(bucket),
+      }, { transaction });
+    } catch (error) {
+      if (!(error instanceof UniqueConstraintError || error.name === 'SequelizeUniqueConstraintError')) throw error;
+      stat = await UserMinuteStat.findOne({
+        where: { userId, bucketStartAt: bucket },
+        transaction,
+        lock: transaction?.LOCK.UPDATE,
+      });
+    }
+  }
+
+  const activeSeconds = Number(stat.activeSeconds || 0) + Number(delta.activeSeconds || 0);
+  const idleSeconds = Number(stat.idleSeconds || 0) + Number(delta.idleSeconds || 0);
+  const totalSeconds = activeSeconds + idleSeconds;
+  await stat.update({
+    activeSeconds,
+    idleSeconds,
+    totalSeconds,
+    focusScore: calculateFocusScore(activeSeconds, idleSeconds),
+    keystrokeCount: Number(stat.keystrokeCount || 0) + Number(delta.keystrokeCount || 0),
+    mouseClickCount: Number(stat.mouseClickCount || 0) + Number(delta.mouseClickCount || 0),
+    mouseMoveCount: Number(stat.mouseMoveCount || 0) + Number(delta.mouseMoveCount || 0),
+    eventCount: Number(stat.eventCount || 0) + Number(delta.eventCount || 0),
   }, { transaction });
   return stat;
 }
@@ -227,7 +275,23 @@ function sumDeltas(events) {
     keystrokeCount: acc.keystrokeCount + Number(event.keystrokeCount || 0),
     mouseClickCount: acc.mouseClickCount + Number(event.mouseClickCount || 0),
     mouseMoveCount: acc.mouseMoveCount + Number(event.mouseMoveCount || 0),
-  }), { activeSeconds: 0, idleSeconds: 0, keystrokeCount: 0, mouseClickCount: 0, mouseMoveCount: 0 });
+    eventCount: acc.eventCount + 1,
+  }), { activeSeconds: 0, idleSeconds: 0, keystrokeCount: 0, mouseClickCount: 0, mouseMoveCount: 0, eventCount: 0 });
+}
+
+function groupEventDeltas(events, keyFn) {
+  const groups = new Map();
+  for (const event of events) {
+    const key = keyFn(event);
+    const current = groups.get(key) || { key, events: [] };
+    current.events.push(event);
+    groups.set(key, current);
+  }
+  return Array.from(groups.values()).map((group) => ({
+    key: group.key,
+    delta: sumDeltas(group.events),
+    events: group.events,
+  }));
 }
 
 function buildRealtimeActivityUpdate(userId, stat, events, extra = {}) {
@@ -340,17 +404,28 @@ async function ingestBatch(userId, payload) {
     }
 
     let lastStat = null;
-    for (const event of events) {
-      lastStat = await upsertDailyStat(userId, event.eventTime, event, transaction);
-      if (event.sessionId) {
-        await WorkSession.increment({
-          activeSeconds: event.activeSeconds,
-          idleSeconds: event.idleSeconds,
-          keystrokeCount: event.keystrokeCount,
-          mouseClickCount: event.mouseClickCount,
-          mouseMoveCount: event.mouseMoveCount,
-        }, { where: { id: event.sessionId, userId }, transaction });
-      }
+    const dayGroups = groupEventDeltas(events, (event) => toDateOnly(event.eventTime));
+    for (const group of dayGroups) {
+      lastStat = await upsertDailyStat(userId, group.key, group.delta, transaction);
+    }
+
+    const minuteGroups = groupEventDeltas(events, (event) => floorToMinute(event.eventTime).toISOString());
+    for (const group of minuteGroups) {
+      await upsertMinuteStat(userId, group.key, group.delta, transaction);
+    }
+
+    const sessionGroups = groupEventDeltas(
+      events.filter((event) => event.sessionId),
+      (event) => String(event.sessionId),
+    );
+    for (const group of sessionGroups) {
+      await WorkSession.increment({
+        activeSeconds: group.delta.activeSeconds,
+        idleSeconds: group.delta.idleSeconds,
+        keystrokeCount: group.delta.keystrokeCount,
+        mouseClickCount: group.delta.mouseClickCount,
+        mouseMoveCount: group.delta.mouseMoveCount,
+      }, { where: { id: group.key, userId }, transaction });
     }
     await device.update({ lastSequence: maxSequence, lastSyncAt: new Date(), ...patternState }, { transaction });
     const flaggedCount = events.filter((event) => event.suspicionScore >= fraudDetection.LIMITS.highSuspicionThreshold).length;
@@ -378,12 +453,14 @@ async function todayStats(userId) {
 }
 
 async function realtimeUsers() {
-  const since = new Date(Date.now() - 5 * 60 * 1000);
-  return ActivityEvent.findAll({
-    attributes: ['userId', [sequelize.fn('MAX', sequelize.col('event_time')), 'lastEventAt']],
-    where: { eventTime: { [Op.gte]: since }, suspicionScore: { [Op.lt]: fraudDetection.LIMITS.highSuspicionThreshold } },
-    group: ['userId'],
-    raw: true,
+  return cache.rememberJson('workrank:online-users:5m', 5, async () => {
+    const since = new Date(Date.now() - 5 * 60 * 1000);
+    return UserMinuteStat.findAll({
+      attributes: ['userId', [sequelize.fn('MAX', sequelize.col('bucket_start_at')), 'lastEventAt']],
+      where: { bucketStartAt: { [Op.gte]: since } },
+      group: ['userId'],
+      raw: true,
+    });
   });
 }
 

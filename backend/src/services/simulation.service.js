@@ -4,6 +4,7 @@ const env = require('../config/env');
 const { sequelize, User, Team, Device, WorkSession, ActivityEvent, DailyStat, UserProfilePreference, SimulationSetting } = require('../models');
 const { calculateFocusScore, calculateRankScore } = require('../utils/score');
 const simulationPresence = require('./simulationPresence.service');
+const realtimeBatch = require('./realtimeBatch.service');
 
 const SETTINGS_ID = 1;
 const DEFAULT_TARGET_COUNT = 50;
@@ -523,6 +524,10 @@ function buildActivityPayload(user, stat, event, delta) {
 
 function emitToUserScopes(eventName, user, payload) {
   if (!state.io) return;
+  if (eventName === 'activity:user:update') {
+    realtimeBatch.queueActivityUpdate(state.io, payload);
+    return;
+  }
   let target = state.io.to('dashboard').to(`user:${user.id}`);
   if (user.teamId) target = target.to(`team:${user.teamId}`);
   target.emit(eventName, payload);

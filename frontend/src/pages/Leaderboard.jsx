@@ -204,6 +204,7 @@ export default function Leaderboard() {
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const [currentUserRank, setCurrentUserRank] = useState(null);
   const [totalRanked, setTotalRanked] = useState(0);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
 
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
@@ -246,19 +247,20 @@ export default function Leaderboard() {
     setLoading(true);
     try {
       let res;
+      const query = { page, limit: PAGE_SIZE, search };
       if (activeTab === 'global') {
-        res = await leaderboardApi.get(range);
+        res = await leaderboardApi.get(range, query);
       } else if (activeTab === 'friends') {
-        res = await leaderboardApi.friends(range);
+        res = await leaderboardApi.friends(range, query);
       } else if (selectedGroupId) {
-        res = await leaderboardApi.group(selectedGroupId, range);
+        res = await leaderboardApi.group(selectedGroupId, range, query);
       }
       if (res) {
         if (requestId !== requestIdRef.current) return;
         setUsers(res.data || []);
         setCurrentUserRank(res.currentUserRank || null);
         setTotalRanked(Number(res.totalRanked || res.data?.length || 0));
-        setPage(1);
+        setServerTotalPages(Math.max(1, Number(res.totalPages || 1)));
       }
     } catch (err) {
       if (requestId === requestIdRef.current) console.error(err);
@@ -268,7 +270,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     fetchData();
-  }, [range, activeTab, selectedGroupId]);
+  }, [range, activeTab, selectedGroupId, page, search]);
 
   const updateLocalVerification = (userId, nextVerified) => {
     const id = String(userId);
@@ -455,10 +457,11 @@ export default function Leaderboard() {
     };
   }, [socket, activeTab, selectedGroupId, range, user?.id]);
 
-  const top1 = users[0], top2 = users[1], top3 = users[2];
-  const filtered = users.filter(u=>(u.name||'').toLowerCase().includes(search.toLowerCase()));
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  const top1 = page === 1 && !search ? users[0] : null;
+  const top2 = page === 1 && !search ? users[1] : null;
+  const top3 = page === 1 && !search ? users[2] : null;
+  const totalPages = serverTotalPages;
+  const paginated  = users;
   const avgScore   = users.length ? Math.round(users.reduce((a,u)=>a+Number(u.score||0),0)/users.length) : 0;
   const timeStr = now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const CARD = {
@@ -488,19 +491,19 @@ export default function Leaderboard() {
           <div className="leaderboard-controls" style={{display: 'flex', gap: 20, alignItems: 'center'}}>
             {/* Tab Switcher */}
             <div style={{display:'flex',background:'rgba(15,23,42,0.04)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:6,padding:3,gap:2}}>
-              <button onClick={() => setActiveTab('global')} style={{
+              <button onClick={() => { setActiveTab('global'); setPage(1); }} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='global'?'#2563eb':'transparent',
                 color:activeTab==='global'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><Globe2 size={14} /> Toàn Cầu</button>
-              <button onClick={() => setActiveTab('friends')} style={{
+              <button onClick={() => { setActiveTab('friends'); setPage(1); }} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='friends'?'#2563eb':'transparent',
                 color:activeTab==='friends'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><UserCheck size={14} /> Bạn Bè</button>
-              <button onClick={() => setActiveTab('group')} style={{
+              <button onClick={() => { setActiveTab('group'); setPage(1); }} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='group'?'#2563eb':'transparent',
                 color:activeTab==='group'?'#fff':'#64748b',transition:'all .15s',
@@ -511,7 +514,7 @@ export default function Leaderboard() {
             {/* Time Range Filter */}
             <div style={{display:'flex',background:'rgba(15,23,42,0.04)',border:'1px solid rgba(15,23,42,0.1)',borderRadius:6,padding:3,gap:2}}>
               {RANGES.map(({key,label})=>(
-                <button key={key} onClick={()=>setRange(key)} style={{
+                <button key={key} onClick={()=>{ setRange(key); setPage(1); }} style={{
                   padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                   background:range===key?'#3b82f6':'transparent',
                   color:range===key?'#fff':'#64748b',transition:'all .15s',
@@ -616,7 +619,7 @@ export default function Leaderboard() {
           {myGroups.length > 0 ? (
             <select 
               value={selectedGroupId} 
-              onChange={e => setSelectedGroupId(e.target.value)}
+              onChange={e => { setSelectedGroupId(e.target.value); setPage(1); }}
               style={{
                 background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
                 color: '#0f172a', padding: '8px 12px', borderRadius: 6, outline: 'none',
@@ -733,7 +736,7 @@ export default function Leaderboard() {
       </div>
 
       {/* ── PODIUM ── */}
-      {!loading && users.length >= 1 && (
+      {!loading && page === 1 && !search && users.length >= 1 && (
         <div className="leaderboard-podium" style={{...CARD,padding:'28px 24px',marginBottom:20,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'end'}}>
           <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,minHeight:260}}>
             {top2 && (
@@ -792,7 +795,7 @@ export default function Leaderboard() {
 
           <div style={{display:'flex',flexDirection:'column',gap:6}}>
             {users.slice(3, 8).map((u,i)=>{
-              const rank=i+4;
+              const rank = Number(u.rankPosition || u.rank || i + 4);
               const devStyle = devRankerStyle(u);
               return (
                 <div key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)}
@@ -854,7 +857,7 @@ export default function Leaderboard() {
               ) : paginated.length === 0 ? (
                 <tr><td colSpan={5} style={{padding:'52px',textAlign:'center',color:'#94a3b8'}}>Không có người dùng phù hợp</td></tr>
               ) : paginated.map((u,i)=>{
-                const rank = (page-1)*PAGE_SIZE + i + 1;
+                const rank = Number(u.rankPosition || u.rank || (page-1)*PAGE_SIZE + i + 1);
                 const sc = Number(u.score||0);
                 const verified = isVerifiedRanker(u);
                 const badges = rankBadges(u, rank, range);

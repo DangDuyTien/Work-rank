@@ -235,32 +235,54 @@ export const dashboard = {
 };
 
 export const leaderboard = {
-  get: async (range = 'daily') => {
+  get: async (range = 'daily', options = {}) => {
     const apiRange = range === 'today' ? 'daily' : range === 'week' ? 'weekly' : range === 'month' ? 'monthly' : range;
-    const res = await api.get(`/api/leaderboard/${apiRange}`);
+    const params = new URLSearchParams();
+    if (options.page) params.set('page', String(options.page));
+    if (options.limit) params.set('limit', String(options.limit));
+    if (options.search) params.set('search', String(options.search));
+    const qs = params.toString();
+    const res = await api.get(`/api/leaderboard/${apiRange}${qs ? `?${qs}` : ''}`);
     return {
       ...res,
       data: unwrapArray(res.data).map(normalizeLeaderboardRow),
       currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
       totalRanked: Number(res.data?.totalRanked || 0),
+      page: Number(res.data?.page || options.page || 1),
+      limit: Number(res.data?.limit || options.limit || 20),
+      totalPages: Number(res.data?.totalPages || 1),
     };
   },
-  group: async (groupId, range = 'today') => {
-    const res = await api.get(`/api/leaderboard/team/${groupId}?range=${range}`);
+  group: async (groupId, range = 'today', options = {}) => {
+    const params = new URLSearchParams({ range });
+    if (options.page) params.set('page', String(options.page));
+    if (options.limit) params.set('limit', String(options.limit));
+    if (options.search) params.set('search', String(options.search));
+    const res = await api.get(`/api/leaderboard/team/${groupId}?${params.toString()}`);
     return {
       ...res,
       data: unwrapArray(res.data).map(normalizeLeaderboardRow),
       currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
       totalRanked: Number(res.data?.totalRanked || 0),
+      page: Number(res.data?.page || options.page || 1),
+      limit: Number(res.data?.limit || options.limit || 20),
+      totalPages: Number(res.data?.totalPages || 1),
     };
   },
-  friends: async (range = 'today') => {
-    const res = await api.get(`/api/leaderboard/friends?range=${range}`);
+  friends: async (range = 'today', options = {}) => {
+    const params = new URLSearchParams({ range });
+    if (options.page) params.set('page', String(options.page));
+    if (options.limit) params.set('limit', String(options.limit));
+    if (options.search) params.set('search', String(options.search));
+    const res = await api.get(`/api/leaderboard/friends?${params.toString()}`);
     return {
       ...res,
       data: unwrapArray(res.data).map(normalizeLeaderboardRow),
       currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
       totalRanked: Number(res.data?.totalRanked || 0),
+      page: Number(res.data?.page || options.page || 1),
+      limit: Number(res.data?.limit || options.limit || 50),
+      totalPages: Number(res.data?.totalPages || 1),
     };
   },
 };
@@ -333,11 +355,19 @@ export const friends = {
 };
 
 export const users = {
-  list: async () => {
-    const res = await api.get('/api/users');
+  list: async (options = {}) => {
+    const params = new URLSearchParams();
+    const page = Number(options.page || 1);
+    const limit = Number(options.limit || 100);
+    if (page > 1) params.set('page', String(page));
+    if (limit) params.set('limit', String(limit));
+    if (options.search) params.set('search', String(options.search));
+    const qs = params.toString();
+    const res = await api.get(`/api/users${qs ? `?${qs}` : ''}`);
     return {
       ...res,
       data: unwrapArray(res.data).map(normalizeUserSummary),
+      pagination: res.data?.pagination || null,
     };
   },
   get: async (id) => {

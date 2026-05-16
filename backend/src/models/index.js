@@ -5,6 +5,7 @@ const Device = require('./Device');
 const WorkSession = require('./WorkSession');
 const ActivityEvent = require('./ActivityEvent');
 const DailyStat = require('./DailyStat');
+const UserMinuteStat = require('./UserMinuteStat');
 const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
 const SimulationSetting = require('./SimulationSetting');
@@ -33,6 +34,9 @@ ActivityEvent.belongsTo(WorkSession, { foreignKey: 'sessionId' });
 User.hasMany(DailyStat, { foreignKey: 'userId' });
 DailyStat.belongsTo(User, { foreignKey: 'userId' });
 
+User.hasMany(UserMinuteStat, { foreignKey: 'userId' });
+UserMinuteStat.belongsTo(User, { foreignKey: 'userId' });
+
 User.hasMany(UserProfileImage, { foreignKey: 'userId' });
 UserProfileImage.belongsTo(User, { foreignKey: 'userId' });
 
@@ -57,6 +61,7 @@ module.exports = {
   WorkSession,
   ActivityEvent,
   DailyStat,
+  UserMinuteStat,
   UserProfileImage,
   UserProfilePreference,
   SimulationSetting,

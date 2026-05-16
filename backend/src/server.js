@@ -6,6 +6,7 @@ const socketOptions = require('./config/socket');
 const registerSockets = require('./sockets');
 const { sequelize } = require('./models');
 const simulationService = require('./services/simulation.service');
+const retentionService = require('./services/retention.service');
 
 async function start() {
   await sequelize.authenticate();
@@ -15,6 +16,7 @@ async function start() {
   registerSockets(io);
   server.listen(env.port, () => {
     console.log(`WorkRank backend listening on ${env.port}`);
+    retentionService.startRetentionJobs();
     simulationService.restorePersistedState({ io }).catch((error) => {
       console.error('Failed to restore simulation state', error);
     });

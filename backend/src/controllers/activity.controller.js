@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 const activityService = require('../services/activity.service');
-const dashboardService = require('../services/dashboard.service');
+const realtimeBatch = require('../services/realtimeBatch.service');
 
 const DESKTOP_PROTOCOL = 'workrank';
 
@@ -72,25 +72,14 @@ function shouldOpenDesktopOnServer() {
 
 function emitRealtime(req, realtime) {
   const io = req.app.get('io');
-  if (!io) return;
-  Promise.all([dashboardService.overview(), dashboardService.leaderboard()]).then(([overview, leaderboard]) => {
-    if (realtime) {
-      const payload = {
-        ...realtime,
-        userId: req.user.id,
-        user_id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        teamId: req.user.teamId,
-      };
-      let target = io.to('dashboard').to(`user:${req.user.id}`);
-      if (req.user.teamId) target = target.to(`team:${req.user.teamId}`);
-      target.emit('activity:user:update', payload);
-    }
-    io.to('dashboard').emit('dashboard:overview:update', overview);
-    io.to('dashboard').emit('leaderboard:update', leaderboard);
-  }).catch((error) => {
-    console.warn('Failed to emit realtime activity update:', error.message);
+  if (!io || !realtime) return;
+  realtimeBatch.queueActivityUpdate(io, {
+    ...realtime,
+    userId: req.user.id,
+    user_id: req.user.id,
+    name: req.user.name,
+    email: req.user.email,
+    teamId: req.user.teamId,
   });
 }
 

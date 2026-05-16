@@ -68,15 +68,23 @@ const PROFILE_GALLERY_IMAGES = [
 ];
 
 const FEATURED_BADGE_LIMIT = 4;
+const PRIVILEGE_BADGE_LIMIT = 4;
+const PROFILE_BADGE_STORAGE_LIMIT = 12;
 
 const PRIVILEGE_BADGES = [
-  { label: 'Tích xanh đặc quyền', desc: 'Admin cấp quyền nổi bật', icon: BadgeCheck, unlocked: true, privilege: true },
+  { label: 'Dev đặc quyền', desc: 'Huy hiệu dev do admin cấp', icon: Code, unlocked: true, privilege: true },
+  { label: 'Người đóng góp', desc: 'Đóng góp cho cộng đồng WorkRank', icon: Medal, unlocked: true, privilege: true },
+  { label: 'Nhà sáng lập', desc: 'Tài khoản sáng lập hoặc vận hành', icon: Trophy, unlocked: true, privilege: true },
   { label: 'Thành viên VIP', desc: 'Hồ sơ được ưu tiên hiển thị', icon: Crown, unlocked: true, privilege: true },
   { label: 'Đối tác WorkRank', desc: 'Tài khoản đối tác hoặc cộng tác viên', icon: ShieldCheck, unlocked: true, privilege: true },
   { label: 'Người nổi bật', desc: 'Hồ sơ được admin chọn nổi bật', icon: Star, unlocked: true, privilege: true },
-  { label: 'Nhà sáng lập', desc: 'Tài khoản sáng lập hoặc vận hành', icon: Trophy, unlocked: true, privilege: true },
-  { label: 'Hỗ trợ cộng đồng', desc: 'Đóng góp cho cộng đồng WorkRank', icon: Medal, unlocked: true, privilege: true },
 ];
+
+const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.label));
+
+function isPrivilegeBadgeLabel(label) {
+  return PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
+}
 
 const RANK_TIERS = [
   {
@@ -469,7 +477,6 @@ function buildAnimalCollection(currentLevel, maxLevel = 50) {
 
 function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, sessionRecords }) {
   return [
-    ...PRIVILEGE_BADGES,
     { label: 'Tập trung thép', desc: 'Điểm hoạt động từ 90+', icon: ShieldCheck, unlocked: score >= 90 },
     { label: 'Bùng nổ 15 phút', desc: 'Đạt 500+ thao tác trong 1 block', icon: Zap, unlocked: peakBucket.actions >= 500 },
     { label: 'Chuỗi bền bỉ', desc: '7 ngày liên tiếp có hoạt động', icon: Flame, unlocked: currentStreak >= 7 },
@@ -484,7 +491,7 @@ function normalizeFeaturedBadgeLabels(labels) {
     .map((label) => String(label || '').trim())
     .filter(Boolean)
     .filter((label, index, list) => list.indexOf(label) === index)
-    .slice(0, FEATURED_BADGE_LIMIT);
+    .slice(0, PROFILE_BADGE_STORAGE_LIMIT);
 }
 
 function buildProfileGallery(images = []) {
@@ -962,12 +969,17 @@ export default function UserDetail() {
   const canCustomizeProfile = canEditAvatar || authUser?.role === 'admin';
   const canHeartProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const canFriendProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
-  const unlockedBadgeList = badges.filter((badge) => badge.unlocked);
-  const selectableBadgeList = authUser?.role === 'admin'
-    ? [...PRIVILEGE_BADGES, ...unlockedBadgeList.filter((badge) => !PRIVILEGE_BADGES.some((item) => item.label === badge.label))]
-    : unlockedBadgeList;
+  const unlockedBadgeList = achievementBadges.filter((badge) => badge.unlocked);
+  const privilegeLabels = normalizeFeaturedBadgeLabels(featuredBadgeLabels)
+    .filter(isPrivilegeBadgeLabel)
+    .slice(0, PRIVILEGE_BADGE_LIMIT);
+  const privilegeBadges = privilegeLabels
+    .map((label) => PRIVILEGE_BADGES.find((badge) => badge.label === label))
+    .filter(Boolean);
+  const selectableBadgeList = unlockedBadgeList;
   const selectedFeaturedLabels = (hasFeaturedBadgePreference ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
     .filter((label, index, list) => list.indexOf(label) === index)
+    .filter((label) => !isPrivilegeBadgeLabel(label))
     .filter((label) => selectableBadgeList.some((badge) => badge.label === label))
     .slice(0, FEATURED_BADGE_LIMIT);
   const featuredBadges = selectedFeaturedLabels
@@ -1056,12 +1068,16 @@ export default function UserDetail() {
 
   const toggleFeaturedBadge = async (label) => {
     if (!canCustomizeProfile) return;
+    const storedLabels = normalizeFeaturedBadgeLabels(featuredBadgeLabels);
+    const storedPrivilegeLabels = storedLabels.filter(isPrivilegeBadgeLabel).slice(0, PRIVILEGE_BADGE_LIMIT);
     const base = normalizeFeaturedBadgeLabels(hasFeaturedBadgePreference ? featuredBadgeLabels : selectedFeaturedLabels)
+      .filter((item) => !isPrivilegeBadgeLabel(item))
       .filter((item) => selectableBadgeList.some((badge) => badge.label === item));
     const exists = base.includes(label);
-    const next = exists
+    const nextAchievements = exists
       ? base.filter((item) => item !== label)
       : base.length >= FEATURED_BADGE_LIMIT ? base : [...base, label];
+    const next = [...storedPrivilegeLabels, ...nextAchievements];
 
     setFeaturedBadgeLabels(next);
     setHasFeaturedBadgePreference(true);
@@ -1245,6 +1261,19 @@ export default function UserDetail() {
                 onChange={handleAvatarPick}
               />
             )}
+            {privilegeBadges.length > 0 && (
+              <div className="profile-privilege-stack" aria-label="Huy hiệu đặc quyền do admin cấp">
+                {privilegeBadges.map((badge) => {
+                  const Icon = badge.icon;
+                  return (
+                    <span key={badge.label} className="profile-privilege-pill" title={badge.desc}>
+                      <Icon size={13} strokeWidth={2.6} />
+                      {badge.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             {avatarError && <div className="profile-avatar-error">{avatarError}</div>}
           </div>
 
@@ -1271,9 +1300,6 @@ export default function UserDetail() {
             </div>
             <div className="profile-presence-row">
               <StatusPill statusConfig={sc} />
-              {(user.email === 'tien@gmail.com' || Number(user.id || id) === 8 || (user.name || '').toLowerCase() === 'dang duy tien') && (
-                <DevPill />
-              )}
               {canFriendProfile && (
                 <button
                   type="button"
@@ -1407,7 +1433,7 @@ export default function UserDetail() {
               </div>
               {badgeEditorOpen && canCustomizeProfile && (
                 <div className="profile-badge-editor">
-                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu hoặc đặc quyền để ghim ở đây.</div>
+                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu nhiệm vụ để ghim ở đây. Huy hiệu đặc quyền do admin cấp sẽ nằm ở khung ảnh phía trên.</div>
                   {badgeEditorError && <div className="profile-badge-editor-error">{badgeEditorError}</div>}
                   <div className="profile-badge-editor-grid">
                     {selectableBadgeList.map((badge) => {
@@ -1422,7 +1448,7 @@ export default function UserDetail() {
                         >
                           <Icon size={15} strokeWidth={2.4} />
                           <span>{badge.label}</span>
-                          <em>{selected ? 'Đang ghim' : badge.privilege ? 'Đặc quyền admin' : 'Có thể chọn'}</em>
+                          <em>{selected ? 'Đang ghim' : 'Có thể chọn'}</em>
                         </button>
                       );
                     })}
@@ -1468,7 +1494,7 @@ export default function UserDetail() {
         </div>
 
         <div className="profile-badge-board">
-          {badges.map((badge) => {
+          {achievementBadges.map((badge) => {
             const Icon = badge.icon;
             return (
               <div key={badge.label} className={badge.unlocked ? 'profile-badge is-unlocked' : 'profile-badge'}>

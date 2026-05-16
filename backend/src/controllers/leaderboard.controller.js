@@ -1,9 +1,17 @@
 const dashboardService = require('../services/dashboard.service');
 
+function listOptions(req, defaults = {}) {
+  return {
+    limit: Number(req.query.limit || defaults.limit || 20),
+    page: Number(req.query.page || defaults.page || 1),
+    search: req.query.search || '',
+  };
+}
+
 async function daily(req, res) {
   res.json(await dashboardService.leaderboard({
     range: 'today',
-    limit: Number(req.query.limit || 20),
+    ...listOptions(req),
     currentUserId: req.user.id,
     withCurrentUserRank: true,
   }));
@@ -12,7 +20,7 @@ async function daily(req, res) {
 async function weekly(req, res) {
   const payload = await dashboardService.leaderboard({
     range: 'week',
-    limit: Number(req.query.limit || 20),
+    ...listOptions(req),
     currentUserId: req.user.id,
     withCurrentUserRank: true,
   });
@@ -22,7 +30,7 @@ async function weekly(req, res) {
 async function monthly(req, res) {
   const payload = await dashboardService.leaderboard({
     range: 'month',
-    limit: Number(req.query.limit || 20),
+    ...listOptions(req),
     currentUserId: req.user.id,
     withCurrentUserRank: true,
   });
@@ -34,7 +42,7 @@ async function team(req, res) {
   const payload = await dashboardService.leaderboard({
     range,
     teamId: Number(req.params.teamId),
-    limit: Number(req.query.limit || 20),
+    ...listOptions(req),
     currentUserId: req.user.id,
     withCurrentUserRank: true,
   });
@@ -49,7 +57,7 @@ async function friends(req, res) {
   const range = req.query.range || 'today';
   const payload = await dashboardService.friendsLeaderboard({
     range,
-    limit: Number(req.query.limit || 50),
+    ...listOptions(req, { limit: 50 }),
     currentUserId: req.user.id,
   });
   res.json({
