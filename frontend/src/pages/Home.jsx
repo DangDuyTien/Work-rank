@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const installTabs = ['web', 'desktop', 'team', 'rank'];
+const installTabs = ['dashboard', 'tracker', 'ranking', 'groups'];
 
 const featureItems = [
   { label: 'Realtime', text: 'Theo dõi phím, click và thời gian hoạt động theo từng phiên.', icon: Gauge },
@@ -37,25 +37,25 @@ export default function Home() {
   const { user, loading } = useAuth();
   const isSignedIn = Boolean(user);
   const primaryTo = isSignedIn ? '/dashboard' : '/login';
-  const primaryLabel = loading ? 'Đang kiểm tra...' : (isSignedIn ? 'Open dashboard' : 'Login');
+  const primaryLabel = loading ? 'Đang kiểm tra...' : (isSignedIn ? 'Mở dashboard' : 'Đăng nhập');
 
   return (
     <main className="home-page">
       <header className="home-nav">
         <Link to="/" className="home-wordmark" aria-label="WorkRank">
-          workrank
+          WorkRank
         </Link>
         <nav className="home-nav-menu" aria-label="WorkRank home navigation">
-          <Link to="/leaderboard">Rank</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/leaderboard">Xếp hạng</Link>
           <Link to="/tracker">Tracker</Link>
-          <Link to="/groups">Groups</Link>
-          <Link to={isSignedIn ? '/settings' : '/login'}>Account</Link>
+          <Link to="/groups">Nhóm</Link>
         </nav>
         <Link className="home-download-button" to={primaryTo}>
           {isSignedIn ? firstName(user) : (
             <>
               <Download size={15} strokeWidth={2.6} />
-              Start
+              Bắt đầu
             </>
           )}
         </Link>
@@ -64,12 +64,12 @@ export default function Home() {
       <section className="home-hero">
         <div className="home-hero-content">
           <div className="home-announcement">
-            <span>New</span>
-            <p>Desktop tracker available for Windows, macOS, and Linux.</p>
+            <span>Mới</span>
+            <p>Desktop tracker đã sẵn sàng cho Windows, macOS và Linux.</p>
             <Link to="/tracker">Mở tracker</Link>
           </div>
 
-          <h1>The realtime productivity ranking workspace</h1>
+          <h1>WorkRank Realtime workspace</h1>
           <p className="home-lead">
             WorkRank gom dashboard, tracker, bảng xếp hạng và nhóm vào một giao diện gọn.
             Dùng cho team muốn thấy nhịp làm việc mà không cần báo cáo thủ công.
