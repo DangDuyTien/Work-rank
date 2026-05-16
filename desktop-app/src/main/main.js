@@ -5,7 +5,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { io: ioClient } = require('socket.io-client');
 
-const DEFAULT_API_URL = 'https://workrank-duy-tien.onrender.com';
+const DEFAULT_API_URL = 'https://workrank.onrender.com';
 let apiBaseUrl = normalizeApiUrl(process.env.API_URL || DEFAULT_API_URL);
 const LOGIN_EMAIL = process.env.WORKRANK_EMAIL || '';
 const LOGIN_PASSWORD = process.env.WORKRANK_PASSWORD || '';

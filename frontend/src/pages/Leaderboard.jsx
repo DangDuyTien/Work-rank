@@ -733,7 +733,7 @@ export default function Leaderboard() {
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#64748b',textAlign:'center'}}>
-                  {(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top2) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
@@ -751,7 +751,7 @@ export default function Leaderboard() {
                   <div style={{position:'absolute',bottom:-6,left:-6,width:18,height:18,borderRadius:3,background:'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'#f8fafc'}}>1</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>
-                  {(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top1) && <VerifiedMark size={14} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
@@ -768,7 +768,7 @@ export default function Leaderboard() {
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
                 </div>
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>
-                  {(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)+'.'}
+                  {(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top3) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>

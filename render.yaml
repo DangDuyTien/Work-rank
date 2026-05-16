@@ -1,7 +1,7 @@
 services:
   - type: web
     runtime: node
-    name: workrank-duy-tien
+    name: workrank
     plan: free
     region: singapore
     buildCommand: npm --prefix backend ci && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
@@ -12,7 +12,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        value: https://workrank-duy-tien.onrender.com
+        value: https://workrank.onrender.com
       - key: DB_DIALECT
         value: mysql
       - key: DB_SSL

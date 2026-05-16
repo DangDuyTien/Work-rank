@@ -61,7 +61,7 @@ DB_PASSWORD=...
 File `render.yaml` đang đặt:
 
 ```env
-CLIENT_URL=https://workrank-duy-tien.onrender.com
+CLIENT_URL=https://workrank.onrender.com
 ```
 
 Nếu Render tạo URL khác, vào Environment của service và đổi `CLIENT_URL` theo URL thật, rồi redeploy.
@@ -71,7 +71,7 @@ Nếu Render tạo URL khác, vào Environment của service và đổi `CLIENT_
 Mở:
 
 ```text
-https://workrank-duy-tien.onrender.com
+https://workrank.onrender.com
 ```
 
 Nếu lần đầu mở hơi chậm là bình thường vì Render Free có cold start.
@@ -88,7 +88,7 @@ Render sẽ tải được nếu có một trong các cách sau:
 
 1. Commit file installer vào `frontend/public/downloads/WorkRank Tracker-Setup-1.0.0-x64.exe`. Khi Render build frontend, file này được copy sang `frontend/dist/downloads` và backend sẽ tải được qua `/downloads/...`.
 2. Hoặc upload file `desktop-app/release/WorkRank Tracker-Setup-1.0.0-x64.exe` lên một nơi public như GitHub Release, Cloudflare R2 hoặc S3.
-3. Nếu dùng link public riêng, vào Render -> service `workrank-duy-tien` -> Environment, set:
+3. Nếu dùng link public riêng, vào Render -> service `workrank` -> Environment, set:
 
 ```env
 DESKTOP_WINDOWS_DOWNLOAD_URL=https://link-public-to/WorkRank%20Tracker-Setup-1.0.0-x64.exe
