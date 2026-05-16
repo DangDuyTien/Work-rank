@@ -66,6 +66,15 @@ const PROFILE_GALLERY_IMAGES = [
 
 const FEATURED_BADGE_LIMIT = 4;
 
+const PRIVILEGE_BADGES = [
+  { label: 'Tích xanh đặc quyền', desc: 'Admin cấp quyền nổi bật', icon: BadgeCheck, unlocked: true, privilege: true },
+  { label: 'Thành viên VIP', desc: 'Hồ sơ được ưu tiên hiển thị', icon: Crown, unlocked: true, privilege: true },
+  { label: 'Đối tác WorkRank', desc: 'Tài khoản đối tác hoặc cộng tác viên', icon: ShieldCheck, unlocked: true, privilege: true },
+  { label: 'Người nổi bật', desc: 'Hồ sơ được admin chọn nổi bật', icon: Star, unlocked: true, privilege: true },
+  { label: 'Nhà sáng lập', desc: 'Tài khoản sáng lập hoặc vận hành', icon: Trophy, unlocked: true, privilege: true },
+  { label: 'Hỗ trợ cộng đồng', desc: 'Đóng góp cho cộng đồng WorkRank', icon: Medal, unlocked: true, privilege: true },
+];
+
 const RANK_TIERS = [
   {
     min: 45,
@@ -457,6 +466,7 @@ function buildAnimalCollection(currentLevel, maxLevel = 50) {
 
 function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, sessionRecords }) {
   return [
+    ...PRIVILEGE_BADGES,
     { label: 'Tập trung thép', desc: 'Điểm hoạt động từ 90+', icon: ShieldCheck, unlocked: score >= 90 },
     { label: 'Bùng nổ 15 phút', desc: 'Đạt 500+ thao tác trong 1 block', icon: Zap, unlocked: peakBucket.actions >= 500 },
     { label: 'Chuỗi bền bỉ', desc: '7 ngày liên tiếp có hoạt động', icon: Flame, unlocked: currentStreak >= 7 },
@@ -805,7 +815,8 @@ export default function UserDetail() {
     const activeSeconds = Number(stats?.total_active_seconds || 0);
     const actionsPerHour = activeSeconds > 0 ? Math.round((todayActions / activeSeconds) * 3600) : 0;
     const badges = buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, sessionRecords });
-    const unlockedBadges = badges.filter((badge) => badge.unlocked).length;
+    const achievementBadges = badges.filter((badge) => !badge.privilege);
+    const unlockedBadges = achievementBadges.filter((badge) => badge.unlocked).length;
     const animalCollection = buildAnimalCollection(levelView.level, levelView.maxLevel);
     const currentAnimal = getLevelAnimal(levelView.level);
     const nextAnimal = getLevelAnimal(Math.min(levelView.maxLevel, levelView.level + 1));
@@ -823,6 +834,7 @@ export default function UserDetail() {
       activeSeconds,
       actionsPerHour,
       badges,
+      achievementBadges,
       unlockedBadges,
       animalCollection,
       currentAnimal,
@@ -863,6 +875,7 @@ export default function UserDetail() {
     activeSeconds,
     actionsPerHour,
     badges,
+    achievementBadges,
     unlockedBadges,
     animalCollection,
     currentAnimal,
@@ -878,12 +891,15 @@ export default function UserDetail() {
   const canEditAvatar = String(authUser?.id || '') === String(user.id || id);
   const canCustomizeProfile = canEditAvatar || authUser?.role === 'admin';
   const unlockedBadgeList = badges.filter((badge) => badge.unlocked);
+  const selectableBadgeList = authUser?.role === 'admin'
+    ? [...PRIVILEGE_BADGES, ...unlockedBadgeList.filter((badge) => !PRIVILEGE_BADGES.some((item) => item.label === badge.label))]
+    : unlockedBadgeList;
   const selectedFeaturedLabels = (hasFeaturedBadgePreference ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
     .filter((label, index, list) => list.indexOf(label) === index)
-    .filter((label) => unlockedBadgeList.some((badge) => badge.label === label))
+    .filter((label) => selectableBadgeList.some((badge) => badge.label === label))
     .slice(0, FEATURED_BADGE_LIMIT);
   const featuredBadges = selectedFeaturedLabels
-    .map((label) => unlockedBadgeList.find((badge) => badge.label === label))
+    .map((label) => selectableBadgeList.find((badge) => badge.label === label))
     .filter(Boolean);
   const featuredBadgeSlots = Array.from({ length: FEATURED_BADGE_LIMIT }, (_, index) => featuredBadges[index] || null);
   const photoUrl = localAvatarUrl || user.avatarData || user.avatarUrl || user.photoUrl || user.imageUrl || '';
@@ -969,7 +985,7 @@ export default function UserDetail() {
   const toggleFeaturedBadge = async (label) => {
     if (!canCustomizeProfile) return;
     const base = normalizeFeaturedBadgeLabels(hasFeaturedBadgePreference ? featuredBadgeLabels : selectedFeaturedLabels)
-      .filter((item) => unlockedBadgeList.some((badge) => badge.label === item));
+      .filter((item) => selectableBadgeList.some((badge) => badge.label === item));
     const exists = base.includes(label);
     const next = exists
       ? base.filter((item) => item !== label)
@@ -1146,11 +1162,11 @@ export default function UserDetail() {
               {canCustomizeProfile && (
                 <button
                   type="button"
-                  className={index === PROFILE_GALLERY_IMAGES.length - 1 ? 'profile-gallery-add' : 'profile-gallery-change'}
+                  className="profile-gallery-change"
                   onClick={() => openGalleryPicker(index)}
                 >
                   <ImagePlus size={16} strokeWidth={2.5} />
-                  <span>{index === PROFILE_GALLERY_IMAGES.length - 1 ? 'Thêm ảnh' : 'Đổi ảnh'}</span>
+                  <span>Thay ảnh</span>
                 </button>
               )}
             </div>
@@ -1183,7 +1199,7 @@ export default function UserDetail() {
             <div className="profile-summary-stat">
               <BadgeCheck size={17} strokeWidth={2.4} />
               <span>Danh hiệu</span>
-              <strong>{unlockedBadges}/{badges.length}</strong>
+              <strong>{unlockedBadges}/{achievementBadges.length}</strong>
             </div>
             <div className="profile-summary-stat">
               <PawPrint size={17} strokeWidth={2.4} />
@@ -1204,7 +1220,7 @@ export default function UserDetail() {
                   <div className="profile-achievement-title">Huy hiệu nổi bật</div>
                   <span>{featuredBadges.length}/{FEATURED_BADGE_LIMIT} slot đang dùng</span>
                 </div>
-                {canCustomizeProfile && unlockedBadgeList.length > 0 && (
+                {canCustomizeProfile && selectableBadgeList.length > 0 && (
                   <button
                     type="button"
                     className="profile-achievement-edit"
@@ -1236,23 +1252,22 @@ export default function UserDetail() {
               </div>
               {badgeEditorOpen && canCustomizeProfile && (
                 <div className="profile-badge-editor">
-                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu đã mở khóa để ghim ở đây.</div>
+                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu hoặc đặc quyền để ghim ở đây.</div>
                   {badgeEditorError && <div className="profile-badge-editor-error">{badgeEditorError}</div>}
                   <div className="profile-badge-editor-grid">
-                    {badges.map((badge) => {
+                    {selectableBadgeList.map((badge) => {
                       const Icon = badge.icon;
                       const selected = selectedFeaturedLabels.includes(badge.label);
                       return (
                         <button
                           key={badge.label}
                           type="button"
-                          className={selected ? 'profile-badge-choice is-selected' : badge.unlocked ? 'profile-badge-choice' : 'profile-badge-choice is-locked'}
-                          disabled={!badge.unlocked}
+                          className={selected ? 'profile-badge-choice is-selected' : 'profile-badge-choice'}
                           onClick={() => toggleFeaturedBadge(badge.label)}
                         >
                           <Icon size={15} strokeWidth={2.4} />
                           <span>{badge.label}</span>
-                          <em>{selected ? 'Đang ghim' : badge.unlocked ? 'Có thể chọn' : 'Chưa mở'}</em>
+                          <em>{selected ? 'Đang ghim' : badge.privilege ? 'Đặc quyền admin' : 'Có thể chọn'}</em>
                         </button>
                       );
                     })}

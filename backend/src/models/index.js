@@ -8,6 +8,7 @@ const DailyStat = require('./DailyStat');
 const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
 const SimulationSetting = require('./SimulationSetting');
+const Friendship = require('./Friendship');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -37,6 +38,11 @@ UserProfileImage.belongsTo(User, { foreignKey: 'userId' });
 User.hasOne(UserProfilePreference, { foreignKey: 'userId' });
 UserProfilePreference.belongsTo(User, { foreignKey: 'userId' });
 
+User.hasMany(Friendship, { as: 'SentFriendships', foreignKey: 'requesterId' });
+User.hasMany(Friendship, { as: 'ReceivedFriendships', foreignKey: 'addresseeId' });
+Friendship.belongsTo(User, { as: 'Requester', foreignKey: 'requesterId' });
+Friendship.belongsTo(User, { as: 'Addressee', foreignKey: 'addresseeId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -48,4 +54,5 @@ module.exports = {
   UserProfileImage,
   UserProfilePreference,
   SimulationSetting,
+  Friendship,
 };

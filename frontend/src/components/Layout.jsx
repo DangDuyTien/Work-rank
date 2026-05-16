@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Bell, Coffee, LogOut, MessageCircle, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
+import { Activity, BadgeCheck, Bell, Coffee, LogOut, MessageCircle, Monitor, Play, Settings, Shield, Square, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
@@ -12,16 +12,20 @@ const NAV_LINKS = [
   { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
   { to: '/leaderboard', label: 'Xếp Hạng', shortLabel: 'Xếp hạng', icon: Trophy },
   { to: '/groups', label: 'Nhóm', shortLabel: 'Nhóm', icon: Users },
+  { to: '/friends', label: 'Bạn Bè', shortLabel: 'Bạn bè', icon: MessageCircle },
   { to: '/tracker', label: 'Theo Dõi', shortLabel: 'Tracker', icon: Monitor },
   { to: '/security', label: 'Bảo Mật', shortLabel: 'Bảo mật', icon: Shield, adminOnly: true },
+  { to: '/admin/privileges', label: 'Đặc Quyền', shortLabel: 'Đặc quyền', icon: BadgeCheck, adminOnly: true },
 ];
 
 const PAGE_TITLES = {
   '/dashboard': 'WorkRank Realtime',
   '/leaderboard': 'WorkRank Realtime',
   '/groups': 'WorkRank Realtime',
+  '/friends': 'Bạn Bè',
   '/tracker': 'WorkRank Realtime',
   '/security': 'Bảo Mật & Chống Gian Lận',
+  '/admin/privileges': 'Quản Lý Đặc Quyền',
   '/settings': 'Cài Đặt',
 };
 

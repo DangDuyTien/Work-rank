@@ -120,6 +120,31 @@ function normalizeStat(row = {}) {
   };
 }
 
+function normalizeUserSummary(user = {}) {
+  return {
+    ...user,
+    user_id: user.id ?? user.userId ?? user.user_id,
+    id: user.id ?? user.userId ?? user.user_id,
+    isVerified: normalizeVerified(user),
+    verified: normalizeVerified(user),
+    isSimulated: toBoolean(user.isSimulated ?? user.is_simulated),
+    accountStatus: user.accountStatus || user.status || 'active',
+    status: user.presence || user.presenceStatus || user.status || 'offline',
+    presence: user.presence || user.presenceStatus || user.status || 'offline',
+    presenceStatus: user.presence || user.presenceStatus || user.status || 'offline',
+  };
+}
+
+function normalizeFriendship(row = {}) {
+  const friend = normalizeUserSummary(row.friend || row.user || {});
+  return {
+    ...row,
+    id: row.id || row.friendshipId,
+    friendshipId: row.friendshipId || row.id,
+    friend,
+  };
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -270,19 +295,40 @@ export const groups = {
   kick: async () => { throw new Error('Groups kick API pending'); },
 };
 
+export const friends = {
+  list: async () => {
+    const res = await api.get('/api/friends');
+    return { ...res, data: unwrapArray(res.data).map(normalizeFriendship) };
+  },
+  requests: async () => {
+    const res = await api.get('/api/friends/requests');
+    return {
+      ...res,
+      data: {
+        incoming: unwrapArray(res.data?.incoming).map(normalizeFriendship),
+        outgoing: unwrapArray(res.data?.outgoing).map(normalizeFriendship),
+      },
+    };
+  },
+  sendRequest: async (userId) => {
+    const res = await api.post('/api/friends/requests', { userId });
+    return { ...res, data: normalizeFriendship(res.data?.data || res.data || {}) };
+  },
+  accept: async (requestId) => {
+    const res = await api.post(`/api/friends/requests/${requestId}/accept`);
+    return { ...res, data: normalizeFriendship(res.data?.data || res.data || {}) };
+  },
+  decline: (requestId) => api.post(`/api/friends/requests/${requestId}/decline`),
+  cancel: (requestId) => api.delete(`/api/friends/requests/${requestId}`),
+  remove: (userId) => api.delete(`/api/friends/${userId}`),
+};
+
 export const users = {
   list: async () => {
     const res = await api.get('/api/users');
     return {
       ...res,
-      data: unwrapArray(res.data).map((user) => ({
-        ...user,
-        user_id: user.id,
-        isVerified: normalizeVerified(user),
-        verified: normalizeVerified(user),
-        accountStatus: user.status || 'active',
-        status: user.presence || user.presenceStatus || 'offline',
-      })),
+      data: unwrapArray(res.data).map(normalizeUserSummary),
     };
   },
   get: async (id) => {
@@ -291,14 +337,7 @@ export const users = {
       const user = res.data?.user || res.data || {};
       return {
         ...res,
-        data: {
-          ...user,
-          user_id: user.id,
-          isVerified: normalizeVerified(user),
-          verified: normalizeVerified(user),
-          accountStatus: user.status || 'active',
-          status: user.presence || user.presenceStatus || 'offline',
-        },
+        data: normalizeUserSummary(user),
       };
     } catch (err) {
       if (err.response?.status === 403) return { data: { id, user_id: id, name: `User #${id}`, accountStatus: 'active', status: 'offline' } };
@@ -310,14 +349,7 @@ export const users = {
     const user = res.data?.user || res.data || {};
     return {
       ...res,
-      data: {
-        ...user,
-        user_id: user.id,
-        isVerified: normalizeVerified(user),
-        verified: normalizeVerified(user),
-        accountStatus: user.status || 'active',
-        status: user.presence || user.presenceStatus || 'offline',
-      },
+      data: normalizeUserSummary(user),
     };
   },
   profilePreferences: async (id) => {
