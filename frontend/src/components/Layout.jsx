@@ -298,6 +298,13 @@ export default function Layout() {
   const pageTitle = PAGE_TITLES[location.pathname] || 'WorkRank Realtime';
   const accountInitials = initialsFromName(user?.name || user?.email || '??');
   const accountVerified = isVerifiedAccount(user);
+  const visibleNavLinks = NAV_LINKS.filter((link) => !link.adminOnly || isAdmin);
+
+  const goToNav = useCallback((event, to) => {
+    event.preventDefault();
+    event.stopPropagation();
+    navigate(to);
+  }, [navigate]);
 
   return (
     <div style={{
@@ -412,14 +419,18 @@ export default function Layout() {
             whiteSpace: 'nowrap',
           }}
         >
-          {NAV_LINKS.filter((link) => !link.adminOnly || isAdmin).map(({ to, label }) => {
+          {visibleNavLinks.map(({ to, label }) => {
             const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
             return (
               <NavLink
                 key={to}
                 to={to}
+                title={label}
+                aria-label={label}
+                onClick={(event) => goToNav(event, to)}
                 style={{
                   padding: '6px 14px',
+                  minWidth: to === '/friends' ? 74 : 'auto',
                   fontSize: 13,
                   fontWeight: active ? 700 : 500,
                   color: active ? '#2563eb' : '#64748b',
@@ -430,9 +441,11 @@ export default function Layout() {
                   position: 'relative',
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   flex: '0 0 auto',
                   whiteSpace: 'nowrap',
                   lineHeight: 1,
+                  zIndex: active ? 2 : 1,
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -840,13 +853,15 @@ export default function Layout() {
       </div>
 
       <nav className="mobile-bottom-nav" aria-label="Điều hướng chính trên mobile">
-        {NAV_LINKS.filter((link) => !link.adminOnly || isAdmin).map(({ to, shortLabel, icon: Icon }) => {
+        {visibleNavLinks.map(({ to, shortLabel, icon: Icon }) => {
           const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
           return (
             <NavLink
               key={to}
               to={to}
               aria-label={shortLabel}
+              title={shortLabel}
+              onClick={(event) => goToNav(event, to)}
               className="mobile-bottom-link"
               style={{
                 color: active ? '#2563eb' : '#64748b',

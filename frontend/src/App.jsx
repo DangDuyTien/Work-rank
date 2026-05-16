@@ -67,10 +67,10 @@ export default function App() {
               >
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="tracker" element={<Tracker />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="groups" element={<Groups />} />
                 <Route path="friends" element={<Friends />} />
+                <Route path="tracker" element={<Tracker />} />
                 <Route path="performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
                 <Route path="security" element={<AdminRoute><Security /></AdminRoute>} />
                 <Route path="admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
