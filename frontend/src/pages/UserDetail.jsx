@@ -18,12 +18,12 @@ import {
   Cat,
   ChevronLeft,
   Clock3,
-  Code,
   Crown,
   Dog,
   Flame,
   Fish,
   Gauge,
+  Gem,
   Heart,
   ImagePlus,
   Keyboard,
@@ -540,7 +540,7 @@ function VerifiedMark({ size = 20 }) {
 function DevPill() {
   return (
     <span className="profile-dev-pill" title="Vật phẩm hiếm: Dev" aria-label="Vật phẩm hiếm: Dev">
-      <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
+      <Gem className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
       <span className="profile-dev-label">Dev</span>
     </span>
   );

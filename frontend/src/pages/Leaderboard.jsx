@@ -4,7 +4,7 @@ import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi }
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
-import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Gem, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 
 const RANGES = [
@@ -34,6 +34,7 @@ const AVATAR_GRADS = [
 ];
 
 const BADGE_STYLES = {
+  dev: { bg: 'linear-gradient(135deg, rgba(236,254,255,0.96), rgba(125,211,252,0.3), rgba(255,255,255,0.92))', border: 'rgba(34,211,238,0.62)', color: '#075985', icon: Gem },
   champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
   weekly: { bg: 'rgba(37,99,235,0.12)', border: 'rgba(37,99,235,0.26)', color: '#2563eb', icon: Medal },
   monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
@@ -89,29 +90,30 @@ function devRankerStyle(user, variant = 'row') {
   if (!isDevRanker(user)) return {};
   if (variant === 'table') {
     return {
-      background: 'linear-gradient(90deg, rgba(34,211,238,0.1), rgba(124,58,237,0.055), rgba(255,255,255,0.98) 72%)',
-      boxShadow: 'inset 3px 0 0 rgba(34,211,238,0.52), inset -1px 0 0 rgba(124,58,237,0.14), inset 0 1px 0 rgba(103,232,249,0.18), inset 0 -1px 0 rgba(124,58,237,0.12)',
+      background: 'linear-gradient(90deg, rgba(236,254,255,0.98), rgba(103,232,249,0.24) 30%, rgba(191,219,254,0.18) 58%, rgba(255,255,255,0.98) 86%)',
+      boxShadow: 'inset 4px 0 0 rgba(34,211,238,0.88), inset -1px 0 0 rgba(14,165,233,0.24), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(34,211,238,0.2), 0 0 18px rgba(103,232,249,0.16)',
     };
   }
   if (variant === 'podium') {
     return {
       padding: '10px 8px 0',
       borderRadius: 8,
-      border: '1px solid rgba(34,211,238,0.28)',
-      background: 'linear-gradient(145deg, rgba(34,211,238,0.075), rgba(124,58,237,0.045), rgba(255,255,255,0.72))',
-      boxShadow: '0 10px 24px rgba(14,165,233,0.075), inset 0 0 0 1px rgba(255,255,255,0.68)',
+      border: '1px solid rgba(34,211,238,0.58)',
+      background: 'radial-gradient(circle at 26% 16%, rgba(255,255,255,0.94) 0 10%, transparent 24%), linear-gradient(145deg, rgba(236,254,255,0.88), rgba(103,232,249,0.18), rgba(255,255,255,0.76))',
+      boxShadow: '0 12px 30px rgba(14,165,233,0.14), 0 0 24px rgba(103,232,249,0.18), inset 0 0 0 1px rgba(255,255,255,0.8)',
     };
   }
   return {
-    background: 'linear-gradient(90deg, rgba(34,211,238,0.09), rgba(124,58,237,0.055), rgba(255,255,255,0.92))',
-    border: '1px solid rgba(34,211,238,0.3)',
-    boxShadow: '0 8px 20px rgba(14,165,233,0.06), inset 0 0 0 1px rgba(255,255,255,0.7)',
+    background: 'linear-gradient(90deg, rgba(236,254,255,0.94), rgba(103,232,249,0.18), rgba(255,255,255,0.92))',
+    border: '1px solid rgba(34,211,238,0.52)',
+    boxShadow: '0 8px 22px rgba(14,165,233,0.11), 0 0 18px rgba(103,232,249,0.13), inset 0 0 0 1px rgba(255,255,255,0.74)',
   };
 }
 
 function rankBadges(user, rank, range) {
   const actions = userActions(user);
   const badges = [];
+  if (isDevRanker(user)) badges.push({ key: 'dev', label: 'Dev', style: 'dev' });
   if (rank === 1) {
     if (range === 'week') badges.push({ key: 'weekly', label: 'Nhất tuần', style: 'weekly' });
     else if (range === 'month') badges.push({ key: 'monthly', label: 'Nhất tháng', style: 'monthly' });
@@ -124,7 +126,7 @@ function rankBadges(user, rank, range) {
   if (actions >= 10000) badges.push({ key: '10k', label: '10K thao tác', style: 'volume' });
   else if (actions >= 5000) badges.push({ key: '5k', label: '5K thao tác', style: 'volume' });
   if (Number(user.focusScore || 0) >= 90) badges.push({ key: 'focus', label: 'Tập trung', style: 'streak' });
-  return badges.slice(0, 3);
+  return badges.slice(0, isDevRanker(user) ? 4 : 3);
 }
 
 function RankBadge({ badge, compact = false }) {
@@ -737,7 +739,7 @@ export default function Leaderboard() {
                   {isVerifiedRanker(top2) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
-                  {rankBadges(top2, 2, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                  {rankBadges(top2, 2, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
                 </div>
                 <div style={{fontSize:14,fontWeight:900,color:'#64748b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top2.score)}</div>
                 <div style={{width:'100%',height:90,background:'linear-gradient(180deg,rgba(148,163,184,0.15),rgba(148,163,184,0.05))',border:'1px solid rgba(148,163,184,0.2)',borderRadius:'4px 4px 0 0'}}/>
@@ -755,7 +757,7 @@ export default function Leaderboard() {
                   {isVerifiedRanker(top1) && <VerifiedMark size={14} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
-                  {rankBadges(top1, 1, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                  {rankBadges(top1, 1, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
                 </div>
                 <div style={{fontSize:18,fontWeight:900,color:'#f59e0b',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top1.score)}</div>
                 <div style={{width:'100%',height:130,background:'linear-gradient(180deg,rgba(245,158,11,0.18),rgba(245,158,11,0.05))',border:'1px solid rgba(245,158,11,0.25)',borderRadius:'4px 4px 0 0'}}/>
@@ -772,7 +774,7 @@ export default function Leaderboard() {
                   {isVerifiedRanker(top3) && <VerifiedMark size={13} />}
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
-                  {rankBadges(top3, 3, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                  {rankBadges(top3, 3, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
                 </div>
                 <div style={{fontSize:14,fontWeight:900,color:'#d97706',fontFamily:"'JetBrains Mono',monospace"}}>{fmtScore(top3.score)}</div>
                 <div style={{width:'100%',height:70,background:'linear-gradient(180deg,rgba(180,83,9,0.15),rgba(180,83,9,0.05))',border:'1px solid rgba(180,83,9,0.2)',borderRadius:'4px 4px 0 0'}}/>
@@ -796,7 +798,7 @@ export default function Leaderboard() {
                       {isVerifiedRanker(u) && <VerifiedMark size={12} />}
                     </div>
                     <div style={{display:'flex',gap:4,marginTop:4,overflow:'hidden'}}>
-                      {rankBadges(u, rank, range).slice(0, 1).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
+                      {rankBadges(u, rank, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
                     </div>
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:'#60a5fa',fontFamily:"'JetBrains Mono',monospace",flexShrink:0}}>{fmtScore(u.score)}</div>
