@@ -62,6 +62,7 @@ export function vibrateDevice(pattern = [200, 100, 200]) {
 let pipWindow = null;
 let pipToken = 0;
 let pipInterval = null;
+let pipDone = false;
 const PIP_TICK_KEY = 'workrank:pomodoro-state';
 const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
 
@@ -87,6 +88,7 @@ function updatePipDOM(data) {
 
 function pipTick() {
   if (!pipWindow || pipWindow.closed) { stopPipInterval(); return; }
+  if (pipDone) return;
   try {
     const raw = localStorage.getItem(PIP_TICK_KEY);
     if (!raw) { try { closePipWindow(); } catch {} return; }
@@ -96,6 +98,7 @@ function pipTick() {
     if (!endsAt) { try { closePipWindow(); } catch {} return; }
     const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
     if (rem <= 0) {
+      pipDone = true;
       const newFocusCount = (p.mode || 'focus') === 'focus'
         ? Number(p.completedFocusCount || 0) + 1
         : Number(p.completedFocusCount || 0);
@@ -117,6 +120,14 @@ function pipTick() {
       };
       localStorage.setItem(PIP_TICK_KEY, JSON.stringify(completed));
       try {
+        const pw = pipWindow;
+        if (pw && !pw.closed) {
+          pw.document.body.style.background = '#b91c1c';
+          pw.document.body.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;font-family:Inter,sans-serif">DONE</div>';
+          pw.document.body.onclick = function(){ try{pw.close()}catch{} };
+        }
+      } catch {}
+      try {
         const settingsRaw = localStorage.getItem('workrank:app-settings');
         const appSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
         const sound = appSettings.notifications?.sound !== false;
@@ -133,7 +144,7 @@ function pipTick() {
         }
         vibrateDevice([200, 100, 200]);
       } catch {}
-      try { closePipWindow(); } catch {}
+      setTimeout(() => closePipWindow(), 3000);
       return;
     }
 
@@ -164,6 +175,7 @@ function stopPipInterval() {
 
 export function openPipWindow() {
   if (!('documentPictureInPicture' in window)) return false;
+  pipDone = false;
   if (pipWindow && !pipWindow.closed) { pipWindow.focus(); startPipInterval(); return true; }
   const token = ++pipToken;
   window.documentPictureInPicture.requestWindow({ width: 270, height: 280 }).then((win) => {
