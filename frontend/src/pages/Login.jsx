@@ -1,65 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../services/api';
+import api, { auth } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
-import BrandMark from '../components/BrandMark';
-
-const S = {
-  page: {
-    minHeight: '100vh', display: 'flex', alignItems: 'stretch',
-    background: '#f8fafc', fontFamily: "'Space Grotesk', system-ui, sans-serif",
-  },
-  left: {
-    width: 420, flexShrink: 0, background: 'linear-gradient(180deg,#eff6ff 0%,#ffffff 100%)',
-    borderRight: '1px solid rgba(15,23,42,0.08)',
-    display: 'flex', flexDirection: 'column',
-    padding: '48px 40px', justifyContent: 'space-between',
-  },
-  right: {
-    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '48px 60px',
-  },
-  formWrap: { width: '100%', maxWidth: 400 },
-  label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b',
-    textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 },
-  input: {
-    width: '100%', background: '#ffffff',
-    border: '1px solid rgba(15,23,42,0.12)',
-    borderRadius: 6, padding: '12px 14px',
-    color: '#0f172a', fontSize: 14, fontWeight: 500,
-    fontFamily: "'Space Grotesk', system-ui, sans-serif",
-    outline: 'none', boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
-  },
-  btn: {
-    width: '100%', padding: '13px 0', background: '#3b82f6',
-    border: 'none', borderRadius: 6, cursor: 'pointer',
-    color: '#fff', fontSize: 14, fontWeight: 700,
-    fontFamily: "'Space Grotesk', system-ui, sans-serif",
-    letterSpacing: '0.01em', transition: 'background 0.2s, transform 0.1s',
-  },
-  err: {
-    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-    borderRadius: 6, padding: '10px 14px', fontSize: 13,
-    color: '#dc2626', marginBottom: 20,
-  },
-};
 
 const statItems = [
-  { v: '142', u: 'Người dùng hoạt động' },
-  { v: '99.9%', u: 'Thời gian hoạt động' },
-  { v: '2.5s', u: 'Chu kỳ ping' },
+  { key: 'users', label: 'users online' },
+  { key: 'uptime', label: 'uptime' },
+  { key: 'cycle', label: 'sync cycle' },
 ];
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
-  const [name, setName]     = useState('');
-  const [email, setEmail]   = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState(null);
   const navigate = useNavigate();
   const { user, setUser, loading: authLoading } = useAuth();
 
@@ -78,20 +35,26 @@ export default function Login() {
     }
   }, [authLoading, setUser, user]);
 
+  useEffect(() => {
+    api.get('/api/health').then((res) => {
+      if (res.data) setStats(res.data);
+    }).catch(() => {});
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const fn   = isRegister ? auth.register : auth.login;
+      const fn = isRegister ? auth.register : auth.login;
       const trimmedEmail = email.trim().toLowerCase();
       const data = isRegister ? { name: name.trim(), email: trimmedEmail, password } : { email: trimmedEmail, password };
-      const res  = await fn(data);
+      const res = await fn(data);
       const user = res.data.user || res.data;
       if (user) setUser(user);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || (err.request ? 'Không kết nối được backend. Hãy bật backend ở http://localhost:5001' : 'Có lỗi xảy ra'));
+      setError(err.response?.data?.message || err.response?.data?.error || (err.request ? 'Không kết nối được backend.' : 'Có lỗi xảy ra'));
     }
     setLoading(false);
   };
@@ -99,156 +62,70 @@ export default function Login() {
   if (authLoading || user) return null;
 
   return (
-    <div className="login-page" style={S.page}>
-      {/* ── LEFT BRAND PANEL ── */}
-      <div className="login-brand-panel" style={S.left}>
-        {/* Logo */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-            <BrandMark
-              size={36}
-              showLabel
-              labelStyle={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.35px' }}
-            />
+    <main className="login-page">
+      <section className="login-hero">
+        <div className="login-hero-content">
+          <div className="login-brand-block">
+            <span className="login-logo-block">W</span>
           </div>
 
-          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-            Giám Sát<br />Hiệu Suất<br />Thời Gian Thực
-          </h2>
-          <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
-            Theo dõi gõ phím, click chuột và thời gian hoạt động của cả nhóm — trực tiếp.
+          <h1 className="login-heading">
+            <span className="login-prompt">$</span>
+            <span className="login-title">WorkRank</span>
+            <span className="login-heading-sub">realtime workspace tracker</span>
+          </h1>
+
+          <p className="login-lead">
+            Dashboard, tracker, bảng xếp hạng và nhóm trong một giao diện gọn.
           </p>
-        </div>
 
-        {/* Stats */}
-        <div className="login-brand-stats" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {statItems.map(s => (
-            <div key={s.u} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 3, height: 32, background: '#3b82f6', borderRadius: 2, flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>{s.v}</div>
-                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.u}</div>
+          <div className="login-stats">
+            {statItems.map((s) => (
+              <div key={s.key} className="login-stat-item">
+                <span className="login-stat-value">
+                  {stats?.[s.key] ?? '—'}
+                </span>
+                <span className="login-stat-label">{s.label}</span>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Footer */}
-        <div className="login-brand-footer" style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
-          © 2024 WorkRank Realtime. High-Performance Monitoring.
-        </div>
-      </div>
+          <div className="login-form-box">
+            {error && <div className="login-error">{error}</div>}
 
-      {/* ── RIGHT FORM PANEL ── */}
-      <div className="login-form-panel" style={S.right}>
-        <div style={S.formWrap}>
-          <div style={{ marginBottom: 36 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
-              {isRegister ? 'Tạo Tài Khoản' : 'Truy Cập An Toàn'}
-            </h1>
-            <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontWeight: 500 }}>
-              {isRegister
-                ? 'Thiết lập tài khoản WorkRank của bạn.'
-                : 'Nhập thông tin đăng nhập để vào bảng điều khiển.'}
+            <form onSubmit={handleSubmit}>
+              {isRegister && (
+                <div className="login-field">
+                  <label className="login-field-label">&gt; Họ tên</label>
+                  <input className="login-input" type="text" value={name} required placeholder="Nguyễn Văn A" onChange={e => setName(e.target.value)} />
+                </div>
+              )}
+              <div className="login-field">
+                <label className="login-field-label">&gt; Email</label>
+                <input className="login-input" type="email" value={email} required placeholder="user@company.com" onChange={e => setEmail(e.target.value)} />
+              </div>
+              <div className="login-field">
+                <label className="login-field-label">&gt; Mật khẩu</label>
+                <input className="login-input" type="password" value={password} required placeholder="Nhập mật khẩu" onChange={e => setPassword(e.target.value)} />
+              </div>
+
+              <button className="login-submit" type="submit" disabled={loading}>
+                {loading ? 'Đang xử lý...' : (isRegister ? 'Tạo tài khoản' : 'Đăng nhập')}
+                <span className="login-arrow">→</span>
+              </button>
+            </form>
+
+            <div className="login-divider" />
+
+            <p className="login-switch">
+              {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
+              <button className="login-switch-btn" onClick={() => { setIsRegister(!isRegister); setError(''); }}>
+                {isRegister ? 'Đăng nhập' : 'Đăng ký'}
+              </button>
             </p>
           </div>
-
-          {error && <div style={S.err}>{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            {isRegister && (
-              <div style={{ marginBottom: 18 }}>
-                <label style={S.label}>Họ và Tên</label>
-                <input
-                  style={S.input}
-                  type="text" value={name} required
-                  placeholder="Nguyễn Văn A"
-                  onChange={e => setName(e.target.value)}
-                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                />
-              </div>
-            )}
-            <div style={{ marginBottom: 18 }}>
-              <label style={S.label}>Email công việc</label>
-              <input
-                style={S.input}
-                type="email" value={email} required
-                placeholder="user@company.com"
-                onChange={e => setEmail(e.target.value)}
-                onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-              />
-            </div>
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ ...S.label, marginBottom: 0 }}>Mật khẩu</label>
-                {!isRegister && (
-                  <span style={{ fontSize: 12, color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
-                    Liên hệ quản trị viên
-                  </span>
-                )}
-              </div>
-              <div style={{ position: 'relative' }}>
-                <input
-                  style={{ ...S.input, paddingRight: 44 }}
-                  type={showPassword ? 'text' : 'password'} value={password} required
-                  placeholder="Nhập mật khẩu"
-                  onChange={e => setPassword(e.target.value)}
-                  onFocus={e => e.target.style.borderColor = 'rgba(59,130,246,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  onClick={() => setShowPassword((value) => !value)}
-                  style={{
-                    position: 'absolute',
-                    right: 10,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#64748b',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    padding: 4,
-                  }}
-                >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit" style={S.btn} disabled={loading}
-              onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-              onMouseLeave={e => e.currentTarget.style.background = '#3b82f6'}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.99)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'none'}
-            >
-              {loading ? 'Vui lòng đợi...' : (isRegister ? 'Tạo Tài Khoản' : 'Đăng Nhập')}
-            </button>
-          </form>
-
-          <div style={{ height: 1, background: 'rgba(15,23,42,0.08)', margin: '24px 0' }} />
-
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#64748b', margin: 0 }}>
-            {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
-            <button
-              onClick={() => setIsRegister(!isRegister)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: 13, fontWeight: 700, padding: 0 }}
-            >
-              {isRegister ? 'Đăng nhập' : 'Đăng ký'}
-            </button>
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 28 }}>
-            <LockKeyhole size={12} color="#94a3b8" />
-            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>KẾT NỐI BẢO MẬT</span>
-          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
