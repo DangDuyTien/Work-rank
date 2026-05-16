@@ -68,10 +68,23 @@ const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 
 function cell(d) { return '<div class="c"><div class="h t"><span class="n">' + d + '</span></div><div class="h b"><span class="n">' + d + '</span></div></div>'; }
 function clockHTML(mm, ss) { return cell(mm[0]) + cell(mm[1]) + '<span class="sep">:</span>' + cell(ss[0]) + cell(ss[1]); }
 
+const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(56,189,248,0.12);font-family:\'JetBrains Mono\',monospace}#ring{width:188px;height:188px;padding:7px;display:flex;align-items:center;justify-content:center}#inner{width:100%;height:100%;background:#0f172a;border:1px solid rgba(56,189,248,0.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}#label{font-size:9px;font-weight:900;color:#38bdf8;text-transform:uppercase;letter-spacing:.14em;line-height:1}#clock{display:flex;align-items:center;gap:0;margin-top:2px}.c{position:relative;width:40px;height:58px;overflow:hidden;display:flex;flex-direction:column;background:rgba(30,41,59,1)}.c+.c{border-left:1px solid rgba(15,23,42,0.6)}.h{height:50%;display:flex;justify-content:center;overflow:hidden}.t{align-items:flex-start;background:rgba(30,41,59,1)}.b{align-items:flex-end;background:rgba(26,35,51,1)}.c .n{font-family:\'Montserrat\',sans-serif;font-size:52px;font-weight:900;line-height:58px;color:#fff;display:block;height:58px}.c:after{content:\'\';position:absolute;top:50%;left:0;right:0;height:1px;background:#0f172a;z-index:2;transform:translateY(-50%)}.sep{font-family:\'Montserrat\',sans-serif;font-size:38px;font-weight:900;color:rgba(255,255,255,0.5);margin:0 1px;line-height:1;padding-bottom:4px}#foot{display:flex;gap:8px;align-items:center;margin-top:2px}#foot>span{font-size:8px;font-weight:800;color:#64748b;line-height:1}#foot .d{width:20px;height:4px;display:block}</style></head><body>';
+
+function pipBodyHTML(data) {
+  return '<div id="ring" style="' + data.ring + '"><div id="inner">' +
+    '<div id="label">' + data.label + '</div>' +
+    '<div id="clock">' + clockHTML(data.mm, data.ss) + '</div>' +
+    '<div id="foot">' + data.foot + '</div>' +
+    '</div></div>';
+}
+
 function updatePipDOM(data) {
   const pw = pipWindow;
   if (!pw || pw.closed) return;
-  if (pw.__upd) pw.__upd(clockHTML(data.mm, data.ss), data.label, data.foot, data.ring);
+  try {
+    pw.document.body.innerHTML = pipBodyHTML(data);
+    pw.document.body.onclick = function(){ try{pw.close()}catch{} };
+  } catch {}
 }
 
 function pipTick() {
@@ -170,71 +183,11 @@ export function openPipWindow() {
   window.documentPictureInPicture.requestWindow({ width: 310, height: 240 }).then((win) => {
     if (token !== pipToken) { try { win.close(); } catch {} return; }
     pipWindow = win;
-    win.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:#0f172a;height:100vh;overflow:hidden;user-select:none;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:1px solid rgba(56,189,248,0.12);
-  font-family:'JetBrains Mono',monospace;
-}
-#ring{
-  width:188px;height:188px;padding:7px;display:flex;
-  align-items:center;justify-content:center;
-}
-#inner{
-  width:100%;height:100%;background:#0f172a;
-  border:1px solid rgba(56,189,248,0.06);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-}
-#label{
-  font-size:9px;font-weight:900;color:#38bdf8;
-  text-transform:uppercase;letter-spacing:.14em;line-height:1;
-}
-#clock{display:flex;align-items:center;gap:0;margin-top:2px}
-.c{
-  position:relative;width:40px;height:58px;overflow:hidden;
-  display:flex;flex-direction:column;background:rgba(30,41,59,1);
-}
-.c+.c{border-left:1px solid rgba(15,23,42,0.6)}
-.h{height:50%;display:flex;justify-content:center;overflow:hidden}
-.t{align-items:flex-start;background:rgba(30,41,59,1)}
-.b{align-items:flex-end;background:rgba(26,35,51,1)}
-.c .n{font-family:'Montserrat',sans-serif;font-size:52px;font-weight:900;line-height:58px;color:#fff;display:block;height:58px}
-.c:after{
-  content:'';position:absolute;top:50%;left:0;right:0;
-  height:1px;background:#0f172a;z-index:2;transform:translateY(-50%)
-}
-.sep{
-  font-family:'Montserrat',sans-serif;font-size:38px;font-weight:900;
-  color:rgba(255,255,255,0.5);margin:0 1px;line-height:1;padding-bottom:4px
-}
-#foot{display:flex;gap:8px;align-items:center;margin-top:2px}
-#foot>span{font-size:8px;font-weight:800;color:#64748b;line-height:1}
-#foot .d{width:20px;height:4px;display:block}
-</style></head>
-<body>
-<div id="ring"><div id="inner">
-<div id="label">Tập trung</div>
-<div id="clock"><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><span class="sep">:</span><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div><div class="c"><div class="h t"><span class="n">0</span></div><div class="h b"><span class="n">0</span></div></div></div>
-<div id="foot"><span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span></div>
-</div></div>
-<script>
-window.__upd=function(h,l,f,r){
-  var e;
-  e=document.getElementById('clock');if(e)e.innerHTML=h
-  e=document.getElementById('label');if(e)e.textContent=l
-  e=document.getElementById('foot');if(e)e.innerHTML=f
-  e=document.getElementById('ring');if(e)e.style.background=r
-}
-document.body.onclick=function(){window.close()}
-</script>
-</body></html>`);
+    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', foot: '<span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span>', ring: 'conic-gradient(#38bdf8 0deg, rgba(255,255,255,0.05) 0deg)' });
+    win.document.write(PIP_HEAD + initBody + '</body></html>');
     win.document.close();
-    setTimeout(startPipInterval, 50);
+    win.document.body.onclick = function(){ try{win.close()}catch{} };
+    startPipInterval();
     win.addEventListener('pagehide', () => {
       if (pipWindow === win) { pipWindow = null; stopPipInterval(); }
     });
