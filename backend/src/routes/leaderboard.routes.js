@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/daily', auth, asyncHandler(controller.daily));
 router.get('/weekly', auth, asyncHandler(controller.weekly));
 router.get('/monthly', auth, asyncHandler(controller.monthly));
+router.get('/friends', auth, asyncHandler(controller.friends));
 router.get('/team/:teamId', auth, asyncHandler(controller.team));
 
 module.exports = router;

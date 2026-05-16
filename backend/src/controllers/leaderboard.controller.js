@@ -45,4 +45,18 @@ async function team(req, res) {
   });
 }
 
-module.exports = { daily, weekly, monthly, team };
+async function friends(req, res) {
+  const range = req.query.range || 'today';
+  const payload = await dashboardService.friendsLeaderboard({
+    range,
+    limit: Number(req.query.limit || 50),
+    currentUserId: req.user.id,
+  });
+  res.json({
+    ...payload,
+    scope: 'friends',
+    range,
+  });
+}
+
+module.exports = { daily, weekly, monthly, team, friends };

@@ -254,6 +254,15 @@ export const leaderboard = {
       totalRanked: Number(res.data?.totalRanked || 0),
     };
   },
+  friends: async (range = 'today') => {
+    const res = await api.get(`/api/leaderboard/friends?range=${range}`);
+    return {
+      ...res,
+      data: unwrapArray(res.data).map(normalizeLeaderboardRow),
+      currentUserRank: res.data?.currentUserRank ? normalizeLeaderboardRow(res.data.currentUserRank) : null,
+      totalRanked: Number(res.data?.totalRanked || 0),
+    };
+  },
 };
 
 export const security = {

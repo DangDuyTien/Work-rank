@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { sequelize, User, DailyStat, ActivityEvent, UserProfilePreference } = require('../models');
+const { sequelize, User, DailyStat, ActivityEvent, UserProfilePreference, Friendship } = require('../models');
 const fraudDetection = require('./fraudDetection.service');
 const { resolveUserPresence } = require('./userPresence.service');
 const { calculateFocusScore, calculateRankScore } = require('../utils/score');
@@ -43,6 +43,7 @@ function statWhereForRange(range) {
 function userInclude(teamId, options = {}) {
   const where = { status: 'active' };
   if (teamId) where.teamId = teamId;
+  if (Array.isArray(options.userIds) && options.userIds.length > 0) where.id = { [Op.in]: options.userIds };
   const include = options.withProfile
     ? [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }]
     : [];
@@ -117,10 +118,30 @@ function decorateRankedRow(row, index) {
   };
 }
 
-async function leaderboard({ range = 'today', teamId, limit = 20, currentUserId, withCurrentUserRank = false } = {}) {
+async function acceptedFriendUserIds(currentUserId) {
+  const rows = await Friendship.findAll({
+    where: {
+      status: 'accepted',
+      [Op.or]: [{ requesterId: currentUserId }, { addresseeId: currentUserId }],
+    },
+    attributes: ['requesterId', 'addresseeId'],
+    raw: true,
+  });
+
+  const ids = new Set([String(currentUserId)]);
+  for (const row of rows) {
+    ids.add(String(row.requesterId) === String(currentUserId) ? String(row.addresseeId) : String(row.requesterId));
+  }
+  return Array.from(ids);
+}
+
+async function leaderboard({ range = 'today', teamId, limit = 20, currentUserId, withCurrentUserRank = false, userIds } = {}) {
+  const where = statWhereForRange(range);
+  if (Array.isArray(userIds) && userIds.length > 0) where.userId = { [Op.in]: userIds };
+
   const rows = await DailyStat.findAll({
-    where: statWhereForRange(range),
-    include: [userInclude(teamId, { withProfile: true })],
+    where,
+    include: [userInclude(teamId, { withProfile: true, userIds })],
   });
 
   const byUser = new Map();
@@ -181,6 +202,17 @@ async function leaderboard({ range = 'today', teamId, limit = 20, currentUserId,
   };
 }
 
+async function friendsLeaderboard({ range = 'today', limit = 50, currentUserId } = {}) {
+  const userIds = await acceptedFriendUserIds(currentUserId);
+  return leaderboard({
+    range,
+    limit,
+    currentUserId,
+    withCurrentUserRank: true,
+    userIds,
+  });
+}
+
 async function heatmap({ days = 365, teamId } = {}) {
   const safeDays = Math.min(365, Math.max(1, Number(days || 365)));
   const end = new Date();
@@ -208,4 +240,4 @@ async function heatmap({ days = 365, teamId } = {}) {
   return data;
 }
 
-module.exports = { overview, leaderboard, heatmap, rangeDates, normalizeRange };
+module.exports = { overview, leaderboard, friendsLeaderboard, heatmap, rangeDates, normalizeRange };

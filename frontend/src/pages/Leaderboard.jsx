@@ -4,7 +4,7 @@ import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi }
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
-import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 
 const RANGES = [
@@ -76,6 +76,37 @@ function toVerifiedBool(value) {
 
 function isVerifiedRanker(user) {
   return toVerifiedBool(user.verified ?? user.isVerified ?? user.is_verified);
+}
+
+function isDevRanker(user = {}) {
+  const id = Number(user.id || user.user_id || user.userId);
+  const email = String(user.email || '').trim().toLowerCase();
+  const name = String(user.name || '').trim().toLowerCase();
+  return email === 'tien@gmail.com' || id === 8 || name === 'dang duy tien';
+}
+
+function devRankerStyle(user, variant = 'row') {
+  if (!isDevRanker(user)) return {};
+  if (variant === 'table') {
+    return {
+      background: 'linear-gradient(90deg, rgba(34,211,238,0.1), rgba(124,58,237,0.055), rgba(255,255,255,0.98) 72%)',
+      boxShadow: 'inset 3px 0 0 rgba(34,211,238,0.52), inset -1px 0 0 rgba(124,58,237,0.14), inset 0 1px 0 rgba(103,232,249,0.18), inset 0 -1px 0 rgba(124,58,237,0.12)',
+    };
+  }
+  if (variant === 'podium') {
+    return {
+      padding: '10px 8px 0',
+      borderRadius: 8,
+      border: '1px solid rgba(34,211,238,0.28)',
+      background: 'linear-gradient(145deg, rgba(34,211,238,0.075), rgba(124,58,237,0.045), rgba(255,255,255,0.72))',
+      boxShadow: '0 10px 24px rgba(14,165,233,0.075), inset 0 0 0 1px rgba(255,255,255,0.68)',
+    };
+  }
+  return {
+    background: 'linear-gradient(90deg, rgba(34,211,238,0.09), rgba(124,58,237,0.055), rgba(255,255,255,0.92))',
+    border: '1px solid rgba(34,211,238,0.3)',
+    boxShadow: '0 8px 20px rgba(14,165,233,0.06), inset 0 0 0 1px rgba(255,255,255,0.7)',
+  };
 }
 
 function rankBadges(user, rank, range) {
@@ -207,6 +238,8 @@ export default function Leaderboard() {
       let res;
       if (activeTab === 'global') {
         res = await leaderboardApi.get(range);
+      } else if (activeTab === 'friends') {
+        res = await leaderboardApi.friends(range);
       } else if (selectedGroupId) {
         res = await leaderboardApi.group(selectedGroupId, range);
       }
@@ -318,6 +351,7 @@ export default function Leaderboard() {
           };
           return sortByRankScore(next);
         }
+        if (activeTab === 'friends') return prev;
         // Fallback for new user not yet in DB
         const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
         const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
@@ -423,6 +457,7 @@ export default function Leaderboard() {
     borderRadius: 6,
     boxShadow: '0 12px 32px rgba(15,23,42,0.05)',
   };
+  const activeTabLabel = activeTab === 'global' ? 'Toàn Cầu' : activeTab === 'friends' ? 'Bạn Bè' : 'Nhóm';
 
   return (
     <div className="leaderboard-page" style={{fontFamily:"'Space Grotesk',system-ui,sans-serif",maxWidth:1100,margin:'0 auto'}}>
@@ -436,7 +471,7 @@ export default function Leaderboard() {
               <span style={{fontSize:10,fontWeight:800,color:'#3b82f6',letterSpacing:'0.1em'}}>HỆ THỐNG XẾP HẠNG</span>
             </div>
             <h1 style={{fontSize:32,fontWeight:900,margin:'0 0 6px',letterSpacing:'-0.8px',lineHeight:1}}>
-              Bảng Xếp Hạng <span style={{color:'#3b82f6',fontStyle:'italic'}}>{activeTab === 'global' ? 'Toàn Cầu' : 'Nhóm'}</span>
+              Bảng Xếp Hạng <span style={{color:'#3b82f6',fontStyle:'italic'}}>{activeTabLabel}</span>
             </h1>
           </div>
 
@@ -449,6 +484,12 @@ export default function Leaderboard() {
                 color:activeTab==='global'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><Globe2 size={14} /> Toàn Cầu</button>
+              <button onClick={() => setActiveTab('friends')} style={{
+                padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
+                background:activeTab==='friends'?'#2563eb':'transparent',
+                color:activeTab==='friends'?'#fff':'#64748b',transition:'all .15s',
+                display:'flex',alignItems:'center',gap:6,
+              }}><UserCheck size={14} /> Bạn Bè</button>
               <button onClick={() => setActiveTab('group')} style={{
                 padding:'7px 18px',borderRadius:5,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
                 background:activeTab==='group'?'#2563eb':'transparent',
@@ -592,6 +633,7 @@ export default function Leaderboard() {
             gap: 16,
             borderColor: currentUserRank ? 'rgba(37,99,235,0.22)' : 'rgba(15,23,42,0.08)',
             background: currentUserRank ? 'linear-gradient(135deg, rgba(37,99,235,0.06), #ffffff)' : '#ffffff',
+            ...devRankerStyle(currentUserRank),
           }}
         >
           {currentUserRank ? (
@@ -685,7 +727,7 @@ export default function Leaderboard() {
         <div className="leaderboard-podium" style={{...CARD,padding:'28px 24px',marginBottom:20,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'end'}}>
           <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,minHeight:260}}>
             {top2 && (
-              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top2.user_id}`); } }} onClick={()=>navigate(`/users/${top2.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1,...devRankerStyle(top2, 'podium')}}>
                 <div style={{position:'relative'}}>
                   <Avatar user={top2} userId={top2.user_id || top2.id} name={top2.name} size={44} idx={1} refreshKey={avatarRefreshKey}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#f8fafc'}}>2</div>
@@ -702,7 +744,7 @@ export default function Leaderboard() {
               </div>
             )}
             {top1 && (
-              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2}}>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top1.user_id}`); } }} onClick={()=>navigate(`/users/${top1.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1.2,...devRankerStyle(top1, 'podium')}}>
                 <Crown size={22} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 4 }} />
                 <div style={{position:'relative'}}>
                   <Avatar user={top1} userId={top1.user_id || top1.id} name={top1.name} size={52} idx={0} refreshKey={avatarRefreshKey}/>
@@ -720,7 +762,7 @@ export default function Leaderboard() {
               </div>
             )}
             {top3 && (
-              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top3.user_id}`); } }} onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1}}>
+              <div role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${top3.user_id}`); } }} onClick={()=>navigate(`/users/${top3.user_id}`)} style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',gap:8,flex:1,...devRankerStyle(top3, 'podium')}}>
                 <div style={{position:'relative'}}>
                   <Avatar user={top3} userId={top3.user_id || top3.id} name={top3.name} size={40} idx={2} refreshKey={avatarRefreshKey}/>
                   <div style={{position:'absolute',bottom:-6,left:-6,width:16,height:16,borderRadius:3,background:'#b45309',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#fff'}}>3</div>
@@ -741,9 +783,10 @@ export default function Leaderboard() {
           <div style={{display:'flex',flexDirection:'column',gap:6}}>
             {users.slice(3, 8).map((u,i)=>{
               const rank=i+4;
+              const devStyle = devRankerStyle(u);
               return (
                 <div key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)}
-                  style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(15,23,42,0.03)',borderRadius:5,border:'1px solid rgba(15,23,42,0.08)',cursor:'pointer',transition:'background .15s'}}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(15,23,42,0.03)',borderRadius:5,border:'1px solid rgba(15,23,42,0.08)',cursor:'pointer',transition:'background .15s',...devStyle}}
                 >
                   <div style={{width:22,height:22,borderRadius:4,background:'rgba(15,23,42,0.06)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#64748b',flexShrink:0}}>{rank}</div>
                   <Avatar user={u} userId={u.user_id || u.id} name={u.name} size={28} idx={rank-1} refreshKey={avatarRefreshKey}/>
@@ -808,7 +851,7 @@ export default function Leaderboard() {
                 const userId = u.user_id || u.id;
                 const isUpdatingVerification = Boolean(verificationPending[String(userId)]);
                 return (
-                  <tr key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)} style={{borderBottom:'1px solid rgba(15,23,42,0.04)',cursor:'pointer'}}>
+                  <tr key={u.user_id} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigate(`/users/${u.user_id}`); } }} onClick={()=>navigate(`/users/${u.user_id}`)} style={{borderBottom:'1px solid rgba(15,23,42,0.04)',cursor:'pointer',...devRankerStyle(u, 'table')}}>
                     <td style={{padding:'12px 18px'}}><div style={{fontSize:11,fontWeight:800,color:'#64748b'}}>{rank}</div></td>
                     <td style={{padding:'12px 18px'}}>
                       <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
