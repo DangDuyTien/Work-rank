@@ -65,17 +65,15 @@ let pipInterval = null;
 const PIP_TICK_KEY = 'workrank:pomodoro-state';
 const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
 
-function cell(d) { return '<div class="c"><div class="h t"><span class="n">' + d + '</span></div><div class="h b"><span class="n">' + d + '</span></div></div>'; }
-function clockHTML(mm, ss) { return cell(mm[0]) + cell(mm[1]) + '<span class="sep">:</span>' + cell(ss[0]) + cell(ss[1]); }
+function tile(d) {
+  return '<div class="tile"><div class="h t"><span>' + d + '</span></div><div class="h b"><span>' + d + '</span></div></div>';
+}
+function clockHTML(mm, ss) { return tile(mm[0]) + tile(mm[1]) + '<span id="col">:</span>' + tile(ss[0]) + tile(ss[1]); }
 
-const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{background:#0f172a;height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(56,189,248,0.12);font-family:\'JetBrains Mono\',monospace}#ring{width:188px;height:188px;padding:7px;display:flex;align-items:center;justify-content:center}#inner{width:100%;height:100%;background:#0f172a;border:1px solid rgba(56,189,248,0.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}#label{font-size:9px;font-weight:900;color:#38bdf8;text-transform:uppercase;letter-spacing:.14em;line-height:1}#clock{display:flex;align-items:center;gap:0;margin-top:2px}.c{position:relative;width:40px;height:58px;overflow:hidden;display:flex;flex-direction:column;background:rgba(30,41,59,1)}.c+.c{border-left:1px solid rgba(15,23,42,0.6)}.h{height:50%;display:flex;justify-content:center;overflow:hidden}.t{align-items:flex-start;background:rgba(30,41,59,1)}.b{align-items:flex-end;background:rgba(26,35,51,1)}.c .n{font-family:\'Montserrat\',sans-serif;font-size:52px;font-weight:900;line-height:58px;color:#fff;display:block;height:58px}.c:after{content:\'\';position:absolute;top:50%;left:0;right:0;height:1px;background:#0f172a;z-index:2;transform:translateY(-50%)}.sep{font-family:\'Montserrat\',sans-serif;font-size:38px;font-weight:900;color:rgba(255,255,255,0.5);margin:0 1px;line-height:1;padding-bottom:4px}#foot{display:flex;gap:8px;align-items:center;margin-top:2px}#foot>span{font-size:8px;font-weight:800;color:#64748b;line-height:1}#foot .d{width:20px;height:4px;display:block}</style></head><body>';
+const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{background:#0f0f0f;height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;font-family:\'Space Mono\',monospace}#app{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}#status{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;line-height:1;margin-bottom:14px;transition:color .3s ease}#clock{display:flex;align-items:center;gap:5px}.tile{width:54px;height:54px;position:relative;overflow:hidden;display:flex;flex-direction:column;background:#000;border:1px solid #27272a;border-radius:3px}.tile .h{height:50%;display:flex;justify-content:center;overflow:hidden}.tile .t{align-items:flex-start}.tile .b{align-items:flex-end}.tile .h span{font-family:\'Space Mono\',monospace;font-size:46px;font-weight:700;color:#fff;line-height:54px;height:54px;display:block}.tile::after{content:\'\';position:absolute;top:50%;left:-1px;right:-1px;height:1px;background:#0f0f0f;z-index:2}.tile+.tile{border-left:none}#col{font-size:26px;font-weight:700;color:rgba(255,255,255,0.7);line-height:1;padding-bottom:4px;animation:blink 1s step-end infinite;width:10px;text-align:center}@keyframes blink{0%,100%{opacity:1}50%{opacity:.12}}#bar{width:100%;height:3px;background:#18181b;margin-top:14px;border-radius:2px;overflow:hidden}#fill{height:100%;border-radius:2px;transition:width .3s ease;width:0%}</style></head><body>';
 
-function pipBodyHTML(data) {
-  return '<div id="ring" style="' + data.ring + '"><div id="inner">' +
-    '<div id="label">' + data.label + '</div>' +
-    '<div id="clock">' + clockHTML(data.mm, data.ss) + '</div>' +
-    '<div id="foot">' + data.foot + '</div>' +
-    '</div></div>';
+function pipBodyHTML(d) {
+  return '<div id="app"><div id="status" style="color:' + d.col + '">' + d.label + '</div><div id="clock">' + clockHTML(d.mm, d.ss) + '</div><div id="bar"><div id="fill" style="width:' + d.pct + '%;background:' + d.col + '"></div></div></div>';
 }
 
 function updatePipDOM(data) {
@@ -142,26 +140,14 @@ function pipTick() {
     const mm = String(Math.floor(rem / 60)).padStart(2, '0');
     const ss = String(rem % 60).padStart(2, '0');
     const mode = p.mode || 'focus';
-    const focusCount = Number(p.completedFocusCount || 0);
     const preset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
     const total = (mode === 'focus' ? preset[0] : mode === 'shortBreak' ? preset[1] : preset[2]) * 60;
-    const col = mode === 'focus' ? '#38bdf8' : mode === 'shortBreak' ? '#16a34a' : '#d97706';
-    const done = mode === 'longBreak' ? 4 : focusCount % 4;
-    var steps = '';
-    for (var i = 0; i < 4; i++) {
-      var sc = i < done ? '#22c55e' : (mode === 'focus' && i === (focusCount % 4) ? col : 'rgba(255,255,255,0.07)');
-      steps += '<span class="d" style="background:' + sc + '"></span>';
-    }
+    const col = mode === 'focus' ? '#06b6d4' : mode === 'shortBreak' ? '#16a34a' : '#d97706';
     const label = mode === 'focus' ? 'Tập trung' : mode === 'shortBreak' ? 'Nghỉ ngắn' : 'Nghỉ dài';
-    const deg = (rem / (total || 1)) * 360;
-    const footHTML = '<span>' + (focusCount % 4 + 1) + '/4</span>' + steps + '<span>' + Math.floor(rem / 60) + 'p</span>';
+    const pct = total > 0 ? ((total - rem) / total) * 100 : 0;
 
     updatePipDOM({
-      mm: mm,
-      ss: ss,
-      label: label,
-      foot: footHTML,
-      ring: 'conic-gradient(' + col + ' ' + deg + 'deg, rgba(255,255,255,0.05) 0deg)',
+      mm: mm, ss: ss, label: label, col: col, pct: Math.round(pct * 10) / 10,
     });
   } catch {}
 }
@@ -180,10 +166,10 @@ export function openPipWindow() {
   if (!('documentPictureInPicture' in window)) return false;
   if (pipWindow && !pipWindow.closed) { pipWindow.focus(); startPipInterval(); return true; }
   const token = ++pipToken;
-  window.documentPictureInPicture.requestWindow({ width: 310, height: 240 }).then((win) => {
+  window.documentPictureInPicture.requestWindow({ width: 270, height: 280 }).then((win) => {
     if (token !== pipToken) { try { win.close(); } catch {} return; }
     pipWindow = win;
-    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', foot: '<span>1/4</span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span class="d" style="background:rgba(255,255,255,0.07)"></span><span>0p</span>', ring: 'conic-gradient(#38bdf8 0deg, rgba(255,255,255,0.05) 0deg)' });
+    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', col: '#06b6d4', pct: 0 });
     win.document.write(PIP_HEAD + initBody + '</body></html>');
     win.document.close();
     win.document.body.onclick = function(){ try{win.close()}catch{} };
