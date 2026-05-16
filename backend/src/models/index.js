@@ -7,6 +7,7 @@ const ActivityEvent = require('./ActivityEvent');
 const DailyStat = require('./DailyStat');
 const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
+const SimulationSetting = require('./SimulationSetting');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -46,4 +47,5 @@ module.exports = {
   DailyStat,
   UserProfileImage,
   UserProfilePreference,
+  SimulationSetting,
 };

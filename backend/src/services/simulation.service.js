@@ -1,10 +1,11 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const env = require('../config/env');
-const { sequelize, User, Team, Device, WorkSession, ActivityEvent, DailyStat, UserProfilePreference } = require('../models');
+const { sequelize, User, Team, Device, WorkSession, ActivityEvent, DailyStat, UserProfilePreference, SimulationSetting } = require('../models');
 const { calculateFocusScore, calculateRankScore } = require('../utils/score');
 const simulationPresence = require('./simulationPresence.service');
 
+const SETTINGS_ID = 1;
 const DEFAULT_TARGET_COUNT = 50;
 const DEFAULT_INTERVAL_MS = 30_000;
 const MAX_TARGET_COUNT = 100;
@@ -96,6 +97,7 @@ const state = {
   startedAt: null,
   lastTickAt: null,
   lastError: null,
+  persistenceError: null,
   lastSummary: null,
   lifecycleByUser: new Map(),
   presenceByUser: new Map(),
@@ -111,6 +113,66 @@ function clamp(value, min, max) {
 
 function dateOnly(value = new Date()) {
   return value.toISOString().slice(0, 10);
+}
+
+function isMissingSimulationSettingsTable(error) {
+  const message = String(error?.message || '');
+  return error?.original?.code === 'ER_NO_SUCH_TABLE'
+    || error?.parent?.code === 'ER_NO_SUCH_TABLE'
+    || message.includes("doesn't exist")
+    || message.includes('simulation_settings');
+}
+
+function normalizePersistedSettings(setting) {
+  if (!setting) return null;
+  const plain = setting.toJSON ? setting.toJSON() : setting;
+  return {
+    enabled: Boolean(plain.enabled),
+    targetCount: clamp(Number(plain.targetCount || DEFAULT_TARGET_COUNT), 1, MAX_TARGET_COUNT),
+    intervalSeconds: Math.max(10, Number(plain.intervalSeconds || Math.round(DEFAULT_INTERVAL_MS / 1000))),
+    startedAt: plain.startedAt || null,
+    stoppedAt: plain.stoppedAt || null,
+    updatedAt: plain.updatedAt || null,
+  };
+}
+
+async function readPersistedSettings() {
+  try {
+    const setting = await SimulationSetting.findByPk(SETTINGS_ID);
+    state.persistenceError = null;
+    return normalizePersistedSettings(setting);
+  } catch (error) {
+    state.persistenceError = isMissingSimulationSettingsTable(error)
+      ? 'Missing table simulation_settings'
+      : error.message;
+    return null;
+  }
+}
+
+async function writePersistedSettings(values = {}) {
+  try {
+    const now = new Date();
+    const defaults = {
+      id: SETTINGS_ID,
+      enabled: false,
+      targetCount: DEFAULT_TARGET_COUNT,
+      intervalSeconds: Math.round(DEFAULT_INTERVAL_MS / 1000),
+      createdAt: now,
+      updatedAt: now,
+    };
+    const [setting] = await SimulationSetting.findOrCreate({
+      where: { id: SETTINGS_ID },
+      defaults: { ...defaults, ...values, updatedAt: now },
+    });
+    await setting.update({ ...values, updatedAt: now });
+    state.persistenceError = null;
+    return normalizePersistedSettings(setting);
+  } catch (error) {
+    state.persistenceError = isMissingSimulationSettingsTable(error)
+      ? 'Missing table simulation_settings'
+      : error.message;
+    return null;
+  }
 }
 
 function vietnamTimeParts(value = new Date()) {
@@ -618,17 +680,35 @@ async function start(options = {}) {
   state.intervalMs = Math.max(MIN_INTERVAL_MS, Number(options.intervalMs || state.intervalMs || DEFAULT_INTERVAL_MS));
   state.running = true;
   state.startedAt = state.startedAt || new Date().toISOString();
+  if (options.persist !== false) {
+    await writePersistedSettings({
+      enabled: true,
+      targetCount: state.targetCount,
+      intervalSeconds: Math.round(state.intervalMs / 1000),
+      startedAt: new Date(),
+      stoppedAt: null,
+    });
+  }
   await ensureSimulationUsers(state.targetCount);
   scheduleNextTick();
   await tick();
   return getStatus();
 }
 
-async function stop() {
+async function stop(options = {}) {
   state.running = false;
   if (state.timer) clearInterval(state.timer);
   state.timer = null;
   state.startedAt = null;
+
+  if (options.persist !== false) {
+    await writePersistedSettings({
+      enabled: false,
+      targetCount: state.targetCount,
+      intervalSeconds: Math.round(state.intervalMs / 1000),
+      stoppedAt: new Date(),
+    });
+  }
 
   const currentTime = new Date();
   const users = await User.findAll({ where: { isSimulated: true, status: 'active' } });
@@ -647,6 +727,7 @@ async function countSimulatedUsers() {
 }
 
 async function getStatus() {
+  const persisted = await readPersistedSettings();
   return {
     running: state.running,
     targetCount: state.targetCount,
@@ -654,12 +735,28 @@ async function getStatus() {
     startedAt: state.startedAt,
     lastTickAt: state.lastTickAt,
     lastError: state.lastError,
+    persistenceError: state.persistenceError,
     lastSummary: state.lastSummary,
+    persisted,
     simulatedUserCount: await countSimulatedUsers(),
     activePresenceCount: simulationPresence.activeCount(),
     lifecycleOnlineCount: Array.from(state.lifecycleByUser.values()).filter((item) => item.mode === 'online').length,
     lifecycleOfflineCount: Array.from(state.lifecycleByUser.values()).filter((item) => item.mode === 'offline').length,
   };
+}
+
+async function restorePersistedState(options = {}) {
+  state.io = options.io || state.io;
+  const persisted = await readPersistedSettings();
+  if (!persisted?.enabled) return getStatus();
+
+  console.log('Restoring WorkRank simulation from persisted settings');
+  return start({
+    io: state.io,
+    targetCount: persisted.targetCount,
+    intervalMs: persisted.intervalSeconds * 1000,
+    persist: false,
+  });
 }
 
 async function manualTick(options = {}) {
@@ -671,6 +768,7 @@ async function manualTick(options = {}) {
 module.exports = {
   getStatus,
   manualTick,
+  restorePersistedState,
   start,
   stop,
 };
