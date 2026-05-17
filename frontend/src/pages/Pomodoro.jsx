@@ -188,6 +188,7 @@ export default function Pomodoro() {
   const completedInCurrentCycle = pomodoro.mode === 'longBreak' ? 4 : pomodoro.completedFocusCount % 4;
   const pomodoroTrackingReady = tracking;
   const [pomodoroSettingsOpen, setPomodoroSettingsOpen] = useState(false);
+  const [flashKey, setFlashKey] = useState(0);
   const pomodoroStatus = pomodoro.running
     ? 'Đang chạy'
     : pomodoro.completedAt
@@ -272,6 +273,7 @@ export default function Pomodoro() {
       });
     }
     vibrateDevice([200, 100, 200]);
+    setFlashKey((k) => k + 1);
   }, [pomodoro.completedAt, pomodoro.mode, appSettings.notifications?.sound, appSettings.pomodoro?.volume]);
 
   const runningRef = useRef(pomodoro.running);
@@ -381,12 +383,22 @@ export default function Pomodoro() {
         @keyframes pm-shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
         @keyframes pm-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes pm-fade-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pm-flash { 0%{opacity:0.35} 100%{opacity:0} }
         .pm-btn:hover{filter:brightness(1.3)!important;transform:translateY(-1px)!important}
         .pm-btn:active{transform:translateY(0)!important;filter:brightness(0.95)!important}
         .pm-tile-urgent .pm-digit{color:#ef4444!important}
         .pm-tile-urgent .pm-tile-inner{box-shadow:0 0 20px rgba(239,68,68,0.35)!important;border-color:rgba(239,68,68,0.5)!important}
         .pm-settings-enter{animation:pm-fade-in 0.2s ease forwards}
       `}</style>
+
+      <div key={flashKey} style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99999,
+        pointerEvents: 'none',
+        background: '#ffffff',
+        animation: 'pm-flash 0.4s ease-out forwards',
+      }} />
 
       <section style={{
         width: 400,
