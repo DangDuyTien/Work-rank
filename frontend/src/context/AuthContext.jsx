@@ -94,6 +94,7 @@ export function AuthProvider({ children }) {
       disconnectSocket();
       setSocket(null);
       setUser(null);
+      sessionStorage.setItem('workrank_auth_notice', 'Đã đăng xuất an toàn. Kết nối realtime đã được ngắt.');
       navigate('/login', { replace: true });
     }
   };

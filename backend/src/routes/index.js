@@ -1,7 +1,9 @@
 const express = require('express');
+const healthController = require('../controllers/health.controller');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
-router.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+router.get('/health', asyncHandler(healthController.health));
 router.use('/auth', require('./auth.routes'));
 router.use('/users', require('./users.routes'));
 router.use('/activity', require('./activity.routes'));
