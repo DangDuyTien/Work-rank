@@ -179,32 +179,73 @@ const RANK_TIERS = [
   },
 ];
 
-const ANIMAL_ICON_SEQUENCE = [Cat, Rabbit, Squirrel, Bird, Fish, Turtle, Dog, Snail, Bug, Rat, Shell, PawPrint];
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
-const ANIMAL_NAMES = Array.from({ length: 200 }, (_, i) => {
-  const BASE = [
-    'Mèo con', 'Thỏ đồng', 'Sóc nâu', 'Chim sẻ', 'Cá suối',
-    'Rùa xanh', 'Chó săn', 'Ốc sên bạc', 'Bọ ánh kim', 'Chuột nhắt',
-    'Sò ngọc', 'Cáo đỏ', 'Hươu sao', 'Gấu trúc', 'Cú mèo',
-    'Hải ly', 'Linh dương', 'Sói xám', 'Báo gấm', 'Rái cá',
-    'Ngựa hoang', 'Đại bàng', 'Cá heo', 'Bò rừng', 'Lạc đà',
-    'Sư tử', 'Hổ vàng', 'Gấu trắng', 'Cá mập', 'Tê giác',
-    'Voi rừng', 'Khỉ vàng', 'Báo tuyết', 'Chim ưng', 'Cá voi',
-    'Gấu xám', 'Ngựa vằn', 'Công xanh', 'Sói tuyết', 'Bò tót',
-    'Rồng Komodo', 'Kangaroo', 'Tê tê', 'Hươu cao cổ', 'Cá kiếm',
-    'Báo đen', 'Đại bàng vàng', 'Sư tử trắng', 'Hổ trắng', 'Cá voi xanh', 'Voi ma mút',
-  ];
-  return i < BASE.length ? BASE[i] : `${BASE[i % BASE.length]} siêu việt`;
-});
 
-const LEVEL_ANIMALS = ANIMAL_NAMES.map((name, level) => ({
-  level,
-  name,
-  icon: ANIMAL_ICON_SEQUENCE[level % ANIMAL_ICON_SEQUENCE.length],
-  color: ANIMAL_COLOR_SEQUENCE[level % ANIMAL_COLOR_SEQUENCE.length],
-  trait: ANIMAL_TRAITS[level % ANIMAL_TRAITS.length],
-}));
+const ANIMAL_BASE = [
+  { name: 'Mèo con', icon: Cat },
+  { name: 'Thỏ đồng', icon: Rabbit },
+  { name: 'Sóc nâu', icon: Squirrel },
+  { name: 'Chim sẻ', icon: Bird },
+  { name: 'Cá suối', icon: Fish },
+  { name: 'Rùa xanh', icon: Turtle },
+  { name: 'Chó săn', icon: Dog },
+  { name: 'Ốc sên bạc', icon: Snail },
+  { name: 'Bọ ánh kim', icon: Bug },
+  { name: 'Chuột nhắt', icon: Rat },
+  { name: 'Sò ngọc', icon: Shell },
+  { name: 'Cáo đỏ', icon: PawPrint },
+  { name: 'Hươu sao', icon: PawPrint },
+  { name: 'Gấu trúc', icon: PawPrint },
+  { name: 'Cú mèo', icon: Bird },
+  { name: 'Hải ly', icon: Rat },
+  { name: 'Linh dương', icon: PawPrint },
+  { name: 'Sói xám', icon: Dog },
+  { name: 'Báo gấm', icon: Cat },
+  { name: 'Rái cá', icon: Rat },
+  { name: 'Ngựa hoang', icon: PawPrint },
+  { name: 'Đại bàng', icon: Bird },
+  { name: 'Cá heo', icon: Fish },
+  { name: 'Bò rừng', icon: PawPrint },
+  { name: 'Lạc đà', icon: PawPrint },
+  { name: 'Sư tử', icon: Cat },
+  { name: 'Hổ vàng', icon: Cat },
+  { name: 'Gấu trắng', icon: PawPrint },
+  { name: 'Cá mập', icon: Fish },
+  { name: 'Tê giác', icon: PawPrint },
+  { name: 'Voi rừng', icon: PawPrint },
+  { name: 'Khỉ vàng', icon: Squirrel },
+  { name: 'Báo tuyết', icon: Cat },
+  { name: 'Chim ưng', icon: Bird },
+  { name: 'Cá voi', icon: Fish },
+  { name: 'Gấu xám', icon: PawPrint },
+  { name: 'Ngựa vằn', icon: PawPrint },
+  { name: 'Công xanh', icon: Bird },
+  { name: 'Sói tuyết', icon: Dog },
+  { name: 'Bò tót', icon: PawPrint },
+  { name: 'Rồng Komodo', icon: Bug },
+  { name: 'Kangaroo', icon: Rabbit },
+  { name: 'Tê tê', icon: Bug },
+  { name: 'Hươu cao cổ', icon: PawPrint },
+  { name: 'Cá kiếm', icon: Fish },
+  { name: 'Báo đen', icon: Cat },
+  { name: 'Đại bàng vàng', icon: Bird },
+  { name: 'Sư tử trắng', icon: Cat },
+  { name: 'Hổ trắng', icon: Cat },
+  { name: 'Cá voi xanh', icon: Fish },
+  { name: 'Voi ma mút', icon: PawPrint },
+];
+
+const LEVEL_ANIMALS = Array.from({ length: 200 }, (_, level) => {
+  const base = ANIMAL_BASE[level % ANIMAL_BASE.length];
+  return {
+    level,
+    name: level < ANIMAL_BASE.length ? base.name : `${base.name} siêu việt`,
+    icon: base.icon,
+    color: ANIMAL_COLOR_SEQUENCE[level % ANIMAL_COLOR_SEQUENCE.length],
+    trait: ANIMAL_TRAITS[level % ANIMAL_TRAITS.length],
+  };
+});
 
 const HEAT_COLORS = ['#eef2f7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e'];
 const TIMELINE_BUCKET_MINUTES = 15;
