@@ -5,14 +5,20 @@ import { playPomodoroChime, requestNotificationPermission, sendBrowserNotificati
 import {
   Bell,
   BellOff,
+  Check,
+  ClipboardList,
   Coffee,
   Monitor,
   Pause,
   Play,
+  Plus,
   RotateCcw,
   Settings,
   SkipForward,
+  StickyNote,
+  Target,
   Timer,
+  Trash2,
   Volume2,
 } from 'lucide-react';
 
@@ -25,7 +31,12 @@ const SkipIcon = () => <SkipForward size={16} />;
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
 const POMODORO_HISTORY_KEY = 'workrank:pomodoro-history';
+const POMODORO_TASKS_KEY = 'workrank:pomodoro-tasks';
+const POMODORO_ACTIVE_TASK_KEY = 'workrank:pomodoro-active-task';
+const POMODORO_NOTES_KEY = 'workrank:pomodoro-notes';
+const POMODORO_DAILY_GOAL_KEY = 'workrank:pomodoro-daily-goal';
 const POMODORO_HISTORY_MAX = 300;
+const POMODORO_TASK_MAX = 24;
 
 function loadPomodoroHistory() {
   try {
@@ -37,6 +48,42 @@ function loadPomodoroHistory() {
 function savePomodoroHistory(history) {
   localStorage.setItem(POMODORO_HISTORY_KEY, JSON.stringify(history));
 }
+
+function createPomodoroTaskId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function loadPomodoroTasks() {
+  try {
+    const raw = localStorage.getItem(POMODORO_TASKS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((task) => task && typeof task.title === 'string')
+      .map((task) => ({
+        id: task.id || createPomodoroTaskId(),
+        title: task.title.trim().slice(0, 90),
+        estimate: Math.max(1, Math.min(12, Number(task.estimate || 1))),
+        sessions: Math.max(0, Math.min(999, Number(task.sessions || 0))),
+        completed: Boolean(task.completed),
+        createdAt: Number(task.createdAt || Date.now()),
+        completedAt: Number(task.completedAt || 0),
+      }))
+      .filter((task) => task.title);
+  } catch { return []; }
+}
+
+function savePomodoroTasks(tasks) {
+  localStorage.setItem(POMODORO_TASKS_KEY, JSON.stringify(tasks.slice(0, POMODORO_TASK_MAX)));
+}
+
+function loadPomodoroDailyGoal() {
+  try {
+    const value = Number(localStorage.getItem(POMODORO_DAILY_GOAL_KEY) || 120);
+    return Math.max(15, Math.min(480, value || 120));
+  } catch { return 120; }
+}
+
 const POMODORO_PRESETS = [
   { key: 'classic', label: '25 / 5', focusSeconds: 25 * 60, shortBreakSeconds: 5 * 60, longBreakSeconds: 15 * 60 },
   { key: 'deep', label: '50 / 10', focusSeconds: 50 * 60, shortBreakSeconds: 10 * 60, longBreakSeconds: 25 * 60 },
@@ -200,6 +247,16 @@ function completePomodoroStep(state) {
 export default function Pomodoro() {
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
   const [pomodoroHistory, setPomodoroHistory] = useState(loadPomodoroHistory);
+  const [focusTasks, setFocusTasks] = useState(loadPomodoroTasks);
+  const [taskDraft, setTaskDraft] = useState('');
+  const [taskEstimate, setTaskEstimate] = useState(1);
+  const [activeTaskId, setActiveTaskId] = useState(() => {
+    try { return localStorage.getItem(POMODORO_ACTIVE_TASK_KEY) || ''; } catch { return ''; }
+  });
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(loadPomodoroDailyGoal);
+  const [focusNotes, setFocusNotes] = useState(() => {
+    try { return localStorage.getItem(POMODORO_NOTES_KEY) || ''; } catch { return ''; }
+  });
   const [appSettings, setAppSettings] = useState(getAppSettings);
   const {
     tracking, trackingPending,
@@ -227,7 +284,6 @@ export default function Pomodoro() {
       : pomodoro.startedOnce ? 'Tạm dừng' : 'Sẵn sàng';
 
   const historyStats = useMemo(() => {
-    const now = Date.now();
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayTs = todayStart.getTime();
     const thisWeekStart = new Date(); thisWeekStart.setHours(0, 0, 0, 0);
@@ -270,8 +326,74 @@ export default function Pomodoro() {
   const avgFocusMin = historyStats.totalSessions > 0
     ? Math.round(historyStats.totalFocusMin / historyStats.totalSessions)
     : 0;
+  const recentFocusHistory = useMemo(
+    () => [...pomodoroHistory].reverse().filter((entry) => entry.mode === 'focus').slice(0, 30),
+    [pomodoroHistory]
+  );
+  const openFocusTasks = useMemo(
+    () => focusTasks.filter((task) => !task.completed),
+    [focusTasks]
+  );
+  const completedFocusTasks = focusTasks.length - openFocusTasks.length;
+  const activeTask = useMemo(
+    () => focusTasks.find((task) => task.id === activeTaskId && !task.completed) || null,
+    [activeTaskId, focusTasks]
+  );
+  const taskSessionTotal = focusTasks.reduce((sum, task) => sum + Number(task.sessions || 0), 0);
+  const taskEstimateTotal = focusTasks.reduce((sum, task) => sum + Number(task.estimate || 0), 0);
+  const dailyGoalProgress = Math.min(1, historyStats.todayFocus / Math.max(1, dailyGoalMinutes));
 
   useEffect(() => subscribeAppSettings(setAppSettings), []);
+
+  useEffect(() => {
+    savePomodoroTasks(focusTasks);
+  }, [focusTasks]);
+
+  useEffect(() => {
+    try { localStorage.setItem(POMODORO_ACTIVE_TASK_KEY, activeTaskId); } catch {}
+  }, [activeTaskId]);
+
+  useEffect(() => {
+    try { localStorage.setItem(POMODORO_NOTES_KEY, focusNotes); } catch {}
+  }, [focusNotes]);
+
+  useEffect(() => {
+    try { localStorage.setItem(POMODORO_DAILY_GOAL_KEY, String(dailyGoalMinutes)); } catch {}
+  }, [dailyGoalMinutes]);
+
+  useEffect(() => {
+    if (!activeTaskId) return;
+    const selected = focusTasks.find((task) => task.id === activeTaskId);
+    if (!selected || selected.completed) setActiveTaskId('');
+  }, [activeTaskId, focusTasks]);
+
+  const taskCompletionRef = useRef(pomodoro.completedAt);
+  const previousPomodoroRef = useRef(pomodoro);
+
+  useEffect(() => {
+    if (!pomodoro.completedAt || taskCompletionRef.current === pomodoro.completedAt) return;
+    taskCompletionRef.current = pomodoro.completedAt;
+    const previousPomodoro = previousPomodoroRef.current;
+    const previousPreset = getPomodoroPreset(previousPomodoro?.presetKey);
+    const previousTotal = getPomodoroModeSeconds(previousPreset, previousPomodoro?.mode);
+    const previousElapsed = previousTotal - Math.max(0, Number(previousPomodoro?.remainingSeconds || 0));
+    if (!activeTaskId || previousPomodoro?.mode !== 'focus' || previousElapsed < 10) return;
+    setFocusTasks((prev) => prev.map((task) => {
+      if (task.id !== activeTaskId || task.completed) return task;
+      const sessions = Math.min(999, Number(task.sessions || 0) + 1);
+      const estimate = Math.max(1, Number(task.estimate || 1));
+      return {
+        ...task,
+        sessions,
+        completed: sessions >= estimate,
+        completedAt: sessions >= estimate ? Date.now() : task.completedAt,
+      };
+    }));
+  }, [activeTaskId, pomodoro.completedAt]);
+
+  useEffect(() => {
+    previousPomodoroRef.current = pomodoro;
+  });
 
   useEffect(() => {
     setPomodoroHistory(loadPomodoroHistory());
@@ -287,14 +409,53 @@ export default function Pomodoro() {
       try {
         const cmd = typeof e.data === 'string' ? JSON.parse(e.data) : null;
         if (cmd?.command === 'pause') {
-          setPomodoro((prev) => ({ ...prev, running: false, endsAt: null }));
+          setPomodoro((prev) => {
+            const remainingSeconds = prev.endsAt
+              ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
+              : Math.max(0, Number(prev.remainingSeconds || 0));
+            return { ...prev, remainingSeconds, running: false, endsAt: null, startedOnce: true };
+          });
+        } else if (cmd?.command === 'start') {
+          requestNotificationPermission();
+          if (
+            !tracking
+            && !trackingPending
+            && appSettings.tracker?.autoStartWithPomodoro
+          ) {
+            void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
+          }
+          setPomodoro((prev) => {
+            if (prev.running) return prev;
+            const preset = getPomodoroPreset(prev.presetKey);
+            const remainingSeconds = Math.max(1, Number(prev.remainingSeconds || getPomodoroModeSeconds(preset, prev.mode)));
+            return {
+              ...prev,
+              remainingSeconds,
+              running: true,
+              completedAt: 0,
+              notified: false,
+              startedOnce: true,
+              endsAt: Date.now() + remainingSeconds * 1000,
+            };
+          });
         } else if (cmd?.command === 'skip') {
-          setPomodoro((prev) => completePomodoroStep({ ...prev, running: false }));
+          setPomodoro((prev) => {
+            const remainingSeconds = prev.endsAt
+              ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
+              : Math.max(0, Number(prev.remainingSeconds || 0));
+            return completePomodoroStep({ ...prev, remainingSeconds, running: false, endsAt: null });
+          });
         }
       } catch {}
     };
     return () => bc.close();
-  }, []);
+  }, [
+    appSettings.tracker?.autoLaunchDesktop,
+    appSettings.tracker?.autoStartWithPomodoro,
+    startTrack,
+    tracking,
+    trackingPending,
+  ]);
 
   useEffect(() => {
     localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify({
@@ -305,6 +466,8 @@ export default function Pomodoro() {
       endsAt: pomodoro.endsAt,
       completedFocusCount: pomodoro.completedFocusCount,
       startedOnce: pomodoro.startedOnce,
+      completedAt: pomodoro.completedAt,
+      notified: pomodoro.notified,
     }));
   }, [pomodoro]);
 
@@ -451,6 +614,57 @@ export default function Pomodoro() {
     setPomodoro((prev) => completePomodoroStep({ ...prev, running: false }));
   };
 
+  const addFocusTask = (event) => {
+    event.preventDefault();
+    const title = taskDraft.trim();
+    if (!title) return;
+    const estimate = Math.max(1, Math.min(12, Number(taskEstimate || 1)));
+    const task = {
+      id: createPomodoroTaskId(),
+      title: title.slice(0, 90),
+      estimate,
+      sessions: 0,
+      completed: false,
+      createdAt: Date.now(),
+      completedAt: 0,
+    };
+    setFocusTasks((prev) => [task, ...prev].slice(0, POMODORO_TASK_MAX));
+    setTaskDraft('');
+    setTaskEstimate(estimate);
+    setActiveTaskId(task.id);
+  };
+
+  const toggleFocusTask = (taskId) => {
+    setFocusTasks((prev) => prev.map((task) => {
+      if (task.id !== taskId) return task;
+      const completed = !task.completed;
+      return {
+        ...task,
+        completed,
+        completedAt: completed ? Date.now() : 0,
+      };
+    }));
+  };
+
+  const removeFocusTask = (taskId) => {
+    setFocusTasks((prev) => prev.filter((task) => task.id !== taskId));
+    if (activeTaskId === taskId) setActiveTaskId('');
+  };
+
+  const adjustTaskSessions = (taskId, delta) => {
+    setFocusTasks((prev) => prev.map((task) => {
+      if (task.id !== taskId) return task;
+      const sessions = Math.max(0, Math.min(999, Number(task.sessions || 0) + delta));
+      const completed = sessions >= Math.max(1, Number(task.estimate || 1));
+      return {
+        ...task,
+        sessions,
+        completed,
+        completedAt: completed ? Date.now() : 0,
+      };
+    }));
+  };
+
   const modeGradients = {
     focus: 'linear-gradient(160deg,#082f49 0%,#0c4a6e 100%)',
     shortBreak: 'linear-gradient(160deg,#052e16 0%,#166534 100%)',
@@ -485,6 +699,9 @@ export default function Pomodoro() {
         .pm-tile-urgent .pm-digit{color:#ef4444!important}
         .pm-tile-urgent .pm-tile-inner{box-shadow:0 0 20px rgba(239,68,68,0.35)!important;border-color:rgba(239,68,68,0.5)!important}
         .pm-settings-enter{animation:pm-fade-in 0.2s ease forwards}
+        .pm-field::placeholder{color:#94a3b8}
+        .pm-field:focus{outline:none;border-color:#06b6d4!important;box-shadow:0 0 0 3px rgba(6,182,212,0.12)}
+        .pm-icon-btn:hover{background:#f8fafc!important;color:#0f172a!important}
       `}</style>
 
       <div key={flashKey} style={{
@@ -497,7 +714,7 @@ export default function Pomodoro() {
       }} />
 
       <section style={{
-        width: 400,
+        width: 'min(100%, 400px)',
         background: modeGradients[pomodoro.mode] || modeGradients.focus,
         borderRadius: 0,
         overflow: 'hidden',
@@ -1039,8 +1256,417 @@ export default function Pomodoro() {
         </div>
       </section>
 
+      <section style={{
+        width: 'min(100%, 400px)',
+        border: '1px solid rgba(15,23,42,0.08)',
+        background: '#ffffff',
+        padding: 0,
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '16px 18px 12px',
+          borderBottom: '1px solid rgba(15,23,42,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+            <Target size={15} color="#06b6d4" />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>Mục tiêu hôm nay</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', marginTop: 2 }}>
+                {historyStats.todayFocus}p / {dailyGoalMinutes}p
+              </div>
+            </div>
+          </div>
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            color: '#64748b',
+            fontSize: 10,
+            fontWeight: 800,
+          }}>
+            <input
+              type="number"
+              min="15"
+              max="480"
+              step="15"
+              value={dailyGoalMinutes}
+              onChange={(event) => {
+                const value = Math.max(15, Math.min(480, Number(event.target.value || 15)));
+                setDailyGoalMinutes(value);
+              }}
+              className="pm-field"
+              style={{
+                width: 62,
+                height: 28,
+                border: '1px solid rgba(15,23,42,0.12)',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontSize: 11,
+                fontWeight: 900,
+                padding: '0 7px',
+                fontFamily: "'JetBrains Mono',monospace",
+              }}
+            />
+            phút
+          </label>
+        </div>
+        <div style={{ padding: '12px 18px 16px' }}>
+          <div style={{
+            height: 5,
+            background: 'rgba(15,23,42,0.07)',
+            overflow: 'hidden',
+            marginBottom: 12,
+          }}>
+            <div style={{
+              width: `${Math.round(dailyGoalProgress * 100)}%`,
+              height: '100%',
+              background: dailyGoalProgress >= 1 ? '#22c55e' : '#06b6d4',
+              transition: 'width 0.25s ease',
+            }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+            <div style={{ paddingTop: 10 }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 800 }}>ĐANG MỞ</div>
+              <div style={{ marginTop: 3, fontSize: 18, color: '#0f172a', fontWeight: 900 }}>{openFocusTasks.length}</div>
+            </div>
+            <div style={{ paddingTop: 10 }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 800 }}>ĐÃ XONG</div>
+              <div style={{ marginTop: 3, fontSize: 18, color: '#0f172a', fontWeight: 900 }}>{completedFocusTasks}</div>
+            </div>
+            <div style={{ paddingTop: 10 }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 800 }}>PHIÊN TASK</div>
+              <div style={{ marginTop: 3, fontSize: 18, color: '#0f172a', fontWeight: 900 }}>
+                {taskSessionTotal}/{taskEstimateTotal}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{
+        width: 'min(100%, 400px)',
+        border: '1px solid rgba(15,23,42,0.08)',
+        background: '#ffffff',
+        padding: 0,
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          padding: '16px 18px 12px',
+          borderBottom: '1px solid rgba(15,23,42,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <ClipboardList size={15} color="#0f172a" />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>Việc focus</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', marginTop: 2 }}>
+                {activeTask ? activeTask.title : 'Chưa ghim việc'}
+              </div>
+            </div>
+          </div>
+          {completedFocusTasks > 0 && (
+            <button
+              type="button"
+              data-no-track="true"
+              onClick={() => setFocusTasks((prev) => prev.filter((task) => !task.completed))}
+              className="pm-icon-btn"
+              style={{
+                border: '1px solid rgba(15,23,42,0.1)',
+                background: '#ffffff',
+                color: '#64748b',
+                height: 26,
+                padding: '0 8px',
+                cursor: 'pointer',
+                fontSize: 10,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <Trash2 size={12} />
+              Dọn
+            </button>
+          )}
+        </div>
+        <div style={{ padding: '14px 18px 16px' }}>
+          <form onSubmit={addFocusTask} style={{ display: 'grid', gridTemplateColumns: '1fr 62px 34px', gap: 6, marginBottom: 12 }}>
+            <input
+              type="text"
+              value={taskDraft}
+              onChange={(event) => setTaskDraft(event.target.value)}
+              placeholder="Việc cần làm"
+              maxLength={90}
+              className="pm-field"
+              style={{
+                minWidth: 0,
+                height: 34,
+                border: '1px solid rgba(15,23,42,0.12)',
+                background: '#ffffff',
+                color: '#0f172a',
+                padding: '0 10px',
+                fontSize: 11,
+                fontWeight: 800,
+              }}
+            />
+            <input
+              type="number"
+              min="1"
+              max="12"
+              value={taskEstimate}
+              onChange={(event) => setTaskEstimate(Math.max(1, Math.min(12, Number(event.target.value || 1))))}
+              aria-label="Số phiên dự kiến"
+              className="pm-field"
+              style={{
+                height: 34,
+                border: '1px solid rgba(15,23,42,0.12)',
+                background: '#ffffff',
+                color: '#0f172a',
+                padding: '0 8px',
+                fontSize: 11,
+                fontWeight: 900,
+                fontFamily: "'JetBrains Mono',monospace",
+              }}
+            />
+            <button
+              type="submit"
+              data-no-track="true"
+              disabled={!taskDraft.trim()}
+              aria-label="Thêm việc focus"
+              className="pm-btn"
+              style={{
+                height: 34,
+                border: 'none',
+                background: taskDraft.trim() ? '#0f172a' : '#cbd5e1',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: taskDraft.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Plus size={16} />
+            </button>
+          </form>
+
+          <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+            {focusTasks.length === 0 ? (
+              <div style={{ padding: '18px 0 4px', color: '#94a3b8', fontSize: 11, fontWeight: 800 }}>
+                Chưa có việc focus.
+              </div>
+            ) : focusTasks.slice(0, 10).map((task) => {
+              const estimate = Math.max(1, Number(task.estimate || 1));
+              const sessions = Math.max(0, Number(task.sessions || 0));
+              const selected = activeTaskId === task.id && !task.completed;
+              return (
+                <div key={task.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '26px 1fr auto auto auto auto',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 0',
+                  borderBottom: '1px solid rgba(15,23,42,0.05)',
+                }}>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    aria-label={task.completed ? 'Mở lại việc' : 'Hoàn thành việc'}
+                    onClick={() => toggleFocusTask(task.id)}
+                    className="pm-icon-btn"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: `1px solid ${task.completed ? '#22c55e' : 'rgba(15,23,42,0.14)'}`,
+                      background: task.completed ? '#22c55e' : '#ffffff',
+                      color: task.completed ? '#ffffff' : '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Check size={13} strokeWidth={3} />
+                  </button>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: task.completed ? '#94a3b8' : '#0f172a',
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {task.title}
+                    </div>
+                    <div style={{ display: 'flex', gap: 3, marginTop: 6 }}>
+                      {Array.from({ length: estimate }).map((_, index) => (
+                        <span key={index} style={{
+                          width: 12,
+                          height: 3,
+                          background: index < sessions ? '#06b6d4' : 'rgba(15,23,42,0.12)',
+                        }} />
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    aria-label="Giảm phiên đã làm"
+                    onClick={() => adjustTaskSessions(task.id, -1)}
+                    className="pm-icon-btn"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: '1px solid rgba(15,23,42,0.1)',
+                      background: '#ffffff',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      fontWeight: 900,
+                    }}
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    aria-label="Tăng phiên đã làm"
+                    onClick={() => adjustTaskSessions(task.id, 1)}
+                    className="pm-icon-btn"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: '1px solid rgba(15,23,42,0.1)',
+                      background: '#ffffff',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Plus size={13} strokeWidth={3} />
+                  </button>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    aria-label="Ghim việc focus"
+                    onClick={() => setActiveTaskId(selected ? '' : task.id)}
+                    disabled={task.completed}
+                    className="pm-icon-btn"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: selected ? '1px solid #06b6d4' : '1px solid rgba(15,23,42,0.1)',
+                      background: selected ? 'rgba(6,182,212,0.12)' : '#ffffff',
+                      color: selected ? '#0284c7' : '#64748b',
+                      cursor: task.completed ? 'not-allowed' : 'pointer',
+                      opacity: task.completed ? 0.45 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Target size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    data-no-track="true"
+                    aria-label="Xóa việc focus"
+                    onClick={() => removeFocusTask(task.id)}
+                    className="pm-icon-btn"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: '1px solid rgba(15,23,42,0.1)',
+                      background: '#ffffff',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section style={{
+        width: 'min(100%, 400px)',
+        border: '1px solid rgba(15,23,42,0.08)',
+        background: '#ffffff',
+        padding: 0,
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 18px 10px',
+          borderBottom: '1px solid rgba(15,23,42,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <StickyNote size={15} color="#f59e0b" />
+            <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>Ghi chú nhanh</div>
+          </div>
+          {focusNotes.trim() && (
+            <button
+              type="button"
+              data-no-track="true"
+              onClick={() => setFocusNotes('')}
+              className="pm-icon-btn"
+              style={{
+                width: 26,
+                height: 26,
+                border: '1px solid rgba(15,23,42,0.1)',
+                background: '#ffffff',
+                color: '#ef4444',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              aria-label="Xóa ghi chú"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
+        <div style={{ padding: '14px 18px 16px' }}>
+          <textarea
+            value={focusNotes}
+            onChange={(event) => setFocusNotes(event.target.value)}
+            placeholder={activeTask ? `Ghi chú cho ${activeTask.title}` : 'Ghi chú trong phiên focus'}
+            className="pm-field"
+            style={{
+              width: '100%',
+              minHeight: 108,
+              resize: 'vertical',
+              border: '1px solid rgba(15,23,42,0.12)',
+              background: '#ffffff',
+              color: '#0f172a',
+              padding: '10px 11px',
+              fontSize: 12,
+              lineHeight: 1.5,
+              fontWeight: 700,
+              fontFamily: 'inherit',
+            }}
+          />
+        </div>
+      </section>
+
       {/* ── Stats Dashboard ── */}
-      <section style={{ width: 400, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <section style={{ width: 'min(100%, 400px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1081,7 +1707,7 @@ export default function Pomodoro() {
 
       {/* ── Weekly Focus Bar Chart ── */}
       {historyStats.totalSessions > 0 && (
-        <section style={{ width: 400, border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '16px 18px' }}>
+        <section style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '16px 18px' }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 14 }}>Focus trong tuần</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
             {historyStats.weekData.map((day) => {
@@ -1129,15 +1755,24 @@ export default function Pomodoro() {
       )}
 
       {/* ── Session History List ── */}
-      {historyStats.totalSessions > 0 && (
-        <section style={{ width: 400, border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', padding: '16px 18px 0' }}>Lịch sử phiên</div>
-          <div style={{
-            maxHeight: 280,
-            overflowY: 'auto',
-            marginTop: 10,
-          }}>
-            {[...pomodoroHistory].reverse().filter((e) => e.mode === 'focus').slice(0, 30).map((entry, idx) => {
+      <section style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', padding: '16px 18px 0' }}>Lịch sử phiên</div>
+        <div style={{
+          maxHeight: 280,
+          overflowY: 'auto',
+          marginTop: 10,
+        }}>
+          {recentFocusHistory.length === 0 ? (
+            <div style={{
+              padding: '14px 18px 18px',
+              borderTop: '1px solid rgba(15,23,42,0.06)',
+              color: '#94a3b8',
+              fontSize: 11,
+              fontWeight: 800,
+            }}>
+              Chưa có phiên focus.
+            </div>
+          ) : recentFocusHistory.map((entry, idx) => {
               const d = new Date(entry.at);
               const timeLabel = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
               const dateLabel = d.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
@@ -1145,7 +1780,7 @@ export default function Pomodoro() {
               const plannedMin = Math.round((entry.total || 0) / 60);
               const completed = min >= plannedMin * 0.5;
               return (
-                <div key={entry.at} style={{
+                <div key={`${entry.at}-${idx}`} style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
@@ -1180,9 +1815,8 @@ export default function Pomodoro() {
                 </div>
               );
             })}
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
 
     </div>
   );

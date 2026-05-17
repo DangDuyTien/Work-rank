@@ -227,18 +227,6 @@ function localDateKey(value = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-function sortByRankScore(rows) {
-  return [...rows].sort((a, b) => {
-    const scoreDiff = Number(b.score || 0) - Number(a.score || 0);
-    if (scoreDiff) return scoreDiff;
-    const focusDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
-    if (focusDiff) return focusDiff;
-    const secDiff = Number(b.activeSeconds || b.total_active_seconds || 0) - Number(a.activeSeconds || a.total_active_seconds || 0);
-    if (secDiff) return secDiff;
-    return Number(a.user_id ?? a.id ?? 0) - Number(b.user_id ?? b.id ?? 0);
-  });
-}
-
 export default function Leaderboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -264,6 +252,7 @@ export default function Leaderboard() {
   const [myGroups, setMyGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
   const requestIdRef = useRef(0);
+  const realtimeRefreshRef = useRef(null);
 
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
 
@@ -295,11 +284,13 @@ export default function Leaderboard() {
     fetchMyGroups();
   }, [activeTab]);
 
-  const fetchData = async () => {
+  const fetchData = async ({ silent = false } = {}) => {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
-    setUsers([]);
-    setLoading(true);
+    if (!silent) {
+      setUsers([]);
+      setLoading(true);
+    }
     try {
       let res;
       const query = { page, limit: PAGE_SIZE, search };
@@ -328,7 +319,15 @@ export default function Leaderboard() {
     } catch (err) {
       if (requestId === requestIdRef.current) console.error(err);
     }
-    if (requestId === requestIdRef.current) setLoading(false);
+    if (!silent && requestId === requestIdRef.current) setLoading(false);
+  };
+
+  const scheduleRealtimeRefresh = (delayMs = 6000) => {
+    if (realtimeRefreshRef.current) return;
+    realtimeRefreshRef.current = window.setTimeout(() => {
+      realtimeRefreshRef.current = null;
+      fetchData({ silent: true });
+    }, delayMs);
   };
 
   useEffect(() => {
@@ -336,9 +335,23 @@ export default function Leaderboard() {
   }, [range, activeTab, selectedGroupId, page, search]);
 
   useEffect(() => {
+    if (realtimeRefreshRef.current) {
+      window.clearTimeout(realtimeRefreshRef.current);
+      realtimeRefreshRef.current = null;
+    }
+  }, [range, activeTab, selectedGroupId, page, search]);
+
+  useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [range, activeTab, selectedGroupId, page, search]);
+
+  useEffect(() => () => {
+    if (realtimeRefreshRef.current) {
+      window.clearTimeout(realtimeRefreshRef.current);
+      realtimeRefreshRef.current = null;
+    }
+  }, []);
 
   const updateLocalVerification = (userId, nextVerified) => {
     const id = String(userId);
@@ -393,6 +406,7 @@ export default function Leaderboard() {
 
     const handleActivity = (data) => {
       if (!eventBelongsToCurrentView(data)) return;
+      scheduleRealtimeRefresh();
       const currentAuthUserId = String(user?.id || '');
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
@@ -429,34 +443,9 @@ export default function Leaderboard() {
             focusScore,
             score,
           };
-          return sortByRankScore(next);
+          return next;
         }
-        if (activeTab === 'friends') return prev;
-        // Fallback for new user not yet in DB
-        const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
-        const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
-        const activeSeconds = totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds;
-        const idleSeconds = totals ? Number(totals.idleSeconds || 0) : deltaIdleSeconds;
-        const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore || 0);
-        const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
-        const newUser = {
-          ...data,
-          user_id: userId,
-          name: data.name || `User #${userId}`,
-          status: data.presence || data.presenceStatus || data.status || 'active',
-          presence: data.presence || data.presenceStatus || data.status || 'active',
-          presenceStatus: data.presence || data.presenceStatus || data.status || 'active',
-          keystrokeCount,
-          mouseClickCount,
-          activeSeconds,
-          idleSeconds,
-          total_active_seconds: activeSeconds,
-          total_idle_seconds: idleSeconds,
-          focusScore,
-          score,
-        };
-        const next = [...prev, newUser];
-        return sortByRankScore(next);
+        return prev;
       });
       if (currentAuthUserId && String(data.userId || data.user_id) === currentAuthUserId) {
         setCurrentUserRank((prev) => {
@@ -523,7 +512,7 @@ export default function Leaderboard() {
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
     };
-  }, [socket, activeTab, selectedGroupId, range, user?.id]);
+  }, [socket, activeTab, selectedGroupId, range, page, search, user?.id]);
 
   const top1 = page === 1 && !search ? users[0] : null;
   const top2 = page === 1 && !search ? users[1] : null;

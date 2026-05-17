@@ -67,6 +67,26 @@ let pipContinueTimeout = null;
 const PIP_TICK_KEY = 'workrank:pomodoro-state';
 const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
 
+function getPipPreset(presetKey) {
+  return PIP_PRESETS[presetKey] || PIP_PRESETS.classic;
+}
+
+function getPipModeSeconds(preset, mode) {
+  return (mode === 'focus' ? preset[0] : mode === 'shortBreak' ? preset[1] : preset[2]) * 60;
+}
+
+function getPipModeLabel(mode) {
+  if (mode === 'shortBreak') return 'Nghỉ ngắn';
+  if (mode === 'longBreak') return 'Nghỉ dài';
+  return 'Tập trung';
+}
+
+function getPipNextModeName(mode, completedFocusCount) {
+  return mode === 'focus'
+    ? (Number(completedFocusCount || 0) % 4 === 3 ? 'Nghỉ dài' : 'Nghỉ ngắn')
+    : 'Tập trung';
+}
+
 function broadcastPipCommand(action) {
   try {
     const bc = new BroadcastChannel('workrank-pip');
@@ -77,7 +97,9 @@ function broadcastPipCommand(action) {
 
 function pipHandleAction(action) {
   broadcastPipCommand(action);
-  closePipWindow();
+  if (action === 'start') {
+    pipDone = false;
+  }
 }
 
 function pipBodyClickHandler(e) {
@@ -111,10 +133,11 @@ function handlePipContinue() {
         s.completedAt = 0;
         localStorage.setItem(PIP_TICK_KEY, JSON.stringify(s));
         broadcastPipContinue();
+        pipDone = false;
+        pipTick();
       }
     }
   } catch {}
-  closePipWindow();
 }
 
 function tile(d) {
@@ -123,21 +146,24 @@ function tile(d) {
 function clockHTML(mm, ss) { return tile(mm[0]) + tile(mm[1]) + '<span id="col">:</span>' + tile(ss[0]) + tile(ss[1]); }
 
 const PIP_CTRL_SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+const PIP_CTRL_SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20 7 4"/></svg>';
 const PIP_CTRL_SVG_SKIP = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 20"/><line x1="19" y1="5" x2="19" y2="19"/></svg>';
 
-const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;font-family:\'JetBrains Mono\',monospace;background:#0f0f0f;transition:background .5s cubic-bezier(.4,0,.2,1)}body.focus{background:linear-gradient(160deg,#082f49 0%,#0c4a6e 100%)}body.shortBreak{background:linear-gradient(160deg,#052e16 0%,#166534 100%)}body.longBreak{background:linear-gradient(160deg,#451a03 0%,#78350f 100%)}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}@keyframes urgencyPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.4)}50%{box-shadow:0 0 40px rgba(239,68,68,.6)}}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1px)}75%{transform:translateX(1px)}}#app{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}#header{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px;line-height:1;order:0}#cycle{font-size:9px;color:rgba(255,255,255,.35);font-weight:600;margin-bottom:14px;order:1;letter-spacing:.06em}#status{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:18px;line-height:1;order:2;text-shadow:0 2px 12px rgba(0,0,0,.3)}#clock{display:flex;align-items:center;gap:6px;margin-bottom:18px;order:3}.tile{width:64px;height:64px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;border-radius:8px;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);transition:background .3s,border-color .3s,box-shadow .3s}.tile span{font-family:\'JetBrains Mono\',monospace;font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 2px 8px rgba(0,0,0,.3)}#col{font-size:30px;font-weight:900;color:#fff;line-height:1;padding-bottom:4px;width:10px;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.3);transition:opacity .15s}##controls{order:4;display:flex;gap:10px;margin-top:6px}.pip-ctrl{width:36px;height:30px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none}.pip-ctrl:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25)}.pip-ctrl:active{background:rgba(255,255,255,0.03)}nextinfo{font-size:10px;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:16px;order:5;letter-spacing:.04em}#bar{width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;order:6;position:relative}#fill{height:100%;border-radius:2px;background:rgba(255,255,255,.6);position:relative;overflow:hidden}#fill::after{content:\'\';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s ease-in-out infinite}.urgency .tile{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.5);animation:urgencyPulse 1s ease-in-out infinite,shake .3s ease-in-out infinite}.urgency #status{animation:pulse .6s ease-in-out infinite}.urgency .tile span{text-shadow:0 2px 16px rgba(239,68,68,.4)}.urgency #col{opacity:.9}.urgency #bar{background:rgba(239,68,68,.2)}.urgency #fill{background:rgba(239,68,68,.8)}</style></head><body>';
+const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;font-family:\'JetBrains Mono\',monospace;background:#0f0f0f;transition:background .5s cubic-bezier(.4,0,.2,1)}body.focus{background:linear-gradient(160deg,#082f49 0%,#0c4a6e 100%)}body.shortBreak{background:linear-gradient(160deg,#052e16 0%,#166534 100%)}body.longBreak{background:linear-gradient(160deg,#451a03 0%,#78350f 100%)}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}@keyframes urgencyPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.4)}50%{box-shadow:0 0 40px rgba(239,68,68,.6)}}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1px)}75%{transform:translateX(1px)}}#app{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}#header{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px;line-height:1;order:0}#cycle{font-size:9px;color:rgba(255,255,255,.35);font-weight:600;margin-bottom:14px;order:1;letter-spacing:.06em}#status{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:18px;line-height:1;order:2;text-shadow:0 2px 12px rgba(0,0,0,.3)}#clock{display:flex;align-items:center;gap:6px;margin-bottom:18px;order:3}.tile{width:64px;height:64px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;border-radius:8px;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);transition:background .3s,border-color .3s,box-shadow .3s}.tile span{font-family:\'JetBrains Mono\',monospace;font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 2px 8px rgba(0,0,0,.3)}#col{font-size:30px;font-weight:900;color:#fff;line-height:1;padding-bottom:4px;width:10px;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.3);transition:opacity .15s}#controls{order:4;display:flex;gap:10px;margin-top:6px}.pip-ctrl{width:36px;height:30px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none}.pip-ctrl:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25)}.pip-ctrl:active{background:rgba(255,255,255,0.03)}#nextinfo{font-size:10px;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:16px;order:5;letter-spacing:.04em}#bar{width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;order:6;position:relative}#fill{height:100%;border-radius:2px;background:rgba(255,255,255,.6);position:relative;overflow:hidden}#fill::after{content:\'\';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s ease-in-out infinite}.urgency .tile{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.5);animation:urgencyPulse 1s ease-in-out infinite,shake .3s ease-in-out infinite}.urgency #status{animation:pulse .6s ease-in-out infinite}.urgency .tile span{text-shadow:0 2px 16px rgba(239,68,68,.4)}.urgency #col{opacity:.9}.urgency #bar{background:rgba(239,68,68,.2)}.urgency #fill{background:rgba(239,68,68,.8)}</style></head><body>';
 
 function pipBodyHTML(d) {
   const cls = (d.mode || 'focus') + (d.urgency ? ' urgency' : '');
   const cycleText = d.cycle ? 'Chu k\u1EF3 ' + d.cycle + '/4' : '';
   const nextText = d.nextMode ? 'Ti\u1EBFp: ' + d.nextMode : '';
+  const primaryAction = d.running ? 'pause' : 'start';
+  const primaryIcon = d.running ? PIP_CTRL_SVG_PAUSE : PIP_CTRL_SVG_PLAY;
   return '<div id="app" class="' + cls + '">' +
     '<div id="header">POMODORO</div>' +
     '<div id="cycle">' + cycleText + '</div>' +
     '<div id="status">' + d.label + '</div>' +
     '<div id="clock">' + clockHTML(d.mm, d.ss) + '</div>' +
     '<div id="controls">' +
-      '<button data-pip-action="pause" class="pip-ctrl">' + PIP_CTRL_SVG_PAUSE + '</button>' +
+      '<button data-pip-action="' + primaryAction + '" class="pip-ctrl">' + primaryIcon + '</button>' +
       '<button data-pip-action="skip" class="pip-ctrl">' + PIP_CTRL_SVG_SKIP + '</button>' +
     '</div>' +
     '<div id="nextinfo">' + nextText + '</div>' +
@@ -162,20 +188,27 @@ function pipTick() {
     const raw = localStorage.getItem(PIP_TICK_KEY);
     if (!raw) { try { closePipWindow(); } catch {} return; }
     const p = JSON.parse(raw);
-    if (!p || !p.running) { try { closePipWindow(); } catch {} return; }
+    if (!p) { try { closePipWindow(); } catch {} return; }
+
+    const mode = p.mode || 'focus';
+    const preset = getPipPreset(p.presetKey);
+    const total = getPipModeSeconds(preset, mode);
+    const running = Boolean(p.running);
     const endsAt = Number(p.endsAt || 0);
-    if (!endsAt) { try { closePipWindow(); } catch {} return; }
-    const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-    if (rem <= 0) {
+    const rem = running && endsAt
+      ? Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+      : Math.max(0, Math.min(total, Number(p.remainingSeconds || total)));
+
+    if (running && !endsAt) { try { closePipWindow(); } catch {} return; }
+    if (running && rem <= 0) {
       pipDone = true;
-      const newFocusCount = (p.mode || 'focus') === 'focus'
+      const newFocusCount = mode === 'focus'
         ? Number(p.completedFocusCount || 0) + 1
         : Number(p.completedFocusCount || 0);
-      const nextMode = (p.mode || 'focus') === 'focus'
+      const nextMode = mode === 'focus'
         ? (newFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
         : 'focus';
-      const nextPreset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
-      const nextTotal = (nextMode === 'focus' ? nextPreset[0] : nextMode === 'shortBreak' ? nextPreset[1] : nextPreset[2]) * 60;
+      const nextTotal = getPipModeSeconds(preset, nextMode);
       const completed = {
         presetKey: p.presetKey,
         mode: nextMode,
@@ -220,22 +253,19 @@ function pipTick() {
 
     const mm = String(Math.floor(rem / 60)).padStart(2, '0');
     const ss = String(rem % 60).padStart(2, '0');
-    const mode = p.mode || 'focus';
-    const preset = PIP_PRESETS[p.presetKey] || PIP_PRESETS.classic;
-    const total = (mode === 'focus' ? preset[0] : mode === 'shortBreak' ? preset[1] : preset[2]) * 60;
-    const col = mode === 'focus' ? '#06b6d4' : mode === 'shortBreak' ? '#16a34a' : '#d97706';
-    const label = mode === 'focus' ? 'Tập trung' : mode === 'shortBreak' ? 'Nghỉ ngắn' : 'Nghỉ dài';
+    const label = running ? getPipModeLabel(mode) : (p.startedOnce ? 'Tạm dừng' : 'Sẵn sàng');
     const pct = total > 0 ? ((total - rem) / total) * 100 : 0;
     
     const completedFocusCount = Number(p.completedFocusCount || 0);
     const cycle = mode === 'focus' ? (completedFocusCount % 4) + 1 : (completedFocusCount % 4) + 1;
-    const nextModeName = mode === 'focus'
-      ? (completedFocusCount % 4 === 3 ? 'Nghỉ dài' : 'Nghỉ ngắn')
-      : 'Tập trung';
+    const nextModeName = running
+      ? getPipNextModeName(mode, completedFocusCount)
+      : getPipModeLabel(mode);
 
     updatePipDOM({
       mm: mm, ss: ss, label: label, mode: mode, cycle: cycle, nextMode: nextModeName, pct: Math.round(pct * 10) / 10,
-      urgency: rem <= 10,
+      urgency: running && rem <= 10,
+      running,
     });
   } catch {}
 }
@@ -258,7 +288,7 @@ export function openPipWindow() {
   window.documentPictureInPicture.requestWindow({ width: 330, height: 380 }).then((win) => {
     if (token !== pipToken) { try { win.close(); } catch {} return; }
     pipWindow = win;
-    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', mode: 'focus', cycle: 1, nextMode: 'Nghỉ ngắn', pct: 0, urgency: false });
+    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', mode: 'focus', cycle: 1, nextMode: 'Nghỉ ngắn', pct: 0, urgency: false, running: false });
     win.document.write(PIP_HEAD + initBody + '</body></html>');
     win.document.close();
     win.document.body.className = 'focus';
