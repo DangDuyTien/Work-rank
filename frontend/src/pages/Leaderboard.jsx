@@ -11,17 +11,18 @@ const RANGES = [
   { key: 'today', label: 'Hôm nay' },
   { key: 'week',  label: 'Tuần này' },
   { key: 'month', label: 'Tháng này' },
+  { key: 'year',  label: 'Năm nay' },
 ];
 
 function fmtNum(n) {
   n = Number(n) || 0;
-  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000000000) return (n/1000000000).toFixed(1).replace(/\.0$/,'')+'B';
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
   if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'k';
   return n.toLocaleString();
 }
 function fmtScore(n) {
-  n = Number(n)||0;
-  return n.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:1});
+  return fmtNum(n);
 }
 
 const AVATAR_GRADS = [

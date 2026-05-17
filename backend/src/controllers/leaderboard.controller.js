@@ -37,6 +37,16 @@ async function monthly(req, res) {
   res.json({ ...payload, range: 'monthly' });
 }
 
+async function yearly(req, res) {
+  const payload = await dashboardService.leaderboard({
+    range: 'year',
+    ...listOptions(req),
+    currentUserId: req.user.id,
+    withCurrentUserRank: true,
+  });
+  res.json({ ...payload, range: 'yearly' });
+}
+
 async function team(req, res) {
   const range = req.query.range || 'today';
   const payload = await dashboardService.leaderboard({
@@ -67,4 +77,4 @@ async function friends(req, res) {
   });
 }
 
-module.exports = { daily, weekly, monthly, team, friends };
+module.exports = { daily, weekly, monthly, yearly, team, friends };

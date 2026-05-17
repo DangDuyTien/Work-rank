@@ -19,6 +19,8 @@ function rangeDates(range = 'today') {
     start.setUTCDate(start.getUTCDate() - day + 1);
   } else if (range === 'month' || range === 'monthly') {
     start.setUTCDate(1);
+  } else if (range === 'year' || range === 'yearly') {
+    start.setUTCMonth(0, 1);
   }
 
   return {
@@ -31,6 +33,7 @@ function normalizeRange(range) {
   if (range === 'daily') return 'today';
   if (range === 'weekly') return 'week';
   if (range === 'monthly') return 'month';
+  if (range === 'yearly') return 'year';
   return range || 'today';
 }
 

@@ -274,7 +274,7 @@ export const dashboard = {
 
 export const leaderboard = {
   get: async (range = 'daily', options = {}) => {
-    const apiRange = range === 'today' ? 'daily' : range === 'week' ? 'weekly' : range === 'month' ? 'monthly' : range;
+    const apiRange = range === 'today' ? 'daily' : range === 'week' ? 'weekly' : range === 'month' ? 'monthly' : range === 'year' ? 'yearly' : range;
     const params = new URLSearchParams();
     if (options.page) params.set('page', String(options.page));
     if (options.limit) params.set('limit', String(options.limit));
