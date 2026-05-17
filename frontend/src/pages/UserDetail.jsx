@@ -1062,7 +1062,7 @@ export default function UserDetail() {
   const NextAnimalIcon = nextAnimal.icon;
   const currentMinute = chartNow.getHours() * 60 + chartNow.getMinutes();
   const currentBucket = timelineBucketMinute(currentMinute);
-  const minuteMap = new Map(timeline.map((row) => [Number(row.minute), row]));
+  const minuteMap = new globalThis.Map(timeline.map((row) => [Number(row.minute), row]));
   const chartData = Array.from({ length: Math.floor(currentBucket / TIMELINE_BUCKET_MINUTES) + 1 }, (_, index) => {
     const minute = index * TIMELINE_BUCKET_MINUTES;
     const row = minuteMap.get(minute);
