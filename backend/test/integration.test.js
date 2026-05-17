@@ -196,7 +196,11 @@ test('level endpoint trả đủ mốc 0-50 theo tổng gõ và click', async ()
   assert.equal(res.body.data.maxLevel, 50);
   assert.equal(res.body.data.milestones.length, 51);
   assert.equal(res.body.data.milestones[0].requiredActions, 0);
-  assert.equal(res.body.data.milestones[1].requiredActions, 80000);
-  assert.equal(res.body.data.milestones[50].requiredActions, 10000000000);
+  assert.equal(res.body.data.milestones[1].requiredActions, 250);
+  assert.equal(res.body.data.milestones[7].requiredActions, 12250);
+  assert.equal(res.body.data.milestones[20].requiredActions, 100000);
+  assert.equal(res.body.data.milestones[25].requiredActions, 237841);
+  assert.equal(res.body.data.milestones[35].requiredActions, 1345434);
+  assert.equal(res.body.data.milestones[50].requiredActions, 18101934);
   assert.ok(res.body.data.level >= 0 && res.body.data.level <= 50);
 });
