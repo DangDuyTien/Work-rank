@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const { DailyStat, ActivityEvent, WorkSession } = require('../models');
 const fraudDetection = require('../services/fraudDetection.service');
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 200;
 
 function dateOnly(value = new Date()) {
   return value.toISOString().slice(0, 10);
@@ -10,10 +10,7 @@ function dateOnly(value = new Date()) {
 
 function levelThreshold(level) {
   const n = Math.min(MAX_LEVEL, Math.max(0, Number(level || 0)));
-  // Levels 0-20: quadratic (very fast early progression, 250 actions per level²)
-  if (n <= 20) return Math.round(250 * n * n);
-  // Levels 21-50: exponential doubling every 4 levels (progressively harder)
-  return Math.round(100000 * Math.pow(2, (n - 20) / 4));
+  return Math.round(110 * Math.pow(n, 2.3));
 }
 
 function buildLevelMilestones() {

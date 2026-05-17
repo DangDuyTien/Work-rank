@@ -88,7 +88,7 @@ function isPrivilegeBadgeLabel(label) {
 
 const RANK_TIERS = [
   {
-    min: 45,
+    min: 130,
     tier: 'Huyền thoại',
     title: 'Huyền thoại WorkRank',
     color: '#7c3aed',
@@ -103,7 +103,7 @@ const RANK_TIERS = [
     badgeBg: 'rgba(124,58,237,0.04)',
   },
   {
-    min: 35,
+    min: 70,
     tier: 'Kim cương',
     title: 'Đấu sĩ năng suất',
     color: '#0891b2',
@@ -118,7 +118,7 @@ const RANK_TIERS = [
     badgeBg: 'rgba(8,145,178,0.04)',
   },
   {
-    min: 25,
+    min: 35,
     tier: 'Bạch kim',
     title: 'Cao thủ tập trung',
     color: '#2563eb',
@@ -133,7 +133,7 @@ const RANK_TIERS = [
     badgeBg: 'rgba(37,99,235,0.04)',
   },
   {
-    min: 15,
+    min: 20,
     tier: 'Vàng',
     title: 'Chiến binh bền bỉ',
     color: '#d97706',
@@ -148,7 +148,7 @@ const RANK_TIERS = [
     badgeBg: 'rgba(217,119,6,0.04)',
   },
   {
-    min: 7,
+    min: 10,
     tier: 'Bạc',
     title: 'Người tăng tốc',
     color: '#64748b',
@@ -182,59 +182,21 @@ const RANK_TIERS = [
 const ANIMAL_ICON_SEQUENCE = [Cat, Rabbit, Squirrel, Bird, Fish, Turtle, Dog, Snail, Bug, Rat, Shell, PawPrint];
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
-const ANIMAL_NAMES = [
-  'Mèo con',
-  'Thỏ đồng',
-  'Sóc nâu',
-  'Chim sẻ',
-  'Cá suối',
-  'Rùa xanh',
-  'Chó săn',
-  'Ốc sên bạc',
-  'Bọ ánh kim',
-  'Chuột nhắt',
-  'Sò ngọc',
-  'Cáo đỏ',
-  'Hươu sao',
-  'Gấu trúc',
-  'Cú mèo',
-  'Hải ly',
-  'Linh dương',
-  'Sói xám',
-  'Báo gấm',
-  'Rái cá',
-  'Ngựa hoang',
-  'Đại bàng',
-  'Cá heo',
-  'Bò rừng',
-  'Lạc đà',
-  'Sư tử',
-  'Hổ vàng',
-  'Gấu trắng',
-  'Cá mập',
-  'Tê giác',
-  'Voi rừng',
-  'Khỉ vàng',
-  'Báo tuyết',
-  'Chim ưng',
-  'Cá voi',
-  'Gấu xám',
-  'Ngựa vằn',
-  'Công xanh',
-  'Sói tuyết',
-  'Bò tót',
-  'Rồng Komodo',
-  'Kangaroo',
-  'Tê tê',
-  'Hươu cao cổ',
-  'Cá kiếm',
-  'Báo đen',
-  'Đại bàng vàng',
-  'Sư tử trắng',
-  'Hổ trắng',
-  'Cá voi xanh',
-  'Voi ma mút',
-];
+const ANIMAL_NAMES = Array.from({ length: 200 }, (_, i) => {
+  const BASE = [
+    'Mèo con', 'Thỏ đồng', 'Sóc nâu', 'Chim sẻ', 'Cá suối',
+    'Rùa xanh', 'Chó săn', 'Ốc sên bạc', 'Bọ ánh kim', 'Chuột nhắt',
+    'Sò ngọc', 'Cáo đỏ', 'Hươu sao', 'Gấu trúc', 'Cú mèo',
+    'Hải ly', 'Linh dương', 'Sói xám', 'Báo gấm', 'Rái cá',
+    'Ngựa hoang', 'Đại bàng', 'Cá heo', 'Bò rừng', 'Lạc đà',
+    'Sư tử', 'Hổ vàng', 'Gấu trắng', 'Cá mập', 'Tê giác',
+    'Voi rừng', 'Khỉ vàng', 'Báo tuyết', 'Chim ưng', 'Cá voi',
+    'Gấu xám', 'Ngựa vằn', 'Công xanh', 'Sói tuyết', 'Bò tót',
+    'Rồng Komodo', 'Kangaroo', 'Tê tê', 'Hươu cao cổ', 'Cá kiếm',
+    'Báo đen', 'Đại bàng vàng', 'Sư tử trắng', 'Hổ trắng', 'Cá voi xanh', 'Voi ma mút',
+  ];
+  return i < BASE.length ? BASE[i] : `${BASE[i % BASE.length]} siêu việt`;
+});
 
 const LEVEL_ANIMALS = ANIMAL_NAMES.map((name, level) => ({
   level,
@@ -466,8 +428,8 @@ function getLevelAnimal(level) {
   return LEVEL_ANIMALS[index] || LEVEL_ANIMALS[0];
 }
 
-function buildAnimalCollection(currentLevel, maxLevel = 50) {
-  const visibleMax = Math.min(Number(maxLevel || 50), LEVEL_ANIMALS.length - 1);
+function buildAnimalCollection(currentLevel, maxLevel = 200) {
+  const visibleMax = Math.min(Number(maxLevel || 200), LEVEL_ANIMALS.length - 1);
   return LEVEL_ANIMALS.slice(0, visibleMax + 1).map((animal) => ({
     ...animal,
     unlocked: animal.level <= Number(currentLevel || 0),
