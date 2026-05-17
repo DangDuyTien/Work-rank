@@ -24,6 +24,19 @@ const SkipIcon = () => <SkipForward size={16} />;
 
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
+const POMODORO_HISTORY_KEY = 'workrank:pomodoro-history';
+const POMODORO_HISTORY_MAX = 300;
+
+function loadPomodoroHistory() {
+  try {
+    const raw = localStorage.getItem(POMODORO_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function savePomodoroHistory(history) {
+  localStorage.setItem(POMODORO_HISTORY_KEY, JSON.stringify(history));
+}
 const POMODORO_PRESETS = [
   { key: 'classic', label: '25 / 5', focusSeconds: 25 * 60, shortBreakSeconds: 5 * 60, longBreakSeconds: 15 * 60 },
   { key: 'deep', label: '50 / 10', focusSeconds: 50 * 60, shortBreakSeconds: 10 * 60, longBreakSeconds: 25 * 60 },
@@ -143,6 +156,23 @@ function completePomodoroStep(state) {
     : 'focus';
   const nextModeLabel = POMODORO_MODES[nextMode]?.label || 'phiên tiếp theo';
 
+  const totalSeconds = getPomodoroModeSeconds(preset, state.mode);
+  const elapsedSeconds = totalSeconds - Math.max(0, Number(state.remainingSeconds || 0));
+  if (elapsedSeconds >= 10) {
+    try {
+      const history = loadPomodoroHistory();
+      history.push({
+        at: Date.now(),
+        mode: state.mode,
+        elapsed: elapsedSeconds,
+        total: totalSeconds,
+        preset: preset.key,
+      });
+      if (history.length > POMODORO_HISTORY_MAX) history.splice(0, history.length - POMODORO_HISTORY_MAX);
+      savePomodoroHistory(history);
+    } catch {}
+  }
+
   emitWorkRankNotification({
     type: 'pomodoro',
     title: state.mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
@@ -169,6 +199,7 @@ function completePomodoroStep(state) {
 
 export default function Pomodoro() {
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
+  const [pomodoroHistory, setPomodoroHistory] = useState(loadPomodoroHistory);
   const [appSettings, setAppSettings] = useState(getAppSettings);
   const {
     tracking, trackingPending,
@@ -195,14 +226,72 @@ export default function Pomodoro() {
       ? `Sẵn sàng: ${POMODORO_MODES[pomodoro.mode]?.label || 'Phiên mới'}`
       : pomodoro.startedOnce ? 'Tạm dừng' : 'Sẵn sàng';
 
+  const historyStats = useMemo(() => {
+    const now = Date.now();
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayTs = todayStart.getTime();
+    const thisWeekStart = new Date(); thisWeekStart.setHours(0, 0, 0, 0);
+    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+    const weekTs = thisWeekStart.getTime();
+
+    let todayFocus = 0, todaySessions = 0, weekDays = {};
+    let longestFocus = 0, totalFocusMin = 0, totalSessions = 0;
+    let completedCount = 0, skippedCount = 0;
+
+    pomodoroHistory.forEach((entry) => {
+      if (entry.mode !== 'focus') return;
+      const min = Math.round((entry.elapsed || 0) / 60);
+      totalFocusMin += min;
+      totalSessions++;
+      if (min >= entry.total / 60 * 0.5) completedCount++;
+      else skippedCount++;
+      if (min > longestFocus) longestFocus = min;
+      if (entry.at >= todayTs) {
+        todayFocus += min;
+        todaySessions++;
+      }
+      if (entry.at >= weekTs) {
+        const day = new Date(entry.at).toLocaleDateString('vi-VN', { weekday: 'short' });
+        weekDays[day] = (weekDays[day] || 0) + min;
+      }
+    });
+
+    const allDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    const todayName = allDays[new Date().getDay()];
+    const weekLabels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    const weekData = weekLabels.map((d) => ({ label: d, minutes: weekDays[d] || 0, isToday: d === todayName }));
+    const maxWeek = Math.max(...weekData.map((d) => d.minutes), 1);
+
+    return { todayFocus, todaySessions, totalFocusMin, totalSessions, completedCount, skippedCount, longestFocus, weekData, maxWeek };
+  }, [pomodoroHistory]);
+  const completionRate = historyStats.totalSessions > 0
+    ? Math.round((historyStats.completedCount / historyStats.totalSessions) * 100)
+    : 0;
+  const avgFocusMin = historyStats.totalSessions > 0
+    ? Math.round(historyStats.totalFocusMin / historyStats.totalSessions)
+    : 0;
+
   useEffect(() => subscribeAppSettings(setAppSettings), []);
+
+  useEffect(() => {
+    setPomodoroHistory(loadPomodoroHistory());
+  }, [pomodoro.completedAt]);
 
   useEffect(() => {
     const bc = new BroadcastChannel('workrank-pip');
     bc.onmessage = (e) => {
       if (e.data === 'continue') {
         setPomodoro(loadPomodoroState());
+        return;
       }
+      try {
+        const cmd = typeof e.data === 'string' ? JSON.parse(e.data) : null;
+        if (cmd?.command === 'pause') {
+          setPomodoro((prev) => ({ ...prev, running: false, endsAt: null }));
+        } else if (cmd?.command === 'skip') {
+          setPomodoro((prev) => completePomodoroStep({ ...prev, running: false }));
+        }
+      } catch {}
     };
     return () => bc.close();
   }, []);
@@ -286,8 +375,14 @@ export default function Pomodoro() {
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
+    const pipHealthInterval = setInterval(() => {
+      if (runningRef.current && !isPipOpen()) {
+        openPipWindow();
+      }
+    }, 2000);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(pipHealthInterval);
       if (runningRef.current) {
         openPipWindow();
       }
@@ -372,9 +467,10 @@ export default function Pomodoro() {
   return (
     <div style={{
       display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-      paddingTop: 32,
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 16,
+      padding: '32px 16px',
       fontFamily: "'JetBrains Mono', monospace",
     }}>
       <style>{`
@@ -942,6 +1038,152 @@ export default function Pomodoro() {
           </div>
         </div>
       </section>
+
+      {/* ── Stats Dashboard ── */}
+      <section style={{ width: 400, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          ...(historyStats.todaySessions === 0 && historyStats.totalSessions === 0 ? { opacity: 0.4 } : {}),
+        }}>
+          <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Hôm nay</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              {historyStats.todayFocus}p
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Tổng focus</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              {historyStats.totalFocusMin}p
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Trung bình</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              {avgFocusMin}p
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Kỷ lục</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              {historyStats.longestFocus}p
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Tỉ lệ</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              {completionRate}%
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Weekly Focus Bar Chart ── */}
+      {historyStats.totalSessions > 0 && (
+        <section style={{ width: 400, border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '16px 18px' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 14 }}>Focus trong tuần</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+            {historyStats.weekData.map((day) => {
+              const heightPct = historyStats.maxWeek > 0 ? (day.minutes / historyStats.maxWeek) * 100 : 0;
+              return (
+                <div key={day.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    width: '100%',
+                    height: `${Math.max(4, heightPct)}%`,
+                    background: day.isToday ? '#06b6d4' : 'rgba(15,23,42,0.1)',
+                    minHeight: 4,
+                    transition: 'height 0.3s ease',
+                    position: 'relative',
+                  }}>
+                    {day.minutes > 0 && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: 9,
+                        fontWeight: 900,
+                        color: '#64748b',
+                        fontFamily: "'JetBrains Mono',monospace",
+                        marginBottom: 4,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {day.minutes}p
+                      </div>
+                    )}
+                  </div>
+                  <div style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: day.isToday ? '#06b6d4' : '#94a3b8',
+                    fontFamily: "'JetBrains Mono',monospace",
+                  }}>
+                    {day.label}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Session History List ── */}
+      {historyStats.totalSessions > 0 && (
+        <section style={{ width: 400, border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', padding: '16px 18px 0' }}>Lịch sử phiên</div>
+          <div style={{
+            maxHeight: 280,
+            overflowY: 'auto',
+            marginTop: 10,
+          }}>
+            {[...pomodoroHistory].reverse().filter((e) => e.mode === 'focus').slice(0, 30).map((entry, idx) => {
+              const d = new Date(entry.at);
+              const timeLabel = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+              const dateLabel = d.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' });
+              const min = Math.round((entry.elapsed || 0) / 60);
+              const plannedMin = Math.round((entry.total || 0) / 60);
+              const completed = min >= plannedMin * 0.5;
+              return (
+                <div key={entry.at} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 18px',
+                  borderTop: idx === 0 ? '1px solid rgba(15,23,42,0.06)' : 'none',
+                  borderBottom: '1px solid rgba(15,23,42,0.04)',
+                }}>
+                  <div style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: completed ? '#22c55e' : '#f59e0b',
+                    flexShrink: 0,
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+                      {min}p / {plannedMin}p
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>
+                      {dateLabel} · {timeLabel} · {entry.preset}
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: 9,
+                    fontWeight: 800,
+                    color: completed ? '#16a34a' : '#ca8a04',
+                    fontFamily: "'JetBrains Mono',monospace",
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {completed ? 'XONG' : 'BỎ LỠ'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
     </div>
   );
 }
