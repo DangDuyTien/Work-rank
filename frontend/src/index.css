@@ -30,9 +30,10 @@
   --shadow-blue: none;
   --shadow-green: 0 0 12px rgba(34,197,94,0.35);
 
-  /* ── Glass ── */
-  --glass-bg: rgba(255,255,255,0.82);
-  --glass-blur: 16px;
+  /* ── Radius ── */
+  --radius-sm:  5px;
+  --radius:     8px;
+  --radius-lg:  12px;
 }
 
 *, *::before, *::after {
@@ -6170,67 +6171,4 @@ html[data-workrank-contrast="true"] .profile-level-card {
     flex-wrap: wrap;
     justify-content: center;
   }
-}
-
-/* ── Utility: Glass surfaces (square) ── */
-.wr-glass {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2) !important;
-}
-
-.wr-glass-sm {
-  background: rgba(255,255,255,0.70) !important;
-  backdrop-filter: blur(8px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(1.1) !important;
-}
-
-/* ── Utility: Nav active indicator (square) ── */
-.wr-nav-active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 8px;
-  right: 8px;
-  height: 2px;
-  background: #38bdf8;
-}
-
-/* ── Utility: Button press (square) ── */
-.wr-btn-press {
-  transition: transform 0.12s ease, filter 0.12s ease !important;
-}
-.wr-btn-press:hover {
-  filter: brightness(1.1) !important;
-}
-.wr-btn-press:active {
-  transform: scale(0.96) !important;
-  filter: brightness(0.92) !important;
-}
-
-/* ── Utility: Card base ── */
-.wr-card {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border) !important;
-}
-
-/* ── Utility: Fade in ── */
-.wr-fade-in {
-  animation: fade-in-up 0.25s ease forwards;
-}
-
-/* ── Utility: Text interactive (square) ── */
-.wr-text-hover {
-  transition: color 0.15s ease, opacity 0.15s ease !important;
-}
-.wr-text-hover:hover {
-  color: #38bdf8 !important;
-}
-
-/* ── Utility: Reduced motion reset ── */
-@media (prefers-reduced-motion: reduce) {
-  .wr-btn-press {
-    transition: none !important;
-  }
-  .wr-btn-press:active { transform: none !important; }
 }

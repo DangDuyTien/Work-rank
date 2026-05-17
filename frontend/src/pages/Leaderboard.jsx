@@ -309,9 +309,17 @@ export default function Leaderboard() {
       }
       if (res) {
         if (requestId !== requestIdRef.current) return;
-        setUsers(res.data || []);
-        setCurrentUserRank(res.currentUserRank || null);
-        setTotalRanked(Number(res.totalRanked || res.data?.length || 0));
+        const data = res.data || [];
+        setUsers(data);
+        let myRank = res.currentUserRank || null;
+        if (!myRank && user?.id) {
+          const idx = data.findIndex(u => String(u.user_id || u.id) === String(user.id));
+          if (idx !== -1) {
+            myRank = { ...data[idx], rankPosition: idx + 1 };
+          }
+        }
+        setCurrentUserRank(myRank);
+        setTotalRanked(Number(res.totalRanked || data.length || 0));
         setServerTotalPages(Math.max(1, Number(res.totalPages || 1)));
       }
     } catch (err) {
@@ -444,22 +452,22 @@ export default function Leaderboard() {
       });
       if (currentAuthUserId && String(data.userId || data.user_id) === currentAuthUserId) {
         setCurrentUserRank((prev) => {
-          if (!prev) return prev;
           const totals = range === 'today' ? data.totals || null : null;
           const delta = data.delta || {};
           const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
           const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
           const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
           const deltaIdleSeconds = Number(delta.idleSeconds ?? data.idleSeconds ?? 0);
-          const status = data.presence || data.presenceStatus || data.status || prev.status || 'active';
-          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(prev.keystrokeCount) || 0) + deltaKeys;
-          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(prev.mouseClickCount) || 0) + deltaClicks;
-          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(prev.activeSeconds || prev.total_active_seconds) || 0) + deltaActiveSeconds;
-          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(prev.idleSeconds || prev.total_idle_seconds) || 0) + deltaIdleSeconds;
-          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? prev.focusScore ?? 0);
+          const status = data.presence || data.presenceStatus || data.status || prev?.status || 'active';
+          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(prev?.keystrokeCount) || 0) + deltaKeys;
+          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(prev?.mouseClickCount) || 0) + deltaClicks;
+          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(prev?.activeSeconds || prev?.total_active_seconds) || 0) + deltaActiveSeconds;
+          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(prev?.idleSeconds || prev?.total_idle_seconds) || 0) + deltaIdleSeconds;
+          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? prev?.focusScore ?? 0);
           const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
+          const base = prev || { user_id: currentAuthUserId, name: data.name || `User #${currentAuthUserId}` };
           return {
-            ...prev,
+            ...base,
             ...data,
             status,
             presence: status,

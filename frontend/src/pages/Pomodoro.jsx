@@ -197,6 +197,16 @@ export default function Pomodoro() {
   useEffect(() => subscribeAppSettings(setAppSettings), []);
 
   useEffect(() => {
+    const bc = new BroadcastChannel('workrank-pip');
+    bc.onmessage = (e) => {
+      if (e.data === 'continue') {
+        setPomodoro(loadPomodoroState());
+      }
+    };
+    return () => bc.close();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify({
       presetKey: pomodoro.presetKey,
       mode: pomodoro.mode,
