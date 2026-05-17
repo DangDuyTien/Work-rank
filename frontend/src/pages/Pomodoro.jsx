@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
+import { leaderboard as leaderboardApi } from '../services/api';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
 import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
 import {
@@ -12,6 +13,7 @@ import {
   Pause,
   Play,
   Plus,
+  RefreshCw,
   RotateCcw,
   Settings,
   SkipForward,
@@ -19,6 +21,7 @@ import {
   Target,
   Timer,
   Trash2,
+  Users,
   Volume2,
 } from 'lucide-react';
 
@@ -188,6 +191,18 @@ function formatPomodoroTime(seconds) {
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
+function getFriendFocusSeconds(row = {}) {
+  return Number(row.active_seconds ?? row.total_active_seconds ?? row.activeSeconds ?? 0);
+}
+
+function getFriendFocusMinutes(row = {}) {
+  return Math.round(Math.max(0, getFriendFocusSeconds(row)) / 60);
+}
+
+function getFriendInitial(name = '') {
+  return String(name || '?').trim().charAt(0).toUpperCase() || '?';
+}
+
 function emitWorkRankNotification(detail) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(WORKRANK_NOTIFICATION_EVENT, { detail }));
@@ -258,6 +273,9 @@ export default function Pomodoro() {
     try { return localStorage.getItem(POMODORO_NOTES_KEY) || ''; } catch { return ''; }
   });
   const [appSettings, setAppSettings] = useState(getAppSettings);
+  const [friendFocusRows, setFriendFocusRows] = useState([]);
+  const [friendFocusLoading, setFriendFocusLoading] = useState(true);
+  const [friendFocusError, setFriendFocusError] = useState('');
   const {
     tracking, trackingPending,
     startTrack,
@@ -342,8 +360,44 @@ export default function Pomodoro() {
   const taskSessionTotal = focusTasks.reduce((sum, task) => sum + Number(task.sessions || 0), 0);
   const taskEstimateTotal = focusTasks.reduce((sum, task) => sum + Number(task.estimate || 0), 0);
   const dailyGoalProgress = Math.min(1, historyStats.todayFocus / Math.max(1, dailyGoalMinutes));
+  const sortedFriendFocusRows = useMemo(
+    () => [...friendFocusRows].sort((a, b) => {
+      const focusDelta = getFriendFocusSeconds(b) - getFriendFocusSeconds(a);
+      if (focusDelta !== 0) return focusDelta;
+      return Number(b.focusScore ?? b.score ?? 0) - Number(a.focusScore ?? a.score ?? 0);
+    }),
+    [friendFocusRows]
+  );
+  const visibleFriendFocusRows = sortedFriendFocusRows.slice(0, 6);
+  const friendFocusTotalMinutes = sortedFriendFocusRows.reduce(
+    (sum, row) => sum + getFriendFocusMinutes(row),
+    0
+  );
+  const friendFocusLeader = visibleFriendFocusRows[0] || null;
+
+  const refreshFriendFocus = async ({ silent = false } = {}) => {
+    if (!silent) setFriendFocusLoading(true);
+    setFriendFocusError('');
+    try {
+      const res = await leaderboardApi.friends('today', { limit: 8 });
+      setFriendFocusRows(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error('Cannot load friend focus stats', error);
+      setFriendFocusError('Không tải được dữ liệu bạn bè.');
+    } finally {
+      if (!silent) setFriendFocusLoading(false);
+    }
+  };
 
   useEffect(() => subscribeAppSettings(setAppSettings), []);
+
+  useEffect(() => {
+    refreshFriendFocus();
+    const friendFocusInterval = window.setInterval(() => {
+      refreshFriendFocus({ silent: true });
+    }, 45000);
+    return () => window.clearInterval(friendFocusInterval);
+  }, []);
 
   useEffect(() => {
     savePomodoroTasks(focusTasks);
@@ -532,20 +586,21 @@ export default function Pomodoro() {
   runningRef.current = pomodoro.running;
 
   useEffect(() => {
-    const handleVisibility = () => {
-      if (document.hidden && runningRef.current) {
-        openPipWindow();
+    const syncPipForPomodoroPage = () => {
+      if (document.hidden) {
+        if (runningRef.current && !isPipOpen()) {
+          openPipWindow();
+        }
+        return;
       }
+      if (isPipOpen()) closePipWindow();
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-    const pipHealthInterval = setInterval(() => {
-      if (runningRef.current && !isPipOpen()) {
-        openPipWindow();
-      }
-    }, 2000);
+    syncPipForPomodoroPage();
+    document.addEventListener('visibilitychange', syncPipForPomodoroPage);
+    const pipHealthInterval = window.setInterval(syncPipForPomodoroPage, 2000);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      clearInterval(pipHealthInterval);
+      document.removeEventListener('visibilitychange', syncPipForPomodoroPage);
+      window.clearInterval(pipHealthInterval);
       if (runningRef.current) {
         openPipWindow();
       }
@@ -679,12 +734,10 @@ export default function Pomodoro() {
   const isUrgent = pomodoro.running && pomodoro.remainingSeconds <= 10;
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 16,
-      padding: '32px 16px',
+    <div className="pm-page" style={{
+      width: 'min(100%, 1120px)',
+      margin: '0 auto',
+      padding: '28px 16px 56px',
       fontFamily: "'JetBrains Mono', monospace",
     }}>
       <style>{`
@@ -694,6 +747,13 @@ export default function Pomodoro() {
         @keyframes pm-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes pm-fade-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pm-flash { 0%{opacity:0.35} 100%{opacity:0} }
+        @keyframes pm-spin { to{transform:rotate(360deg)} }
+        .pm-shell{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:18px;align-items:start}
+        .pm-primary{position:sticky;top:80px;display:flex;flex-direction:column;gap:16px;min-width:0}
+        .pm-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;min-width:0}
+        .pm-primary>section,.pm-side>section{width:100%!important}
+        .pm-wide{grid-column:1 / -1}
+        .pm-spin{animation:pm-spin 0.8s linear infinite}
         .pm-btn:hover{filter:brightness(1.3)!important;transform:translateY(-1px)!important}
         .pm-btn:active{transform:translateY(0)!important;filter:brightness(0.95)!important}
         .pm-tile-urgent .pm-digit{color:#ef4444!important}
@@ -702,6 +762,17 @@ export default function Pomodoro() {
         .pm-field::placeholder{color:#94a3b8}
         .pm-field:focus{outline:none;border-color:#06b6d4!important;box-shadow:0 0 0 3px rgba(6,182,212,0.12)}
         .pm-icon-btn:hover{background:#f8fafc!important;color:#0f172a!important}
+        @media (max-width: 980px){
+          .pm-shell{grid-template-columns:1fr}
+          .pm-primary{position:static}
+          .pm-side{grid-template-columns:1fr}
+          .pm-wide{grid-column:auto}
+        }
+        @media (max-width: 520px){
+          .pm-page{padding:20px 12px 44px!important}
+          .pm-side{gap:12px}
+          .pm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+        }
       `}</style>
 
       <div key={flashKey} style={{
@@ -713,6 +784,8 @@ export default function Pomodoro() {
         animation: 'pm-flash 0.4s ease-out forwards',
       }} />
 
+      <div className="pm-shell">
+        <div className="pm-primary">
       <section style={{
         width: 'min(100%, 400px)',
         background: modeGradients[pomodoro.mode] || modeGradients.focus,
@@ -892,7 +965,7 @@ export default function Pomodoro() {
               type="button"
               data-no-track="true"
               aria-label="Cửa sổ nổi"
-              onClick={() => { if (isPipOpen()) closePipWindow(); else openPipWindow(); }}
+              onClick={() => { if (isPipOpen()) closePipWindow(); }}
               className="pm-btn"
               style={{
                 height: 26,
@@ -902,7 +975,7 @@ export default function Pomodoro() {
                   : '1px solid rgba(255,255,255,0.1)',
                 background: isPipOpen() ? pomodoroModeMeta.bg : 'rgba(255,255,255,0.04)',
                 color: isPipOpen() ? pomodoroModeMeta.color : 'rgba(255,255,255,0.5)',
-                cursor: 'pointer',
+                cursor: isPipOpen() ? 'pointer' : 'default',
                 fontSize: 10,
                 fontWeight: 800,
                 display: 'flex',
@@ -912,7 +985,7 @@ export default function Pomodoro() {
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              {isPipOpen() ? 'Ẩn' : 'Nổi'}
+              {isPipOpen() ? 'Ẩn' : 'PiP tắt'}
             </button>
             <button
               type="button"
@@ -1255,6 +1328,165 @@ export default function Pomodoro() {
           </div>
         </div>
       </section>
+        </div>
+
+        <div className="pm-side">
+      <section className="pm-wide" style={{
+        width: 'min(100%, 400px)',
+        border: '1px solid rgba(15,23,42,0.08)',
+        background: '#ffffff',
+        padding: 0,
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '16px 18px 12px',
+          borderBottom: '1px solid rgba(15,23,42,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+            <Users size={15} color="#0ea5e9" />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>Focus bạn bè hôm nay</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', marginTop: 2 }}>
+                Dữ liệu từ BXH bạn bè
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            data-no-track="true"
+            onClick={() => refreshFriendFocus()}
+            disabled={friendFocusLoading}
+            className="pm-icon-btn"
+            style={{
+              height: 28,
+              padding: '0 9px',
+              border: '1px solid rgba(15,23,42,0.1)',
+              background: '#ffffff',
+              color: '#64748b',
+              cursor: friendFocusLoading ? 'wait' : 'pointer',
+              fontSize: 10,
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              opacity: friendFocusLoading ? 0.7 : 1,
+            }}
+          >
+            <RefreshCw size={13} className={friendFocusLoading ? 'pm-spin' : ''} />
+            Mới
+          </button>
+        </div>
+        <div style={{ padding: '14px 18px 16px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 8,
+            marginBottom: 12,
+          }}>
+            <div style={{ border: '1px solid rgba(15,23,42,0.08)', padding: '10px 11px', background: '#f8fafc' }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 900 }}>BẠN BÈ</div>
+              <div style={{ marginTop: 4, fontSize: 20, color: '#0f172a', fontWeight: 900 }}>
+                {sortedFriendFocusRows.length}
+              </div>
+            </div>
+            <div style={{ border: '1px solid rgba(15,23,42,0.08)', padding: '10px 11px', background: '#f8fafc' }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 900 }}>TỔNG PHÚT</div>
+              <div style={{ marginTop: 4, fontSize: 20, color: '#0f172a', fontWeight: 900 }}>
+                {friendFocusTotalMinutes}p
+              </div>
+            </div>
+            <div style={{ border: '1px solid rgba(15,23,42,0.08)', padding: '10px 11px', background: '#f8fafc', minWidth: 0 }}>
+              <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 900 }}>DẪN ĐẦU</div>
+              <div style={{
+                marginTop: 4,
+                fontSize: 14,
+                color: '#0f172a',
+                fontWeight: 900,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {friendFocusLeader ? friendFocusLeader.name : '--'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+            {friendFocusLoading && visibleFriendFocusRows.length === 0 ? (
+              <div style={{ padding: '16px 0 2px', color: '#94a3b8', fontSize: 11, fontWeight: 800 }}>
+                Đang tải thống kê bạn bè...
+              </div>
+            ) : friendFocusError ? (
+              <div style={{ padding: '16px 0 2px', color: '#ef4444', fontSize: 11, fontWeight: 800 }}>
+                {friendFocusError}
+              </div>
+            ) : visibleFriendFocusRows.length === 0 ? (
+              <div style={{ padding: '16px 0 2px', color: '#94a3b8', fontSize: 11, fontWeight: 800 }}>
+                Chưa có bạn bè có dữ liệu focus hôm nay.
+              </div>
+            ) : visibleFriendFocusRows.map((friend, index) => {
+              const minutes = getFriendFocusMinutes(friend);
+              const leaderSeconds = Math.max(1, getFriendFocusSeconds(visibleFriendFocusRows[0]));
+              const progress = Math.min(1, getFriendFocusSeconds(friend) / leaderSeconds);
+              const score = Math.round(Number(friend.focusScore ?? friend.score ?? 0));
+              return (
+                <div key={friend.user_id || friend.id || `${friend.name}-${index}`} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '26px 32px minmax(0,1fr) auto',
+                  alignItems: 'center',
+                  gap: 9,
+                  padding: '10px 0',
+                  borderBottom: '1px solid rgba(15,23,42,0.05)',
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: index === 0 ? '#0ea5e9' : '#94a3b8' }}>
+                    #{index + 1}
+                  </div>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: index === 0 ? '#e0f2fe' : '#f1f5f9',
+                    color: index === 0 ? '#0284c7' : '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 900,
+                  }}>
+                    {getFriendInitial(friend.name)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: '#0f172a',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {friend.name}
+                    </div>
+                    <div style={{ height: 4, marginTop: 7, background: 'rgba(15,23,42,0.08)', overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${Math.round(progress * 100)}%`,
+                        height: '100%',
+                        background: index === 0 ? '#0ea5e9' : '#94a3b8',
+                      }} />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>{minutes}p</div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', marginTop: 2 }}>{score} điểm</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       <section style={{
         width: 'min(100%, 400px)',
@@ -1346,7 +1578,7 @@ export default function Pomodoro() {
         </div>
       </section>
 
-      <section style={{
+      <section className="pm-wide" style={{
         width: 'min(100%, 400px)',
         border: '1px solid rgba(15,23,42,0.08)',
         background: '#ffffff',
@@ -1602,7 +1834,7 @@ export default function Pomodoro() {
         </div>
       </section>
 
-      <section style={{
+      <section className="pm-wide" style={{
         width: 'min(100%, 400px)',
         border: '1px solid rgba(15,23,42,0.08)',
         background: '#ffffff',
@@ -1670,8 +1902,9 @@ export default function Pomodoro() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 0,
           ...(historyStats.todaySessions === 0 && historyStats.totalSessions === 0 ? { opacity: 0.4 } : {}),
-        }}>
+        }} className="pm-stats-grid">
           <div style={{ border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '14px 14px' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>Hôm nay</div>
             <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
@@ -1707,7 +1940,7 @@ export default function Pomodoro() {
 
       {/* ── Weekly Focus Bar Chart ── */}
       {historyStats.totalSessions > 0 && (
-        <section style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '16px 18px' }}>
+        <section className="pm-wide" style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: '16px 18px' }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', marginBottom: 14 }}>Focus trong tuần</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
             {historyStats.weekData.map((day) => {
@@ -1755,7 +1988,7 @@ export default function Pomodoro() {
       )}
 
       {/* ── Session History List ── */}
-      <section style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: 0 }}>
+      <section className="pm-wide" style={{ width: 'min(100%, 400px)', border: '1px solid rgba(15,23,42,0.08)', background: '#ffffff', padding: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', padding: '16px 18px 0' }}>Lịch sử phiên</div>
         <div style={{
           maxHeight: 280,
@@ -1818,6 +2051,8 @@ export default function Pomodoro() {
         </div>
       </section>
 
+        </div>
+      </div>
     </div>
   );
 }
