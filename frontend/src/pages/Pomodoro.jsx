@@ -478,6 +478,22 @@ export default function Pomodoro() {
       if (commandId && lastPipCommandIdRef.current === commandId) return;
       if (commandId) lastPipCommandIdRef.current = commandId;
 
+      if (cmd.stateApplied) {
+        if (cmd.command === 'start') {
+          requestNotificationPermission();
+          if (
+            !tracking
+            && !trackingPending
+            && appSettings.tracker?.autoStartWithPomodoro
+          ) {
+            void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
+          }
+        }
+        setPomodoro(loadPomodoroState());
+        setPomodoroHistory(loadPomodoroHistory());
+        return;
+      }
+
       if (cmd.command === 'pause') {
         setPomodoro((prev) => {
           const remainingSeconds = prev.endsAt

@@ -3947,6 +3947,35 @@ textarea:focus-visible,
   line-height: 1;
   white-space: nowrap;
   box-shadow: none;
+  overflow: hidden;
+}
+
+.profile-achievement-pill:not(.is-empty) {
+  border-color: var(--badge-border);
+  background: linear-gradient(135deg, #ffffff 0%, var(--badge-soft) 100%);
+  color: color-mix(in srgb, var(--badge-color) 88%, #334155);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--badge-color) 8%, transparent);
+}
+
+.profile-achievement-pill:not(.is-empty) svg {
+  color: var(--badge-color);
+}
+
+.profile-achievement-pill > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-achievement-pill em {
+  flex-shrink: 0;
+  border-left: 1px solid color-mix(in srgb, var(--badge-color) 22%, rgba(15, 23, 42, 0.08));
+  color: color-mix(in srgb, var(--badge-color) 78%, #64748b);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  padding-left: 7px;
+  text-transform: uppercase;
 }
 
 .profile-achievement-pill.is-empty {
@@ -4157,7 +4186,7 @@ textarea:focus-visible,
 }
 
 .profile-badge-choice svg {
-  color: color-mix(in srgb, var(--rank-color) 78%, #64748b);
+  color: color-mix(in srgb, var(--badge-color, var(--rank-color)) 82%, #64748b);
 }
 
 .profile-badge-choice span {
@@ -4170,7 +4199,7 @@ textarea:focus-visible,
 }
 
 .profile-badge-choice em {
-  color: #94a3b8;
+  color: color-mix(in srgb, var(--badge-color, #94a3b8) 72%, #94a3b8);
   font-size: 10px;
   font-style: normal;
   font-weight: 900;
@@ -4178,12 +4207,13 @@ textarea:focus-visible,
 }
 
 .profile-badge-choice.is-selected {
-  border-color: color-mix(in srgb, var(--rank-color) 22%, rgba(15, 23, 42, 0.08));
-  background: var(--rank-badge-bg);
+  border-color: var(--badge-border);
+  background: linear-gradient(135deg, #ffffff 0%, var(--badge-soft) 100%);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--badge-color) 7%, transparent);
 }
 
 .profile-badge-choice.is-selected em {
-  color: color-mix(in srgb, var(--rank-color) 82%, #475569);
+  color: color-mix(in srgb, var(--badge-color) 82%, #475569);
 }
 
 .profile-badge-choice.is-locked {
@@ -4359,7 +4389,7 @@ textarea:focus-visible,
 
 .profile-badge-board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 14px;
 }
@@ -4368,6 +4398,8 @@ textarea:focus-visible,
   min-height: 86px;
   display: flex;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
   border: 1px dashed rgba(100, 116, 139, 0.25);
   border-radius: 0;
   background: #f8fafc;
@@ -4377,10 +4409,64 @@ textarea:focus-visible,
 
 .profile-badge.is-unlocked {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--rank-color) 24%, rgba(15, 23, 42, 0.08));
-  background: var(--rank-card-bg);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--rank-color) 5%, transparent);
+  border-color: var(--badge-border);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.78) 48%, var(--badge-soft) 100%);
+  box-shadow: var(--badge-glow);
   opacity: 1;
+}
+
+.profile-badge.is-unlocked::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--badge-color), var(--badge-accent));
+}
+
+.profile-badge.is-unlocked::after {
+  content: '';
+  position: absolute;
+  inset: -60% -45%;
+  background: linear-gradient(110deg, transparent 38%, rgba(255,255,255,0.64) 50%, transparent 62%);
+  opacity: 0;
+  transform: translateX(-54%) rotate(12deg);
+  pointer-events: none;
+}
+
+.profile-badge.is-unlocked.achievement-tier-3::after,
+.profile-badge.is-unlocked.achievement-tier-4::after,
+.profile-badge.is-unlocked.achievement-tier-5::after {
+  animation: profile-achievement-sheen 5.6s ease-in-out infinite;
+}
+
+.profile-badge.is-unlocked.achievement-tier-4,
+.profile-badge.is-unlocked.achievement-tier-5 {
+  box-shadow:
+    var(--badge-glow),
+    0 0 0 1px color-mix(in srgb, var(--badge-color) 10%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.86);
+}
+
+@keyframes profile-achievement-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-58%) rotate(12deg);
+  }
+  34% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.82;
+  }
+  68% {
+    opacity: 0;
+    transform: translateX(58%) rotate(12deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(58%) rotate(12deg);
+  }
 }
 
 .profile-badge-icon {
@@ -4397,15 +4483,33 @@ textarea:focus-visible,
 
 .profile-badge.is-unlocked .profile-badge-icon {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--rank-color), var(--rank-accent-2));
-  box-shadow: 0 8px 16px color-mix(in srgb, var(--rank-color) 16%, transparent);
+  background: linear-gradient(135deg, var(--badge-color), var(--badge-accent));
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--badge-color) 18%, transparent);
 }
 
 .profile-badge strong {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
   color: #0f172a;
   font-size: 12px;
   font-weight: 900;
+}
+
+.profile-badge strong em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  border: 1px solid var(--badge-border);
+  background: var(--badge-soft);
+  color: color-mix(in srgb, var(--badge-color) 86%, #334155);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0 6px;
+  text-transform: uppercase;
 }
 
 .profile-badge span {

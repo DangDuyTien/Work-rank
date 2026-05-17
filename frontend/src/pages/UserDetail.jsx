@@ -31,7 +31,6 @@ import {
   Snowflake,
   Star,
   Target,
-  Timer,
   Trophy,
   UserCheck,
   UserPlus,
@@ -233,6 +232,57 @@ const RANK_TIERS = [
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
 
+const ACHIEVEMENT_TIER_STYLES = [
+  {
+    label: 'Chưa mở',
+    color: '#94a3b8',
+    accent: '#cbd5e1',
+    soft: 'rgba(148,163,184,0.1)',
+    border: 'rgba(148,163,184,0.24)',
+    glow: '0 8px 18px rgba(148,163,184,0.08)',
+  },
+  {
+    label: 'Đồng',
+    color: '#b45309',
+    accent: '#f97316',
+    soft: 'rgba(180,83,9,0.13)',
+    border: 'rgba(180,83,9,0.3)',
+    glow: '0 10px 24px rgba(180,83,9,0.12)',
+  },
+  {
+    label: 'Bạc',
+    color: '#64748b',
+    accent: '#cbd5e1',
+    soft: 'rgba(100,116,139,0.13)',
+    border: 'rgba(100,116,139,0.3)',
+    glow: '0 12px 26px rgba(100,116,139,0.13)',
+  },
+  {
+    label: 'Vàng',
+    color: '#d97706',
+    accent: '#facc15',
+    soft: 'rgba(217,119,6,0.15)',
+    border: 'rgba(217,119,6,0.34)',
+    glow: '0 14px 30px rgba(217,119,6,0.16)',
+  },
+  {
+    label: 'Bạch kim',
+    color: '#2563eb',
+    accent: '#67e8f9',
+    soft: 'rgba(37,99,235,0.15)',
+    border: 'rgba(37,99,235,0.38)',
+    glow: '0 16px 36px rgba(37,99,235,0.18)',
+  },
+  {
+    label: 'Huyền thoại',
+    color: '#7c3aed',
+    accent: '#ec4899',
+    soft: 'rgba(124,58,237,0.16)',
+    border: 'rgba(124,58,237,0.42)',
+    glow: '0 18px 44px rgba(124,58,237,0.22)',
+  },
+];
+
 function createNotoAnimalIcon(iconData) {
   return function NotoAnimalIcon({ size = 24, strokeWidth: _strokeWidth, color: _color, style, ...props }) {
     return (
@@ -357,7 +407,7 @@ const ANIMAL_LEVELS = [
   { name: 'Voi ma mút', icon: createNotoAnimalIcon(notoMammothIcon), iconKey: 'noto-mammoth' },
 ];
 
-const LEVEL_ANIMALS = Array.from({ length: 200 }, (_, level) => {
+const LEVEL_ANIMALS = Array.from({ length: 201 }, (_, level) => {
   const animal = ANIMAL_LEVELS[level % ANIMAL_LEVELS.length];
   return {
     level,
@@ -486,7 +536,7 @@ function resizeGalleryFile(file) {
 
 function hydrateLevelInfo(info = {}) {
   const milestones = Array.isArray(info.milestones) ? info.milestones : [];
-  const maxLevel = Number(info.maxLevel || 50);
+  const maxLevel = Number(info.maxLevel || 200);
   const totalActions = Number(info.totalActions || 0);
   let level = Number(info.level || 0);
 
@@ -578,7 +628,7 @@ function getSessionRecords(sessions) {
 function buildMilestoneTrack(levelInfo) {
   const milestones = levelInfo.milestones || [];
   if (!milestones.length) return [];
-  const maxLevel = Number(levelInfo.maxLevel || 50);
+  const maxLevel = Number(levelInfo.maxLevel || 200);
   const currentLevel = Number(levelInfo.level || 0);
   const start = currentLevel <= 2 ? 0 : currentLevel >= maxLevel - 3 ? Math.max(0, maxLevel - 5) : currentLevel - 2;
   return Array.from({ length: 6 }, (_, index) => start + index)
@@ -600,14 +650,80 @@ function buildAnimalCollection(currentLevel, maxLevel = 200) {
   }));
 }
 
+function resolveAchievementTier(value, thresholds) {
+  const tierIndex = thresholds.reduce((tier, threshold, index) => (
+    Number(value || 0) >= threshold ? index + 1 : tier
+  ), 0);
+  return {
+    tierIndex,
+    nextTarget: thresholds[tierIndex] || null,
+    ...ACHIEVEMENT_TIER_STYLES[tierIndex],
+  };
+}
+
+function buildAchievementBadge({ label, icon, value, thresholds, desc, nextDesc }) {
+  const tier = resolveAchievementTier(value, thresholds);
+  return {
+    label,
+    icon,
+    unlocked: tier.tierIndex > 0,
+    tierIndex: tier.tierIndex,
+    tierLabel: tier.label,
+    tierColor: tier.color,
+    tierAccent: tier.accent,
+    tierSoft: tier.soft,
+    tierBorder: tier.border,
+    tierGlow: tier.glow,
+    desc: tier.tierIndex > 0 ? desc(tier) : nextDesc(tier),
+  };
+}
+
+function achievementStyleVars(badge) {
+  return {
+    '--badge-color': badge.tierColor || '#94a3b8',
+    '--badge-accent': badge.tierAccent || '#cbd5e1',
+    '--badge-soft': badge.tierSoft || 'rgba(148,163,184,0.1)',
+    '--badge-border': badge.tierBorder || 'rgba(148,163,184,0.24)',
+    '--badge-glow': badge.tierGlow || '0 8px 18px rgba(148,163,184,0.08)',
+  };
+}
+
 function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, sessionRecords }) {
+  const burstScore = Math.max(Number(peakBucket.actions || 0), Math.round(Number(score || 0) * 8));
+  const focusMinutes = Math.round(Number(sessionRecords.longest || 0) / 60);
   return [
-    { label: 'Tập trung thép', desc: 'Điểm hoạt động từ 90+', icon: ShieldCheck, unlocked: score >= 90 },
-    { label: 'Bùng nổ 15 phút', desc: 'Đạt 500+ thao tác trong 1 block', icon: Zap, unlocked: peakBucket.actions >= 500 },
-    { label: 'Chuỗi bền bỉ', desc: '7 ngày liên tiếp có hoạt động', icon: Flame, unlocked: currentStreak >= 7 },
-    { label: 'Mốc Level 10', desc: 'Vượt level 10', icon: Medal, unlocked: levelView.level >= 10 },
-    { label: 'Ngày 10K', desc: 'Một ngày đạt 10k thao tác', icon: Trophy, unlocked: Number(bestDay?.count || 0) >= 10000 },
-    { label: 'Phiên marathon', desc: 'Một phiên dài từ 2 giờ', icon: Timer, unlocked: sessionRecords.longest >= 7200 },
+    buildAchievementBadge({
+      label: 'Cấp bậc',
+      icon: Medal,
+      value: levelView.level,
+      thresholds: [10, 20, 35, 70, 130],
+      desc: () => `Level ${levelView.level} · ${fmtNum(levelView.totalActions)} thao tác`,
+      nextDesc: (tier) => `Cần level ${tier.nextTarget || 10} để mở`,
+    }),
+    buildAchievementBadge({
+      label: 'Kỷ lục ngày',
+      icon: Trophy,
+      value: Number(bestDay?.count || 0),
+      thresholds: [1000, 3000, 10000, 30000, 70000],
+      desc: () => `${fmtNum(bestDay?.count)} thao tác trong ngày mạnh nhất`,
+      nextDesc: (tier) => `Cần ${fmtNum(tier.nextTarget || 1000)} thao tác/ngày`,
+    }),
+    buildAchievementBadge({
+      label: 'Chuỗi bền bỉ',
+      icon: Flame,
+      value: currentStreak,
+      thresholds: [3, 7, 14, 30, 60],
+      desc: () => `${fmtNum(currentStreak)} ngày liên tiếp có hoạt động`,
+      nextDesc: (tier) => `Cần chuỗi ${fmtNum(tier.nextTarget || 3)} ngày`,
+    }),
+    buildAchievementBadge({
+      label: 'Nhịp tập trung',
+      icon: Zap,
+      value: Math.max(burstScore, focusMinutes * 6),
+      thresholds: [300, 600, 1200, 2400, 4800],
+      desc: () => `Burst ${fmtNum(peakBucket.actions)} thao tác · phiên dài ${fmtDur(sessionRecords.longest)}`,
+      nextDesc: (tier) => `Cần burst ${fmtNum(tier.nextTarget || 300)} hoặc phiên dài hơn`,
+    }),
   ];
 }
 
@@ -1102,10 +1218,13 @@ export default function UserDetail() {
     .map((label) => PRIVILEGE_BADGES.find((badge) => badge.label === label))
     .filter(Boolean);
   const selectableBadgeList = unlockedBadgeList;
-  const selectedFeaturedLabels = (hasFeaturedBadgePreference ? featuredBadgeLabels : unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label))
+  const normalizedFeaturedLabels = normalizeFeaturedBadgeLabels(featuredBadgeLabels)
+    .filter((label) => !isPrivilegeBadgeLabel(label));
+  const validFeaturedLabels = normalizedFeaturedLabels
+    .filter((label) => selectableBadgeList.some((badge) => badge.label === label));
+  const shouldFallbackFeaturedLabels = !hasFeaturedBadgePreference || (normalizedFeaturedLabels.length > 0 && validFeaturedLabels.length === 0);
+  const selectedFeaturedLabels = (shouldFallbackFeaturedLabels ? unlockedBadgeList.slice(0, FEATURED_BADGE_LIMIT).map((badge) => badge.label) : validFeaturedLabels)
     .filter((label, index, list) => list.indexOf(label) === index)
-    .filter((label) => !isPrivilegeBadgeLabel(label))
-    .filter((label) => selectableBadgeList.some((badge) => badge.label === label))
     .slice(0, FEATURED_BADGE_LIMIT);
   const featuredBadges = selectedFeaturedLabels
     .map((label) => selectableBadgeList.find((badge) => badge.label === label))
@@ -1528,7 +1647,7 @@ export default function UserDetail() {
             <div className="profile-achievement-panel">
               <div className="profile-achievement-header">
                 <div>
-                  <div className="profile-achievement-title">Huy hiệu nổi bật</div>
+                  <div className="profile-achievement-title">Thành tích nổi bật</div>
                   <span>{featuredBadges.length}/{FEATURED_BADGE_LIMIT} slot đang dùng</span>
                 </div>
                 {canCustomizeProfile && selectableBadgeList.length > 0 && (
@@ -1537,7 +1656,7 @@ export default function UserDetail() {
                     className="profile-achievement-edit"
                     onClick={() => setBadgeEditorOpen((open) => !open)}
                   >
-                    {badgeEditorOpen ? 'Đóng' : 'Chỉnh huy hiệu'}
+                    {badgeEditorOpen ? 'Đóng' : 'Chỉnh thành tích'}
                   </button>
                 )}
               </div>
@@ -1545,16 +1664,22 @@ export default function UserDetail() {
                 {featuredBadgeSlots.map((badge, index) => {
                   const Icon = badge?.icon;
                   return (
-                    <span key={badge?.label || `empty-${index}`} className={badge ? 'profile-achievement-pill' : 'profile-achievement-pill is-empty'}>
+                    <span
+                      key={badge?.label || `empty-${index}`}
+                      className={badge ? `profile-achievement-pill achievement-tier-${badge.tierIndex}` : 'profile-achievement-pill is-empty'}
+                      style={badge ? achievementStyleVars(badge) : undefined}
+                      title={badge ? `${badge.label} · ${badge.tierLabel}` : 'Chọn thành tích'}
+                    >
                       {badge ? (
                         <>
                           <Icon size={14} strokeWidth={2.5} />
-                          {badge.label}
+                          <span>{badge.label}</span>
+                          <em>{badge.tierLabel}</em>
                         </>
                       ) : (
                         <>
                           <Star size={14} strokeWidth={2.5} />
-                          Chọn huy hiệu
+                          Chọn thành tích
                         </>
                       )}
                     </span>
@@ -1563,7 +1688,7 @@ export default function UserDetail() {
               </div>
               {badgeEditorOpen && canCustomizeProfile && (
                 <div className="profile-badge-editor">
-                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} huy hiệu nhiệm vụ để ghim ở đây. Huy hiệu đặc quyền do admin cấp sẽ nằm ở khung ảnh phía trên.</div>
+                  <div className="profile-badge-editor-note">Chọn tối đa {FEATURED_BADGE_LIMIT} thành tích chính để ghim ở đây. Mốc cao hơn sẽ tự đổi màu và hiệu ứng trên cùng thành tích.</div>
                   {badgeEditorError && <div className="profile-badge-editor-error">{badgeEditorError}</div>}
                   <div className="profile-badge-editor-grid">
                     {selectableBadgeList.map((badge) => {
@@ -1573,12 +1698,13 @@ export default function UserDetail() {
                         <button
                           key={badge.label}
                           type="button"
-                          className={selected ? 'profile-badge-choice is-selected' : 'profile-badge-choice'}
+                          className={selected ? `profile-badge-choice is-selected achievement-tier-${badge.tierIndex}` : `profile-badge-choice achievement-tier-${badge.tierIndex}`}
+                          style={achievementStyleVars(badge)}
                           onClick={() => toggleFeaturedBadge(badge.label)}
                         >
                           <Icon size={15} strokeWidth={2.4} />
                           <span>{badge.label}</span>
-                          <em>{selected ? 'Đang ghim' : 'Có thể chọn'}</em>
+                          <em>{selected ? 'Đang ghim' : badge.tierLabel}</em>
                         </button>
                       );
                     })}
@@ -1624,10 +1750,17 @@ export default function UserDetail() {
           {achievementBadges.map((badge) => {
             const Icon = badge.icon;
             return (
-              <div key={badge.label} className={badge.unlocked ? 'profile-badge is-unlocked' : 'profile-badge'}>
+              <div
+                key={badge.label}
+                className={badge.unlocked ? `profile-badge is-unlocked achievement-tier-${badge.tierIndex}` : 'profile-badge'}
+                style={achievementStyleVars(badge)}
+              >
                 <div className="profile-badge-icon"><Icon size={18} strokeWidth={2.4} /></div>
                 <div>
-                  <strong>{badge.label}</strong>
+                  <strong>
+                    {badge.label}
+                    <em>{badge.tierLabel}</em>
+                  </strong>
                   <span>{badge.desc}</span>
                 </div>
               </div>

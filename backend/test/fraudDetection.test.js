@@ -154,3 +154,30 @@ test('click đều ít lần không bị coi là bot', () => {
   assert.equal(analysis.flags.includes('repeated_click_pattern_streak'), false);
   assert.equal(analysis.trusted, true);
 });
+
+test('click-only lặp nhiều lần không có di chuột bị gắn cờ bot', () => {
+  const analysis = fraudDetection.analyzeEvent(
+    {
+      timestamp: new Date().toISOString(),
+      activeSeconds: 10,
+      idleSeconds: 0,
+      keystrokeCount: 0,
+      mouseClickCount: 3,
+      mouseMoveCount: 0,
+      sequence: 11,
+    },
+    baseDevice({
+      lastEventAt: new Date().toISOString(),
+      lastClickCount: 3,
+      lastActiveSeconds: 10,
+      clickOnlyStreakCount: 6,
+    }),
+    true,
+    { ok: true },
+    null,
+    { hasSessionId: true },
+  );
+
+  assert.ok(analysis.flags.includes('click_only_streak_no_movement'));
+  assert.equal(analysis.trusted, false);
+});

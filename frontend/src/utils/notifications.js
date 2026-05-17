@@ -69,6 +69,8 @@ let lastPipActionAt = 0;
 const PIP_TICK_KEY = 'workrank:pomodoro-state';
 const PIP_COMMAND_KEY = 'workrank:pip-command';
 const PIP_COMMAND_EVENT = 'workrank:pip-command';
+const PIP_HISTORY_KEY = 'workrank:pomodoro-history';
+const PIP_HISTORY_MAX = 300;
 const PIP_PRESETS = { classic: [25, 5, 15], deep: [50, 10, 25], sprint: [15, 3, 10] };
 
 function getPipPreset(presetKey) {
@@ -99,8 +101,120 @@ function buildPipCommand(action) {
   };
 }
 
-function broadcastPipCommand(action) {
+function loadPipState() {
+  try {
+    const raw = localStorage.getItem(PIP_TICK_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function savePipState(state) {
+  try {
+    localStorage.setItem(PIP_TICK_KEY, JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function pushPipHistory(entry) {
+  try {
+    const raw = localStorage.getItem(PIP_HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(history)) return;
+    history.push(entry);
+    if (history.length > PIP_HISTORY_MAX) history.splice(0, history.length - PIP_HISTORY_MAX);
+    localStorage.setItem(PIP_HISTORY_KEY, JSON.stringify(history));
+  } catch {}
+}
+
+function completePipStep(state) {
+  const preset = getPipPreset(state.presetKey);
+  const mode = state.mode || 'focus';
+  const completedFocusCount = mode === 'focus'
+    ? Number(state.completedFocusCount || 0) + 1
+    : Number(state.completedFocusCount || 0);
+  const nextMode = mode === 'focus'
+    ? (completedFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
+    : 'focus';
+  const totalSeconds = getPipModeSeconds(preset, mode);
+  const elapsedSeconds = totalSeconds - Math.max(0, Number(state.remainingSeconds || 0));
+  if (elapsedSeconds >= 10) {
+    pushPipHistory({
+      at: Date.now(),
+      mode,
+      elapsed: elapsedSeconds,
+      total: totalSeconds,
+      preset: state.presetKey || 'classic',
+    });
+  }
+  return {
+    ...state,
+    mode: nextMode,
+    remainingSeconds: getPipModeSeconds(preset, nextMode),
+    running: false,
+    completedFocusCount,
+    completedAt: Date.now(),
+    startedOnce: false,
+    endsAt: null,
+    notified: true,
+  };
+}
+
+function applyPipActionToState(action) {
+  const state = loadPipState();
+  if (!state) return false;
+  const mode = state.mode || 'focus';
+  const preset = getPipPreset(state.presetKey);
+  const totalSeconds = getPipModeSeconds(preset, mode);
+  const remainingSeconds = state.running && state.endsAt
+    ? Math.max(0, Math.ceil((Number(state.endsAt || 0) - Date.now()) / 1000))
+    : Math.max(0, Math.min(totalSeconds, Number(state.remainingSeconds || totalSeconds)));
+
+  if (action === 'pause') {
+    return savePipState({
+      ...state,
+      remainingSeconds,
+      running: false,
+      endsAt: null,
+      startedOnce: true,
+      completedAt: 0,
+      notified: false,
+    });
+  }
+
+  if (action === 'start') {
+    const safeRemaining = Math.max(1, remainingSeconds || totalSeconds);
+    return savePipState({
+      ...state,
+      mode,
+      remainingSeconds: safeRemaining,
+      running: true,
+      endsAt: Date.now() + safeRemaining * 1000,
+      startedOnce: true,
+      completedAt: 0,
+      notified: false,
+    });
+  }
+
+  if (action === 'skip') {
+    return savePipState(completePipStep({
+      ...state,
+      mode,
+      remainingSeconds,
+      running: false,
+      endsAt: null,
+    }));
+  }
+
+  return false;
+}
+
+function broadcastPipCommand(action, stateApplied = false) {
   const payload = buildPipCommand(action);
+  payload.stateApplied = stateApplied;
   try {
     const bc = new BroadcastChannel('workrank-pip');
     bc.postMessage(payload);
@@ -120,9 +234,16 @@ function pipHandleAction(action) {
   if (lastPipAction === action && now - lastPipActionAt < 350) return;
   lastPipAction = action;
   lastPipActionAt = now;
-  broadcastPipCommand(action);
+  const stateApplied = applyPipActionToState(action);
+  broadcastPipCommand(action, stateApplied);
   if (action === 'start') {
     pipDone = false;
+  }
+  if (action === 'skip') {
+    pipDone = false;
+  }
+  if (stateApplied) {
+    pipTick();
   }
 }
 

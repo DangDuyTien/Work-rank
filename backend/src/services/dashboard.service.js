@@ -220,6 +220,13 @@ function decorateRankedRow(row, index) {
   };
 }
 
+function toDbBoolean(value) {
+  if (value === true || value === 1 || value === '1') return true;
+  if (Buffer.isBuffer(value)) return value.length > 0 && value[0] === 1;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return false;
+}
+
 function clampPositiveInt(value, fallback, max) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
@@ -347,8 +354,8 @@ function mapLeaderboardRow(row, index) {
     email: row.email,
     role: row.role,
     teamId: row.team_id,
-    isVerified: Boolean(row.is_verified),
-    verified: Boolean(row.is_verified),
+    isVerified: toDbBoolean(row.is_verified),
+    verified: toDbBoolean(row.is_verified),
     featuredBadges: normalizeFeaturedBadges(row.featured_badges),
     accountStatus: row.account_status,
     activeSeconds: Number(row.active_seconds || 0),

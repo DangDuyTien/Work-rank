@@ -11,8 +11,9 @@ const LIMITS = {
   maxClockSkewMs: 5 * 60 * 1000,
   maxEventBacktrackMs: 10 * 1000,
   highSuspicionThreshold: 60,
-  minClicksForRepeatedPattern: 8,
+  minClicksForRepeatedPattern: 3,
   repeatedPatternThreshold: 4,
+  clickOnlyStreakThreshold: 6,
   intervalToleranceMs: 350,
   baselineMinActiveDays: 5,
   baselineSpikeMultiplier: 6,
@@ -72,6 +73,7 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
   const idleSeconds = numberValue(event.idleSeconds);
   const keystrokeCount = numberValue(event.keystrokeCount);
   const mouseClickCount = numberValue(event.mouseClickCount);
+  const mouseMoveCount = numberValue(event.mouseMoveCount);
   const totalSeconds = Math.max(1, activeSeconds + idleSeconds);
   const actionWindowSeconds = Math.max(1, activeSeconds || totalSeconds);
   const actionCount = keystrokeCount + mouseClickCount;
@@ -81,6 +83,11 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
   const eventTime = event.timestamp ? new Date(event.timestamp) : new Date();
   const lastEventAt = device.lastEventAt ? new Date(device.lastEventAt) : null;
   const repeatedPattern = isRepeatedPattern(event, device, eventTime);
+  const clickOnly = isClickOnly(event);
+  const repeatedClickOnlyNoMovement = clickOnly
+    && mouseMoveCount === 0
+    && mouseClickCount >= LIMITS.minClicksForRepeatedPattern
+    && Number(device.clickOnlyStreakCount || 0) >= LIMITS.clickOnlyStreakThreshold;
   let suspicionScore = 0;
 
   if (!signatureValid) {
@@ -145,6 +152,10 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
   if (repeatedPattern && Number(device.repeatedClickPatternCount || 0) >= LIMITS.repeatedPatternThreshold) {
     flags.push('repeated_click_pattern_streak');
     suspicionScore += 40;
+  }
+  if (repeatedClickOnlyNoMovement) {
+    flags.push('click_only_streak_no_movement');
+    suspicionScore += 65;
   }
   if (baseline && baseline.activeDays >= LIMITS.baselineMinActiveDays) {
     const baselineClickRate = baseline.avgClicksPerActiveSecond || 0;
