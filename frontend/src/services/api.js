@@ -237,7 +237,10 @@ export const activity = {
     return { ...res, data: normalizeStat(row) };
   },
   level: async (id) => {
-    const res = await api.get(`/api/reports/users/${id}/level`);
+    const res = await api.get(`/api/reports/users/${id}/level`, {
+      params: { _: Date.now() },
+      headers: { 'Cache-Control': 'no-cache' },
+    });
     return { ...res, data: res.data?.data || res.data || {} };
   },
   timeline: async (id, date, granularity = 'hour') => {

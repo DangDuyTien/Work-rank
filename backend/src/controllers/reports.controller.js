@@ -87,6 +87,7 @@ async function userLevel(req, res) {
     DailyStat.sum('mouseClickCount', { where }),
   ]);
 
+  res.set('Cache-Control', 'no-store');
   res.json({ data: buildLevelReport(totalKeystrokes, totalMouseClicks) });
 }
 
