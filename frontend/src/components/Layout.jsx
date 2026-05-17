@@ -398,11 +398,11 @@ export default function Layout() {
           width: 360,
           maxWidth: 'calc(100vw - 48px)',
           zIndex: 500,
-          background: '#ffffff',
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(12px)',
           border: '1px solid rgba(220,38,38,0.28)',
           borderLeft: '4px solid #dc2626',
           borderRadius: 0,
-          boxShadow: 'none',
           padding: '14px 16px',
         }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#991b1b', marginBottom: 4 }}>
@@ -436,7 +436,8 @@ export default function Layout() {
         style={{
           height: 52,
           flexShrink: 0,
-          background: '#ffffff',
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(8px)',
           borderBottom: '1px solid rgba(15,23,42,0.08)',
           display: 'flex',
           alignItems: 'center',
@@ -496,6 +497,7 @@ export default function Layout() {
                 title={label}
                 aria-label={label}
                 onClick={(event) => goToNav(event, to)}
+                className={'wr-btn-press' + (active ? ' wr-nav-active' : '')}
                 style={{
                   padding: '6px 14px',
                   minWidth: to === '/friends' ? 74 : 'auto',
@@ -523,6 +525,7 @@ export default function Layout() {
           })}
           <NavLink
             to={`/users/${user?.id || 1}`}
+            className={'wr-btn-press' + (location.pathname.startsWith('/users') ? ' wr-nav-active' : '')}
             style={{
               padding: '6px 14px',
               fontSize: 13,
@@ -589,7 +592,6 @@ export default function Layout() {
                 color: '#fff',
                 fontSize: 12,
                 fontWeight: 700,
-                boxShadow: 'none',
                 marginRight: 6,
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
@@ -655,11 +657,11 @@ export default function Layout() {
                 right: -42,
                 width: 340,
                 maxWidth: 'calc(100vw - 24px)',
-                background: '#ffffff',
+                background: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(12px) saturate(1.1)',
                 border: '1px solid rgba(15,23,42,0.12)',
                 borderRadius: 0,
                 overflow: 'hidden',
-                boxShadow: 'none',
                 animation: 'slide-down 0.15s ease',
                 zIndex: 220,
               }}>
@@ -680,6 +682,7 @@ export default function Layout() {
                     <button
                       type="button"
                       onClick={clearNotifications}
+                      className="wr-btn-press"
                       style={{
                         border: '1px solid rgba(15,23,42,0.1)',
                         background: '#f8fafc',
@@ -844,11 +847,11 @@ export default function Layout() {
                 top: 'calc(100% + 8px)',
                 right: 0,
                 width: 180,
-                background: '#ffffff',
+                background: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(12px) saturate(1.1)',
                 border: '1px solid rgba(15,23,42,0.12)',
                 borderRadius: 0,
                 overflow: 'hidden',
-                boxShadow: 'none',
                 animation: 'slide-down 0.15s ease',
                 zIndex: 200,
               }}>
@@ -959,7 +962,6 @@ export default function Layout() {
             width: 400,
             maxWidth: '100%',
             overflow: 'hidden',
-            boxShadow: 'none',
             animation: 'slide-down 0.2s ease',
             fontFamily: "'JetBrains Mono', monospace",
           }} onClick={e => e.stopPropagation()}>
@@ -1001,7 +1003,6 @@ export default function Layout() {
                     padding: '10px 20px', borderRadius: 0,
                     background: '#1877F2', color: '#fff', 
                     fontSize: 14, fontWeight: 800, textDecoration: 'none',
-                    boxShadow: 'none',
                     transition: 'transform 0.2s'
                   }}
                   onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}

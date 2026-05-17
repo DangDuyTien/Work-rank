@@ -71,16 +71,27 @@ function tile(d) {
 }
 function clockHTML(mm, ss) { return tile(mm[0]) + tile(mm[1]) + '<span id="col">:</span>' + tile(ss[0]) + tile(ss[1]); }
 
-const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{background:#0f0f0f;height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;font-family:\'Inter\',ui-sans-serif,sans-serif}#app{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}#status{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;line-height:1;margin-bottom:14px;transition:color .3s ease}#clock{display:flex;align-items:center;gap:4px}.tile{width:56px;height:56px;background:#1e293b;display:flex;align-items:center;justify-content:center;border-radius:2px}.tile span{font-family:\'Inter\',ui-sans-serif,sans-serif;font-size:44px;font-weight:900;color:#fff;line-height:1}#col{font-size:28px;font-weight:900;color:#fff;line-height:1;padding-bottom:4px;animation:blink 1s step-end infinite;width:10px;text-align:center}@keyframes blink{0%,100%{opacity:1}50%{opacity:.08}}#bar{width:100%;height:3px;background:#18181b;margin-top:14px;border-radius:2px;overflow:hidden}#fill{height:100%;border-radius:2px;transition:width .3s ease;width:0%}</style></head><body>';
+const PIP_HEAD = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>@import url(\'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;900&display=swap\');*{margin:0;padding:0;box-sizing:border-box}body{height:100vh;overflow:hidden;user-select:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;font-family:\'JetBrains Mono\',monospace;background:#0f0f0f;transition:background .5s cubic-bezier(.4,0,.2,1)}body.focus{background:linear-gradient(160deg,#082f49 0%,#0c4a6e 100%)}body.shortBreak{background:linear-gradient(160deg,#052e16 0%,#166534 100%)}body.longBreak{background:linear-gradient(160deg,#451a03 0%,#78350f 100%)}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}@keyframes urgencyPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.4)}50%{box-shadow:0 0 40px rgba(239,68,68,.6)}}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1px)}75%{transform:translateX(1px)}}#app{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}#header{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px;line-height:1;order:0}#cycle{font-size:9px;color:rgba(255,255,255,.35);font-weight:600;margin-bottom:14px;order:1;letter-spacing:.06em}#status{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:18px;line-height:1;order:2;text-shadow:0 2px 12px rgba(0,0,0,.3)}#clock{display:flex;align-items:center;gap:6px;margin-bottom:18px;order:3}.tile{width:64px;height:64px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;border-radius:8px;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);transition:background .3s,border-color .3s,box-shadow .3s}.tile span{font-family:\'JetBrains Mono\',monospace;font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 2px 8px rgba(0,0,0,.3)}#col{font-size:30px;font-weight:900;color:#fff;line-height:1;padding-bottom:4px;width:10px;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.3);transition:opacity .15s}#nextinfo{font-size:10px;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:16px;order:4;letter-spacing:.04em}#bar{width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;order:5;position:relative}#fill{height:100%;border-radius:2px;background:rgba(255,255,255,.6);position:relative;overflow:hidden}#fill::after{content:\'\';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s ease-in-out infinite}.urgency .tile{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.5);animation:urgencyPulse 1s ease-in-out infinite,shake .3s ease-in-out infinite}.urgency #status{animation:pulse .6s ease-in-out infinite}.urgency .tile span{text-shadow:0 2px 16px rgba(239,68,68,.4)}.urgency #col{opacity:.9}.urgency #bar{background:rgba(239,68,68,.2)}.urgency #fill{background:rgba(239,68,68,.8)}</style></head><body>';
 
 function pipBodyHTML(d) {
-  return '<div id="app"><div id="status" style="color:' + d.col + '">' + d.label + '</div><div id="clock">' + clockHTML(d.mm, d.ss) + '</div><div id="bar"><div id="fill" style="width:' + d.pct + '%;background:' + d.col + '"></div></div></div>';
+  const cls = (d.mode || 'focus') + (d.urgency ? ' urgency' : '');
+  const cycleText = d.cycle ? 'Chu k\u1EF3 ' + d.cycle + '/4' : '';
+  const nextText = d.nextMode ? 'Ti\u1EBFp: ' + d.nextMode : '';
+  return '<div id="app" class="' + cls + '">' +
+    '<div id="header">POMODORO</div>' +
+    '<div id="cycle">' + cycleText + '</div>' +
+    '<div id="status">' + d.label + '</div>' +
+    '<div id="clock">' + clockHTML(d.mm, d.ss) + '</div>' +
+    '<div id="nextinfo">' + nextText + '</div>' +
+    '<div id="bar"><div id="fill" style="width:' + d.pct + '%"></div></div></div>';
 }
 
 function updatePipDOM(data) {
   const pw = pipWindow;
   if (!pw || pw.closed) return;
   try {
+    const modeClass = (data.mode || 'focus');
+    pw.document.body.className = modeClass;
     pw.document.body.innerHTML = pipBodyHTML(data);
     pw.document.body.onclick = function(){ try{pw.close()}catch{} };
   } catch {}
@@ -122,8 +133,9 @@ function pipTick() {
       try {
         const pw = pipWindow;
         if (pw && !pw.closed) {
-          pw.document.body.style.background = '#b91c1c';
-          pw.document.body.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;font-family:Inter,sans-serif">DONE</div>';
+          pw.document.body.classList.remove('focus', 'shortBreak', 'longBreak');
+          pw.document.body.style.background = 'linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%)';
+          pw.document.body.innerHTML = '<style>@keyframes pipCelebScale{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}@keyframes pipCelebFade{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}@keyframes pipConfetti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-60px) rotate(720deg);opacity:0}}@keyframes pipGlow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.4)}50%{text-shadow:0 0 40px rgba(255,255,255,0.8)}}#c{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}#c .check{font-size:42px;font-weight:900;color:#fff;font-family:JetBrains Mono,monospace;animation:pipCelebScale 0.5s cubic-bezier(.34,1.56,.64,1) forwards,pipGlow 1.5s ease-in-out infinite;margin-bottom:8px}#c .label{font-size:13px;font-weight:900;color:#fff;font-family:JetBrains Mono,monospace;text-transform:uppercase;letter-spacing:.12em;animation:pipCelebFade 0.4s 0.15s both;text-shadow:0 2px 8px rgba(0,0,0,.3)}#c .sub{font-size:10px;font-weight:600;color:rgba(255,255,255,0.8);font-family:JetBrains Mono,monospace;animation:pipCelebFade 0.4s 0.3s both;margin-top:6px}.confetti{position:absolute;width:6px;height:6px;border-radius:50%;animation:pipConfetti 1s ease-out forwards}.c1{background:#fbbf24;top:35%;left:20%;animation-delay:0.1s}.c2{background:#38bdf8;top:40%;right:25%;animation-delay:0.2s}.c3{background:#a78bfa;top:30%;right:30%;animation-delay:0.15s}.c4{background:#22c55e;top:45%;left:30%;animation-delay:0.25s}.c5{background:#f472b6;top:35%;right:20%;animation-delay:0.3s}</style><div id="c"><div class="check">✓</div><div class="label">HOÀN THÀNH</div><div class="sub">Tuyệt vời!</div><div class="confetti c1"></div><div class="confetti c2"></div><div class="confetti c3"></div><div class="confetti c4"></div><div class="confetti c5"></div></div>';
           pw.document.body.onclick = function(){ try{pw.close()}catch{} };
         }
       } catch {}
@@ -156,9 +168,16 @@ function pipTick() {
     const col = mode === 'focus' ? '#06b6d4' : mode === 'shortBreak' ? '#16a34a' : '#d97706';
     const label = mode === 'focus' ? 'Tập trung' : mode === 'shortBreak' ? 'Nghỉ ngắn' : 'Nghỉ dài';
     const pct = total > 0 ? ((total - rem) / total) * 100 : 0;
+    
+    const completedFocusCount = Number(p.completedFocusCount || 0);
+    const cycle = mode === 'focus' ? (completedFocusCount % 4) + 1 : (completedFocusCount % 4) + 1;
+    const nextModeName = mode === 'focus'
+      ? (completedFocusCount % 4 === 3 ? 'Nghỉ dài' : 'Nghỉ ngắn')
+      : 'Tập trung';
 
     updatePipDOM({
-      mm: mm, ss: ss, label: label, col: col, pct: Math.round(pct * 10) / 10,
+      mm: mm, ss: ss, label: label, mode: mode, cycle: cycle, nextMode: nextModeName, pct: Math.round(pct * 10) / 10,
+      urgency: rem <= 10,
     });
   } catch {}
 }
@@ -178,12 +197,13 @@ export function openPipWindow() {
   pipDone = false;
   if (pipWindow && !pipWindow.closed) { pipWindow.focus(); startPipInterval(); return true; }
   const token = ++pipToken;
-  window.documentPictureInPicture.requestWindow({ width: 270, height: 280 }).then((win) => {
+  window.documentPictureInPicture.requestWindow({ width: 330, height: 380 }).then((win) => {
     if (token !== pipToken) { try { win.close(); } catch {} return; }
     pipWindow = win;
-    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', col: '#06b6d4', pct: 0 });
+    const initBody = pipBodyHTML({ mm: '00', ss: '00', label: 'Tập trung', mode: 'focus', cycle: 1, nextMode: 'Nghỉ ngắn', pct: 0, urgency: false });
     win.document.write(PIP_HEAD + initBody + '</body></html>');
     win.document.close();
+    win.document.body.className = 'focus';
     win.document.body.onclick = function(){ try{win.close()}catch{} };
     startPipInterval();
     win.addEventListener('pagehide', () => {
