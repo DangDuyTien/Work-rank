@@ -221,9 +221,9 @@ function RankBadge({ badge, compact = false }) {
 const PAGE_SIZE = 10;
 
 function localDateKey(value = new Date()) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(value.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -233,7 +233,9 @@ function sortByRankScore(rows) {
     if (scoreDiff) return scoreDiff;
     const focusDiff = Number(b.focusScore || 0) - Number(a.focusScore || 0);
     if (focusDiff) return focusDiff;
-    return Number(b.activeSeconds || b.total_active_seconds || 0) - Number(a.activeSeconds || a.total_active_seconds || 0);
+    const secDiff = Number(b.activeSeconds || b.total_active_seconds || 0) - Number(a.activeSeconds || a.total_active_seconds || 0);
+    if (secDiff) return secDiff;
+    return Number(a.user_id ?? a.id ?? 0) - Number(b.user_id ?? b.id ?? 0);
   });
 }
 
@@ -331,6 +333,11 @@ export default function Leaderboard() {
 
   useEffect(() => {
     fetchData();
+  }, [range, activeTab, selectedGroupId, page, search]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [range, activeTab, selectedGroupId, page, search]);
 
   const updateLocalVerification = (userId, nextVerified) => {

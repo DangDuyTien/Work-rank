@@ -281,7 +281,7 @@ const LEVEL_ICONS = [
   Shell, PawPrint, Crown, Diamond, Gem, Star, Sparkles, Moon, Sun, Cloud,
   Rainbow, Wind, Waves, Flame, Leaf, Mountain, Flower, Cherry, Apple, Droplet,
   Feather, Anchor, Atom, Infinity, Key, Lock, Heart,
-  Shield, Sword, Wand, Ghost, Alien, Rocket, Compass, Globe, Map,
+  Shield, Sword, Wand, Ghost, Timer, Rocket, Compass, Globe, Map,
   MapPin, Pin, Navigation, Camera, Headphones, Music, Palette, Puzzle, Gamepad, Hourglass,
   Clock, Bell, Bolt, Zap, Lightbulb, Gift, Flag, Book, Scroll, Coffee,
   Cookie, Pizza, Egg, Circle, Triangle, Hexagon, Crosshair, Target, Dumbbell, Bike,
