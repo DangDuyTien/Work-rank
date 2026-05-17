@@ -70,6 +70,8 @@ function renderMissingDesktopInstaller(req, res) {
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
+      scriptSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", 'https:', 'wss:'],
     },

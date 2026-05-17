@@ -80,7 +80,8 @@ function isVerifiedRanker(user) {
   return toVerifiedBool(user.verified ?? user.isVerified ?? user.is_verified);
 }
 
-function isDevRanker(user = {}) {
+function isDevRanker(user) {
+  if (!user) return false;
   const id = Number(user.id || user.user_id || user.userId);
   const email = String(user.email || '').trim().toLowerCase();
   const name = String(user.name || '').trim().toLowerCase();
