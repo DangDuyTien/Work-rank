@@ -91,6 +91,10 @@ function normalizeLeaderboardRow(row, index = 0) {
       total_mouse_clicks: 0,
       total_active_seconds: 0,
       total_idle_seconds: 0,
+      lifetimeKeystrokeCount: 0,
+      lifetimeMouseClickCount: 0,
+      lifetimeActions: 0,
+      level: 0,
       keystrokes: 0,
       mouse_clicks: 0,
       active_seconds: 0,
@@ -102,6 +106,10 @@ function normalizeLeaderboardRow(row, index = 0) {
   const idleSeconds = Number(row.idleSeconds ?? row.idle_seconds ?? row.total_idle_seconds ?? 0);
   const keystrokes = Number(row.keystrokeCount ?? row.keystrokes ?? row.total_keystrokes ?? 0);
   const clicks = Number(row.mouseClickCount ?? row.mouse_clicks ?? row.total_mouse_clicks ?? 0);
+  const lifetimeKeystrokeCount = Number(row.lifetimeKeystrokeCount ?? row.lifetime_keystroke_count ?? row.total_lifetime_keystrokes ?? 0);
+  const lifetimeMouseClickCount = Number(row.lifetimeMouseClickCount ?? row.lifetime_mouse_click_count ?? row.total_lifetime_mouse_clicks ?? 0);
+  const lifetimeActions = Number(row.lifetimeActions ?? row.lifetime_actions ?? (lifetimeKeystrokeCount + lifetimeMouseClickCount));
+  const level = Number(row.level ?? row.userLevel ?? row.user_level ?? 0);
   const focusScore = Number(row.focusScore ?? row.focus_score ?? 0);
   const fallbackScore = calculateRankScore({
     activeSeconds,
@@ -140,6 +148,10 @@ function normalizeLeaderboardRow(row, index = 0) {
     total_mouse_clicks: clicks,
     total_active_seconds: activeSeconds,
     total_idle_seconds: idleSeconds,
+    lifetimeKeystrokeCount,
+    lifetimeMouseClickCount,
+    lifetimeActions,
+    level,
     keystrokes,
     mouse_clicks: clicks,
     active_seconds: activeSeconds,

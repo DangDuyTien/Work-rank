@@ -472,6 +472,8 @@ export default function Pomodoro() {
     const handlePipCommand = (payload) => {
       const cmd = normalizePipCommand(payload);
       if (!cmd?.command) return;
+      const commandTs = Number(cmd.ts || 0);
+      if (commandTs && Date.now() - commandTs > 30000) return;
       const commandId = cmd.id || `${cmd.command}:${cmd.ts || ''}`;
       if (commandId && lastPipCommandIdRef.current === commandId) return;
       if (commandId) lastPipCommandIdRef.current = commandId;
@@ -530,7 +532,14 @@ export default function Pomodoro() {
     };
     window.addEventListener('workrank:pip-command', handleWindowCommand);
     window.addEventListener('storage', handleStorageCommand);
+    const pollPipCommand = window.setInterval(() => {
+      try {
+        const raw = localStorage.getItem('workrank:pip-command');
+        if (raw) handlePipCommand(raw);
+      } catch {}
+    }, 150);
     return () => {
+      window.clearInterval(pollPipCommand);
       bc.close();
       window.removeEventListener('workrank:pip-command', handleWindowCommand);
       window.removeEventListener('storage', handleStorageCommand);

@@ -115,6 +115,7 @@ function broadcastPipCommand(action) {
 }
 
 function pipHandleAction(action) {
+  if (!action) return;
   const now = Date.now();
   if (lastPipAction === action && now - lastPipActionAt < 350) return;
   lastPipAction = action;
@@ -126,7 +127,8 @@ function pipHandleAction(action) {
 }
 
 function pipBodyActionHandler(e) {
-  const btn = e.target?.closest?.('[data-pip-action]');
+  const target = e.target?.closest ? e.target : e.target?.parentElement;
+  const btn = target?.closest?.('[data-pip-action]');
   if (btn) {
     e.preventDefault?.();
     e.stopPropagation?.();
@@ -137,8 +139,28 @@ function pipBodyActionHandler(e) {
 function attachPipHandlers(win = pipWindow) {
   try {
     if (!win || win.closed || !win.document?.body) return;
+    win.__workrankPipAction = (action) => pipHandleAction(action);
     win.document.body.onpointerdown = pipBodyActionHandler;
+    win.document.body.onmousedown = pipBodyActionHandler;
+    win.document.body.ontouchstart = pipBodyActionHandler;
     win.document.body.onclick = pipBodyActionHandler;
+    win.document.querySelectorAll('[data-pip-action]').forEach((button) => {
+      const buttonHandler = (event) => {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+        pipHandleAction(button.dataset.pipAction);
+      };
+      button.onpointerdown = buttonHandler;
+      button.onmousedown = buttonHandler;
+      button.ontouchstart = buttonHandler;
+      button.onclick = buttonHandler;
+    });
+    if (!win.__workrankPipHandlersAttached) {
+      ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach((eventName) => {
+        win.document.addEventListener(eventName, pipBodyActionHandler, true);
+      });
+      win.__workrankPipHandlersAttached = true;
+    }
   } catch {}
 }
 
@@ -176,6 +198,11 @@ function tile(d) {
 }
 function clockHTML(mm, ss) { return tile(mm[0]) + tile(mm[1]) + '<span id="col">:</span>' + tile(ss[0]) + tile(ss[1]); }
 
+function pipActionAttrs(action) {
+  const call = 'window.__workrankPipAction&&window.__workrankPipAction(&quot;' + action + '&quot;)';
+  return 'type="button" data-pip-action="' + action + '" onpointerdown="' + call + '" onmousedown="' + call + '" ontouchstart="' + call + '" onclick="' + call + '"';
+}
+
 const PIP_CTRL_SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 const PIP_CTRL_SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20 7 4"/></svg>';
 const PIP_CTRL_SVG_SKIP = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 20"/><line x1="19" y1="5" x2="19" y2="19"/></svg>';
@@ -198,10 +225,10 @@ button{font-family:inherit}
 #header{font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--pip-strong);line-height:1}
 #cycle{font-size:9px;color:var(--pip-strong);font-weight:900;letter-spacing:.04em;padding:5px 7px;border:1px solid var(--pip-border);background:var(--pip-soft);border-radius:0;white-space:nowrap}
 #status{font-size:16px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--pip-strong) 82%,#0f172a);line-height:1}
-#clock{display:grid;grid-template-columns:repeat(2,58px) 14px repeat(2,58px);align-items:center;justify-content:center;gap:6px;width:100%}
-.tile{width:58px;height:62px;background:var(--pip-tile-bg,#f8fafc);display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--pip-border);transition:background .25s,border-color .25s,box-shadow .25s}
-.tile span{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:900;color:color-mix(in srgb,var(--pip-strong) 78%,#0f172a);line-height:1;letter-spacing:0}
-#col{font-size:27px;font-weight:900;color:color-mix(in srgb,var(--pip-strong) 78%,#0f172a);line-height:1;text-align:center;transition:opacity .15s}
+#clock{display:grid;grid-template-columns:repeat(2,56px) 12px repeat(2,56px);align-items:center;justify-content:center;gap:8px;width:100%}
+.tile{width:56px;height:56px;aspect-ratio:1/1;background:var(--pip-tile-bg,#f8fafc);display:flex;align-items:center;justify-content:center;border-radius:2px;border:1px solid var(--pip-border);box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--pip-color) 16%,transparent);transition:background .25s,border-color .25s,box-shadow .25s}
+.tile span{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:900;color:color-mix(in srgb,var(--pip-strong) 78%,#0f172a);line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums}
+#col{font-size:28px;font-weight:900;color:color-mix(in srgb,var(--pip-strong) 78%,#0f172a);line-height:1;text-align:center;transition:opacity .15s;transform:translateY(-1px)}
 #nextinfo{max-width:100%;font-size:10px;color:color-mix(in srgb,var(--pip-strong) 80%,#64748b);font-weight:900;letter-spacing:.04em;line-height:1.3;padding:7px 10px;border:1px solid var(--pip-border);background:var(--pip-soft);border-radius:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #controls{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pip-ctrl{height:38px;border:1px solid rgba(15,23,42,.1);background:#fff;color:#475569;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:0;cursor:pointer;transition:background .15s,border-color .15s,transform .15s,color .15s;user-select:none;-webkit-user-select:none;touch-action:manipulation;font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
@@ -234,8 +261,8 @@ function pipBodyHTML(d) {
     '<div id="clock">' + clockHTML(d.mm, d.ss) + '</div>' +
     '<div id="nextinfo">' + nextText + '</div>' +
     '<div id="controls">' +
-      '<button type="button" data-pip-action="' + primaryAction + '" class="pip-ctrl primary" title="' + primaryLabel + '">' + primaryIcon + '<span>' + primaryLabel + '</span></button>' +
-      '<button type="button" data-pip-action="skip" class="pip-ctrl secondary" title="Chuy\u1EC3n phi\u00EAn">' + PIP_CTRL_SVG_SKIP + '<span>Chuy\u1EC3n</span></button>' +
+      '<button ' + pipActionAttrs(primaryAction) + ' class="pip-ctrl primary" title="' + primaryLabel + '">' + primaryIcon + '<span>' + primaryLabel + '</span></button>' +
+      '<button ' + pipActionAttrs('skip') + ' class="pip-ctrl secondary" title="Chuy\u1EC3n phi\u00EAn">' + PIP_CTRL_SVG_SKIP + '<span>Chuy\u1EC3n</span></button>' +
     '</div>' +
     '<div id="bar"><div id="fill" style="width:' + d.pct + '%"></div></div></div>';
 }
@@ -247,7 +274,34 @@ function updatePipDOM(data) {
     const modeClass = (data.mode || 'focus');
     pw.document.body.className = modeClass;
     pw.document.body.style.background = '';
-    pw.document.body.innerHTML = pipBodyHTML(data);
+    const app = pw.document.getElementById('app');
+    if (!app) {
+      pw.document.body.innerHTML = pipBodyHTML(data);
+      attachPipHandlers(pw);
+      return;
+    }
+    app.className = modeClass + (data.urgency ? ' urgency' : '');
+    const cycle = pw.document.getElementById('cycle');
+    if (cycle) cycle.textContent = data.cycle ? 'Chu kỳ ' + data.cycle + '/4' : '';
+    const status = pw.document.getElementById('status');
+    if (status) status.textContent = data.label;
+    const nextInfo = pw.document.getElementById('nextinfo');
+    if (nextInfo) nextInfo.textContent = data.nextMode ? 'Tiếp: ' + data.nextMode : '';
+    const digits = [data.mm?.[0] || '0', data.mm?.[1] || '0', data.ss?.[0] || '0', data.ss?.[1] || '0'];
+    pw.document.querySelectorAll('.tile span').forEach((node, index) => {
+      node.textContent = digits[index] || '0';
+    });
+    const fill = pw.document.getElementById('fill');
+    if (fill) fill.style.width = data.pct + '%';
+    const primaryAction = data.running ? 'pause' : 'start';
+    const primaryLabel = data.running ? 'Tạm dừng' : 'Bắt đầu';
+    const primaryIcon = data.running ? PIP_CTRL_SVG_PAUSE : PIP_CTRL_SVG_PLAY;
+    const primaryButton = pw.document.querySelector('.pip-ctrl.primary');
+    if (primaryButton && primaryButton.dataset.pipAction !== primaryAction) {
+      primaryButton.dataset.pipAction = primaryAction;
+      primaryButton.setAttribute('title', primaryLabel);
+      primaryButton.innerHTML = primaryIcon + '<span>' + primaryLabel + '</span>';
+    }
     attachPipHandlers(pw);
   } catch {}
 }

@@ -8,8 +8,23 @@ const presence = require('./presence.service');
 const simulationPresence = require('./simulationPresence.service');
 const cache = require('./cache.service');
 
+const MAX_LEVEL = 200;
+
 function today() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function levelThreshold(level) {
+  const n = Math.min(MAX_LEVEL, Math.max(0, Number(level || 0)));
+  return Math.round(110 * Math.pow(n, 2.3));
+}
+
+function levelFromActions(totalActions) {
+  const safeActions = Math.max(0, Number(totalActions || 0));
+  for (let level = MAX_LEVEL; level >= 0; level -= 1) {
+    if (safeActions >= levelThreshold(level)) return level;
+  }
+  return 0;
 }
 
 function rangeDates(range = 'today') {
@@ -234,7 +249,15 @@ async function acceptedFriendUserIds(currentUserId) {
 
 function leaderboardBaseSql({ hasTeam, hasUserIds, hasSearch } = {}) {
   return `
-    WITH aggregated AS (
+    WITH lifetime AS (
+      SELECT
+        user_id,
+        COALESCE(SUM(keystroke_count), 0) AS lifetime_keystroke_count,
+        COALESCE(SUM(mouse_click_count), 0) AS lifetime_mouse_click_count
+      FROM daily_stats
+      GROUP BY user_id
+    ),
+    aggregated AS (
       SELECT
         u.id AS user_id,
         u.name,
@@ -248,9 +271,12 @@ function leaderboardBaseSql({ hasTeam, hasUserIds, hasSearch } = {}) {
         COALESCE(SUM(ds.total_seconds), 0) AS total_seconds,
         COALESCE(SUM(ds.keystroke_count), 0) AS keystroke_count,
         COALESCE(SUM(ds.mouse_click_count), 0) AS mouse_click_count,
-        COALESCE(SUM(ds.session_count), 0) AS session_count
+        COALESCE(SUM(ds.session_count), 0) AS session_count,
+        COALESCE(MAX(lifetime.lifetime_keystroke_count), 0) AS lifetime_keystroke_count,
+        COALESCE(MAX(lifetime.lifetime_mouse_click_count), 0) AS lifetime_mouse_click_count
       FROM daily_stats ds
       INNER JOIN users u ON u.id = ds.user_id AND u.status = 'active'
+      LEFT JOIN lifetime ON lifetime.user_id = u.id
       WHERE ds.stat_date >= :startDate
         AND ds.stat_date <= :endDate
         ${hasTeam ? 'AND u.team_id = :teamId' : ''}
@@ -311,6 +337,9 @@ function normalizeFeaturedBadges(value) {
 }
 
 function mapLeaderboardRow(row, index) {
+  const lifetimeKeystrokeCount = Number(row.lifetime_keystroke_count || 0);
+  const lifetimeMouseClickCount = Number(row.lifetime_mouse_click_count || 0);
+  const lifetimeActions = lifetimeKeystrokeCount + lifetimeMouseClickCount;
   return decorateRankedRow({
     id: row.user_id,
     user_id: row.user_id,
@@ -327,6 +356,10 @@ function mapLeaderboardRow(row, index) {
     totalSeconds: Number(row.total_seconds || 0),
     keystrokeCount: Number(row.keystroke_count || 0),
     mouseClickCount: Number(row.mouse_click_count || 0),
+    lifetimeKeystrokeCount,
+    lifetimeMouseClickCount,
+    lifetimeActions,
+    level: levelFromActions(lifetimeActions),
     sessionCount: Number(row.session_count || 0),
     focusScore: Number(row.focus_score || 0),
     score: Number(row.score || 0),

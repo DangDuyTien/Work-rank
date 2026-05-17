@@ -25,6 +25,47 @@ function fmtScore(n) {
   return fmtNum(n);
 }
 
+function rankerLevel(user = {}) {
+  const level = Number(user.level ?? user.userLevel ?? user.user_level ?? 0);
+  return Number.isFinite(level) ? Math.max(0, Math.floor(level)) : 0;
+}
+
+function levelBandTheme(level) {
+  const band = Math.min(20, Math.floor(Math.max(0, Number(level || 0)) / 10));
+  const hue = 205 + band * 2;
+  const bgLightness = Math.max(24, 96 - band * 3.4);
+  const borderLightness = Math.max(28, 84 - band * 2.6);
+  const textLightness = band >= 12 ? 98 : Math.max(23, 36 - band * 0.6);
+  return {
+    color: `hsl(${hue} 74% ${textLightness}%)`,
+    bg: `hsl(${hue} 78% ${bgLightness}%)`,
+    border: `hsl(${hue} 66% ${borderLightness}%)`,
+  };
+}
+
+function LevelText({ user, compact = false }) {
+  const level = rankerLevel(user);
+  const theme = levelBandTheme(level);
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      minHeight: compact ? 16 : 18,
+      padding: compact ? '0 5px' : '1px 6px',
+      border: `1px solid ${theme.border}`,
+      background: theme.bg,
+      flexShrink: 0,
+      color: theme.color,
+      fontSize: compact ? 9 : 11,
+      fontWeight: 900,
+      fontFamily: "'JetBrains Mono',monospace",
+      whiteSpace: 'nowrap',
+    }}>
+      (Level {level})
+    </span>
+  );
+}
+
 const AVATAR_GRADS = [
   '#f59e0b',
   '#64748b',
@@ -802,6 +843,7 @@ export default function Leaderboard() {
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#64748b',textAlign:'center'}}>
                   {(top2.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top2) && <VerifiedMark size={13} />}
+                  <LevelText user={top2} compact />
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top2, 2, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -820,6 +862,7 @@ export default function Leaderboard() {
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:12,fontWeight:700,color:'#f59e0b',textAlign:'center'}}>
                   {(top1.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top1) && <VerifiedMark size={14} />}
+                  <LevelText user={top1} compact />
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top1, 1, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -837,6 +880,7 @@ export default function Leaderboard() {
                 <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,fontSize:11,fontWeight:700,color:'#d97706',textAlign:'center'}}>
                   {(top3.name||'').split(' ').pop().toUpperCase().slice(0,6)}
                   {isVerifiedRanker(top3) && <VerifiedMark size={13} />}
+                  <LevelText user={top3} compact />
                 </div>
                 <div style={{display:'flex',justifyContent:'center',gap:4,flexWrap:'wrap',minHeight:18}}>
                   {rankBadges(top3, 3, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -861,6 +905,7 @@ export default function Leaderboard() {
                     <div style={{display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                       <span style={{overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
                       {isVerifiedRanker(u) && <VerifiedMark size={12} />}
+                      <LevelText user={u} compact />
                     </div>
                     <div style={{display:'flex',gap:4,marginTop:4,overflow:'hidden'}}>
                       {rankBadges(u, rank, range).slice(0, 2).map((badge) => <RankBadge key={badge.key} badge={badge} compact />)}
@@ -927,6 +972,7 @@ export default function Leaderboard() {
                           <div style={{display:'flex',alignItems:'center',gap:5,minWidth:0}}>
                             <span style={{fontSize:13,fontWeight:700,color:'#1e293b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:190}}>{u.name}</span>
                             {verified && <VerifiedMark size={13} />}
+                            <LevelText user={u} />
                           </div>
                           {badges.length > 0 && (
                             <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
