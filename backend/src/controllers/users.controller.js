@@ -91,7 +91,14 @@ function serializeUserWithProfile(user) {
 }
 
 function serializeUserListItem(user) {
-  return decorateUserPresence(sanitizeUser(user));
+  const plain = sanitizeUser(user);
+  const preference = plain.UserProfilePreference || plain.userProfilePreference || null;
+  delete plain.UserProfilePreference;
+  delete plain.userProfilePreference;
+  return decorateUserPresence({
+    ...plain,
+    featuredBadges: Array.isArray(preference?.featuredBadges) ? preference.featuredBadges : [],
+  });
 }
 
 function clampPositiveInt(value, fallback, max) {
@@ -125,6 +132,7 @@ async function list(req, res) {
     order: [['createdAt', 'DESC'], ['id', 'DESC']],
     limit,
     offset,
+    include: [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }],
   });
   res.json({
     data: rows.map(serializeUserListItem),

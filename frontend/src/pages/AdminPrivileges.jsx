@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -20,6 +20,7 @@ import { useToast } from '../context/UiContext';
 
 const PRIVILEGE_BADGE_LIMIT = 4;
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
+const PAGE_SIZE = 50;
 
 const PRIVILEGE_BADGES = [
   { label: 'Dev đặc quyền', icon: Code },
@@ -87,22 +88,25 @@ export default function AdminPrivileges() {
   const [saving, setSaving] = useState({});
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+  const searchTimerRef = useRef(null);
+  const loadIdRef = useRef(0);
 
-  const loadData = async () => {
+  const loadData = async (searchTerm, pageNum) => {
+    const id = ++loadIdRef.current;
     setLoading(true);
     try {
-      const res = await usersApi.list();
+      const res = await usersApi.list({ search: searchTerm, page: pageNum, limit: PAGE_SIZE });
+      if (id !== loadIdRef.current) return;
       const list = res.data || [];
       setUsers(list);
-      const entries = await Promise.all(list.map(async (user) => {
-        try {
-          const pref = await usersApi.profilePreferences(user.id);
-          return [String(user.id), normalizeBadges(pref.data?.featuredBadges)];
-        } catch {
-          return [String(user.id), []];
-        }
-      }));
-      setBadgeByUser(Object.fromEntries(entries));
+      const badgeMap = {};
+      list.forEach((user) => {
+        badgeMap[String(user.id)] = normalizeBadges(user.featuredBadges);
+      });
+      setBadgeByUser(badgeMap);
+      setPagination(res.pagination);
     } catch (err) {
       toast(err.response?.data?.message || 'Không tải được danh sách người dùng.', { type: 'error' });
     } finally {
@@ -111,7 +115,21 @@ export default function AdminPrivileges() {
   };
 
   useEffect(() => {
-    loadData();
+    loadData('', 1);
+  }, []);
+
+  const onSearchChange = (event) => {
+    const value = event.target.value;
+    setQuery(value);
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setPage(1);
+      loadData(value, 1);
+    }, 400);
+  };
+
+  useEffect(() => {
+    return () => clearTimeout(searchTimerRef.current);
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -208,7 +226,7 @@ export default function AdminPrivileges() {
           <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={onSearchChange}
             placeholder="Tìm theo tên, email hoặc WR-0001..."
             style={{ width: '100%', minHeight: 38, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, padding: '0 12px 0 34px', outline: 'none', fontSize: 13, fontWeight: 700 }}
           />
@@ -241,7 +259,7 @@ export default function AdminPrivileges() {
           ))}
           <button
             type="button"
-            onClick={loadData}
+            onClick={() => loadData(query, page)}
             disabled={loading}
             style={{ minHeight: 34, border: '1px solid rgba(56,189,248,0.16)', borderRadius: 0, background: 'rgba(56,189,248,0.06)', color: '#38bdf8', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 900, cursor: loading ? 'wait' : 'pointer' }}
           >
@@ -356,6 +374,49 @@ export default function AdminPrivileges() {
           );
         })}
       </section>
+
+      {pagination && pagination.totalPages > 1 && (
+        <section style={{ ...CARD, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => { const p = page - 1; setPage(p); loadData(query, p); }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, background: '#ffffff', color: page <= 1 ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 900, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+          >
+            « Trước
+          </button>
+          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === pagination.totalPages || Math.abs(p - page) <= 2)
+            .map((p, idx, arr) => (
+              <React.Fragment key={p}>
+                {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#94a3b8', fontSize: 12 }}>...</span>}
+                <button
+                  type="button"
+                  onClick={() => { setPage(p); loadData(query, p); }}
+                  style={{
+                    minWidth: 32, minHeight: 32, border: p === page ? '1px solid #38bdf8' : '1px solid rgba(15,23,42,0.1)',
+                    borderRadius: 0, background: p === page ? '#38bdf8' : '#ffffff',
+                    color: p === page ? '#ffffff' : '#64748b', padding: '0 6px', fontSize: 12,
+                    fontWeight: p === page ? 900 : 600, cursor: 'pointer',
+                  }}
+                >
+                  {p}
+                </button>
+              </React.Fragment>
+            ))}
+          <button
+            type="button"
+            disabled={page >= pagination.totalPages}
+            onClick={() => { const p = page + 1; setPage(p); loadData(query, p); }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, background: '#ffffff', color: page >= pagination.totalPages ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 900, cursor: page >= pagination.totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            Sau »
+          </button>
+          <span style={{ marginLeft: 8, fontSize: 12, color: '#94a3b8', fontWeight: 700 }}>
+            {pagination.total} người dùng
+          </span>
+        </section>
+      )}
 
       <style>{`
         @media (max-width: 920px) {

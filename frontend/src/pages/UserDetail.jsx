@@ -142,6 +142,7 @@ import {
   Zap,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
+import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
 
 const UserActivityChart = lazy(() => import('../components/UserActivityChart'));
 
@@ -1296,6 +1297,7 @@ export default function UserDetail() {
   });
 
   return (
+    <ProfileErrorBoundary>
     <div className="profile-page" style={rankThemeStyle}>
       <button type="button" className="profile-back-button" onClick={() => navigate(-1)} style={{ marginBottom: 4 }}>
         <ChevronLeft size={15} strokeWidth={2.5} />
@@ -1766,5 +1768,7 @@ export default function UserDetail() {
         </div>
       </section>
     </div>
+    </ProfileErrorBoundary>
   );
 }
+
