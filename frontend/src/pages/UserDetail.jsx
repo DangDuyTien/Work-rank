@@ -10,137 +10,87 @@ import {
 } from '../utils/avatar';
 import {
   Activity,
-  Anchor,
-  Apple,
-  Atom,
   Award,
   BadgeCheck,
-  Battery,
-  Bell,
-  Bike,
-  Bird,
-  Bolt,
-  Book,
-  Bug,
-  Bus,
   CalendarDays,
-  Camera,
-  Car,
-  Cat,
-  Cherry,
   ChevronLeft,
-  Circle,
-  Clock,
   Clock3,
-  Cloud,
   Code,
-  Coffee,
-  Compass,
-  Cookie,
-  Crosshair,
   Crown,
-  Database,
-  Diamond,
-  Dog,
-  Droplet,
-  Dumbbell,
-  Egg,
-  Feather,
-  Fish,
-  Flag,
   Flame,
-  Flower,
-  Frown,
-  Gamepad,
   Gauge,
-  Gem,
-  Ghost,
-  Gift,
-  Globe,
-  Hand,
-  HardDrive,
-  Headphones,
   Heart,
-  Helicopter,
-  Hexagon,
-  Hourglass,
-  House,
   ImagePlus,
-  Infinity,
-  Key,
   Keyboard,
-  Lamp,
-  Laugh,
-  Leaf,
-  Lightbulb,
-  Lock,
-  Magnet,
   Map,
-  MapPin,
   Medal,
-  Meh,
-  Microscope,
-  Monitor,
-  Moon,
-  Mountain,
   Mouse,
-  Music,
-  Navigation,
-  Palette,
   PawPrint,
   Pencil,
-  Pin,
-  Pizza,
-  Plane,
-  Plug,
-  Printer,
-  Puzzle,
-  Rabbit,
-  Radio,
-  Rainbow,
-  Rat,
-  Rocket,
-  Sailboat,
-  Scroll,
-  Server,
-  Shell,
-  Shield,
   ShieldCheck,
-  Ship,
-  Siren,
-  Smartphone,
-  Smile,
-  Snail,
   Snowflake,
-  Sparkles,
-  Squirrel,
   Star,
-  Sun,
-  Sword,
-  Swords,
-  Table,
-  Tablet,
   Target,
-  Telescope,
-  TestTube,
-  ThumbsUp,
   Timer,
-  Tornado,
-  Train,
-  Triangle,
   Trophy,
-  Truck,
-  Turtle,
-  Usb,
   UserCheck,
   UserPlus,
   UserRound,
-  Wand,
-  Waves,
-  Wifi,
-  Wind,
   Zap,
 } from 'lucide-react';
+import { Icon as IconifyIcon } from '@iconify/react';
+import notoBearIcon from '@iconify-icons/noto/bear';
+import notoBeaverIcon from '@iconify-icons/noto/beaver';
+import notoBeetleIcon from '@iconify-icons/noto/beetle';
+import notoBisonIcon from '@iconify-icons/noto/bison';
+import notoBlackCatIcon from '@iconify-icons/noto/black-cat';
+import notoCamelIcon from '@iconify-icons/noto/camel';
+import notoCatIcon from '@iconify-icons/noto/cat';
+import notoDeerIcon from '@iconify-icons/noto/deer';
+import notoDogIcon from '@iconify-icons/noto/dog';
+import notoDolphinIcon from '@iconify-icons/noto/dolphin';
+import notoEagleIcon from '@iconify-icons/noto/eagle';
+import notoElephantIcon from '@iconify-icons/noto/elephant';
+import notoFishIcon from '@iconify-icons/noto/fish';
+import notoFoxIcon from '@iconify-icons/noto/fox';
+import notoGiraffeIcon from '@iconify-icons/noto/giraffe';
+import notoHorseIcon from '@iconify-icons/noto/horse';
+import notoKangarooIcon from '@iconify-icons/noto/kangaroo';
+import notoLeopardIcon from '@iconify-icons/noto/leopard';
+import notoLionIcon from '@iconify-icons/noto/lion';
+import notoLizardIcon from '@iconify-icons/noto/lizard';
+import notoMammothIcon from '@iconify-icons/noto/mammoth';
+import notoMonkeyIcon from '@iconify-icons/noto/monkey';
+import notoMouseIcon from '@iconify-icons/noto/mouse';
+import notoOtterIcon from '@iconify-icons/noto/otter';
+import notoOxIcon from '@iconify-icons/noto/ox';
+import notoOwlIcon from '@iconify-icons/noto/owl';
+import notoOysterIcon from '@iconify-icons/noto/oyster';
+import notoPandaIcon from '@iconify-icons/noto/panda';
+import notoPeacockIcon from '@iconify-icons/noto/peacock';
+import notoPolarBearIcon from '@iconify-icons/noto/polar-bear';
+import notoRabbitIcon from '@iconify-icons/noto/rabbit';
+import notoRhinocerosIcon from '@iconify-icons/noto/rhinoceros';
+import notoSharkIcon from '@iconify-icons/noto/shark';
+import notoSnailIcon from '@iconify-icons/noto/snail';
+import notoSpoutingWhaleIcon from '@iconify-icons/noto/spouting-whale';
+import notoTigerIcon from '@iconify-icons/noto/tiger';
+import notoTurtleIcon from '@iconify-icons/noto/turtle';
+import notoWhaleIcon from '@iconify-icons/noto/whale';
+import notoWolfIcon from '@iconify-icons/noto/wolf';
+import notoZebraIcon from '@iconify-icons/noto/zebra';
+import {
+  GiEagleEmblem,
+  GiFalconMoon,
+  GiFeline,
+  GiLion,
+  GiPangolin,
+  GiRamProfile,
+  GiSparrow,
+  GiSquirrel,
+  GiTigerHead,
+  GiWolfHowl,
+} from 'react-icons/gi';
 import VerifiedBadge from '../components/VerifiedBadge';
 import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
 
@@ -163,7 +113,6 @@ const PROFILE_GALLERY_IMAGES = [
 ];
 
 const FEATURED_BADGE_LIMIT = 4;
-const PRIVILEGE_BADGE_LIMIT = 4;
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
 
 const PRIVILEGE_BADGES = [
@@ -179,6 +128,13 @@ const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.lab
 
 function isPrivilegeBadgeLabel(label) {
   return PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
+}
+
+function isDevProfileUser(user = {}) {
+  const id = Number(user.id || user.user_id || user.userId);
+  const email = String(user.email || '').trim().toLowerCase();
+  const name = String(user.name || '').trim().toLowerCase();
+  return email === 'tien@gmail.com' || id === 8 || name === 'dang duy tien';
 }
 
 const RANK_TIERS = [
@@ -277,41 +233,141 @@ const RANK_TIERS = [
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
 
-const LEVEL_ICONS = [
-  Cat, Rabbit, Squirrel, Bird, Fish, Turtle, Dog, Snail, Bug, Rat,
-  Shell, PawPrint, Crown, Diamond, Gem, Star, Sparkles, Moon, Sun, Cloud,
-  Rainbow, Wind, Waves, Flame, Leaf, Mountain, Flower, Cherry, Apple, Droplet,
-  Feather, Anchor, Atom, Infinity, Key, Lock, Heart,
-  Shield, Sword, Wand, Ghost, Timer, Rocket, Compass, Globe, Map,
-  MapPin, Pin, Navigation, Camera, Headphones, Music, Palette, Puzzle, Gamepad, Hourglass,
-  Clock, Bell, Bolt, Zap, Lightbulb, Gift, Flag, Book, Scroll, Coffee,
-  Cookie, Pizza, Egg, Circle, Triangle, Hexagon, Crosshair, Target, Dumbbell, Bike,
-  Train, Plane, Car, Bus, Ship, House, Lamp,
-  Battery, Wifi, Monitor, Database, Server, Microscope, Telescope, Magnet,
-  ThumbsUp, Smile, Laugh, Frown, Meh, Hand, Swords, Award, Medal, Trophy,
-  Radio, Usb, Plug, Printer, Tablet, HardDrive, Table,
+function createNotoAnimalIcon(iconData) {
+  return function NotoAnimalIcon({ size = 24, strokeWidth: _strokeWidth, color: _color, style, ...props }) {
+    return (
+      <IconifyIcon
+        {...props}
+        icon={iconData}
+        width={size}
+        height={size}
+        style={{ display: 'block', flexShrink: 0, ...style }}
+      />
+    );
+  };
+}
+
+function SwordfishIcon({ size = 24, strokeWidth = 2, color: _color, style, ...props }) {
+  return (
+    <svg
+      {...props}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ display: 'block', flexShrink: 0, ...style }}
+    >
+      <path d="M6 31h24" />
+      <path d="M29 22c9 0 19 4 25 10-6 6-16 10-25 10-6 0-12-2-16-6 4-1 7-2 10-4-3-2-6-3-10-4 4-4 10-6 16-6Z" />
+      <path d="M54 32l8-4" />
+      <path d="M54 32l8 4" />
+      <path d="M33 22l-5-10" />
+      <path d="M34 42l-6 9" />
+      <circle cx="43" cy="30" r="1.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function SnowLeopardIcon({ size = 24, strokeWidth = 2, color: _color, style, ...props }) {
+  const markSize = Math.max(8, Math.round(size * 0.36));
+  return (
+    <span
+      {...props}
+      style={{
+        width: size,
+        height: size,
+        display: 'inline-grid',
+        placeItems: 'center',
+        position: 'relative',
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      <GiFeline size={size} style={{ gridArea: '1 / 1' }} />
+      <Snowflake
+        size={markSize}
+        strokeWidth={strokeWidth}
+        style={{
+          position: 'absolute',
+          right: 0,
+          bottom: 0,
+          background: 'rgba(255,255,255,0.72)',
+          borderRadius: '999px',
+        }}
+      />
+    </span>
+  );
+}
+
+const ANIMAL_LEVELS = [
+  { name: 'Mèo con', icon: createNotoAnimalIcon(notoCatIcon), iconKey: 'noto-cat' },
+  { name: 'Thỏ đồng', icon: createNotoAnimalIcon(notoRabbitIcon), iconKey: 'noto-rabbit' },
+  { name: 'Sóc nâu', icon: GiSquirrel, iconKey: 'gi-squirrel' },
+  { name: 'Chim sẻ', icon: GiSparrow, iconKey: 'gi-sparrow' },
+  { name: 'Cá suối', icon: createNotoAnimalIcon(notoFishIcon), iconKey: 'noto-fish' },
+  { name: 'Rùa xanh', icon: createNotoAnimalIcon(notoTurtleIcon), iconKey: 'noto-turtle' },
+  { name: 'Chó săn', icon: createNotoAnimalIcon(notoDogIcon), iconKey: 'noto-dog' },
+  { name: 'Ốc sên bạc', icon: createNotoAnimalIcon(notoSnailIcon), iconKey: 'noto-snail' },
+  { name: 'Bọ ánh kim', icon: createNotoAnimalIcon(notoBeetleIcon), iconKey: 'noto-beetle' },
+  { name: 'Chuột nhắt', icon: createNotoAnimalIcon(notoMouseIcon), iconKey: 'noto-mouse' },
+  { name: 'Sò ngọc', icon: createNotoAnimalIcon(notoOysterIcon), iconKey: 'noto-oyster' },
+  { name: 'Cáo đỏ', icon: createNotoAnimalIcon(notoFoxIcon), iconKey: 'noto-fox' },
+  { name: 'Hươu sao', icon: createNotoAnimalIcon(notoDeerIcon), iconKey: 'noto-deer' },
+  { name: 'Gấu trúc', icon: createNotoAnimalIcon(notoPandaIcon), iconKey: 'noto-panda' },
+  { name: 'Cú mèo', icon: createNotoAnimalIcon(notoOwlIcon), iconKey: 'noto-owl' },
+  { name: 'Hải ly', icon: createNotoAnimalIcon(notoBeaverIcon), iconKey: 'noto-beaver' },
+  { name: 'Linh dương', icon: GiRamProfile, iconKey: 'gi-ram-profile' },
+  { name: 'Sói xám', icon: createNotoAnimalIcon(notoWolfIcon), iconKey: 'noto-wolf' },
+  { name: 'Báo gấm', icon: createNotoAnimalIcon(notoLeopardIcon), iconKey: 'noto-leopard' },
+  { name: 'Rái cá', icon: createNotoAnimalIcon(notoOtterIcon), iconKey: 'noto-otter' },
+  { name: 'Ngựa hoang', icon: createNotoAnimalIcon(notoHorseIcon), iconKey: 'noto-horse' },
+  { name: 'Đại bàng', icon: createNotoAnimalIcon(notoEagleIcon), iconKey: 'noto-eagle' },
+  { name: 'Cá heo', icon: createNotoAnimalIcon(notoDolphinIcon), iconKey: 'noto-dolphin' },
+  { name: 'Bò rừng', icon: createNotoAnimalIcon(notoBisonIcon), iconKey: 'noto-bison' },
+  { name: 'Lạc đà', icon: createNotoAnimalIcon(notoCamelIcon), iconKey: 'noto-camel' },
+  { name: 'Sư tử', icon: createNotoAnimalIcon(notoLionIcon), iconKey: 'noto-lion' },
+  { name: 'Hổ vàng', icon: createNotoAnimalIcon(notoTigerIcon), iconKey: 'noto-tiger' },
+  { name: 'Gấu trắng', icon: createNotoAnimalIcon(notoPolarBearIcon), iconKey: 'noto-polar-bear' },
+  { name: 'Cá mập', icon: createNotoAnimalIcon(notoSharkIcon), iconKey: 'noto-shark' },
+  { name: 'Tê giác', icon: createNotoAnimalIcon(notoRhinocerosIcon), iconKey: 'noto-rhinoceros' },
+  { name: 'Voi rừng', icon: createNotoAnimalIcon(notoElephantIcon), iconKey: 'noto-elephant' },
+  { name: 'Khỉ vàng', icon: createNotoAnimalIcon(notoMonkeyIcon), iconKey: 'noto-monkey' },
+  { name: 'Báo tuyết', icon: SnowLeopardIcon, iconKey: 'custom-snow-leopard' },
+  { name: 'Chim ưng', icon: GiFalconMoon, iconKey: 'gi-falcon-moon' },
+  { name: 'Cá voi', icon: createNotoAnimalIcon(notoWhaleIcon), iconKey: 'noto-whale' },
+  { name: 'Gấu xám', icon: createNotoAnimalIcon(notoBearIcon), iconKey: 'noto-bear' },
+  { name: 'Ngựa vằn', icon: createNotoAnimalIcon(notoZebraIcon), iconKey: 'noto-zebra' },
+  { name: 'Công xanh', icon: createNotoAnimalIcon(notoPeacockIcon), iconKey: 'noto-peacock' },
+  { name: 'Sói tuyết', icon: GiWolfHowl, iconKey: 'gi-wolf-howl' },
+  { name: 'Bò tót', icon: createNotoAnimalIcon(notoOxIcon), iconKey: 'noto-ox' },
+  { name: 'Rồng Komodo', icon: createNotoAnimalIcon(notoLizardIcon), iconKey: 'noto-lizard' },
+  { name: 'Kangaroo', icon: createNotoAnimalIcon(notoKangarooIcon), iconKey: 'noto-kangaroo' },
+  { name: 'Tê tê', icon: GiPangolin, iconKey: 'gi-pangolin' },
+  { name: 'Hươu cao cổ', icon: createNotoAnimalIcon(notoGiraffeIcon), iconKey: 'noto-giraffe' },
+  { name: 'Cá kiếm', icon: SwordfishIcon, iconKey: 'custom-swordfish' },
+  { name: 'Báo đen', icon: createNotoAnimalIcon(notoBlackCatIcon), iconKey: 'noto-black-cat' },
+  { name: 'Đại bàng vàng', icon: GiEagleEmblem, iconKey: 'gi-eagle-emblem' },
+  { name: 'Sư tử trắng', icon: GiLion, iconKey: 'gi-lion' },
+  { name: 'Hổ trắng', icon: GiTigerHead, iconKey: 'gi-tiger-head' },
+  { name: 'Cá voi xanh', icon: createNotoAnimalIcon(notoSpoutingWhaleIcon), iconKey: 'noto-spouting-whale' },
+  { name: 'Voi ma mút', icon: createNotoAnimalIcon(notoMammothIcon), iconKey: 'noto-mammoth' },
 ];
 
-const ANIMAL_NAMES = [
-  'Mèo con', 'Thỏ đồng', 'Sóc nâu', 'Chim sẻ', 'Cá suối',
-  'Rùa xanh', 'Chó săn', 'Ốc sên bạc', 'Bọ ánh kim', 'Chuột nhắt',
-  'Sò ngọc', 'Cáo đỏ', 'Hươu sao', 'Gấu trúc', 'Cú mèo',
-  'Hải ly', 'Linh dương', 'Sói xám', 'Báo gấm', 'Rái cá',
-  'Ngựa hoang', 'Đại bàng', 'Cá heo', 'Bò rừng', 'Lạc đà',
-  'Sư tử', 'Hổ vàng', 'Gấu trắng', 'Cá mập', 'Tê giác',
-  'Voi rừng', 'Khỉ vàng', 'Báo tuyết', 'Chim ưng', 'Cá voi',
-  'Gấu xám', 'Ngựa vằn', 'Công xanh', 'Sói tuyết', 'Bò tót',
-  'Rồng Komodo', 'Kangaroo', 'Tê tê', 'Hươu cao cổ', 'Cá kiếm',
-  'Báo đen', 'Đại bàng vàng', 'Sư tử trắng', 'Hổ trắng', 'Cá voi xanh', 'Voi ma mút',
-];
-
-const LEVEL_ANIMALS = Array.from({ length: 200 }, (_, level) => ({
-  level,
-  name: level < ANIMAL_NAMES.length ? ANIMAL_NAMES[level] : `${ANIMAL_NAMES[level % ANIMAL_NAMES.length]} siêu việt`,
-  icon: LEVEL_ICONS[level % LEVEL_ICONS.length],
-  color: ANIMAL_COLOR_SEQUENCE[level % ANIMAL_COLOR_SEQUENCE.length],
-  trait: ANIMAL_TRAITS[level % ANIMAL_TRAITS.length],
-}));
+const LEVEL_ANIMALS = Array.from({ length: 200 }, (_, level) => {
+  const animal = ANIMAL_LEVELS[level % ANIMAL_LEVELS.length];
+  return {
+    level,
+    name: level < ANIMAL_LEVELS.length ? animal.name : `${animal.name} siêu việt`,
+    icon: animal.icon,
+    iconKey: animal.iconKey,
+    color: ANIMAL_COLOR_SEQUENCE[level % ANIMAL_COLOR_SEQUENCE.length],
+    trait: ANIMAL_TRAITS[level % ANIMAL_TRAITS.length],
+  };
+});
 
 const HEAT_COLORS = ['#eef2f7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e'];
 const TIMELINE_BUCKET_MINUTES = 15;
@@ -1039,9 +1095,9 @@ export default function UserDetail() {
   const canHeartProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const canFriendProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const unlockedBadgeList = achievementBadges.filter((badge) => badge.unlocked);
-  const privilegeLabels = normalizeFeaturedBadgeLabels(featuredBadgeLabels)
-    .filter(isPrivilegeBadgeLabel)
-    .slice(0, PRIVILEGE_BADGE_LIMIT);
+  const inferredPrivilegeLabels = isDevProfileUser(user) ? ['Dev đặc quyền'] : [];
+  const privilegeLabels = [...inferredPrivilegeLabels, ...normalizeFeaturedBadgeLabels(featuredBadgeLabels).filter(isPrivilegeBadgeLabel)]
+    .filter((label, index, list) => list.indexOf(label) === index);
   const privilegeBadges = privilegeLabels
     .map((label) => PRIVILEGE_BADGES.find((badge) => badge.label === label))
     .filter(Boolean);
@@ -1138,7 +1194,7 @@ export default function UserDetail() {
   const toggleFeaturedBadge = async (label) => {
     if (!canCustomizeProfile) return;
     const storedLabels = normalizeFeaturedBadgeLabels(featuredBadgeLabels);
-    const storedPrivilegeLabels = storedLabels.filter(isPrivilegeBadgeLabel).slice(0, PRIVILEGE_BADGE_LIMIT);
+    const storedPrivilegeLabels = storedLabels.filter(isPrivilegeBadgeLabel);
     const base = normalizeFeaturedBadgeLabels(hasFeaturedBadgePreference ? featuredBadgeLabels : selectedFeaturedLabels)
       .filter((item) => !isPrivilegeBadgeLabel(item))
       .filter((item) => selectableBadgeList.some((badge) => badge.label === item));
@@ -1771,4 +1827,3 @@ export default function UserDetail() {
     </ProfileErrorBoundary>
   );
 }
-

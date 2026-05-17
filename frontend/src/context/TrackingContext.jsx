@@ -469,6 +469,7 @@ export function TrackingProvider({ children }) {
     stopTrack,
     toggle,
     sendDesktopCommand,
+    refreshDesktopStatus: fetchDesktopStatus,
   };
 
   return (

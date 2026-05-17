@@ -18,7 +18,6 @@ import { users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 
-const PRIVILEGE_BADGE_LIMIT = 4;
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
 const PAGE_SIZE = 50;
 
@@ -31,6 +30,7 @@ const PRIVILEGE_BADGES = [
   { label: 'Người nổi bật', icon: Star },
 ];
 
+const PRIVILEGE_BADGE_LIMIT = PRIVILEGE_BADGES.length;
 const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.label));
 const LEGACY_PRIVILEGE_BADGE_LABELS = new Set(['Tích xanh đặc quyền', ...PRIVILEGE_BADGE_LABELS]);
 

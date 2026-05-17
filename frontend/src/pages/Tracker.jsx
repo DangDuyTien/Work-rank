@@ -1,20 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { getAppSettings, subscribeAppSettings } from '../utils/settings';
 import BrandMark from '../components/BrandMark';
 import {
+  Activity,
   AlertTriangle,
+  BarChart3,
+  CalendarDays,
   CheckCircle2,
+  ClipboardList,
+  Copy,
+  Download,
+  Gauge,
   Info,
   Keyboard,
   LogOut,
   Monitor,
   Mouse,
   Play,
+  RefreshCw,
   Square,
+  Target,
+  TimerReset,
   TrendingUp,
+  Wifi,
+  WifiOff,
   XCircle,
 } from 'lucide-react';
 
@@ -27,6 +39,39 @@ const LogoutIcon = () => <LogOut size={16} />;
 const DesktopIcon = () => <Monitor size={14} />;
 
 const DESKTOP_WINDOWS_DOWNLOAD_URL = import.meta.env.VITE_DESKTOP_WINDOWS_DOWNLOAD_URL || '/downloads/WorkRank%20Tracker-Setup-1.0.0-x64.exe';
+const TRACKER_DAILY_GOAL_KEY = 'workrank:tracker-daily-goal-minutes';
+const TRACKER_BREAK_REMINDER_KEY = 'workrank:tracker-break-reminder-minutes';
+const TRACKER_SESSION_FOCUS_KEY = 'workrank:tracker-session-focus';
+const TRACKER_SESSION_NOTE_KEY = 'workrank:tracker-session-note';
+
+function loadNumberPreference(key, fallback, min, max) {
+  try {
+    const value = Number(localStorage.getItem(key) || fallback);
+    if (!Number.isFinite(value)) return fallback;
+    return Math.max(min, Math.min(max, value));
+  } catch {
+    return fallback;
+  }
+}
+
+function loadTextPreference(key) {
+  try {
+    return localStorage.getItem(key) || '';
+  } catch {
+    return '';
+  }
+}
+
+function formatDateTime(value) {
+  if (!value) return 'Chưa có';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Chưa rõ';
+  return date.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+}
+
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
 
 export default function Tracker() {
   const { user, logout } = useAuth();
@@ -36,20 +81,113 @@ export default function Tracker() {
   const [desktopDownloadStarted, setDesktopDownloadStarted] = useState(false);
   const [desktopDownloadError, setDesktopDownloadError] = useState('');
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(() => loadNumberPreference(TRACKER_DAILY_GOAL_KEY, 240, 15, 720));
+  const [breakReminderMinutes, setBreakReminderMinutes] = useState(() => loadNumberPreference(TRACKER_BREAK_REMINDER_KEY, 50, 15, 180));
+  const [sessionFocus, setSessionFocus] = useState(() => loadTextPreference(TRACKER_SESSION_FOCUS_KEY));
+  const [sessionNote, setSessionNote] = useState(() => loadTextPreference(TRACKER_SESSION_NOTE_KEY));
+  const [copiedLaunchUrl, setCopiedLaunchUrl] = useState(false);
   const avatarUrl = getUserAvatar(user);
   const {
     tracking, seconds,
     activeSecondsToday, totalKeys, totalClicks, score, connected,
     desktopLaunchStatus, desktopLaunchStatusType, scoreHistory, formatNum, formatTime, toggle,
-    desktopOnline, desktopTracking, desktopInfo, desktopLaunchUrl, startTrack, trackingState, trackingPending,
+    desktopOnline, desktopTracking, desktopInfo, desktopLaunchUrl, startTrack, stopTrack, trackingState, trackingPending,
+    refreshDesktopStatus,
   } = useTracking();
 
   const maxBar = Math.max(...scoreHistory, 1);
   const displayKeys = totalKeys;
   const displayClicks = totalClicks;
+  const totalActions = displayKeys + displayClicks;
   const keysPerHr = activeSecondsToday > 0 ? Math.round((displayKeys / activeSecondsToday) * 3600) : 0;
+  const clicksPerHr = activeSecondsToday > 0 ? Math.round((displayClicks / activeSecondsToday) * 3600) : 0;
+  const actionsPerHr = activeSecondsToday > 0 ? Math.round((totalActions / activeSecondsToday) * 3600) : 0;
+  const actionsPerMin = activeSecondsToday > 0 ? Math.round(totalActions / Math.max(1, activeSecondsToday / 60)) : 0;
   const keysPerHrStr = keysPerHr >= 1000 ? (keysPerHr / 1000).toFixed(1) + 'k' : keysPerHr;
   const showDesktopAction = !desktopOnline || (tracking && desktopOnline && !desktopTracking);
+  const activeMinutesToday = Math.round(activeSecondsToday / 60);
+  const dailyGoalProgress = clampPercent((activeMinutesToday / Math.max(1, dailyGoalMinutes)) * 100);
+  const remainingGoalMinutes = Math.max(0, dailyGoalMinutes - activeMinutesToday);
+  const breakTotalSeconds = Math.max(1, breakReminderMinutes * 60);
+  const breakProgress = clampPercent((seconds / breakTotalSeconds) * 100);
+  const breakDue = tracking && seconds >= breakTotalSeconds;
+  const breakRemainingLabel = breakDue ? 'Đến giờ nghỉ' : formatTime(Math.max(0, breakTotalSeconds - seconds));
+  const keyShare = totalActions > 0 ? clampPercent((displayKeys / totalActions) * 100) : 0;
+  const clickShare = totalActions > 0 ? 100 - keyShare : 0;
+  const desktopStatusText = desktopOnline ? (desktopTracking ? 'Đang ghi nhận' : 'Online, tạm dừng') : 'Chưa kết nối';
+  const connectionItems = useMemo(() => ([
+    {
+      label: 'Realtime socket',
+      value: connected ? 'Đang kết nối' : 'Mất kết nối',
+      ok: connected,
+      icon: connected ? Wifi : WifiOff,
+    },
+    {
+      label: 'Desktop Tracker',
+      value: desktopStatusText,
+      ok: desktopOnline && desktopTracking,
+      icon: Monitor,
+    },
+    {
+      label: 'Thiết bị',
+      value: desktopInfo?.deviceName || 'Chưa nhận diện',
+      ok: Boolean(desktopInfo?.deviceName),
+      icon: Gauge,
+    },
+    {
+      label: 'Heartbeat',
+      value: formatDateTime(desktopInfo?.lastHeartbeat),
+      ok: Boolean(desktopInfo?.lastHeartbeat),
+      icon: Activity,
+    },
+  ]), [connected, desktopInfo?.deviceName, desktopInfo?.lastHeartbeat, desktopOnline, desktopStatusText]);
+  const trackerLog = useMemo(() => {
+    const rows = [
+      {
+        title: connected ? 'Realtime đã sẵn sàng' : 'Realtime đang mất kết nối',
+        detail: connected ? 'Web nhận cập nhật trực tiếp từ server.' : 'Kiểm tra lại mạng hoặc refresh trang.',
+        tone: connected ? 'success' : 'error',
+      },
+      {
+        title: desktopOnline ? 'Desktop Tracker online' : 'Desktop Tracker chưa online',
+        detail: desktopOnline
+          ? `${desktopInfo?.deviceName || 'Desktop'} · ${desktopTracking ? 'đang ghi dữ liệu' : 'đang tạm dừng'}`
+          : 'Bấm mở app đã cài hoặc tải bản Windows nếu chưa cài.',
+        tone: desktopOnline ? 'success' : 'warning',
+      },
+    ];
+    if (tracking) {
+      rows.push({
+        title: 'Phiên theo dõi đang chạy',
+        detail: `Đã chạy ${formatTime(seconds)}${sessionFocus.trim() ? ` · ${sessionFocus.trim()}` : ''}`,
+        tone: 'info',
+      });
+    }
+    if (desktopLaunchStatus) {
+      rows.push({
+        title: desktopLaunchStatusType === 'error' ? 'Cần xử lý Desktop' : 'Thông báo Desktop',
+        detail: desktopLaunchStatus,
+        tone: desktopLaunchStatusType || 'info',
+      });
+    }
+    return rows.slice(-4);
+  }, [connected, desktopInfo?.deviceName, desktopLaunchStatus, desktopLaunchStatusType, desktopOnline, desktopTracking, formatTime, seconds, sessionFocus, tracking]);
+
+  useEffect(() => {
+    try { localStorage.setItem(TRACKER_DAILY_GOAL_KEY, String(dailyGoalMinutes)); } catch {}
+  }, [dailyGoalMinutes]);
+
+  useEffect(() => {
+    try { localStorage.setItem(TRACKER_BREAK_REMINDER_KEY, String(breakReminderMinutes)); } catch {}
+  }, [breakReminderMinutes]);
+
+  useEffect(() => {
+    try { localStorage.setItem(TRACKER_SESSION_FOCUS_KEY, sessionFocus); } catch {}
+  }, [sessionFocus]);
+
+  useEffect(() => {
+    try { localStorage.setItem(TRACKER_SESSION_NOTE_KEY, sessionNote); } catch {}
+  }, [sessionNote]);
 
   useEffect(() => {
     const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
@@ -118,6 +256,17 @@ export default function Tracker() {
   const openInstalledDesktopTracker = () => {
     setDesktopConsentOpen(false);
     void startTrack({ launchDesktop: true });
+  };
+
+  const copyDesktopLaunchUrl = async () => {
+    if (!desktopLaunchUrl) return;
+    try {
+      await navigator.clipboard.writeText(desktopLaunchUrl);
+      setCopiedLaunchUrl(true);
+      window.setTimeout(() => setCopiedLaunchUrl(false), 1600);
+    } catch {
+      setCopiedLaunchUrl(false);
+    }
   };
 
   useEffect(() => subscribeAppSettings(setAppSettings), []);
@@ -476,7 +625,248 @@ export default function Tracker() {
         </div>
       </div>
 
+      <div className="tracker-dashboard">
+        <section className="tracker-panel tracker-panel-wide">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Realtime</div>
+              <h2>Tổng quan theo dõi</h2>
+            </div>
+            <span className={tracking ? 'tracker-live-pill is-on' : 'tracker-live-pill'}>
+              {tracking ? 'Đang chạy' : 'Đang chờ'}
+            </span>
+          </div>
+          <div className="tracker-metric-grid">
+            <div className="tracker-metric">
+              <CalendarDays size={15} />
+              <span>Hôm nay</span>
+              <strong>{formatTime(activeSecondsToday)}</strong>
+            </div>
+            <div className="tracker-metric">
+              <Activity size={15} />
+              <span>Thao tác</span>
+              <strong>{formatNum(totalActions)}</strong>
+            </div>
+            <div className="tracker-metric">
+              <TrendingUp size={15} />
+              <span>Tốc độ</span>
+              <strong>{formatNum(actionsPerHr)}/h</strong>
+            </div>
+            <div className="tracker-metric">
+              <Gauge size={15} />
+              <span>Điểm</span>
+              <strong>{score}</strong>
+            </div>
+          </div>
+        </section>
 
+        <section className="tracker-panel">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Mục tiêu</div>
+              <h2>Tiến độ hôm nay</h2>
+            </div>
+            <Target size={17} color="#38bdf8" />
+          </div>
+          <div className="tracker-goal-row">
+            <strong>{activeMinutesToday}p</strong>
+            <label>
+              <input
+                type="number"
+                min="15"
+                max="720"
+                step="15"
+                value={dailyGoalMinutes}
+                onChange={(event) => setDailyGoalMinutes(Math.max(15, Math.min(720, Number(event.target.value || 15))))}
+              />
+              phút
+            </label>
+          </div>
+          <div className="tracker-progress-bar">
+            <span style={{ width: `${dailyGoalProgress}%` }} />
+          </div>
+          <div className="tracker-panel-note">
+            {dailyGoalProgress >= 100 ? 'Đã đạt mục tiêu theo dõi hôm nay.' : `Còn ${remainingGoalMinutes} phút để đạt mục tiêu.`}
+          </div>
+        </section>
+
+        <section className="tracker-panel">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Phiên hiện tại</div>
+              <h2>Nhắc nghỉ</h2>
+            </div>
+            <TimerReset size={17} color={breakDue ? '#d97706' : '#38bdf8'} />
+          </div>
+          <div className={breakDue ? 'tracker-break-alert is-due' : 'tracker-break-alert'}>
+            <strong>{breakRemainingLabel}</strong>
+            <span>{breakDue ? 'Nên đứng dậy hoặc nghỉ mắt 3-5 phút.' : 'Thời gian còn lại trước nhắc nghỉ.'}</span>
+          </div>
+          <div className="tracker-progress-bar">
+            <span style={{ width: `${breakProgress}%`, background: breakDue ? '#d97706' : '#38bdf8' }} />
+          </div>
+          <label className="tracker-inline-control">
+            Nhắc sau
+            <input
+              type="number"
+              min="15"
+              max="180"
+              step="5"
+              value={breakReminderMinutes}
+              onChange={(event) => setBreakReminderMinutes(Math.max(15, Math.min(180, Number(event.target.value || 15))))}
+            />
+            phút
+          </label>
+        </section>
+
+        <section className="tracker-panel tracker-panel-wide">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Desktop</div>
+              <h2>Thiết bị và kết nối</h2>
+            </div>
+            <button
+              type="button"
+              data-no-track="true"
+              className="tracker-text-button"
+              onClick={() => { void refreshDesktopStatus?.(); }}
+            >
+              <RefreshCw size={13} />
+              Cập nhật
+            </button>
+          </div>
+          <div className="tracker-connection-grid">
+            {connectionItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className="tracker-connection-item">
+                  <Icon size={15} />
+                  <div>
+                    <span>{item.label}</span>
+                    <strong className={item.ok ? 'is-ok' : ''}>{item.value}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="tracker-action-row">
+            <button
+              type="button"
+              data-no-track="true"
+              disabled={trackingPending}
+              onClick={() => { tracking ? void stopTrack() : requestStartTrack({ launchDesktop: true }); }}
+              className="tracker-action-primary"
+            >
+              {tracking ? <Square size={14} fill="currentColor" strokeWidth={0} /> : <Play size={14} fill="currentColor" strokeWidth={0} />}
+              {tracking ? 'Dừng theo dõi' : 'Bắt đầu và mở app'}
+            </button>
+            <button
+              type="button"
+              data-no-track="true"
+              onClick={() => setDesktopConsentOpen(true)}
+              className="tracker-action-secondary"
+            >
+              <Download size={14} />
+              Tải Windows
+            </button>
+            <button
+              type="button"
+              data-no-track="true"
+              disabled={!desktopLaunchUrl}
+              onClick={copyDesktopLaunchUrl}
+              className="tracker-action-secondary"
+            >
+              <Copy size={14} />
+              {copiedLaunchUrl ? 'Đã copy' : 'Copy link mở'}
+            </button>
+          </div>
+        </section>
+
+        <section className="tracker-panel">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Hiệu suất</div>
+              <h2>Phím và click</h2>
+            </div>
+            <BarChart3 size={17} color="#38bdf8" />
+          </div>
+          <div className="tracker-input-split">
+            <div>
+              <span>Gõ phím</span>
+              <strong>{keyShare}%</strong>
+            </div>
+            <div>
+              <span>Click</span>
+              <strong>{clickShare}%</strong>
+            </div>
+          </div>
+          <div className="tracker-split-bar">
+            <span style={{ width: `${keyShare}%` }} />
+          </div>
+          <div className="tracker-rate-grid">
+            <div><span>Phím/giờ</span><strong>{formatNum(keysPerHr)}</strong></div>
+            <div><span>Click/giờ</span><strong>{formatNum(clicksPerHr)}</strong></div>
+            <div><span>Thao tác/phút</span><strong>{formatNum(actionsPerMin)}</strong></div>
+          </div>
+        </section>
+
+        <section className="tracker-panel">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Ghi chú</div>
+              <h2>Việc đang theo dõi</h2>
+            </div>
+            <ClipboardList size={17} color="#38bdf8" />
+          </div>
+          <input
+            className="tracker-input"
+            value={sessionFocus}
+            maxLength={80}
+            onChange={(event) => setSessionFocus(event.target.value)}
+            placeholder="Việc đang làm"
+          />
+          <textarea
+            className="tracker-note"
+            value={sessionNote}
+            onChange={(event) => setSessionNote(event.target.value)}
+            placeholder="Ghi chú nhanh cho phiên này"
+          />
+          {(sessionFocus || sessionNote) && (
+            <button
+              type="button"
+              data-no-track="true"
+              className="tracker-text-button"
+              onClick={() => {
+                setSessionFocus('');
+                setSessionNote('');
+              }}
+            >
+              Xóa ghi chú
+            </button>
+          )}
+        </section>
+
+        <section className="tracker-panel tracker-panel-wide">
+          <div className="tracker-panel-head">
+            <div>
+              <div className="tracker-panel-kicker">Nhật ký</div>
+              <h2>Tín hiệu gần đây</h2>
+            </div>
+            <Activity size={17} color="#38bdf8" />
+          </div>
+          <div className="tracker-log-list">
+            {trackerLog.map((item, index) => (
+              <div key={`${item.title}-${index}`} className={`tracker-log-item is-${item.tone}`}>
+                <span />
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
       {desktopConsentOpen && (
         <div
