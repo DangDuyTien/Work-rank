@@ -67,6 +67,7 @@ function Avatar({ user, userId, name, size = 36, idx = 0, refreshKey = 0 }) {
 }
 
 function userActions(user = {}) {
+  if (!user) return 0;
   return Number(user.keystrokeCount || user.keystrokes || 0) + Number(user.mouseClickCount || user.mouse_clicks || 0);
 }
 
@@ -77,6 +78,7 @@ function toVerifiedBool(value) {
 }
 
 function isVerifiedRanker(user) {
+  if (!user) return false;
   return toVerifiedBool(user.verified ?? user.isVerified ?? user.is_verified);
 }
 
@@ -89,6 +91,7 @@ function isDevRanker(user) {
 }
 
 function hasFeaturedBadge(user = {}, label) {
+  if (!user) return false;
   const badges = Array.isArray(user.featuredBadges)
     ? user.featuredBadges
     : Array.isArray(user.featured_badges)
@@ -98,10 +101,12 @@ function hasFeaturedBadge(user = {}, label) {
 }
 
 function isPartnerRanker(user = {}) {
+  if (!user) return false;
   return hasFeaturedBadge(user, 'Đối tác WorkRank');
 }
 
 function devRankerStyle(user, variant = 'row') {
+  if (!user) return {};
   const isDev = isDevRanker(user);
   const isPartner = isPartnerRanker(user);
   if (!isDev && !isPartner) return {};
@@ -162,6 +167,7 @@ function devRankerStyle(user, variant = 'row') {
 }
 
 function rankBadges(user, rank, range) {
+  if (!user) return [];
   const actions = userActions(user);
   const badges = [];
   if (isDevRanker(user)) badges.push({ key: 'dev', label: 'Dev', style: 'dev' });
