@@ -62,10 +62,41 @@ function toBoolean(value) {
 }
 
 function normalizeVerified(user = {}, row = {}) {
-  return toBoolean(user.isVerified ?? user.is_verified ?? row.isVerified ?? row.is_verified ?? row.verified);
+  const safeUser = user || {};
+  const safeRow = row || {};
+  return toBoolean(safeUser.isVerified ?? safeUser.is_verified ?? safeRow.isVerified ?? safeRow.is_verified ?? safeRow.verified);
 }
 
 function normalizeLeaderboardRow(row, index = 0) {
+  if (!row) {
+    return {
+      user_id: null,
+      id: null,
+      name: 'Unknown User',
+      email: '',
+      role: 'user',
+      avatarData: null,
+      avatarUrl: '',
+      photoUrl: '',
+      imageUrl: '',
+      featuredBadges: [],
+      isVerified: false,
+      verified: false,
+      accountStatus: 'active',
+      status: 'offline',
+      rank: index + 1,
+      focusScore: 0,
+      score: 0,
+      total_keystrokes: 0,
+      total_mouse_clicks: 0,
+      total_active_seconds: 0,
+      total_idle_seconds: 0,
+      keystrokes: 0,
+      mouse_clicks: 0,
+      active_seconds: 0,
+      idle_seconds: 0,
+    };
+  }
   const user = row.User || row.user || row;
   const activeSeconds = Number(row.activeSeconds ?? row.active_seconds ?? row.total_active_seconds ?? 0);
   const idleSeconds = Number(row.idleSeconds ?? row.idle_seconds ?? row.total_idle_seconds ?? 0);
@@ -82,25 +113,25 @@ function normalizeLeaderboardRow(row, index = 0) {
   const score = Number(row.score ?? fallbackScore);
   return {
     ...row,
-    user_id: user.id ?? row.userId ?? row.user_id,
-    id: user.id ?? row.userId ?? row.user_id,
-    name: user.name || row.name || 'Unknown User',
-    email: user.email || row.email || '',
-    role: user.role || row.role || 'user',
-    avatarData: user.avatarData || row.avatarData || user.UserProfilePreference?.avatarData || row.UserProfilePreference?.avatarData || null,
-    avatarUrl: user.avatarUrl || row.avatarUrl || '',
-    photoUrl: user.photoUrl || row.photoUrl || '',
-    imageUrl: user.imageUrl || row.imageUrl || '',
+    user_id: user?.id ?? row.userId ?? row.user_id,
+    id: user?.id ?? row.userId ?? row.user_id,
+    name: user?.name || row.name || 'Unknown User',
+    email: user?.email || row.email || '',
+    role: user?.role || row.role || 'user',
+    avatarData: user?.avatarData || row.avatarData || user?.UserProfilePreference?.avatarData || row.UserProfilePreference?.avatarData || null,
+    avatarUrl: user?.avatarUrl || row.avatarUrl || '',
+    photoUrl: user?.photoUrl || row.photoUrl || '',
+    imageUrl: user?.imageUrl || row.imageUrl || '',
     featuredBadges: Array.isArray(row.featuredBadges)
       ? row.featuredBadges
       : Array.isArray(row.featured_badges)
         ? row.featured_badges
-        : Array.isArray(user.featuredBadges)
+        : Array.isArray(user?.featuredBadges)
           ? user.featuredBadges
           : [],
     isVerified: normalizeVerified(user, row),
     verified: normalizeVerified(user, row),
-    accountStatus: user.status || row.accountStatus || row.status || 'active',
+    accountStatus: user?.status || row.accountStatus || row.status || 'active',
     status: row.presence || row.presenceStatus || row.status || 'offline',
     rank: row.rankPosition || index + 1,
     focusScore,
