@@ -580,9 +580,65 @@ async function sendPing() {
       quarantineCurrentDevice({ message: error.message });
       return;
     }
+    if (isAuthError(error)) {
+      debugLog('auth expired, attempting re-authentication...');
+      const savedDeviceSecret = deviceSecret;
+      clearExpiredAuth();
+      try {
+        await ensureAuth();
+        if (!deviceSecret) deviceSecret = savedDeviceSecret;
+        sessionId = null;
+        await ensureSession();
+        const retryPayload = { deviceUuid: DEVICE_UUID, deviceName: DEVICE_NAME, platform: PLATFORM, deviceSecret, sessionId, events: [event] };
+        const retrySigned = JSON.parse(JSON.stringify(retryPayload));
+        delete retrySigned.deviceSecret;
+        retryPayload.signature = signPayload(deviceSecret, retrySigned);
+        const retryResult = await apiRequest('/api/activity/batch', { method: 'POST', body: JSON.stringify(retryPayload) });
+        debugLog('re-auth flush ok', { sequence: event.sequence, flaggedCount: retryResult.flaggedCount });
+        sequence = event.sequence;
+        lastFlushAt = now;
+        saveRuntimeState();
+        totalKeystrokes += event.keystrokeCount;
+        totalClicks += event.mouseClickCount;
+        score = Math.max(0, score + event.keystrokeCount + event.mouseClickCount - retryResult.flaggedCount * 10);
+        emitPingResult({ keystrokes: totalKeystrokes, mouse_clicks: totalClicks, score, connected: true, flaggedCount: retryResult.flaggedCount });
+        emitStatus({ connected: true });
+        keystrokes = 0;
+        clicks = 0;
+        sendHeartbeat();
+        return;
+      } catch (reAuthError) {
+        debugLog('re-authentication failed', reAuthError.message);
+        lastError = reAuthError.message;
+        emitPingResult({ connected: false, error: lastError });
+        emitStatus({ connected: false, error: lastError });
+        sendHeartbeat();
+        return;
+      }
+    }
     emitPingResult({ connected: false, error: error.message });
     emitStatus({ connected: false, error: error.message });
   }
+}
+
+function isAuthError(error) {
+  const msg = String(error.message || '');
+  return msg.includes('401') ||
+    msg.includes('jwt') || msg.includes('token') ||
+    msg.includes('Unauthorized') || msg.includes('unauthorized') ||
+    msg.includes('Forbidden') || msg.includes('forbidden') ||
+    msg.includes('Mã thông báo') || msg.includes('đăng nhập');
+}
+
+function clearExpiredAuth() {
+  accessToken = null;
+  refreshToken = null;
+  const state = loadSecureState();
+  saveSecureState({
+    ...state,
+    accessToken: null,
+    refreshToken: null,
+  });
 }
 
 function countKey(rawcode) {
