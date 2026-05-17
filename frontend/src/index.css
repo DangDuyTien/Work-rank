@@ -3001,15 +3001,15 @@ textarea:focus-visible,
   flex-direction: column;
   gap: 16px;
   --rank-color: #b45309;
-  --rank-soft: rgba(180, 83, 9, 0.04);
+  --rank-soft: rgba(180, 83, 9, 0.12);
   --rank-accent-2: #d97706;
   --rank-accent-3: #f97316;
-  --rank-border: rgba(180, 83, 9, 0.1);
-  --rank-glow: none;
-  --rank-hero-bg: #ffffff;
-  --rank-card-bg: #ffffff;
-  --rank-progress: rgba(180,83,9,0.68);
-  --rank-badge-bg: rgba(180,83,9,0.04);
+  --rank-border: rgba(180, 83, 9, 0.3);
+  --rank-glow: 0 18px 46px rgba(180, 83, 9, 0.13);
+  --rank-hero-bg: linear-gradient(135deg, rgba(180, 83, 9, 0.13) 0%, #ffffff 45%, rgba(249, 115, 22, 0.11) 100%);
+  --rank-card-bg: linear-gradient(180deg, #ffffff 0%, rgba(180, 83, 9, 0.045) 100%);
+  --rank-progress: linear-gradient(90deg, #b45309 0%, #d97706 100%);
+  --rank-badge-bg: rgba(180,83,9,0.13);
 }
 
 .profile-page-state {
@@ -3058,16 +3058,21 @@ textarea:focus-visible,
   gap: clamp(24px, 3vw, 44px);
   position: relative;
   overflow: visible;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--rank-border);
   border-radius: 0;
-  background: #ffffff;
-  box-shadow: none;
+  background: var(--rank-hero-bg);
+  box-shadow: var(--rank-glow);
   padding: 22px 24px;
   margin-bottom: 16px;
 }
 
 .profile-hero::before {
-  display: none;
+  content: '';
+  width: 5px;
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(180deg, var(--rank-color), var(--rank-accent-2));
+  opacity: 0.9;
 }
 
 .profile-hero > * {
@@ -3101,10 +3106,10 @@ textarea:focus-visible,
   height: 150px;
   position: relative;
   flex-shrink: 0;
-  border: 3px solid rgba(255, 255, 255, 0.92);
+  border: 3px solid #ffffff;
   border-radius: 0;
   background: #e2e8f0;
-  box-shadow: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rank-color) 28%, transparent), 0 14px 30px color-mix(in srgb, var(--rank-color) 14%, transparent);
   --avatar-hue: 28;
 }
 
@@ -3403,17 +3408,23 @@ textarea:focus-visible,
 .profile-eyebrow {
   width: fit-content;
   min-height: 28px;
-  border: 1px solid var(--rank-border);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 58%, transparent);
   border-radius: 0;
-  background: var(--rank-badge-bg);
+  background: linear-gradient(135deg, var(--rank-color), var(--rank-accent-2));
+  color: #ffffff;
   padding: 0 11px;
-  box-shadow: none;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rank-color) 20%, transparent);
+}
+
+.profile-eyebrow svg {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.22));
 }
 
 .profile-rank-title {
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  color: color-mix(in srgb, var(--rank-color) 92%, #0f172a);
   font-weight: 900;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--rank-accent-3) 6%, transparent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--rank-accent-3) 16%, transparent);
 }
 
 .profile-rank-help {
@@ -3437,10 +3448,10 @@ textarea:focus-visible,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 18%, rgba(15, 23, 42, 0.08));
   border-radius: 50%;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--rank-badge-bg);
+  color: color-mix(in srgb, var(--rank-color) 90%, #334155);
   box-shadow: none;
   cursor: help;
   font-size: 12px;
@@ -3453,10 +3464,10 @@ textarea:focus-visible,
 .profile-rank-help-trigger:hover,
 .profile-rank-help-trigger:focus-visible {
   outline: none;
-  border-color: rgba(15, 23, 42, 0.14);
-  background: #ffffff;
-  color: #334155;
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--rank-color) 36%, rgba(15, 23, 42, 0.14));
+  background: color-mix(in srgb, var(--rank-color) 10%, #ffffff);
+  color: var(--rank-color);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--rank-color) 14%, transparent);
 }
 
 .profile-rank-help-popover {
@@ -3952,8 +3963,8 @@ textarea:focus-visible,
   margin-bottom: 16px;
   border: 1px solid var(--rank-border);
   border-radius: 0;
-  background: #ffffff;
-  box-shadow: none;
+  background: var(--rank-card-bg);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--rank-color) 7%, transparent);
   padding: 24px;
 }
 
@@ -3982,10 +3993,10 @@ textarea:focus-visible,
   align-items: center;
   justify-content: center;
   min-height: 28px;
-  border: 1px solid var(--rank-border);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 26%, rgba(15, 23, 42, 0.08));
   border-radius: 0;
   background: var(--rank-badge-bg);
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  color: color-mix(in srgb, var(--rank-color) 90%, #334155);
   padding: 0 11px;
   font-size: 11px;
   font-weight: 900;
@@ -4007,9 +4018,9 @@ textarea:focus-visible,
     "icon value";
   align-items: center;
   column-gap: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 12%, rgba(15, 23, 42, 0.08));
   border-radius: 0;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.82);
   padding: 12px;
   box-shadow: none;
 }
@@ -4188,8 +4199,8 @@ textarea:focus-visible,
   justify-content: center;
   border: 1px solid var(--rank-border);
   border-radius: 0;
-  background: #ffffff;
-  box-shadow: none;
+  background: var(--rank-card-bg);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--rank-color) 7%, transparent);
   padding: 18px;
 }
 
@@ -4232,10 +4243,10 @@ textarea:focus-visible,
 .profile-chart-card,
 .profile-heatmap-card,
 .profile-session-card {
-  border: 1px solid color-mix(in srgb, var(--rank-border) 74%, rgba(15, 23, 42, 0.08));
+  border: 1px solid color-mix(in srgb, var(--rank-color) 18%, rgba(15, 23, 42, 0.08));
   border-radius: 0;
   background: #ffffff;
-  box-shadow: none;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--rank-color) 5%, transparent);
 }
 
 .profile-metric-card {
@@ -4289,6 +4300,18 @@ textarea:focus-visible,
 
 .profile-title-card {
   padding: 18px;
+  background: var(--rank-card-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-title-card::before,
+.profile-level-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rank-color), var(--rank-accent-2), var(--rank-accent-3));
 }
 
 .profile-title-main {
@@ -4299,8 +4322,8 @@ textarea:focus-visible,
 
 .profile-title-main > svg {
   flex-shrink: 0;
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
-  filter: drop-shadow(0 6px 12px color-mix(in srgb, var(--rank-color) 7%, transparent));
+  color: var(--rank-color);
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--rank-color) 18%, transparent));
 }
 
 .profile-title-main h2,
@@ -4327,9 +4350,9 @@ textarea:focus-visible,
   margin-top: 16px;
   padding: 10px 12px;
   border-radius: 0;
-  border: 1px solid color-mix(in srgb, var(--rank-color) 12%, transparent);
-  background: #ffffff;
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  border: 1px solid color-mix(in srgb, var(--rank-color) 24%, transparent);
+  background: var(--rank-badge-bg);
+  color: color-mix(in srgb, var(--rank-color) 90%, #334155);
   font-size: 12px;
   font-weight: 900;
 }
@@ -4354,9 +4377,9 @@ textarea:focus-visible,
 
 .profile-badge.is-unlocked {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--rank-color) 14%, rgba(15, 23, 42, 0.08));
-  background: #ffffff;
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--rank-color) 24%, rgba(15, 23, 42, 0.08));
+  background: var(--rank-card-bg);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rank-color) 5%, transparent);
   opacity: 1;
 }
 
@@ -4373,9 +4396,9 @@ textarea:focus-visible,
 }
 
 .profile-badge.is-unlocked .profile-badge-icon {
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--rank-color), var(--rank-accent-2));
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--rank-color) 16%, transparent);
 }
 
 .profile-badge strong {
@@ -4539,6 +4562,9 @@ textarea:focus-visible,
 
 .profile-level-card {
   padding: 18px;
+  background: var(--rank-card-bg);
+  position: relative;
+  overflow: hidden;
 }
 
 .profile-level-summary,
@@ -4574,8 +4600,8 @@ textarea:focus-visible,
   overflow: hidden;
   margin-top: 16px;
   border-radius: 0;
-  background: color-mix(in srgb, var(--rank-color) 4%, #edf2f7);
-  box-shadow: none;
+  background: color-mix(in srgb, var(--rank-color) 8%, #edf2f7);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rank-color) 8%, transparent);
 }
 
 .profile-progress-bar span {
@@ -4583,7 +4609,7 @@ textarea:focus-visible,
   display: block;
   border-radius: inherit;
   background: var(--rank-progress);
-  box-shadow: none;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--rank-color) 28%, transparent);
   transition: width 0.4s ease;
 }
 
@@ -4603,14 +4629,14 @@ textarea:focus-visible,
 }
 
 .profile-milestone.is-reached {
-  border-color: color-mix(in srgb, var(--rank-color) 8%, rgba(15, 23, 42, 0.08));
-  background: color-mix(in srgb, var(--rank-color) 2.5%, #ffffff);
+  border-color: color-mix(in srgb, var(--rank-color) 18%, rgba(15, 23, 42, 0.08));
+  background: color-mix(in srgb, var(--rank-color) 5%, #ffffff);
 }
 
 .profile-milestone.is-current {
-  border-color: color-mix(in srgb, var(--rank-color) 14%, rgba(15, 23, 42, 0.08));
-  background: #ffffff;
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--rank-color) 34%, rgba(15, 23, 42, 0.08));
+  background: var(--rank-badge-bg);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--rank-color) 8%, transparent);
 }
 
 .profile-milestone-dot {
@@ -4628,14 +4654,14 @@ textarea:focus-visible,
 }
 
 .profile-milestone.is-reached .profile-milestone-dot {
-  color: color-mix(in srgb, var(--rank-color) 84%, #475569);
+  color: color-mix(in srgb, var(--rank-color) 88%, #334155);
 }
 
 .profile-milestone.is-current .profile-milestone-dot {
-  border: 1px solid color-mix(in srgb, var(--rank-color) 16%, rgba(15, 23, 42, 0.08));
-  background: #ffffff;
-  color: color-mix(in srgb, var(--rank-color) 88%, #334155);
-  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--rank-color) 42%, rgba(15, 23, 42, 0.08));
+  background: linear-gradient(135deg, var(--rank-color), var(--rank-accent-2));
+  color: #ffffff;
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--rank-color) 18%, transparent);
 }
 
 .profile-milestone strong,

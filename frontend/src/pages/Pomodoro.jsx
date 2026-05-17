@@ -424,6 +424,7 @@ export default function Pomodoro() {
 
   const taskCompletionRef = useRef(pomodoro.completedAt);
   const previousPomodoroRef = useRef(pomodoro);
+  const lastPipCommandIdRef = useRef('');
 
   useEffect(() => {
     if (!pomodoro.completedAt || taskCompletionRef.current === pomodoro.completedAt) return;
@@ -455,55 +456,85 @@ export default function Pomodoro() {
   }, [pomodoro.completedAt]);
 
   useEffect(() => {
+    const normalizePipCommand = (payload) => {
+      if (!payload) return null;
+      if (typeof payload === 'string') {
+        try {
+          return JSON.parse(payload);
+        } catch {
+          return null;
+        }
+      }
+      if (typeof payload === 'object') return payload;
+      return null;
+    };
+
+    const handlePipCommand = (payload) => {
+      const cmd = normalizePipCommand(payload);
+      if (!cmd?.command) return;
+      const commandId = cmd.id || `${cmd.command}:${cmd.ts || ''}`;
+      if (commandId && lastPipCommandIdRef.current === commandId) return;
+      if (commandId) lastPipCommandIdRef.current = commandId;
+
+      if (cmd.command === 'pause') {
+        setPomodoro((prev) => {
+          const remainingSeconds = prev.endsAt
+            ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
+            : Math.max(0, Number(prev.remainingSeconds || 0));
+          return { ...prev, remainingSeconds, running: false, endsAt: null, startedOnce: true };
+        });
+      } else if (cmd.command === 'start') {
+        requestNotificationPermission();
+        if (
+          !tracking
+          && !trackingPending
+          && appSettings.tracker?.autoStartWithPomodoro
+        ) {
+          void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
+        }
+        setPomodoro((prev) => {
+          if (prev.running) return prev;
+          const preset = getPomodoroPreset(prev.presetKey);
+          const remainingSeconds = Math.max(1, Number(prev.remainingSeconds || getPomodoroModeSeconds(preset, prev.mode)));
+          return {
+            ...prev,
+            remainingSeconds,
+            running: true,
+            completedAt: 0,
+            notified: false,
+            startedOnce: true,
+            endsAt: Date.now() + remainingSeconds * 1000,
+          };
+        });
+      } else if (cmd.command === 'skip') {
+        setPomodoro((prev) => {
+          const remainingSeconds = prev.endsAt
+            ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
+            : Math.max(0, Number(prev.remainingSeconds || 0));
+          return completePomodoroStep({ ...prev, remainingSeconds, running: false, endsAt: null });
+        });
+      }
+    };
+
     const bc = new BroadcastChannel('workrank-pip');
     bc.onmessage = (e) => {
       if (e.data === 'continue') {
         setPomodoro(loadPomodoroState());
         return;
       }
-      try {
-        const cmd = typeof e.data === 'string' ? JSON.parse(e.data) : null;
-        if (cmd?.command === 'pause') {
-          setPomodoro((prev) => {
-            const remainingSeconds = prev.endsAt
-              ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
-              : Math.max(0, Number(prev.remainingSeconds || 0));
-            return { ...prev, remainingSeconds, running: false, endsAt: null, startedOnce: true };
-          });
-        } else if (cmd?.command === 'start') {
-          requestNotificationPermission();
-          if (
-            !tracking
-            && !trackingPending
-            && appSettings.tracker?.autoStartWithPomodoro
-          ) {
-            void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
-          }
-          setPomodoro((prev) => {
-            if (prev.running) return prev;
-            const preset = getPomodoroPreset(prev.presetKey);
-            const remainingSeconds = Math.max(1, Number(prev.remainingSeconds || getPomodoroModeSeconds(preset, prev.mode)));
-            return {
-              ...prev,
-              remainingSeconds,
-              running: true,
-              completedAt: 0,
-              notified: false,
-              startedOnce: true,
-              endsAt: Date.now() + remainingSeconds * 1000,
-            };
-          });
-        } else if (cmd?.command === 'skip') {
-          setPomodoro((prev) => {
-            const remainingSeconds = prev.endsAt
-              ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
-              : Math.max(0, Number(prev.remainingSeconds || 0));
-            return completePomodoroStep({ ...prev, remainingSeconds, running: false, endsAt: null });
-          });
-        }
-      } catch {}
+      handlePipCommand(e.data);
     };
-    return () => bc.close();
+    const handleWindowCommand = (event) => handlePipCommand(event.detail);
+    const handleStorageCommand = (event) => {
+      if (event.key === 'workrank:pip-command') handlePipCommand(event.newValue);
+    };
+    window.addEventListener('workrank:pip-command', handleWindowCommand);
+    window.addEventListener('storage', handleStorageCommand);
+    return () => {
+      bc.close();
+      window.removeEventListener('workrank:pip-command', handleWindowCommand);
+      window.removeEventListener('storage', handleStorageCommand);
+    };
   }, [
     appSettings.tracker?.autoLaunchDesktop,
     appSettings.tracker?.autoStartWithPomodoro,
