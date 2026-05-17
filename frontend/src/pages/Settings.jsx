@@ -75,7 +75,7 @@ function SettingSection({ icon: Icon, title, desc, children, className = '' }) {
         </div>
         <div>
           <h2>{title}</h2>
-          <p>{desc}</p>
+          {desc && <p>{desc}</p>}
         </div>
       </div>
       {children}
@@ -288,9 +288,6 @@ export default function Settings() {
         <div>
           <div className="settings-kicker">Trung tâm cài đặt</div>
           <h1>Cài đặt tài khoản và trải nghiệm</h1>
-          <p>
-            Quản lý hồ sơ, bảo mật, thông báo, tracker, Pomodoro và dữ liệu lưu cục bộ của WorkRank.
-          </p>
         </div>
         <div className="settings-account-card">
           <div className="settings-account-avatar">{String(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()}</div>
@@ -305,7 +302,6 @@ export default function Settings() {
         <SettingSection
           icon={UserRound}
           title="Hồ sơ tài khoản"
-          desc="Thông tin này hiển thị trên dashboard, bảng xếp hạng và hồ sơ cá nhân."
           className="settings-card-wide"
         >
           <form className="settings-form" onSubmit={saveProfile}>
@@ -424,7 +420,6 @@ export default function Settings() {
         <SettingSection
           icon={ShieldCheck}
           title="Bảo mật đăng nhập"
-          desc="Đổi mật khẩu định kỳ nếu bạn dùng WorkRank trên nhiều thiết bị."
         >
           <form className="settings-form" onSubmit={savePassword}>
             <label>
@@ -466,7 +461,6 @@ export default function Settings() {
         <SettingSection
           icon={Bell}
           title="Thông báo"
-          desc="Chọn những loại thông báo bạn muốn WorkRank lưu và hiển thị ở thanh trên."
         >
           <div className="settings-list">
             <ToggleRow
@@ -517,7 +511,6 @@ export default function Settings() {
         <SettingSection
           icon={Monitor}
           title="Tracker và Pomodoro"
-          desc="Điều chỉnh cách web phối hợp với Desktop Tracker và bộ đếm Pomodoro."
         >
           <div className="settings-list">
             <ToggleRow
@@ -554,7 +547,6 @@ export default function Settings() {
         <SettingSection
           icon={Palette}
           title="Giao diện"
-          desc="Các tùy chọn này lưu trên trình duyệt hiện tại và áp dụng ngay khi đổi."
         >
           <div className="settings-list">
             <div className="settings-segment-row">
@@ -623,7 +615,6 @@ export default function Settings() {
         <SettingSection
           icon={Mail}
           title="Liên kết nhanh"
-          desc="Các khu vực liên quan đến cài đặt tài khoản trong WorkRank."
         >
           <div className="settings-link-grid">
             <button type="button" onClick={() => navigate(`/users/${user?.id}`)}>Hồ sơ cá nhân</button>

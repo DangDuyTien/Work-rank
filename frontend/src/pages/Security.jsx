@@ -299,7 +299,7 @@ boxShadow: 'none',
       )}
 
       <section className="security-section">
-        <SectionHeader title="Tổng quan" subtitle="Các chỉ số chính trong khoảng thời gian đang chọn." />
+        <SectionHeader title="Tổng quan" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
           <div style={card}><div style={muted}>Tổng lượt dữ liệu</div><div style={value}>{anomalies?.totalEvents || 0}</div></div>
           <div style={card}><div style={muted}>Cảnh báo nhẹ</div><div style={{ ...value, color: '#f59e0b' }}>{anomalies?.warningEvents || 0}</div></div>
@@ -312,7 +312,6 @@ boxShadow: 'none',
       <section className="security-section">
         <SectionHeader
           title="Cách kiểm tra cảnh báo"
-          subtitle="Dùng phần này để đọc màu đỏ/vàng trước khi khóa hoặc mở khóa thiết bị."
         />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           <div style={{ ...card, borderColor: 'rgba(239,68,68,0.18)', background: 'rgba(254,242,242,0.55)' }}>
@@ -338,12 +337,12 @@ boxShadow: 'none',
 
       <div className="security-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, alignItems: 'start' }}>
         <div style={card}>
-          <SectionHeader title="Dấu hiệu" subtitle="Nhóm lỗi được phát hiện nhiều nhất." />
+          <SectionHeader title="Dấu hiệu" />
           <FlagList flags={anomalies?.flagCounts} />
         </div>
 
         <div style={card}>
-          <SectionHeader title="Thiết bị" subtitle="Khóa hoặc mở lại các tracker đã pair." />
+          <SectionHeader title="Thiết bị" />
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>

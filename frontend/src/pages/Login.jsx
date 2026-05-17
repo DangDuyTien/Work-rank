@@ -121,9 +121,6 @@ export default function Login() {
     { label: 'Dữ liệu dashboard', value: relativeSyncLabel(live.timestamp), ok: !statsError },
   ];
   const modeTitle = isRegister ? 'Tạo tài khoản WorkRank' : 'Đăng nhập workspace';
-  const modeSubtitle = isRegister
-    ? 'Tạo hồ sơ để bắt đầu ghi nhận tracker và tham gia bảng xếp hạng.'
-    : 'Tiếp tục vào dashboard, tracker realtime, nhóm và hồ sơ cá nhân.';
   const SubmitIcon = loading ? Loader2 : isRegister ? UserPlus : ArrowRight;
 
   const switchMode = (nextIsRegister) => {
@@ -165,10 +162,6 @@ export default function Login() {
               <h1>Workspace tracker</h1>
             </div>
           </div>
-
-          <p className="login-lead">
-            Dashboard, tracker, bảng xếp hạng và nhóm trong một giao diện gọn, đồng bộ theo phiên làm việc thực tế.
-          </p>
 
           <div className="login-stats" aria-label="Thông số realtime WorkRank">
             {statItems.map((item) => {
@@ -218,7 +211,6 @@ export default function Login() {
 
           <div className="login-form-head">
             <h2>{modeTitle}</h2>
-            <p>{modeSubtitle}</p>
           </div>
 
           {notice && (

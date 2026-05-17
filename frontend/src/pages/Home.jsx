@@ -190,7 +190,6 @@ export default function Home() {
           </h1>
           <p data-wr-reveal>
             Dashboard gọn cho team muốn xem nhịp làm việc, xếp hạng, Pomodoro và trạng thái tracker trong một nơi.
-            Không cần báo cáo thủ công, không kéo dữ liệu nặng lên trình duyệt.
           </p>
           <div className="wr-home-actions" data-wr-reveal>
             <Link className="wr-home-primary" to={primaryTo}>
@@ -222,9 +221,6 @@ export default function Home() {
         <div className="wr-section-copy">
           <span className="wr-section-kicker">Product</span>
           <h2>Từ tracker đến leaderboard trong một luồng rõ ràng.</h2>
-          <p>
-            Dữ liệu được gom theo phút/ngày, cache ngắn hạn và phân trang ở backend. Giao diện chỉ lấy phần cần hiển thị nên mở trang nhanh hơn khi user tăng.
-          </p>
         </div>
         <div className="wr-command-card">
           <div className="wr-command-tabs">
@@ -299,7 +295,6 @@ export default function Home() {
         <div>
           <span><Flame size={18} /></span>
           <h2>Bắt đầu theo dõi năng suất ngay hôm nay.</h2>
-          <p>Vào dashboard nếu bạn đã đăng nhập, hoặc mở tracker để đồng bộ phiên làm việc đầu tiên.</p>
         </div>
         <Link className="wr-home-primary" to={primaryTo}>
           {isSignedIn ? 'Mở dashboard' : 'Đăng nhập'}

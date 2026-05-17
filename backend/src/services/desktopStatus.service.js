@@ -54,4 +54,12 @@ function getStatus(userId) {
   };
 }
 
-module.exports = { heartbeat, getStatus };
+function activeUserIds() {
+  const ids = [];
+  for (const userId of registry.keys()) {
+    if (getStatus(userId).online) ids.push(userId);
+  }
+  return ids;
+}
+
+module.exports = { activeUserIds, heartbeat, getStatus };

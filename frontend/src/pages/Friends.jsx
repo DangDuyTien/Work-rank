@@ -492,9 +492,6 @@ export default function Friends() {
             Kết nối cá nhân
           </div>
           <h1 style={{ margin: '10px 0 6px', color: '#0f172a', fontSize: 28, lineHeight: 1.1 }}>Bạn bè</h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 13, fontWeight: 700 }}>
-            Theo dõi nhanh ai đang online, đang active hoặc đã offline.
-          </p>
         </div>
 
         <button
@@ -575,11 +572,7 @@ export default function Friends() {
               />
             </div>
 
-            {!query.trim() ? (
-              <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5, fontWeight: 700 }}>
-                Gõ tên, email hoặc mã người dùng để gửi lời mời kết bạn.
-              </div>
-            ) : searchResults.length === 0 ? (
+            {!query.trim() ? null : searchResults.length === 0 ? (
               <EmptyState icon={Search} title="Không tìm thấy người dùng" description="Thử nhập đúng tên, email hoặc mã WR của họ." />
             ) : (
               <div style={{ display: 'grid', gap: 10 }}>

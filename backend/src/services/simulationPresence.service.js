@@ -47,8 +47,17 @@ function activeCount() {
   return count;
 }
 
+function activeUserIds() {
+  const ids = [];
+  for (const id of simulatedPresenceByUser.keys()) {
+    if (getStatus(id) !== 'offline') ids.push(id);
+  }
+  return ids;
+}
+
 module.exports = {
   activeCount,
+  activeUserIds,
   clear,
   getStatus,
   setStatus,

@@ -30,9 +30,9 @@ const STATUS_CONFIG = {
 };
 
 const RANGES = [
-  { key: 'today', label: 'Hôm nay', description: 'Dữ liệu trong ngày hiện tại' },
-  { key: 'week', label: 'Tuần này', description: 'Tổng hợp từ đầu tuần' },
-  { key: 'month', label: 'Tháng này', description: 'Tổng hợp từ đầu tháng' },
+  { key: 'today', label: 'Hôm nay' },
+  { key: 'week', label: 'Tuần này' },
+  { key: 'month', label: 'Tháng này' },
 ];
 
 function formatNum(value) {
@@ -125,7 +125,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const prevRef = useRef(null);
   const requestIdRef = useRef(0);
@@ -164,7 +163,6 @@ export default function Dashboard() {
       if (prevRef.current) setPrevTotals(prevRef.current);
       prevRef.current = newTotals;
       setTotals(newTotals);
-      setLastUpdatedAt(new Date());
     } catch (err) {
       if (requestId === requestIdRef.current) setError(getErrorMessage(err));
     } finally {
@@ -197,7 +195,6 @@ export default function Dashboard() {
     const handleActivity = (data = {}) => {
       if (!eventBelongsToRange(data)) return;
       setLiveFlash(true);
-      setLastUpdatedAt(new Date());
       if (flashTimer) window.clearTimeout(flashTimer);
       flashTimer = window.setTimeout(() => setLiveFlash(false), 650);
 
@@ -272,7 +269,6 @@ export default function Dashboard() {
 
     const handleOverview = (overview = {}) => {
       if (range !== 'today') return;
-      setLastUpdatedAt(new Date());
       setTotals({
         keystrokes: Number(overview.totalKeystrokes || 0),
         clicks: Number(overview.totalMouseClicks || 0),
@@ -305,19 +301,16 @@ export default function Dashboard() {
     };
   }, [socket, range]);
 
-  const rangeMeta = RANGES.find((item) => item.key === range) || RANGES[0];
-  const activeUsers = users.filter((user) => ['active', 'online'].includes(String(user.status || user.presence || '').toLowerCase())).length;
+  const activeUsers = users.filter((user) => ['active', 'online', 'idle'].includes(String(user.status || user.presence || '').toLowerCase())).length;
+  const currentOnlineUsers = Math.max(Number(totals.online || 0), activeUsers);
   const averageScore = users.length ? Math.round(users.reduce((sum, user) => sum + Number(user.score ?? calculateRankScore(user)), 0) / users.length) : 0;
-  const lastUpdatedText = lastUpdatedAt
-    ? lastUpdatedAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    : 'Chưa cập nhật';
 
   const statCards = useMemo(() => ([
     {
       label: 'Đang online',
-      value: totals.online.toLocaleString(),
-      delta: buildDelta(totals.online, prevTotals?.online),
-      note: `${activeUsers.toLocaleString()} người có tín hiệu hiện tại`,
+      value: currentOnlineUsers.toLocaleString(),
+      delta: buildDelta(currentOnlineUsers, prevTotals?.online),
+      note: `${currentOnlineUsers.toLocaleString()} người có tín hiệu hiện tại`,
       icon: Users,
       color: '#38bdf8',
       iconBg: 'rgba(56,189,248,0.1)',
@@ -326,7 +319,6 @@ export default function Dashboard() {
       label: 'Thời gian active',
       value: formatDuration(totals.activeSeconds),
       delta: buildDelta(totals.activeSeconds, prevTotals?.activeSeconds),
-      note: `${rangeMeta.description}`,
       icon: Clock3,
       color: '#16a34a',
       iconBg: 'rgba(22,163,74,0.1)',
@@ -349,7 +341,7 @@ export default function Dashboard() {
       color: '#ea580c',
       iconBg: 'rgba(234,88,12,0.1)',
     },
-  ]), [activeUsers, averageScore, prevTotals, rangeMeta.description, totals]);
+  ]), [averageScore, currentOnlineUsers, prevTotals, totals]);
 
   const tableRows = users.map((user) => {
     const activeSeconds = Number(user.activeSeconds || user.active_seconds || user.total_active_seconds || 0);
@@ -372,16 +364,13 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      <section className="dashboard-hero">
+      <section className="dashboard-hero" data-tour="dashboard-overview">
         <div>
           <div className="dashboard-eyebrow">
             <Activity size={14} />
             Dashboard realtime
           </div>
           <h1>Tổng quan hoạt động</h1>
-          <p>
-            Theo dõi trạng thái làm việc của nhóm từ Desktop Tracker. Web chỉ hiển thị dữ liệu đã được backend xác nhận.
-          </p>
         </div>
 
         <div className="dashboard-hero-actions">
@@ -410,17 +399,6 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="dashboard-source-strip">
-        <div>
-          <Monitor size={15} />
-          <span>Nguồn dữ liệu: Desktop Tracker</span>
-        </div>
-        <div>
-          <span className={`dashboard-live-dot ${liveFlash ? 'flash' : ''}`} />
-          <span>Cập nhật: {lastUpdatedText}</span>
-        </div>
-      </div>
-
       {error && (
         <div className="dashboard-error" role="alert">
           <AlertCircle size={17} />
@@ -429,11 +407,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      <section className="dashboard-stat-grid">
+      <section className="dashboard-stat-grid" data-tour="dashboard-stats">
         {statCards.map((card) => <StatCard key={card.label} card={card} loading={loading && !error} />)}
       </section>
 
-      <section className="dashboard-live-card">
+      <section className="dashboard-live-card" data-tour="live-table">
         <div className="dashboard-table-header">
           <div>
             <h2>Hoạt động thời gian thực</h2>

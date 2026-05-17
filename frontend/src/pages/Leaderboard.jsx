@@ -634,9 +634,6 @@ export default function Leaderboard() {
                 <Crown size={32} color="#f59e0b" strokeWidth={2.5} />
               </div>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>Đặc Quyền Tích Xanh</h2>
-              <p style={{ margin: '8px 0 0', fontSize: 14, color: '#64748b', lineHeight: 1.5 }}>
-                Luật chơi dành cho các cao thủ cày cuốc trên bảng xếp hạng toàn cầu.
-              </p>
             </div>
 
             {/* Modal Body */}

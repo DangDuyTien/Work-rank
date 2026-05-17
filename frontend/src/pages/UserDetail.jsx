@@ -1612,9 +1612,6 @@ export default function UserDetail() {
             <Award size={34} />
             <div>
               <h2>{rank.title}</h2>
-              <p>
-                Level {levelView.level} với {fmtNum(levelView.totalActions)} thao tác tích lũy. Hệ thống danh hiệu mở khóa theo level, kỷ lục và nhịp làm việc.
-              </p>
             </div>
           </div>
           <div className="profile-next-target">
@@ -1647,9 +1644,6 @@ export default function UserDetail() {
           <div>
             <div className="profile-section-kicker">Thú đồng hành level {currentAnimal.level}</div>
             <h2>{currentAnimal.name}</h2>
-            <p>
-              Mỗi level mở khóa một con vật riêng để sưu tầm. Con hiện tại mang thuộc tính {currentAnimal.trait.toLowerCase()} và đại diện cho mốc level của người dùng.
-            </p>
           </div>
         </div>
 

@@ -3,6 +3,9 @@ const { Op, QueryTypes } = require('sequelize');
 const { sequelize, User, DailyStat, ActivityEvent, UserProfilePreference, Friendship, UserMinuteStat } = require('../models');
 const fraudDetection = require('./fraudDetection.service');
 const { resolveUserPresence } = require('./userPresence.service');
+const desktopStatus = require('./desktopStatus.service');
+const presence = require('./presence.service');
+const simulationPresence = require('./simulationPresence.service');
 const cache = require('./cache.service');
 
 function today() {
@@ -76,28 +79,58 @@ function isMissingTableError(error) {
     || /doesn't exist|no such table/i.test(String(error?.message || ''));
 }
 
-async function countActiveUsersNow({ activeSince, teamId, teamInclude }) {
+async function recentActivityUserIds({ activeSince, teamId, teamInclude }) {
   try {
-    return await UserMinuteStat.count({
-      distinct: true,
-      col: 'user_id',
+    const rows = await UserMinuteStat.findAll({
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('UserMinuteStat.user_id')), 'userId']],
       where: { bucketStartAt: { [Op.gte]: activeSince } },
       include: teamInclude,
+      raw: true,
     });
+    return rows.map((row) => String(row.userId || row.user_id)).filter(Boolean);
   } catch (error) {
     if (!isMissingTableError(error)) throw error;
-    console.warn('user_minute_stats table missing; falling back to activity_events for active users count.');
+    console.warn('user_minute_stats table missing; falling back to activity_events for active users ids.');
     const trustedWhere = {
       eventTime: { [Op.gte]: activeSince },
       suspicionScore: { [Op.lt]: fraudDetection.LIMITS.highSuspicionThreshold },
     };
-    return ActivityEvent.count({
-      distinct: true,
-      col: 'user_id',
+    const rows = await ActivityEvent.findAll({
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('ActivityEvent.user_id')), 'userId']],
       where: trustedWhere,
       include: teamId ? [{ model: User, attributes: [], where: { teamId } }] : [],
+      raw: true,
     });
+    return rows.map((row) => String(row.userId || row.user_id)).filter(Boolean);
   }
+}
+
+async function currentPresenceUserIds(teamId) {
+  const ids = Array.from(new Set([
+    ...presence.activeUserIds(),
+    ...simulationPresence.activeUserIds(),
+    ...desktopStatus.activeUserIds(),
+  ].map(String).filter(Boolean)));
+
+  if (ids.length === 0) return [];
+
+  const rows = await User.findAll({
+    attributes: ['id'],
+    where: {
+      id: { [Op.in]: ids },
+      status: 'active',
+      ...(teamId ? { teamId } : {}),
+    },
+    raw: true,
+  });
+
+  return rows.map((row) => String(row.id)).filter(Boolean);
+}
+
+async function countActiveUsersNow({ activeSince, teamId, teamInclude }) {
+  const ids = new Set(await recentActivityUserIds({ activeSince, teamId, teamInclude }));
+  for (const userId of await currentPresenceUserIds(teamId)) ids.add(userId);
+  return ids.size;
 }
 
 async function overview(options = {}) {

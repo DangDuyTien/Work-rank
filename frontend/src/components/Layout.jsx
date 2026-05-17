@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, BadgeCheck, Bell, Coffee, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy, Users } from 'lucide-react';
+import { Activity, BadgeCheck, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
@@ -8,6 +8,7 @@ import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '.
 import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
+import ProductTour, { PRODUCT_TOUR_EVENT } from './ProductTour';
 import VerifiedBadge from './VerifiedBadge';
 
 const NAV_LINKS = [
@@ -19,6 +20,14 @@ const NAV_LINKS = [
   { to: '/security', label: 'Bảo Mật', shortLabel: 'Bảo mật', icon: Shield, adminOnly: true },
   { to: '/admin/privileges', label: 'Đặc Quyền', shortLabel: 'Đặc quyền', icon: BadgeCheck, adminOnly: true },
 ];
+
+const NAV_TOUR_TARGETS = {
+  '/dashboard': 'nav-dashboard',
+  '/leaderboard': 'nav-leaderboard',
+  '/groups': 'nav-groups',
+  '/tracker': 'nav-tracker',
+  '/pomodoro': 'nav-pomodoro',
+};
 
 const PAGE_TITLES = {
   '/dashboard': 'WorkRank Realtime',
@@ -474,6 +483,7 @@ export default function Layout() {
         </div>
 
         <nav
+          data-tour="app-nav"
           className="top-nav-scroll app-desktop-nav"
           style={{
             display: 'flex',
@@ -492,6 +502,7 @@ export default function Layout() {
             return (
               <NavLink
                 key={to}
+                data-tour={NAV_TOUR_TARGETS[to]}
                 to={to}
                 title={label}
                 aria-label={label}
@@ -522,6 +533,7 @@ export default function Layout() {
             );
           })}
           <NavLink
+            data-tour="profile"
             to={`/users/${user?.id || 1}`}
             style={{
               padding: '6px 14px',
@@ -545,7 +557,7 @@ export default function Layout() {
           </NavLink>
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
+        <div data-tour="quick-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
           {tracking && (
             <button
               type="button"
@@ -603,6 +615,7 @@ export default function Layout() {
 
           <div ref={notificationRef} style={{ position: 'relative' }}>
             <button
+              data-tour="notifications"
               type="button"
               className="app-icon-action"
               aria-label="Thông báo"
@@ -765,6 +778,29 @@ export default function Layout() {
           </div>
 
           <button
+            data-tour="help"
+            type="button"
+            className="app-icon-action app-help-tour-button"
+            aria-label="Xem hướng dẫn sử dụng"
+            title="Xem hướng dẫn sử dụng"
+            onClick={() => window.dispatchEvent(new CustomEvent(PRODUCT_TOUR_EVENT))}
+            style={{
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#64748b',
+              borderRadius: 0,
+            }}
+          >
+            <HelpCircle size={17} />
+          </button>
+
+          <button
             type="button"
             className="app-icon-action"
             aria-label="Mời Cà Phê"
@@ -921,13 +957,15 @@ export default function Layout() {
       </div>
 
       <FriendsDock />
+      <ProductTour />
 
-      <nav className="mobile-bottom-nav" aria-label="Điều hướng chính trên mobile">
+      <nav data-tour="app-nav" className="mobile-bottom-nav" aria-label="Điều hướng chính trên mobile">
         {visibleNavLinks.map(({ to, shortLabel, icon: Icon }) => {
           const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
           return (
             <NavLink
               key={to}
+              data-tour={NAV_TOUR_TARGETS[to]}
               to={to}
               aria-label={shortLabel}
               title={shortLabel}

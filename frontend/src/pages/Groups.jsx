@@ -335,9 +335,6 @@ export default function Groups() {
           <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.8px' }}>
             Nhóm <span style={{ color: '#38bdf8', fontStyle: 'italic' }}>Của Tôi</span>
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontWeight: 500 }}>
-            Tạo hoặc tham gia nhóm để đua top cùng bạn bè và đồng nghiệp.
-          </p>
         </div>
         <div className="groups-actions" style={{ display: 'flex', gap: 12 }}>
           <button
@@ -369,9 +366,6 @@ export default function Groups() {
               Cuộc thi nhóm
             </div>
             <h2 style={{ margin: 0, color: '#0f172a', fontSize: 20, fontWeight: 900 }}>Đấu 2v2 hoặc 3v3</h2>
-            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 600, lineHeight: 1.5 }}>
-              Tính điểm bằng số thao tác tăng thêm từ lúc tạo trận tới thời gian kết thúc.
-            </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(217,119,6,0.22)', borderRadius: 0, background: 'rgba(217,119,6,0.08)', padding: '8px 10px', color: '#92400e', fontSize: 12, fontWeight: 900 }}>

@@ -85,7 +85,14 @@ function socketCount(userOrId) {
   return state ? state.sockets.size : 0;
 }
 
+function activeUserIds() {
+  return Array.from(presenceByUser.entries())
+    .filter(([, state]) => state.sockets.size > 0 && state.status !== 'offline')
+    .map(([userId]) => userId);
+}
+
 module.exports = {
+  activeUserIds,
   addSocket,
   getPresence,
   getStatus,

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
-import { getAppSettings, subscribeAppSettings } from '../utils/settings';
 import BrandMark from '../components/BrandMark';
 import {
   Activity,
@@ -43,6 +42,26 @@ const TRACKER_DAILY_GOAL_KEY = 'workrank:tracker-daily-goal-minutes';
 const TRACKER_BREAK_REMINDER_KEY = 'workrank:tracker-break-reminder-minutes';
 const TRACKER_SESSION_FOCUS_KEY = 'workrank:tracker-session-focus';
 const TRACKER_SESSION_NOTE_KEY = 'workrank:tracker-session-note';
+const DESKTOP_TRACKER_CONSENT_KEY = 'workrank:desktop-tracker-consent:v1';
+
+function getDesktopConsentKey(user) {
+  const subject = user?.id || user?.email || 'guest';
+  return `${DESKTOP_TRACKER_CONSENT_KEY}:${subject}`;
+}
+
+function loadDesktopConsent(key) {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function saveDesktopConsent(key) {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {}
+}
 
 function loadNumberPreference(key, fallback, min, max) {
   try {
@@ -75,11 +94,12 @@ function clampPercent(value) {
 
 export default function Tracker() {
   const { user, logout } = useAuth();
-  const [appSettings, setAppSettings] = useState(getAppSettings);
   const [desktopConsentOpen, setDesktopConsentOpen] = useState(false);
   const [desktopConsentChecked, setDesktopConsentChecked] = useState(false);
+  const [desktopConsentAccepted, setDesktopConsentAccepted] = useState(false);
   const [desktopDownloadStarted, setDesktopDownloadStarted] = useState(false);
   const [desktopDownloadError, setDesktopDownloadError] = useState('');
+  const [desktopOpenNoticeOpen, setDesktopOpenNoticeOpen] = useState(false);
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(() => loadNumberPreference(TRACKER_DAILY_GOAL_KEY, 240, 15, 720));
   const [breakReminderMinutes, setBreakReminderMinutes] = useState(() => loadNumberPreference(TRACKER_BREAK_REMINDER_KEY, 50, 15, 180));
@@ -115,6 +135,8 @@ export default function Tracker() {
   const keyShare = totalActions > 0 ? clampPercent((displayKeys / totalActions) * 100) : 0;
   const clickShare = totalActions > 0 ? 100 - keyShare : 0;
   const desktopStatusText = desktopOnline ? (desktopTracking ? 'Đang ghi nhận' : 'Online, tạm dừng') : 'Chưa kết nối';
+  const desktopConsentKey = useMemo(() => getDesktopConsentKey(user), [user?.email, user?.id]);
+  const canConfirmDesktopConsent = desktopConsentAccepted || desktopConsentChecked;
   const connectionItems = useMemo(() => ([
     {
       label: 'Realtime socket',
@@ -135,7 +157,7 @@ export default function Tracker() {
       icon: Gauge,
     },
     {
-      label: 'Heartbeat',
+      label: 'Cập nhật cuối',
       value: formatDateTime(desktopInfo?.lastHeartbeat),
       ok: Boolean(desktopInfo?.lastHeartbeat),
       icon: Activity,
@@ -194,6 +216,13 @@ export default function Tracker() {
     window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
   }, []);
+
+  useEffect(() => {
+    const accepted = loadDesktopConsent(desktopConsentKey);
+    setDesktopConsentAccepted(accepted);
+    setDesktopConsentChecked(accepted);
+  }, [desktopConsentKey]);
+
   const desktopActionLabel = desktopOnline ? 'Bật' : 'Mở';
   const sourceLabel = desktopOnline && desktopTracking ? 'Desktop' : 'Chờ desktop';
   const mainActionLabel = trackingState === 'starting'
@@ -214,12 +243,28 @@ export default function Tracker() {
     info: '#64748b',
   }[desktopLaunchStatusType || 'info'];
 
-  const requestStartTrack = (options = {}) => {
-    if (options.launchDesktop && !desktopOnline) {
-      setDesktopConsentChecked(false);
+  const openDesktopConsentGuide = ({ resetDownload = true } = {}) => {
+    setDesktopConsentChecked(desktopConsentAccepted);
+    if (resetDownload) {
       setDesktopDownloadStarted(false);
       setDesktopDownloadError('');
-      setDesktopConsentOpen(true);
+    }
+    setDesktopConsentOpen(true);
+  };
+
+  const rememberDesktopConsent = () => {
+    saveDesktopConsent(desktopConsentKey);
+    setDesktopConsentAccepted(true);
+    setDesktopConsentChecked(true);
+  };
+
+  const requestStartTrack = (options = {}) => {
+    if (options.launchDesktop && !desktopOnline && !desktopConsentAccepted) {
+      openDesktopConsentGuide();
+      return false;
+    }
+    if (options.launchDesktop && !desktopOnline) {
+      setDesktopOpenNoticeOpen(true);
       return false;
     }
     void startTrack(options);
@@ -255,6 +300,33 @@ export default function Tracker() {
 
   const openInstalledDesktopTracker = () => {
     setDesktopConsentOpen(false);
+    setDesktopOpenNoticeOpen(true);
+    void startTrack({ launchDesktop: true });
+  };
+
+  const confirmConsentAndOpenInstalled = () => {
+    if (!canConfirmDesktopConsent) return;
+    rememberDesktopConsent();
+    openInstalledDesktopTracker();
+  };
+
+  const confirmConsentAndDownload = () => {
+    if (!canConfirmDesktopConsent) return;
+    rememberDesktopConsent();
+    void downloadDesktopTracker();
+  };
+
+  const handleDesktopDownload = () => {
+    if (!desktopConsentAccepted) {
+      setDesktopOpenNoticeOpen(false);
+      openDesktopConsentGuide();
+      return;
+    }
+    void downloadDesktopTracker();
+  };
+
+  const openDesktopTrackerFromNotice = () => {
+    setDesktopOpenNoticeOpen(true);
     void startTrack({ launchDesktop: true });
   };
 
@@ -269,12 +341,16 @@ export default function Tracker() {
     }
   };
 
-  useEffect(() => subscribeAppSettings(setAppSettings), []);
+  useEffect(() => {
+    if (desktopOpenNoticeOpen && desktopOnline) {
+      setDesktopOpenNoticeOpen(false);
+    }
+  }, [desktopOnline, desktopOpenNoticeOpen]);
 
   return (
     <div className="tracker-page-shell">
       {/* Widget Card */}
-      <div className="tracker-card" style={{
+      <div data-tour="tracker-widget" className="tracker-card" style={{
         width: 320,
         background: '#ffffff',
         borderRadius: 0,
@@ -298,18 +374,34 @@ export default function Tracker() {
               labelStyle={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.3px' }}
             />
           </div>
-          <span style={{
-            padding: '4px 8px',
-            borderRadius: 0,
-            background: connected ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-            color: connected ? '#16a34a' : '#dc2626',
-            fontSize: 10,
-            fontWeight: 900,
-            letterSpacing: '0.04em',
-            textTransform: 'uppercase',
-          }}>
-            {connected ? 'Live' : 'Offline'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              data-no-track="true"
+              aria-label="Xem lại hướng dẫn Desktop Tracker"
+              title="Xem lại hướng dẫn Desktop Tracker"
+              className="tracker-help-button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openDesktopConsentGuide({ resetDownload: false });
+              }}
+            >
+              ?
+            </button>
+            <span style={{
+              padding: '4px 8px',
+              borderRadius: 0,
+              background: connected ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+              color: connected ? '#16a34a' : '#dc2626',
+              fontSize: 10,
+              fontWeight: 900,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+            }}>
+              {connected ? 'Live' : 'Offline'}
+            </span>
+          </div>
         </div>
 
         {/* Desktop Status Indicator */}
@@ -398,7 +490,7 @@ export default function Tracker() {
                   if (tracking) {
                     toggle();
                   } else {
-                    requestStartTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
+                    requestStartTrack({ launchDesktop: true });
                   }
                 }}
                 disabled={trackingPending}
@@ -468,10 +560,7 @@ export default function Tracker() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setDesktopConsentChecked(false);
-                      setDesktopDownloadStarted(false);
-                      setDesktopDownloadError('');
-                      setDesktopConsentOpen(true);
+                      handleDesktopDownload();
                     }}
                     style={{
                       height: 27,
@@ -485,7 +574,7 @@ export default function Tracker() {
                       cursor: 'pointer',
                     }}
                   >
-                    Tải app Windows
+                    Tải .exe Windows
                   </button>
                   <a
                     href={desktopLaunchUrl}
@@ -719,7 +808,7 @@ export default function Tracker() {
           </label>
         </section>
 
-        <section className="tracker-panel tracker-panel-wide">
+        <section data-tour="tracker-desktop-install" className="tracker-panel tracker-panel-wide">
           <div className="tracker-panel-head">
             <div>
               <div className="tracker-panel-kicker">Desktop</div>
@@ -761,13 +850,14 @@ export default function Tracker() {
               {tracking ? 'Dừng theo dõi' : 'Bắt đầu và mở app'}
             </button>
             <button
+              data-tour="tracker-download"
               type="button"
               data-no-track="true"
-              onClick={() => setDesktopConsentOpen(true)}
+              onClick={handleDesktopDownload}
               className="tracker-action-secondary"
             >
               <Download size={14} />
-              Tải Windows
+              Tải .exe Windows
             </button>
             <button
               type="button"
@@ -867,6 +957,189 @@ export default function Tracker() {
           </div>
         </section>
       </div>
+
+      {desktopOpenNoticeOpen && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="desktop-open-notice-title"
+          onClick={() => setDesktopOpenNoticeOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 82,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 18,
+            background: 'rgba(15,23,42,0.38)',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(430px, calc(100vw - 32px))',
+              background: '#ffffff',
+              border: '1px solid rgba(15,23,42,0.08)',
+              borderRadius: 0,
+              boxShadow: '0 20px 45px rgba(15,23,42,0.16)',
+              color: '#0f172a',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 14,
+              padding: '17px 18px 13px',
+              borderBottom: '1px solid rgba(15,23,42,0.08)',
+            }}>
+              <div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  padding: '5px 8px',
+                  background: 'rgba(56,189,248,0.1)',
+                  color: '#0284c7',
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  marginBottom: 10,
+                }}>
+                  <Monitor size={13} />
+                  Mở Desktop Tracker
+                </div>
+                <h2 id="desktop-open-notice-title" style={{
+                  margin: 0,
+                  fontSize: 19,
+                  lineHeight: 1.18,
+                  fontWeight: 900,
+                }}>
+                  Cho phép trình duyệt mở app
+                </h2>
+                <p style={{
+                  margin: '8px 0 0',
+                  color: '#64748b',
+                  fontSize: 13,
+                  lineHeight: 1.45,
+                  fontWeight: 650,
+                }}>
+                  WorkRank sẽ mở Desktop Tracker bằng giao thức đã cài trên máy. Bấm nút bên dưới rồi chọn mở app nếu Chrome hỏi quyền.
+                </p>
+              </div>
+              <button
+                type="button"
+                data-no-track="true"
+                aria-label="Đóng thông báo mở app"
+                onClick={() => setDesktopOpenNoticeOpen(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  borderRadius: 0,
+                  background: '#f8fafc',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <XCircle size={16} />
+              </button>
+            </div>
+
+            <div style={{ padding: 18 }}>
+              <div style={{
+                border: '1px solid rgba(217,119,6,0.2)',
+                background: 'rgba(217,119,6,0.08)',
+                color: '#92400e',
+                padding: '11px 12px',
+                fontSize: 12,
+                lineHeight: 1.48,
+                fontWeight: 750,
+                marginBottom: 12,
+              }}>
+                Chrome có thể hiện hộp thoại xác nhận mở app liên kết. Đây là hộp thoại bảo mật của trình duyệt nên web không thể thay giao diện trực tiếp.
+              </div>
+              <div style={{
+                border: '1px solid rgba(22,163,74,0.18)',
+                background: 'rgba(22,163,74,0.07)',
+                color: '#15803d',
+                padding: '11px 12px',
+                fontSize: 12,
+                lineHeight: 1.48,
+                fontWeight: 750,
+                marginBottom: 14,
+              }}>
+                Trên Windows/macOS, sau khi app mở lần đầu có thể cần cấp quyền Accessibility/Input Monitoring để đếm phím và click.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+                <button
+                  type="button"
+                  data-no-track="true"
+                  onClick={() => setDesktopOpenNoticeOpen(false)}
+                  style={{
+                    height: 40,
+                    border: '1px solid rgba(15,23,42,0.1)',
+                    borderRadius: 0,
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: 13,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Đã hiểu
+                </button>
+                <button
+                  type="button"
+                  data-no-track="true"
+                  onClick={openDesktopTrackerFromNotice}
+                  style={{
+                    height: 40,
+                    border: 'none',
+                    borderRadius: 0,
+                    background: '#38bdf8',
+                    color: '#ffffff',
+                    fontSize: 13,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Mở Desktop Tracker
+                </button>
+                <button
+                  type="button"
+                  data-no-track="true"
+                  onClick={handleDesktopDownload}
+                  style={{
+                    gridColumn: '1 / -1',
+                    height: 38,
+                    border: '1px solid rgba(15,23,42,0.1)',
+                    borderRadius: 0,
+                    background: '#ffffff',
+                    color: '#64748b',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 7,
+                  }}
+                >
+                  <Download size={14} />
+                  Tải .exe Windows
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {desktopConsentOpen && (
         <div
@@ -1050,27 +1323,47 @@ export default function Tracker() {
                 Nếu máy chưa cài app, hãy bấm tải file .exe trước. Nút mở app đã cài chỉ hoạt động sau khi Windows đã cài WorkRank Tracker và đăng ký giao thức workrank://.
               </div>
 
-              <label style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 10,
-                padding: '11px 12px',
-                borderRadius: 0,
-                border: '1px solid rgba(15,23,42,0.1)',
-                background: '#f8fafc',
-                cursor: 'pointer',
-                marginBottom: 14,
-              }}>
-                <input
-                  type="checkbox"
-                  checked={desktopConsentChecked}
-                  onChange={(e) => setDesktopConsentChecked(e.target.checked)}
-                  style={{ marginTop: 2, width: 16, height: 16, accentColor: '#38bdf8', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 12, lineHeight: 1.45, color: '#334155', fontWeight: 700 }}>
-                  Tôi đã đọc cảnh báo và đồng ý cài WorkRank Tracker với phạm vi dữ liệu ở trên.
-                </span>
-              </label>
+              {desktopConsentAccepted ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 9,
+                  padding: '11px 12px',
+                  borderRadius: 0,
+                  border: '1px solid rgba(22,163,74,0.18)',
+                  background: 'rgba(22,163,74,0.07)',
+                  color: '#15803d',
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  fontWeight: 800,
+                  marginBottom: 14,
+                }}>
+                  <CheckCircle2 size={15} style={{ marginTop: 1, flexShrink: 0 }} />
+                  <span>Bạn đã đồng ý trước đó. Có thể xem lại hướng dẫn hoặc tải lại file .exe khi cần.</span>
+                </div>
+              ) : (
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '11px 12px',
+                  borderRadius: 0,
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  background: '#f8fafc',
+                  cursor: 'pointer',
+                  marginBottom: 14,
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={desktopConsentChecked}
+                    onChange={(e) => setDesktopConsentChecked(e.target.checked)}
+                    style={{ marginTop: 2, width: 16, height: 16, accentColor: '#38bdf8', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 12, lineHeight: 1.45, color: '#334155', fontWeight: 700 }}>
+                    Tôi đã đọc cảnh báo và đồng ý cài WorkRank Tracker với phạm vi dữ liệu ở trên.
+                  </span>
+                </label>
+              )}
 
               {desktopDownloadError && (
                 <div style={{
@@ -1104,44 +1397,45 @@ export default function Tracker() {
                     cursor: 'pointer',
                   }}
                 >
-                  Để sau
+                  {desktopConsentAccepted ? 'Đóng' : 'Để sau'}
                 </button>
                 <button
                   type="button"
                   data-no-track="true"
-                  onClick={openInstalledDesktopTracker}
+                  disabled={!canConfirmDesktopConsent}
+                  onClick={confirmConsentAndOpenInstalled}
                   style={{
                     height: 40,
                     borderRadius: 0,
                     border: '1px solid rgba(56,189,248,0.22)',
                     background: '#ffffff',
-                    color: '#38bdf8',
+                    color: canConfirmDesktopConsent ? '#38bdf8' : '#cbd5e1',
                     fontSize: 13,
                     fontWeight: 900,
-                    cursor: 'pointer',
+                    cursor: canConfirmDesktopConsent ? 'pointer' : 'not-allowed',
                   }}
                 >
-                  Đã cài, mở app
+                  {desktopConsentAccepted ? 'Đã cài, mở app' : 'Đồng ý, mở app'}
                 </button>
                 <button
                   type="button"
                   data-no-track="true"
-                  disabled={!desktopConsentChecked}
-                  onClick={downloadDesktopTracker}
+                  disabled={!canConfirmDesktopConsent}
+                  onClick={confirmConsentAndDownload}
                   style={{
                     gridColumn: '1 / -1',
                     height: 40,
                     borderRadius: 0,
                     border: 'none',
-                    background: desktopConsentChecked ? '#38bdf8' : '#cbd5e1',
+                    background: canConfirmDesktopConsent ? '#38bdf8' : '#cbd5e1',
                     color: '#ffffff',
                     fontSize: 13,
                     fontWeight: 900,
-                    cursor: desktopConsentChecked ? 'pointer' : 'not-allowed',
+                    cursor: canConfirmDesktopConsent ? 'pointer' : 'not-allowed',
                     boxShadow: 'none',
                   }}
                 >
-                  Đồng ý và tải về
+                  {desktopConsentAccepted ? 'Tải .exe Windows' : 'Đồng ý và tải .exe'}
                 </button>
               </div>
 

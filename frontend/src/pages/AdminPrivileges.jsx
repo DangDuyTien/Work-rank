@@ -205,9 +205,6 @@ export default function AdminPrivileges() {
             Quản trị đặc quyền
           </div>
           <h1 style={{ margin: '12px 0 8px', fontSize: 28, lineHeight: 1.1, color: '#0f172a' }}>Tích xanh và huy hiệu người dùng</h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>
-            Cấp tích xanh cho khung trên, cấp huy hiệu đặc quyền riêng cho khung ảnh hồ sơ.
-          </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ ...CARD, boxShadow: 'none', padding: '10px 12px', minWidth: 120 }}>
