@@ -1,14 +1,31 @@
 export const AVATAR_UPDATED_EVENT = 'workrank:profile-avatar-updated';
 export const AVATAR_STORAGE_PREFIX = 'workrank:profile-avatar:';
 
+const avatarCache = new Map();
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (!event.key || !event.key.startsWith(AVATAR_STORAGE_PREFIX)) return;
+    const userId = event.key.slice(AVATAR_STORAGE_PREFIX.length);
+    avatarCache.set(userId, event.newValue || '');
+    window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT, {
+      detail: { userId, avatarUrl: event.newValue || '' },
+    }));
+  });
+}
+
 export function avatarStorageKey(userId) {
   return `${AVATAR_STORAGE_PREFIX}${userId}`;
 }
 
 export function getStoredAvatar(userId) {
   if (!userId) return '';
+  const key = String(userId);
+  if (avatarCache.has(key)) return avatarCache.get(key);
   try {
-    return localStorage.getItem(avatarStorageKey(userId)) || '';
+    const value = localStorage.getItem(avatarStorageKey(userId)) || '';
+    avatarCache.set(key, value);
+    return value;
   } catch {
     return '';
   }
@@ -16,6 +33,7 @@ export function getStoredAvatar(userId) {
 
 export function setStoredAvatar(userId, dataUrl) {
   if (!userId || !dataUrl) return;
+  avatarCache.set(String(userId), dataUrl);
   localStorage.setItem(avatarStorageKey(userId), dataUrl);
   window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT, {
     detail: { userId: String(userId), avatarUrl: dataUrl },
@@ -24,6 +42,7 @@ export function setStoredAvatar(userId, dataUrl) {
 
 export function removeStoredAvatar(userId) {
   if (!userId) return;
+  avatarCache.set(String(userId), '');
   localStorage.removeItem(avatarStorageKey(userId));
   window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT, {
     detail: { userId: String(userId), avatarUrl: '' },

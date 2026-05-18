@@ -20,9 +20,13 @@ import { useToast } from '../context/UiContext';
 
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
 const PAGE_SIZE = 50;
+const DEV_PRIVILEGE_LABEL = 'Dev';
+const PRIVILEGE_BADGE_ALIASES = {
+  'Dev đặc quyền': DEV_PRIVILEGE_LABEL,
+};
 
 const PRIVILEGE_BADGES = [
-  { label: 'Dev đặc quyền', icon: Code },
+  { label: DEV_PRIVILEGE_LABEL, icon: Code },
   { label: 'Người đóng góp', icon: Medal },
   { label: 'Nhà sáng lập', icon: Trophy },
   { label: 'Thành viên VIP', icon: Crown },
@@ -32,7 +36,7 @@ const PRIVILEGE_BADGES = [
 
 const PRIVILEGE_BADGE_LIMIT = PRIVILEGE_BADGES.length;
 const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.label));
-const LEGACY_PRIVILEGE_BADGE_LABELS = new Set(['Tích xanh đặc quyền', ...PRIVILEGE_BADGE_LABELS]);
+const LEGACY_PRIVILEGE_BADGE_LABELS = new Set(['Tích xanh đặc quyền', ...Object.keys(PRIVILEGE_BADGE_ALIASES), ...PRIVILEGE_BADGE_LABELS]);
 
 const CARD = {
   background: '#ffffff',
@@ -71,8 +75,17 @@ function normalizeBadges(value) {
   return Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).slice(0, PROFILE_BADGE_STORAGE_LIMIT) : [];
 }
 
+function canonicalPrivilegeBadgeLabel(label) {
+  const trimmed = String(label || '').trim();
+  return PRIVILEGE_BADGE_ALIASES[trimmed] || trimmed;
+}
+
+function uniqueLabels(labels) {
+  return labels.filter((label, index, list) => list.indexOf(label) === index);
+}
+
 function isPrivilegeBadgeLabel(label) {
-  return PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
+  return PRIVILEGE_BADGE_LABELS.has(canonicalPrivilegeBadgeLabel(label));
 }
 
 function isManagedPrivilegeBadgeLabel(label) {
@@ -171,14 +184,15 @@ export default function AdminPrivileges() {
   const toggleBadge = async (user, label) => {
     const userId = String(user.id);
     const current = normalizeBadges(badgeByUser[userId]);
-    const currentPrivileges = current.filter(isPrivilegeBadgeLabel);
+    const currentPrivileges = uniqueLabels(current.filter(isPrivilegeBadgeLabel).map(canonicalPrivilegeBadgeLabel));
     const otherBadges = current.filter((item) => !isManagedPrivilegeBadgeLabel(item));
-    const exists = currentPrivileges.includes(label);
+    const canonicalLabel = canonicalPrivilegeBadgeLabel(label);
+    const exists = currentPrivileges.includes(canonicalLabel);
     if (!exists && currentPrivileges.length >= PRIVILEGE_BADGE_LIMIT) {
       toast(`Mỗi hồ sơ chỉ có tối đa ${PRIVILEGE_BADGE_LIMIT} huy hiệu đặc quyền.`, { type: 'warning' });
       return;
     }
-    const nextPrivileges = exists ? currentPrivileges.filter((item) => item !== label) : [...currentPrivileges, label];
+    const nextPrivileges = exists ? currentPrivileges.filter((item) => item !== canonicalLabel) : [...currentPrivileges, canonicalLabel];
     const next = [...nextPrivileges, ...otherBadges].slice(0, PROFILE_BADGE_STORAGE_LIMIT);
     setUserSaving(userId, true);
     setBadgeByUser((state) => ({ ...state, [userId]: next }));
@@ -273,7 +287,7 @@ export default function AdminPrivileges() {
           <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 800 }}>Không có người dùng phù hợp.</div>
         ) : filteredUsers.map((user) => {
           const userId = String(user.id);
-          const selectedBadges = normalizeBadges(badgeByUser[userId]).filter(isPrivilegeBadgeLabel);
+          const selectedBadges = uniqueLabels(normalizeBadges(badgeByUser[userId]).filter(isPrivilegeBadgeLabel).map(canonicalPrivilegeBadgeLabel));
           const pending = Boolean(saving[userId]);
           return (
             <article key={userId} className="admin-privilege-row" style={{ ...CARD, padding: 14, display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) minmax(260px, 1.35fr) auto', alignItems: 'center', gap: 14 }}>
@@ -294,6 +308,7 @@ export default function AdminPrivileges() {
                 {PRIVILEGE_BADGES.map((badge) => {
                   const Icon = badge.icon;
                   const active = selectedBadges.includes(badge.label);
+                  const isDevBadge = badge.label === DEV_PRIVILEGE_LABEL;
                   return (
                     <button
                       key={badge.label}
@@ -316,7 +331,13 @@ export default function AdminPrivileges() {
                         cursor: pending ? 'wait' : 'pointer',
                       }}
                     >
-                      <Icon size={13} strokeWidth={2.5} />
+                      {isDevBadge ? (
+                        <span style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", fontSize: 11, fontWeight: 900, letterSpacing: 0 }}>
+                          &lt;&gt;
+                        </span>
+                      ) : (
+                        <Icon size={13} strokeWidth={2.5} />
+                      )}
                       {badge.label}
                     </button>
                   );

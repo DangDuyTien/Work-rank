@@ -8,15 +8,14 @@ import {
   Activity,
   AlertCircle,
   Clock3,
-  Keyboard,
   Monitor,
-  Mouse,
   RefreshCw,
   TrendingDown,
   TrendingUp,
   Users,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 function isVerifiedUser(user) {
   return user.verified === true || user.isVerified === true || user.verified === 1 || user.isVerified === 1 || user.verified === '1' || user.isVerified === '1';
@@ -34,6 +33,12 @@ const RANGES = [
   { key: 'week', label: 'Tuần này' },
   { key: 'month', label: 'Tháng này' },
 ];
+
+const ONLINE_STATUSES = ['active', 'online', 'idle'];
+const STATUS_PRIORITY = { active: 0, online: 1, idle: 2, offline: 3 };
+const DASHBOARD_LEADERBOARD_LIMIT = 24;
+const DASHBOARD_USER_CACHE_LIMIT = 80;
+const DASHBOARD_REALTIME_FLUSH_MS = 700;
 
 function formatNum(value) {
   const n = Number(value) || 0;
@@ -65,6 +70,54 @@ function localDateKey(value = new Date()) {
 
 function statusConfig(status) {
   return STATUS_CONFIG[String(status || 'offline').toLowerCase()] || STATUS_CONFIG.offline;
+}
+
+function dashboardUserId(user = {}) {
+  return String(user.user_id || user.id || user.userId || '');
+}
+
+function activityDeltaFromPayload(data = {}) {
+  const delta = data.delta || {};
+  return {
+    keystrokeCount: Number(delta.keystrokeCount ?? data.keystrokes ?? 0),
+    mouseClickCount: Number(delta.mouseClickCount ?? data.clicks ?? 0),
+    activeSeconds: Number(delta.activeSeconds ?? data.activeSeconds ?? 0),
+    idleSeconds: Number(delta.idleSeconds ?? data.idleSeconds ?? 0),
+  };
+}
+
+function mergeActivityPayload(previous, data = {}) {
+  const incomingDelta = activityDeltaFromPayload(data);
+  if (!previous) {
+    return {
+      ...data,
+      delta: incomingDelta,
+    };
+  }
+  const previousDelta = previous.delta || {};
+  return {
+    ...previous,
+    ...data,
+    delta: {
+      keystrokeCount: Number(previousDelta.keystrokeCount || 0) + incomingDelta.keystrokeCount,
+      mouseClickCount: Number(previousDelta.mouseClickCount || 0) + incomingDelta.mouseClickCount,
+      activeSeconds: Number(previousDelta.activeSeconds || 0) + incomingDelta.activeSeconds,
+      idleSeconds: Number(previousDelta.idleSeconds || 0) + incomingDelta.idleSeconds,
+    },
+    totals: data.totals || previous.totals,
+  };
+}
+
+function capDashboardUsers(rows = []) {
+  if (rows.length <= DASHBOARD_USER_CACHE_LIMIT) return rows;
+  return [...rows]
+    .sort((a, b) => {
+      const aStatus = STATUS_PRIORITY[String(a.status || a.presence || '').toLowerCase()] ?? 9;
+      const bStatus = STATUS_PRIORITY[String(b.status || b.presence || '').toLowerCase()] ?? 9;
+      if (aStatus !== bStatus) return aStatus - bStatus;
+      return Number(b.score || 0) - Number(a.score || 0);
+    })
+    .slice(0, DASHBOARD_USER_CACHE_LIMIT);
 }
 
 function buildDelta(current, previous, label = 'lần cập nhật trước') {
@@ -114,13 +167,11 @@ function StatCard({ card, loading }) {
 export default function Dashboard() {
   const { socket } = useAuth();
   const navigate = useNavigate();
+  const pageVisible = usePageVisibility();
   const [range, setRange] = useState('today');
   const [totals, setTotals] = useState({ keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
   const [prevTotals, setPrevTotals] = useState(null);
-  const [viewMode, setViewMode] = useState('list');
   const [users, setUsers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [now, setNow] = useState(new Date());
   const [liveFlash, setLiveFlash] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -146,7 +197,7 @@ export default function Dashboard() {
 
     try {
       const [leaderboardRes, overviewRes] = await Promise.all([
-        leaderboard.get(selectedRange),
+        leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT }),
         dashboard.overview(selectedRange),
       ]);
       if (requestId !== requestIdRef.current) return;
@@ -174,8 +225,8 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetchData(range);
-  }, [fetchData, range]);
+    if (pageVisible) fetchData(range);
+  }, [fetchData, pageVisible, range]);
 
   useEffect(() => {
     const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
@@ -184,52 +235,88 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!socket) return undefined;
+    if (!socket || !pageVisible) return undefined;
     let flashTimer = null;
+    let flushTimer = null;
+    let pendingTotalDelta = { keystrokes: 0, clicks: 0, activeSeconds: 0 };
+    const pendingUserUpdates = new Map();
 
     const eventBelongsToRange = (data = {}) => {
       if (range !== 'today') return true;
       return !data.statDate || data.statDate === localDateKey();
     };
 
-    const handleActivity = (data = {}) => {
-      if (!eventBelongsToRange(data)) return;
-      setLiveFlash(true);
-      if (flashTimer) window.clearTimeout(flashTimer);
-      flashTimer = window.setTimeout(() => setLiveFlash(false), 650);
+    const flushActivityBatch = () => {
+      flushTimer = null;
+      const totalDelta = pendingTotalDelta;
+      const updates = Array.from(pendingUserUpdates.values());
+      pendingTotalDelta = { keystrokes: 0, clicks: 0, activeSeconds: 0 };
+      pendingUserUpdates.clear();
 
-      const delta = data.delta || {};
-      setTotals((prev) => ({
-        ...prev,
-        keystrokes: prev.keystrokes + Number(delta.keystrokeCount ?? data.keystrokes ?? 0),
-        clicks: prev.clicks + Number(delta.mouseClickCount ?? data.clicks ?? 0),
-        activeSeconds: prev.activeSeconds + Number(delta.activeSeconds ?? 0),
-      }));
-
+      if (totalDelta.keystrokes || totalDelta.clicks || totalDelta.activeSeconds) {
+        setTotals((prev) => ({
+          ...prev,
+          keystrokes: prev.keystrokes + totalDelta.keystrokes,
+          clicks: prev.clicks + totalDelta.clicks,
+          activeSeconds: prev.activeSeconds + totalDelta.activeSeconds,
+        }));
+      }
+      if (updates.length === 0) return;
       setUsers((prev) => {
-        const userId = String(data.userId || data.user_id || '');
-        if (!userId) return prev;
-        const totals = range === 'today' ? data.totals || null : null;
-        const deltaKeys = Number(delta.keystrokeCount ?? data.keystrokes ?? 0);
-        const deltaClicks = Number(delta.mouseClickCount ?? data.clicks ?? 0);
-        const deltaActiveSeconds = Number(delta.activeSeconds ?? data.activeSeconds ?? 0);
-        const deltaIdleSeconds = Number(delta.idleSeconds ?? data.idleSeconds ?? 0);
-        const nextStatus = data.presence || data.status || 'active';
-        const idx = prev.findIndex((user) => String(user.user_id || user.id) === userId);
+        let next = [...prev];
+        let changed = false;
+        updates.forEach((data = {}) => {
+          const userId = String(data.userId || data.user_id || '');
+          if (!userId) return;
+          const totals = range === 'today' ? data.totals || null : null;
+          const delta = data.delta || {};
+          const deltaKeys = Number(delta.keystrokeCount || 0);
+          const deltaClicks = Number(delta.mouseClickCount || 0);
+          const deltaActiveSeconds = Number(delta.activeSeconds || 0);
+          const deltaIdleSeconds = Number(delta.idleSeconds || 0);
+          const nextStatus = data.presence || data.status || 'active';
+          const idx = next.findIndex((user) => dashboardUserId(user) === userId);
 
-        if (idx >= 0) {
-          const next = [...prev];
-          const existing = next[idx];
-          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys;
-          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks;
-          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds || existing.total_active_seconds) || 0) + deltaActiveSeconds;
-          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(existing.idleSeconds || existing.total_idle_seconds) || 0) + deltaIdleSeconds;
-          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? existing.focusScore ?? 0);
+          if (idx >= 0) {
+            const existing = next[idx];
+            const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : (Number(existing.keystrokeCount) || 0) + deltaKeys;
+            const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : (Number(existing.mouseClickCount) || 0) + deltaClicks;
+            const activeSeconds = totals ? Number(totals.activeSeconds || 0) : (Number(existing.activeSeconds || existing.total_active_seconds) || 0) + deltaActiveSeconds;
+            const idleSeconds = totals ? Number(totals.idleSeconds || 0) : (Number(existing.idleSeconds || existing.total_idle_seconds) || 0) + deltaIdleSeconds;
+            const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore ?? existing.focusScore ?? 0);
+            const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
+            next[idx] = {
+              ...existing,
+              ...data,
+              name: data.name || existing.name,
+              keystrokeCount,
+              mouseClickCount,
+              activeSeconds,
+              idleSeconds,
+              total_active_seconds: activeSeconds,
+              total_idle_seconds: idleSeconds,
+              focusScore,
+              score,
+              status: nextStatus,
+              presence: nextStatus,
+              presenceStatus: nextStatus,
+            };
+            changed = true;
+            return;
+          }
+
+          const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
+          const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
+          const activeSeconds = totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds;
+          const idleSeconds = totals ? Number(totals.idleSeconds || 0) : deltaIdleSeconds;
+          const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore || 0);
           const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
-          next[idx] = {
-            ...existing,
+
+          next.push({
             ...data,
-            name: data.name || existing.name,
+            user_id: userId,
+            status: nextStatus,
+            name: data.name || `User #${userId}`,
             keystrokeCount,
             mouseClickCount,
             activeSeconds,
@@ -238,37 +325,36 @@ export default function Dashboard() {
             total_idle_seconds: idleSeconds,
             focusScore,
             score,
-            status: nextStatus,
-          };
-          return next;
-        }
-
-        const keystrokeCount = totals ? Number(totals.keystrokeCount || 0) : deltaKeys;
-        const mouseClickCount = totals ? Number(totals.mouseClickCount || 0) : deltaClicks;
-        const activeSeconds = totals ? Number(totals.activeSeconds || 0) : deltaActiveSeconds;
-        const idleSeconds = totals ? Number(totals.idleSeconds || 0) : deltaIdleSeconds;
-        const focusScore = totals ? Number(totals.focusScore || 0) : Number(data.focusScore || 0);
-        const score = calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore });
-
-        return [...prev, {
-          ...data,
-          user_id: userId,
-          status: nextStatus,
-          name: data.name || `User #${userId}`,
-          keystrokeCount,
-          mouseClickCount,
-          activeSeconds,
-          idleSeconds,
-          total_active_seconds: activeSeconds,
-          total_idle_seconds: idleSeconds,
-          focusScore,
-          score,
-        }];
+            presence: nextStatus,
+            presenceStatus: nextStatus,
+          });
+          changed = true;
+        });
+        return changed ? capDashboardUsers(next) : prev;
       });
+    };
+
+    const handleActivity = (data = {}) => {
+      if (!eventBelongsToRange(data)) return;
+      if (!flashTimer) setLiveFlash(true);
+      if (flashTimer) window.clearTimeout(flashTimer);
+      flashTimer = window.setTimeout(() => {
+        flashTimer = null;
+        setLiveFlash(false);
+      }, 650);
+
+      const userId = String(data.userId || data.user_id || '');
+      const delta = activityDeltaFromPayload(data);
+      pendingTotalDelta.keystrokes += delta.keystrokeCount;
+      pendingTotalDelta.clicks += delta.mouseClickCount;
+      pendingTotalDelta.activeSeconds += delta.activeSeconds;
+      if (userId) pendingUserUpdates.set(userId, mergeActivityPayload(pendingUserUpdates.get(userId), data));
+      if (!flushTimer) flushTimer = window.setTimeout(flushActivityBatch, DASHBOARD_REALTIME_FLUSH_MS);
     };
 
     const handleOverview = (overview = {}) => {
       if (range !== 'today') return;
+      pendingTotalDelta = { keystrokes: 0, clicks: 0, activeSeconds: 0 };
       setTotals({
         keystrokes: Number(overview.totalKeystrokes || 0),
         clicks: Number(overview.totalMouseClicks || 0),
@@ -280,7 +366,7 @@ export default function Dashboard() {
     const handleStatus = (data = {}) => {
       setUsers((prev) => {
         const userId = String(data.userId || data.user_id || '');
-        const idx = prev.findIndex((user) => String(user.user_id || user.id) === userId);
+        const idx = prev.findIndex((user) => dashboardUserId(user) === userId);
         if (idx < 0) return prev;
         const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
         const next = [...prev];
@@ -295,15 +381,20 @@ export default function Dashboard() {
 
     return () => {
       if (flashTimer) window.clearTimeout(flashTimer);
+      if (flushTimer) window.clearTimeout(flushTimer);
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
       socket.off('dashboard:overview:update', handleOverview);
     };
-  }, [socket, range]);
+  }, [socket, pageVisible, range]);
 
-  const activeUsers = users.filter((user) => ['active', 'online', 'idle'].includes(String(user.status || user.presence || '').toLowerCase())).length;
+  const activeUsers = useMemo(
+    () => users.filter((user) => ONLINE_STATUSES.includes(String(user.status || user.presence || '').toLowerCase())).length,
+    [users]
+  );
   const currentOnlineUsers = Math.max(Number(totals.online || 0), activeUsers);
-  const averageScore = users.length ? Math.round(users.reduce((sum, user) => sum + Number(user.score ?? calculateRankScore(user)), 0) / users.length) : 0;
+  const totalActions = Number(totals.keystrokes || 0) + Number(totals.clicks || 0);
+  const previousActions = prevTotals ? Number(prevTotals.keystrokes || 0) + Number(prevTotals.clicks || 0) : null;
 
   const statCards = useMemo(() => ([
     {
@@ -324,43 +415,41 @@ export default function Dashboard() {
       iconBg: 'rgba(22,163,74,0.1)',
     },
     {
-      label: 'Gõ phím',
-      value: formatNum(totals.keystrokes),
-      delta: buildDelta(totals.keystrokes, prevTotals?.keystrokes),
-      note: 'Không lưu nội dung phím',
-      icon: Keyboard,
+      label: 'Thao tác',
+      value: formatNum(totalActions),
+      delta: buildDelta(totalActions, previousActions),
+      note: 'Gộp gõ phím và click chuột',
+      icon: Activity,
       color: '#7c3aed',
       iconBg: 'rgba(124,58,237,0.1)',
     },
-    {
-      label: 'Click chuột',
-      value: formatNum(totals.clicks),
-      delta: buildDelta(totals.clicks, prevTotals?.clicks),
-      note: `Điểm tổng TB: ${averageScore.toLocaleString()}`,
-      icon: Mouse,
-      color: '#ea580c',
-      iconBg: 'rgba(234,88,12,0.1)',
-    },
-  ]), [averageScore, currentOnlineUsers, prevTotals, totals]);
+  ]), [currentOnlineUsers, prevTotals, previousActions, totalActions, totals.activeSeconds]);
 
-  const tableRows = users.map((user) => {
+  const tableRows = useMemo(() => users.map((user) => {
     const activeSeconds = Number(user.activeSeconds || user.active_seconds || user.total_active_seconds || 0);
     const idleSeconds = Number(user.idleSeconds || user.idle_seconds || user.total_idle_seconds || 0);
     const keystrokeCount = Number(user.keystrokeCount || user.keystrokes || 0);
     const mouseClickCount = Number(user.mouseClickCount || user.mouse_clicks || 0);
-    const focusScore = Number(user.focusScore || 0);
-    const activeMinutes = Math.max(1, activeSeconds / 60);
     return {
       ...user,
       id: user.user_id || user.id,
       status: user.status || user.presence || user.presenceStatus || 'offline',
       activeSeconds,
       idleSeconds,
-      kpm: activeSeconds > 0 ? Math.round(keystrokeCount / activeMinutes) : 0,
-      cpm: activeSeconds > 0 ? Math.round(mouseClickCount / activeMinutes) : 0,
-      score: Number(user.score ?? calculateRankScore({ activeSeconds, idleSeconds, keystrokeCount, mouseClickCount, focusScore })),
+      actions: keystrokeCount + mouseClickCount,
     };
-  });
+  }), [users]);
+
+  const onlineRows = useMemo(() => [...tableRows]
+    .filter((user) => ONLINE_STATUSES.includes(String(user.status || '').toLowerCase()))
+    .sort((a, b) => {
+      const aStatus = STATUS_PRIORITY[String(a.status || '').toLowerCase()] ?? 9;
+      const bStatus = STATUS_PRIORITY[String(b.status || '').toLowerCase()] ?? 9;
+      if (aStatus !== bStatus) return aStatus - bStatus;
+      return Number(b.activeSeconds || 0) - Number(a.activeSeconds || 0);
+    })
+    .slice(0, 12), [tableRows]);
+  const hiddenOnlineCount = Math.max(0, currentOnlineUsers - onlineRows.length);
 
   return (
     <div className="dashboard-page">
@@ -411,96 +500,82 @@ export default function Dashboard() {
         {statCards.map((card) => <StatCard key={card.label} card={card} loading={loading && !error} />)}
       </section>
 
-      <section className="dashboard-live-card" data-tour="live-table">
+      <section className="dashboard-live-card is-compact" data-tour="live-table">
         <div className="dashboard-table-header">
           <div>
-            <h2>Hoạt động thời gian thực</h2>
-            <p>{tableRows.length ? `${tableRows.length} người dùng trong bảng xếp hạng hiện tại` : 'Chưa có dữ liệu cho khoảng thời gian này'}</p>
+            <h2>Người đang online</h2>
+            <p>{currentOnlineUsers ? `${currentOnlineUsers.toLocaleString()} người có tín hiệu hiện tại` : 'Chưa có tín hiệu online'}</p>
           </div>
-          <div className="dashboard-table-status">
-            <span className={`dashboard-live-dot ${liveFlash ? 'flash' : ''}`} />
-            <span>Live</span>
+          <div className="dashboard-table-actions">
+            <div className="dashboard-table-status">
+              <span className={`dashboard-live-dot ${liveFlash ? 'flash' : ''}`} />
+              <span>Live</span>
+            </div>
+            <button type="button" className="dashboard-table-link" onClick={() => navigate('/leaderboard')}>
+              Xem xếp hạng
+            </button>
           </div>
         </div>
 
-        <div className="dashboard-realtime-table">
-          <table>
-            <thead>
-              <tr>
-                {['Người dùng', 'Trạng thái', 'Gõ/phút', 'Click/phút', 'Thời gian active', 'Điểm tổng'].map((heading) => (
-                  <th key={heading} className={heading === 'Người dùng' || heading === 'Trạng thái' ? 'left' : 'right'}>
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading && !error ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={index}>
-                    <td colSpan={6}><div className="dashboard-row-skeleton" /></td>
-                  </tr>
-                ))
-              ) : tableRows.length === 0 ? (
-                <tr>
-                  <td colSpan={6}>
-                    <div className="dashboard-empty-state">
-                      <Monitor size={28} />
-                      <strong>Chưa có hoạt động realtime</strong>
-                      <span>Mở Desktop Tracker để bắt đầu gửi dữ liệu gõ phím, click và thời gian active.</span>
-                      <button type="button" onClick={() => navigate('/tracker')}>Mở Tracker</button>
+        <div className="dashboard-online-list">
+          {loading && !error ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="dashboard-online-row is-loading">
+                <div className="dashboard-avatar dashboard-skeleton" />
+                <div className="dashboard-online-skeleton-copy">
+                  <div className="dashboard-skeleton" />
+                  <div className="dashboard-skeleton" />
+                </div>
+              </div>
+            ))
+          ) : onlineRows.length === 0 ? (
+            <div className="dashboard-empty-state">
+              <Monitor size={28} />
+              <strong>Chưa có người online</strong>
+              <span>Mở Desktop Tracker để bắt đầu gửi tín hiệu hoạt động realtime.</span>
+              <button type="button" onClick={() => navigate('/tracker')}>Mở Tracker</button>
+            </div>
+          ) : (
+            onlineRows.map((user) => {
+              const sc = statusConfig(user.status);
+              const avatarUrl = getUserAvatar(user);
+              const initials = initialsFromName(user.name || `User #${user.id}`);
+              return (
+                <button
+                  key={user.id}
+                  type="button"
+                  className="dashboard-online-row"
+                  onClick={() => navigate(`/users/${user.id}`)}
+                >
+                  <div className="dashboard-user-cell">
+                    <div className="dashboard-avatar" data-avatar-refresh={avatarRefreshKey}>
+                      {avatarUrl ? <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${user.id}`}`} /> : initials}
                     </div>
-                  </td>
-                </tr>
-              ) : tableRows.map((user) => {
-                const sc = statusConfig(user.status);
-                const avatarUrl = getUserAvatar(user);
-                const initials = initialsFromName(user.name || `User #${user.id}`);
-                return (
-                  <tr
-                    key={user.id}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        navigate(`/users/${user.id}`);
-                      }
-                    }}
-                    onClick={() => navigate(`/users/${user.id}`)}
-                  >
-                    <td>
-                      <div className="dashboard-user-cell">
-                        <div className="dashboard-avatar" data-avatar-refresh={avatarRefreshKey}>
-                          {avatarUrl ? <img src={avatarUrl} alt={`Ảnh đại diện ${user.name || `User #${user.id}`}`} /> : initials}
-                        </div>
-                        <div>
-                          <div className="dashboard-user-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {user.name || `User #${user.id}`}
-                            {isVerifiedUser(user) && <VerifiedBadge size={14} />}
-                          </div>
-                        </div>
+                    <div>
+                      <div className="dashboard-user-name">
+                        {user.name || `User #${user.id}`}
+                        {isVerifiedUser(user) && <VerifiedBadge size={14} />}
                       </div>
-                    </td>
-                    <td>
-                      <span className="dashboard-status-pill" style={{ color: sc.color, background: sc.bg, borderColor: sc.border }}>
-                        <span style={{ background: sc.dot }} />
-                        {sc.label}
-                      </span>
-                    </td>
-                    <td className="right mono">{user.kpm.toLocaleString()}</td>
-                    <td className="right mono">{user.cpm.toLocaleString()}</td>
-                    <td className="right mono muted">{formatDuration(user.activeSeconds)}</td>
-                    <td className="right">
-                      <span className="dashboard-score" data-tone={user.score >= 850 ? 'good' : user.score >= 600 ? 'ok' : 'warn'}>
-                        {user.score.toFixed(1)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <div className="dashboard-online-meta">
+                        <span>{formatDuration(user.activeSeconds)}</span>
+                        <span>{formatNum(user.actions)} thao tác</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="dashboard-status-pill is-compact" style={{ color: sc.color, background: sc.bg, borderColor: sc.border }}>
+                    <span style={{ background: sc.dot }} />
+                    {sc.label}
+                  </span>
+                </button>
+              );
+            })
+          )}
+
+          {!loading && hiddenOnlineCount > 0 && (
+            <button type="button" className="dashboard-online-overflow" onClick={() => navigate('/leaderboard')}>
+              +{hiddenOnlineCount.toLocaleString()} người khác trong bảng xếp hạng
+            </button>
+          )}
         </div>
       </section>
     </div>

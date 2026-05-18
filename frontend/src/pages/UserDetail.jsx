@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 const UserActivityChart = lazy(() => import('../components/UserActivityChart'));
 
@@ -52,9 +53,13 @@ const PROFILE_GALLERY_IMAGES = Array.from({ length: 6 }, () => '');
 
 const FEATURED_BADGE_LIMIT = 4;
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
+const DEV_PRIVILEGE_LABEL = 'Dev';
+const PRIVILEGE_BADGE_ALIASES = {
+  'Dev đặc quyền': DEV_PRIVILEGE_LABEL,
+};
 
 const PRIVILEGE_BADGES = [
-  { label: 'Dev đặc quyền', desc: 'Huy hiệu dev do admin cấp', icon: Code, unlocked: true, privilege: true },
+  { label: DEV_PRIVILEGE_LABEL, desc: 'Huy hiệu Dev do admin cấp', icon: Code, unlocked: true, privilege: true },
   { label: 'Người đóng góp', desc: 'Đóng góp cho cộng đồng WorkRank', icon: Medal, unlocked: true, privilege: true },
   { label: 'Nhà sáng lập', desc: 'Tài khoản sáng lập hoặc vận hành', icon: Trophy, unlocked: true, privilege: true },
   { label: 'Thành viên VIP', desc: 'Hồ sơ được ưu tiên hiển thị', icon: Crown, unlocked: true, privilege: true },
@@ -64,8 +69,13 @@ const PRIVILEGE_BADGES = [
 
 const PRIVILEGE_BADGE_LABELS = new Set(PRIVILEGE_BADGES.map((badge) => badge.label));
 
+function canonicalPrivilegeBadgeLabel(label) {
+  const trimmed = String(label || '').trim();
+  return PRIVILEGE_BADGE_ALIASES[trimmed] || trimmed;
+}
+
 function isPrivilegeBadgeLabel(label) {
-  return PRIVILEGE_BADGE_LABELS.has(String(label || '').trim());
+  return PRIVILEGE_BADGE_LABELS.has(canonicalPrivilegeBadgeLabel(label));
 }
 
 function isDevProfileUser(user = {}) {
@@ -213,12 +223,20 @@ const ACHIEVEMENT_TIER_STYLES = [
     glow: '0 16px 36px rgba(37,99,235,0.18)',
   },
   {
-    label: 'Huyền thoại',
+    label: 'Kim cương',
     color: '#7c3aed',
     accent: '#ec4899',
     soft: 'rgba(124,58,237,0.16)',
     border: 'rgba(124,58,237,0.42)',
     glow: '0 18px 44px rgba(124,58,237,0.22)',
+  },
+  {
+    label: 'Huyền thoại',
+    color: '#be123c',
+    accent: '#f59e0b',
+    soft: 'rgba(190,18,60,0.16)',
+    border: 'rgba(190,18,60,0.42)',
+    glow: '0 20px 52px rgba(190,18,60,0.24)',
   },
 ];
 
@@ -581,7 +599,7 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
       label: 'Cấp bậc',
       icon: Medal,
       value: levelView.level,
-      thresholds: [10, 20, 35, 70, 130],
+      thresholds: [0, 10, 20, 35, 70, 130],
       desc: () => `Level ${levelView.level} · ${fmtNum(levelView.totalActions)} thao tác`,
       nextDesc: (tier) => `Cần level ${tier.nextTarget || 10} để mở`,
     }),
@@ -589,25 +607,25 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
       label: 'Kỷ lục ngày',
       icon: Trophy,
       value: Number(bestDay?.count || 0),
-      thresholds: [1000, 3000, 10000, 30000, 70000],
+      thresholds: [500, 1000, 3000, 10000, 30000, 70000],
       desc: () => `${fmtNum(bestDay?.count)} thao tác trong ngày mạnh nhất`,
-      nextDesc: (tier) => `Cần ${fmtNum(tier.nextTarget || 1000)} thao tác/ngày`,
+      nextDesc: (tier) => `Cần ${fmtNum(tier.nextTarget || 500)} thao tác/ngày`,
     }),
     buildAchievementBadge({
       label: 'Chuỗi bền bỉ',
       icon: Flame,
       value: currentStreak,
-      thresholds: [3, 7, 14, 30, 60],
+      thresholds: [1, 3, 7, 14, 30, 60],
       desc: () => `${fmtNum(currentStreak)} ngày liên tiếp có hoạt động`,
-      nextDesc: (tier) => `Cần chuỗi ${fmtNum(tier.nextTarget || 3)} ngày`,
+      nextDesc: (tier) => `Cần chuỗi ${fmtNum(tier.nextTarget || 1)} ngày`,
     }),
     buildAchievementBadge({
       label: 'Nhịp tập trung',
       icon: Zap,
       value: Math.max(burstScore, focusMinutes * 6),
-      thresholds: [300, 600, 1200, 2400, 4800],
+      thresholds: [150, 300, 600, 1200, 2400, 4800],
       desc: () => `Burst ${fmtNum(peakBucket.actions)} thao tác · phiên dài ${fmtDur(sessionRecords.longest)}`,
-      nextDesc: (tier) => `Cần burst ${fmtNum(tier.nextTarget || 300)} hoặc phiên dài hơn`,
+      nextDesc: (tier) => `Cần burst ${fmtNum(tier.nextTarget || 150)} hoặc phiên dài hơn`,
     }),
   ];
 }
@@ -672,8 +690,8 @@ function VerifiedMark({ size = 20 }) {
 
 function DevPill() {
   return (
-    <span className="profile-dev-pill" title="Vật phẩm hiếm: Dev" aria-label="Vật phẩm hiếm: Dev">
-      <Code className="profile-dev-icon" size={13} strokeWidth={2.8} aria-hidden="true" />
+    <span className="profile-dev-pill" title="Huy hiệu Dev" aria-label="Huy hiệu Dev">
+      <span className="profile-dev-mark" aria-hidden="true">&lt;&gt;</span>
       <span className="profile-dev-label">Dev</span>
     </span>
   );
@@ -763,6 +781,7 @@ export default function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { socket, user: authUser, setUser: setAuthUser } = useAuth();
+  const pageVisible = usePageVisibility();
   const avatarInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const galleryContainerRef = useRef(null);
@@ -794,6 +813,7 @@ export default function UserDetail() {
   const [chartVisible, setChartVisible] = useState(false);
 
   useEffect(() => {
+    if (!pageVisible) return undefined;
     let mounted = true;
 
     const fetchAll = async () => {
@@ -826,7 +846,7 @@ export default function UserDetail() {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, pageVisible]);
 
   useEffect(() => {
     let mounted = true;
@@ -877,9 +897,10 @@ export default function UserDetail() {
   }, [authUser?.id, id]);
 
   useEffect(() => {
+    if (!pageVisible) return undefined;
     const timer = window.setInterval(() => setChartNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [pageVisible]);
 
   useEffect(() => {
     let observer = null;
@@ -998,7 +1019,7 @@ export default function UserDetail() {
   }, [id, loading]);
 
   useEffect(() => {
-    if (!socket) return undefined;
+    if (!socket || !pageVisible) return undefined;
 
     const sameUser = (payload = {}) => String(payload.userId || payload.user_id || payload.id) === String(id);
     const updatePresence = (payload = {}) => {
@@ -1065,7 +1086,7 @@ export default function UserDetail() {
       socket.off('user:status:update', updatePresence);
       socket.off('activity:user:update', updateActivity);
     };
-  }, [socket, id]);
+  }, [socket, id, pageVisible]);
 
   const derived = useMemo(() => {
     const levelView = hydrateLevelInfo(levelInfo || {});
@@ -1159,8 +1180,9 @@ export default function UserDetail() {
   const canHeartProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const canFriendProfile = Boolean(authUser?.id) && String(authUser.id) !== String(user.id || id);
   const unlockedBadgeList = achievementBadges.filter((badge) => badge.unlocked);
-  const inferredPrivilegeLabels = isDevProfileUser(user) ? ['Dev đặc quyền'] : [];
+  const inferredPrivilegeLabels = isDevProfileUser(user) ? [DEV_PRIVILEGE_LABEL] : [];
   const privilegeLabels = [...inferredPrivilegeLabels, ...normalizeFeaturedBadgeLabels(featuredBadgeLabels).filter(isPrivilegeBadgeLabel)]
+    .map(canonicalPrivilegeBadgeLabel)
     .filter((label, index, list) => list.indexOf(label) === index);
   const privilegeBadges = privilegeLabels
     .map((label) => PRIVILEGE_BADGES.find((badge) => badge.label === label))
@@ -1455,9 +1477,12 @@ export default function UserDetail() {
               />
             )}
             {privilegeBadges.length > 0 && (
-              <div className="profile-privilege-stack" aria-label="Huy hiệu đặc quyền do admin cấp">
+              <div className="profile-privilege-stack" aria-label="Huy hiệu riêng do admin cấp">
                 {privilegeBadges.map((badge) => {
                   const Icon = badge.icon;
+                  if (badge.label === DEV_PRIVILEGE_LABEL) {
+                    return <DevPill key={badge.label} />;
+                  }
                   return (
                     <span
                       key={badge.label}

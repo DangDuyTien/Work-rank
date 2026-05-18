@@ -429,6 +429,8 @@ export const users = {
     if (page > 1) params.set('page', String(page));
     if (limit) params.set('limit', String(limit));
     if (options.search) params.set('search', String(options.search));
+    if (options.withCount === false) params.set('withCount', '0');
+    if (options.withProfile === false) params.set('withProfile', '0');
     const qs = params.toString();
     const res = await api.get(`/api/users${qs ? `?${qs}` : ''}`);
     return {

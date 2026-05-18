@@ -42,7 +42,6 @@ const Security = lazyWithReload(() => import('./pages/Security'));
 const Settings = lazyWithReload(() => import('./pages/Settings'));
 const AdminPrivileges = lazyWithReload(() => import('./pages/AdminPrivileges'));
 const Pomodoro = lazyWithReload(() => import('./pages/Pomodoro'));
-const Performance = lazyWithReload(() => import('./pages/Performance'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -143,7 +142,7 @@ export default function App() {
                   <Route path="/friends" element={<Friends />} />
                   <Route path="/tracker" element={<Tracker />} />
                   <Route path="/pomodoro" element={<Pomodoro />} />
-                  <Route path="/performance" element={<Performance />} />
+                  <Route path="/performance" element={<Navigate to="/tracker" replace />} />
                   <Route path="/security" element={<AdminRoute><Security /></AdminRoute>} />
                   <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
                   <Route path="/settings" element={<Settings />} />

@@ -3,6 +3,7 @@ import { useTracking } from '../context/TrackingContext';
 import { leaderboard as leaderboardApi } from '../services/api';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
 import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
+import usePageVisibility from '../hooks/usePageVisibility';
 import {
   BarChart3,
   Bell,
@@ -261,6 +262,7 @@ function completePomodoroStep(state) {
 
 
 export default function Pomodoro() {
+  const pageVisible = usePageVisibility();
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
   const [pomodoroHistory, setPomodoroHistory] = useState(loadPomodoroHistory);
   const [focusTasks, setFocusTasks] = useState(loadPomodoroTasks);
@@ -393,12 +395,13 @@ export default function Pomodoro() {
   useEffect(() => subscribeAppSettings(setAppSettings), []);
 
   useEffect(() => {
+    if (!pageVisible) return undefined;
     refreshFriendFocus();
     const friendFocusInterval = window.setInterval(() => {
       refreshFriendFocus({ silent: true });
     }, 45000);
     return () => window.clearInterval(friendFocusInterval);
-  }, []);
+  }, [pageVisible]);
 
   useEffect(() => {
     savePomodoroTasks(focusTasks);

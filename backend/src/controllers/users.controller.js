@@ -14,6 +14,7 @@ const DEFAULT_USER_LIST_LIMIT = 50;
 const MAX_USER_LIST_LIMIT = 100;
 const ADMIN_PRIVILEGE_BADGE_LABELS = new Set([
   'Tích xanh đặc quyền',
+  'Dev',
   'Dev đặc quyền',
   'Người đóng góp',
   'Nhà sáng lập',
@@ -119,30 +120,38 @@ async function list(req, res) {
   const page = clampPositiveInt(req.query.page, 1, 1000000);
   const offset = (page - 1) * limit;
   const search = String(req.query.search || '').trim();
+  const withCount = req.query.withCount !== '0' && req.query.withCount !== 'false';
+  const withProfile = req.query.withProfile !== '0' && req.query.withProfile !== 'false';
   const where = {};
   if (search) {
-    where[Op.or] = [
+    const idMatch = search.match(/^WR-?0*(\d+)$/i) || search.match(/^#?0*(\d+)$/);
+    const searchClauses = [
       { name: { [Op.like]: `%${search}%` } },
       { email: { [Op.like]: `%${search}%` } },
     ];
+    if (idMatch) searchClauses.push({ id: Number(idMatch[1]) });
+    where[Op.or] = searchClauses;
   }
 
-  const { count, rows } = await User.findAndCountAll({
+  const queryOptions = {
     where,
     order: [['createdAt', 'DESC'], ['id', 'DESC']],
     limit,
     offset,
-    include: [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }],
-  });
+    include: withProfile ? [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }] : [],
+  };
+  const { count, rows } = withCount
+    ? await User.findAndCountAll(queryOptions)
+    : { count: null, rows: await User.findAll(queryOptions) };
   res.json({
     data: rows.map(serializeUserListItem),
-    pagination: {
+    pagination: withCount ? {
       page,
       limit,
       total: count,
       totalPages: Math.max(1, Math.ceil(count / limit)),
       hasNextPage: offset + rows.length < count,
-    },
+    } : null,
   });
 }
 

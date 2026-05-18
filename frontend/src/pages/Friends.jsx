@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Check,
@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 import { friends as friendsApi, users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 const STATUS_META = {
   active: { label: 'Đang hoạt động', color: '#16a34a', bg: 'rgba(22,163,74,0.1)', border: 'rgba(22,163,74,0.28)', dot: '#22c55e' },
@@ -51,6 +52,28 @@ function userIdOf(user = {}) {
 
 function isVerified(user = {}) {
   return user.isVerified === true || user.verified === true || user.isVerified === 1 || user.verified === 1 || user.isVerified === '1' || user.verified === '1';
+}
+
+function patchFriendshipRows(rows, patchUser) {
+  let changed = false;
+  const next = rows.map((row) => {
+    const patchedFriend = patchUser(row.friend);
+    if (patchedFriend === row.friend) return row;
+    changed = true;
+    return { ...row, friend: patchedFriend };
+  });
+  return changed ? next : rows;
+}
+
+function patchUserRows(rows, patchUser) {
+  let changed = false;
+  const next = rows.map((row) => {
+    const patched = patchUser(row);
+    if (patched === row) return row;
+    changed = true;
+    return patched;
+  });
+  return changed ? next : rows;
 }
 
 function formatFriendCode(user = {}) {
@@ -284,16 +307,19 @@ export default function Friends() {
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
+  const pageVisible = usePageVisibility();
   const [friendRows, setFriendRows] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [outgoing, setOutgoing] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [friendLoadError, setFriendLoadError] = useState('');
   const [busyKey, setBusyKey] = useState('');
+  const searchRequestRef = useRef(0);
 
   const requestErrorMessage = (reason, fallback) => (
     reason?.response?.data?.message || reason?.response?.data?.error || reason?.message || fallback
@@ -306,14 +332,10 @@ export default function Friends() {
     setError('');
     setFriendLoadError('');
     try {
-      const [friendRes, requestRes, userRes] = await Promise.allSettled([
+      const [friendRes, requestRes] = await Promise.allSettled([
         friendsApi.list(),
         friendsApi.requests(),
-        usersApi.list(),
       ]);
-      if (userRes.status !== 'fulfilled') throw userRes.reason;
-
-      setAllUsers(userRes.value.data || []);
 
       if (friendRes.status === 'fulfilled') {
         setFriendRows(friendRes.value.data || []);
@@ -347,11 +369,11 @@ export default function Friends() {
   }, [toast]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (pageVisible) loadData();
+  }, [loadData, pageVisible]);
 
   useEffect(() => {
-    if (!socket) return undefined;
+    if (!socket || !pageVisible) return undefined;
     const updateUserPresence = (payload = {}) => {
       const targetId = String(payload.userId || payload.user_id || payload.id || '');
       if (!targetId) return;
@@ -361,14 +383,14 @@ export default function Friends() {
           ? { ...itemUser, status: nextStatus, presence: nextStatus, presenceStatus: nextStatus, lastSeenAt: payload.lastSeenAt || itemUser.lastSeenAt }
           : itemUser
       );
-      setFriendRows((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setIncoming((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setOutgoing((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setAllUsers((rows) => rows.map(patchUser));
+      setFriendRows((rows) => patchFriendshipRows(rows, patchUser));
+      setIncoming((rows) => patchFriendshipRows(rows, patchUser));
+      setOutgoing((rows) => patchFriendshipRows(rows, patchUser));
+      setSearchResults((rows) => patchUserRows(rows, patchUser));
     };
     socket.on('user:status:update', updateUserPresence);
     return () => socket.off('user:status:update', updateUserPresence);
-  }, [socket]);
+  }, [socket, pageVisible]);
 
   const connectionMaps = useMemo(() => {
     const friends = new Set(friendRows.map((row) => userIdOf(row.friend)));
@@ -381,18 +403,41 @@ export default function Friends() {
     friendRows.filter((row) => ['active', 'online', 'idle'].includes(String(row.friend?.presence || row.friend?.status || '').toLowerCase())).length
   ), [friendRows]);
 
-  const searchResults = useMemo(() => {
+  useEffect(() => {
     const needle = query.trim().toLowerCase();
-    return allUsers
-      .filter((item) => userIdOf(item) && userIdOf(item) !== String(user?.id || ''))
-      .filter((item) => String(item.accountStatus || 'active') === 'active')
-      .filter((item) => {
-        if (!needle) return false;
-        const haystack = `${item.name || ''} ${item.email || ''} ${formatFriendCode(item)}`.toLowerCase();
-        return haystack.includes(needle);
-      })
-      .slice(0, 12);
-  }, [allUsers, query, user?.id]);
+    searchRequestRef.current += 1;
+    const requestId = searchRequestRef.current;
+
+    if (!needle || !pageVisible) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await usersApi.list({ search: needle, limit: 12, withCount: false, withProfile: false });
+        if (cancelled || requestId !== searchRequestRef.current) return;
+        setSearchResults((res.data || [])
+          .filter((item) => userIdOf(item) && userIdOf(item) !== String(user?.id || ''))
+          .filter((item) => String(item.accountStatus || 'active') === 'active')
+          .slice(0, 12));
+      } catch (err) {
+        if (!cancelled && requestId === searchRequestRef.current) {
+          toast(err.response?.data?.message || err.response?.data?.error || 'Không tìm kiếm được người dùng.', { type: 'error' });
+        }
+      } finally {
+        if (!cancelled && requestId === searchRequestRef.current) setSearchLoading(false);
+      }
+    }, 260);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [pageVisible, query, toast, user?.id]);
 
   const openProfile = (targetUser) => {
     const targetId = userIdOf(targetUser);
@@ -572,7 +617,9 @@ export default function Friends() {
               />
             </div>
 
-            {!query.trim() ? null : searchResults.length === 0 ? (
+            {!query.trim() ? null : searchLoading ? (
+              <EmptyState icon={Search} title="Đang tìm người dùng..." description="Kết quả được lấy trực tiếp từ server." />
+            ) : searchResults.length === 0 ? (
               <EmptyState icon={Search} title="Không tìm thấy người dùng" description="Thử nhập đúng tên, email hoặc mã WR của họ." />
             ) : (
               <div style={{ display: 'grid', gap: 10 }}>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import api, { auth } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 function fmtNum(value) {
   const number = Number(value) || 0;
@@ -61,6 +62,7 @@ export default function Login() {
   const [statsError, setStatsError] = useState(false);
   const navigate = useNavigate();
   const { user, setUser, loading: authLoading } = useAuth();
+  const pageVisible = usePageVisibility();
 
   useEffect(() => {
     const message = sessionStorage.getItem('workrank_auth_message');
@@ -83,6 +85,7 @@ export default function Login() {
   }, [authLoading, setUser, user]);
 
   useEffect(() => {
+    if (!pageVisible) return undefined;
     let mounted = true;
 
     const loadStats = async () => {
@@ -106,7 +109,7 @@ export default function Login() {
       mounted = false;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [pageVisible]);
 
   const live = useMemo(() => normalizeLiveStats(stats || {}), [stats]);
   const statItems = [

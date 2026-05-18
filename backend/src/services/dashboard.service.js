@@ -256,15 +256,7 @@ async function acceptedFriendUserIds(currentUserId) {
 
 function leaderboardBaseSql({ hasTeam, hasUserIds, hasSearch } = {}) {
   return `
-    WITH lifetime AS (
-      SELECT
-        user_id,
-        COALESCE(SUM(keystroke_count), 0) AS lifetime_keystroke_count,
-        COALESCE(SUM(mouse_click_count), 0) AS lifetime_mouse_click_count
-      FROM daily_stats
-      GROUP BY user_id
-    ),
-    aggregated AS (
+    WITH aggregated AS (
       SELECT
         u.id AS user_id,
         u.name,
@@ -278,12 +270,9 @@ function leaderboardBaseSql({ hasTeam, hasUserIds, hasSearch } = {}) {
         COALESCE(SUM(ds.total_seconds), 0) AS total_seconds,
         COALESCE(SUM(ds.keystroke_count), 0) AS keystroke_count,
         COALESCE(SUM(ds.mouse_click_count), 0) AS mouse_click_count,
-        COALESCE(SUM(ds.session_count), 0) AS session_count,
-        COALESCE(MAX(lifetime.lifetime_keystroke_count), 0) AS lifetime_keystroke_count,
-        COALESCE(MAX(lifetime.lifetime_mouse_click_count), 0) AS lifetime_mouse_click_count
+        COALESCE(SUM(ds.session_count), 0) AS session_count
       FROM daily_stats ds
       INNER JOIN users u ON u.id = ds.user_id AND u.status = 'active'
-      LEFT JOIN lifetime ON lifetime.user_id = u.id
       WHERE ds.stat_date >= :startDate
         AND ds.stat_date <= :endDate
         ${hasTeam ? 'AND u.team_id = :teamId' : ''}
@@ -374,6 +363,20 @@ function mapLeaderboardRow(row, index) {
   }, index);
 }
 
+function lifetimeStatsSql(sourceCteName) {
+  return `
+    lifetime AS (
+      SELECT
+        ds.user_id,
+        COALESCE(SUM(ds.keystroke_count), 0) AS lifetime_keystroke_count,
+        COALESCE(SUM(ds.mouse_click_count), 0) AS lifetime_mouse_click_count
+      FROM daily_stats ds
+      INNER JOIN ${sourceCteName} source_rows ON source_rows.user_id = ds.user_id
+      GROUP BY ds.user_id
+    )
+  `;
+}
+
 async function leaderboard(options = {}) {
   const cachePayload = {
     range: normalizeRange(options.range || 'today'),
@@ -412,12 +415,22 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
 
   const baseSql = leaderboardBaseSql(baseOptions);
   const rows = await sequelize.query(`
-    ${baseSql}
-    SELECT ranked.*, upp.featured_badges_json AS featured_badges
-    FROM ranked
-    LEFT JOIN user_profile_preferences upp ON upp.user_id = ranked.user_id
-    WHERE ranked.rank_position > :offset
-      AND ranked.rank_position <= (:offset + :limit)
+    ${baseSql},
+    page_rows AS (
+      SELECT ranked.*
+      FROM ranked
+      WHERE ranked.rank_position > :offset
+        AND ranked.rank_position <= (:offset + :limit)
+    ),
+    ${lifetimeStatsSql('page_rows')}
+    SELECT
+      page_rows.*,
+      COALESCE(lifetime.lifetime_keystroke_count, 0) AS lifetime_keystroke_count,
+      COALESCE(lifetime.lifetime_mouse_click_count, 0) AS lifetime_mouse_click_count,
+      upp.featured_badges_json AS featured_badges
+    FROM page_rows
+    LEFT JOIN lifetime ON lifetime.user_id = page_rows.user_id
+    LEFT JOIN user_profile_preferences upp ON upp.user_id = page_rows.user_id
     ORDER BY rank_position ASC
   `, {
     replacements,
@@ -431,12 +444,22 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
   let currentTotalRanked = 0;
   if (currentUserId) {
     const currentRows = await sequelize.query(`
-      ${baseSql}
-      SELECT ranked.*, upp.featured_badges_json AS featured_badges
-      FROM ranked
-      LEFT JOIN user_profile_preferences upp ON upp.user_id = ranked.user_id
-      WHERE ranked.user_id = :currentUserId
-      LIMIT 1
+      ${baseSql},
+      current_row AS (
+        SELECT ranked.*
+        FROM ranked
+        WHERE ranked.user_id = :currentUserId
+        LIMIT 1
+      ),
+      ${lifetimeStatsSql('current_row')}
+      SELECT
+        current_row.*,
+        COALESCE(lifetime.lifetime_keystroke_count, 0) AS lifetime_keystroke_count,
+        COALESCE(lifetime.lifetime_mouse_click_count, 0) AS lifetime_mouse_click_count,
+        upp.featured_badges_json AS featured_badges
+      FROM current_row
+      LEFT JOIN lifetime ON lifetime.user_id = current_row.user_id
+      LEFT JOIN user_profile_preferences upp ON upp.user_id = current_row.user_id
     `, {
       replacements: { ...replacements, currentUserId: Number(currentUserId) },
       type: QueryTypes.SELECT,

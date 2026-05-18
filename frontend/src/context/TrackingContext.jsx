@@ -1,7 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { activity as activityApi } from '../services/api';
 import { getAppSettings, subscribeAppSettings } from '../utils/settings';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 const TrackingContext = createContext(null);
 const DESKTOP_PROTOCOL = 'workrank';
@@ -67,6 +68,7 @@ export function useTracking() {
 
 export function TrackingProvider({ children }) {
   const { socket } = useAuth();
+  const pageVisible = usePageVisibility();
 
   const [trackingState, setTrackingStateState] = useState('idle');
   const [tracking, setTracking] = useState(false);
@@ -92,6 +94,8 @@ export function TrackingProvider({ children }) {
   const trackingStateRef = useRef('idle');
   const commandTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
+  const pendingTotalsRef = useRef(null);
+  const totalsFlushTimerRef = useRef(null);
 
   useEffect(() => subscribeAppSettings(setAppSettings), []);
 
@@ -123,6 +127,17 @@ export function TrackingProvider({ children }) {
       return [...history.slice(-5), Math.min(10, Math.max(1, Math.round(next / 10)))];
     });
   }, []);
+
+  const scheduleApplyTotals = useCallback((totals = {}) => {
+    pendingTotalsRef.current = totals;
+    if (totalsFlushTimerRef.current) return;
+    totalsFlushTimerRef.current = window.setTimeout(() => {
+      totalsFlushTimerRef.current = null;
+      const pending = pendingTotalsRef.current;
+      pendingTotalsRef.current = null;
+      if (pending) applyTotals(pending);
+    }, 800);
+  }, [applyTotals]);
 
   const applyDesktopStatus = useCallback((payload = {}) => {
     const isOnline = !!payload.online;
@@ -217,9 +232,9 @@ export function TrackingProvider({ children }) {
     };
 
     updateSessionSeconds();
-    const interval = window.setInterval(updateSessionSeconds, 1000);
+    const interval = window.setInterval(updateSessionSeconds, pageVisible ? 1000 : 15000);
     return () => window.clearInterval(interval);
-  }, [trackingState, desktopTrackingStartedAt]);
+  }, [desktopTrackingStartedAt, pageVisible, trackingState]);
 
   const fetchDesktopStatus = useCallback(async () => {
     const res = await activityApi.desktopStatus();
@@ -248,9 +263,9 @@ export function TrackingProvider({ children }) {
       fetchDesktopStatus().catch((err) => {
         console.warn('Could not check desktop status:', err.message);
       });
-    }, 15_000);
+    }, pageVisible ? 15_000 : 60_000);
     return () => window.clearInterval(interval);
-  }, [fetchDesktopStatus]);
+  }, [fetchDesktopStatus, pageVisible]);
 
   const formatNum = useCallback((n) => {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -277,7 +292,7 @@ export function TrackingProvider({ children }) {
     };
 
     const handleActivityUpdate = (payload) => {
-      if (payload?.totals) applyTotals(payload.totals);
+      if (payload?.totals) scheduleApplyTotals(payload.totals);
     };
 
     socket.on('desktop:status', handleDesktopStatus);
@@ -287,7 +302,7 @@ export function TrackingProvider({ children }) {
       socket.off('desktop:status', handleDesktopStatus);
       socket.off('activity:user:update', handleActivityUpdate);
     };
-  }, [socket, applyDesktopStatus, applyTotals]);
+  }, [socket, applyDesktopStatus, scheduleApplyTotals]);
 
   useEffect(() => {
     if (!socket) {
@@ -441,11 +456,12 @@ export function TrackingProvider({ children }) {
   useEffect(() => () => {
     clearCommandTimeout();
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (totalsFlushTimerRef.current) clearTimeout(totalsFlushTimerRef.current);
   }, [clearCommandTimeout]);
 
   const trackingPending = trackingState === 'starting' || trackingState === 'stopping';
 
-  const value = {
+  const value = useMemo(() => ({
     tracking,
     trackingState,
     trackingPending,
@@ -470,7 +486,31 @@ export function TrackingProvider({ children }) {
     toggle,
     sendDesktopCommand,
     refreshDesktopStatus: fetchDesktopStatus,
-  };
+  }), [
+    activeSecondsToday,
+    connected,
+    desktopInfo,
+    desktopLaunchStatus,
+    desktopLaunchStatusType,
+    desktopLaunchUrl,
+    desktopOnline,
+    desktopTracking,
+    fetchDesktopStatus,
+    formatNum,
+    formatTime,
+    score,
+    scoreHistory,
+    seconds,
+    sendDesktopCommand,
+    startTrack,
+    stopTrack,
+    toggle,
+    totalClicks,
+    totalKeys,
+    tracking,
+    trackingPending,
+    trackingState,
+  ]);
 
   return (
     <TrackingContext.Provider value={value}>

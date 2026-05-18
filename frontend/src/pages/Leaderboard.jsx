@@ -6,6 +6,7 @@ import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/
 import { calculateRankScore } from '../utils/scoring';
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Code, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' },
@@ -81,10 +82,31 @@ const BADGE_STYLES = {
   champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
   weekly: { bg: 'rgba(56,189,248,0.12)', border: 'rgba(56,189,248,0.26)', color: '#38bdf8', icon: Medal },
   monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
-  top: { bg: 'rgba(14,165,233,0.11)', border: 'rgba(14,165,233,0.24)', color: '#0284c7', icon: ShieldCheck },
-  streak: { bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.26)', color: '#ea580c', icon: Flame },
-  volume: { bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.24)', color: '#16a34a', icon: BadgeCheck },
+  rankLegend: { bg: 'linear-gradient(135deg, rgba(190,18,60,0.14), rgba(245,158,11,0.18))', border: 'rgba(190,18,60,0.34)', color: '#be123c', icon: Crown, shadow: '0 0 14px rgba(190,18,60,0.14)' },
+  rankDiamond: { bg: 'linear-gradient(135deg, rgba(124,58,237,0.13), rgba(34,211,238,0.16))', border: 'rgba(124,58,237,0.3)', color: '#6d28d9', icon: Sparkles, shadow: '0 0 12px rgba(124,58,237,0.12)' },
+  rankGold: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Medal },
+  rankSilver: { bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.24)', color: '#64748b', icon: ShieldCheck },
+  focus: { bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.26)', color: '#ea580c', icon: Flame },
+  focusLegend: { bg: 'linear-gradient(135deg, rgba(234,88,12,0.14), rgba(245,158,11,0.16))', border: 'rgba(234,88,12,0.34)', color: '#c2410c', icon: Flame, shadow: '0 0 12px rgba(234,88,12,0.14)' },
+  volumeBronze: { bg: 'rgba(180,83,9,0.11)', border: 'rgba(180,83,9,0.24)', color: '#b45309', icon: BadgeCheck },
+  volumeGold: { bg: 'rgba(217,119,6,0.13)', border: 'rgba(217,119,6,0.3)', color: '#b45309', icon: BadgeCheck },
+  volumeDiamond: { bg: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(103,232,249,0.16))', border: 'rgba(37,99,235,0.32)', color: '#2563eb', icon: BadgeCheck, shadow: '0 0 12px rgba(37,99,235,0.12)' },
+  volumeLegend: { bg: 'linear-gradient(135deg, rgba(124,58,237,0.14), rgba(236,72,153,0.14))', border: 'rgba(124,58,237,0.34)', color: '#7c3aed', icon: BadgeCheck, shadow: '0 0 14px rgba(124,58,237,0.14)' },
 };
+
+const RANGE_TOP_LABELS = {
+  today: 'ngày',
+  week: 'tuần',
+  month: 'tháng',
+  year: 'năm',
+};
+
+const ACTION_BADGE_MILESTONES = [
+  { key: 'actions-70k', min: 70000, label: '70K thao tác', style: 'volumeLegend' },
+  { key: 'actions-30k', min: 30000, label: '30K thao tác', style: 'volumeDiamond' },
+  { key: 'actions-10k', min: 10000, label: '10K thao tác', style: 'volumeGold' },
+  { key: 'actions-3k', min: 3000, label: '3K thao tác', style: 'volumeBronze' },
+];
 
 function VerifiedMark({ size = 15 }) {
   return <VerifiedBadge size={size} />;
@@ -145,6 +167,26 @@ function hasFeaturedBadge(user = {}, label) {
 function isPartnerRanker(user = {}) {
   if (!user) return false;
   return hasFeaturedBadge(user, 'Đối tác WorkRank');
+}
+
+function rankMilestoneBadge(rank, range) {
+  const safeRank = Number(rank || 0);
+  if (!Number.isFinite(safeRank) || safeRank <= 0) return null;
+  if (safeRank === 1) {
+    return {
+      key: 'rank-top1',
+      label: `Top 1 ${RANGE_TOP_LABELS[range] || 'ngày'}`,
+      style: 'rankLegend',
+    };
+  }
+  if (safeRank <= 3) return { key: 'rank-top3', label: `Top ${safeRank}`, style: 'rankDiamond' };
+  if (safeRank <= 10) return { key: 'rank-top10', label: 'Top 10', style: 'rankGold' };
+  if (safeRank <= 50) return { key: 'rank-top50', label: 'Top 50', style: 'rankSilver' };
+  return null;
+}
+
+function actionMilestoneBadge(actions) {
+  return ACTION_BADGE_MILESTONES.find((milestone) => Number(actions || 0) >= milestone.min) || null;
 }
 
 function devRankerStyle(user, variant = 'row') {
@@ -214,27 +256,23 @@ function rankBadges(user, rank, range) {
   const badges = [];
   if (isDevRanker(user)) badges.push({ key: 'dev', label: 'Dev', style: 'dev' });
   if (isPartnerRanker(user)) badges.push({ key: 'partner', label: 'Đối tác', style: 'partner' });
-  if (rank === 1) {
-    if (range === 'week') badges.push({ key: 'weekly', label: 'Nhất tuần', style: 'weekly' });
-    else if (range === 'month') badges.push({ key: 'monthly', label: 'Nhất tháng', style: 'monthly' });
-    else badges.push({ key: 'champion', label: 'Top 1 ngày', style: 'champion' });
-  } else if (rank <= 3) {
-    badges.push({ key: 'top3', label: `Top ${rank}`, style: 'top' });
-  } else if (rank <= 10) {
-    badges.push({ key: 'top10', label: 'Top 10', style: 'top' });
-  }
-  if (actions >= 10000) badges.push({ key: '10k', label: '10K thao tác', style: 'volume' });
-  else if (actions >= 5000) badges.push({ key: '5k', label: '5K thao tác', style: 'volume' });
-  if (Number(user.focusScore || 0) >= 90) badges.push({ key: 'focus', label: 'Tập trung', style: 'streak' });
+  const rankBadge = rankMilestoneBadge(rank, range);
+  const actionBadge = actionMilestoneBadge(actions);
+  const focusScore = Number(user.focusScore || user.focus_score || 0);
+  if (rankBadge) badges.push(rankBadge);
+  if (actionBadge) badges.push(actionBadge);
+  if (focusScore >= 90) badges.push({ key: 'focus-90', label: 'Tập trung', style: 'focusLegend' });
+  else if (focusScore >= 75) badges.push({ key: 'focus-75', label: 'Ổn định', style: 'focus' });
   return badges.slice(0, (isDevRanker(user) || isPartnerRanker(user)) ? 4 : 3);
 }
 
 function RankBadge({ badge, compact = false }) {
-  const style = BADGE_STYLES[badge.style] || BADGE_STYLES.top;
+  const style = BADGE_STYLES[badge.style] || BADGE_STYLES.rankSilver;
   const Icon = style.icon;
+  const isDev = badge.style === 'dev';
   return (
     <span
-      title={badge.label}
+      title={isDev ? '<> Dev' : badge.label}
       className={badge.style === 'dev' || badge.style === 'partner' ? 'leaderboard-dev-badge' : undefined}
       style={{
         display: 'inline-flex',
@@ -250,11 +288,21 @@ function RankBadge({ badge, compact = false }) {
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: 'nowrap',
+        boxShadow: style.shadow || 'none',
         ...(badge.style === 'dev' || badge.style === 'partner' ? { backgroundSize: '220% 100%', animation: 'leaderboard-dev-badge-flow 5.4s ease-in-out infinite' } : {}),
       }}
     >
-      <Icon size={compact ? 10 : 11} strokeWidth={2.6} />
-      {badge.label}
+      {isDev ? (
+        <>
+          <span className="leaderboard-dev-code" aria-hidden="true">&lt;&gt;</span>
+          <span>Dev</span>
+        </>
+      ) : (
+        <>
+          <Icon size={compact ? 10 : 11} strokeWidth={2.6} />
+          {badge.label}
+        </>
+      )}
     </span>
   );
 }
@@ -272,6 +320,7 @@ export default function Leaderboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { socket, isAdmin, user } = useAuth();
+  const pageVisible = usePageVisibility();
   const searchParams = new URLSearchParams(location.search);
   const initialGroupId = searchParams.get('groupId');
 
@@ -295,7 +344,12 @@ export default function Leaderboard() {
   const requestIdRef = useRef(0);
   const realtimeRefreshRef = useRef(null);
 
-  useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return ()=>clearInterval(t); }, []);
+  useEffect(() => {
+    if (!pageVisible) return undefined;
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, [pageVisible]);
 
   useEffect(() => {
     const refreshAvatars = () => setAvatarRefreshKey((key) => key + 1);
@@ -313,6 +367,11 @@ export default function Leaderboard() {
 
   // Fetch groups for the dropdown
   useEffect(() => {
+    if (activeTab !== 'group' || !pageVisible) return undefined;
+    if (myGroups.length > 0) {
+      if (!selectedGroupId) setSelectedGroupId(myGroups[0].id);
+      return undefined;
+    }
     const fetchMyGroups = async () => {
       try {
         const res = await groupsApi.list();
@@ -323,9 +382,11 @@ export default function Leaderboard() {
       } catch (err) { console.error(err); }
     };
     fetchMyGroups();
-  }, [activeTab]);
+    return undefined;
+  }, [activeTab, myGroups, pageVisible, selectedGroupId]);
 
-  const fetchData = async ({ silent = false } = {}) => {
+  const fetchData = async ({ silent = false, force = false } = {}) => {
+    if (!force && !pageVisible) return;
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     if (!silent) {
@@ -364,6 +425,7 @@ export default function Leaderboard() {
   };
 
   const scheduleRealtimeRefresh = (delayMs = 6000) => {
+    if (!pageVisible) return;
     if (realtimeRefreshRef.current) return;
     realtimeRefreshRef.current = window.setTimeout(() => {
       realtimeRefreshRef.current = null;
@@ -372,20 +434,21 @@ export default function Leaderboard() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [range, activeTab, selectedGroupId, page, search]);
+    if (pageVisible) fetchData();
+  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
 
   useEffect(() => {
     if (realtimeRefreshRef.current) {
       window.clearTimeout(realtimeRefreshRef.current);
       realtimeRefreshRef.current = null;
     }
-  }, [range, activeTab, selectedGroupId, page, search]);
+  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
 
   useEffect(() => {
+    if (!pageVisible) return undefined;
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, [range, activeTab, selectedGroupId, page, search]);
+  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
 
   useEffect(() => () => {
     if (realtimeRefreshRef.current) {
@@ -435,7 +498,7 @@ export default function Leaderboard() {
 
   // Real-time socket listener
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !pageVisible) return undefined;
     const eventBelongsToCurrentView = (data = {}) => {
       if (range === 'today' && data.statDate && data.statDate !== localDateKey()) return false;
       if (activeTab === 'group') {
@@ -553,7 +616,7 @@ export default function Leaderboard() {
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
     };
-  }, [socket, activeTab, selectedGroupId, range, page, search, user?.id]);
+  }, [socket, pageVisible, activeTab, selectedGroupId, range, page, search, user?.id]);
 
   const top1 = page === 1 && !search ? users[0] : null;
   const top2 = page === 1 && !search ? users[1] : null;

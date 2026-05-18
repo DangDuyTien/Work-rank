@@ -1,4 +1,5 @@
 const DEFAULT_TTL_SECONDS = 10;
+const MAX_MEMORY_ENTRIES = 500;
 
 let redisClient = null;
 let redisReady = false;
@@ -9,6 +10,11 @@ function cleanupMemory() {
   const now = Date.now();
   for (const [key, entry] of memoryStore.entries()) {
     if (entry.expiresAt <= now) memoryStore.delete(key);
+  }
+  while (memoryStore.size > MAX_MEMORY_ENTRIES) {
+    const oldestKey = memoryStore.keys().next().value;
+    if (!oldestKey) break;
+    memoryStore.delete(oldestKey);
   }
 }
 
@@ -54,10 +60,12 @@ async function setJson(key, value, ttlSeconds = DEFAULT_TTL_SECONDS) {
   }
 
   cleanupMemory();
+  if (memoryStore.has(key)) memoryStore.delete(key);
   memoryStore.set(key, {
     value,
     expiresAt: Date.now() + ttl * 1000,
   });
+  cleanupMemory();
 }
 
 async function rememberJson(key, ttlSeconds, producer) {

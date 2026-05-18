@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Eye, MessageCircle, Search, UserCheck, UserPlus, Users, X } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import { useAuth } from '../context/AuthContext';
 import { friends as friendsApi, users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
+import usePageVisibility from '../hooks/usePageVisibility';
 
 const STATUS_META = {
   active: { label: 'Active', color: '#16a34a', dot: '#22c55e' },
@@ -23,6 +24,28 @@ function isVerified(user = {}) {
 
 function statusMeta(status) {
   return STATUS_META[String(status || 'offline').toLowerCase()] || STATUS_META.offline;
+}
+
+function patchFriendshipRows(rows, patchUser) {
+  let changed = false;
+  const next = rows.map((row) => {
+    const patchedFriend = patchUser(row.friend);
+    if (patchedFriend === row.friend) return row;
+    changed = true;
+    return { ...row, friend: patchedFriend };
+  });
+  return changed ? next : rows;
+}
+
+function patchUserRows(rows, patchUser) {
+  let changed = false;
+  const next = rows.map((row) => {
+    const patched = patchUser(row);
+    if (patched === row) return row;
+    changed = true;
+    return patched;
+  });
+  return changed ? next : rows;
 }
 
 function Avatar({ user }) {
@@ -61,26 +84,24 @@ function CompactUser({ user, detail, action, onOpen }) {
 export default function FriendsDock() {
   const { user: authUser, socket } = useAuth();
   const navigate = useNavigate();
+  const pageVisible = usePageVisibility();
   const [open, setOpen] = useState(() => localStorage.getItem('workrank:friends-dock-open') !== '0');
   const [friendRows, setFriendRows] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [outgoing, setOutgoing] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [busyKey, setBusyKey] = useState('');
   const [error, setError] = useState('');
+  const searchRequestRef = useRef(0);
 
   const loadData = useCallback(async () => {
     setError('');
-    const [friendRes, requestRes, userRes] = await Promise.allSettled([
+    const [friendRes, requestRes] = await Promise.allSettled([
       friendsApi.list(),
       friendsApi.requests(),
-      usersApi.list(),
     ]);
-
-    if (userRes.status === 'fulfilled') {
-      setAllUsers(userRes.value.data || []);
-    }
 
     if (friendRes.status === 'fulfilled') setFriendRows(friendRes.value.data || []);
     else setError(friendRes.reason?.response?.data?.message || 'Chưa tải được danh sách bạn bè.');
@@ -102,7 +123,7 @@ export default function FriendsDock() {
   }, [open]);
 
   useEffect(() => {
-    if (!socket) return undefined;
+    if (!socket || !pageVisible) return undefined;
     const updatePresence = (payload = {}) => {
       const targetId = String(payload.userId || payload.user_id || payload.id || '');
       if (!targetId) return;
@@ -112,14 +133,14 @@ export default function FriendsDock() {
           ? { ...itemUser, status: nextStatus, presence: nextStatus, presenceStatus: nextStatus, lastSeenAt: payload.lastSeenAt || itemUser.lastSeenAt }
           : itemUser
       );
-      setFriendRows((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setIncoming((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setOutgoing((rows) => rows.map((row) => ({ ...row, friend: patchUser(row.friend) })));
-      setAllUsers((rows) => rows.map(patchUser));
+      setFriendRows((rows) => patchFriendshipRows(rows, patchUser));
+      setIncoming((rows) => patchFriendshipRows(rows, patchUser));
+      setOutgoing((rows) => patchFriendshipRows(rows, patchUser));
+      setSearchResults((rows) => patchUserRows(rows, patchUser));
     };
     socket.on('user:status:update', updatePresence);
     return () => socket.off('user:status:update', updatePresence);
-  }, [socket]);
+  }, [socket, pageVisible]);
 
   const connectionMaps = useMemo(() => {
     const friends = new Set(friendRows.map((row) => userIdOf(row.friend)));
@@ -134,15 +155,41 @@ export default function FriendsDock() {
     return bOnline - aOnline || String(a.friend?.name || '').localeCompare(String(b.friend?.name || ''));
   }).slice(0, 12), [friendRows]);
 
-  const searchResults = useMemo(() => {
+  useEffect(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return [];
-    return allUsers
-      .filter((item) => userIdOf(item) && userIdOf(item) !== String(authUser?.id || ''))
-      .filter((item) => String(item.accountStatus || 'active') === 'active')
-      .filter((item) => `${item.name || ''} ${item.email || ''} WR-${String(item.id || '').padStart(4, '0')}`.toLowerCase().includes(needle))
-      .slice(0, 7);
-  }, [allUsers, authUser?.id, query]);
+    searchRequestRef.current += 1;
+    const requestId = searchRequestRef.current;
+
+    if (!needle || !open || !pageVisible) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await usersApi.list({ search: needle, limit: 8, withCount: false, withProfile: false });
+        if (cancelled || requestId !== searchRequestRef.current) return;
+        setSearchResults((res.data || [])
+          .filter((item) => userIdOf(item) && userIdOf(item) !== String(authUser?.id || ''))
+          .filter((item) => String(item.accountStatus || 'active') === 'active')
+          .slice(0, 7));
+      } catch (err) {
+        if (!cancelled && requestId === searchRequestRef.current) {
+          setError(err.response?.data?.message || 'Không tìm kiếm được người dùng.');
+        }
+      } finally {
+        if (!cancelled && requestId === searchRequestRef.current) setSearchLoading(false);
+      }
+    }, 260);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [authUser?.id, open, pageVisible, query]);
 
   const openProfile = (targetUser) => {
     const targetId = userIdOf(targetUser);
@@ -225,7 +272,9 @@ export default function FriendsDock() {
         {query.trim() ? (
           <div className="friends-dock-section">
             <div className="friends-dock-section-title">Kết quả tìm kiếm</div>
-            {searchResults.length === 0 ? (
+            {searchLoading ? (
+              <div className="friends-dock-empty">Đang tìm người dùng...</div>
+            ) : searchResults.length === 0 ? (
               <div className="friends-dock-empty">Không tìm thấy người dùng.</div>
             ) : searchResults.map((item) => {
               const state = stateFor(item);

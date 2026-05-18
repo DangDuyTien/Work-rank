@@ -3,6 +3,7 @@ import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import BrandMark from '../components/BrandMark';
+import PerformanceSummary from '../components/PerformanceSummary';
 import {
   Activity,
   AlertTriangle,
@@ -875,8 +876,8 @@ export default function Tracker() {
         <section className="tracker-panel">
           <div className="tracker-panel-head">
             <div>
-              <div className="tracker-panel-kicker">Hiệu suất</div>
-              <h2>Phím và click</h2>
+              <div className="tracker-panel-kicker">Hiện tại</div>
+              <h2>Tỉ lệ thao tác</h2>
             </div>
             <BarChart3 size={17} color="#38bdf8" />
           </div>
@@ -899,6 +900,8 @@ export default function Tracker() {
             <div><span>Thao tác/phút</span><strong>{formatNum(actionsPerMin)}</strong></div>
           </div>
         </section>
+
+        <PerformanceSummary compact className="tracker-panel-wide" />
 
         <section className="tracker-panel">
           <div className="tracker-panel-head">
