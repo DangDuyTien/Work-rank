@@ -325,6 +325,7 @@ export default function AdminPrivileges() {
                         borderRadius: 0,
                         background: active ? 'rgba(56,189,248,0.09)' : '#ffffff',
                         color: active ? '#38bdf8' : '#64748b',
+                        boxShadow: active ? '0 0 0 1px rgba(56,189,248,0.14), 0 2px 8px rgba(56,189,248,0.12)' : 'none',
                         padding: '0 10px',
                         fontSize: 11,
                         fontWeight: 900,
@@ -332,8 +333,8 @@ export default function AdminPrivileges() {
                       }}
                     >
                       {isDevBadge ? (
-                        <span style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", fontSize: 11, fontWeight: 900, letterSpacing: 0 }}>
-                          &lt;&gt;
+                        <span style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", fontSize: 11, fontWeight: 900, letterSpacing: '1px' }}>
+                          {'< >'}
                         </span>
                       ) : (
                         <Icon size={13} strokeWidth={2.5} />

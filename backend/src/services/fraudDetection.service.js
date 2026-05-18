@@ -8,7 +8,7 @@ const LIMITS = {
   maxActiveSecondsPerEvent: 30,
   maxIdleSecondsPerEvent: 600,
   maxSequenceGap: 300,
-  maxClockSkewMs: 5 * 60 * 1000,
+  maxClockSkewMs: 15 * 60 * 1000,
   maxEventBacktrackMs: 10 * 1000,
   highSuspicionThreshold: 60,
   minClicksForRepeatedPattern: 3,
@@ -17,8 +17,8 @@ const LIMITS = {
   intervalToleranceMs: 350,
   baselineMinActiveDays: 5,
   baselineSpikeMultiplier: 6,
-  quarantineHighSuspicionEvents: 5,
-  quarantineWindowMs: 10 * 60 * 1000,
+  quarantineHighSuspicionEvents: 10,
+  quarantineWindowMs: 15 * 60 * 1000,
 };
 
 function stripSignature(payload) {
@@ -96,7 +96,7 @@ function analyzeEvent(event, device, signatureValid, sequenceCheck = { ok: true 
   }
   if (Math.abs(Date.now() - eventTime.getTime()) > LIMITS.maxClockSkewMs) {
     flags.push('clock_skew');
-    suspicionScore += 20;
+    suspicionScore += 10;
   }
   if (!sequenceCheck.ok) {
     flags.push(sequenceCheck.flag);

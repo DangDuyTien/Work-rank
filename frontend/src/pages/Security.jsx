@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { security } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useConfirm, useToast } from '../context/UiContext';
+import { useToast } from '../context/UiContext';
 import { EmptyState, PageState, SegmentedControl } from '../components/ui';
 
 const card = { background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 0, padding: 18, boxShadow: 'none' };
@@ -160,7 +160,7 @@ export default function Security() {
   const [eventFilter, setEventFilter] = useState('all');
   const [quarantineAlert, setQuarantineAlert] = useState(null);
   const [pendingDeviceId, setPendingDeviceId] = useState(null);
-  const confirm = useConfirm();
+  const [deviceSearch, setDeviceSearch] = useState('');
   const toast = useToast();
 
   const load = useCallback(async () => {
@@ -196,21 +196,11 @@ export default function Security() {
 
   const toggleDevice = async (device) => {
     const isRestore = !!device.revokedAt;
-    const ok = await confirm({
-      title: isRestore ? 'Mở khóa thiết bị?' : 'Khóa thiết bị?',
-      message: isRestore
-        ? `Thiết bị ${device.deviceName || device.deviceUuid} sẽ được phép gửi dữ liệu lại. Chỉ mở khóa khi đã kiểm tra xong.`
-        : `Thiết bị ${device.deviceName || device.deviceUuid} của ${device.User?.email || 'người dùng này'} sẽ không gửi dữ liệu được nữa cho tới khi được mở khóa hoặc pair lại.`,
-      confirmText: isRestore ? 'Mở khóa' : 'Khóa thiết bị',
-      tone: isRestore ? 'info' : 'danger',
-    });
-    if (!ok) return;
-
     setPendingDeviceId(device.id);
     try {
       if (isRestore) await security.restoreDevice(device.id);
       else await security.revokeDevice(device.id);
-      toast(isRestore ? 'Đã mở khóa thiết bị' : 'Đã khóa thiết bị', { type: 'success' });
+      toast(isRestore ? 'Đã mở khóa' : 'Đã khóa', { type: isRestore ? 'success' : 'error' });
       await load();
     } catch (err) {
       toast(err.response?.data?.message || 'Không xử lý được thiết bị', { type: 'error' });
@@ -228,6 +218,14 @@ export default function Security() {
   const redEvents = events.filter((event) => eventSeverity(event, highThreshold) === 'red');
   const yellowEvents = events.filter((event) => eventSeverity(event, highThreshold) === 'yellow');
   const filteredEvents = events.filter((event) => eventFilter === 'all' || eventSeverity(event, highThreshold) === eventFilter);
+  const filteredDevices = deviceSearch
+    ? devices.filter((d) => {
+      const q = deviceSearch.toLowerCase();
+      return (d.deviceName || '').toLowerCase().includes(q)
+        || (d.deviceUuid || '').toLowerCase().includes(q)
+        || (d.User?.email || '').toLowerCase().includes(q);
+    })
+    : devices;
 
   return (
     <div className="security-page" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -335,58 +333,104 @@ boxShadow: 'none',
         </div>
       </section>
 
-      <div className="security-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, alignItems: 'start' }}>
-        <div style={card}>
-          <SectionHeader title="Dấu hiệu" />
-          <FlagList flags={anomalies?.flagCounts} />
+      <section className="security-section" style={{ ...card }}>
+        <SectionHeader
+          title="Kiểm soát thiết bị"
+          subtitle={`${devices.filter((d) => !d.revokedAt).length} đang hoạt động · ${devices.filter((d) => d.revokedAt).length} đã khóa`}
+          action={(
+            <input
+              type="text"
+              placeholder="Tìm thiết bị hoặc email..."
+              value={deviceSearch}
+              onChange={(e) => setDeviceSearch(e.target.value)}
+              style={{
+                height: 32,
+                padding: '0 10px',
+                border: '1px solid rgba(15,23,42,0.1)',
+                borderRadius: 0,
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#0f172a',
+                backgroundColor: '#fff',
+                minWidth: 200,
+                outline: 'none',
+              }}
+              onFocus={(e) => { e.target.style.borderColor = '#06b6d4'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(15,23,42,0.1)'; }}
+            />
+          )}
+        />
+        <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
+          {filteredDevices.length === 0 && (
+            <EmptyState title={deviceSearch ? 'Không tìm thấy thiết bị khớp' : 'Chưa có thiết bị nào'} description={deviceSearch ? '' : 'Thiết bị sẽ xuất hiện khi Desktop Tracker được pair thành công.'} />
+          )}
+          {filteredDevices.map((device) => {
+            const isRevoked = !!device.revokedAt;
+            const isBusy = pendingDeviceId === device.id;
+            return (
+              <div
+                key={device.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '10px 14px',
+                  border: `1px solid ${isRevoked ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.1)'}`,
+                  background: isRevoked ? 'rgba(254,242,242,0.4)' : '#ffffff',
+                  transition: 'background 0.15s',
+                }}
+              >
+                <div style={{
+                  width: 44,
+                  height: 24,
+                  borderRadius: 12,
+                  background: isRevoked ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)',
+                  border: `1.5px solid ${isRevoked ? 'rgba(239,68,68,0.4)' : 'rgba(34,197,94,0.35)'}`,
+                  position: 'relative',
+                  cursor: isBusy ? 'wait' : 'pointer',
+                  opacity: isBusy ? 0.6 : 1,
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }} onClick={() => { if (!isBusy) toggleDevice(device); }}>
+                  <div style={{
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: isRevoked ? '#ef4444' : '#22c55e',
+                    position: 'absolute', top: 1.5,
+                    left: isRevoked ? 2 : 22,
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                  }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#0f172a', fontSize: 13, fontWeight: 800 }}>{device.deviceName || device.deviceUuid}</span>
+                    <span style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      border: `1px solid ${isRevoked ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}`,
+                      color: isRevoked ? '#dc2626' : '#16a34a',
+                      background: isRevoked ? 'rgba(239,68,68,0.06)' : 'rgba(34,197,94,0.06)',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {isRevoked ? 'KHÓA' : 'MỞ'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 2, fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+                    <span>{device.User?.email || '—'}</span>
+                    <span>{device.platform || '—'}</span>
+                    <span>CK: {device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </section>
 
-        <div style={card}>
-          <SectionHeader title="Thiết bị" />
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ color: '#94a3b8', textAlign: 'left' }}>
-                  <th style={{ padding: '10px 8px' }}>Thiết bị</th>
-                  <th style={{ padding: '10px 8px' }}>Người dùng</th>
-                  <th style={{ padding: '10px 8px' }}>Đồng bộ cuối</th>
-                  <th style={{ padding: '10px 8px' }}>Trạng thái</th>
-                  <th style={{ padding: '10px 8px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {devices.map((device) => (
-                  <tr key={device.id} style={{ borderTop: '1px solid rgba(15,23,42,0.06)' }}>
-                    <td style={{ padding: '10px 8px', color: '#1e293b' }}>{device.deviceName}<div style={{ color: '#6b7280', fontSize: 11 }}>{device.deviceUuid}</div></td>
-                    <td style={{ padding: '10px 8px', color: '#334155' }}>{device.User?.email || '—'}</td>
-                    <td style={{ padding: '10px 8px', color: '#94a3b8' }}>{device.lastSyncAt ? new Date(device.lastSyncAt).toLocaleString() : '—'}</td>
-                    <td style={{ padding: '10px 8px' }}><span style={{ color: device.revokedAt ? '#ef4444' : '#22c55e', fontWeight: 800 }}>{device.revokedAt ? 'Đã khóa' : 'Đang hoạt động'}</span></td>
-                    <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        disabled={pendingDeviceId === device.id}
-                        onClick={() => toggleDevice(device)}
-                        style={{
-                          background: device.revokedAt ? '#16a34a' : '#dc2626',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 0,
-                          padding: '8px 10px',
-                          cursor: pendingDeviceId === device.id ? 'wait' : 'pointer',
-                          fontWeight: 800,
-                          opacity: pendingDeviceId === device.id ? 0.72 : 1,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {pendingDeviceId === device.id ? 'Đang xử lý...' : device.revokedAt ? 'Mở khóa' : 'Khóa'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div style={card}>
+        <SectionHeader title="Dấu hiệu" />
+        <FlagList flags={anomalies?.flagCounts} />
       </div>
 
       <section className="security-section">

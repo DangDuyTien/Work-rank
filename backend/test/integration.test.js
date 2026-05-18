@@ -163,7 +163,7 @@ test('auto-quarantine khóa device sau nhiều event nghi vấn cao', async () =
   assert.equal(start.status, 201, start.text);
 
   let lastBatch = null;
-  for (let sequence = 1; sequence <= 5; sequence += 1) {
+  for (let sequence = 1; sequence <= 10; sequence += 1) {
     const payload = signedPayload(start.body.deviceSecret, {
       deviceUuid,
       deviceName: deviceUuid,
@@ -186,7 +186,7 @@ test('auto-quarantine khóa device sau nhiều event nghi vấn cao', async () =
   }
 
   assert.equal(lastBatch.body.quarantine.quarantined, true);
-  assert.equal(lastBatch.body.quarantine.flaggedEventsInWindow, 5);
+  assert.equal(lastBatch.body.quarantine.flaggedEventsInWindow, 10);
 
   const rejected = await agent.post('/api/activity/batch').set('Authorization', `Bearer ${token}`).send(signedPayload(start.body.deviceSecret, {
     deviceUuid,
@@ -194,7 +194,7 @@ test('auto-quarantine khóa device sau nhiều event nghi vấn cao', async () =
     platform: 'macos',
     deviceSecret: start.body.deviceSecret,
     sessionId: start.body.session.id,
-    events: [{ timestamp: new Date().toISOString(), activeSeconds: 1, idleSeconds: 0, keystrokeCount: 1, mouseClickCount: 1, mouseMoveCount: 1, sequence: 6 }],
+    events: [{ timestamp: new Date().toISOString(), activeSeconds: 1, idleSeconds: 0, keystrokeCount: 1, mouseClickCount: 1, mouseMoveCount: 1, sequence: 11 }],
   }));
   assert.equal(rejected.status, 403, rejected.text);
   assert.equal(rejected.body.message, 'Device revoked');

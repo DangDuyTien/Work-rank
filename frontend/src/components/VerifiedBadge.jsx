@@ -23,7 +23,7 @@ export default function VerifiedBadge({ size = 16, color = '#0ea5e9', className 
       width={size}
       height={size}
       className={className}
-      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, filter: 'drop-shadow(0 1px 2px rgba(14,165,233,0.25))', ...style }}
     >
       <polygon fill={color} points={polygonPoints} />
       <path
