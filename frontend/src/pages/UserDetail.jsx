@@ -171,64 +171,30 @@ const RANK_TIERS = buildRankTiers();
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
 
-const ACHIEVEMENT_TIER_STYLES = [
-  {
+function buildAchievementTierStyles() {
+  const rankTiers = buildRankTiers();
+  const styles = [{
     label: 'Chưa mở',
     color: '#94a3b8',
     accent: '#cbd5e1',
     soft: 'rgba(148,163,184,0.1)',
     border: 'rgba(148,163,184,0.24)',
     glow: '0 8px 18px rgba(148,163,184,0.08)',
-  },
-  {
-    label: 'Đồng',
-    color: '#b45309',
-    accent: '#f97316',
-    soft: 'rgba(180,83,9,0.13)',
-    border: 'rgba(180,83,9,0.3)',
-    glow: '0 10px 24px rgba(180,83,9,0.12)',
-  },
-  {
-    label: 'Bạc',
-    color: '#64748b',
-    accent: '#cbd5e1',
-    soft: 'rgba(100,116,139,0.13)',
-    border: 'rgba(100,116,139,0.3)',
-    glow: '0 12px 26px rgba(100,116,139,0.13)',
-  },
-  {
-    label: 'Vàng',
-    color: '#d97706',
-    accent: '#facc15',
-    soft: 'rgba(217,119,6,0.15)',
-    border: 'rgba(217,119,6,0.34)',
-    glow: '0 14px 30px rgba(217,119,6,0.16)',
-  },
-  {
-    label: 'Bạch kim',
-    color: '#2563eb',
-    accent: '#67e8f9',
-    soft: 'rgba(37,99,235,0.15)',
-    border: 'rgba(37,99,235,0.38)',
-    glow: '0 16px 36px rgba(37,99,235,0.18)',
-  },
-  {
-    label: 'Kim cương',
-    color: '#7c3aed',
-    accent: '#ec4899',
-    soft: 'rgba(124,58,237,0.16)',
-    border: 'rgba(124,58,237,0.42)',
-    glow: '0 18px 44px rgba(124,58,237,0.22)',
-  },
-  {
-    label: 'Huyền thoại',
-    color: '#be123c',
-    accent: '#f59e0b',
-    soft: 'rgba(190,18,60,0.16)',
-    border: 'rgba(190,18,60,0.42)',
-    glow: '0 20px 52px rgba(190,18,60,0.24)',
-  },
-];
+  }];
+  rankTiers.forEach((tier) => {
+    styles.push({
+      label: tier.tier,
+      color: tier.color,
+      accent: tier.accent2,
+      soft: tier.soft,
+      border: tier.border,
+      glow: tier.glow,
+    });
+  });
+  return styles;
+}
+
+const ACHIEVEMENT_TIER_STYLES = buildAchievementTierStyles();
 
 const ANIMAL_LEVEL_NAMES = [
   'Mèo con',
@@ -584,12 +550,13 @@ function achievementStyleVars(badge) {
 function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, sessionRecords }) {
   const burstScore = Math.max(Number(peakBucket.actions || 0), Math.round(Number(score || 0) * 8));
   const focusMinutes = Math.round(Number(sessionRecords.longest || 0) / 60);
+  const rankMins = buildRankTiers().map((t) => t.min);
   return [
     buildAchievementBadge({
       label: 'Cấp bậc',
       icon: Medal,
       value: levelView.level,
-      thresholds: [0, 10, 20, 35, 70, 130],
+      thresholds: rankMins,
       desc: () => `Level ${levelView.level} · ${fmtNum(levelView.totalActions)} thao tác`,
       nextDesc: (tier) => `Cần level ${tier.nextTarget || 10} để mở`,
     }),
@@ -597,7 +564,7 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
       label: 'Kỷ lục ngày',
       icon: Trophy,
       value: Number(bestDay?.count || 0),
-      thresholds: [500, 1000, 3000, 10000, 30000, 70000],
+      thresholds: [300, 500, 800, 1200, 1800, 2500, 3500, 5000, 7500, 10000, 15000, 22000, 32000, 45000, 60000],
       desc: () => `${fmtNum(bestDay?.count)} thao tác trong ngày mạnh nhất`,
       nextDesc: (tier) => `Cần ${fmtNum(tier.nextTarget || 500)} thao tác/ngày`,
     }),
@@ -605,7 +572,7 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
       label: 'Chuỗi bền bỉ',
       icon: Flame,
       value: currentStreak,
-      thresholds: [1, 3, 7, 14, 30, 60],
+      thresholds: [1, 2, 3, 5, 7, 10, 14, 20, 28, 40, 55, 75, 100, 150, 200],
       desc: () => `${fmtNum(currentStreak)} ngày liên tiếp có hoạt động`,
       nextDesc: (tier) => `Cần chuỗi ${fmtNum(tier.nextTarget || 1)} ngày`,
     }),
@@ -613,7 +580,7 @@ function buildBadges({ levelView, score, bestDay, currentStreak, peakBucket, ses
       label: 'Nhịp tập trung',
       icon: Zap,
       value: Math.max(burstScore, focusMinutes * 6),
-      thresholds: [150, 300, 600, 1200, 2400, 4800],
+      thresholds: [80, 150, 250, 400, 600, 900, 1300, 1800, 2500, 3500, 5000, 7000, 10000, 15000, 22000],
       desc: () => `Burst ${fmtNum(peakBucket.actions)} thao tác · phiên dài ${fmtDur(sessionRecords.longest)}`,
       nextDesc: (tier) => `Cần burst ${fmtNum(tier.nextTarget || 150)} hoặc phiên dài hơn`,
     }),
@@ -1640,6 +1607,7 @@ export default function UserDetail() {
                       className={badge ? `profile-achievement-pill achievement-tier-${badge.tierIndex}` : 'profile-achievement-pill is-empty'}
                       style={badge ? achievementStyleVars(badge) : undefined}
                       title={badge ? `${badge.label} · ${badge.tierLabel}` : 'Chọn thành tích'}
+                      data-achievement-tier={badge?.tierIndex}
                     >
                       {badge ? (
                         <>
@@ -1725,6 +1693,7 @@ export default function UserDetail() {
                 key={badge.label}
                 className={badge.unlocked ? `profile-badge is-unlocked achievement-tier-${badge.tierIndex}` : 'profile-badge'}
                 style={achievementStyleVars(badge)}
+                data-achievement-tier={badge.tierIndex}
               >
                 <div className="profile-badge-icon"><Icon size={18} strokeWidth={2.4} /></div>
                 <div>

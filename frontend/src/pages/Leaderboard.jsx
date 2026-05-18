@@ -4,7 +4,7 @@ import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi }
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
-import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Code, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, CheckCheck, ChevronLeft, ChevronRight, Code, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import usePageVisibility from '../hooks/usePageVisibility';
 
@@ -86,12 +86,18 @@ const BADGE_STYLES = {
   rankDiamond: { bg: 'linear-gradient(135deg, rgba(124,58,237,0.13), rgba(34,211,238,0.16))', border: 'rgba(124,58,237,0.3)', color: '#6d28d9', icon: Sparkles, shadow: '0 0 12px rgba(124,58,237,0.12)' },
   rankGold: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Medal },
   rankSilver: { bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.24)', color: '#64748b', icon: ShieldCheck },
+  rankBronze: { bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.18)', color: '#92400e', icon: BadgeCheck },
   focus: { bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.26)', color: '#ea580c', icon: Flame },
   focusLegend: { bg: 'linear-gradient(135deg, rgba(234,88,12,0.14), rgba(245,158,11,0.16))', border: 'rgba(234,88,12,0.34)', color: '#c2410c', icon: Flame, shadow: '0 0 12px rgba(234,88,12,0.14)' },
+  focusElite: { bg: 'linear-gradient(135deg, rgba(190,18,60,0.12), rgba(234,88,12,0.14))', border: 'rgba(190,18,60,0.3)', color: '#be123c', icon: Flame, shadow: '0 0 14px rgba(190,18,60,0.14)' },
   volumeBronze: { bg: 'rgba(180,83,9,0.11)', border: 'rgba(180,83,9,0.24)', color: '#b45309', icon: BadgeCheck },
+  volumeSilver: { bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.24)', color: '#64748b', icon: BadgeCheck },
   volumeGold: { bg: 'rgba(217,119,6,0.13)', border: 'rgba(217,119,6,0.3)', color: '#b45309', icon: BadgeCheck },
+  volumePlatinum: { bg: 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(56,189,248,0.13))', border: 'rgba(37,99,235,0.28)', color: '#2563eb', icon: BadgeCheck },
   volumeDiamond: { bg: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(103,232,249,0.16))', border: 'rgba(37,99,235,0.32)', color: '#2563eb', icon: BadgeCheck, shadow: '0 0 12px rgba(37,99,235,0.12)' },
   volumeLegend: { bg: 'linear-gradient(135deg, rgba(124,58,237,0.14), rgba(236,72,153,0.14))', border: 'rgba(124,58,237,0.34)', color: '#7c3aed', icon: BadgeCheck, shadow: '0 0 14px rgba(124,58,237,0.14)' },
+  levelTier: { bg: 'rgba(14,165,233,0.12)', border: 'rgba(14,165,233,0.28)', color: '#0369a1', icon: Trophy },
+  streak: { bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.24)', color: '#16a34a', icon: CheckCheck },
 };
 
 const RANGE_TOP_LABELS = {
@@ -102,14 +108,43 @@ const RANGE_TOP_LABELS = {
 };
 
 const ACTION_BADGE_MILESTONES = [
-  { key: 'actions-70k', min: 70000, label: '70K thao tác', style: 'volumeLegend' },
-  { key: 'actions-30k', min: 30000, label: '30K thao tác', style: 'volumeDiamond' },
-  { key: 'actions-10k', min: 10000, label: '10K thao tác', style: 'volumeGold' },
-  { key: 'actions-3k', min: 3000, label: '3K thao tác', style: 'volumeBronze' },
+  { key: 'actions-1m', min: 1000000, label: '1M thao tác', style: 'volumeLegend' },
+  { key: 'actions-500k', min: 500000, label: '500K', style: 'volumeLegend' },
+  { key: 'actions-250k', min: 250000, label: '250K', style: 'volumeDiamond' },
+  { key: 'actions-120k', min: 120000, label: '120K', style: 'volumeDiamond' },
+  { key: 'actions-60k', min: 60000, label: '60K', style: 'volumePlatinum' },
+  { key: 'actions-30k', min: 30000, label: '30K', style: 'volumePlatinum' },
+  { key: 'actions-15k', min: 15000, label: '15K', style: 'volumeGold' },
+  { key: 'actions-7k', min: 7000, label: '7K', style: 'volumeGold' },
+  { key: 'actions-3k', min: 3000, label: '3K', style: 'volumeSilver' },
+  { key: 'actions-1k', min: 1000, label: '1K', style: 'volumeBronze' },
 ];
 
-function VerifiedMark({ size = 15 }) {
-  return <VerifiedBadge size={size} />;
+const FOCUS_BADGE_MILESTONES = [
+  { key: 'focus-97', min: 97, label: 'Siêu tập trung', style: 'focusElite' },
+  { key: 'focus-92', min: 92, label: 'Cực tập trung', style: 'focusLegend' },
+  { key: 'focus-85', min: 85, label: 'Rất tập trung', style: 'focusLegend' },
+  { key: 'focus-75', min: 75, label: 'Tập trung cao', style: 'focus' },
+  { key: 'focus-60', min: 60, label: 'Có tập trung', style: 'focus' },
+];
+
+function actionMilestoneBadge(actions) {
+  return ACTION_BADGE_MILESTONES.find((milestone) => Number(actions || 0) >= milestone.min) || null;
+}
+
+function focusMilestoneBadge(focusScore) {
+  return FOCUS_BADGE_MILESTONES.find((milestone) => Number(focusScore || 0) >= milestone.min) || null;
+}
+
+function levelTierBadge(level) {
+  const lvl = Math.max(0, Math.floor(Number(level || 0)));
+  if (lvl >= 130) return { key: 'tier-legend', label: 'Huyền thoại', style: 'rankLegend' };
+  if (lvl >= 70) return { key: 'tier-diamond', label: 'Kim cương', style: 'rankDiamond' };
+  if (lvl >= 35) return { key: 'tier-platinum', label: 'Bạch kim', style: 'levelTier' };
+  if (lvl >= 20) return { key: 'tier-gold', label: 'Vàng', style: 'volumeGold' };
+  if (lvl >= 10) return { key: 'tier-silver', label: 'Bạc', style: 'volumeSilver' };
+  if (lvl >= 1) return { key: 'tier-bronze', label: 'Đồng', style: 'volumeBronze' };
+  return null;
 }
 
 function Avatar({ user, userId, name, size = 36, idx = 0, refreshKey = 0 }) {
@@ -172,21 +207,15 @@ function isPartnerRanker(user = {}) {
 function rankMilestoneBadge(rank, range) {
   const safeRank = Number(rank || 0);
   if (!Number.isFinite(safeRank) || safeRank <= 0) return null;
-  if (safeRank === 1) {
-    return {
-      key: 'rank-top1',
-      label: `Top 1 ${RANGE_TOP_LABELS[range] || 'ngày'}`,
-      style: 'rankLegend',
-    };
-  }
+  const label = RANGE_TOP_LABELS[range] || 'ngày';
+  if (safeRank === 1) return { key: 'rank-top1', label: `Top 1 ${label}`, style: 'rankLegend' };
   if (safeRank <= 3) return { key: 'rank-top3', label: `Top ${safeRank}`, style: 'rankDiamond' };
+  if (safeRank <= 5) return { key: 'rank-top5', label: 'Top 5', style: 'rankGold' };
   if (safeRank <= 10) return { key: 'rank-top10', label: 'Top 10', style: 'rankGold' };
+  if (safeRank <= 20) return { key: 'rank-top20', label: 'Top 20', style: 'rankSilver' };
   if (safeRank <= 50) return { key: 'rank-top50', label: 'Top 50', style: 'rankSilver' };
+  if (safeRank <= 100) return { key: 'rank-top100', label: 'Top 100', style: 'rankBronze' };
   return null;
-}
-
-function actionMilestoneBadge(actions) {
-  return ACTION_BADGE_MILESTONES.find((milestone) => Number(actions || 0) >= milestone.min) || null;
 }
 
 function devRankerStyle(user, variant = 'row') {
@@ -253,17 +282,21 @@ function devRankerStyle(user, variant = 'row') {
 function rankBadges(user, rank, range) {
   if (!user) return [];
   const actions = userActions(user);
+  const focusScore = Number(user.focusScore || user.focus_score || 0);
+  const level = rankerLevel(user);
   const badges = [];
   if (isDevRanker(user)) badges.push({ key: 'dev', label: 'Dev', style: 'dev' });
   if (isPartnerRanker(user)) badges.push({ key: 'partner', label: 'Đối tác', style: 'partner' });
   const rankBadge = rankMilestoneBadge(rank, range);
   const actionBadge = actionMilestoneBadge(actions);
-  const focusScore = Number(user.focusScore || user.focus_score || 0);
+  const focusBadge = focusMilestoneBadge(focusScore);
+  const tierBadge = levelTierBadge(level);
   if (rankBadge) badges.push(rankBadge);
   if (actionBadge) badges.push(actionBadge);
-  if (focusScore >= 90) badges.push({ key: 'focus-90', label: 'Tập trung', style: 'focusLegend' });
-  else if (focusScore >= 75) badges.push({ key: 'focus-75', label: 'Ổn định', style: 'focus' });
-  return badges.slice(0, (isDevRanker(user) || isPartnerRanker(user)) ? 4 : 3);
+  if (focusBadge) badges.push(focusBadge);
+  if (tierBadge) badges.push(tierBadge);
+  const maxBadges = (isDevRanker(user) || isPartnerRanker(user)) ? 5 : 4;
+  return badges.slice(0, maxBadges);
 }
 
 function RankBadge({ badge, compact = false }) {

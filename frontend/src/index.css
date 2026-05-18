@@ -4659,8 +4659,42 @@ textarea:focus-visible,
   box-shadow: 0 8px 18px color-mix(in srgb, var(--badge-color) 8%, transparent);
 }
 
-.profile-achievement-pill:not(.is-empty).achievement-tier-5,
-.profile-achievement-pill:not(.is-empty).achievement-tier-6 {
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="21"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="22"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="23"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="24"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="25"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="26"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="27"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="28"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="29"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="30"]::after {
+  animation: profile-achievement-sheen 5.6s ease-in-out infinite;
+}
+
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="21"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="22"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="23"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="24"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="25"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="26"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="27"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="28"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="29"]::after,
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="30"]::after {
+  animation: profile-achievement-sheen 5.6s ease-in-out infinite;
+}
+
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="21"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="22"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="23"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="24"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="25"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="26"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="27"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="28"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="29"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="30"] {
   background:
     linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--badge-soft) 78%, #ffffff) 42%, var(--badge-soft) 100%);
   box-shadow:
@@ -4668,7 +4702,11 @@ textarea:focus-visible,
     inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
-.profile-achievement-pill:not(.is-empty).achievement-tier-6 {
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="26"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="27"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="28"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="29"],
+.profile-achievement-pill:not(.is-empty)[data-achievement-tier="30"] {
   border-color: color-mix(in srgb, var(--badge-color) 54%, rgba(15, 23, 42, 0.08));
   box-shadow:
     0 12px 28px color-mix(in srgb, var(--badge-color) 16%, transparent),
@@ -5153,16 +5191,52 @@ textarea:focus-visible,
   pointer-events: none;
 }
 
-.profile-badge.is-unlocked.achievement-tier-3::after,
-.profile-badge.is-unlocked.achievement-tier-4::after,
-.profile-badge.is-unlocked.achievement-tier-5::after,
-.profile-badge.is-unlocked.achievement-tier-6::after {
+.profile-badge.is-unlocked[data-achievement-tier="8"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="9"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="10"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="11"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="12"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="13"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="14"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="15"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="16"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="17"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="18"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="19"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="20"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="21"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="22"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="23"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="24"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="25"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="26"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="27"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="28"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="29"]::after,
+.profile-badge.is-unlocked[data-achievement-tier="30"]::after {
   animation: profile-achievement-sheen 5.6s ease-in-out infinite;
 }
 
-.profile-badge.is-unlocked.achievement-tier-4,
-.profile-badge.is-unlocked.achievement-tier-5,
-.profile-badge.is-unlocked.achievement-tier-6 {
+.profile-badge.is-unlocked[data-achievement-tier="11"],
+.profile-badge.is-unlocked[data-achievement-tier="12"],
+.profile-badge.is-unlocked[data-achievement-tier="13"],
+.profile-badge.is-unlocked[data-achievement-tier="14"],
+.profile-badge.is-unlocked[data-achievement-tier="15"],
+.profile-badge.is-unlocked[data-achievement-tier="16"],
+.profile-badge.is-unlocked[data-achievement-tier="17"],
+.profile-badge.is-unlocked[data-achievement-tier="18"],
+.profile-badge.is-unlocked[data-achievement-tier="19"],
+.profile-badge.is-unlocked[data-achievement-tier="20"],
+.profile-badge.is-unlocked[data-achievement-tier="21"],
+.profile-badge.is-unlocked[data-achievement-tier="22"],
+.profile-badge.is-unlocked[data-achievement-tier="23"],
+.profile-badge.is-unlocked[data-achievement-tier="24"],
+.profile-badge.is-unlocked[data-achievement-tier="25"],
+.profile-badge.is-unlocked[data-achievement-tier="26"],
+.profile-badge.is-unlocked[data-achievement-tier="27"],
+.profile-badge.is-unlocked[data-achievement-tier="28"],
+.profile-badge.is-unlocked[data-achievement-tier="29"],
+.profile-badge.is-unlocked[data-achievement-tier="30"] {
   box-shadow:
     var(--badge-glow),
     0 0 0 1px color-mix(in srgb, var(--badge-color) 10%, transparent),
