@@ -442,6 +442,22 @@ export default function FriendsDock() {
     typingStopTimerRef.current = window.setTimeout(() => emitTyping(false), 1800);
   };
 
+  const handleChatKeyDown = (event) => {
+    if (
+      event.key !== 'Enter'
+      || event.shiftKey
+      || event.metaKey
+      || event.ctrlKey
+      || event.altKey
+      || event.nativeEvent?.isComposing
+    ) {
+      return;
+    }
+    event.preventDefault();
+    if (!chatInput.trim() || chatBusy) return;
+    event.currentTarget.form?.requestSubmit();
+  };
+
   const replaceOptimisticMessage = (targetId, clientMessageId, nextMessage) => {
     setMessagesByUser((prev) => ({
       ...prev,
@@ -595,6 +611,7 @@ export default function FriendsDock() {
               <textarea
                 value={chatInput}
                 onChange={handleChatInput}
+                onKeyDown={handleChatKeyDown}
                 placeholder="Nhắn tin..."
                 maxLength={2000}
                 rows={1}
