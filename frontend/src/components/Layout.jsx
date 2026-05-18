@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, BadgeCheck, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy, Users } from 'lucide-react';
+import { Activity, BadgeCheck, BarChart3, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
@@ -13,6 +13,7 @@ import VerifiedBadge from './VerifiedBadge';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
+  { to: '/performance', label: 'Hiệu Suất', shortLabel: 'Hiệu suất', icon: BarChart3 },
   { to: '/leaderboard', label: 'Xếp Hạng', shortLabel: 'Xếp hạng', icon: Trophy },
   { to: '/groups', label: 'Nhóm', shortLabel: 'Nhóm', icon: Users },
   { to: '/tracker', label: 'Theo Dõi', shortLabel: 'Tracker', icon: Monitor },
@@ -31,6 +32,7 @@ const NAV_TOUR_TARGETS = {
 
 const PAGE_TITLES = {
   '/dashboard': 'WorkRank Realtime',
+  '/performance': 'Phân Tích Hiệu Suất',
   '/leaderboard': 'WorkRank Realtime',
   '/groups': 'WorkRank Realtime',
   '/friends': 'Bạn Bè',

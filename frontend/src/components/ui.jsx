@@ -1,16 +1,15 @@
 import React from 'react';
 import { Inbox, RotateCcw } from 'lucide-react';
 
-export function Card({ children, style, ...props }) {
+function cx(...values) {
+  return values.filter(Boolean).join(' ');
+}
+
+export function Card({ children, className = '', style, tone = 'default', ...props }) {
   return (
     <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 0,
-        boxShadow: 'none',
-        ...style,
-      }}
+      className={cx('ui-card', tone !== 'default' && `ui-card--${tone}`, className)}
+      style={style}
       {...props}
     >
       {children}
@@ -18,12 +17,12 @@ export function Card({ children, style, ...props }) {
   );
 }
 
-export function EmptyState({ icon: Icon = Inbox, title, description, action }) {
+export function EmptyState({ icon: Icon = Inbox, title, description, action, compact = false, className = '' }) {
   return (
-    <div style={{ textAlign: 'center', padding: '44px 24px', color: '#94a3b8' }}>
-      <Icon size={40} color="#38bdf8" style={{ marginBottom: 14 }} />
-      <h2 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: 18, fontWeight: 800 }}>{title}</h2>
-      {description && <p style={{ margin: '0 auto 18px', maxWidth: 420, fontSize: 13, lineHeight: 1.5 }}>{description}</p>}
+    <div className={cx('ui-empty-state', compact && 'ui-empty-state--compact', className)}>
+      <Icon className="ui-empty-state__icon" size={compact ? 26 : 40} />
+      <h2 className="ui-empty-state__title">{title}</h2>
+      {description && <p className="ui-empty-state__description">{description}</p>}
       {action}
     </div>
   );
@@ -32,44 +31,21 @@ export function EmptyState({ icon: Icon = Inbox, title, description, action }) {
 export function PageState({ type = 'loading', title, description, onRetry }) {
   const loading = type === 'loading';
   return (
-    <div style={{ minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-      <div style={{ textAlign: 'center' }}>
+    <div className="ui-page-state" aria-busy={loading ? 'true' : undefined}>
+      <div className="ui-page-state__inner">
         {loading ? (
-          <div style={{
-            width: 24,
-            height: 24,
-            border: '3px solid rgba(56,189,248,0.2)',
-            borderTopColor: '#38bdf8',
-            borderRadius: '50%',
-            margin: '0 auto 14px',
-            animation: 'spin 0.8s linear infinite',
-          }} />
+          <div className="ui-spinner" />
         ) : (
-          <RotateCcw size={28} color="#ef4444" style={{ marginBottom: 12 }} />
+          <RotateCcw className="ui-page-state__error-icon" size={28} />
         )}
-        <div style={{ color: type === 'error' ? '#ef4444' : '#94a3b8', fontSize: 14, fontWeight: 800 }}>{title}</div>
-        {description && <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.5 }}>{description}</div>}
+        <div className={cx('ui-page-state__title', type === 'error' && 'is-error')}>{title}</div>
+        {description && <div className="ui-page-state__description">{description}</div>}
         {type === 'error' && onRetry && (
-          <button
-            type="button"
-            onClick={onRetry}
-            style={{
-              marginTop: 14,
-              border: '1px solid rgba(56,189,248,0.3)',
-              background: 'rgba(56,189,248,0.1)',
-              color: '#38bdf8',
-              borderRadius: 0,
-              padding: '8px 12px',
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 800,
-            }}
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={onRetry} className="ui-page-state__action">
             Thử lại
-          </button>
+          </Button>
         )}
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -79,14 +55,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel }) {
     <div
       role="group"
       aria-label={ariaLabel}
-      style={{
-        display: 'flex',
-        background: 'rgba(15,23,42,0.04)',
-        border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 0,
-        padding: 3,
-        gap: 2,
-      }}
+      className="ui-segmented"
     >
       {options.map((option) => {
         const active = value === option.key;
@@ -95,22 +64,93 @@ export function SegmentedControl({ options, value, onChange, ariaLabel }) {
             key={option.key}
             type="button"
             onClick={() => onChange(option.key)}
-            style={{
-              padding: '7px 14px',
-              borderRadius: 0,
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 700,
-              background: active ? '#38bdf8' : 'transparent',
-              color: active ? '#ffffff' : '#94a3b8',
-              whiteSpace: 'nowrap',
-            }}
+            className={cx('ui-segmented__button', active && 'is-active')}
+            aria-pressed={active}
           >
             {option.label}
           </button>
         );
       })}
     </div>
+  );
+}
+
+export function Button({ children, className = '', variant = 'secondary', size = 'md', ...props }) {
+  return (
+    <button
+      className={cx('ui-button', `ui-button--${variant}`, `ui-button--${size}`, className)}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function PageShell({ children, className = '', narrow = false, mono = false }) {
+  return (
+    <div className={cx('ui-page-shell', narrow && 'ui-page-shell--narrow', mono && 'ui-page-shell--mono', className)}>
+      {children}
+    </div>
+  );
+}
+
+export function PageHeader({ icon: Icon, eyebrow, title, description, actions }) {
+  return (
+    <section className="ui-page-header">
+      <div className="ui-page-header__copy">
+        {eyebrow && (
+          <div className="ui-kicker">
+            {Icon && <Icon size={15} />}
+            {eyebrow}
+          </div>
+        )}
+        <h1 className="ui-page-title">{title}</h1>
+        {description && <p className="ui-page-description">{description}</p>}
+      </div>
+      {actions && <div className="ui-page-actions">{actions}</div>}
+    </section>
+  );
+}
+
+export function Section({ title, description, actions, children, className = '' }) {
+  return (
+    <section className={cx('ui-section', className)}>
+      {(title || description || actions) && (
+        <div className="ui-section__header">
+          <div>
+            {title && <h2 className="ui-section__title">{title}</h2>}
+            {description && <p className="ui-section__description">{description}</p>}
+          </div>
+          {actions && <div className="ui-section__actions">{actions}</div>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+export function Notice({ type = 'info', icon: Icon, children }) {
+  return (
+    <div className={cx('ui-notice', `ui-notice--${type}`)} role={type === 'error' ? 'alert' : 'status'}>
+      {Icon && <Icon size={17} />}
+      <span>{children}</span>
+    </div>
+  );
+}
+
+export function StatCard({ icon: Icon, label, value, detail, color = '#38bdf8' }) {
+  return (
+    <Card className="ui-stat-card" style={{ '--stat-color': color }}>
+      <div className="ui-stat-card__top">
+        <span className="ui-stat-card__label">{label}</span>
+        {Icon && (
+          <span className="ui-stat-card__icon">
+            <Icon size={17} />
+          </span>
+        )}
+      </div>
+      <strong className="ui-stat-card__value">{value}</strong>
+      {detail && <span className="ui-stat-card__detail">{detail}</span>}
+    </Card>
   );
 }

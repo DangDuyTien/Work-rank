@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { TrackingProvider } from './context/TrackingContext';
 import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
-import { Construction } from 'lucide-react';
 
 const CHUNK_RELOAD_KEY = 'workrank:chunk-reload-attempted';
 
@@ -43,6 +42,7 @@ const Security = lazyWithReload(() => import('./pages/Security'));
 const Settings = lazyWithReload(() => import('./pages/Settings'));
 const AdminPrivileges = lazyWithReload(() => import('./pages/AdminPrivileges'));
 const Pomodoro = lazyWithReload(() => import('./pages/Pomodoro'));
+const Performance = lazyWithReload(() => import('./pages/Performance'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -58,15 +58,6 @@ const AdminRoute = ({ children }) => {
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 };
-
-// Placeholder pages for sidebar nav items
-const ComingSoon = ({ title }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
-    <Construction size={48} color="#f59e0b" />
-    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{title}</h2>
-    <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>Chức năng đang được hoàn thiện</p>
-  </div>
-);
 
 const PageFallback = ({ text = 'Đang tải...' }) => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#64748b', fontSize: 14 }}>
@@ -152,7 +143,7 @@ export default function App() {
                   <Route path="/friends" element={<Friends />} />
                   <Route path="/tracker" element={<Tracker />} />
                   <Route path="/pomodoro" element={<Pomodoro />} />
-                  <Route path="/performance" element={<ComingSoon title="Phân Tích Hiệu Suất" />} />
+                  <Route path="/performance" element={<Performance />} />
                   <Route path="/security" element={<AdminRoute><Security /></AdminRoute>} />
                   <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
                   <Route path="/settings" element={<Settings />} />

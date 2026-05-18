@@ -22,7 +22,19 @@ async function ensureInviteCode(team) {
 
 async function toGroupPayload(team, userId) {
   await ensureInviteCode(team);
-  const memberCount = await User.count({ where: { teamId: team.id, status: 'active' } });
+  const memberWhere = { teamId: team.id, status: 'active' };
+  const [memberCount, members] = await Promise.all([
+    User.count({ where: memberWhere }),
+    User.findAll({
+      where: memberWhere,
+      attributes: ['id', 'name', 'email', 'role', 'isVerified', 'status'],
+      order: [
+        ['name', 'ASC'],
+        ['id', 'ASC'],
+      ],
+      limit: 100,
+    }),
+  ]);
   return {
     id: team.id,
     name: team.name,
@@ -33,8 +45,45 @@ async function toGroupPayload(team, userId) {
     ownerId: team.ownerId,
     member_count: memberCount,
     memberCount,
+    members: members.map((member) => ({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      isVerified: member.isVerified,
+      status: member.status,
+      groupRole: String(team.ownerId || '') === String(member.id) ? 'owner' : 'member',
+    })),
     role: String(team.ownerId || '') === String(userId) ? 'owner' : 'member',
   };
+}
+
+async function loadTeamOrThrow(teamId) {
+  const team = await Team.findByPk(teamId);
+  if (!team) {
+    const error = new Error('Group not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return team;
+}
+
+function assertCanManage(user, team) {
+  const isOwner = String(team.ownerId || '') === String(user.id);
+  const isAdmin = user.role === 'admin';
+  if (isOwner || isAdmin) return;
+  const error = new Error('Only group owner or admin can manage this group');
+  error.statusCode = 403;
+  throw error;
+}
+
+function normalizeName(value) {
+  return String(value || '').trim();
+}
+
+function normalizeDescription(value) {
+  const description = String(value || '').trim();
+  return description || null;
 }
 
 async function listForUser(user) {
@@ -72,8 +121,69 @@ async function leave(user, teamId) {
     error.statusCode = 400;
     throw error;
   }
+  const team = await loadTeamOrThrow(teamId);
+  if (String(team.ownerId || '') === String(user.id)) {
+    const error = new Error('Group owner must delete the group before leaving');
+    error.statusCode = 400;
+    throw error;
+  }
   await user.update({ teamId: null });
   return { ok: true };
 }
 
-module.exports = { listForUser, create, join, leave };
+async function update(user, teamId, payload = {}) {
+  const team = await loadTeamOrThrow(teamId);
+  assertCanManage(user, team);
+  const updates = {};
+  if (payload.name !== undefined) {
+    const name = normalizeName(payload.name);
+    if (!name) {
+      const error = new Error('Group name is required');
+      error.statusCode = 400;
+      throw error;
+    }
+    updates.name = name;
+  }
+  if (payload.description !== undefined) updates.description = normalizeDescription(payload.description);
+  if (Object.keys(updates).length > 0) {
+    try {
+      await team.update(updates);
+    } catch (error) {
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const conflict = new Error('Group name already exists');
+        conflict.statusCode = 409;
+        throw conflict;
+      }
+      throw error;
+    }
+  }
+  return toGroupPayload(team, user.id);
+}
+
+async function remove(user, teamId) {
+  const team = await loadTeamOrThrow(teamId);
+  assertCanManage(user, team);
+  await User.update({ teamId: null }, { where: { teamId: team.id } });
+  await team.destroy();
+  return { ok: true };
+}
+
+async function kick(user, teamId, targetUserId) {
+  const team = await loadTeamOrThrow(teamId);
+  assertCanManage(user, team);
+  if (String(team.ownerId || '') === String(targetUserId)) {
+    const error = new Error('Group owner cannot be kicked');
+    error.statusCode = 400;
+    throw error;
+  }
+  const target = await User.findByPk(targetUserId);
+  if (!target || String(target.teamId || '') !== String(team.id)) {
+    const error = new Error('User is not in this group');
+    error.statusCode = 404;
+    throw error;
+  }
+  await target.update({ teamId: null });
+  return toGroupPayload(team, user.id);
+}
+
+module.exports = { listForUser, create, join, leave, update, remove, kick };

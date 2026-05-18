@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { activity, groups as groupsApi, users as usersApi } from '../services/api';
-import { Clipboard, Plus, RefreshCw, Swords, Trophy, UserPlus, Users, X } from 'lucide-react';
+import { Clipboard, Edit3, Plus, RefreshCw, Swords, Trash2, Trophy, UserMinus, UserPlus, Users, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 
@@ -81,8 +81,11 @@ export default function Groups() {
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [showContest, setShowContest] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(null);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [contests, setContests] = useState(() => loadContests());
   const [contestMode, setContestMode] = useState('2v2');
@@ -184,6 +187,65 @@ export default function Groups() {
       void fetchGroups();
     } catch (err) {
       toast(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi rời nhóm', { type: 'error' });
+    }
+  };
+
+  const openEditGroup = (group) => {
+    setEditingGroup(group);
+    setEditName(group.name || '');
+    setEditDesc(group.description || '');
+    setError('');
+  };
+
+  const handleUpdateGroup = async (event) => {
+    event.preventDefault();
+    if (!editingGroup) return;
+    const name = editName.trim();
+    if (!name) {
+      setError('Tên nhóm không được để trống');
+      return;
+    }
+    try {
+      await groupsApi.update(editingGroup.id, { name, description: editDesc.trim() });
+      setEditingGroup(null);
+      toast('Đã cập nhật nhóm', { type: 'success' });
+      void fetchGroups();
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Không cập nhật được nhóm');
+    }
+  };
+
+  const handleDeleteGroup = async (group) => {
+    const ok = await confirm({
+      title: 'Xóa nhóm này?',
+      message: 'Tất cả thành viên sẽ bị gỡ khỏi nhóm. Bảng xếp hạng nhóm này sẽ không còn truy cập được.',
+      confirmText: 'Xóa nhóm',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await groupsApi.delete(group.id);
+      toast('Đã xóa nhóm', { type: 'success' });
+      void fetchGroups();
+    } catch (err) {
+      toast(err.response?.data?.message || err.response?.data?.error || 'Không xóa được nhóm', { type: 'error' });
+    }
+  };
+
+  const handleKickMember = async (group, member) => {
+    const ok = await confirm({
+      title: 'Gỡ thành viên khỏi nhóm?',
+      message: `${member.name || `User #${member.id}`} sẽ không còn xuất hiện trong nhóm này.`,
+      confirmText: 'Gỡ thành viên',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await groupsApi.kick(group.id, member.id);
+      toast('Đã gỡ thành viên khỏi nhóm', { type: 'success' });
+      void fetchGroups();
+    } catch (err) {
+      toast(err.response?.data?.message || err.response?.data?.error || 'Không gỡ được thành viên', { type: 'error' });
     }
   };
 
@@ -363,9 +425,12 @@ export default function Groups() {
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', marginBottom: 8 }}>
               <Swords size={14} />
-              Cuộc thi nhóm
+              Cuộc thi nhóm · Beta cục bộ
             </div>
             <h2 style={{ margin: 0, color: '#0f172a', fontSize: 20, fontWeight: 900 }}>Đấu 2v2 hoặc 3v3</h2>
+            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+              Dữ liệu cuộc thi hiện lưu trên trình duyệt này; bản đồng bộ backend sẽ được tách riêng ở phase sau.
+            </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(217,119,6,0.22)', borderRadius: 0, background: 'rgba(217,119,6,0.08)', padding: '8px 10px', color: '#92400e', fontSize: 12, fontWeight: 900 }}>
@@ -517,6 +582,38 @@ export default function Groups() {
                 </div>
               </div>
 
+              {Array.isArray(g.members) && g.members.length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 14, marginBottom: 18 }}>
+                  <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: 8 }}>Thành viên</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {g.members.slice(0, 6).map((member) => {
+                      const isOwnerMember = String(member.id) === String(g.ownerId || g.owner_id);
+                      return (
+                        <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#f8fafc', padding: '8px 10px' }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ color: '#0f172a', fontSize: 12, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name || `User #${member.id}`}</div>
+                            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700 }}>{isOwnerMember ? 'Chủ nhóm' : 'Thành viên'}</div>
+                          </div>
+                          {g.role === 'owner' && !isOwnerMember && (
+                            <button
+                              type="button"
+                              onClick={() => handleKickMember(g, member)}
+                              aria-label={`Gỡ ${member.name || `User #${member.id}`}`}
+                              style={{ border: '1px solid rgba(239,68,68,0.18)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', padding: 7, cursor: 'pointer', display: 'flex' }}
+                            >
+                              <UserMinus size={13} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {g.member_count > g.members.length && (
+                      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700 }}>+{g.member_count - g.members.length} thành viên khác</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => navigate(`/leaderboard?groupId=${g.id}`)}
@@ -526,6 +623,24 @@ export default function Groups() {
                 >
                   Xem BXH
                 </button>
+                {g.role === 'owner' && (
+                  <>
+                    <button
+                      onClick={() => openEditGroup(g)}
+                      aria-label="Sửa nhóm"
+                      style={{ ...BUTTON, padding: '10px', background: 'rgba(15,23,42,0.06)', color: '#0f172a', border: '1px solid rgba(15,23,42,0.1)' }}
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGroup(g)}
+                      aria-label="Xóa nhóm"
+                      style={{ ...BUTTON, padding: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </>
+                )}
                 {g.role !== 'owner' && (
                   <button
                     onClick={() => handleLeave(g.id)}
@@ -539,6 +654,39 @@ export default function Groups() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingGroup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="edit-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
+            <h2 id="edit-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#0f172a' }}>Sửa nhóm</h2>
+            <form onSubmit={handleUpdateGroup}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Tên nhóm *</label>
+                <input
+                  required
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Mô tả</label>
+                <textarea
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => setEditingGroup(null)} style={{ ...BUTTON, flex: 1, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
+                <button type="submit" style={{ ...BUTTON, flex: 1, background: '#0f172a', color: '#fff' }}>Lưu thay đổi</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

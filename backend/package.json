@@ -13,7 +13,8 @@
     "test": "node --test test/*.test.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all",
-    "test:anti-cheat": "node scripts/anti-cheat-smoke-test.js"
+    "test:anti-cheat": "node scripts/anti-cheat-smoke-test.js",
+    "test:load": "node scripts/api-load-smoke-test.js"
   },
   "keywords": [],
   "author": "",

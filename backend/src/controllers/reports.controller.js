@@ -1,11 +1,149 @@
 const { Op } = require('sequelize');
-const { DailyStat, ActivityEvent, WorkSession } = require('../models');
-const fraudDetection = require('../services/fraudDetection.service');
+const { DailyStat, UserMinuteStat, WorkSession } = require('../models');
 
 const MAX_LEVEL = 200;
 
 function dateOnly(value = new Date()) {
   return value.toISOString().slice(0, 10);
+}
+
+function clampInt(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.floor(parsed)));
+}
+
+function parseUtcDate(value = dateOnly()) {
+  return new Date(`${dateOnly(new Date(`${value}T00:00:00.000Z`))}T00:00:00.000Z`);
+}
+
+function addDays(value, days) {
+  const next = new Date(value);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function addMonths(value, months) {
+  const next = new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1));
+  next.setUTCMonth(next.getUTCMonth() + months);
+  return next;
+}
+
+function weekStart(value) {
+  const start = parseUtcDate(dateOnly(value));
+  const day = start.getUTCDay() || 7;
+  start.setUTCDate(start.getUTCDate() - day + 1);
+  return start;
+}
+
+function monthStart(value) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1));
+}
+
+function buildAggregate(period, periodStart, periodEnd) {
+  return {
+    period,
+    periodStart,
+    periodEnd,
+    days: 0,
+    totalSeconds: 0,
+    activeSeconds: 0,
+    idleSeconds: 0,
+    keystrokeCount: 0,
+    mouseClickCount: 0,
+    sessionCount: 0,
+    focusScoreTotal: 0,
+    focusScoreWeight: 0,
+  };
+}
+
+function addDailyStat(bucket, row = {}) {
+  const activeSeconds = Number(row.activeSeconds || 0);
+  const focusScore = Number(row.focusScore || 0);
+  const weight = activeSeconds > 0 ? activeSeconds : 1;
+  bucket.days += 1;
+  bucket.totalSeconds += Number(row.totalSeconds || 0);
+  bucket.activeSeconds += activeSeconds;
+  bucket.idleSeconds += Number(row.idleSeconds || 0);
+  bucket.keystrokeCount += Number(row.keystrokeCount || 0);
+  bucket.mouseClickCount += Number(row.mouseClickCount || 0);
+  bucket.sessionCount += Number(row.sessionCount || 0);
+  bucket.focusScoreTotal += focusScore * weight;
+  bucket.focusScoreWeight += weight;
+}
+
+function finalizeAggregate(bucket) {
+  const focusScore = bucket.focusScoreWeight > 0
+    ? Math.round(bucket.focusScoreTotal / bucket.focusScoreWeight)
+    : 0;
+  const totalActions = bucket.keystrokeCount + bucket.mouseClickCount;
+  return {
+    period: bucket.period,
+    periodStart: bucket.periodStart,
+    periodEnd: bucket.periodEnd,
+    period_start: bucket.periodStart,
+    period_end: bucket.periodEnd,
+    days: bucket.days,
+    totalSeconds: bucket.totalSeconds,
+    activeSeconds: bucket.activeSeconds,
+    idleSeconds: bucket.idleSeconds,
+    focusScore,
+    keystrokeCount: bucket.keystrokeCount,
+    mouseClickCount: bucket.mouseClickCount,
+    sessionCount: bucket.sessionCount,
+    totalActions,
+    total_seconds: bucket.totalSeconds,
+    active_seconds: bucket.activeSeconds,
+    idle_seconds: bucket.idleSeconds,
+    focus_score: focusScore,
+    keystroke_count: bucket.keystrokeCount,
+    mouse_click_count: bucket.mouseClickCount,
+    session_count: bucket.sessionCount,
+    total_actions: totalActions,
+  };
+}
+
+async function aggregateUserStatsByPeriod({ userId, period, limit }) {
+  const now = parseUtcDate(dateOnly());
+  const buckets = new Map();
+  let firstStart;
+
+  if (period === 'week') {
+    const currentStart = weekStart(now);
+    firstStart = addDays(currentStart, -7 * (limit - 1));
+    for (let index = 0; index < limit; index += 1) {
+      const start = addDays(firstStart, index * 7);
+      const end = addDays(start, 6);
+      const key = dateOnly(start);
+      buckets.set(key, buildAggregate(key, key, dateOnly(end)));
+    }
+  } else {
+    const currentStart = monthStart(now);
+    firstStart = addMonths(currentStart, -(limit - 1));
+    for (let index = 0; index < limit; index += 1) {
+      const start = addMonths(firstStart, index);
+      const end = addDays(addMonths(start, 1), -1);
+      const key = dateOnly(start).slice(0, 7);
+      buckets.set(key, buildAggregate(key, dateOnly(start), dateOnly(end)));
+    }
+  }
+
+  const rows = await DailyStat.findAll({
+    where: {
+      userId,
+      statDate: { [Op.gte]: dateOnly(firstStart), [Op.lte]: dateOnly(now) },
+    },
+    raw: true,
+  });
+
+  for (const row of rows) {
+    const statDate = parseUtcDate(row.statDate);
+    const key = period === 'week' ? dateOnly(weekStart(statDate)) : dateOnly(monthStart(statDate)).slice(0, 7);
+    const bucket = buckets.get(key);
+    if (bucket) addDailyStat(bucket, row);
+  }
+
+  return Array.from(buckets.values()).map(finalizeAggregate).reverse();
 }
 
 function levelThreshold(level) {
@@ -68,6 +206,28 @@ function dayBounds(date = dateOnly(), offsetMinutes = 0) {
   };
 }
 
+function buildTimelineBucket(row, granularity, offsetMinutes) {
+  const localTime = new Date(new Date(row.bucketStartAt).getTime() - offsetMinutes * 60 * 1000);
+  const hour = localTime.getUTCHours();
+  const minuteOfDay = hour * 60 + localTime.getUTCMinutes();
+  const bucketMinute = granularity === 'quarter' ? Math.floor(minuteOfDay / 15) * 15 : minuteOfDay;
+  const key = granularity === 'hour' ? hour : bucketMinute;
+  return {
+    key,
+    value: {
+      hour: granularity === 'hour' ? hour : Math.floor(bucketMinute / 60),
+      ...(granularity !== 'hour' ? {
+        minute: bucketMinute,
+        time: `${String(Math.floor(bucketMinute / 60)).padStart(2, '0')}:${String(bucketMinute % 60).padStart(2, '0')}`,
+      } : {}),
+      keystrokes: 0,
+      mouse_clicks: 0,
+      active_seconds: 0,
+      idle_seconds: 0,
+    },
+  };
+}
+
 async function userDaily(req, res) {
   const where = { userId: req.params.id };
   if (req.query.date) where.statDate = req.query.date;
@@ -96,41 +256,29 @@ async function userTimeline(req, res) {
   const offsetMinutes = timezoneOffsetMinutes(req.query.timezoneOffsetMinutes);
   const granularity = ['minute', 'quarter'].includes(req.query.granularity) ? req.query.granularity : 'hour';
   const bounds = dayBounds(date, offsetMinutes);
-  const events = await ActivityEvent.findAll({
+  const rows = await UserMinuteStat.findAll({
     where: {
       userId: req.params.id,
-      eventTime: { [Op.between]: [bounds.start, bounds.end] },
-      suspicionScore: { [Op.lt]: fraudDetection.LIMITS.highSuspicionThreshold },
+      bucketStartAt: { [Op.between]: [bounds.start, bounds.end] },
     },
+    order: [['bucketStartAt', 'ASC']],
     raw: true,
   });
+
   const buckets = new Map();
-  for (const event of events) {
-    const localTime = new Date(new Date(event.eventTime).getTime() - offsetMinutes * 60 * 1000);
-    const hour = localTime.getUTCHours();
-    const minuteOfDay = hour * 60 + localTime.getUTCMinutes();
-    const bucketMinute = granularity === 'quarter' ? Math.floor(minuteOfDay / 15) * 15 : minuteOfDay;
-    const key = granularity === 'hour' ? hour : bucketMinute;
-    const row = buckets.get(key) || {
-      hour: granularity === 'hour' ? hour : Math.floor(bucketMinute / 60),
-      ...(granularity !== 'hour' ? {
-        minute: bucketMinute,
-        time: `${String(Math.floor(bucketMinute / 60)).padStart(2, '0')}:${String(bucketMinute % 60).padStart(2, '0')}`,
-      } : {}),
-      keystrokes: 0,
-      mouse_clicks: 0,
-      active_seconds: 0,
-      idle_seconds: 0,
-    };
-    row.keystrokes += Number(event.keystrokeCount || 0);
-    row.mouse_clicks += Number(event.mouseClickCount || 0);
-    row.active_seconds += Number(event.activeSeconds || 0);
-    row.idle_seconds += Number(event.idleSeconds || 0);
-    buckets.set(key, row);
+  for (const minuteStat of rows) {
+    const bucket = buildTimelineBucket(minuteStat, granularity, offsetMinutes);
+    const row = buckets.get(bucket.key) || bucket.value;
+    row.keystrokes += Number(minuteStat.keystrokeCount || 0);
+    row.mouse_clicks += Number(minuteStat.mouseClickCount || 0);
+    row.active_seconds += Number(minuteStat.activeSeconds || 0);
+    row.idle_seconds += Number(minuteStat.idleSeconds || 0);
+    buckets.set(bucket.key, row);
   }
   const sortKey = granularity === 'hour' ? 'hour' : 'minute';
   res.json({
     granularity,
+    source: 'user_minute_stats',
     data: Array.from(buckets.values()).sort((a, b) => Number(a[sortKey]) - Number(b[sortKey])),
   });
 }
@@ -170,11 +318,15 @@ async function userSessions(req, res) {
 }
 
 async function userWeekly(req, res) {
-  res.json({ data: [], message: 'Weekly report aggregation pending' });
+  const limit = clampInt(req.query.limit, 12, 1, 104);
+  const data = await aggregateUserStatsByPeriod({ userId: req.params.id, period: 'week', limit });
+  res.json({ data, period: 'week', limit });
 }
 
 async function userMonthly(req, res) {
-  res.json({ data: [], message: 'Monthly report aggregation pending' });
+  const limit = clampInt(req.query.limit, 12, 1, 36);
+  const data = await aggregateUserStatsByPeriod({ userId: req.params.id, period: 'month', limit });
+  res.json({ data, period: 'month', limit });
 }
 
 async function exportCsv(req, res) {

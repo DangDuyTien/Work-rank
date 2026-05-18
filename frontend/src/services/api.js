@@ -272,6 +272,14 @@ export const activity = {
     const res = await api.get(`/api/reports/users/${id}/sessions?limit=${limit}`);
     return { ...res, data: unwrapArray(res.data) };
   },
+  weekly: async (id, limit = 12) => {
+    const res = await api.get(`/api/reports/users/${id}/weekly?limit=${limit}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
+  monthly: async (id, limit = 12) => {
+    const res = await api.get(`/api/reports/users/${id}/monthly?limit=${limit}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
   desktopStatus: () => api.get('/api/activity/desktop-status', {
     headers: { 'Cache-Control': 'no-store' },
   }),
@@ -369,14 +377,20 @@ export const groups = {
     const res = await api.post('/api/groups', data);
     return { ...res, data: res.data?.data || res.data?.group };
   },
-  update: async () => { throw new Error('Groups update API pending'); },
-  delete: async () => { throw new Error('Groups delete API pending'); },
+  update: async (id, data) => {
+    const res = await api.patch(`/api/groups/${id}`, data);
+    return { ...res, data: res.data?.data || res.data?.group };
+  },
+  delete: (id) => api.delete(`/api/groups/${id}`),
   join: async (inviteCode) => {
     const res = await api.post('/api/groups/join', { inviteCode });
     return { ...res, data: res.data?.data || res.data?.group };
   },
   leave: (id) => api.post(`/api/groups/${id}/leave`),
-  kick: async () => { throw new Error('Groups kick API pending'); },
+  kick: async (id, userId) => {
+    const res = await api.post(`/api/groups/${id}/kick`, { userId });
+    return { ...res, data: res.data?.data || res.data?.group };
+  },
 };
 
 export const friends = {

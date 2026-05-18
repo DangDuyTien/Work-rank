@@ -28,7 +28,6 @@ import {
   PawPrint,
   Pencil,
   ShieldCheck,
-  Snowflake,
   Star,
   Target,
   Trophy,
@@ -37,59 +36,6 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
-import { Icon as IconifyIcon } from '@iconify/react';
-import notoBearIcon from '@iconify-icons/noto/bear';
-import notoBeaverIcon from '@iconify-icons/noto/beaver';
-import notoBeetleIcon from '@iconify-icons/noto/beetle';
-import notoBisonIcon from '@iconify-icons/noto/bison';
-import notoBlackCatIcon from '@iconify-icons/noto/black-cat';
-import notoCamelIcon from '@iconify-icons/noto/camel';
-import notoCatIcon from '@iconify-icons/noto/cat';
-import notoDeerIcon from '@iconify-icons/noto/deer';
-import notoDogIcon from '@iconify-icons/noto/dog';
-import notoDolphinIcon from '@iconify-icons/noto/dolphin';
-import notoEagleIcon from '@iconify-icons/noto/eagle';
-import notoElephantIcon from '@iconify-icons/noto/elephant';
-import notoFishIcon from '@iconify-icons/noto/fish';
-import notoFoxIcon from '@iconify-icons/noto/fox';
-import notoGiraffeIcon from '@iconify-icons/noto/giraffe';
-import notoHorseIcon from '@iconify-icons/noto/horse';
-import notoKangarooIcon from '@iconify-icons/noto/kangaroo';
-import notoLeopardIcon from '@iconify-icons/noto/leopard';
-import notoLionIcon from '@iconify-icons/noto/lion';
-import notoLizardIcon from '@iconify-icons/noto/lizard';
-import notoMammothIcon from '@iconify-icons/noto/mammoth';
-import notoMonkeyIcon from '@iconify-icons/noto/monkey';
-import notoMouseIcon from '@iconify-icons/noto/mouse';
-import notoOtterIcon from '@iconify-icons/noto/otter';
-import notoOxIcon from '@iconify-icons/noto/ox';
-import notoOwlIcon from '@iconify-icons/noto/owl';
-import notoOysterIcon from '@iconify-icons/noto/oyster';
-import notoPandaIcon from '@iconify-icons/noto/panda';
-import notoPeacockIcon from '@iconify-icons/noto/peacock';
-import notoPolarBearIcon from '@iconify-icons/noto/polar-bear';
-import notoRabbitIcon from '@iconify-icons/noto/rabbit';
-import notoRhinocerosIcon from '@iconify-icons/noto/rhinoceros';
-import notoSharkIcon from '@iconify-icons/noto/shark';
-import notoSnailIcon from '@iconify-icons/noto/snail';
-import notoSpoutingWhaleIcon from '@iconify-icons/noto/spouting-whale';
-import notoTigerIcon from '@iconify-icons/noto/tiger';
-import notoTurtleIcon from '@iconify-icons/noto/turtle';
-import notoWhaleIcon from '@iconify-icons/noto/whale';
-import notoWolfIcon from '@iconify-icons/noto/wolf';
-import notoZebraIcon from '@iconify-icons/noto/zebra';
-import {
-  GiEagleEmblem,
-  GiFalconMoon,
-  GiFeline,
-  GiLion,
-  GiPangolin,
-  GiRamProfile,
-  GiSparrow,
-  GiSquirrel,
-  GiTigerHead,
-  GiWolfHowl,
-} from 'react-icons/gi';
 import VerifiedBadge from '../components/VerifiedBadge';
 import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
 
@@ -102,14 +48,7 @@ const STATUS_CONFIG = {
   offline: { label: 'Ngoại tuyến', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.25)', color: '#64748b', dot: '#94a3b8' },
 };
 
-const PROFILE_GALLERY_IMAGES = [
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=360&q=80',
-];
+const PROFILE_GALLERY_IMAGES = Array.from({ length: 6 }, () => '');
 
 const FEATURED_BADGE_LIMIT = 4;
 const PROFILE_BADGE_STORAGE_LIMIT = 12;
@@ -283,129 +222,65 @@ const ACHIEVEMENT_TIER_STYLES = [
   },
 ];
 
-function createNotoAnimalIcon(iconData) {
-  return function NotoAnimalIcon({ size = 24, strokeWidth: _strokeWidth, color: _color, style, ...props }) {
-    return (
-      <IconifyIcon
-        {...props}
-        icon={iconData}
-        width={size}
-        height={size}
-        style={{ display: 'block', flexShrink: 0, ...style }}
-      />
-    );
-  };
-}
-
-function SwordfishIcon({ size = 24, strokeWidth = 2, color: _color, style, ...props }) {
-  return (
-    <svg
-      {...props}
-      width={size}
-      height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ display: 'block', flexShrink: 0, ...style }}
-    >
-      <path d="M6 31h24" />
-      <path d="M29 22c9 0 19 4 25 10-6 6-16 10-25 10-6 0-12-2-16-6 4-1 7-2 10-4-3-2-6-3-10-4 4-4 10-6 16-6Z" />
-      <path d="M54 32l8-4" />
-      <path d="M54 32l8 4" />
-      <path d="M33 22l-5-10" />
-      <path d="M34 42l-6 9" />
-      <circle cx="43" cy="30" r="1.6" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function SnowLeopardIcon({ size = 24, strokeWidth = 2, color: _color, style, ...props }) {
-  const markSize = Math.max(8, Math.round(size * 0.36));
-  return (
-    <span
-      {...props}
-      style={{
-        width: size,
-        height: size,
-        display: 'inline-grid',
-        placeItems: 'center',
-        position: 'relative',
-        flexShrink: 0,
-        ...style,
-      }}
-    >
-      <GiFeline size={size} style={{ gridArea: '1 / 1' }} />
-      <Snowflake
-        size={markSize}
-        strokeWidth={strokeWidth}
-        style={{
-          position: 'absolute',
-          right: 0,
-          bottom: 0,
-          background: 'rgba(255,255,255,0.72)',
-          borderRadius: '999px',
-        }}
-      />
-    </span>
-  );
-}
-
-const ANIMAL_LEVELS = [
-  { name: 'Mèo con', icon: createNotoAnimalIcon(notoCatIcon), iconKey: 'noto-cat' },
-  { name: 'Thỏ đồng', icon: createNotoAnimalIcon(notoRabbitIcon), iconKey: 'noto-rabbit' },
-  { name: 'Sóc nâu', icon: GiSquirrel, iconKey: 'gi-squirrel' },
-  { name: 'Chim sẻ', icon: GiSparrow, iconKey: 'gi-sparrow' },
-  { name: 'Cá suối', icon: createNotoAnimalIcon(notoFishIcon), iconKey: 'noto-fish' },
-  { name: 'Rùa xanh', icon: createNotoAnimalIcon(notoTurtleIcon), iconKey: 'noto-turtle' },
-  { name: 'Chó săn', icon: createNotoAnimalIcon(notoDogIcon), iconKey: 'noto-dog' },
-  { name: 'Ốc sên bạc', icon: createNotoAnimalIcon(notoSnailIcon), iconKey: 'noto-snail' },
-  { name: 'Bọ ánh kim', icon: createNotoAnimalIcon(notoBeetleIcon), iconKey: 'noto-beetle' },
-  { name: 'Chuột nhắt', icon: createNotoAnimalIcon(notoMouseIcon), iconKey: 'noto-mouse' },
-  { name: 'Sò ngọc', icon: createNotoAnimalIcon(notoOysterIcon), iconKey: 'noto-oyster' },
-  { name: 'Cáo đỏ', icon: createNotoAnimalIcon(notoFoxIcon), iconKey: 'noto-fox' },
-  { name: 'Hươu sao', icon: createNotoAnimalIcon(notoDeerIcon), iconKey: 'noto-deer' },
-  { name: 'Gấu trúc', icon: createNotoAnimalIcon(notoPandaIcon), iconKey: 'noto-panda' },
-  { name: 'Cú mèo', icon: createNotoAnimalIcon(notoOwlIcon), iconKey: 'noto-owl' },
-  { name: 'Hải ly', icon: createNotoAnimalIcon(notoBeaverIcon), iconKey: 'noto-beaver' },
-  { name: 'Linh dương', icon: GiRamProfile, iconKey: 'gi-ram-profile' },
-  { name: 'Sói xám', icon: createNotoAnimalIcon(notoWolfIcon), iconKey: 'noto-wolf' },
-  { name: 'Báo gấm', icon: createNotoAnimalIcon(notoLeopardIcon), iconKey: 'noto-leopard' },
-  { name: 'Rái cá', icon: createNotoAnimalIcon(notoOtterIcon), iconKey: 'noto-otter' },
-  { name: 'Ngựa hoang', icon: createNotoAnimalIcon(notoHorseIcon), iconKey: 'noto-horse' },
-  { name: 'Đại bàng', icon: createNotoAnimalIcon(notoEagleIcon), iconKey: 'noto-eagle' },
-  { name: 'Cá heo', icon: createNotoAnimalIcon(notoDolphinIcon), iconKey: 'noto-dolphin' },
-  { name: 'Bò rừng', icon: createNotoAnimalIcon(notoBisonIcon), iconKey: 'noto-bison' },
-  { name: 'Lạc đà', icon: createNotoAnimalIcon(notoCamelIcon), iconKey: 'noto-camel' },
-  { name: 'Sư tử', icon: createNotoAnimalIcon(notoLionIcon), iconKey: 'noto-lion' },
-  { name: 'Hổ vàng', icon: createNotoAnimalIcon(notoTigerIcon), iconKey: 'noto-tiger' },
-  { name: 'Gấu trắng', icon: createNotoAnimalIcon(notoPolarBearIcon), iconKey: 'noto-polar-bear' },
-  { name: 'Cá mập', icon: createNotoAnimalIcon(notoSharkIcon), iconKey: 'noto-shark' },
-  { name: 'Tê giác', icon: createNotoAnimalIcon(notoRhinocerosIcon), iconKey: 'noto-rhinoceros' },
-  { name: 'Voi rừng', icon: createNotoAnimalIcon(notoElephantIcon), iconKey: 'noto-elephant' },
-  { name: 'Khỉ vàng', icon: createNotoAnimalIcon(notoMonkeyIcon), iconKey: 'noto-monkey' },
-  { name: 'Báo tuyết', icon: SnowLeopardIcon, iconKey: 'custom-snow-leopard' },
-  { name: 'Chim ưng', icon: GiFalconMoon, iconKey: 'gi-falcon-moon' },
-  { name: 'Cá voi', icon: createNotoAnimalIcon(notoWhaleIcon), iconKey: 'noto-whale' },
-  { name: 'Gấu xám', icon: createNotoAnimalIcon(notoBearIcon), iconKey: 'noto-bear' },
-  { name: 'Ngựa vằn', icon: createNotoAnimalIcon(notoZebraIcon), iconKey: 'noto-zebra' },
-  { name: 'Công xanh', icon: createNotoAnimalIcon(notoPeacockIcon), iconKey: 'noto-peacock' },
-  { name: 'Sói tuyết', icon: GiWolfHowl, iconKey: 'gi-wolf-howl' },
-  { name: 'Bò tót', icon: createNotoAnimalIcon(notoOxIcon), iconKey: 'noto-ox' },
-  { name: 'Rồng Komodo', icon: createNotoAnimalIcon(notoLizardIcon), iconKey: 'noto-lizard' },
-  { name: 'Kangaroo', icon: createNotoAnimalIcon(notoKangarooIcon), iconKey: 'noto-kangaroo' },
-  { name: 'Tê tê', icon: GiPangolin, iconKey: 'gi-pangolin' },
-  { name: 'Hươu cao cổ', icon: createNotoAnimalIcon(notoGiraffeIcon), iconKey: 'noto-giraffe' },
-  { name: 'Cá kiếm', icon: SwordfishIcon, iconKey: 'custom-swordfish' },
-  { name: 'Báo đen', icon: createNotoAnimalIcon(notoBlackCatIcon), iconKey: 'noto-black-cat' },
-  { name: 'Đại bàng vàng', icon: GiEagleEmblem, iconKey: 'gi-eagle-emblem' },
-  { name: 'Sư tử trắng', icon: GiLion, iconKey: 'gi-lion' },
-  { name: 'Hổ trắng', icon: GiTigerHead, iconKey: 'gi-tiger-head' },
-  { name: 'Cá voi xanh', icon: createNotoAnimalIcon(notoSpoutingWhaleIcon), iconKey: 'noto-spouting-whale' },
-  { name: 'Voi ma mút', icon: createNotoAnimalIcon(notoMammothIcon), iconKey: 'noto-mammoth' },
+const ANIMAL_LEVEL_NAMES = [
+  'Mèo con',
+  'Thỏ đồng',
+  'Sóc nâu',
+  'Chim sẻ',
+  'Cá suối',
+  'Rùa xanh',
+  'Chó săn',
+  'Ốc sên bạc',
+  'Bọ ánh kim',
+  'Chuột nhắt',
+  'Sò ngọc',
+  'Cáo đỏ',
+  'Hươu sao',
+  'Gấu trúc',
+  'Cú mèo',
+  'Hải ly',
+  'Linh dương',
+  'Sói xám',
+  'Báo gấm',
+  'Rái cá',
+  'Ngựa hoang',
+  'Đại bàng',
+  'Cá heo',
+  'Bò rừng',
+  'Lạc đà',
+  'Sư tử',
+  'Hổ vàng',
+  'Gấu trắng',
+  'Cá mập',
+  'Tê giác',
+  'Voi rừng',
+  'Khỉ vàng',
+  'Báo tuyết',
+  'Chim ưng',
+  'Cá voi',
+  'Gấu xám',
+  'Ngựa vằn',
+  'Công xanh',
+  'Sói tuyết',
+  'Bò tót',
+  'Rồng Komodo',
+  'Kangaroo',
+  'Tê tê',
+  'Hươu cao cổ',
+  'Cá kiếm',
+  'Báo đen',
+  'Đại bàng vàng',
+  'Sư tử trắng',
+  'Hổ trắng',
+  'Cá voi xanh',
+  'Voi ma mút',
 ];
+
+const ANIMAL_LEVELS = ANIMAL_LEVEL_NAMES.map((name, index) => ({
+  name,
+  icon: PawPrint,
+  iconKey: `animal-${index}`,
+}));
 
 const LEVEL_ANIMALS = Array.from({ length: 201 }, (_, level) => {
   const animal = ANIMAL_LEVELS[level % ANIMAL_LEVELS.length];
@@ -643,11 +518,21 @@ function getLevelAnimal(level) {
 
 function buildAnimalCollection(currentLevel, maxLevel = 200) {
   const visibleMax = Math.min(Number(maxLevel || 200), LEVEL_ANIMALS.length - 1);
-  return LEVEL_ANIMALS.slice(0, visibleMax + 1).map((animal) => ({
+  const current = Math.min(visibleMax, Math.max(0, Number(currentLevel || 0)));
+  const windowSize = 24;
+  const start = Math.max(0, Math.min(current - 8, Math.max(0, visibleMax - windowSize + 1)));
+  const end = Math.min(visibleMax + 1, start + windowSize);
+  return LEVEL_ANIMALS.slice(start, end).map((animal) => ({
     ...animal,
     unlocked: animal.level <= Number(currentLevel || 0),
     current: animal.level === Number(currentLevel || 0),
   }));
+}
+
+function animalCollectionTotals(currentLevel, maxLevel = 200) {
+  const total = Math.min(Number(maxLevel || 200), LEVEL_ANIMALS.length - 1) + 1;
+  const unlocked = Math.min(total, Math.max(0, Number(currentLevel || 0) + 1));
+  return { total, unlocked };
 }
 
 function resolveAchievementTier(value, thresholds) {
@@ -880,6 +765,8 @@ export default function UserDetail() {
   const { socket, user: authUser, setUser: setAuthUser } = useAuth();
   const avatarInputRef = useRef(null);
   const galleryInputRef = useRef(null);
+  const galleryContainerRef = useRef(null);
+  const chartContainerRef = useRef(null);
   const gallerySlotRef = useRef(PROFILE_GALLERY_IMAGES.length - 1);
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
@@ -890,6 +777,7 @@ export default function UserDetail() {
   const [localAvatarUrl, setLocalAvatarUrl] = useState('');
   const [avatarError, setAvatarError] = useState('');
   const [galleryImages, setGalleryImages] = useState(PROFILE_GALLERY_IMAGES);
+  const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryError, setGalleryError] = useState('');
   const [featuredBadgeLabels, setFeaturedBadgeLabels] = useState([]);
   const [hasFeaturedBadgePreference, setHasFeaturedBadgePreference] = useState(false);
@@ -903,6 +791,7 @@ export default function UserDetail() {
   const [friendError, setFriendError] = useState('');
   const [loading, setLoading] = useState(true);
   const [chartNow, setChartNow] = useState(new Date());
+  const [chartVisible, setChartVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -993,11 +882,30 @@ export default function UserDetail() {
   }, []);
 
   useEffect(() => {
+    let observer = null;
+    if (loading) return undefined;
+    const node = chartContainerRef.current;
+    if (!node || chartVisible) return undefined;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setChartVisible(true);
+        observer?.disconnect();
+      }, { rootMargin: '260px' });
+      observer.observe(node);
+      return () => observer?.disconnect();
+    }
+    const timer = window.setTimeout(() => setChartVisible(true), 1000);
+    return () => window.clearTimeout(timer);
+  }, [chartVisible, loading]);
+
+  useEffect(() => {
     let mounted = true;
 
     setLocalAvatarUrl('');
     setAvatarError('');
     setGalleryImages(PROFILE_GALLERY_IMAGES);
+    setGalleryLoading(false);
     setGalleryError('');
     setFeaturedBadgeLabels([]);
     setHasFeaturedBadgePreference(false);
@@ -1006,18 +914,11 @@ export default function UserDetail() {
     setHeartError('');
 
     const fetchProfileCustomization = async () => {
-      const [galleryResult, preferenceResult, likesResult] = await Promise.allSettled([
-        usersApi.gallery(id),
+      const [preferenceResult, likesResult] = await Promise.allSettled([
         usersApi.profilePreferences(id),
         usersApi.profileLikes(id),
       ]);
       if (!mounted) return;
-
-      if (galleryResult.status === 'fulfilled') {
-        setGalleryImages(buildProfileGallery(galleryResult.value.data));
-      } else {
-        console.error('Failed to fetch profile gallery:', galleryResult.reason);
-      }
 
       if (preferenceResult.status === 'fulfilled') {
         const preferences = preferenceResult.value.data || {};
@@ -1050,6 +951,51 @@ export default function UserDetail() {
       mounted = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    let mounted = true;
+    let observer = null;
+    let timer = null;
+    if (loading) return undefined;
+
+    const loadGallery = async () => {
+      if (!mounted) return;
+      setGalleryLoading(true);
+      try {
+        const res = await usersApi.gallery(id);
+        if (!mounted) return;
+        setGalleryImages(buildProfileGallery(res.data));
+        setGalleryError('');
+      } catch (error) {
+        if (mounted) {
+          console.error('Failed to fetch profile gallery:', error);
+          setGalleryError('Chưa tải được ảnh giới thiệu.');
+        }
+      } finally {
+        if (mounted) setGalleryLoading(false);
+      }
+    };
+
+    const node = galleryContainerRef.current;
+    if ('IntersectionObserver' in window && node) {
+      observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer?.disconnect();
+        void loadGallery();
+      }, { rootMargin: '240px' });
+      observer.observe(node);
+    } else {
+      timer = window.setTimeout(() => {
+        void loadGallery();
+      }, 800);
+    }
+
+    return () => {
+      mounted = false;
+      observer?.disconnect();
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [id, loading]);
 
   useEffect(() => {
     if (!socket) return undefined;
@@ -1138,7 +1084,7 @@ export default function UserDetail() {
     const animalCollection = buildAnimalCollection(levelView.level, levelView.maxLevel);
     const currentAnimal = getLevelAnimal(levelView.level);
     const nextAnimal = getLevelAnimal(Math.min(levelView.maxLevel, levelView.level + 1));
-    const unlockedAnimals = animalCollection.filter((animal) => animal.unlocked).length;
+    const animalTotals = animalCollectionTotals(levelView.level, levelView.maxLevel);
     const powerScore = buildPowerScore({ levelView, score, currentStreak, todayActions });
     return {
       levelView,
@@ -1157,7 +1103,8 @@ export default function UserDetail() {
       animalCollection,
       currentAnimal,
       nextAnimal,
-      unlockedAnimals,
+      unlockedAnimals: animalTotals.unlocked,
+      totalAnimals: animalTotals.total,
       powerScore,
       milestoneTrack: buildMilestoneTrack(levelView),
     };
@@ -1199,6 +1146,7 @@ export default function UserDetail() {
     currentAnimal,
     nextAnimal,
     unlockedAnimals,
+    totalAnimals,
     powerScore,
     milestoneTrack,
   } = derived;
@@ -1585,10 +1533,17 @@ export default function UserDetail() {
         </div>
 
         {/* ── GIỚI THIỆU BẢN THÂN (GALLERY) ── */}
-        <div className="profile-gallery-grid" aria-label="Ảnh giới thiệu cá nhân">
+        <div ref={galleryContainerRef} className="profile-gallery-grid" aria-label="Ảnh giới thiệu cá nhân">
           {galleryImages.map((imageUrl, index) => (
             <div key={`${index}-${imageUrl.slice(0, 24)}`} className="profile-gallery-cell">
-              <img src={imageUrl} alt={`Ảnh giới thiệu ${index + 1}`} />
+              {imageUrl ? (
+                <img loading="lazy" decoding="async" src={imageUrl} alt={`Ảnh giới thiệu ${index + 1}`} />
+              ) : (
+                <div className="profile-gallery-placeholder">
+                  <ImagePlus size={18} strokeWidth={2.4} />
+                  <span>{galleryLoading ? 'Đang tải' : `Ảnh ${index + 1}`}</span>
+                </div>
+              )}
               {canCustomizeProfile && (
                 <button
                   type="button"
@@ -1610,6 +1565,7 @@ export default function UserDetail() {
               onChange={handleGalleryPick}
             />
           )}
+          {galleryLoading && <div className="profile-gallery-error">Đang tải ảnh giới thiệu...</div>}
           {galleryError && <div className="profile-gallery-error">{galleryError}</div>}
         </div>
       </section>
@@ -1634,7 +1590,7 @@ export default function UserDetail() {
             <div className="profile-summary-stat">
               <PawPrint size={17} strokeWidth={2.4} />
               <span>Thú sưu tầm</span>
-              <strong>{unlockedAnimals}/{animalCollection.length}</strong>
+              <strong>{unlockedAnimals}/{totalAnimals}</strong>
             </div>
             <div className="profile-summary-stat">
               <Flame size={17} strokeWidth={2.4} />
@@ -1848,7 +1804,7 @@ export default function UserDetail() {
               </tr>
             </thead>
             <tbody>
-              {levelView.milestones.map((milestone) => {
+              {milestoneTrack.map((milestone) => {
                 const milestoneLevel = Number(milestone.level || 0);
                 const requiredActions = Number(milestone.requiredActions || 0);
                 const reached = levelView.totalActions >= requiredActions;
@@ -1883,7 +1839,7 @@ export default function UserDetail() {
           </div>
         </div>
 
-        <div className="profile-chart-card">
+        <div ref={chartContainerRef} className="profile-chart-card">
           <div className="profile-section-header">
             <div>
               <div className="profile-section-kicker">Nhịp thi đấu hôm nay</div>
@@ -1894,9 +1850,13 @@ export default function UserDetail() {
               <span style={{ color: '#d97706' }}><Mouse size={12} /> Click</span>
             </div>
           </div>
-          <Suspense fallback={<div className="profile-chart-loading">Đang tải biểu đồ...</div>}>
-            <UserActivityChart chartData={chartData} chartTickInterval={chartTickInterval} />
-          </Suspense>
+          {chartVisible ? (
+            <Suspense fallback={<div className="profile-chart-loading">Đang tải biểu đồ...</div>}>
+              <UserActivityChart chartData={chartData} chartTickInterval={chartTickInterval} />
+            </Suspense>
+          ) : (
+            <div className="profile-chart-loading">Cuộn tới đây để tải biểu đồ chi tiết...</div>
+          )}
         </div>
       </section>
 

@@ -1,11 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const request = require('supertest');
 const app = require('../src/app');
 const env = require('../src/config/env');
 const { signPayload } = require('../src/utils/crypto');
-const { sequelize, User } = require('../src/models');
+const { sequelize, ActivityEvent, DailyStat, Device, Team, User, UserMinuteStat } = require('../src/models');
+const { pruneRawActivityEvents } = require('../src/services/retention.service');
 
 const agent = request(app);
 const email = process.env.TEST_EMAIL || 'admin@workrank.local';
@@ -22,6 +24,16 @@ function signedPayload(secret, payload) {
   const signed = JSON.parse(JSON.stringify(payload));
   delete signed.deviceSecret;
   return { ...payload, signature: signPayload(secret, signed) };
+}
+
+function dateOnly(value = new Date()) {
+  return value.toISOString().slice(0, 10);
+}
+
+function addDays(value, days) {
+  const next = new Date(value);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 }
 
 test.before(async () => {
@@ -204,4 +216,227 @@ test('level endpoint trả đủ mốc 0-50 theo tổng gõ và click', async ()
   assert.equal(res.body.data.milestones[130].requiredActions, 8006863);
   assert.equal(res.body.data.milestones[200].requiredActions, 21565606);
   assert.ok(res.body.data.level >= 0 && res.body.data.level <= 50);
+});
+
+test('weekly/monthly report trả aggregate từ daily_stats', async () => {
+  const token = await authToken();
+  const suffix = Date.now();
+  const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
+  const reportUser = await User.create({
+    name: `Report User ${suffix}`,
+    email: `report-${suffix}@workrank.local`,
+    passwordHash,
+    role: 'user',
+    status: 'active',
+  });
+
+  const today = new Date();
+  const lastMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 15));
+  await DailyStat.bulkCreate([
+    {
+      userId: reportUser.id,
+      statDate: dateOnly(today),
+      totalSeconds: 3600,
+      activeSeconds: 3000,
+      idleSeconds: 600,
+      focusScore: 82,
+      keystrokeCount: 1200,
+      mouseClickCount: 300,
+      sessionCount: 2,
+    },
+    {
+      userId: reportUser.id,
+      statDate: dateOnly(addDays(today, -7)),
+      totalSeconds: 1800,
+      activeSeconds: 1500,
+      idleSeconds: 300,
+      focusScore: 75,
+      keystrokeCount: 700,
+      mouseClickCount: 150,
+      sessionCount: 1,
+    },
+    {
+      userId: reportUser.id,
+      statDate: dateOnly(lastMonth),
+      totalSeconds: 1200,
+      activeSeconds: 900,
+      idleSeconds: 300,
+      focusScore: 70,
+      keystrokeCount: 400,
+      mouseClickCount: 100,
+      sessionCount: 1,
+    },
+  ]);
+
+  const weekly = await agent.get(`/api/reports/users/${reportUser.id}/weekly?limit=6`).set('Authorization', `Bearer ${token}`);
+  assert.equal(weekly.status, 200, weekly.text);
+  assert.equal(weekly.body.period, 'week');
+  assert.ok(Array.isArray(weekly.body.data));
+  assert.ok(weekly.body.data.some((row) => Number(row.totalActions || row.total_actions || 0) >= 1500));
+
+  const monthly = await agent.get(`/api/reports/users/${reportUser.id}/monthly?limit=2`).set('Authorization', `Bearer ${token}`);
+  assert.equal(monthly.status, 200, monthly.text);
+  assert.equal(monthly.body.period, 'month');
+  assert.ok(Array.isArray(monthly.body.data));
+  assert.ok(monthly.body.data.some((row) => Number(row.totalActions || row.total_actions || 0) >= 1500));
+
+  await DailyStat.destroy({ where: { userId: reportUser.id } });
+  await reportUser.destroy();
+});
+
+test('timeline dùng user_minute_stats thay vì raw events', async () => {
+  const token = await authToken();
+  const suffix = Date.now();
+  const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
+  const timelineUser = await User.create({
+    name: `Timeline User ${suffix}`,
+    email: `timeline-${suffix}@workrank.local`,
+    passwordHash,
+    role: 'user',
+    status: 'active',
+  });
+  const now = new Date();
+  const statDate = dateOnly(now);
+  const firstBucket = new Date(`${statDate}T08:00:00.000Z`);
+  const secondBucket = new Date(`${statDate}T08:12:00.000Z`);
+  await UserMinuteStat.bulkCreate([
+    {
+      userId: timelineUser.id,
+      bucketStartAt: firstBucket,
+      statDate,
+      activeSeconds: 50,
+      idleSeconds: 10,
+      totalSeconds: 60,
+      focusScore: 83,
+      keystrokeCount: 120,
+      mouseClickCount: 30,
+      mouseMoveCount: 5,
+      eventCount: 2,
+    },
+    {
+      userId: timelineUser.id,
+      bucketStartAt: secondBucket,
+      statDate,
+      activeSeconds: 40,
+      idleSeconds: 20,
+      totalSeconds: 60,
+      focusScore: 66,
+      keystrokeCount: 80,
+      mouseClickCount: 10,
+      mouseMoveCount: 4,
+      eventCount: 1,
+    },
+  ]);
+
+  const res = await agent.get(`/api/reports/users/${timelineUser.id}/timeline?date=${statDate}&granularity=quarter&timezoneOffsetMinutes=0`)
+    .set('Authorization', `Bearer ${token}`);
+  assert.equal(res.status, 200, res.text);
+  assert.equal(res.body.source, 'user_minute_stats');
+  assert.equal(res.body.granularity, 'quarter');
+  assert.equal(res.body.data.length, 1);
+  assert.equal(res.body.data[0].minute, 480);
+  assert.equal(Number(res.body.data[0].keystrokes), 200);
+  assert.equal(Number(res.body.data[0].mouse_clicks), 40);
+  assert.equal(Number(res.body.data[0].active_seconds), 90);
+
+  await UserMinuteStat.destroy({ where: { userId: timelineUser.id } });
+  await timelineUser.destroy();
+});
+
+test('retention job xóa raw activity_events cũ theo batch', async () => {
+  const suffix = Date.now();
+  const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
+  const retentionUser = await User.create({
+    name: `Retention User ${suffix}`,
+    email: `retention-${suffix}@workrank.local`,
+    passwordHash,
+    role: 'user',
+    status: 'active',
+  });
+  const device = await Device.create({
+    userId: retentionUser.id,
+    deviceUuid: `retention-device-${suffix}`,
+    deviceName: `Retention Device ${suffix}`,
+    platform: 'macos',
+  });
+  const oldA = await ActivityEvent.create({
+    userId: retentionUser.id,
+    deviceId: device.id,
+    eventTime: addDays(new Date(), -45),
+    activeSeconds: 1,
+    keystrokeCount: 1,
+    metadataJson: { test: 'retention-old-a' },
+  });
+  const oldB = await ActivityEvent.create({
+    userId: retentionUser.id,
+    deviceId: device.id,
+    eventTime: addDays(new Date(), -40),
+    activeSeconds: 1,
+    mouseClickCount: 1,
+    metadataJson: { test: 'retention-old-b' },
+  });
+  const recent = await ActivityEvent.create({
+    userId: retentionUser.id,
+    deviceId: device.id,
+    eventTime: addDays(new Date(), -2),
+    activeSeconds: 1,
+    keystrokeCount: 1,
+    metadataJson: { test: 'retention-recent' },
+  });
+
+  try {
+    const result = await pruneRawActivityEvents({ days: 30, batchSize: 1, maxBatches: 5, now: new Date() });
+    assert.equal(result.deleted, 2);
+    assert.equal(result.batches, 2);
+
+    const oldCount = await ActivityEvent.count({ where: { id: { [Op.in]: [oldA.id, oldB.id] } } });
+    assert.equal(oldCount, 0);
+    const recentCount = await ActivityEvent.count({ where: { id: recent.id } });
+    assert.equal(recentCount, 1);
+  } finally {
+    await ActivityEvent.destroy({ where: { id: { [Op.in]: [oldA.id, oldB.id, recent.id].filter(Boolean) } } });
+    await device.destroy();
+    await retentionUser.destroy();
+  }
+});
+
+test('group owner sửa, kick thành viên và xóa nhóm', async () => {
+  const token = await authToken();
+  const suffix = Date.now();
+  const create = await agent.post('/api/groups')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ name: `Integration Group ${suffix}`, description: 'Before update' });
+  assert.equal(create.status, 201, create.text);
+  const groupId = create.body.data.id;
+
+  const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
+  const member = await User.create({
+    name: `Group Member ${suffix}`,
+    email: `group-member-${suffix}@workrank.local`,
+    passwordHash,
+    role: 'user',
+    status: 'active',
+    teamId: groupId,
+  });
+
+  const update = await agent.patch(`/api/groups/${groupId}`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ name: `Integration Group Updated ${suffix}`, description: 'After update' });
+  assert.equal(update.status, 200, update.text);
+  assert.equal(update.body.data.name, `Integration Group Updated ${suffix}`);
+  assert.ok(update.body.data.members.some((row) => String(row.id) === String(member.id)));
+
+  const kick = await agent.post(`/api/groups/${groupId}/kick`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ userId: member.id });
+  assert.equal(kick.status, 200, kick.text);
+  assert.ok(!kick.body.data.members.some((row) => String(row.id) === String(member.id)));
+  await member.reload();
+  assert.equal(member.teamId, null);
+
+  const remove = await agent.delete(`/api/groups/${groupId}`).set('Authorization', `Bearer ${token}`);
+  assert.equal(remove.status, 204, remove.text);
+  const deleted = await Team.findByPk(groupId);
+  assert.equal(deleted, null);
+  await member.destroy();
 });

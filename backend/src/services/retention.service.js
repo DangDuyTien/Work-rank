@@ -4,47 +4,113 @@ const { ActivityEvent } = require('../models');
 const DEFAULT_RETENTION_DAYS = 30;
 const DEFAULT_BATCH_SIZE = 5000;
 const DEFAULT_MAX_BATCHES = 20;
+const DEFAULT_INTERVAL_HOURS = 24;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
-function retentionDays() {
-  const days = Number(process.env.RAW_EVENT_RETENTION_DAYS || DEFAULT_RETENTION_DAYS);
-  return Number.isFinite(days) ? days : DEFAULT_RETENTION_DAYS;
+let activeJob = null;
+
+function numberSetting(value, fallback, { min = 1, max = Number.MAX_SAFE_INTEGER } = {}) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.floor(parsed)));
+}
+
+function retentionConfig(options = {}) {
+  const days = numberSetting(
+    options.days ?? process.env.RAW_EVENT_RETENTION_DAYS,
+    DEFAULT_RETENTION_DAYS,
+    { min: 0, max: 3650 },
+  );
+  const batchSize = numberSetting(
+    options.batchSize ?? process.env.RAW_EVENT_RETENTION_BATCH_SIZE,
+    DEFAULT_BATCH_SIZE,
+    { min: 1, max: 50000 },
+  );
+  const maxBatches = numberSetting(
+    options.maxBatches ?? process.env.RAW_EVENT_RETENTION_MAX_BATCHES,
+    DEFAULT_MAX_BATCHES,
+    { min: 1, max: 1000 },
+  );
+  const intervalHours = numberSetting(
+    options.intervalHours ?? process.env.RAW_EVENT_RETENTION_INTERVAL_HOURS,
+    DEFAULT_INTERVAL_HOURS,
+    { min: 1, max: 168 },
+  );
+  const disabled = process.env.RAW_EVENT_RETENTION_DISABLED === 'true' || days <= 0;
+
+  return { days, batchSize, maxBatches, intervalHours, disabled };
 }
 
 async function pruneRawActivityEvents(options = {}) {
-  const days = Number(options.days ?? retentionDays());
-  if (days <= 0) return { deleted: 0, disabled: true };
+  const config = retentionConfig(options);
+  if (config.disabled) return { deleted: 0, disabled: true, days: config.days };
 
-  const cutoff = new Date(Date.now() - days * ONE_DAY_MS);
-  const batchSize = Math.max(100, Number(options.batchSize || DEFAULT_BATCH_SIZE));
-  const maxBatches = Math.max(1, Number(options.maxBatches || DEFAULT_MAX_BATCHES));
+  const now = options.now ? new Date(options.now) : new Date();
+  const cutoff = new Date(now.getTime() - config.days * ONE_DAY_MS);
   let deleted = 0;
+  let batches = 0;
 
-  for (let batch = 0; batch < maxBatches; batch += 1) {
-    const count = await ActivityEvent.destroy({
+  for (let batch = 0; batch < config.maxBatches; batch += 1) {
+    const rows = await ActivityEvent.findAll({
+      attributes: ['id'],
       where: { eventTime: { [Op.lt]: cutoff } },
-      limit: batchSize,
+      order: [['eventTime', 'ASC'], ['id', 'ASC']],
+      limit: config.batchSize,
+      raw: true,
+    });
+    const ids = rows.map((row) => row.id).filter(Boolean);
+    if (!ids.length) break;
+
+    const count = await ActivityEvent.destroy({
+      where: { id: { [Op.in]: ids } },
     });
     deleted += Number(count || 0);
-    if (count < batchSize) break;
+    batches += 1;
+    if (ids.length < config.batchSize) break;
   }
 
-  return { deleted, cutoff: cutoff.toISOString(), days };
+  return {
+    deleted,
+    batches,
+    cutoff: cutoff.toISOString(),
+    days: config.days,
+    batchSize: config.batchSize,
+    maxBatches: config.maxBatches,
+  };
 }
 
-function startRetentionJobs() {
+function startRetentionJobs(options = {}) {
+  const config = retentionConfig(options);
+  if (config.disabled) {
+    return { enabled: false, config, stop() {} };
+  }
+  if (activeJob) return activeJob;
+
+  const intervalMs = config.intervalHours * ONE_HOUR_MS;
   const timer = setInterval(() => {
-    pruneRawActivityEvents().catch((error) => {
+    pruneRawActivityEvents(config).catch((error) => {
       console.warn('Raw activity retention failed:', error.message);
     });
-  }, ONE_DAY_MS);
+  }, intervalMs);
   timer.unref?.();
 
-  setTimeout(() => {
-    pruneRawActivityEvents().catch((error) => {
+  const initialTimer = setTimeout(() => {
+    pruneRawActivityEvents(config).catch((error) => {
       console.warn('Initial raw activity retention failed:', error.message);
     });
   }, 60_000).unref?.();
+
+  activeJob = {
+    enabled: true,
+    config,
+    stop() {
+      clearInterval(timer);
+      clearTimeout(initialTimer);
+      activeJob = null;
+    },
+  };
+  return activeJob;
 }
 
-module.exports = { pruneRawActivityEvents, startRetentionJobs };
+module.exports = { pruneRawActivityEvents, retentionConfig, startRetentionJobs };
