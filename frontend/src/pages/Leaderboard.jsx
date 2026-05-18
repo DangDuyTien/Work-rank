@@ -176,6 +176,18 @@ function toVerifiedBool(value) {
   return false;
 }
 
+function VerifiedMark({ size = 15 }) {
+  return (
+    <span
+      title="Tích xanh được quản trị viên cấp"
+      aria-label="Đã được cấp tích xanh"
+      style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
+    >
+      <VerifiedBadge size={size} />
+    </span>
+  );
+}
+
 function isVerifiedRanker(user) {
   if (!user) return false;
   return toVerifiedBool(user.verified ?? user.isVerified ?? user.is_verified);
