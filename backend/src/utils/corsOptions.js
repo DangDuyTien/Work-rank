@@ -9,7 +9,8 @@ const devOrigins = env.nodeEnv === 'development'
       'http://127.0.0.1:5174',
     ]
   : [];
-const origins = new Set([...configuredOrigins, ...devOrigins]);
+const localAppOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const origins = new Set([...configuredOrigins, ...devOrigins, ...localAppOrigins]);
 
 module.exports = {
   origin(origin, callback) {

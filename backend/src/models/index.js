@@ -12,6 +12,8 @@ const SimulationSetting = require('./SimulationSetting');
 const Friendship = require('./Friendship');
 const ProfileLike = require('./ProfileLike');
 const ChatMessage = require('./ChatMessage');
+const TradingViewCandle = require('./TradingViewCandle');
+const TradingViewWebhookAttempt = require('./TradingViewWebhookAttempt');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -74,4 +76,6 @@ module.exports = {
   Friendship,
   ProfileLike,
   ChatMessage,
+  TradingViewCandle,
+  TradingViewWebhookAttempt,
 };

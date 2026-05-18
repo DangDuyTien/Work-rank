@@ -5,9 +5,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const routes = require('./routes');
+const tradingViewController = require('./controllers/tradingView.controller');
 const corsOptions = require('./utils/corsOptions');
 const { notFound, errorHandler } = require('./middlewares/error.middleware');
 const { authLimiter, activityLimiter, apiLimiter } = require('./middlewares/rateLimit.middleware');
+const asyncHandler = require('./utils/asyncHandler');
 
 const app = express();
 const DOWNLOADABLE_DESKTOP_FILES = new Set([
@@ -79,8 +81,15 @@ app.use(helmet({
 }));
 app.use(morgan('combined', { skip: (req) => req.path === '/api/health' }));
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({
+  limit: '5mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.post('/webhook/tradingview', asyncHandler(tradingViewController.receiveWebhook));
+app.get('/debug/tradingview', asyncHandler(tradingViewController.debug));
 app.use('/api/auth', authLimiter);
 app.use('/api/activity', activityLimiter);
 app.use('/api', apiLimiter);

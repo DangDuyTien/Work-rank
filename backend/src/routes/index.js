@@ -15,5 +15,6 @@ router.use('/groups', require('./groups.routes'));
 router.use('/reports', require('./reports.routes'));
 router.use('/security', require('./security.routes'));
 router.use('/simulation', require('./simulation.routes'));
+router.use('/tradingview', require('./tradingview.routes'));
 
 module.exports = router;
