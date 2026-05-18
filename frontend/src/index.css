@@ -4231,6 +4231,8 @@ textarea:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 7px;
+  max-height: 340px;
+  overflow-y: auto;
 }
 
 .profile-rank-guide-item {

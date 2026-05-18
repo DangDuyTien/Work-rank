@@ -85,98 +85,88 @@ function isDevProfileUser(user = {}) {
   return email === 'tien@gmail.com' || id === 8 || name === 'dang duy tien';
 }
 
-const RANK_TIERS = [
-  {
-    min: 130,
-    tier: 'Huyền thoại',
-    title: 'Huyền thoại WorkRank',
-    color: '#7c3aed',
-    soft: 'rgba(124,58,237,0.12)',
-    accent2: '#ec4899',
-    accent3: '#22d3ee',
-    border: 'rgba(124,58,237,0.3)',
-    glow: '0 18px 46px rgba(124,58,237,0.12)',
-    heroBg: 'linear-gradient(135deg, rgba(124,58,237,0.13) 0%, #ffffff 42%, rgba(34,211,238,0.1) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(124,58,237,0.04) 100%)',
-    progress: 'linear-gradient(90deg, #7c3aed 0%, #ec4899 58%, #22d3ee 100%)',
-    badgeBg: 'rgba(124,58,237,0.13)',
-  },
-  {
-    min: 70,
-    tier: 'Kim cương',
-    title: 'Đấu sĩ năng suất',
-    color: '#0891b2',
-    soft: 'rgba(8,145,178,0.12)',
-    accent2: '#38bdf8',
-    accent3: '#67e8f9',
-    border: 'rgba(8,145,178,0.3)',
-    glow: '0 18px 46px rgba(8,145,178,0.13)',
-    heroBg: 'linear-gradient(135deg, rgba(8,145,178,0.13) 0%, #ffffff 44%, rgba(103,232,249,0.11) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(8,145,178,0.045) 100%)',
-    progress: 'linear-gradient(90deg, #0891b2 0%, #38bdf8 100%)',
-    badgeBg: 'rgba(8,145,178,0.13)',
-  },
-  {
-    min: 35,
-    tier: 'Bạch kim',
-    title: 'Cao thủ tập trung',
-    color: '#2563eb',
-    soft: 'rgba(37,99,235,0.12)',
-    accent2: '#60a5fa',
-    accent3: '#93c5fd',
-    border: 'rgba(37,99,235,0.3)',
-    glow: '0 18px 46px rgba(37,99,235,0.14)',
-    heroBg: 'linear-gradient(135deg, rgba(37,99,235,0.14) 0%, #ffffff 44%, rgba(147,197,253,0.13) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(37,99,235,0.045) 100%)',
-    progress: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
-    badgeBg: 'rgba(37,99,235,0.13)',
-  },
-  {
-    min: 20,
-    tier: 'Vàng',
-    title: 'Chiến binh bền bỉ',
-    color: '#d97706',
-    soft: 'rgba(217,119,6,0.12)',
-    accent2: '#f59e0b',
-    accent3: '#facc15',
-    border: 'rgba(217,119,6,0.32)',
-    glow: '0 18px 46px rgba(217,119,6,0.13)',
-    heroBg: 'linear-gradient(135deg, rgba(217,119,6,0.13) 0%, #ffffff 45%, rgba(250,204,21,0.12) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(217,119,6,0.045) 100%)',
-    progress: 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)',
-    badgeBg: 'rgba(217,119,6,0.13)',
-  },
-  {
-    min: 10,
-    tier: 'Bạc',
-    title: 'Người tăng tốc',
-    color: '#64748b',
-    soft: 'rgba(100,116,139,0.11)',
-    accent2: '#94a3b8',
-    accent3: '#cbd5e1',
-    border: 'rgba(100,116,139,0.28)',
-    glow: '0 18px 46px rgba(100,116,139,0.12)',
-    heroBg: 'linear-gradient(135deg, rgba(100,116,139,0.13) 0%, #ffffff 45%, rgba(203,213,225,0.18) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(100,116,139,0.045) 100%)',
-    progress: 'linear-gradient(90deg, #64748b 0%, #94a3b8 100%)',
-    badgeBg: 'rgba(100,116,139,0.13)',
-  },
-  {
-    min: 0,
-    tier: 'Đồng',
-    title: 'Tân binh tiềm năng',
-    color: '#b45309',
-    soft: 'rgba(180,83,9,0.12)',
-    accent2: '#d97706',
-    accent3: '#f97316',
-    border: 'rgba(180,83,9,0.3)',
-    glow: '0 18px 46px rgba(180,83,9,0.13)',
-    heroBg: 'linear-gradient(135deg, rgba(180,83,9,0.13) 0%, #ffffff 45%, rgba(249,115,22,0.11) 100%)',
-    cardBg: 'linear-gradient(180deg, #ffffff 0%, rgba(180,83,9,0.045) 100%)',
-    progress: 'linear-gradient(90deg, #b45309 0%, #d97706 100%)',
-    badgeBg: 'rgba(180,83,9,0.13)',
-  },
-];
+function buildRankTiers() {
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r},${g},${b}`;
+  }
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  const GLOW_SCALE = [0.58, 0.76, 1.0, 1.26, 1.56];
+  const MAIN_TIERS = [
+    {
+      name: 'Đồng', title: 'Tân binh tiềm năng',
+      levels: [14, 11, 8, 5, 2],
+      color: '#b45309', soft: 'rgba(180,83,9,0.12)', accent2: '#d97706', accent3: '#f97316',
+      border: 'rgba(180,83,9,0.3)', baseGlow: 16,
+    },
+    {
+      name: 'Bạc', title: 'Người tăng tốc',
+      levels: [34, 30, 26, 22, 18],
+      color: '#64748b', soft: 'rgba(100,116,139,0.11)', accent2: '#94a3b8', accent3: '#cbd5e1',
+      border: 'rgba(100,116,139,0.28)', baseGlow: 17,
+    },
+    {
+      name: 'Vàng', title: 'Chiến binh bền bỉ',
+      levels: [59, 54, 49, 44, 39],
+      color: '#d97706', soft: 'rgba(217,119,6,0.12)', accent2: '#f59e0b', accent3: '#facc15',
+      border: 'rgba(217,119,6,0.32)', baseGlow: 18,
+    },
+    {
+      name: 'Bạch kim', title: 'Cao thủ tập trung',
+      levels: [89, 83, 77, 71, 65],
+      color: '#2563eb', soft: 'rgba(37,99,235,0.12)', accent2: '#60a5fa', accent3: '#93c5fd',
+      border: 'rgba(37,99,235,0.3)', baseGlow: 19,
+    },
+    {
+      name: 'Kim cương', title: 'Đấu sĩ năng suất',
+      levels: [129, 121, 113, 105, 97],
+      color: '#0891b2', soft: 'rgba(8,145,178,0.12)', accent2: '#38bdf8', accent3: '#67e8f9',
+      border: 'rgba(8,145,178,0.3)', baseGlow: 21,
+    },
+    {
+      name: 'Huyền thoại', title: 'Huyền thoại WorkRank',
+      levels: [200, 186, 172, 158, 144],
+      color: '#7c3aed', soft: 'rgba(124,58,237,0.12)', accent2: '#ec4899', accent3: '#22d3ee',
+      border: 'rgba(124,58,237,0.3)', baseGlow: 24,
+    },
+  ];
+  const tiers = [];
+  MAIN_TIERS.forEach(({ name, title: baseTitle, levels, color, soft, accent2, accent3, border, baseGlow }) => {
+    const rgb = hexToRgb(color);
+    const rgb3 = hexToRgb(accent3);
+    for (let s = ROMAN.length - 1; s >= 0; s -= 1) {
+      const min = levels[ROMAN.length - 1 - s];
+      const maxPrev = s > 0 ? levels[ROMAN.length - s] - 1 : min - 1;
+      const minWithGap = maxPrev + 1;
+      const gs = GLOW_SCALE[s];
+      const glowSize = Math.round(baseGlow * gs);
+      const glowAlpha = (0.10 + s * 0.018).toFixed(2);
+      const cardAlpha = (0.03 + s * 0.005).toFixed(2);
+      const badgeAlpha = (0.09 + s * 0.016).toFixed(2);
+      const borderAlpha = Math.min(0.48, 0.22 + s * 0.06).toFixed(2);
+      tiers.push({
+        min: Math.max(0, minWithGap > 0 ? minWithGap : min),
+        tier: `${name} ${ROMAN[s]}`,
+        title: `${baseTitle} ${ROMAN[s]}`,
+        color,
+        soft,
+        accent2,
+        accent3,
+        border: `rgba(${rgb},${borderAlpha})`,
+        glow: `0 ${glowSize}px ${Math.round(glowSize * 2)}px rgba(${rgb},${glowAlpha})`,
+        heroBg: `linear-gradient(135deg, ${soft} 0%, #ffffff ${44 - s * 2}%, rgba(${rgb3},${(0.08 + s * 0.008).toFixed(2)}) 100%)`,
+        cardBg: `linear-gradient(180deg, #ffffff 0%, rgba(${rgb},${cardAlpha}) 100%)`,
+        progress: `linear-gradient(90deg, ${color} 0%, ${accent2} ${s >= 3 ? 80 : 100}%)`,
+        badgeBg: `rgba(${rgb},${badgeAlpha})`,
+      });
+    }
+  });
+  return tiers;
+}
+
+const RANK_TIERS = buildRankTiers();
 
 const ANIMAL_COLOR_SEQUENCE = ['#d97706', '#16a34a', '#db2777', '#0891b2', '#7c3aed', '#dc2626'];
 const ANIMAL_TRAITS = ['Nhanh nhẹn', 'Bền bỉ', 'Tập trung', 'Bứt tốc', 'Ổn định', 'Tinh anh'];
