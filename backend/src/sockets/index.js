@@ -4,6 +4,25 @@ const { User } = require('../models');
 const desktopStatus = require('../services/desktopStatus.service');
 const presence = require('../services/presence.service');
 
+function sanitizePomodoroState(payload = {}) {
+  const mode = ['focus', 'shortBreak', 'longBreak'].includes(payload.mode) ? payload.mode : 'focus';
+  const remainingSeconds = Math.max(0, Math.min(24 * 60 * 60, Math.floor(Number(payload.remainingSeconds || 0))));
+  const totalSeconds = Math.max(1, Math.min(24 * 60 * 60, Math.floor(Number(payload.totalSeconds || 1))));
+  const cycle = Math.max(1, Math.min(4, Math.floor(Number(payload.cycle || 1))));
+  const completedFocusCount = Math.max(0, Math.min(9999, Math.floor(Number(payload.completedFocusCount || 0))));
+  return {
+    mode,
+    label: String(payload.label || '').slice(0, 32),
+    remainingSeconds,
+    totalSeconds,
+    running: Boolean(payload.running),
+    endsAt: Number(payload.endsAt || 0) || null,
+    completedFocusCount,
+    cycle,
+    updatedAt: Date.now(),
+  };
+}
+
 function emitPresence(io, user, status) {
   const payload = {
     userId: user.id,
@@ -105,6 +124,12 @@ function registerSockets(io) {
       const status = desktopStatus.getStatus(socket.user.id);
       if (typeof ack === 'function') ack(status);
       socket.emit('desktop:status', status);
+    });
+
+    socket.on('pomodoro:state', (payload, ack) => {
+      const state = sanitizePomodoroState(payload);
+      io.to(`desktop:${socket.user.id}`).emit('pomodoro:state', state);
+      if (typeof ack === 'function') ack({ ok: true });
     });
 
     socket.on('disconnect', () => {

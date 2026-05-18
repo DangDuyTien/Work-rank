@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -42,6 +42,9 @@ let sequence = 0;
 let shouldAutoStart = true;
 let lastError = null;
 const pendingProtocolUrls = [];
+let tray = null;
+let trayInterval = null;
+let pomodoroTrayState = null;
 
 // Socket.IO connection to backend
 let desktopSocket = null;
@@ -251,6 +254,7 @@ function signPayload(secret, payload) {
 }
 
 function emitStatus(extra = {}) {
+  updateTray();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('status', {
       tracking,
@@ -288,6 +292,127 @@ function getPrivacyInfo() {
       'Lịch sử duyệt web',
     ],
   };
+}
+
+function escapeXml(value) {
+  return String(value || '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;',
+  }[ch]));
+}
+
+function pomodoroModeLabel(mode) {
+  if (mode === 'shortBreak') return 'Nghỉ ngắn';
+  if (mode === 'longBreak') return 'Nghỉ dài';
+  return 'Tập trung';
+}
+
+function pomodoroModeShort(mode) {
+  if (mode === 'shortBreak') return 'N';
+  if (mode === 'longBreak') return 'D';
+  return 'T';
+}
+
+function formatTrayTime(seconds) {
+  const safe = Math.max(0, Math.floor(Number(seconds || 0)));
+  const minutes = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function livePomodoroState() {
+  if (!pomodoroTrayState) return null;
+  const totalSeconds = Math.max(1, Number(pomodoroTrayState.totalSeconds || 1));
+  const endsAt = Number(pomodoroTrayState.endsAt || 0);
+  const remainingSeconds = pomodoroTrayState.running && endsAt
+    ? Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+    : Math.max(0, Number(pomodoroTrayState.remainingSeconds || 0));
+  return {
+    ...pomodoroTrayState,
+    totalSeconds,
+    remainingSeconds,
+    progress: Math.min(1, Math.max(0, (totalSeconds - remainingSeconds) / totalSeconds)),
+  };
+}
+
+function trayIconImage(label = 'WR', color = '#06b6d4') {
+  const safeLabel = escapeXml(String(label || 'WR').slice(0, 5));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    <rect x="4" y="8" width="56" height="48" rx="14" fill="${color}"/>
+    <rect x="8" y="12" width="48" height="40" rx="11" fill="rgba(255,255,255,0.16)"/>
+    <text x="32" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#ffffff">${safeLabel}</text>
+  </svg>`;
+  return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+}
+
+function buildTrayMenu() {
+  const pomodoro = livePomodoroState();
+  const pomodoroLabel = pomodoro
+    ? `${formatTrayTime(pomodoro.remainingSeconds)} · ${pomodoroModeLabel(pomodoro.mode)} · Phiên ${pomodoro.cycle || 1}/4`
+    : 'Pomodoro chưa chạy';
+  return Menu.buildFromTemplate([
+    { label: pomodoroLabel, enabled: false },
+    { label: tracking ? 'Tracker đang chạy' : lastError ? `Tracker lỗi: ${lastError}` : 'Tracker đang tắt', enabled: false },
+    { type: 'separator' },
+    { label: 'Mở WorkRank Tracker', click: focusMainWindow },
+    {
+      label: tracking ? 'Tạm dừng tracker' : 'Bật tracker',
+      click: () => { if (tracking) void stopTracking(); else void startTracking(); },
+    },
+    { type: 'separator' },
+    { label: 'Thoát', click: () => app.quit() },
+  ]);
+}
+
+function updateTray() {
+  if (!tray) return;
+  const pomodoro = livePomodoroState();
+  const modeColor = pomodoro?.mode === 'shortBreak' ? '#22c55e' : pomodoro?.mode === 'longBreak' ? '#f59e0b' : '#06b6d4';
+  const timeText = pomodoro ? formatTrayTime(pomodoro.remainingSeconds) : '';
+  const modeShort = pomodoro ? pomodoroModeShort(pomodoro.mode) : 'WR';
+  const title = pomodoro ? `${timeText} ${modeShort}${pomodoro.cycle || 1}/4` : '';
+  const tooltip = pomodoro
+    ? `WorkRank Pomodoro: ${timeText} · ${pomodoroModeLabel(pomodoro.mode)} · Phiên ${pomodoro.cycle || 1}/4`
+    : `WorkRank Tracker: ${tracking ? 'đang chạy' : 'đang tắt'}`;
+
+  if (process.platform === 'darwin') {
+    tray.setTitle(title);
+  } else {
+    tray.setImage(trayIconImage(pomodoro ? timeText.replace(':', '') : 'WR', modeColor));
+  }
+  tray.setToolTip(tooltip);
+  tray.setContextMenu(buildTrayMenu());
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setProgressBar(pomodoro?.running ? pomodoro.progress : -1);
+  }
+}
+
+function ensureTray() {
+  if (tray || app.isQuitting) return;
+  tray = new Tray(trayIconImage('WR'));
+  tray.on('click', focusMainWindow);
+  tray.on('double-click', focusMainWindow);
+  updateTray();
+  if (!trayInterval) trayInterval = setInterval(updateTray, 1000);
+}
+
+function setPomodoroTrayState(payload = {}) {
+  pomodoroTrayState = {
+    mode: ['focus', 'shortBreak', 'longBreak'].includes(payload.mode) ? payload.mode : 'focus',
+    label: String(payload.label || '').slice(0, 32),
+    remainingSeconds: Math.max(0, Number(payload.remainingSeconds || 0)),
+    totalSeconds: Math.max(1, Number(payload.totalSeconds || 1)),
+    running: Boolean(payload.running),
+    endsAt: Number(payload.endsAt || 0) || null,
+    completedFocusCount: Math.max(0, Number(payload.completedFocusCount || 0)),
+    cycle: Math.max(1, Math.min(4, Number(payload.cycle || 1))),
+    updatedAt: Number(payload.updatedAt || Date.now()),
+  };
+  updateTray();
 }
 
 // ─── Socket.IO connection to backend ──────────────────────────────────────────
@@ -343,6 +468,10 @@ function connectSocket() {
   desktopSocket.on('security:device:quarantined', (payload) => {
     debugLog('Device quarantined by backend:', payload);
     quarantineCurrentDevice(payload);
+  });
+
+  desktopSocket.on('pomodoro:state', (payload) => {
+    setPomodoroTrayState(payload);
   });
 }
 
@@ -865,6 +994,7 @@ app.whenReady().then(() => {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
   });
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  ensureTray();
 
   // Start HTTP heartbeat as fallback (in case socket connection fails)
   setInterval(sendHttpHeartbeat, HEARTBEAT_INTERVAL);
@@ -883,6 +1013,15 @@ app.whenReady().then(() => {
 });
 
 app.on('before-quit', () => {
+  app.isQuitting = true;
+  if (trayInterval) {
+    clearInterval(trayInterval);
+    trayInterval = null;
+  }
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
   stopTracking();
   disconnectSocket();
 });

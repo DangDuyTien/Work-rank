@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTracking } from '../context/TrackingContext';
+import { useAuth } from '../context/AuthContext';
 import { leaderboard as leaderboardApi } from '../services/api';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
 import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
@@ -262,6 +263,7 @@ function completePomodoroStep(state) {
 
 
 export default function Pomodoro() {
+  const { socket } = useAuth();
   const pageVisible = usePageVisibility();
   const [pomodoro, setPomodoro] = useState(loadPomodoroState);
   const [pomodoroHistory, setPomodoroHistory] = useState(loadPomodoroHistory);
@@ -586,6 +588,32 @@ export default function Pomodoro() {
   }, [pomodoro]);
 
   useEffect(() => {
+    if (!socket) return;
+    socket.emit('pomodoro:state', {
+      presetKey: pomodoro.presetKey,
+      mode: pomodoro.mode,
+      label: pomodoroModeMeta.label,
+      remainingSeconds: pomodoro.remainingSeconds,
+      totalSeconds: pomodoroTotalSeconds,
+      running: pomodoro.running,
+      endsAt: pomodoro.endsAt,
+      completedFocusCount: pomodoro.completedFocusCount,
+      cycle: pomodoroCycle,
+    });
+  }, [
+    pomodoro.completedFocusCount,
+    pomodoro.endsAt,
+    pomodoro.mode,
+    pomodoro.presetKey,
+    pomodoro.remainingSeconds,
+    pomodoro.running,
+    pomodoroCycle,
+    pomodoroModeMeta.label,
+    pomodoroTotalSeconds,
+    socket,
+  ]);
+
+  useEffect(() => {
     if (!pomodoro.running) return undefined;
     const timer = window.setInterval(() => {
       setPomodoro((prev) => {
@@ -651,9 +679,7 @@ export default function Pomodoro() {
         if (runningRef.current && !isPipOpen()) {
           openPipWindow();
         }
-        return;
       }
-      if (isPipOpen()) closePipWindow();
     };
     syncPipForPomodoroPage();
     document.addEventListener('visibilitychange', syncPipForPomodoroPage);
@@ -1099,7 +1125,7 @@ export default function Pomodoro() {
               type="button"
               data-no-track="true"
               aria-label="Cửa sổ nổi"
-              onClick={() => { if (isPipOpen()) closePipWindow(); }}
+              onClick={() => { if (isPipOpen()) closePipWindow(); else openPipWindow(); }}
               className="pm-btn"
               style={{
                 height: 26,
@@ -1109,7 +1135,7 @@ export default function Pomodoro() {
 	                  : '1px solid rgba(15,23,42,0.1)',
 	                background: isPipOpen() ? pomodoroModeMeta.bg : '#ffffff',
 	                color: isPipOpen() ? pomodoroModeMeta.color : '#64748b',
-                cursor: isPipOpen() ? 'pointer' : 'default',
+                cursor: 'pointer',
                 fontSize: 10,
                 fontWeight: 800,
                 display: 'flex',
@@ -1119,7 +1145,7 @@ export default function Pomodoro() {
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              {isPipOpen() ? 'Ẩn' : 'PiP tắt'}
+              {isPipOpen() ? 'Ẩn' : 'PiP mini'}
             </button>
             <button
               type="button"
