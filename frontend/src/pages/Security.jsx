@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Cpu,
   LockKeyhole,
   RefreshCw,
   Search,
@@ -321,7 +320,6 @@ export default function Security() {
 
   const highThreshold = Number(anomalies?.highSuspicionThreshold || 60);
   const lockedDevices = useMemo(() => devices.filter((device) => device.revokedAt), [devices]);
-  const openDevices = useMemo(() => devices.filter((device) => !device.revokedAt), [devices]);
   const redEvents = useMemo(() => events.filter((event) => eventSeverity(event, highThreshold) === 'red'), [events, highThreshold]);
   const yellowEvents = useMemo(() => events.filter((event) => eventSeverity(event, highThreshold) === 'yellow'), [events, highThreshold]);
   const filteredEvents = useMemo(() => (
@@ -361,7 +359,7 @@ export default function Security() {
             Bảo mật
           </div>
           <h1>Trung tâm chống gian lận</h1>
-          <p>Trang này chỉ giữ lại các việc cần làm: xem trạng thái, mở/khóa thiết bị, và kiểm tra event nghi vấn.</p>
+          <p>Ưu tiên xem event nghi vấn trước, rồi mới xử lý thiết bị nếu cần.</p>
         </div>
         <div className="security-hero-actions">
           <SegmentedControl ariaLabel="Khoảng thời gian bảo mật" options={DAY_FILTERS} value={days} onChange={setDays} />
@@ -399,17 +397,34 @@ export default function Security() {
           </div>
         </div>
         <div className="security-status-steps">
-          <StepCard tone={lockedDevices.length ? 'danger' : 'clean'} icon={LockKeyhole} value={formatNum(lockedDevices.length)} label="thiết bị đang khóa" detail={lockedDevices.length ? 'Ưu tiên kiểm tra trước' : 'Không có thiết bị bị khóa'} />
-          <StepCard tone={redEvents.length ? 'danger' : 'clean'} icon={ShieldAlert} value={formatNum(redEvents.length)} label="event đỏ" detail={redEvents.length ? 'Không cộng điểm' : 'Không có event đỏ'} />
-          <StepCard tone={yellowEvents.length ? 'warning' : 'clean'} icon={AlertTriangle} value={formatNum(yellowEvents.length)} label="event vàng" detail={yellowEvents.length ? 'Theo dõi nếu lặp lại' : 'Không có cảnh báo nhẹ'} />
+          <StepCard tone="neutral" icon={Activity} value={formatNum(anomalies?.totalEvents)} label="lượt dữ liệu" detail={`${days} ngày`} />
+          <StepCard tone={redEvents.length ? 'danger' : 'clean'} icon={ShieldAlert} value={formatNum(redEvents.length)} label="event đỏ" detail="Không cộng điểm" />
+          <StepCard tone={yellowEvents.length ? 'warning' : 'clean'} icon={AlertTriangle} value={formatNum(yellowEvents.length)} label="event vàng" detail="Theo dõi" />
+          <StepCard tone={lockedDevices.length ? 'danger' : 'clean'} icon={LockKeyhole} value={formatNum(lockedDevices.length)} label="thiết bị khóa" detail={`${formatNum(devices.length)} tổng máy`} />
         </div>
       </section>
 
-      <section className="security-metric-grid">
-        <StepCard tone="neutral" icon={Activity} value={formatNum(anomalies?.totalEvents)} label="lượt dữ liệu" detail={`${days} ngày gần nhất`} />
-        <StepCard tone="warning" icon={AlertTriangle} value={formatNum(anomalies?.warningEvents)} label="cảnh báo nhẹ" detail="Chưa loại điểm" />
-        <StepCard tone="danger" icon={ShieldAlert} value={formatNum(anomalies?.flaggedEvents)} label="nghi vấn cao" detail="Đã loại điểm" />
-        <StepCard tone="neutral" icon={Cpu} value={formatNum(openDevices.length)} label="thiết bị đang mở" detail={`${formatNum(devices.length)} tổng thiết bị`} />
+      <section className="security-panel security-event-panel">
+        <div className="security-panel-head">
+          <div>
+            <h2>Event nghi vấn</h2>
+            <p>Đỏ là không cộng điểm. Vàng là theo dõi. Bấm từng dòng để xem cách xử lý.</p>
+          </div>
+          <SegmentedControl ariaLabel="Lọc event nghi vấn" options={EVENT_FILTERS} value={eventFilter} onChange={setEventFilter} />
+        </div>
+        <div className="security-event-list">
+          {filteredEvents.length === 0 ? (
+            <EmptyState title="Chưa có event nghi vấn" description="Khoảng thời gian này chưa phát hiện dữ liệu bất thường cần kiểm tra." />
+          ) : filteredEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              threshold={highThreshold}
+              expanded={expandedEventId === event.id}
+              onToggle={(id) => setExpandedEventId((current) => (current === id ? null : id))}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="security-main-grid">
@@ -441,29 +456,6 @@ export default function Security() {
             </div>
           </div>
           <FlagCloud flags={anomalies?.flagCounts} />
-        </div>
-      </section>
-
-      <section className="security-panel">
-        <div className="security-panel-head">
-          <div>
-            <h2>Event nghi vấn</h2>
-            <p>Đỏ là không cộng điểm. Vàng là theo dõi. Bấm từng dòng để xem cách xử lý.</p>
-          </div>
-          <SegmentedControl ariaLabel="Lọc event nghi vấn" options={EVENT_FILTERS} value={eventFilter} onChange={setEventFilter} />
-        </div>
-        <div className="security-event-list">
-          {filteredEvents.length === 0 ? (
-            <EmptyState title="Chưa có event nghi vấn" description="Khoảng thời gian này chưa phát hiện dữ liệu bất thường cần kiểm tra." />
-          ) : filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              threshold={highThreshold}
-              expanded={expandedEventId === event.id}
-              onToggle={(id) => setExpandedEventId((current) => (current === id ? null : id))}
-            />
-          ))}
         </div>
       </section>
     </div>

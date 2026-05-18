@@ -261,6 +261,10 @@ export const activity = {
     const row = unwrapArray(res.data)[0] || {};
     return { ...res, data: normalizeStat(row) };
   },
+  daily: async (id, limit = 90) => {
+    const res = await api.get(`/api/reports/users/${id}/daily?limit=${limit}`);
+    return { ...res, data: unwrapArray(res.data) };
+  },
   level: async (id) => {
     const res = await api.get(`/api/reports/users/${id}/level`, {
       params: { _: Date.now() },
