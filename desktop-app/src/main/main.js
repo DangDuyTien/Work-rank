@@ -45,6 +45,7 @@ const pendingProtocolUrls = [];
 let tray = null;
 let trayInterval = null;
 let pomodoroTrayState = null;
+let refreshingSocketAuth = false;
 
 // Socket.IO connection to backend
 let desktopSocket = null;
@@ -294,26 +295,16 @@ function getPrivacyInfo() {
   };
 }
 
-function escapeXml(value) {
-  return String(value || '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&apos;',
-  }[ch]));
-}
-
 function pomodoroModeLabel(mode) {
   if (mode === 'shortBreak') return 'Nghỉ ngắn';
   if (mode === 'longBreak') return 'Nghỉ dài';
   return 'Tập trung';
 }
 
-function pomodoroModeShort(mode) {
-  if (mode === 'shortBreak') return 'N';
-  if (mode === 'longBreak') return 'D';
-  return 'T';
+function pomodoroTrayTitleLabel(mode) {
+  if (mode === 'shortBreak') return 'Nghỉ';
+  if (mode === 'longBreak') return 'Nghỉ dài';
+  return 'Tập trung';
 }
 
 function formatTrayTime(seconds) {
@@ -338,23 +329,13 @@ function livePomodoroState() {
   };
 }
 
-function trayIconImage(label = 'WR', color = '#06b6d4') {
-  const safeLabel = escapeXml(String(label || 'WR').slice(0, 5));
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-    <rect x="4" y="8" width="56" height="48" rx="14" fill="${color}"/>
-    <rect x="8" y="12" width="48" height="40" rx="11" fill="rgba(255,255,255,0.16)"/>
-    <text x="32" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#ffffff">${safeLabel}</text>
-  </svg>`;
-  return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
-}
-
 function buildTrayMenu() {
   const pomodoro = livePomodoroState();
   const pomodoroLabel = pomodoro
     ? `${formatTrayTime(pomodoro.remainingSeconds)} · ${pomodoroModeLabel(pomodoro.mode)} · Phiên ${pomodoro.cycle || 1}/4`
     : 'Pomodoro chưa chạy';
   return Menu.buildFromTemplate([
-    { label: pomodoroLabel, enabled: false },
+    { label: pomodoroLabel, click: focusMainWindow },
     { label: tracking ? 'Tracker đang chạy' : lastError ? `Tracker lỗi: ${lastError}` : 'Tracker đang tắt', enabled: false },
     { type: 'separator' },
     { label: 'Mở WorkRank Tracker', click: focusMainWindow },
@@ -370,18 +351,16 @@ function buildTrayMenu() {
 function updateTray() {
   if (!tray) return;
   const pomodoro = livePomodoroState();
-  const modeColor = pomodoro?.mode === 'shortBreak' ? '#22c55e' : pomodoro?.mode === 'longBreak' ? '#f59e0b' : '#06b6d4';
   const timeText = pomodoro ? formatTrayTime(pomodoro.remainingSeconds) : '';
-  const modeShort = pomodoro ? pomodoroModeShort(pomodoro.mode) : 'WR';
-  const title = pomodoro ? `${timeText} ${modeShort}${pomodoro.cycle || 1}/4` : '';
+  const modeText = pomodoro ? pomodoroTrayTitleLabel(pomodoro.mode) : 'WR';
+  const pausedPrefix = pomodoro && !pomodoro.running ? 'Ⅱ ' : '';
   const tooltip = pomodoro
     ? `WorkRank Pomodoro: ${timeText} · ${pomodoroModeLabel(pomodoro.mode)} · Phiên ${pomodoro.cycle || 1}/4`
     : `WorkRank Tracker: ${tracking ? 'đang chạy' : 'đang tắt'}`;
 
   if (process.platform === 'darwin') {
-    tray.setTitle(title);
-  } else {
-    tray.setImage(trayIconImage(pomodoro ? timeText.replace(':', '') : 'WR', modeColor));
+    tray.setImage(nativeImage.createEmpty());
+    tray.setTitle(pomodoro ? `${pausedPrefix}${timeText} · ${modeText} ${pomodoro.cycle || 1}/4` : 'WR', { fontType: 'monospacedDigit' });
   }
   tray.setToolTip(tooltip);
   tray.setContextMenu(buildTrayMenu());
@@ -393,7 +372,7 @@ function updateTray() {
 
 function ensureTray() {
   if (tray || app.isQuitting) return;
-  tray = new Tray(trayIconImage('WR'));
+  tray = new Tray(nativeImage.createEmpty());
   tray.on('click', focusMainWindow);
   tray.on('double-click', focusMainWindow);
   updateTray();
@@ -447,6 +426,19 @@ function connectSocket() {
 
   desktopSocket.on('connect_error', (err) => {
     debugLog('Desktop socket connection error:', err.message);
+    const message = String(err?.message || '');
+    if (refreshingSocketAuth || !refreshToken || !message.toLowerCase().includes('unauthorized')) return;
+    refreshingSocketAuth = true;
+    refreshAccessToken()
+      .catch((error) => {
+        debugLog('Socket auth refresh failed:', error.message);
+        lastError = error.message;
+        emitStatus({ connected: false, error: lastError });
+        updateTray();
+      })
+      .finally(() => {
+        refreshingSocketAuth = false;
+      });
   });
 
   // Listen for commands from the web frontend

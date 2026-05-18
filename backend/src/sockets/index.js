@@ -3,6 +3,7 @@ const env = require('../config/env');
 const { User } = require('../models');
 const desktopStatus = require('../services/desktopStatus.service');
 const presence = require('../services/presence.service');
+const pomodoroStateByUser = new Map();
 
 function sanitizePomodoroState(payload = {}) {
   const mode = ['focus', 'shortBreak', 'longBreak'].includes(payload.mode) ? payload.mode : 'focus';
@@ -75,6 +76,8 @@ function registerSockets(io) {
       const nextPresence = status.tracking && !status.error ? 'active' : 'online';
       presence.setStatus(socket.user, nextPresence);
       io.to(`web:${socket.user.id}`).emit('desktop:status', { ...status, online: true });
+      const pomodoroState = pomodoroStateByUser.get(String(socket.user.id));
+      if (pomodoroState) socket.emit('pomodoro:state', pomodoroState);
       emitPresence(io, socket.user, nextPresence);
     }
 
@@ -128,6 +131,7 @@ function registerSockets(io) {
 
     socket.on('pomodoro:state', (payload, ack) => {
       const state = sanitizePomodoroState(payload);
+      pomodoroStateByUser.set(String(socket.user.id), state);
       io.to(`desktop:${socket.user.id}`).emit('pomodoro:state', state);
       if (typeof ack === 'function') ack({ ok: true });
     });

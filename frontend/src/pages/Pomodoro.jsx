@@ -3,7 +3,7 @@ import { useTracking } from '../context/TrackingContext';
 import { useAuth } from '../context/AuthContext';
 import { leaderboard as leaderboardApi } from '../services/api';
 import { getAppSettings, saveAppSettings, subscribeAppSettings } from '../utils/settings';
-import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice, openPipWindow, closePipWindow, isPipOpen } from '../utils/notifications';
+import { playPomodoroChime, requestNotificationPermission, sendBrowserNotification, vibrateDevice } from '../utils/notifications';
 import usePageVisibility from '../hooks/usePageVisibility';
 import {
   BarChart3,
@@ -37,6 +37,9 @@ const SkipIcon = () => <SkipForward size={16} />;
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
 const POMODORO_HISTORY_KEY = 'workrank:pomodoro-history';
+const POMODORO_SYNC_EVENT = 'workrank:pomodoro-sync';
+const POMODORO_COMPLETION_LOCK_KEY = 'workrank:pomodoro-completion-lock';
+const POMODORO_TASK_COMPLETION_LOCK_KEY = 'workrank:pomodoro-task-completion-lock';
 const POMODORO_TASKS_KEY = 'workrank:pomodoro-tasks';
 const POMODORO_ACTIVE_TASK_KEY = 'workrank:pomodoro-active-task';
 const POMODORO_NOTES_KEY = 'workrank:pomodoro-notes';
@@ -127,6 +130,7 @@ function createPomodoroState(presetKey = getDefaultPomodoroPresetKey(), mode = '
     completedAt: 0,
     startedOnce: false,
     endsAt: null,
+    notified: false,
   };
 }
 
@@ -135,7 +139,7 @@ function loadPomodoroState() {
     const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
     if (!raw) return createPomodoroState();
     const parsed = JSON.parse(raw);
-    if (parsed.notified || (!parsed.running && Number(parsed.completedAt || 0) > 0)) {
+    if (!parsed.running && (parsed.notified || Number(parsed.completedAt || 0) > 0)) {
       return {
         presetKey: parsed.presetKey || 'classic',
         mode: parsed.mode || 'focus',
@@ -162,11 +166,11 @@ function loadPomodoroState() {
           presetKey: preset.key,
           mode,
           remainingSeconds: 0,
-          running: false,
+          running: true,
           completedFocusCount: Math.max(0, Number(parsed.completedFocusCount || 0)),
           completedAt: 0,
           startedOnce: true,
-          endsAt: null,
+          endsAt: storedEndsAt,
         });
       }
     } else if (running) {
@@ -211,8 +215,43 @@ function emitWorkRankNotification(detail) {
   window.dispatchEvent(new CustomEvent(WORKRANK_NOTIFICATION_EVENT, { detail }));
 }
 
-function completePomodoroStep(state) {
+function pomodoroCompletionKey(state) {
+  return [
+    state.presetKey || 'classic',
+    state.mode || 'focus',
+    state.endsAt || 'manual',
+    Math.max(0, Number(state.completedFocusCount || 0)),
+  ].join(':');
+}
+
+function reservePomodoroCompletion(state) {
+  try {
+    const key = pomodoroCompletionKey(state);
+    const existing = JSON.parse(localStorage.getItem(POMODORO_COMPLETION_LOCK_KEY) || '{}');
+    if (existing.key === key) return false;
+    localStorage.setItem(POMODORO_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function reservePomodoroTaskCompletion(state) {
+  try {
+    const key = pomodoroCompletionKey(state);
+    const existing = JSON.parse(localStorage.getItem(POMODORO_TASK_COMPLETION_LOCK_KEY) || '{}');
+    if (existing.key === key) return false;
+    localStorage.setItem(POMODORO_TASK_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function completePomodoroStep(state, options = {}) {
   const preset = getPomodoroPreset(state.presetKey);
+  const shouldNotify = reservePomodoroCompletion(state);
+  const completedAt = Date.now();
   const completedFocusCount = state.mode === 'focus'
     ? Number(state.completedFocusCount || 0) + 1
     : Number(state.completedFocusCount || 0);
@@ -220,10 +259,20 @@ function completePomodoroStep(state) {
     ? (completedFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
     : 'focus';
   const nextModeLabel = POMODORO_MODES[nextMode]?.label || 'phiên tiếp theo';
+  const nextSeconds = getPomodoroModeSeconds(preset, nextMode);
+  const autoStartNext = options.autoStartNext ?? Boolean(state.running);
+  const feedback = options.feedback ?? (autoStartNext || Number(state.remainingSeconds || 0) <= 0);
+  const message = state.mode === 'focus'
+    ? (autoStartNext
+      ? `Đến giờ ${nextModeLabel.toLowerCase()}. Pomodoro đang tự chạy phiên tiếp theo.`
+      : `Đến giờ ${nextModeLabel.toLowerCase()}. Pomodoro đã sẵn sàng cho bước tiếp theo.`)
+    : (autoStartNext
+      ? 'Pomodoro đang tự quay lại phiên tập trung tiếp theo.'
+      : 'Đến lúc quay lại phiên tập trung tiếp theo.');
 
   const totalSeconds = getPomodoroModeSeconds(preset, state.mode);
   const elapsedSeconds = totalSeconds - Math.max(0, Number(state.remainingSeconds || 0));
-  if (elapsedSeconds >= 10) {
+  if (shouldNotify && elapsedSeconds >= 10) {
     try {
       const history = loadPomodoroHistory();
       history.push({
@@ -238,25 +287,28 @@ function completePomodoroStep(state) {
     } catch {}
   }
 
-  emitWorkRankNotification({
-    type: 'pomodoro',
-    title: state.mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
-    message: state.mode === 'focus'
-      ? `Đến giờ ${nextModeLabel.toLowerCase()}. Pomodoro đã sẵn sàng cho bước tiếp theo.`
-      : 'Đến lúc quay lại phiên tập trung tiếp theo.',
-    actionTo: '/pomodoro',
-    actionLabel: 'Mở Pomodoro',
-  });
+  if (shouldNotify) {
+    emitWorkRankNotification({
+      type: 'pomodoro',
+      title: state.mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
+      message,
+      actionTo: '/pomodoro',
+      actionLabel: 'Mở Pomodoro',
+      playSound: feedback,
+      vibrate: feedback,
+    });
+  }
 
   return {
     ...state,
     mode: nextMode,
-    remainingSeconds: getPomodoroModeSeconds(preset, nextMode),
-    running: false,
+    remainingSeconds: nextSeconds,
+    running: autoStartNext,
     completedFocusCount,
-    completedAt: Date.now(),
-    startedOnce: false,
-    endsAt: null,
+    completedAt,
+    startedOnce: autoStartNext,
+    endsAt: autoStartNext ? completedAt + nextSeconds * 1000 : null,
+    notified: true,
   };
 }
 
@@ -295,7 +347,9 @@ export default function Pomodoro() {
   const nextPomodoroMode = pomodoro.mode === 'focus'
     ? ((pomodoro.completedFocusCount + 1) % 4 === 0 ? 'Nghỉ dài' : 'Nghỉ ngắn')
     : 'Tập trung';
-  const pomodoroCycle = Math.min(4, (pomodoro.completedFocusCount % 4) + 1);
+  const pomodoroCycle = pomodoro.mode === 'longBreak'
+    ? 4
+    : Math.min(4, (pomodoro.completedFocusCount % 4) + 1);
   const completedInCurrentCycle = pomodoro.mode === 'longBreak' ? 4 : pomodoro.completedFocusCount % 4;
   const pomodoroTrackingReady = tracking;
   const [pomodoroSettingsOpen, setPomodoroSettingsOpen] = useState(false);
@@ -429,7 +483,6 @@ export default function Pomodoro() {
 
   const taskCompletionRef = useRef(pomodoro.completedAt);
   const previousPomodoroRef = useRef(pomodoro);
-  const lastPipCommandIdRef = useRef('');
 
   useEffect(() => {
     if (!pomodoro.completedAt || taskCompletionRef.current === pomodoro.completedAt) return;
@@ -439,6 +492,7 @@ export default function Pomodoro() {
     const previousTotal = getPomodoroModeSeconds(previousPreset, previousPomodoro?.mode);
     const previousElapsed = previousTotal - Math.max(0, Number(previousPomodoro?.remainingSeconds || 0));
     if (!activeTaskId || previousPomodoro?.mode !== 'focus' || previousElapsed < 10) return;
+    if (!reservePomodoroTaskCompletion(previousPomodoro)) return;
     setFocusTasks((prev) => prev.map((task) => {
       if (task.id !== activeTaskId || task.completed) return task;
       const sessions = Math.min(999, Number(task.sessions || 0) + 1);
@@ -461,117 +515,30 @@ export default function Pomodoro() {
   }, [pomodoro.completedAt]);
 
   useEffect(() => {
-    const normalizePipCommand = (payload) => {
-      if (!payload) return null;
-      if (typeof payload === 'string') {
-        try {
-          return JSON.parse(payload);
-        } catch {
-          return null;
-        }
-      }
-      if (typeof payload === 'object') return payload;
-      return null;
+    const syncFromStorage = () => {
+      setPomodoro(loadPomodoroState());
+      setPomodoroHistory(loadPomodoroHistory());
+      setFocusTasks(loadPomodoroTasks());
     };
-
-    const handlePipCommand = (payload) => {
-      const cmd = normalizePipCommand(payload);
-      if (!cmd?.command) return;
-      const commandTs = Number(cmd.ts || 0);
-      if (commandTs && Date.now() - commandTs > 30000) return;
-      const commandId = cmd.id || `${cmd.command}:${cmd.ts || ''}`;
-      if (commandId && lastPipCommandIdRef.current === commandId) return;
-      if (commandId) lastPipCommandIdRef.current = commandId;
-
-      if (cmd.stateApplied) {
-        if (cmd.command === 'start') {
-          requestNotificationPermission();
-          if (
-            !tracking
-            && !trackingPending
-            && appSettings.tracker?.autoStartWithPomodoro
-          ) {
-            void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
-          }
-        }
-        setPomodoro(loadPomodoroState());
-        setPomodoroHistory(loadPomodoroHistory());
-        return;
-      }
-
-      if (cmd.command === 'pause') {
-        setPomodoro((prev) => {
-          const remainingSeconds = prev.endsAt
-            ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
-            : Math.max(0, Number(prev.remainingSeconds || 0));
-          return { ...prev, remainingSeconds, running: false, endsAt: null, startedOnce: true };
-        });
-      } else if (cmd.command === 'start') {
-        requestNotificationPermission();
-        if (
-          !tracking
-          && !trackingPending
-          && appSettings.tracker?.autoStartWithPomodoro
-        ) {
-          void startTrack({ launchDesktop: Boolean(appSettings.tracker?.autoLaunchDesktop) });
-        }
-        setPomodoro((prev) => {
-          if (prev.running) return prev;
-          const preset = getPomodoroPreset(prev.presetKey);
-          const remainingSeconds = Math.max(1, Number(prev.remainingSeconds || getPomodoroModeSeconds(preset, prev.mode)));
-          return {
-            ...prev,
-            remainingSeconds,
-            running: true,
-            completedAt: 0,
-            notified: false,
-            startedOnce: true,
-            endsAt: Date.now() + remainingSeconds * 1000,
-          };
-        });
-      } else if (cmd.command === 'skip') {
-        setPomodoro((prev) => {
-          const remainingSeconds = prev.endsAt
-            ? Math.max(0, Math.ceil((Number(prev.endsAt || 0) - Date.now()) / 1000))
-            : Math.max(0, Number(prev.remainingSeconds || 0));
-          return completePomodoroStep({ ...prev, remainingSeconds, running: false, endsAt: null });
-        });
-      }
+    const handleStorage = (event) => {
+      if (event.key === POMODORO_STORAGE_KEY || event.key === POMODORO_HISTORY_KEY) syncFromStorage();
     };
-
-    const bc = new BroadcastChannel('workrank-pip');
-    bc.onmessage = (e) => {
-      if (e.data === 'continue') {
-        setPomodoro(loadPomodoroState());
-        return;
-      }
-      handlePipCommand(e.data);
+    const handleVisibility = () => {
+      if (!document.hidden) syncFromStorage();
     };
-    const handleWindowCommand = (event) => handlePipCommand(event.detail);
-    const handleStorageCommand = (event) => {
-      if (event.key === 'workrank:pip-command') handlePipCommand(event.newValue);
-    };
-    window.addEventListener('workrank:pip-command', handleWindowCommand);
-    window.addEventListener('storage', handleStorageCommand);
-    const pollPipCommand = window.setInterval(() => {
-      try {
-        const raw = localStorage.getItem('workrank:pip-command');
-        if (raw) handlePipCommand(raw);
-      } catch {}
-    }, 500);
+    window.addEventListener(POMODORO_SYNC_EVENT, syncFromStorage);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', syncFromStorage);
+    window.addEventListener('pageshow', syncFromStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
-      window.clearInterval(pollPipCommand);
-      bc.close();
-      window.removeEventListener('workrank:pip-command', handleWindowCommand);
-      window.removeEventListener('storage', handleStorageCommand);
+      window.removeEventListener(POMODORO_SYNC_EVENT, syncFromStorage);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', syncFromStorage);
+      window.removeEventListener('pageshow', syncFromStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [
-    appSettings.tracker?.autoLaunchDesktop,
-    appSettings.tracker?.autoStartWithPomodoro,
-    startTrack,
-    tracking,
-    trackingPending,
-  ]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify({
@@ -589,17 +556,26 @@ export default function Pomodoro() {
 
   useEffect(() => {
     if (!socket) return;
-    socket.emit('pomodoro:state', {
-      presetKey: pomodoro.presetKey,
-      mode: pomodoro.mode,
-      label: pomodoroModeMeta.label,
-      remainingSeconds: pomodoro.remainingSeconds,
-      totalSeconds: pomodoroTotalSeconds,
-      running: pomodoro.running,
-      endsAt: pomodoro.endsAt,
-      completedFocusCount: pomodoro.completedFocusCount,
-      cycle: pomodoroCycle,
-    });
+    const emitPomodoroState = () => {
+      socket.emit('pomodoro:state', {
+        presetKey: pomodoro.presetKey,
+        mode: pomodoro.mode,
+        label: pomodoroModeMeta.label,
+        remainingSeconds: pomodoro.remainingSeconds,
+        totalSeconds: pomodoroTotalSeconds,
+        running: pomodoro.running,
+        endsAt: pomodoro.endsAt,
+        completedFocusCount: pomodoro.completedFocusCount,
+        cycle: pomodoroCycle,
+      });
+    };
+    emitPomodoroState();
+    socket.on('connect', emitPomodoroState);
+    const timer = window.setInterval(emitPomodoroState, 5000);
+    return () => {
+      window.clearInterval(timer);
+      socket.off('connect', emitPomodoroState);
+    };
   }, [
     pomodoro.completedFocusCount,
     pomodoro.endsAt,
@@ -628,17 +604,7 @@ export default function Pomodoro() {
           const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
           const stored = raw ? JSON.parse(raw) : {};
           if (stored.notified) {
-            return {
-              presetKey: stored.presetKey || prev.presetKey,
-              mode: stored.mode || prev.mode,
-              remainingSeconds: Math.max(0, Number(stored.remainingSeconds || 0)),
-              running: false,
-              completedFocusCount: Math.max(0, Number(stored.completedFocusCount || 0)),
-              completedAt: Number(stored.completedAt || 0),
-              startedOnce: false,
-              endsAt: null,
-              notified: true,
-            };
+            return loadPomodoroState();
           }
         } catch {}
         return completePomodoroStep(prev);
@@ -666,32 +632,9 @@ export default function Pomodoro() {
         );
       });
     }
-    vibrateDevice([200, 100, 200]);
+    vibrateDevice([180]);
     setFlashKey((k) => k + 1);
   }, [pomodoro.completedAt, pomodoro.mode, appSettings.notifications?.sound, appSettings.pomodoro?.volume]);
-
-  const runningRef = useRef(pomodoro.running);
-  runningRef.current = pomodoro.running;
-
-  useEffect(() => {
-    const syncPipForPomodoroPage = () => {
-      if (document.hidden) {
-        if (runningRef.current && !isPipOpen()) {
-          openPipWindow();
-        }
-      }
-    };
-    syncPipForPomodoroPage();
-    document.addEventListener('visibilitychange', syncPipForPomodoroPage);
-    const pipHealthInterval = window.setInterval(syncPipForPomodoroPage, 2000);
-    return () => {
-      document.removeEventListener('visibilitychange', syncPipForPomodoroPage);
-      window.clearInterval(pipHealthInterval);
-      if (runningRef.current) {
-        openPipWindow();
-      }
-    };
-  }, []);
 
   const setPomodoroPreset = (presetKey) => {
     setPomodoro(createPomodoroState(presetKey));
@@ -708,6 +651,7 @@ export default function Pomodoro() {
         completedAt: 0,
         startedOnce: false,
         endsAt: null,
+        notified: false,
       };
     });
   };
@@ -733,6 +677,7 @@ export default function Pomodoro() {
         completedAt: 0,
         startedOnce: true,
         endsAt: running ? Date.now() + Math.max(1, Number(prev.remainingSeconds || 0)) * 1000 : null,
+        notified: false,
       };
     });
   };
@@ -747,12 +692,16 @@ export default function Pomodoro() {
         completedAt: 0,
         startedOnce: false,
         endsAt: null,
+        notified: false,
       };
     });
   };
 
   const skipPomodoro = () => {
-    setPomodoro((prev) => completePomodoroStep({ ...prev, running: false }));
+    setPomodoro((prev) => completePomodoroStep(
+      { ...prev, running: false },
+      { autoStartNext: false, feedback: false }
+    ));
   };
 
   const addFocusTask = (event) => {
@@ -1121,32 +1070,6 @@ export default function Pomodoro() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 12 }}>
-            <button
-              type="button"
-              data-no-track="true"
-              aria-label="Cửa sổ nổi"
-              onClick={() => { if (isPipOpen()) closePipWindow(); else openPipWindow(); }}
-              className="pm-btn"
-              style={{
-                height: 26,
-                padding: '0 7px',
-	                border: isPipOpen()
-	                  ? `1px solid ${pomodoroModeMeta.color}`
-	                  : '1px solid rgba(15,23,42,0.1)',
-	                background: isPipOpen() ? pomodoroModeMeta.bg : '#ffffff',
-	                color: isPipOpen() ? pomodoroModeMeta.color : '#64748b',
-                cursor: 'pointer',
-                fontSize: 10,
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              {isPipOpen() ? 'Ẩn' : 'PiP mini'}
-            </button>
             <button
               type="button"
               data-no-track="true"

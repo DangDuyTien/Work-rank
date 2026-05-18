@@ -36,7 +36,6 @@ const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const Tracker = lazyWithReload(() => import('./pages/Tracker'));
 const Leaderboard = lazyWithReload(() => import('./pages/Leaderboard'));
 const UserDetail = lazyWithReload(() => import('./pages/UserDetail'));
-const Groups = lazyWithReload(() => import('./pages/Groups'));
 const Friends = lazyWithReload(() => import('./pages/Friends'));
 const Security = lazyWithReload(() => import('./pages/Security'));
 const Settings = lazyWithReload(() => import('./pages/Settings'));
@@ -138,7 +137,7 @@ export default function App() {
                 >
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
-                  <Route path="/groups" element={<Groups />} />
+                  <Route path="/groups" element={<Navigate to="/friends" replace />} />
                   <Route path="/friends" element={<Friends />} />
                   <Route path="/tracker" element={<Tracker />} />
                   <Route path="/pomodoro" element={<Pomodoro />} />

@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, BadgeCheck, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy, Users } from 'lucide-react';
+import { Activity, BadgeCheck, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
-import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
+import { playPomodoroChime, sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
 import ProductTour, { PRODUCT_TOUR_EVENT } from './ProductTour';
@@ -15,7 +15,6 @@ const NAV_LINKS = [
   { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
   { to: '/tracker', label: 'Theo Dõi', shortLabel: 'Tracker', icon: Monitor },
   { to: '/leaderboard', label: 'Xếp Hạng', shortLabel: 'Xếp hạng', icon: Trophy },
-  { to: '/groups', label: 'Nhóm', shortLabel: 'Nhóm', icon: Users },
   { to: '/pomodoro', label: 'Pomodoro', shortLabel: 'Pomodoro', icon: Timer },
   { to: '/security', label: 'Bảo Mật', shortLabel: 'Bảo mật', icon: Shield, adminOnly: true },
   { to: '/admin/privileges', label: 'Đặc Quyền', shortLabel: 'Đặc quyền', icon: BadgeCheck, adminOnly: true },
@@ -24,7 +23,6 @@ const NAV_LINKS = [
 const NAV_TOUR_TARGETS = {
   '/dashboard': 'nav-dashboard',
   '/leaderboard': 'nav-leaderboard',
-  '/groups': 'nav-groups',
   '/tracker': 'nav-tracker',
   '/pomodoro': 'nav-pomodoro',
 };
@@ -32,7 +30,6 @@ const NAV_TOUR_TARGETS = {
 const PAGE_TITLES = {
   '/dashboard': 'WorkRank Realtime',
   '/leaderboard': 'WorkRank Realtime',
-  '/groups': 'WorkRank Realtime',
   '/friends': 'Bạn Bè',
   '/tracker': 'Theo Dõi & Hiệu Suất',
   '/pomodoro': 'Pomodoro Timer',
@@ -44,8 +41,245 @@ const PAGE_TITLES = {
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const NOTIFICATIONS_CLEARED_EVENT = 'workrank:notifications-cleared';
 const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
-const CONTEST_STORAGE_KEY = 'workrank:group-contests:v1';
+const POMODORO_HISTORY_KEY = 'workrank:pomodoro-history';
+const POMODORO_SYNC_EVENT = 'workrank:pomodoro-sync';
+const POMODORO_COMPLETION_LOCK_KEY = 'workrank:pomodoro-completion-lock';
+const POMODORO_TASK_COMPLETION_LOCK_KEY = 'workrank:pomodoro-task-completion-lock';
+const POMODORO_TASKS_KEY = 'workrank:pomodoro-tasks';
+const POMODORO_ACTIVE_TASK_KEY = 'workrank:pomodoro-active-task';
+const POMODORO_HISTORY_MAX = 300;
 const ACTION_MILESTONES = [500, 1000, 2500, 5000, 10000, 25000, 50000];
+
+const POMODORO_PRESETS = {
+  classic: { key: 'classic', focusSeconds: 25 * 60, shortBreakSeconds: 5 * 60, longBreakSeconds: 15 * 60 },
+  deep: { key: 'deep', focusSeconds: 50 * 60, shortBreakSeconds: 10 * 60, longBreakSeconds: 25 * 60 },
+  sprint: { key: 'sprint', focusSeconds: 15 * 60, shortBreakSeconds: 3 * 60, longBreakSeconds: 10 * 60 },
+};
+
+const POMODORO_MODE_LABELS = {
+  focus: 'Tập trung',
+  shortBreak: 'Nghỉ ngắn',
+  longBreak: 'Nghỉ dài',
+};
+
+function getPomodoroPreset(key) {
+  return POMODORO_PRESETS[key] || POMODORO_PRESETS.classic;
+}
+
+function getPomodoroModeSeconds(preset, mode) {
+  if (mode === 'longBreak') return preset.longBreakSeconds;
+  if (mode === 'shortBreak') return preset.shortBreakSeconds;
+  return preset.focusSeconds;
+}
+
+function pomodoroCompletionKey(state) {
+  return [
+    state.presetKey || 'classic',
+    state.mode || 'focus',
+    state.endsAt || 'manual',
+    Math.max(0, Number(state.completedFocusCount || 0)),
+  ].join(':');
+}
+
+function reservePomodoroCompletion(state) {
+  try {
+    const key = pomodoroCompletionKey(state);
+    const existing = JSON.parse(localStorage.getItem(POMODORO_COMPLETION_LOCK_KEY) || '{}');
+    if (existing.key === key) return false;
+    localStorage.setItem(POMODORO_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function reservePomodoroTaskCompletion(state) {
+  try {
+    const key = pomodoroCompletionKey(state);
+    const existing = JSON.parse(localStorage.getItem(POMODORO_TASK_COMPLETION_LOCK_KEY) || '{}');
+    if (existing.key === key) return false;
+    localStorage.setItem(POMODORO_TASK_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function savePomodoroHistoryEntry(entry) {
+  try {
+    const history = JSON.parse(localStorage.getItem(POMODORO_HISTORY_KEY) || '[]');
+    if (!Array.isArray(history)) return;
+    history.push(entry);
+    if (history.length > POMODORO_HISTORY_MAX) history.splice(0, history.length - POMODORO_HISTORY_MAX);
+    localStorage.setItem(POMODORO_HISTORY_KEY, JSON.stringify(history));
+  } catch {}
+}
+
+function completeActivePomodoroTask(state, completedAt = Date.now()) {
+  try {
+    if (!reservePomodoroTaskCompletion(state)) return;
+    const activeTaskId = localStorage.getItem(POMODORO_ACTIVE_TASK_KEY);
+    if (!activeTaskId) return;
+    const tasks = JSON.parse(localStorage.getItem(POMODORO_TASKS_KEY) || '[]');
+    if (!Array.isArray(tasks)) return;
+    const nextTasks = tasks.map((task) => {
+      if (!task || task.id !== activeTaskId || task.completed) return task;
+      const sessions = Math.min(999, Number(task.sessions || 0) + 1);
+      const estimate = Math.max(1, Number(task.estimate || 1));
+      return {
+        ...task,
+        sessions,
+        completed: sessions >= estimate,
+        completedAt: sessions >= estimate ? completedAt : task.completedAt,
+      };
+    });
+    localStorage.setItem(POMODORO_TASKS_KEY, JSON.stringify(nextTasks));
+  } catch {}
+}
+
+function writePomodoroState(state) {
+  localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent(POMODORO_SYNC_EVENT, { detail: state }));
+}
+
+function completeStoredPomodoroStep(state, now = Date.now()) {
+  const preset = getPomodoroPreset(state.presetKey);
+  const mode = POMODORO_MODE_LABELS[state.mode] ? state.mode : 'focus';
+  const shouldNotify = reservePomodoroCompletion(state);
+  const completedFocusCount = mode === 'focus'
+    ? Number(state.completedFocusCount || 0) + 1
+    : Number(state.completedFocusCount || 0);
+  const nextMode = mode === 'focus'
+    ? (completedFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
+    : 'focus';
+  const totalSeconds = getPomodoroModeSeconds(preset, mode);
+  const elapsedSeconds = totalSeconds - Math.max(0, Number(state.remainingSeconds || 0));
+  const nextSeconds = getPomodoroModeSeconds(preset, nextMode);
+
+  if (shouldNotify && elapsedSeconds >= 10) {
+    savePomodoroHistoryEntry({
+      at: now,
+      mode,
+      elapsed: elapsedSeconds,
+      total: totalSeconds,
+      preset: preset.key,
+    });
+    if (mode === 'focus') completeActivePomodoroTask(state, now);
+  }
+
+  const nextState = {
+    ...state,
+    presetKey: preset.key,
+    mode: nextMode,
+    remainingSeconds: nextSeconds,
+    running: true,
+    completedFocusCount,
+    completedAt: now,
+    startedOnce: true,
+    endsAt: now + nextSeconds * 1000,
+    notified: true,
+  };
+
+  writePomodoroState(nextState);
+
+  if (shouldNotify) {
+    const nextModeLabel = POMODORO_MODE_LABELS[nextMode] || 'phiên tiếp theo';
+    window.dispatchEvent(new CustomEvent(WORKRANK_NOTIFICATION_EVENT, {
+      detail: {
+        type: 'pomodoro',
+        title: mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
+        message: mode === 'focus'
+          ? `Đến giờ ${nextModeLabel.toLowerCase()}. Pomodoro đang tự chạy phiên tiếp theo.`
+          : 'Pomodoro đang tự quay lại phiên tập trung tiếp theo.',
+        actionTo: '/pomodoro',
+        actionLabel: 'Mở Pomodoro',
+        playSound: true,
+        vibrate: true,
+      },
+    }));
+  }
+
+  return { state: nextState, changed: true, completed: true };
+}
+
+function reconcileStoredPomodoroState({ updateRunningState = true, completeExpired = true } = {}) {
+  try {
+    const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.running) return { state: parsed, changed: false, completed: false };
+
+    const preset = getPomodoroPreset(parsed.presetKey);
+    const mode = POMODORO_MODE_LABELS[parsed.mode] ? parsed.mode : 'focus';
+    const fallbackRemaining = getPomodoroModeSeconds(preset, mode);
+    let endsAt = Number(parsed.endsAt || 0);
+    let changed = false;
+
+    if (!endsAt) {
+      const remaining = Math.max(1, Number(parsed.remainingSeconds || fallbackRemaining));
+      endsAt = Date.now() + remaining * 1000;
+      parsed.endsAt = endsAt;
+      changed = true;
+    }
+
+    const remainingSeconds = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    if (remainingSeconds <= 0) {
+      if (!completeExpired) return { state: parsed, changed: false, completed: false };
+      return completeStoredPomodoroStep({
+        ...parsed,
+        presetKey: preset.key,
+        mode,
+        remainingSeconds: 0,
+      });
+    }
+
+    if (!updateRunningState) return { state: parsed, changed: false, completed: false };
+
+    if (
+      changed
+      || Number(parsed.remainingSeconds || 0) !== remainingSeconds
+      || parsed.presetKey !== preset.key
+      || parsed.mode !== mode
+    ) {
+      const nextState = {
+        ...parsed,
+        presetKey: preset.key,
+        mode,
+        remainingSeconds,
+        endsAt,
+        completedAt: 0,
+        notified: false,
+      };
+      writePomodoroState(nextState);
+      return { state: nextState, changed: true, completed: false };
+    }
+
+    return { state: parsed, changed: false, completed: false };
+  } catch {
+    return null;
+  }
+}
+
+function pomodoroSocketPayload(state = {}) {
+  const preset = getPomodoroPreset(state.presetKey);
+  const mode = POMODORO_MODE_LABELS[state.mode] ? state.mode : 'focus';
+  const totalSeconds = getPomodoroModeSeconds(preset, mode);
+  const completedFocusCount = Math.max(0, Number(state.completedFocusCount || 0));
+  const cycle = mode === 'longBreak'
+    ? 4
+    : Math.max(1, Math.min(4, (completedFocusCount % 4) + 1));
+  return {
+    presetKey: preset.key,
+    mode,
+    label: POMODORO_MODE_LABELS[mode],
+    remainingSeconds: Math.max(0, Number(state.remainingSeconds || 0)),
+    totalSeconds,
+    running: Boolean(state.running),
+    endsAt: state.endsAt || null,
+    completedFocusCount,
+    cycle,
+  };
+}
 
 function notificationStorageKey(userId) {
   return `workrank:notifications:${userId || 'guest'}`;
@@ -54,7 +288,7 @@ function notificationStorageKey(userId) {
 function loadNotifications(userId) {
   try {
     const parsed = JSON.parse(localStorage.getItem(notificationStorageKey(userId)) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter((notification) => notification?.type !== 'contest') : [];
   } catch {
     return [];
   }
@@ -85,7 +319,6 @@ function notificationTone(type) {
   if (type === 'warning' || type === 'security') return { dot: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
   if (type === 'danger') return { dot: '#dc2626', bg: 'rgba(220,38,38,0.08)' };
   if (type === 'success' || type === 'pomodoro') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
-  if (type === 'contest') return { dot: '#d97706', bg: 'rgba(217,119,6,0.1)' };
   return { dot: '#38bdf8', bg: 'rgba(56,189,248,0.08)' };
 }
 
@@ -111,6 +344,7 @@ export default function Layout() {
   const [appSettings, setAppSettings] = useState(getAppSettings);
   const dropRef = useRef(null);
   const notificationRef = useRef(null);
+  const pomodoroEmitRef = useRef(0);
 
   const addNotification = useCallback((item) => {
     if (!user?.id) return;
@@ -244,22 +478,26 @@ export default function Layout() {
   useEffect(() => {
     const handler = (event) => {
       const detail = event.detail || {};
-      addNotification(detail);
       const allowed = shouldStoreNotification(detail.type || 'info', appSettings);
-      if (!allowed) return;
-      if (document.hidden && ('Notification' in window)) {
-        requestNotificationPermission().then((permission) => {
-          if (permission === 'granted') {
-            sendBrowserNotification(detail.title || 'WorkRank', {
-              body: detail.message || '',
-              tag: detail.dedupeKey || `notif-${Date.now()}`,
-              data: { url: detail.actionTo || '/' },
-            });
-          }
-        });
+      if (allowed) {
+        addNotification(detail);
+        if (document.hidden && ('Notification' in window)) {
+          requestNotificationPermission().then((permission) => {
+            if (permission === 'granted') {
+              sendBrowserNotification(detail.title || 'WorkRank', {
+                body: detail.message || '',
+                tag: detail.dedupeKey || `notif-${Date.now()}`,
+                data: { url: detail.actionTo || '/' },
+              });
+            }
+          });
+        }
       }
       if (detail.type === 'pomodoro') {
-        vibrateDevice([200, 100, 200]);
+        if (detail.playSound && appSettings.notifications?.sound) {
+          playPomodoroChime(appSettings.pomodoro?.volume ?? 0.12);
+        }
+        if (detail.vibrate !== false) vibrateDevice([180]);
       }
     };
     window.addEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
@@ -314,36 +552,43 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) return undefined;
-    const checkContests = () => {
-      try {
-        const contests = JSON.parse(localStorage.getItem(CONTEST_STORAGE_KEY) || '[]');
-        if (!Array.isArray(contests)) return;
-        contests.forEach((contest) => {
-          const inContest = [...(contest.teamA || []), ...(contest.teamB || [])]
-            .some((member) => String(member.id) === String(user.id));
-          if (!inContest || new Date(contest.endAt).getTime() > Date.now()) return;
-          addNotification({
-            type: 'contest',
-            title: 'Cuộc thi đã kết thúc',
-            message: `${contest.name || 'Cuộc thi nhóm'} đã đến giờ chốt điểm. Vào trang Nhóm để cập nhật kết quả.`,
-            actionTo: '/groups',
-            actionLabel: 'Xem cuộc thi',
-            dedupeKey: `contest-ended:${contest.id}:${user.id}`,
-          });
-        });
-      } catch {
-        // Ignore malformed local contest cache.
-      }
+    const emitPomodoroState = (state, force = false) => {
+      if (!socket || !state) return;
+      const now = Date.now();
+      if (!force && now - pomodoroEmitRef.current < 5000) return;
+      pomodoroEmitRef.current = now;
+      socket.emit('pomodoro:state', pomodoroSocketPayload(state));
     };
-    checkContests();
-    const timer = window.setInterval(checkContests, 30000);
-    window.addEventListener('storage', checkContests);
+
+    const tickPomodoro = (forceEmit = false) => {
+      const shouldOwnTick = location.pathname !== '/pomodoro' || document.hidden;
+      const result = reconcileStoredPomodoroState({
+        updateRunningState: shouldOwnTick,
+        completeExpired: shouldOwnTick,
+      });
+      if (!result?.state) return;
+      emitPomodoroState(result.state, forceEmit || result.completed);
+    };
+
+    const handleWake = () => tickPomodoro(true);
+    const handleStorage = (event) => {
+      if (event.key === POMODORO_STORAGE_KEY) tickPomodoro(true);
+    };
+
+    tickPomodoro(true);
+    const interval = window.setInterval(() => tickPomodoro(false), 1000);
+    window.addEventListener('focus', handleWake);
+    window.addEventListener('pageshow', handleWake);
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleWake);
     return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('storage', checkContests);
+      window.clearInterval(interval);
+      window.removeEventListener('focus', handleWake);
+      window.removeEventListener('pageshow', handleWake);
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleWake);
     };
-  }, [addNotification, user?.id]);
+  }, [location.pathname, socket]);
 
   useEffect(() => {
     if (!user?.id || tracking || trackingPending || location.pathname === '/tracker' || !appSettings.notifications?.trackerIdle) return undefined;
@@ -712,7 +957,7 @@ export default function Layout() {
                 <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                   {notifications.length === 0 ? (
                     <div style={{ padding: 18, color: '#64748b', fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>
-                      Các thông báo cá nhân như Pomodoro, mốc thao tác, cuộc thi nhóm và trạng thái tracker sẽ xuất hiện ở đây.
+                      Các thông báo cá nhân như Pomodoro, mốc thao tác và trạng thái tracker sẽ xuất hiện ở đây.
                     </div>
                   ) : notifications.map((notification) => {
                     const tone = notificationTone(notification.type);

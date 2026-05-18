@@ -6,7 +6,6 @@ export const DEFAULT_APP_SETTINGS = {
     activityMilestones: true,
     trackerIdle: true,
     pomodoro: true,
-    contests: true,
     security: true,
     sound: true,
   },
@@ -78,7 +77,6 @@ export function shouldStoreNotification(type, settings = getAppSettings()) {
   if (type === 'success') return notifications.activityMilestones;
   if (type === 'warning') return notifications.trackerIdle;
   if (type === 'pomodoro') return notifications.pomodoro;
-  if (type === 'contest') return notifications.contests;
   if (type === 'security' || type === 'danger') return notifications.security;
   return true;
 }

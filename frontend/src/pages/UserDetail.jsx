@@ -15,7 +15,7 @@ import {
   CalendarDays,
   ChevronLeft,
   Clock3,
-  Code,
+  Code2,
   Crown,
   Flame,
   Gauge,
@@ -59,7 +59,7 @@ const PRIVILEGE_BADGE_ALIASES = {
 };
 
 const PRIVILEGE_BADGES = [
-  { label: DEV_PRIVILEGE_LABEL, desc: 'Huy hiệu Dev do admin cấp', icon: Code, unlocked: true, privilege: true },
+  { label: DEV_PRIVILEGE_LABEL, desc: 'Huy hiệu Dev do admin cấp', icon: Code2, unlocked: true, privilege: true },
   { label: 'Người đóng góp', desc: 'Đóng góp cho cộng đồng WorkRank', icon: Medal, unlocked: true, privilege: true },
   { label: 'Nhà sáng lập', desc: 'Tài khoản sáng lập hoặc vận hành', icon: Trophy, unlocked: true, privilege: true },
   { label: 'Thành viên VIP', desc: 'Hồ sơ được ưu tiên hiển thị', icon: Crown, unlocked: true, privilege: true },
@@ -828,8 +828,8 @@ function VerifiedMark({ size = 20 }) {
 
 function DevPill() {
   return (
-    <span className="profile-dev-pill" title="< > Dev" aria-label="Huy hiệu < > Dev">
-      <span className="profile-dev-mark" aria-hidden="true">&lt; &gt;</span>
+    <span className="profile-dev-pill" title="Dev" aria-label="Huy hiệu Dev">
+      <Code2 className="profile-dev-mark" size={13} strokeWidth={2.7} aria-hidden="true" />
       <span className="profile-dev-label">Dev</span>
     </span>
   );

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
-  BadgeCheck,
   Bell,
   Bot,
   CheckCircle2,
@@ -485,13 +484,6 @@ export default function Settings() {
               onChange={(value) => updateSetting('notifications', 'pomodoro', value)}
             />
             <ToggleRow
-              icon={BadgeCheck}
-              title="Cuộc thi nhóm"
-              desc="Thông báo khi cuộc thi nhóm đến giờ chốt điểm."
-              checked={settingValue(settings, 'notifications', 'contests')}
-              onChange={(value) => updateSetting('notifications', 'contests', value)}
-            />
-            <ToggleRow
               icon={AlertTriangle}
               title="Cảnh báo bảo mật"
               desc="Thông báo khi thiết bị bị khóa hoặc có hoạt động nghi vấn."
@@ -619,7 +611,7 @@ export default function Settings() {
           <div className="settings-link-grid">
             <button type="button" onClick={() => navigate(`/users/${user?.id}`)}>Hồ sơ cá nhân</button>
             <button type="button" onClick={() => navigate('/tracker')}>Desktop Tracker</button>
-            <button type="button" onClick={() => navigate('/groups')}>Nhóm làm việc</button>
+            <button type="button" onClick={() => navigate('/friends')}>Bạn bè</button>
             {isAdmin && <button type="button" onClick={() => navigate('/security')}>Bảo mật hệ thống</button>}
           </div>
         </SettingSection>

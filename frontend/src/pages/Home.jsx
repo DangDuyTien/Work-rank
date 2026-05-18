@@ -50,7 +50,7 @@ const features = [
 const leaderboardRows = [
   { rank: 1, name: 'Đặng Duy Tiến', score: '4,314', badge: 'Dev' },
   { rank: 2, name: 'Minh Anh', score: '3,280', badge: 'Top ngày' },
-  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Nhóm A' },
+  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Bạn bè' },
 ];
 
 const timeline = [
@@ -104,7 +104,7 @@ export default function Home() {
           <Link to="/leaderboard">Xếp hạng</Link>
           <Link to="/pomodoro">Pomodoro</Link>
           <Link to="/tracker">Tracker</Link>
-          <Link to="/groups">Nhóm</Link>
+          <Link to="/friends">Bạn bè</Link>
         </nav>
         <Link className="wr-home-nav-action" to={primaryTo}>
           {isSignedIn ? firstName(user) : 'Vào app'}
@@ -189,7 +189,7 @@ export default function Home() {
             <span> realtime workspace tracker</span>
           </h1>
           <p data-wr-reveal>
-            Dashboard gọn cho team muốn xem nhịp làm việc, xếp hạng, Pomodoro và trạng thái tracker trong một nơi.
+            Dashboard gọn để xem nhịp làm việc, bạn bè, xếp hạng, Pomodoro và trạng thái tracker trong một nơi.
           </p>
           <div className="wr-home-actions" data-wr-reveal>
             <Link className="wr-home-primary" to={primaryTo}>
@@ -251,7 +251,7 @@ export default function Home() {
       <section className="wr-home-section wr-feature-section" data-wr-reveal>
         <div className="wr-section-head">
           <span className="wr-section-kicker">Workspace</span>
-          <h2>Đủ công cụ cho team vận hành hằng ngày.</h2>
+          <h2>Đủ công cụ để theo dõi nhịp làm việc hằng ngày.</h2>
         </div>
         <div className="wr-feature-grid">
           {features.map((feature) => {
@@ -270,7 +270,7 @@ export default function Home() {
       <section className="wr-home-section wr-workflow-section" data-wr-reveal>
         <div className="wr-workflow-copy">
           <span className="wr-section-kicker">Flow</span>
-          <h2>Một màn hình đủ để biết team đang chạy ra sao.</h2>
+          <h2>Một màn hình đủ để biết bạn bè đang chạy ra sao.</h2>
         </div>
         <div className="wr-workflow-list">
           <div>
@@ -285,8 +285,8 @@ export default function Home() {
           </div>
           <div>
             <span><Users size={17} /></span>
-            <strong>Team theo dõi</strong>
-            <p>Dashboard, nhóm và leaderboard lấy dữ liệu phân trang đã tối ưu.</p>
+            <strong>Bạn bè theo dõi</strong>
+            <p>Dashboard, bạn bè và leaderboard lấy dữ liệu phân trang đã tối ưu.</p>
           </div>
         </div>
       </section>

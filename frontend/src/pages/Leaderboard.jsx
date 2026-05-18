@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { leaderboard as leaderboardApi, groups as groupsApi, users as usersApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { leaderboard as leaderboardApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import { calculateRankScore } from '../utils/scoring';
-import { ArrowRight, BadgeCheck, CheckCheck, ChevronLeft, ChevronRight, Code, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, CheckCheck, ChevronLeft, ChevronRight, Code2, Crown, Flame, Globe2, Medal, Search, ShieldCheck, Sparkles, Trophy, UserCheck } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import usePageVisibility from '../hooks/usePageVisibility';
 
@@ -77,7 +77,13 @@ const AVATAR_GRADS = [
 ];
 
 const BADGE_STYLES = {
-  dev: { bg: 'rgba(236,254,255,0.96)', border: 'rgba(34,211,238,0.62)', color: '#075985', icon: Code },
+  dev: {
+    bg: 'linear-gradient(180deg, rgba(255,255,255,0.99), rgba(246,252,255,0.96))',
+    border: 'rgba(125,211,252,0.34)',
+    color: '#0284c7',
+    icon: Code2,
+    shadow: '0 1px 0 rgba(255,255,255,0.96) inset, 0 8px 18px rgba(15,23,42,0.06), 0 0 20px rgba(125,211,252,0.16)',
+  },
   partner: { bg: 'rgba(236,253,245,0.98)', border: 'rgba(20,184,166,0.5)', color: '#047857', icon: ShieldCheck },
   champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
   weekly: { bg: 'rgba(56,189,248,0.12)', border: 'rgba(56,189,248,0.26)', color: '#38bdf8', icon: Medal },
@@ -265,29 +271,23 @@ function devRankerStyle(user, variant = 'row') {
   }
   if (variant === 'table') {
     return {
-      background: 'rgba(236,254,255,0.98)',
-      backgroundSize: '220% 100%',
-      boxShadow: 'none',
-      animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+      background: 'rgba(255,255,255,0.98)',
+      boxShadow: '0 10px 24px rgba(15,23,42,0.04), 0 0 18px rgba(125,211,252,0.07)',
     };
   }
   if (variant === 'podium') {
     return {
       padding: '10px 8px 0',
       borderRadius: 0,
-      border: '1px solid rgba(34,211,238,0.58)',
-      background: 'rgba(236,254,255,0.88)',
-      backgroundSize: '160% 160%, 220% 100%',
-      boxShadow: 'none',
-      animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+      border: '1px solid rgba(125,211,252,0.2)',
+      background: 'rgba(255,255,255,0.94)',
+      boxShadow: '0 12px 28px rgba(15,23,42,0.07), 0 0 22px rgba(125,211,252,0.1)',
     };
   }
   return {
-    background: 'rgba(236,254,255,0.94)',
-    backgroundSize: '220% 100%',
-    border: '1px solid rgba(34,211,238,0.52)',
-    boxShadow: 'none',
-    animation: 'leaderboard-dev-frame-flow 7s ease-in-out infinite',
+    background: 'rgba(255,255,255,0.96)',
+    border: '1px solid rgba(125,211,252,0.18)',
+    boxShadow: '0 10px 24px rgba(15,23,42,0.05), 0 0 20px rgba(125,211,252,0.09)',
   };
 }
 
@@ -317,8 +317,8 @@ function RankBadge({ badge, compact = false }) {
   const isDev = badge.style === 'dev';
   return (
     <span
-      title={isDev ? '< > Dev' : badge.label}
-      className={badge.style === 'dev' || badge.style === 'partner' ? 'leaderboard-dev-badge' : undefined}
+      title={isDev ? 'Dev' : badge.label}
+      className={badge.style === 'dev' ? 'leaderboard-dev-badge' : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -334,13 +334,12 @@ function RankBadge({ badge, compact = false }) {
         lineHeight: 1,
         whiteSpace: 'nowrap',
         boxShadow: style.shadow || 'none',
-        ...(badge.style === 'dev' || badge.style === 'partner' ? { backgroundSize: '220% 100%', animation: 'leaderboard-dev-badge-flow 5.4s ease-in-out infinite' } : {}),
       }}
     >
       {isDev ? (
         <>
-          <span className="leaderboard-dev-code" aria-hidden="true">&lt; &gt;</span>
-          <span>Dev</span>
+          <Code2 className="leaderboard-dev-code" size={compact ? 11 : 12} strokeWidth={2.7} aria-hidden="true" />
+          <span className="leaderboard-dev-label">Dev</span>
         </>
       ) : (
         <>
@@ -363,13 +362,10 @@ function localDateKey(value = new Date()) {
 
 export default function Leaderboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { socket, isAdmin, user } = useAuth();
   const pageVisible = usePageVisibility();
-  const searchParams = new URLSearchParams(location.search);
-  const initialGroupId = searchParams.get('groupId');
 
-  const [activeTab, setActiveTab] = useState(initialGroupId ? 'group' : 'global');
+  const [activeTab, setActiveTab] = useState('global');
   const [range, setRange]   = useState('today');
   const [users, setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -384,8 +380,6 @@ export default function Leaderboard() {
   const [totalRanked, setTotalRanked] = useState(0);
   const [serverTotalPages, setServerTotalPages] = useState(1);
 
-  const [myGroups, setMyGroups] = useState([]);
-  const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId || '');
   const requestIdRef = useRef(0);
   const realtimeRefreshRef = useRef(null);
 
@@ -410,26 +404,6 @@ export default function Leaderboard() {
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-  // Fetch groups for the dropdown
-  useEffect(() => {
-    if (activeTab !== 'group' || !pageVisible) return undefined;
-    if (myGroups.length > 0) {
-      if (!selectedGroupId) setSelectedGroupId(myGroups[0].id);
-      return undefined;
-    }
-    const fetchMyGroups = async () => {
-      try {
-        const res = await groupsApi.list();
-        setMyGroups(res.data || []);
-        if (res.data?.length > 0 && !selectedGroupId && activeTab === 'group') {
-          setSelectedGroupId(res.data[0].id);
-        }
-      } catch (err) { console.error(err); }
-    };
-    fetchMyGroups();
-    return undefined;
-  }, [activeTab, myGroups, pageVisible, selectedGroupId]);
-
   const fetchData = async ({ silent = false, force = false } = {}) => {
     if (!force && !pageVisible) return;
     const requestId = requestIdRef.current + 1;
@@ -445,8 +419,6 @@ export default function Leaderboard() {
         res = await leaderboardApi.get(range, query);
       } else if (activeTab === 'friends') {
         res = await leaderboardApi.friends(range, query);
-      } else if (selectedGroupId) {
-        res = await leaderboardApi.group(selectedGroupId, range, query);
       }
       if (res) {
         if (requestId !== requestIdRef.current) return;
@@ -480,20 +452,20 @@ export default function Leaderboard() {
 
   useEffect(() => {
     if (pageVisible) fetchData();
-  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
+  }, [range, activeTab, page, search, pageVisible]);
 
   useEffect(() => {
     if (realtimeRefreshRef.current) {
       window.clearTimeout(realtimeRefreshRef.current);
       realtimeRefreshRef.current = null;
     }
-  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
+  }, [range, activeTab, page, search, pageVisible]);
 
   useEffect(() => {
     if (!pageVisible) return undefined;
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, [range, activeTab, selectedGroupId, page, search, pageVisible]);
+  }, [range, activeTab, page, search, pageVisible]);
 
   useEffect(() => () => {
     if (realtimeRefreshRef.current) {
@@ -546,10 +518,6 @@ export default function Leaderboard() {
     if (!socket || !pageVisible) return undefined;
     const eventBelongsToCurrentView = (data = {}) => {
       if (range === 'today' && data.statDate && data.statDate !== localDateKey()) return false;
-      if (activeTab === 'group') {
-        if (!selectedGroupId) return false;
-        return String(data.teamId || '') === String(selectedGroupId);
-      }
       return true;
     };
 
@@ -631,7 +599,6 @@ export default function Leaderboard() {
       }
     };
     const handleStatus = (data) => {
-      if (activeTab === 'group' && selectedGroupId && data.teamId && String(data.teamId) !== String(selectedGroupId)) return;
       const nextStatus = data.presence || data.presenceStatus || data.status || 'online';
       setUsers(prev => {
         const userId = String(data.userId || data.user_id);
@@ -661,7 +628,7 @@ export default function Leaderboard() {
       socket.off('activity:user:update', handleActivity);
       socket.off('user:status:update', handleStatus);
     };
-  }, [socket, pageVisible, activeTab, selectedGroupId, range, page, search, user?.id]);
+  }, [socket, pageVisible, activeTab, range, page, search, user?.id]);
 
   const top1 = page === 1 && !search ? users[0] : null;
   const top2 = page === 1 && !search ? users[1] : null;
@@ -676,7 +643,7 @@ export default function Leaderboard() {
     borderRadius: 0,
     boxShadow: 'none',
   };
-  const activeTabLabel = activeTab === 'global' ? 'Toàn Cầu' : activeTab === 'friends' ? 'Bạn Bè' : 'Nhóm';
+  const activeTabLabel = activeTab === 'global' ? 'Toàn Cầu' : 'Bạn Bè';
 
   return (
     <div className="leaderboard-page" style={{fontFamily:"'JetBrains Mono', monospace",maxWidth:1100,margin:'0 auto'}}>
@@ -709,12 +676,6 @@ export default function Leaderboard() {
                 color:activeTab==='friends'?'#fff':'#64748b',transition:'all .15s',
                 display:'flex',alignItems:'center',gap:6,
               }}><UserCheck size={14} /> Bạn Bè</button>
-              <button onClick={() => { setActiveTab('group'); setPage(1); }} style={{
-                padding:'7px 18px',borderRadius:0,border:'none',cursor:'pointer',fontSize:12,fontWeight:600,
-                background:activeTab==='group'?'#38bdf8':'transparent',
-                color:activeTab==='group'?'#fff':'#64748b',transition:'all .15s',
-                display:'flex',alignItems:'center',gap:6,
-              }}><Users size={14} /> Nhóm</button>
             </div>
 
             {/* Time Range Filter */}
@@ -813,27 +774,6 @@ export default function Leaderboard() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {activeTab === 'group' && (
-        <div className="leaderboard-group-filter" style={{...CARD, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16}}>
-          <span style={{fontSize: 13, fontWeight: 700, color: '#64748b'}}>CHỌN NHÓM:</span>
-          {myGroups.length > 0 ? (
-            <select 
-              value={selectedGroupId} 
-              onChange={e => { setSelectedGroupId(e.target.value); setPage(1); }}
-              style={{
-                background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
-                color: '#0f172a', padding: '8px 12px', borderRadius: 0, outline: 'none',
-                fontSize: 14, fontWeight: 600, minWidth: 200
-              }}
-            >
-              {myGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          ) : (
-            <div style={{fontSize: 13, color: '#64748b'}}>Bạn chưa tham gia nhóm nào. <span onClick={() => navigate('/groups')} style={{display:'inline-flex',alignItems:'center',gap:4,color: '#38bdf8', cursor: 'pointer', fontWeight: 700}}>Đến trang Nhóm <ArrowRight size={13} /></span></div>
-          )}
         </div>
       )}
 
