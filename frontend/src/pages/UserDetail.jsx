@@ -482,7 +482,7 @@ function buildDailyProfile(dailyStats = [], heatmapData = [], todayStats = {}) {
   const todayKeystrokes = Number(todayStats?.total_keystrokes || 0);
   const todayClicks = Number(todayStats?.total_mouse_clicks || 0);
   const todayActiveSeconds = Number(todayStats?.total_active_seconds || 0);
-  const dailyByDate = new Map();
+  const dailyByDate = new globalThis.Map();
 
   (Array.isArray(dailyStats) ? dailyStats : []).forEach((row) => {
     const date = dailyStatDate(row);
