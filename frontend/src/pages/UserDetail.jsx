@@ -97,37 +97,37 @@ function buildRankTiers() {
   const MAIN_TIERS = [
     {
       name: 'Đồng', title: 'Tân binh tiềm năng',
-      levels: [14, 11, 8, 5, 2],
+      levels: [12, 9, 6, 3, 0],
       color: '#b45309', soft: 'rgba(180,83,9,0.12)', accent2: '#d97706', accent3: '#f97316',
       border: 'rgba(180,83,9,0.3)', baseGlow: 16,
     },
     {
       name: 'Bạc', title: 'Người tăng tốc',
-      levels: [34, 30, 26, 22, 18],
+      levels: [31, 27, 23, 19, 15],
       color: '#64748b', soft: 'rgba(100,116,139,0.11)', accent2: '#94a3b8', accent3: '#cbd5e1',
       border: 'rgba(100,116,139,0.28)', baseGlow: 17,
     },
     {
       name: 'Vàng', title: 'Chiến binh bền bỉ',
-      levels: [59, 54, 49, 44, 39],
+      levels: [55, 50, 45, 40, 35],
       color: '#d97706', soft: 'rgba(217,119,6,0.12)', accent2: '#f59e0b', accent3: '#facc15',
       border: 'rgba(217,119,6,0.32)', baseGlow: 18,
     },
     {
       name: 'Bạch kim', title: 'Cao thủ tập trung',
-      levels: [89, 83, 77, 71, 65],
+      levels: [84, 78, 72, 66, 60],
       color: '#2563eb', soft: 'rgba(37,99,235,0.12)', accent2: '#60a5fa', accent3: '#93c5fd',
       border: 'rgba(37,99,235,0.3)', baseGlow: 19,
     },
     {
       name: 'Kim cương', title: 'Đấu sĩ năng suất',
-      levels: [129, 121, 113, 105, 97],
+      levels: [122, 114, 106, 98, 90],
       color: '#0891b2', soft: 'rgba(8,145,178,0.12)', accent2: '#38bdf8', accent3: '#67e8f9',
       border: 'rgba(8,145,178,0.3)', baseGlow: 21,
     },
     {
       name: 'Huyền thoại', title: 'Huyền thoại WorkRank',
-      levels: [200, 186, 172, 158, 144],
+      levels: [186, 172, 158, 144, 130],
       color: '#7c3aed', soft: 'rgba(124,58,237,0.12)', accent2: '#ec4899', accent3: '#22d3ee',
       border: 'rgba(124,58,237,0.3)', baseGlow: 24,
     },
@@ -138,8 +138,6 @@ function buildRankTiers() {
     const rgb3 = hexToRgb(accent3);
     for (let s = ROMAN.length - 1; s >= 0; s -= 1) {
       const min = levels[ROMAN.length - 1 - s];
-      const maxPrev = s > 0 ? levels[ROMAN.length - s] - 1 : min - 1;
-      const minWithGap = maxPrev + 1;
       const gs = GLOW_SCALE[s];
       const glowSize = Math.round(baseGlow * gs);
       const glowAlpha = (0.10 + s * 0.018).toFixed(2);
@@ -147,7 +145,7 @@ function buildRankTiers() {
       const badgeAlpha = (0.09 + s * 0.016).toFixed(2);
       const borderAlpha = Math.min(0.48, 0.22 + s * 0.06).toFixed(2);
       tiers.push({
-        min: Math.max(0, minWithGap > 0 ? minWithGap : min),
+        min: Math.max(0, min),
         tier: `${name} ${ROMAN[s]}`,
         title: `${baseTitle} ${ROMAN[s]}`,
         color,

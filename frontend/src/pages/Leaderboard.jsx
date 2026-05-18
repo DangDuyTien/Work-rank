@@ -139,10 +139,10 @@ function focusMilestoneBadge(focusScore) {
 function levelTierBadge(level) {
   const lvl = Math.max(0, Math.floor(Number(level || 0)));
   if (lvl >= 130) return { key: 'tier-legend', label: 'Huyền thoại', style: 'rankLegend' };
-  if (lvl >= 70) return { key: 'tier-diamond', label: 'Kim cương', style: 'rankDiamond' };
-  if (lvl >= 35) return { key: 'tier-platinum', label: 'Bạch kim', style: 'levelTier' };
-  if (lvl >= 20) return { key: 'tier-gold', label: 'Vàng', style: 'volumeGold' };
-  if (lvl >= 10) return { key: 'tier-silver', label: 'Bạc', style: 'volumeSilver' };
+  if (lvl >= 90) return { key: 'tier-diamond', label: 'Kim cương', style: 'rankDiamond' };
+  if (lvl >= 60) return { key: 'tier-platinum', label: 'Bạch kim', style: 'levelTier' };
+  if (lvl >= 35) return { key: 'tier-gold', label: 'Vàng', style: 'volumeGold' };
+  if (lvl >= 15) return { key: 'tier-silver', label: 'Bạc', style: 'volumeSilver' };
   if (lvl >= 1) return { key: 'tier-bronze', label: 'Đồng', style: 'volumeBronze' };
   return null;
 }
