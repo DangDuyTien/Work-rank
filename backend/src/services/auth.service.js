@@ -6,6 +6,8 @@ const { User, UserProfilePreference } = require('../models');
 const { signAccessToken, signRefreshToken } = require('../utils/token');
 const sanitizeUser = require('../utils/sanitizeUser');
 
+const ACCOUNT_LOCKED_MESSAGE = 'Tài khoản đã bị khóa. Inbox Facebook để được mở nếu đây là lỗi.';
+
 async function userPayload(user) {
   const payload = sanitizeUser(user);
   const preference = await UserProfilePreference.findByPk(user.id);
@@ -36,6 +38,11 @@ async function register({ name, email, password, teamId }) {
 
 async function login({ email, password }) {
   const user = await User.findOne({ where: { email } });
+  if (user && user.status !== 'active') {
+    const error = new Error(ACCOUNT_LOCKED_MESSAGE);
+    error.statusCode = 403;
+    throw error;
+  }
   const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
   if (!valid) {
     const error = new Error('Invalid email or password');
@@ -54,13 +61,19 @@ async function refresh(refreshToken) {
   try {
     const payload = jwt.verify(refreshToken, env.refreshTokenSecret);
     const user = await User.findByPk(payload.sub);
-    if (!user || user.status !== 'active') {
+    if (!user) {
       const error = new Error('User not found or inactive');
       error.statusCode = 401;
       throw error;
     }
+    if (user.status !== 'active') {
+      const error = new Error(ACCOUNT_LOCKED_MESSAGE);
+      error.statusCode = 403;
+      throw error;
+    }
     return issueTokens(user);
   } catch (err) {
+    if (err.statusCode === 403) throw err;
     const error = new Error('Invalid or expired refresh token');
     error.statusCode = 401;
     throw error;

@@ -305,7 +305,7 @@ function RankBadge({ badge, compact = false }) {
   const isDev = badge.style === 'dev';
   return (
     <span
-      title={isDev ? '<> Dev' : badge.label}
+      title={isDev ? '< > Dev' : badge.label}
       className={badge.style === 'dev' || badge.style === 'partner' ? 'leaderboard-dev-badge' : undefined}
       style={{
         display: 'inline-flex',
@@ -327,7 +327,7 @@ function RankBadge({ badge, compact = false }) {
     >
       {isDev ? (
         <>
-          <span className="leaderboard-dev-code" aria-hidden="true">&lt;&gt;</span>
+          <span className="leaderboard-dev-code" aria-hidden="true">&lt; &gt;</span>
           <span>Dev</span>
         </>
       ) : (

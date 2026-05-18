@@ -62,6 +62,24 @@ test('auth/me trả user hiện tại', async () => {
   assert.ok(res.body.user.email);
 });
 
+test('login tài khoản bị khóa trả hướng dẫn liên hệ Facebook', async () => {
+  const lockedEmail = `locked-${Date.now()}@workrank.local`;
+  const lockedPassword = 'Locked@123456';
+  const passwordHash = await bcrypt.hash(lockedPassword, env.bcryptRounds);
+  await User.create({
+    name: 'Locked User',
+    email: lockedEmail,
+    passwordHash,
+    role: 'user',
+    status: 'inactive',
+  });
+
+  const res = await agent.post('/api/auth/login').send({ email: lockedEmail, password: lockedPassword });
+  assert.equal(res.status, 403, res.text);
+  assert.equal(res.body.message, 'Tài khoản đã bị khóa. Inbox Facebook để được mở nếu đây là lỗi.');
+  assert.equal(res.body.accessToken, undefined);
+});
+
 test('activity batch ký HMAC được nhận', async () => {
   const token = await authToken();
   const deviceUuid = `integration-${Date.now()}`;

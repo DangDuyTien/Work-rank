@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const { User } = require('../models');
 
+const ACCOUNT_LOCKED_MESSAGE = 'Tài khoản đã bị khóa. Inbox Facebook để được mở nếu đây là lỗi.';
+
 async function auth(req, res, next) {
   try {
     const header = req.headers.authorization || '';
@@ -10,7 +12,8 @@ async function auth(req, res, next) {
 
     const payload = jwt.verify(token, env.jwtSecret);
     const user = await User.findByPk(payload.sub);
-    if (!user || user.status !== 'active') return res.status(401).json({ message: 'Invalid user' });
+    if (!user) return res.status(401).json({ message: 'Invalid user' });
+    if (user.status !== 'active') return res.status(403).json({ message: ACCOUNT_LOCKED_MESSAGE });
     req.user = user;
     return next();
   } catch (error) {

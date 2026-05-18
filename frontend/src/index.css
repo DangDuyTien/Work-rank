@@ -3958,15 +3958,20 @@ textarea:focus-visible,
   line-height: 1;
   white-space: nowrap;
   color: var(--dev-ink);
-  background: #ffffff;
-  border: 1px solid transparent;
-  box-shadow: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 254, 255, 0.96) 34%, rgba(125, 211, 252, 0.24) 52%, rgba(255, 255, 255, 0.98) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.44);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.78) inset,
+    0 1px 0 rgba(255, 255, 255, 0.96) inset,
+    0 0 14px rgba(34, 211, 238, 0.28);
   cursor: default;
   position: relative;
   overflow: hidden;
   z-index: 2;
   isolation: isolate;
   transform: translateZ(0);
+  animation: dev-legendary-idle 4.8s ease-in-out infinite;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
@@ -3987,7 +3992,9 @@ textarea:focus-visible,
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0;
-  text-shadow: 0 0 8px rgba(103, 232, 249, 0.32);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95),
+    0 0 9px rgba(34, 211, 238, 0.45);
 }
 
 .profile-dev-icon {
@@ -4007,13 +4014,25 @@ textarea:focus-visible,
   inset: 1px;
   z-index: 0;
   border-radius: inherit;
-  background: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(14, 165, 233, 0.08) 100%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 254, 255, 0.92) 45%, rgba(186, 230, 253, 0.72) 100%);
   opacity: 0.96;
   pointer-events: none;
 }
 
 .profile-dev-pill::after {
-  display: none;
+  content: '';
+  position: absolute;
+  inset: -80% auto -80% -48%;
+  z-index: 1;
+  width: 42%;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 12%, rgba(255, 255, 255, 0.92) 50%, rgba(125, 211, 252, 0.28) 76%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-180%) rotate(14deg);
+  animation: dev-legendary-shimmer 3.6s ease-in-out infinite;
 }
 
 @keyframes dev-legendary-idle {

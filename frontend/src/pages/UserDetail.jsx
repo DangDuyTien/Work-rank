@@ -645,8 +645,8 @@ function VerifiedMark({ size = 20 }) {
 
 function DevPill() {
   return (
-    <span className="profile-dev-pill" title="Huy hiệu Dev" aria-label="Huy hiệu Dev">
-      <span className="profile-dev-mark" aria-hidden="true">&lt;&gt;</span>
+    <span className="profile-dev-pill" title="< > Dev" aria-label="Huy hiệu < > Dev">
+      <span className="profile-dev-mark" aria-hidden="true">&lt; &gt;</span>
       <span className="profile-dev-label">Dev</span>
     </span>
   );

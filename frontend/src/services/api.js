@@ -30,6 +30,11 @@ function clearAuth(options = {}) {
   }
 }
 
+function isAccountLockedResponse(err) {
+  const message = err?.response?.data?.message || err?.response?.data?.error || '';
+  return err?.response?.status === 403 && String(message).includes('Tài khoản đã bị khóa');
+}
+
 function isAuthEndpoint(url = '') {
   return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token'].some((path) => String(url).includes(path));
 }
@@ -211,9 +216,17 @@ api.interceptors.response.use(
         const token = await refreshStoredAuth();
         original.headers = { ...(original.headers || {}), Authorization: `Bearer ${token}` };
         return api(original);
-      } catch {
-        clearAuth({ expired: true });
+      } catch (refreshError) {
+        clearAuth({
+          expired: true,
+          message: refreshError?.response?.data?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+        });
       }
+    } else if (isAccountLockedResponse(err) && !isAuthEndpoint(original.url)) {
+      clearAuth({
+        expired: true,
+        message: err.response?.data?.message,
+      });
     } else if (err.response?.status === 401 && String(original.url || '').includes('/api/auth/refresh-token')) {
       clearAuth({ expired: true });
     }
