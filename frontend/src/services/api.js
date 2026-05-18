@@ -200,6 +200,20 @@ function normalizeFriendship(row = {}) {
   };
 }
 
+function normalizeChatMessage(row = {}) {
+  return {
+    ...row,
+    id: row.id || row.messageId,
+    senderId: row.senderId ?? row.sender_id,
+    receiverId: row.receiverId ?? row.receiver_id,
+    body: String(row.body || ''),
+    clientMessageId: row.clientMessageId || row.client_message_id || '',
+    readAt: row.readAt || row.read_at || null,
+    createdAt: row.createdAt || row.created_at || new Date().toISOString(),
+    updatedAt: row.updatedAt || row.updated_at || row.createdAt || row.created_at || new Date().toISOString(),
+  };
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -436,6 +450,31 @@ export const friends = {
   decline: (requestId) => api.post(`/api/friends/requests/${requestId}/decline`),
   cancel: (requestId) => api.delete(`/api/friends/requests/${requestId}`),
   remove: (userId) => api.delete(`/api/friends/${userId}`),
+};
+
+export const chats = {
+  unreadCounts: async () => {
+    const res = await api.get('/api/chats/unread-counts');
+    return { ...res, data: res.data?.data || {} };
+  },
+  messages: async (friendId, options = {}) => {
+    const params = new URLSearchParams();
+    if (options.limit) params.set('limit', String(options.limit));
+    if (options.beforeId) params.set('beforeId', String(options.beforeId));
+    const qs = params.toString();
+    const res = await api.get(`/api/chats/${friendId}/messages${qs ? `?${qs}` : ''}`);
+    return {
+      ...res,
+      data: unwrapArray(res.data).map(normalizeChatMessage),
+      pagination: res.data?.pagination || { hasMore: false, nextBeforeId: null },
+    };
+  },
+  send: async (friendId, data) => {
+    const res = await api.post(`/api/chats/${friendId}/messages`, data);
+    return { ...res, data: normalizeChatMessage(res.data?.data || res.data || {}) };
+  },
+  markRead: (friendId) => api.post(`/api/chats/${friendId}/read`),
+  normalizeMessage: normalizeChatMessage,
 };
 
 export const users = {

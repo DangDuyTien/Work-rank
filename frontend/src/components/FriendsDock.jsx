@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, Eye, MessageCircle, Search, UserCheck, UserPlus, Users, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Eye, MessageCircle, Search, Send, UserPlus, Users, X } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import { useAuth } from '../context/AuthContext';
-import { friends as friendsApi, users as usersApi } from '../services/api';
+import { chats as chatsApi, friends as friendsApi, users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
 
@@ -46,6 +46,25 @@ function patchUserRows(rows, patchUser) {
     return patched;
   });
   return changed ? next : rows;
+}
+
+function chatMessageKey(message = {}) {
+  return String(message.id || message.clientMessageId || `${message.senderId || ''}:${message.createdAt || ''}`);
+}
+
+function mergeChatMessages(current = [], incoming = []) {
+  const byKey = new Map();
+  [...current, ...incoming].forEach((message) => {
+    const key = chatMessageKey(message);
+    if (!key) return;
+    const previous = byKey.get(key);
+    byKey.set(key, { ...(previous || {}), ...message });
+  });
+  return [...byKey.values()].sort((a, b) => {
+    const idDelta = Number(a.id || 0) - Number(b.id || 0);
+    if (Number.isFinite(idDelta) && idDelta !== 0) return idDelta;
+    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+  });
 }
 
 function Avatar({ user }) {
@@ -94,7 +113,27 @@ export default function FriendsDock() {
   const [query, setQuery] = useState('');
   const [busyKey, setBusyKey] = useState('');
   const [error, setError] = useState('');
+  const [activeChatUser, setActiveChatUser] = useState(null);
+  const [messagesByUser, setMessagesByUser] = useState({});
+  const [chatMetaByUser, setChatMetaByUser] = useState({});
+  const [chatInput, setChatInput] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [typingByUser, setTypingByUser] = useState({});
   const searchRequestRef = useRef(0);
+  const chatScrollRef = useRef(null);
+  const skipNextChatScrollRef = useRef(false);
+  const typingTimersRef = useRef({});
+  const typingLastSentRef = useRef(0);
+  const typingStopTimerRef = useRef(null);
+
+  const activeChatUserId = activeChatUser ? userIdOf(activeChatUser) : '';
+  const activeChatMessages = activeChatUserId ? (messagesByUser[activeChatUserId] || []) : [];
+  const activeChatMeta = activeChatUserId ? (chatMetaByUser[activeChatUserId] || {}) : {};
+  const unreadTotal = useMemo(
+    () => Object.values(unreadCounts).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0),
+    [unreadCounts]
+  );
 
   const loadData = useCallback(async () => {
     setError('');
@@ -114,9 +153,81 @@ export default function FriendsDock() {
     }
   }, []);
 
+  const loadUnreadCounts = useCallback(async () => {
+    try {
+      const res = await chatsApi.unreadCounts();
+      setUnreadCounts(res.data || {});
+    } catch {
+      setUnreadCounts({});
+    }
+  }, []);
+
+  const patchChatMeta = useCallback((targetId, patch) => {
+    setChatMetaByUser((prev) => ({
+      ...prev,
+      [targetId]: { ...(prev[targetId] || {}), ...(typeof patch === 'function' ? patch(prev[targetId] || {}) : patch) },
+    }));
+  }, []);
+
+  const loadChatMessages = useCallback(async (targetId, { older = false } = {}) => {
+    if (!targetId) return;
+    const currentMeta = chatMetaByUser[targetId] || {};
+    if (older && (!currentMeta.hasMore || currentMeta.loadingMore)) return;
+    if (older) skipNextChatScrollRef.current = true;
+    patchChatMeta(targetId, older ? { loadingMore: true, error: '' } : { loading: true, error: '' });
+    try {
+      const res = await chatsApi.messages(targetId, {
+        limit: 36,
+        beforeId: older ? currentMeta.nextBeforeId : null,
+      });
+      setMessagesByUser((prev) => ({
+        ...prev,
+        [targetId]: mergeChatMessages(older ? (res.data || []) : [], older ? (prev[targetId] || []) : (res.data || [])),
+      }));
+      patchChatMeta(targetId, {
+        loading: false,
+        loadingMore: false,
+        loaded: true,
+        hasMore: Boolean(res.pagination?.hasMore),
+        nextBeforeId: res.pagination?.nextBeforeId || null,
+      });
+    } catch (err) {
+      patchChatMeta(targetId, {
+        loading: false,
+        loadingMore: false,
+        error: err.response?.data?.message || 'Không tải được tin nhắn.',
+      });
+    }
+  }, [chatMetaByUser, patchChatMeta]);
+
+  const markConversationRead = useCallback((targetId) => {
+    if (!targetId) return;
+    setUnreadCounts((prev) => ({ ...prev, [targetId]: 0 }));
+    if (socket?.connected) {
+      socket.emit('chat:read', { friendId: targetId });
+    } else {
+      chatsApi.markRead(targetId).catch(() => {});
+    }
+  }, [socket]);
+
+  const openChat = useCallback((targetUser) => {
+    const targetId = userIdOf(targetUser);
+    if (!targetId) return;
+    setActiveChatUser(targetUser);
+    setQuery('');
+    setError('');
+    setChatInput('');
+    markConversationRead(targetId);
+    const meta = chatMetaByUser[targetId] || {};
+    if (!meta.loaded && !meta.loading) {
+      void loadChatMessages(targetId);
+    }
+  }, [chatMetaByUser, loadChatMessages, markConversationRead]);
+
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadUnreadCounts();
+  }, [loadData, loadUnreadCounts]);
 
   useEffect(() => {
     localStorage.setItem('workrank:friends-dock-open', open ? '1' : '0');
@@ -137,10 +248,89 @@ export default function FriendsDock() {
       setIncoming((rows) => patchFriendshipRows(rows, patchUser));
       setOutgoing((rows) => patchFriendshipRows(rows, patchUser));
       setSearchResults((rows) => patchUserRows(rows, patchUser));
+      setActiveChatUser((current) => (current && userIdOf(current) === targetId ? patchUser(current) : current));
     };
     socket.on('user:status:update', updatePresence);
     return () => socket.off('user:status:update', updatePresence);
   }, [socket, pageVisible]);
+
+  useEffect(() => {
+    if (!socket || !pageVisible) return undefined;
+
+    const handleMessage = (payload = {}) => {
+      const message = chatsApi.normalizeMessage(payload);
+      const authId = String(authUser?.id || '');
+      const senderId = String(message.senderId || '');
+      const receiverId = String(message.receiverId || '');
+      const otherId = senderId === authId ? receiverId : senderId;
+      if (!otherId) return;
+
+      setMessagesByUser((prev) => ({
+        ...prev,
+        [otherId]: mergeChatMessages(prev[otherId] || [], [message]),
+      }));
+
+      if (senderId !== authId) {
+        if (activeChatUserId === otherId) {
+          markConversationRead(otherId);
+        } else {
+          setUnreadCounts((prev) => ({ ...prev, [otherId]: Math.max(0, Number(prev[otherId] || 0)) + 1 }));
+        }
+      }
+    };
+
+    const handleRead = (payload = {}) => {
+      const readerId = String(payload.readerId || '');
+      if (!readerId) return;
+      setMessagesByUser((prev) => {
+        const rows = prev[readerId] || [];
+        if (!rows.length) return prev;
+        return {
+          ...prev,
+          [readerId]: rows.map((message) => (
+            String(message.senderId || '') === String(authUser?.id || '')
+              ? { ...message, readAt: message.readAt || payload.readAt || new Date().toISOString() }
+              : message
+          )),
+        };
+      });
+    };
+
+    const handleTyping = (payload = {}) => {
+      const fromId = String(payload.fromUserId || '');
+      if (!fromId) return;
+      window.clearTimeout(typingTimersRef.current[fromId]);
+      setTypingByUser((prev) => ({ ...prev, [fromId]: payload.isTyping !== false }));
+      if (payload.isTyping !== false) {
+        typingTimersRef.current[fromId] = window.setTimeout(() => {
+          setTypingByUser((prev) => ({ ...prev, [fromId]: false }));
+        }, 2600);
+      }
+    };
+
+    socket.on('chat:message', handleMessage);
+    socket.on('chat:read', handleRead);
+    socket.on('chat:typing', handleTyping);
+    return () => {
+      socket.off('chat:message', handleMessage);
+      socket.off('chat:read', handleRead);
+      socket.off('chat:typing', handleTyping);
+    };
+  }, [activeChatUserId, authUser?.id, markConversationRead, pageVisible, socket]);
+
+  useEffect(() => {
+    if (!activeChatUserId || !chatScrollRef.current) return;
+    if (skipNextChatScrollRef.current) {
+      skipNextChatScrollRef.current = false;
+      return;
+    }
+    chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+  }, [activeChatMessages.length, activeChatUserId, typingByUser]);
+
+  useEffect(() => () => {
+    Object.values(typingTimersRef.current).forEach((timer) => window.clearTimeout(timer));
+    window.clearTimeout(typingStopTimerRef.current);
+  }, []);
 
   const connectionMaps = useMemo(() => {
     const friends = new Set(friendRows.map((row) => userIdOf(row.friend)));
@@ -236,6 +426,101 @@ export default function FriendsDock() {
     }
   };
 
+  const emitTyping = (value) => {
+    if (!socket?.connected || !activeChatUserId) return;
+    socket.emit('chat:typing', { receiverId: activeChatUserId, isTyping: value });
+  };
+
+  const handleChatInput = (event) => {
+    setChatInput(event.target.value);
+    const now = Date.now();
+    if (now - typingLastSentRef.current > 1400) {
+      typingLastSentRef.current = now;
+      emitTyping(true);
+    }
+    window.clearTimeout(typingStopTimerRef.current);
+    typingStopTimerRef.current = window.setTimeout(() => emitTyping(false), 1800);
+  };
+
+  const replaceOptimisticMessage = (targetId, clientMessageId, nextMessage) => {
+    setMessagesByUser((prev) => ({
+      ...prev,
+      [targetId]: mergeChatMessages(
+        (prev[targetId] || []).filter((message) => message.clientMessageId !== clientMessageId),
+        [nextMessage],
+      ),
+    }));
+  };
+
+  const markOptimisticFailed = (targetId, clientMessageId, messageText) => {
+    setMessagesByUser((prev) => ({
+      ...prev,
+      [targetId]: (prev[targetId] || []).map((message) => (
+        message.clientMessageId === clientMessageId
+          ? { ...message, pending: false, failed: true, error: messageText }
+          : message
+      )),
+    }));
+  };
+
+  const sendChatMessage = async (event) => {
+    event.preventDefault();
+    const body = chatInput.trim();
+    const targetId = activeChatUserId;
+    if (!body || !targetId || chatBusy) return;
+
+    const clientMessageId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const optimistic = {
+      id: `local:${clientMessageId}`,
+      senderId: authUser?.id,
+      receiverId: targetId,
+      body,
+      clientMessageId,
+      createdAt: new Date().toISOString(),
+      pending: true,
+    };
+    setChatInput('');
+    setChatBusy(true);
+    setMessagesByUser((prev) => ({
+      ...prev,
+      [targetId]: mergeChatMessages(prev[targetId] || [], [optimistic]),
+    }));
+    emitTyping(false);
+
+    const finish = (message) => {
+      replaceOptimisticMessage(targetId, clientMessageId, { ...message, pending: false });
+      setChatBusy(false);
+    };
+    const fail = (messageText) => {
+      markOptimisticFailed(targetId, clientMessageId, messageText);
+      setChatBusy(false);
+    };
+
+    if (socket?.connected) {
+      let settled = false;
+      const timeout = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        fail('Mạng chậm, chưa gửi được.');
+      }, 6500);
+      socket.emit('chat:send', { receiverId: targetId, body, clientMessageId }, (ack = {}) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        if (ack.ok && ack.message) finish(chatsApi.normalizeMessage(ack.message));
+        else fail(ack.error || 'Không gửi được tin nhắn.');
+      });
+      return;
+    }
+
+    try {
+      const res = await chatsApi.send(targetId, { body, clientMessageId });
+      finish(res.data);
+    } catch (err) {
+      fail(err.response?.data?.message || 'Không gửi được tin nhắn.');
+    }
+  };
+
   const stateFor = (targetUser) => {
     const targetId = userIdOf(targetUser);
     if (connectionMaps.friends.has(targetId)) return 'friend';
@@ -248,7 +533,7 @@ export default function FriendsDock() {
     <aside className={open ? 'friends-dock is-open' : 'friends-dock'}>
       <button type="button" className="friends-dock-tab" onClick={() => setOpen((value) => !value)} aria-label="Mở danh sách bạn bè">
         <Users size={18} />
-        {incoming.length > 0 && <b>{incoming.length}</b>}
+        {incoming.length + unreadTotal > 0 && <b>{incoming.length + unreadTotal}</b>}
       </button>
 
       <div className="friends-dock-panel">
@@ -262,99 +547,167 @@ export default function FriendsDock() {
           </button>
         </div>
 
-        <label className="friends-dock-search">
-          <Search size={14} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm tên, email, WR-0001..." />
-        </label>
+        {activeChatUser ? (
+          <div className="friends-chat">
+            <div className="friends-chat-head">
+              <button type="button" onClick={() => setActiveChatUser(null)} aria-label="Quay lại danh sách bạn bè">
+                <ArrowLeft size={15} />
+              </button>
+              <Avatar user={activeChatUser} />
+              <div>
+                <strong>{activeChatUser.name || activeChatUser.email || `User #${activeChatUserId}`}</strong>
+                <span>{typingByUser[activeChatUserId] ? 'Đang nhập...' : statusMeta(activeChatUser.presence || activeChatUser.status).label}</span>
+              </div>
+              <button type="button" onClick={() => openProfile(activeChatUser)} aria-label="Mở hồ sơ">
+                <Eye size={15} />
+              </button>
+            </div>
 
-        {error && <div className="friends-dock-error">{error}</div>}
+            <div className="friends-chat-messages" ref={chatScrollRef}>
+              {activeChatMeta.hasMore && (
+                <button type="button" className="friends-chat-load" disabled={activeChatMeta.loadingMore} onClick={() => loadChatMessages(activeChatUserId, { older: true })}>
+                  {activeChatMeta.loadingMore ? 'Đang tải...' : 'Tin cũ hơn'}
+                </button>
+              )}
+              {activeChatMeta.loading ? (
+                <div className="friends-chat-empty">Đang tải tin nhắn...</div>
+              ) : activeChatMessages.length === 0 ? (
+                <div className="friends-chat-empty">Chưa có tin nhắn. Bắt đầu bằng một câu ngắn.</div>
+              ) : activeChatMessages.map((message) => {
+                const mine = String(message.senderId || '') === String(authUser?.id || '');
+                return (
+                  <div key={chatMessageKey(message)} className={mine ? 'friends-chat-row is-mine' : 'friends-chat-row'}>
+                    <div className={message.failed ? 'friends-chat-bubble is-failed' : 'friends-chat-bubble'}>
+                      <p>{message.body}</p>
+                      <span>
+                        {new Date(message.createdAt || Date.now()).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        {message.pending ? ' · Đang gửi' : message.failed ? ` · ${message.error || 'Lỗi'}` : mine && message.readAt ? ' · Đã đọc' : ''}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+              {typingByUser[activeChatUserId] && <div className="friends-chat-typing">Đang nhập...</div>}
+              {activeChatMeta.error && <div className="friends-dock-error">{activeChatMeta.error}</div>}
+            </div>
 
-        {query.trim() ? (
-          <div className="friends-dock-section">
-            <div className="friends-dock-section-title">Kết quả tìm kiếm</div>
-            {searchLoading ? (
-              <div className="friends-dock-empty">Đang tìm người dùng...</div>
-            ) : searchResults.length === 0 ? (
-              <div className="friends-dock-empty">Không tìm thấy người dùng.</div>
-            ) : searchResults.map((item) => {
-              const state = stateFor(item);
-              const incomingRequest = connectionMaps.incomingByUser.get(userIdOf(item));
-              const disabled = state === 'friend' || state === 'outgoing' || busyKey === `send:${userIdOf(item)}`;
-              return (
-                <CompactUser
-                  key={userIdOf(item)}
-                  user={item}
-                  detail={item.email || `WR-${String(item.id || '').padStart(4, '0')}`}
-                  onOpen={openProfile}
-                  action={(
-                    <button
-                      type="button"
-                      className={state === 'friend' ? 'friends-dock-icon-action is-done' : 'friends-dock-icon-action'}
-                      disabled={disabled}
-                      onClick={() => state === 'incoming' && incomingRequest ? acceptRequest(incomingRequest) : sendRequest(item)}
-                      aria-label={state === 'incoming' ? 'Chấp nhận' : 'Kết bạn'}
-                    >
-                      {state === 'friend' ? <UserCheck size={14} /> : state === 'incoming' ? <Check size={14} /> : <UserPlus size={14} />}
-                    </button>
-                  )}
-                />
-              );
-            })}
+            <form className="friends-chat-compose" onSubmit={sendChatMessage}>
+              <textarea
+                value={chatInput}
+                onChange={handleChatInput}
+                placeholder="Nhắn tin..."
+                maxLength={2000}
+                rows={1}
+              />
+              <button type="submit" disabled={!chatInput.trim() || chatBusy} aria-label="Gửi tin nhắn">
+                <Send size={15} />
+              </button>
+            </form>
           </div>
         ) : (
           <>
-            {incoming.length > 0 && (
+            <label className="friends-dock-search">
+              <Search size={14} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm tên, email, WR-0001..." />
+            </label>
+
+            {error && <div className="friends-dock-error">{error}</div>}
+
+            {query.trim() ? (
               <div className="friends-dock-section">
-                <div className="friends-dock-section-title">Lời mời</div>
-                {incoming.slice(0, 4).map((row) => (
-                  <CompactUser
-                    key={row.friendshipId}
-                    user={row.friend}
-                    detail="Muốn kết bạn"
-                    onOpen={openProfile}
-                    action={(
-                      <span className="friends-dock-request-actions">
-                        <button type="button" disabled={busyKey === `accept:${row.friendshipId}`} onClick={() => acceptRequest(row)} aria-label="Nhận lời mời">
-                          <Check size={13} />
+                <div className="friends-dock-section-title">Kết quả tìm kiếm</div>
+                {searchLoading ? (
+                  <div className="friends-dock-empty">Đang tìm người dùng...</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="friends-dock-empty">Không tìm thấy người dùng.</div>
+                ) : searchResults.map((item) => {
+                  const state = stateFor(item);
+                  const incomingRequest = connectionMaps.incomingByUser.get(userIdOf(item));
+                  const disabled = state === 'outgoing' || busyKey === `send:${userIdOf(item)}`;
+                  return (
+                    <CompactUser
+                      key={userIdOf(item)}
+                      user={item}
+                      detail={item.email || `WR-${String(item.id || '').padStart(4, '0')}`}
+                      onOpen={openProfile}
+                      action={(
+                        <button
+                          type="button"
+                          className={state === 'friend' ? 'friends-dock-icon-action is-done' : 'friends-dock-icon-action'}
+                          disabled={disabled}
+                          onClick={() => {
+                            if (state === 'friend') openChat(item);
+                            else if (state === 'incoming' && incomingRequest) acceptRequest(incomingRequest);
+                            else sendRequest(item);
+                          }}
+                          aria-label={state === 'friend' ? 'Nhắn tin' : state === 'incoming' ? 'Chấp nhận' : 'Kết bạn'}
+                        >
+                          {state === 'friend' ? <MessageCircle size={14} /> : state === 'incoming' ? <Check size={14} /> : <UserPlus size={14} />}
                         </button>
-                        <button type="button" disabled={busyKey === `decline:${row.friendshipId}`} onClick={() => declineRequest(row)} aria-label="Từ chối">
-                          <X size={13} />
-                        </button>
-                      </span>
-                    )}
-                  />
-                ))}
+                      )}
+                    />
+                  );
+                })}
               </div>
+            ) : (
+              <>
+                {incoming.length > 0 && (
+                  <div className="friends-dock-section">
+                    <div className="friends-dock-section-title">Lời mời</div>
+                    {incoming.slice(0, 4).map((row) => (
+                      <CompactUser
+                        key={row.friendshipId}
+                        user={row.friend}
+                        detail="Muốn kết bạn"
+                        onOpen={openProfile}
+                        action={(
+                          <span className="friends-dock-request-actions">
+                            <button type="button" disabled={busyKey === `accept:${row.friendshipId}`} onClick={() => acceptRequest(row)} aria-label="Nhận lời mời">
+                              <Check size={13} />
+                            </button>
+                            <button type="button" disabled={busyKey === `decline:${row.friendshipId}`} onClick={() => declineRequest(row)} aria-label="Từ chối">
+                              <X size={13} />
+                            </button>
+                          </span>
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="friends-dock-section">
+                  <div className="friends-dock-section-title">Đang hoạt động</div>
+                  {visibleFriends.length === 0 ? (
+                    <div className="friends-dock-empty">Chưa có bạn bè. Dùng ô tìm kiếm phía trên để kết bạn.</div>
+                  ) : visibleFriends.map((row) => {
+                    const friendId = userIdOf(row.friend);
+                    const meta = statusMeta(row.friend?.presence || row.friend?.status);
+                    const unread = Math.max(0, Number(unreadCounts[friendId] || 0));
+                    return (
+                      <CompactUser
+                        key={row.friendshipId}
+                        user={row.friend}
+                        detail={unread ? `${unread} tin mới` : meta.label}
+                        onOpen={openProfile}
+                        action={(
+                          <button type="button" className="friends-dock-icon-action has-chat" onClick={() => openChat(row.friend)} aria-label="Nhắn tin">
+                            <MessageCircle size={14} />
+                            {unread > 0 && <b>{unread > 9 ? '9+' : unread}</b>}
+                          </button>
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+              </>
             )}
 
-            <div className="friends-dock-section">
-              <div className="friends-dock-section-title">Đang hoạt động</div>
-              {visibleFriends.length === 0 ? (
-                <div className="friends-dock-empty">Chưa có bạn bè. Dùng ô tìm kiếm phía trên để kết bạn.</div>
-              ) : visibleFriends.map((row) => {
-                const meta = statusMeta(row.friend?.presence || row.friend?.status);
-                return (
-                  <CompactUser
-                    key={row.friendshipId}
-                    user={row.friend}
-                    detail={meta.label}
-                    onOpen={openProfile}
-                    action={(
-                      <button type="button" className="friends-dock-icon-action" onClick={() => openProfile(row.friend)} aria-label="Mở hồ sơ">
-                        <Eye size={14} />
-                      </button>
-                    )}
-                  />
-                );
-              })}
-            </div>
+            <button type="button" className="friends-dock-full" onClick={() => navigate('/friends')}>
+              <MessageCircle size={14} />
+              Mở trang bạn bè
+            </button>
           </>
         )}
-
-        <button type="button" className="friends-dock-full" onClick={() => navigate('/friends')}>
-          <MessageCircle size={14} />
-          Mở trang bạn bè
-        </button>
       </div>
     </aside>
   );

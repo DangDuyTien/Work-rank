@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Cpu,
   LockKeyhole,
   RefreshCw,
   Search,

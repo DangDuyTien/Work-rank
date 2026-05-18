@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const { User } = require('../models');
+const chatService = require('../services/chat.service');
 const desktopStatus = require('../services/desktopStatus.service');
 const presence = require('../services/presence.service');
 const pomodoroStateByUser = new Map();
@@ -38,6 +39,15 @@ function emitPresence(io, user, status) {
   let target = io.to('dashboard').to(`user:${user.id}`);
   if (user.teamId) target = target.to(`team:${user.teamId}`);
   target.emit('user:status:update', payload);
+}
+
+function chatUserPayload(user) {
+  return {
+    userId: user.id,
+    user_id: user.id,
+    name: user.name,
+    email: user.email,
+  };
 }
 
 function registerSockets(io) {
@@ -134,6 +144,55 @@ function registerSockets(io) {
       pomodoroStateByUser.set(String(socket.user.id), state);
       io.to(`desktop:${socket.user.id}`).emit('pomodoro:state', state);
       if (typeof ack === 'function') ack({ ok: true });
+    });
+
+    socket.on('chat:send', async (payload = {}, ack) => {
+      try {
+        const message = await chatService.sendMessage(
+          socket.user.id,
+          payload.receiverId || payload.friendId,
+          payload.body,
+          payload.clientMessageId,
+        );
+        const eventPayload = {
+          ...message,
+          sender: chatUserPayload(socket.user),
+        };
+        io.to(`web:${message.receiverId}`).emit('chat:message', eventPayload);
+        io.to(`web:${message.senderId}`).emit('chat:message', eventPayload);
+        if (typeof ack === 'function') ack({ ok: true, message: eventPayload });
+      } catch (error) {
+        if (typeof ack === 'function') ack({ ok: false, error: error.message || 'Không gửi được tin nhắn' });
+      }
+    });
+
+    socket.on('chat:typing', async (payload = {}) => {
+      const receiverId = Number(payload.receiverId || payload.friendId || 0);
+      if (!receiverId || receiverId === Number(socket.user.id)) return;
+      try {
+        if (!(await chatService.areFriends(socket.user.id, receiverId))) return;
+        io.to(`web:${receiverId}`).emit('chat:typing', {
+          fromUserId: socket.user.id,
+          isTyping: payload.isTyping !== false,
+          at: Date.now(),
+        });
+      } catch {
+        // Typing indicators are best-effort only.
+      }
+    });
+
+    socket.on('chat:read', async (payload = {}, ack) => {
+      try {
+        const result = await chatService.markRead(socket.user.id, payload.friendId || payload.senderId);
+        io.to(`web:${result.friendId}`).emit('chat:read', {
+          readerId: socket.user.id,
+          readAt: result.readAt,
+          count: result.count,
+        });
+        if (typeof ack === 'function') ack({ ok: true, ...result });
+      } catch (error) {
+        if (typeof ack === 'function') ack({ ok: false, error: error.message || 'Không cập nhật được trạng thái đọc' });
+      }
     });
 
     socket.on('disconnect', () => {

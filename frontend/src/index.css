@@ -2080,11 +2080,28 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
 }
 
 .friends-dock-icon-action {
+  position: relative;
   width: 30px;
   height: 30px;
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.08);
   border-color: rgba(56, 189, 248, 0.14);
+}
+
+.friends-dock-icon-action.has-chat b {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 0;
+  background: #0ea5e9;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 12px;
 }
 
 .friends-dock-icon-action:disabled,
@@ -2146,6 +2163,186 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   align-items: center;
   justify-content: center;
   gap: 7px;
+}
+
+.friends-chat {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-chat-head {
+  display: grid;
+  grid-template-columns: 30px 34px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.friends-chat-head button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-chat-head strong,
+.friends-chat-head span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friends-chat-head strong {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.friends-chat-head span {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.friends-chat-messages {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.88), rgba(255, 255, 255, 0.98));
+}
+
+.friends-chat-load {
+  align-self: center;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.friends-chat-empty,
+.friends-chat-typing {
+  border: 1px dashed rgba(15, 23, 42, 0.14);
+  border-radius: 0;
+  padding: 10px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.friends-chat-typing {
+  align-self: flex-start;
+  border-style: solid;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.friends-chat-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.friends-chat-row.is-mine {
+  justify-content: flex-end;
+}
+
+.friends-chat-bubble {
+  max-width: 82%;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 8px 9px 6px;
+  box-shadow: none;
+}
+
+.friends-chat-row.is-mine .friends-chat-bubble {
+  border-color: rgba(56, 189, 248, 0.18);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.friends-chat-bubble.is-failed {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.friends-chat-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.friends-chat-bubble span {
+  display: block;
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.friends-chat-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 7px;
+  padding: 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+}
+
+.friends-chat-compose textarea {
+  min-height: 34px;
+  max-height: 84px;
+  resize: vertical;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  padding: 8px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.friends-chat-compose button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 0;
+  background: #38bdf8;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-chat-compose button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .tracker-page-shell {

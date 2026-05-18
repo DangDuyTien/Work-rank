@@ -555,28 +555,16 @@ function getRankRequiredActions(tier, milestones = []) {
   return Number(milestone?.requiredActions || 0);
 }
 
-function isRankTierUnlocked(tier, levelView = {}, dailyProfile = {}) {
+function isRankTierUnlocked(tier, levelView = {}) {
   const requiredActions = getRankRequiredActions(tier, Array.isArray(levelView.milestones) ? levelView.milestones : []);
   const level = Number(levelView.level || 0);
   const totalActions = Number(levelView.totalActions || 0);
-  const baseUnlocked = level >= Number(tier.min || 0) && (requiredActions <= 0 || totalActions >= requiredActions);
-  if (!baseUnlocked) return false;
-
-  const requirement = rankActivityRequirement(tier);
-  if (requirement.avgActions <= 0) return true;
-  const activeDays = Number(dailyProfile.activeDays || 0);
-  const avgActions = Number(dailyProfile.avgActionsPerActiveDay || 0);
-  const avgKeystrokes = Number(dailyProfile.avgKeystrokesPerActiveDay || 0);
-  const avgClicks = Number(dailyProfile.avgClicksPerActiveDay || 0);
-  const activeOk = activeDays >= requirement.activeDays;
-  const averageOk = avgActions >= requirement.avgActions;
-  const inputOk = avgKeystrokes >= requirement.avgInput || avgClicks >= requirement.avgInput;
-  return activeOk && averageOk && inputOk;
+  return level >= Number(tier.min || 0) && (requiredActions <= 0 || totalActions >= requiredActions);
 }
 
-function getRankTier(levelViewOrLevel, dailyProfile = {}) {
+function getRankTier(levelViewOrLevel) {
   if (typeof levelViewOrLevel === 'object' && levelViewOrLevel !== null) {
-    return RANK_TIERS_BY_LEVEL_DESC.find((tier) => isRankTierUnlocked(tier, levelViewOrLevel, dailyProfile))
+    return RANK_TIERS_BY_LEVEL_DESC.find((tier) => isRankTierUnlocked(tier, levelViewOrLevel))
       || RANK_TIERS_BY_LEVEL_ASC[0];
   }
   return RANK_TIERS_BY_LEVEL_DESC.find((tier) => Number(levelViewOrLevel || 0) >= tier.min)
@@ -588,12 +576,12 @@ function getRankTierIndex(rank) {
   return index >= 0 ? index + 1 : 0;
 }
 
-function buildRankGuideItems(levelView, currentRank, dailyProfile = {}) {
+function buildRankGuideItems(levelView, currentRank) {
   const items = RANK_TIERS_BY_LEVEL_ASC.map((tier) => ({
     ...tier,
     requiredActions: getRankRequiredActions(tier, Array.isArray(levelView.milestones) ? levelView.milestones : []),
     ...rankActivityRequirement(tier),
-    unlocked: isRankTierUnlocked(tier, levelView, dailyProfile),
+    unlocked: isRankTierUnlocked(tier, levelView),
     current: currentRank.tier === tier.tier,
   }));
   const currentIndex = Math.max(0, items.findIndex((item) => item.current));
@@ -837,27 +825,15 @@ function DevPill() {
 
 function RankGuide({ items, currentLevel, totalActions, dailyProfile }) {
   const nextRank = items.find((item) => !item.unlocked);
+  const nextRemainingLevel = nextRank
+    ? Math.max(0, Number(nextRank.min || 0) - Number(currentLevel || 0))
+    : 0;
   const nextRemainingActions = nextRank
     ? Math.max(0, Number(nextRank.requiredActions || 0) - Number(totalActions || 0))
     : 0;
-  const nextRemainingAverage = nextRank
-    ? Math.max(0, Number(nextRank.avgActions || 0) - Number(dailyProfile?.avgActionsPerActiveDay || 0))
-    : 0;
-  const nextRemainingDays = nextRank
-    ? Math.max(0, Number(nextRank.activeDays || 0) - Number(dailyProfile?.activeDays || 0))
-    : 0;
-  const nextInputAverage = Math.max(
-    Number(dailyProfile?.avgKeystrokesPerActiveDay || 0),
-    Number(dailyProfile?.avgClicksPerActiveDay || 0),
-  );
-  const nextRemainingInput = nextRank
-    ? Math.max(0, Number(nextRank.avgInput || 0) - nextInputAverage)
-    : 0;
   const nextRequirements = [
+    nextRemainingLevel > 0 ? `cần Level ${nextRank.min}` : '',
     nextRemainingActions > 0 ? `còn ${fmtNum(nextRemainingActions)} thao tác` : '',
-    nextRemainingDays > 0 ? `thêm ${fmtNum(nextRemainingDays)} ngày active` : '',
-    nextRemainingAverage > 0 ? `TB +${fmtNum(nextRemainingAverage)}/ngày` : '',
-    nextRemainingInput > 0 ? `gõ/click TB +${fmtNum(nextRemainingInput)}/ngày` : '',
   ].filter(Boolean).join(' · ');
 
   return (
@@ -877,7 +853,7 @@ function RankGuide({ items, currentLevel, totalActions, dailyProfile }) {
           </div>
         </div>
         <p>
-          Rank xét mốc cấp, tổng thao tác và nhịp trung bình {RANK_ACTIVITY_WINDOW_DAYS} ngày gần nhất.
+          Rank xét theo mốc level và tổng thao tác tích lũy. Nhịp trung bình {RANK_ACTIVITY_WINDOW_DAYS} ngày gần nhất chỉ dùng cho huy hiệu phụ.
         </p>
         <div className="profile-rank-guide-list">
           {items.map((item) => (
@@ -892,7 +868,7 @@ function RankGuide({ items, currentLevel, totalActions, dailyProfile }) {
                 <span>
                   {item.min === 0
                     ? 'Bắt đầu từ cấp 0'
-                    : `Cấp ${item.min}${item.requiredActions > 0 ? ` · ${fmtNum(item.requiredActions)} thao tác` : ''} · TB ${fmtNum(item.avgActions)}/ngày`}
+                    : `Cấp ${item.min}${item.requiredActions > 0 ? ` · ${fmtNum(item.requiredActions)} thao tác` : ''}`}
                 </span>
               </div>
               <em>{item.current ? 'Hiện tại' : item.unlocked ? 'Đã mở' : 'Chưa mở'}</em>
@@ -1272,7 +1248,7 @@ export default function UserDetail() {
     const todayActions = Number(stats?.total_keystrokes || 0) + Number(stats?.total_mouse_clicks || 0);
     const score = Number(stats?.score || 0);
     const dailyProfile = buildDailyProfile(dailyStats, heatmapData, stats || {});
-    const rank = getRankTier(levelView, dailyProfile);
+    const rank = getRankTier(levelView);
     const currentStreak = getCurrentStreak(heatmapData);
     const bestDay = getBestDay(heatmapData);
     const peakBucket = getPeakBucket(timeline);
@@ -1613,7 +1589,7 @@ export default function UserDetail() {
     '--rank-progress': rank.progress,
     '--rank-badge-bg': rank.badgeBg,
   };
-  const rankGuideItems = buildRankGuideItems(levelView, rank, dailyProfile);
+  const rankGuideItems = buildRankGuideItems(levelView, rank);
 
   return (
     <ProfileErrorBoundary>

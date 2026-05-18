@@ -10,6 +10,7 @@ router.use('/activity', require('./activity.routes'));
 router.use('/dashboard', require('./dashboard.routes'));
 router.use('/leaderboard', require('./leaderboard.routes'));
 router.use('/friends', require('./friends.routes'));
+router.use('/chats', require('./chats.routes'));
 router.use('/groups', require('./groups.routes'));
 router.use('/reports', require('./reports.routes'));
 router.use('/security', require('./security.routes'));
