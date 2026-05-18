@@ -556,7 +556,7 @@ export default function Pomodoro() {
         const raw = localStorage.getItem('workrank:pip-command');
         if (raw) handlePipCommand(raw);
       } catch {}
-    }, 150);
+    }, 500);
     return () => {
       window.clearInterval(pollPipCommand);
       bc.close();

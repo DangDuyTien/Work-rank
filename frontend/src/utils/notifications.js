@@ -231,7 +231,7 @@ function broadcastPipCommand(action, stateApplied = false) {
 function pipHandleAction(action) {
   if (!action) return;
   const now = Date.now();
-  if (lastPipAction === action && now - lastPipActionAt < 350) return;
+  if (now - lastPipActionAt < 260) return;
   lastPipAction = action;
   lastPipActionAt = now;
   const stateApplied = applyPipActionToState(action);
@@ -248,9 +248,11 @@ function pipHandleAction(action) {
 }
 
 function pipBodyActionHandler(e) {
+  if (e.__workrankPipHandled) return;
   const target = e.target?.closest ? e.target : e.target?.parentElement;
   const btn = target?.closest?.('[data-pip-action]');
   if (btn) {
+    e.__workrankPipHandled = true;
     e.preventDefault?.();
     e.stopPropagation?.();
     pipHandleAction(btn.dataset.pipAction);
@@ -261,27 +263,22 @@ function attachPipHandlers(win = pipWindow) {
   try {
     if (!win || win.closed || !win.document?.body) return;
     win.__workrankPipAction = (action) => pipHandleAction(action);
-    win.document.body.onpointerdown = pipBodyActionHandler;
-    win.document.body.onmousedown = pipBodyActionHandler;
-    win.document.body.ontouchstart = pipBodyActionHandler;
-    win.document.body.onclick = pipBodyActionHandler;
+    win.document.body.onpointerdown = null;
+    win.document.body.onmousedown = null;
+    win.document.body.ontouchstart = null;
+    win.document.body.onclick = null;
     win.document.querySelectorAll('[data-pip-action]').forEach((button) => {
-      const buttonHandler = (event) => {
-        event.preventDefault?.();
-        event.stopPropagation?.();
-        pipHandleAction(button.dataset.pipAction);
-      };
-      button.onpointerdown = buttonHandler;
-      button.onmousedown = buttonHandler;
-      button.ontouchstart = buttonHandler;
-      button.onclick = buttonHandler;
+      button.onpointerdown = null;
+      button.onpointerup = null;
+      button.onmousedown = null;
+      button.ontouchstart = null;
+      button.onclick = null;
     });
-    if (!win.__workrankPipHandlersAttached) {
-      ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach((eventName) => {
-        win.document.addEventListener(eventName, pipBodyActionHandler, true);
-      });
-      win.__workrankPipHandlersAttached = true;
-    }
+    ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'click'].forEach((eventName) => {
+      win.document.removeEventListener(eventName, pipBodyActionHandler, true);
+    });
+    if (win.PointerEvent) win.document.addEventListener('pointerup', pipBodyActionHandler, true);
+    win.document.addEventListener('click', pipBodyActionHandler, true);
   } catch {}
 }
 
@@ -320,8 +317,7 @@ function tile(d) {
 function clockHTML(mm, ss) { return tile(mm[0]) + tile(mm[1]) + '<span id="col">:</span>' + tile(ss[0]) + tile(ss[1]); }
 
 function pipActionAttrs(action) {
-  const call = 'window.__workrankPipAction&&window.__workrankPipAction(&quot;' + action + '&quot;)';
-  return 'type="button" data-pip-action="' + action + '" onpointerdown="' + call + '" onmousedown="' + call + '" ontouchstart="' + call + '" onclick="' + call + '"';
+  return 'type="button" data-pip-action="' + action + '"';
 }
 
 const PIP_CTRL_SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
@@ -410,7 +406,8 @@ function updatePipDOM(data) {
     if (nextInfo) nextInfo.textContent = data.nextMode ? 'Tiếp: ' + data.nextMode : '';
     const digits = [data.mm?.[0] || '0', data.mm?.[1] || '0', data.ss?.[0] || '0', data.ss?.[1] || '0'];
     pw.document.querySelectorAll('.tile span').forEach((node, index) => {
-      node.textContent = digits[index] || '0';
+      const digit = digits[index] || '0';
+      if (node.textContent !== digit) node.textContent = digit;
     });
     const fill = pw.document.getElementById('fill');
     if (fill) fill.style.width = data.pct + '%';
@@ -520,7 +517,7 @@ function pipTick() {
 function startPipInterval() {
   if (pipInterval) return;
   pipTick();
-  pipInterval = setInterval(pipTick, 200);
+  pipInterval = setInterval(pipTick, 500);
 }
 
 function stopPipInterval() {
