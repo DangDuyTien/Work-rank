@@ -681,6 +681,11 @@ export default function UserDetail() {
                   decoding="async"
                   src={imageUrl}
                   alt={`Ảnh giới thiệu ${index + 1}`}
+                  onError={(e) => {
+                    if (e.currentTarget.src !== defaultUrl) {
+                      e.currentTarget.src = defaultUrl;
+                    }
+                  }}
                 />
                 {canEdit && (
                   <button
@@ -1331,15 +1336,63 @@ export default function UserDetail() {
 
               {/* Ảnh đại diện Avatar */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Ảnh Đại Diện (Upload Ảnh Mới)
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
+                  Ảnh Đại Diện
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarFile}
-                  style={{ fontSize: 11, color: '#64748b' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      border: '2px solid #0284c7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#e0f2fe',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {editForm.avatarData ? (
+                      <img
+                        src={editForm.avatarData}
+                        alt="Avatar Preview"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: 18, fontWeight: 900, color: '#0284c7' }}>
+                        {initialsFromName(editForm.name || user.name)}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFile}
+                      style={{ fontSize: 11, color: '#64748b' }}
+                    />
+                    {editForm.avatarData && (
+                      <button
+                        type="button"
+                        onClick={() => setEditForm((prev) => ({ ...prev, avatarData: '' }))}
+                        style={{
+                          alignSelf: 'flex-start',
+                          padding: '2px 8px',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: '#dc2626',
+                          background: '#fee2e2',
+                          border: '1px solid #fecaca',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Xóa ảnh đại diện (dùng chữ cái đầu)
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Các trường quản trị chỉ Admin mới có */}

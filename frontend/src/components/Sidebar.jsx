@@ -290,7 +290,25 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.label}
                         </span>
-                        {isActive && (
+                        {item.badge && (
+                          <span
+                            style={{
+                              marginLeft: 'auto',
+                              fontSize: 9,
+                              fontWeight: 800,
+                              padding: '1.5px 5px',
+                              borderRadius: 4,
+                              background: item.comingSoon ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.12)',
+                              color: item.comingSoon ? '#b45309' : '#0284c7',
+                              letterSpacing: '0.2px',
+                              flexShrink: 0,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                        {isActive && !item.badge && (
                           <span
                             style={{
                               marginLeft: 'auto',

@@ -110,8 +110,8 @@ export default function Home() {
       bg: 'rgba(147,51,234,0.08)',
       badge: 'Break & Play',
       metrics: [
-        { label: 'Cờ Tỷ Phú', value: 'Bàn cờ 28 ô & Mua tài sản' },
         { label: 'Đoán Hình & Nhạc', value: 'Quiz trắc nghiệm tốc độ' },
+        { label: 'Cờ Tỷ Phú', value: 'Sắp ra mắt (Coming Soon)' },
         { label: 'Tính độc lập', value: 'Không ảnh hưởng điểm công việc' },
       ],
       description: 'Không gian giải trí nhanh giúp gắn kết đồng đội sau giờ làm việc căng thẳng. Nhiều người chơi cùng tham gia trong phòng đấu realtime kịch tính.',
@@ -834,7 +834,7 @@ export default function Home() {
 
               {isSignedIn && (
                 <Link
-                  to={activeTab === 'ARENA' ? '/arena' : activeTab === 'YOUTUBE' ? '/youtube' : activeTab === 'RANKING' ? '/leaderboard' : '/games/capital-board'}
+                  to={activeTab === 'ARENA' ? '/arena' : activeTab === 'YOUTUBE' ? '/youtube' : activeTab === 'RANKING' ? '/leaderboard' : '/games/quiz'}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',

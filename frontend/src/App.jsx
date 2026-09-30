@@ -149,7 +149,7 @@ export default function App() {
 
                   <Route path="/groups" element={<Navigate to="/friends" replace />} />
                   <Route path="/friends" element={<Friends />} />
-                  <Route path="/games" element={<Navigate to="/games/capital-board" replace />} />
+                  <Route path="/games" element={<Navigate to="/games/quiz" replace />} />
                   <Route path="/games/capital-board" element={<CapitalBoardGame />} />
                   <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
                   <Route path="/games/quiz" element={<QuizGame />} />
