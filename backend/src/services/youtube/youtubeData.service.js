@@ -276,6 +276,11 @@ async function recordChannelMetricSnapshot(params, options = {}) {
   }
 
   const snapshotTime = new Date(capturedAt);
+  const safeViews = Math.max(0, Number(views) || 0);
+  const safeSubscribers = Math.max(0, Number(subscribers) || 0);
+  const safeVideosCount = Math.max(0, Number(videosCount) || 0);
+  const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
+  const safeEngagement = Number(Math.min(999.99, Math.max(0, Number(engagementRate) || 0)).toFixed(2));
 
   // Check if snapshot already exists in the same 5-minute window for idempotency
   const windowStart = new Date(snapshotTime.getTime() - 2.5 * 60 * 1000);
@@ -294,11 +299,11 @@ async function recordChannelMetricSnapshot(params, options = {}) {
   if (existing) {
     return existing.update(
       {
-        views: Number(views),
-        subscribers: Number(subscribers),
-        videosCount: Number(videosCount),
-        watchTimeHours: Number(watchTimeHours),
-        engagementRate: Number(engagementRate),
+        views: safeViews,
+        subscribers: safeSubscribers,
+        videosCount: safeVideosCount,
+        watchTimeHours: safeWatchTime,
+        engagementRate: safeEngagement,
         capturedAt: snapshotTime,
       },
       options,
@@ -309,11 +314,11 @@ async function recordChannelMetricSnapshot(params, options = {}) {
     {
       channelId,
       capturedAt: snapshotTime,
-      views: Number(views),
-      subscribers: Number(subscribers),
-      videosCount: Number(videosCount),
-      watchTimeHours: Number(watchTimeHours),
-      engagementRate: Number(engagementRate),
+      views: safeViews,
+      subscribers: safeSubscribers,
+      videosCount: safeVideosCount,
+      watchTimeHours: safeWatchTime,
+      engagementRate: safeEngagement,
     },
     options,
   );
@@ -335,6 +340,12 @@ async function recordVideoMetricSnapshot(params, options = {}) {
   }
 
   const snapshotTime = new Date(capturedAt);
+  const safeViews = Math.max(0, Number(views) || 0);
+  const safeLikes = Math.max(0, Number(likes) || 0);
+  const safeComments = Math.max(0, Number(comments) || 0);
+  const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
+  const safeEngagement = Number(Math.min(999.99, Math.max(0, Number(engagementRate) || 0)).toFixed(2));
+
   const windowStart = new Date(snapshotTime.getTime() - 2.5 * 60 * 1000);
   const windowEnd = new Date(snapshotTime.getTime() + 2.5 * 60 * 1000);
 
@@ -351,11 +362,11 @@ async function recordVideoMetricSnapshot(params, options = {}) {
   if (existing) {
     return existing.update(
       {
-        views: Number(views),
-        likes: Number(likes),
-        comments: Number(comments),
-        watchTimeHours: Number(watchTimeHours),
-        engagementRate: Number(engagementRate),
+        views: safeViews,
+        likes: safeLikes,
+        comments: safeComments,
+        watchTimeHours: safeWatchTime,
+        engagementRate: safeEngagement,
         capturedAt: snapshotTime,
       },
       options,
@@ -366,11 +377,11 @@ async function recordVideoMetricSnapshot(params, options = {}) {
     {
       videoId,
       capturedAt: snapshotTime,
-      views: Number(views),
-      likes: Number(likes),
-      comments: Number(comments),
-      watchTimeHours: Number(watchTimeHours),
-      engagementRate: Number(engagementRate),
+      views: safeViews,
+      likes: safeLikes,
+      comments: safeComments,
+      watchTimeHours: safeWatchTime,
+      engagementRate: safeEngagement,
     },
     options,
   );

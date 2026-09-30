@@ -139,13 +139,33 @@ async function syncChannel(channelIdentifier, options = {}) {
     channel.lastSyncError = null;
     await channel.save();
 
+    // Calculate channel engagement rate safely from recent videos if available, or estimated
+    let totalVideoInteractions = 0;
+    let totalVideoViews = 0;
+    if (Array.isArray(videosData) && videosData.length > 0) {
+      for (const v of videosData) {
+        totalVideoInteractions += (Number(v.likes) || 0) + (Number(v.comments) || 0);
+        totalVideoViews += (Number(v.views) || 0);
+      }
+    }
+
+    let channelEngagementRate = 0;
+    if (totalVideoViews > 0) {
+      channelEngagementRate = (totalVideoInteractions / totalVideoViews) * 100;
+    } else if (channelStats.subscribers > 0 && channelStats.views > 0) {
+      // Estimated engagement rate within reasonable 0-100% bound
+      channelEngagementRate = Math.min(10.0, (channelStats.views / (channelStats.subscribers * 100)) * 100);
+    }
+    const safeChannelEngagementRate = Number(Math.min(999.99, Math.max(0, channelEngagementRate)).toFixed(2));
+    const safeChannelWatchTime = Number(Math.min(9999999999.99, Math.max(0, channelStats.views * 0.05)).toFixed(2));
+
     await youtubeDataService.recordChannelMetricSnapshot({
       channelId: channel.id,
       views: channelStats.views,
       subscribers: channelStats.subscribers,
       videosCount: channelStats.videosCount,
-      watchTimeHours: (channelStats.views * 0.05).toFixed(2),
-      engagementRate: (channelStats.subscribers > 0 ? (channelStats.views / channelStats.subscribers) * 10 : 1.5).toFixed(2),
+      watchTimeHours: safeChannelWatchTime,
+      engagementRate: safeChannelEngagementRate,
       capturedAt: new Date(),
     });
 
@@ -160,13 +180,20 @@ async function syncChannel(channelIdentifier, options = {}) {
         thumbnailUrl: v.thumbnailUrl,
       });
 
+      const vViews = Number(v.views) || 0;
+      const vLikes = Number(v.likes) || 0;
+      const vComments = Number(v.comments) || 0;
+      const vEngagement = vViews > 0 ? ((vLikes + vComments) / vViews) * 100 : 0;
+      const safeVideoEngagementRate = Number(Math.min(999.99, Math.max(0, vEngagement)).toFixed(2));
+      const safeVideoWatchTime = Number(Math.min(9999999999.99, Math.max(0, vViews * 0.05)).toFixed(2));
+
       await youtubeDataService.recordVideoMetricSnapshot({
         videoId: savedVideo.id,
-        views: v.views,
-        likes: v.likes,
-        comments: v.comments,
-        watchTimeHours: (v.views * 0.05).toFixed(2),
-        engagementRate: (v.views > 0 ? (v.likes / v.views) * 100 : 0).toFixed(2),
+        views: vViews,
+        likes: vLikes,
+        comments: vComments,
+        watchTimeHours: safeVideoWatchTime,
+        engagementRate: safeVideoEngagementRate,
         capturedAt: new Date(),
       });
     }

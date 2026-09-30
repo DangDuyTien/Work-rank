@@ -183,12 +183,14 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
     transaction: options.transaction,
   });
 
-  // Calculate percentage growths safely
+  // Calculate percentage growths safely (clamped to DECIMAL(6, 2) limit [-9999.99, 9999.99])
   const baselineViews30d = Math.max(0, totalViews - views30d);
-  const viewsGrowth30dPct = baselineViews30d > 0 ? Number(((views30d / baselineViews30d) * 100).toFixed(2)) : (totalViews > 0 ? 100.0 : 0.0);
+  const rawViewsGrowth = baselineViews30d > 0 ? (views30d / baselineViews30d) * 100 : (totalViews > 0 ? 100.0 : 0.0);
+  const viewsGrowth30dPct = Number(Math.min(9999.99, Math.max(-9999.99, rawViewsGrowth)).toFixed(2));
 
   const baselineSubs30d = Math.max(0, totalSubscribers - subscriberGrowth30d);
-  const subGrowth30dPct = baselineSubs30d > 0 ? Number(((subscriberGrowth30d / baselineSubs30d) * 100).toFixed(2)) : (totalSubscribers > 0 ? 100.0 : 0.0);
+  const rawSubGrowth = baselineSubs30d > 0 ? (subscriberGrowth30d / baselineSubs30d) * 100 : (totalSubscribers > 0 ? 100.0 : 0.0);
+  const subGrowth30dPct = Number(Math.min(9999.99, Math.max(-9999.99, rawSubGrowth)).toFixed(2));
 
   // Top Video across team channels
   const topVideoRecord = await YouTubeVideo.findAll({
