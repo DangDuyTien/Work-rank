@@ -1,258 +1,986 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   ChevronRight,
-  CheckCircle2,
-  Crown,
-  Flame,
   ShieldCheck,
   Swords,
   Trophy,
-  Users,
+  Tv,
+  Gamepad2,
+  Sparkles,
+  Zap,
+  Lock,
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const metrics = [
-  { value: 'Realtime', label: 'đồng bộ thi đấu' },
-  { value: '99.9%', label: 'uptime hệ thống' },
-  { value: 'Audit', label: 'ledger tính điểm minh bạch' },
-];
-
-const features = [
-  {
-    icon: Swords,
-    title: 'Đấu Trường Arena',
-    text: 'Tham gia thi đấu mùa giải, hoàn thành thử thách và thăng hạng XP cùng đồng đội.',
-  },
-  {
-    icon: Crown,
-    title: 'Grand Championship',
-    text: 'Giải đấu đỉnh cao tích lũy Grand Points xuyên suốt các mùa để tranh ngôi vương.',
-  },
-  {
-    icon: Trophy,
-    title: 'Leaderboard Realtime',
-    text: 'Xếp hạng cá nhân, nhóm và bạn bè tức thời với hệ thống điểm số cập nhật chuẩn xác.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Ledger Minh Bạch',
-    text: 'Mọi điểm số đều được đối soát qua Event Store và Outbox, đảm bảo công bằng tuyệt đối.',
-  },
-];
-
-const leaderboardRows = [
-  { rank: 1, name: 'Đặng Duy Tiến', score: '4,314', badge: 'Dev' },
-  { rank: 2, name: 'Minh Anh', score: '3,280', badge: 'Top 1 Season' },
-  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Grand Master' },
-];
-
-function useScrollReveal() {
-  useEffect(() => {
-    const els = document.querySelectorAll('[data-wr-reveal]');
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add('is-visible');
-        });
-      },
-      { threshold: 0.12 }
-    );
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-}
-
-function firstName(user) {
-  const name = String(user?.name || user?.email || '').trim();
-  if (!name) return 'bạn';
-  return name.split(/\s+/).slice(-1)[0];
-}
+import BrandMark from '../components/BrandMark';
 
 export default function Home() {
   const { user } = useAuth();
   const isSignedIn = Boolean(user);
-  const primaryTo = isSignedIn ? '/dashboard' : '/login';
-  const [activeTerminal, setActiveTerminal] = useState('curl');
+  const [activeTab, setActiveTab] = useState('ARENA');
 
-  useScrollReveal();
+  const previews = {
+    ARENA: {
+      title: 'Đấu Trường Mùa Giải (Arena)',
+      subtitle: 'Thi đấu đối kháng & Nhiệm vụ hiệu suất theo mùa',
+      icon: Swords,
+      color: '#0284c7',
+      bg: 'rgba(2,132,199,0.08)',
+      badge: 'Season Live',
+      metrics: [
+        { label: 'Cơ chế tính điểm', value: 'Event Store bất biến' },
+        { label: 'Cập nhật', value: 'Realtime Socket.IO' },
+        { label: 'Vinh danh', value: 'Huy hiệu & Cúp Vô Địch' },
+      ],
+      description: 'Hệ thống thi đấu đối kháng trực tiếp giữa các cá nhân và đội nhóm. Mọi thành tích đều được quy đổi thành điểm số Season Score và tích lũy vào Grand Championship.',
+    },
+    YOUTUBE: {
+      title: 'Tích Hợp YouTube & Sản Xuất',
+      subtitle: 'Đồng bộ chỉ số kênh media & video realtime',
+      icon: Tv,
+      color: '#ef4444',
+      bg: 'rgba(239,68,68,0.08)',
+      badge: 'Media Hub',
+      metrics: [
+        { label: 'Dữ liệu phân tích', value: 'Views, Likes, Growth' },
+        { label: 'Bảo mật', value: 'Kiểm soát Scope & Anti-IDOR' },
+        { label: 'Cơ chế', value: 'Snapshot chu kỳ tự động' },
+      ],
+      description: 'Theo dõi tổng thể hiệu suất tăng trưởng của mạng lưới kênh YouTube nội bộ. Báo cáo trực quan theo từng đội nhóm sản xuất với phân quyền truy cập chặt chẽ.',
+    },
+    RANKING: {
+      title: 'Bảng Xếp Hạng & Grand Championship',
+      subtitle: 'Xếp hạng hợp nhất đa chiều và giải đấu đỉnh cao',
+      icon: Trophy,
+      color: '#d97706',
+      bg: 'rgba(217,119,6,0.08)',
+      badge: 'Championship',
+      metrics: [
+        { label: 'Phân loại', value: 'Cá nhân & Đội nhóm' },
+        { label: 'Chức danh', value: 'Tier 1 - Tier 6 chuẩn hóa' },
+        { label: 'Xác thực', value: 'Tích xanh Verified Badge' },
+      ],
+      description: 'Hệ thống vinh danh toàn diện với Leaderboard cập nhật tức thời theo Season Score và Grand Points, ghi nhận cống hiến thực chất của từng thành viên.',
+    },
+    GAMES: {
+      title: 'Trò Chơi Giải Trí Nội Bộ',
+      subtitle: 'Cờ Tỷ Phú & Live Quiz Kahoot trong giờ giải lao',
+      icon: Gamepad2,
+      color: '#9333ea',
+      bg: 'rgba(147,51,234,0.08)',
+      badge: 'Break & Play',
+      metrics: [
+        { label: 'Cờ Tỷ Phú', value: 'Bàn cờ 28 ô & Mua tài sản' },
+        { label: 'Đoán Hình & Nhạc', value: 'Live Quiz phong cách Kahoot' },
+        { label: 'Tính độc lập', value: 'Không ảnh hưởng điểm công việc' },
+      ],
+      description: 'Không gian giải trí nhanh giúp gắn kết đồng đội sau giờ làm việc căng thẳng. Nhiều người chơi cùng tham gia trong phòng đấu realtime kịch tính.',
+    },
+  };
+
+  const currentPreview = previews[activeTab];
+  const CurrentIcon = currentPreview.icon;
 
   return (
-    <main className="wr-home-page">
-      <header className="wr-home-nav">
-        <Link to="/" className="wr-home-brand" aria-label="3winmedia">
-          <span style={{ fontSize: 11, fontWeight: 900, fontFamily: "'JetBrains Mono', monospace", letterSpacing: -0.5 }}>3W</span>
-          <strong>3winmedia</strong>
-        </Link>
-        <nav className="wr-home-links" aria-label="Điều hướng trang chủ">
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/arena">Arena</Link>
-          <Link to="/grand">Grand Hub</Link>
-          <Link to="/leaderboard">Xếp hạng</Link>
-          <Link to="/friends">Bạn bè</Link>
-        </nav>
-        <Link className="wr-home-nav-action" to={primaryTo}>
-          {isSignedIn ? firstName(user) : 'Vào app'}
-          <ChevronRight size={16} strokeWidth={2.4} />
-        </Link>
+    <div style={{ minHeight: '100vh', background: '#ffffff', color: '#0f172a', fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      {/* ── 1. PUBLIC HEADER / NAVIGATION BAR (VUÔNG VẮN) ── */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          background: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(15, 23, 42, 0.12)',
+          padding: '0 24px',
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BrandMark size={32} showLabel label="WorkRank" />
+          </Link>
+
+          <nav
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 20,
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+            className="wr-public-nav-links"
+          >
+            <a href="#about" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Giới thiệu</a>
+            <a href="#pillars" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Năng lực</a>
+            <a href="#architecture" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Bảo mật & Dữ liệu</a>
+            <a href="#workflow" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Quy trình</a>
+          </nav>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {isSignedIn ? (
+            <Link
+              to="/dashboard"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 18px',
+                background: '#0f172a',
+                color: '#ffffff',
+                textDecoration: 'none',
+                borderRadius: 0,
+                fontSize: 13,
+                fontWeight: 800,
+                boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
+              }}
+            >
+              <span>Chào, {user?.name || 'Thành viên'}</span>
+              <ArrowRight size={15} />
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  border: '1.5px solid rgba(15,23,42,0.2)',
+                  textDecoration: 'none',
+                  borderRadius: 0,
+                  fontSize: 13,
+                  fontWeight: 800,
+                }}
+              >
+                <LogIn size={15} />
+                <span>Đăng nhập</span>
+              </Link>
+
+              <Link
+                to="/login?mode=register"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 18px',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  borderRadius: 0,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  boxShadow: '0 2px 8px rgba(15,23,42,0.2)',
+                }}
+              >
+                <UserPlus size={15} />
+                <span>Đăng ký</span>
+              </Link>
+            </>
+          )}
+        </div>
       </header>
 
-      <section className="wr-home-hero">
-        <div className="wr-hero-visual" aria-hidden="true">
-          <div className="wr-preview-shell">
-            <div className="wr-preview-topbar">
-              <div className="wr-preview-brand">
-                <span></span>
-                3winmedia Arena
-              </div>
-              <div className="wr-preview-status">
-                <span></span>
-                live season
-              </div>
-            </div>
-            <div className="wr-preview-grid">
-              <div className="wr-preview-panel wr-preview-panel-main">
-                <div className="wr-panel-head">
-                  <span>Mùa giải hiện tại</span>
-                  <strong>Championship 2026</strong>
-                </div>
-                <div style={{ padding: '16px 0', color: '#64748b', fontSize: 13, lineHeight: 1.6 }}>
-                  Hệ thống thi đấu đối kháng, tính điểm sự kiện thời gian thực và ghi nhận bảng vàng thành tích.
-                </div>
-              </div>
-
-              <div className="wr-preview-panel wr-preview-rank">
-                <div className="wr-panel-head">
-                  <span>Top Điểm Mùa Giải</span>
-                  <Trophy size={17} />
-                </div>
-                {leaderboardRows.map((row) => (
-                  <div className="wr-rank-row" key={row.rank}>
-                    <b>{row.rank}</b>
-                    <div>
-                      <strong>{row.name}</strong>
-                      <span>{row.badge}</span>
-                    </div>
-                    <em>{row.score}</em>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* ── 2. HERO SECTION (VUÔNG VẮN) ── */}
+      <section
+        id="about"
+        style={{
+          maxWidth: 1160,
+          margin: '0 auto',
+          padding: '64px 24px 48px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+      >
+        {/* Eyebrow Badge (Vuông vắn) */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 12px',
+            borderRadius: 0,
+            background: 'rgba(2, 132, 199, 0.08)',
+            border: '1px solid rgba(2, 132, 199, 0.35)',
+            color: '#0284c7',
+            fontSize: 12,
+            fontWeight: 800,
+            marginBottom: 20,
+            letterSpacing: '0.4px',
+          }}
+        >
+          <Sparkles size={14} />
+          <span>NỀN TẢNG KẾT NỐI CÔNG VIỆC, THÀNH TÍCH VÀ ĐỘI NHÓM</span>
         </div>
 
-        <div className="wr-home-hero-content">
-          <div className="wr-home-pill" data-wr-reveal>
-            <span>New</span>
-            Hệ thống Đấu Trường Mùa Giải & Grand Championship
-          </div>
-          <h1 data-wr-reveal>
-            3winmedia
-            <span> nền tảng thi đấu & vinh danh hiệu suất</span>
-          </h1>
-          <p data-wr-reveal>
-            Đấu trường công bằng, xếp hạng realtime, giải đấu mùa giải và bảng vàng thành tích cho cá nhân và đội nhóm.
-          </p>
-          <div className="wr-home-actions" data-wr-reveal>
-            <Link className="wr-home-primary" to={primaryTo}>
-              {isSignedIn ? 'Vào Dashboard' : 'Đăng nhập để bắt đầu'}
-              <ArrowRight size={17} strokeWidth={2.5} />
-            </Link>
-            <Link className="wr-home-secondary" to="/arena">
-              <Swords size={16} />
-              Vào Arena
-            </Link>
-            <Link className="wr-home-secondary" to="/leaderboard">
-              <Trophy size={16} />
-              Xem xếp hạng
-            </Link>
-          </div>
-        </div>
-      </section>
+        {/* Hero Title */}
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(32px, 5vw, 52px)',
+            fontWeight: 900,
+            color: '#0f172a',
+            lineHeight: 1.15,
+            letterSpacing: '-1px',
+            maxWidth: 900,
+          }}
+        >
+          Đồng Bộ Công Việc, Bứt Phá Thành Tích, Gắn Kết Đội Ngũ.
+        </h1>
 
-      <section className="wr-home-metrics" data-wr-reveal>
-        {metrics.map((metric) => (
-          <div className="wr-metric" key={metric.label}>
-            <strong>{metric.value}</strong>
-            <span>{metric.label}</span>
-          </div>
-        ))}
-      </section>
+        {/* Hero Subtitle */}
+        <p
+          style={{
+            margin: '18px 0 32px',
+            fontSize: 'clamp(15px, 2vw, 17px)',
+            color: '#475569',
+            lineHeight: 1.6,
+            maxWidth: 760,
+          }}
+        >
+          WorkRank mang lại không gian làm việc chuyên nghiệp: Tự động tổng hợp dữ liệu sản xuất Media & YouTube, thi đấu đối kháng mùa giải minh bạch, vinh danh thứ hạng thời gian thực và giải trí nội bộ lành mạnh.
+        </p>
 
-      <section className="wr-home-section wr-home-product" data-wr-reveal>
-        <div className="wr-section-copy">
-          <span className="wr-section-kicker">Engine</span>
-          <h2>Kiến trúc sự kiện và tính điểm phân tán.</h2>
-        </div>
-        <div className="wr-command-card">
-          <div className="wr-command-tabs">
-            {['curl', 'npm'].map((tab) => (
-              <button
-                type="button"
-                key={tab}
-                className={activeTerminal === tab ? 'is-active' : ''}
-                onClick={() => setActiveTerminal(tab)}
+        {/* Hero Action Buttons (Vuông vắn) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {isSignedIn ? (
+            <Link
+              to="/dashboard"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '14px 28px',
+                background: '#0f172a',
+                color: '#ffffff',
+                textDecoration: 'none',
+                borderRadius: 0,
+                fontSize: 15,
+                fontWeight: 900,
+                boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
+              }}
+            >
+              <span>Vào Dashboard Làm Việc</span>
+              <ArrowRight size={18} />
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '14px 28px',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  borderRadius: 0,
+                  fontSize: 15,
+                  fontWeight: 900,
+                  boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
+                }}
               >
-                {tab}
-              </button>
-            ))}
+                <span>Đăng nhập hệ thống</span>
+                <ArrowRight size={18} />
+              </Link>
+
+              <Link
+                to="/login?mode=register"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '14px 26px',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  border: '1.5px solid rgba(15,23,42,0.25)',
+                  textDecoration: 'none',
+                  borderRadius: 0,
+                  fontSize: 15,
+                  fontWeight: 800,
+                }}
+              >
+                <UserPlus size={18} />
+                <span>Tạo tài khoản mới</span>
+              </Link>
+            </>
+          )}
+
+          <a
+            href="#pillars"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '14px 22px',
+              background: '#f1f5f9',
+              border: '1px solid rgba(15,23,42,0.1)',
+              color: '#334155',
+              textDecoration: 'none',
+              borderRadius: 0,
+              fontSize: 14,
+              fontWeight: 800,
+            }}
+          >
+            <span>Khám phá tính năng</span>
+            <ChevronRight size={16} />
+          </a>
+        </div>
+
+        {/* ── 3. INTERACTIVE PRODUCT PREVIEW SHOWCASE (VUÔNG VẮN) ── */}
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 1040,
+            marginTop: 48,
+            background: '#ffffff',
+            border: '1px solid rgba(15,23,42,0.16)',
+            borderRadius: 0,
+            boxShadow: '0 12px 32px rgba(15,23,42,0.06)',
+            overflow: 'hidden',
+            textAlign: 'left',
+          }}
+        >
+          {/* Top Mockup Tab Switcher (Vuông vắn) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              borderBottom: '1px solid rgba(15,23,42,0.12)',
+              background: '#f8fafc',
+              overflowX: 'auto',
+            }}
+          >
+            {[
+              { key: 'ARENA', label: 'Đấu Trường Mùa Giải', icon: Swords },
+              { key: 'YOUTUBE', label: 'Kênh YouTube & Media', icon: Tv },
+              { key: 'RANKING', label: 'Bảng Xếp Hạng & Vinh Danh', icon: Trophy },
+              { key: 'GAMES', label: 'Trò Chơi Nội Bộ', icon: Gamepad2 },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '14px 20px',
+                    background: isActive ? '#ffffff' : 'transparent',
+                    border: 'none',
+                    borderRight: '1px solid rgba(15,23,42,0.1)',
+                    borderBottom: isActive ? '2px solid #0284c7' : '2px solid transparent',
+                    color: isActive ? '#0f172a' : '#64748b',
+                    fontWeight: isActive ? 900 : 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    borderRadius: 0,
+                  }}
+                >
+                  <Icon size={16} color={isActive ? '#0284c7' : '#64748b'} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
-          <div className="wr-command-line">
-            <span>$</span>
-            {activeTerminal === 'curl' && 'curl -s https://api.3winmedia.vn/health'}
-            {activeTerminal === 'npm' && 'npm run dev'}
-          </div>
-          <div className="wr-command-output">
-            <CheckCircle2 size={16} />
-            database connected · competition ledger active · realtime projections live
+
+          {/* Tab Content Preview Card */}
+          <div style={{ padding: '28px 32px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ maxWidth: 640 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '3px 8px',
+                      borderRadius: 0,
+                      background: currentPreview.bg,
+                      border: `1px solid ${currentPreview.color}40`,
+                      color: currentPreview.color,
+                      fontSize: 11,
+                      fontWeight: 900,
+                    }}
+                  >
+                    <CurrentIcon size={12} />
+                    <span>{currentPreview.badge}</span>
+                  </span>
+                  <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{currentPreview.subtitle}</span>
+                </div>
+
+                <h3 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 900, color: '#0f172a' }}>
+                  {currentPreview.title}
+                </h3>
+
+                <p style={{ margin: 0, fontSize: 14, color: '#475569', lineHeight: 1.6 }}>
+                  {currentPreview.description}
+                </p>
+              </div>
+
+              {isSignedIn && (
+                <Link
+                  to={activeTab === 'ARENA' ? '/arena' : activeTab === 'YOUTUBE' ? '/youtube' : activeTab === 'RANKING' ? '/leaderboard' : '/games/capital-board'}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 16px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    borderRadius: 0,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span>Truy cập nhanh</span>
+                  <ChevronRight size={14} />
+                </Link>
+              )}
+            </div>
+
+            {/* Metrics Row (Vuông vắn) */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: 14,
+                marginTop: 24,
+                paddingTop: 20,
+                borderTop: '1px solid rgba(15,23,42,0.08)',
+              }}
+            >
+              {currentPreview.metrics.map((m, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: '#f8fafc',
+                    padding: '12px 16px',
+                    borderRadius: 0,
+                    border: '1px solid rgba(15,23,42,0.1)',
+                  }}
+                >
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                    {m.label}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', marginTop: 3 }}>
+                    {m.value}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="wr-home-section wr-feature-section" data-wr-reveal>
-        <div className="wr-section-head">
-          <span className="wr-section-kicker">Features</span>
-          <h2>Trải nghiệm thi đấu chuyên nghiệp.</h2>
-        </div>
-        <div className="wr-feature-grid">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <article className="wr-feature-card" key={feature.title}>
-                <div className="wr-feature-icon"><Icon size={20} strokeWidth={2.4} /></div>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
-              </article>
-            );
-          })}
+      {/* ── 4. FOUR CORE PILLARS SECTION (VUÔNG VẮN) ── */}
+      <section
+        id="pillars"
+        style={{
+          background: '#f8fafc',
+          borderTop: '1px solid rgba(15,23,42,0.1)',
+          borderBottom: '1px solid rgba(15,23,42,0.1)',
+          padding: '64px 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Kiến Trúc Sản Phẩm
+            </span>
+            <h2 style={{ margin: '6px 0 10px', fontSize: 32, fontWeight: 900, color: '#0f172a' }}>
+              4 Trụ Cột Nền Tảng Của WorkRank
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, color: '#64748b', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+              Tích hợp liền mạch quy trình làm việc, đo lường năng lực và giải trí vào trong một giao diện duy nhất.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 20,
+            }}
+          >
+            {/* Pillar 1: WORK */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 4px 16px rgba(15,23,42,0.03)',
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 0,
+                  background: 'rgba(239,68,68,0.1)',
+                  color: '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  border: '1px solid rgba(239,68,68,0.2)',
+                }}
+              >
+                <Tv size={22} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                WORK • SẢN XUẤT
+              </span>
+              <h3 style={{ margin: '6px 0 10px', fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                Tích Hợp Media & YouTube
+              </h3>
+              <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
+                Quản trị mạng lưới kênh YouTube, tự động lấy chỉ số views, likes, comments theo chu kỳ và phân bổ theo từng đội nhóm phụ trách.
+              </p>
+            </div>
+
+            {/* Pillar 2: COMPETE */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 4px 16px rgba(15,23,42,0.03)',
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 0,
+                  background: 'rgba(2,132,199,0.1)',
+                  color: '#0284c7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  border: '1px solid rgba(2,132,199,0.2)',
+                }}
+              >
+                <Swords size={22} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                COMPETE • THI ĐẤU
+              </span>
+              <h3 style={{ margin: '6px 0 10px', fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                Đấu Trường & Mùa Giải
+              </h3>
+              <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
+                Tham gia thi đấu theo mùa, hoàn thành nhiệm vụ hiệu suất, tích lũy điểm Season Score và Grand Championship minh bạch.
+              </p>
+            </div>
+
+            {/* Pillar 3: CONNECT */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 4px 16px rgba(15,23,42,0.03)',
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 0,
+                  background: 'rgba(217,119,6,0.1)',
+                  color: '#d97706',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  border: '1px solid rgba(217,119,6,0.2)',
+                }}
+              >
+                <Trophy size={22} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                CONNECT • VINH DANH
+              </span>
+              <h3 style={{ margin: '6px 0 10px', fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                Xếp Hạng & Chức Danh
+              </h3>
+              <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
+                Bảng xếp hạng realtime cá nhân và đội nhóm, phân cấp chức danh Tier 1-6 chuẩn hóa, huy hiệu Verified và kênh chat nội bộ.
+              </p>
+            </div>
+
+            {/* Pillar 4: PLAY */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 4px 16px rgba(15,23,42,0.03)',
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 0,
+                  background: 'rgba(147,51,234,0.1)',
+                  color: '#9333ea',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  border: '1px solid rgba(147,51,234,0.2)',
+                }}
+              >
+                <Gamepad2 size={22} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#9333ea', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                PLAY • GIẢI TRÍ
+              </span>
+              <h3 style={{ margin: '6px 0 10px', fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                Trò Chơi Doanh Nghiệp
+              </h3>
+              <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
+                Mini game Cờ Tỷ Phú và Đoán Hình & Đoán Nhạc theo phong cách Live Quiz Kahoot giúp giải tỏa căng thẳng trong giờ giải lao.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="wr-home-final" data-wr-reveal>
-        <div>
-          <span><Flame size={18} /></span>
-          <h2>Sẵn sàng bước vào đấu trường 3winmedia.</h2>
+      {/* ── 5. HOW IT WORKS / WORKFLOW SECTION (VUÔNG VẮN) ── */}
+      <section
+        id="workflow"
+        style={{
+          maxWidth: 1160,
+          margin: '0 auto',
+          padding: '64px 24px',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <span style={{ fontSize: 11, fontWeight: 900, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Quy Trình Hoạt Động
+          </span>
+          <h2 style={{ margin: '6px 0 10px', fontSize: 32, fontWeight: 900, color: '#0f172a' }}>
+            Cách WorkRank Vận Hành Trong Tổ Chức
+          </h2>
         </div>
-        <Link className="wr-home-primary" to={primaryTo}>
-          {isSignedIn ? 'Mở Dashboard' : 'Đăng nhập'}
-          <ArrowRight size={17} strokeWidth={2.5} />
-        </Link>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 16,
+          }}
+        >
+          {[
+            {
+              step: '01',
+              title: 'Gia Nhập & Phân Bổ',
+              desc: 'Tài khoản thành viên được liên kết với phòng ban, chức danh công tác và đội nhóm phụ trách.',
+            },
+            {
+              step: '02',
+              title: 'Làm Việc & Đồng Bộ',
+              desc: 'Hiệu suất sản xuất, nội dung và chỉ số video được hệ thống tự động đồng bộ theo thời gian thực.',
+            },
+            {
+              step: '03',
+              title: 'Thi Đấu & Thăng Hạng',
+              desc: 'Tích lũy điểm Season Score, hoàn thành nhiệm vụ và cải thiện vị trí trên Bảng Xếp Hạng.',
+            },
+            {
+              step: '04',
+              title: 'Vinh Danh & Gắn Kết',
+              desc: 'Trao Cúp Vô Địch, trao danh hiệu MVP và cùng đồng đội tham gia các trận mini game giải lao vui vẻ.',
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              style={{
+                padding: '20px 22px',
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 0,
+                position: 'relative',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 26,
+                  fontWeight: 900,
+                  color: '#0284c7',
+                  marginBottom: 10,
+                }}
+              >
+                {item.step}
+              </div>
+              <h4 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                {item.title}
+              </h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <footer className="wr-home-footer">
-        <div className="wr-home-brand">
-          <span style={{ fontSize: 11, fontWeight: 900, fontFamily: "'JetBrains Mono', monospace", letterSpacing: -0.5 }}>3W</span>
-          <strong>3winmedia</strong>
+      {/* ── 6. DATA INTEGRITY & ARCHITECTURE SECTION (VUÔNG VẮN) ── */}
+      <section
+        id="architecture"
+        style={{
+          background: '#0f172a',
+          color: '#ffffff',
+          padding: '64px 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Độ Tin Cậy & Bảo Mật Doanh Nghiệp
+            </span>
+            <h2 style={{ margin: '6px 0 10px', fontSize: 32, fontWeight: 900, color: '#ffffff' }}>
+              Kiến Trúc Dữ Liệu Bất Biến & Minh Bạch
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, color: '#94a3b8', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+              Được thiết kế theo kiến trúc hướng sự kiện (Event-Driven) với các tiêu chuẩn an toàn dữ liệu cao cấp.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 20,
+            }}
+          >
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <ShieldCheck size={20} color="#38bdf8" />
+                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#ffffff' }}>
+                  Source of Truth & Score Ledger
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                Mọi thay đổi điểm số đều ghi vết qua Event Store và Sổ Cái (Score Ledger) bất biến. Quản trị viên có thể đối soát và Rebuild Read Models bất kỳ lúc nào mà không thất thoát dữ liệu.
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <Lock size={20} color="#38bdf8" />
+                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#ffffff' }}>
+                  Phân Quyền RBAC & Chống IDOR
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                Hệ thống kiểm tra phân quyền nghiêm ngặt theo vai trò (Admin, Manager, User), cô lập dữ liệu kênh YouTube theo phạm vi đội nhóm, ngăn chặn triệt để lỗ hổng truy cập chéo (IDOR).
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 0,
+                padding: '24px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <Zap size={20} color="#38bdf8" />
+                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#ffffff' }}>
+                  Realtime Engine Phân Tán
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                Đồng bộ hóa tức thời qua Socket.IO cho điểm số, bảng xếp hạng, phòng chơi Cờ Tỷ Phú và các lượt quiz live mà không cần người dùng phải tải lại trang.
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/arena">Arena</Link>
-          <Link to="/grand">Grand Hub</Link>
-          <Link to="/leaderboard">Xếp hạng</Link>
+      </section>
+
+      {/* ── 7. FINAL CTA BANNER (VUÔNG VẮN) ── */}
+      <section
+        style={{
+          maxWidth: 1160,
+          margin: '0 auto',
+          padding: '64px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            borderRadius: 0,
+            padding: '48px 32px',
+            color: '#ffffff',
+            boxShadow: '0 12px 32px rgba(15,23,42,0.15)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <h2 style={{ margin: '0 0 14px', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: '#ffffff' }}>
+            Sẵn Sàng Bứt Phá Cùng Đội Ngũ WorkRank?
+          </h2>
+          <p style={{ margin: '0 0 28px', fontSize: 16, color: '#94a3b8', maxWidth: 600, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+            Truy cập không gian làm việc của bạn ngay hôm nay để theo dõi hiệu suất, thi đấu thăng hạng và kết nối cùng đồng đội.
+          </p>
+
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {isSignedIn ? (
+              <Link
+                to="/dashboard"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '14px 32px',
+                  background: '#38bdf8',
+                  color: '#0f172a',
+                  textDecoration: 'none',
+                  borderRadius: 0,
+                  fontSize: 15,
+                  fontWeight: 900,
+                  boxShadow: '0 4px 16px rgba(56,189,248,0.3)',
+                }}
+              >
+                <span>Mở Dashboard Cá Nhân</span>
+                <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '14px 32px',
+                    background: '#38bdf8',
+                    color: '#0f172a',
+                    textDecoration: 'none',
+                    borderRadius: 0,
+                    fontSize: 15,
+                    fontWeight: 900,
+                    boxShadow: '0 4px 16px rgba(56,189,248,0.3)',
+                  }}
+                >
+                  <span>Đăng Nhập Ngay</span>
+                  <ArrowRight size={18} />
+                </Link>
+
+                <Link
+                  to="/login?mode=register"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '14px 28px',
+                    background: 'rgba(255,255,255,0.1)',
+                    color: '#ffffff',
+                    border: '1.5px solid rgba(255,255,255,0.25)',
+                    textDecoration: 'none',
+                    borderRadius: 0,
+                    fontSize: 15,
+                    fontWeight: 800,
+                  }}
+                >
+                  <UserPlus size={18} />
+                  <span>Tạo Tài Khoản Mới</span>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-        <small>© {new Date().getFullYear()} 3winmedia Realtime Competition Platform</small>
+      </section>
+
+      {/* ── 8. PUBLIC FOOTER (VUÔNG VẮN) ── */}
+      <footer
+        style={{
+          borderTop: '1px solid rgba(15,23,42,0.12)',
+          background: '#ffffff',
+          padding: '32px 24px',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1160,
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 20,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <BrandMark size={28} showLabel label="WorkRank" />
+            <span style={{ fontSize: 12, color: '#64748b' }}>
+              • Nền tảng Hiệu suất, Thi đấu & Vinh danh Doanh nghiệp
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b' }}>
+            <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>Giới thiệu</a>
+            <a href="#pillars" style={{ color: 'inherit', textDecoration: 'none' }}>Năng lực</a>
+            <a href="#architecture" style={{ color: 'inherit', textDecoration: 'none' }}>Bảo mật</a>
+            <Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Đăng nhập</Link>
+          </div>
+
+          <div style={{ width: '100%', borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#94a3b8', flexWrap: 'wrap', gap: 10 }}>
+            <span>© {new Date().getFullYear()} WorkRank Platform. Bảo lưu mọi quyền.</span>
+            <span>Phiên bản Enterprise V3.3 • 100% Realtime Event Sourcing</span>
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }

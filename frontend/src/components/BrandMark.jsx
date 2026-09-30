@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function BrandMark({ size = 32, showLabel = false, labelStyle = {}, label = '3winmedia' }) {
+export default function BrandMark({ size = 32, showLabel = false, labelStyle = {}, label = 'WorkRank', symbol = 'WR' }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: Math.max(6, size * 0.2), minWidth: 0 }}>
       <span
@@ -21,7 +21,7 @@ export default function BrandMark({ size = 32, showLabel = false, labelStyle = {
           letterSpacing: '-0.5px',
         }}
       >
-        3W
+        {symbol}
       </span>
       {showLabel && (
         <span
