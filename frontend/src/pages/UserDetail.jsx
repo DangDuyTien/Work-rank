@@ -450,30 +450,37 @@ export default function UserDetail() {
                 boxShadow: '0 0 0 2px rgba(2,132,199,0.2), 0 10px 25px rgba(2,132,199,0.1)',
               }}
             >
-              {user.avatarData ? (
-                <img
-                  className="profile-photo"
-                  src={user.avatarData}
-                  alt={`Ảnh đại diện ${user.name || `User #${targetUserId}`}`}
-                />
-              ) : (
-                <div
-                  className="profile-photo-fallback"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#0284c7',
-                    color: '#ffffff',
-                    fontSize: 42,
-                    fontWeight: 900,
-                  }}
-                >
-                  {initialsFromName(user.name)}
-                </div>
-              )}
+              {(() => {
+                const avatarSrc = !avatarImgError ? (getUserAvatar(user, targetUserId) || user.avatarData || '') : '';
+                if (avatarSrc) {
+                  return (
+                    <img
+                      className="profile-photo"
+                      src={avatarSrc}
+                      alt={`Ảnh đại diện ${user.name || `User #${targetUserId}`}`}
+                      onError={() => setAvatarImgError(true)}
+                    />
+                  );
+                }
+                return (
+                  <div
+                    className="profile-photo-fallback"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#0284c7',
+                      color: '#ffffff',
+                      fontSize: 42,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {initialsFromName(user.name)}
+                  </div>
+                );
+              })()}
             </div>
             {/* Status dot */}
             <div
