@@ -17,7 +17,7 @@ async function resetAndSeedLocal() {
   console.log('✅ Đã tạo mới toàn bộ bảng thành công.');
 
   const now = new Date();
-  const adminPasswordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'Admin@123456', 12);
+  const adminPasswordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || '123456', 12);
   const userPasswordHash = await bcrypt.hash('User@123456', 12);
 
   // 1. Tạo 4 Đội Nhóm (Teams)
@@ -38,7 +38,7 @@ async function resetAndSeedLocal() {
   const seedUsers = [
     {
       name: 'Duy Tiến (Admin)',
-      email: process.env.SEED_ADMIN_EMAIL || 'admin@workrank.local',
+      email: process.env.SEED_ADMIN_EMAIL || 'tienddph50842@gmail.com',
       passwordHash: adminPasswordHash,
       role: 'admin',
       jobTitle: 'Giám đốc',

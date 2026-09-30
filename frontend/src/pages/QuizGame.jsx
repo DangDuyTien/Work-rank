@@ -13,14 +13,26 @@ import QuizMediaBox from '../components/quiz/QuizMediaBox';
 import QuizPlayerStrip from '../components/quiz/QuizPlayerStrip';
 import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
-import { AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  LogOut,
+  Clock,
+  Sparkles,
+  Gamepad2,
+  ArrowLeft,
+  ArrowRight,
+  Music,
+  Image as ImageIcon,
+  Trophy,
+} from 'lucide-react';
 
 export default function QuizGame() {
   const { user, socket } = useAuth();
   const { roomId: urlRoomId } = useParams();
   const navigate = useNavigate();
 
-  // State
+  // Room & gameplay state
   const [room, setRoom] = useState(null);
   const [players, setPlayers] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -41,11 +53,13 @@ export default function QuizGame() {
   const [actionLoading, setActionLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [soundMuted, setSoundMuted] = useState(quizSound.isMuted());
+  const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false);
 
-  // Timer countdown
+  // Server-authoritative timer
   const [timeRemaining, setTimeRemaining] = useState(10);
   const [timeTotal, setTimeTotal] = useState(10);
-  const timerRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+  const lastTickSecRef = useRef(null);
 
   // Toggle sound
   const toggleSound = () => {
@@ -54,9 +68,59 @@ export default function QuizGame() {
   };
 
   // Push activity feed message
-  const pushActivity = (name, text, color = "#b45309", avatar = null) => {
-    setRecentActivity((prev) => [...prev.slice(-8), { name, text, color, avatar, time: Date.now() }]);
+  const pushActivity = (name, text, color = '#38bdf8', avatar = null) => {
+    setRecentActivity((prev) => [
+      ...prev.slice(-8),
+      { name, text, color, avatar, time: Date.now() },
+    ]);
   };
+
+  /**
+   * Server-authoritative timer synchronizer:
+   * Uses server questionStartTime + questionDurationMs to calculate exact deadline
+   * Updates display countdown and locks answer when remaining <= 0
+   */
+  const syncServerTimer = useCallback((startTimeMs, durationMs, timeLimitSeconds = 10) => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+
+    const totalDurationMs = Number(durationMs) || (Number(timeLimitSeconds) * 1000) || 10000;
+    const startMs = Number(startTimeMs) || Date.now();
+    const deadlineMs = startMs + totalDurationMs;
+    const totalSec = Math.max(1, Math.round(totalDurationMs / 1000));
+    setTimeTotal(totalSec);
+
+    const calcRemaining = () => {
+      const now = Date.now();
+      const diffMs = deadlineMs - now;
+      return Math.max(0, Math.ceil(diffMs / 1000));
+    };
+
+    const initialSec = calcRemaining();
+    setTimeRemaining(initialSec);
+    lastTickSecRef.current = initialSec;
+
+    if (initialSec <= 0) return;
+
+    timerIntervalRef.current = setInterval(() => {
+      const remainingSec = calcRemaining();
+      setTimeRemaining(remainingSec);
+
+      if (remainingSec <= 3 && remainingSec > 0 && remainingSec !== lastTickSecRef.current) {
+        quizSound.playTick(true);
+      }
+      lastTickSecRef.current = remainingSec;
+
+      if (remainingSec <= 0) {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+          timerIntervalRef.current = null;
+        }
+      }
+    }, 100);
+  }, []);
 
   // Fetch lobby rooms & stats
   const fetchLobbyData = useCallback(async () => {
@@ -118,6 +182,14 @@ export default function QuizGame() {
           setSelectedOption(null);
         }
 
+        if (data.room.status === 'PLAYING' && data.currentQuestion) {
+          syncServerTimer(
+            data.room.questionStartTime,
+            data.room.questionDurationMs,
+            data.currentQuestion.timeLimit || 10
+          );
+        }
+
         if (data.room.status === 'FINISHED') {
           setFinalResults(data);
         }
@@ -128,7 +200,7 @@ export default function QuizGame() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [syncServerTimer]);
 
   // Initial load
   useEffect(() => {
@@ -142,26 +214,6 @@ export default function QuizGame() {
       fetchLobbyData();
     }
   }, [urlRoomId, fetchRoomDetail, fetchLobbyData]);
-
-  // Countdown timer logic
-  const startTimer = useCallback((durationSeconds) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setTimeTotal(durationSeconds);
-    setTimeRemaining(durationSeconds);
-
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          return 0;
-        }
-        if (prev - 1 <= 3) {
-          quizSound.playTick(true);
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
 
   // Realtime Socket.IO Listeners
   useEffect(() => {
@@ -199,7 +251,7 @@ export default function QuizGame() {
         setMyAnswer(null);
         setRoundResult(null);
         setFinalResults(null);
-        startTimer(Math.round((data.questionDurationMs || 10000) / 1000));
+        syncServerTimer(data.questionStartTime, data.questionDurationMs, data.question.timeLimit || 10);
         pushActivity('Hệ thống', 'Trận đấu bắt đầu! Câu hỏi số 1', '#f59e0b');
       }
     };
@@ -212,7 +264,7 @@ export default function QuizGame() {
         setCurrentQuestion(data.question);
         setQuestionIndex(data.questionIndex || 0);
         setTotalQuestions(data.totalQuestions || 10);
-        startTimer(Math.round((data.questionDurationMs || 10000) / 1000));
+        syncServerTimer(data.questionStartTime, data.questionDurationMs, data.question.timeLimit || 10);
         pushActivity('Hệ thống', `Chuyển sang Câu ${Number(data.questionIndex || 0) + 1}`, '#f59e0b');
       }
     };
@@ -225,11 +277,13 @@ export default function QuizGame() {
     };
 
     const onQuestionResult = (data) => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
       setRoundResult(data);
       if (data.leaderboard) setPlayers(data.leaderboard);
 
-      // Play sound based on result
       const myAns = data.answers?.find((a) => Number(a.userId) === Number(user?.id));
       if (myAns?.isCorrect) {
         quizSound.playCorrect();
@@ -240,7 +294,10 @@ export default function QuizGame() {
     };
 
     const onGameFinished = (data) => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
       quizSound.playVictory();
       if (data.room) setRoom(data.room);
       if (data.players) setPlayers(data.players);
@@ -258,7 +315,10 @@ export default function QuizGame() {
     socket.on('quiz:finished', onGameFinished);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
       socket.emit('quiz:leaveRoom', { roomId: room.id });
       socket.off('quiz:roomUpdated', onRoomUpdated);
       socket.off('quiz:playerJoined', onPlayerJoined);
@@ -269,7 +329,7 @@ export default function QuizGame() {
       socket.off('quiz:questionResult', onQuestionResult);
       socket.off('quiz:finished', onGameFinished);
     };
-  }, [socket, room?.id, user?.id, startTimer, players]);
+  }, [socket, room?.id, user?.id, syncServerTimer, players]);
 
   // Actions
   const handleCreateRoom = async (formData) => {
@@ -310,8 +370,12 @@ export default function QuizGame() {
     }
   };
 
-  const handleLeaveRoom = async () => {
-    if (!room?.id) return;
+  const executeLeaveRoom = async () => {
+    setShowLeaveConfirmModal(false);
+    if (!room?.id) {
+      navigate('/dashboard');
+      return;
+    }
     try {
       setActionLoading(true);
       await quizGame.leaveRoom(room.id);
@@ -326,6 +390,16 @@ export default function QuizGame() {
       console.error('Failed to leave room:', err);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRequestLeave = () => {
+    if (isPlayingOrShowing && !isFinished) {
+      setShowLeaveConfirmModal(true);
+    } else if (room) {
+      executeLeaveRoom();
+    } else {
+      navigate('/dashboard');
     }
   };
 
@@ -369,33 +443,394 @@ export default function QuizGame() {
   const isPlayingOrShowing = room?.status === 'PLAYING' || room?.status === 'SHOWING_RESULT';
   const isFinished = room?.status === 'FINISHED' || Boolean(finalResults);
 
-  return (
-    <>
-      {/* 1. LOBBY VIEW (Standard in-app layout) */}
-      {!room && (
-        <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
-          {errorMsg && (
-            <div
+  const IS_COMING_SOON = true;
+
+  if (IS_COMING_SOON) {
+    return (
+      <div
+        className="quiz-game-shell quiz-game-shell--scrollable"
+        style={{
+          width: '100vw',
+          minHeight: '100dvh',
+          background: 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          color: '#ffffff',
+          overflowX: 'hidden',
+          userSelect: 'none',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Top Header Bar */}
+        <header
+          style={{
+            height: 58,
+            width: '100%',
+            background: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 24px',
+            boxSizing: 'border-box',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
               style={{
-                maxWidth: 1040,
-                margin: '0 auto 14px',
-                padding: '10px 14px',
-                borderRadius: 8,
-                background: '#fee2e2',
-                border: '1px solid #ef4444',
-                color: '#dc2626',
-                fontSize: 13,
-                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
+                padding: '6px 14px',
+                borderRadius: 8,
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#ffffff',
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
               }}
             >
-              <AlertCircle size={16} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+              <ArrowLeft size={14} />
+              <span>Trang Chủ</span>
+            </button>
 
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
+                padding: '4px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: '0.4px',
+              }}
+            >
+              <Sparkles size={14} />
+              <span>ĐOÁN HÌNH & ĐOÁN NHẠC</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => navigate('/games/2048')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 14px',
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 900,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(2,132,199,0.3)',
+              }}
+            >
+              <Gamepad2 size={14} />
+              <span>Chơi Game 2048</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Centered Coming Soon Showcase Container */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            width: '100%',
+            maxWidth: 720,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              background: 'rgba(15, 23, 42, 0.85)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: 20,
+              padding: '36px 32px',
+              textAlign: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Ambient Top Glow */}
+            <div
+              style={{
+                position: 'absolute',
+                top: -60,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 240,
+                height: 120,
+                background: 'radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 70%)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Coming Soon Pill */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                padding: '5px 14px',
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 900,
+                color: '#f59e0b',
+                letterSpacing: '0.8px',
+                marginBottom: 16,
+              }}
+            >
+              <Clock size={13} />
+              <span>SẮP RA MẮT • COMING SOON</span>
+            </div>
+
+            <h1
+              style={{
+                margin: '0 0 12px',
+                fontSize: 32,
+                fontWeight: 950,
+                color: '#ffffff',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.2,
+              }}
+            >
+              Đoán Hình & Đoán Nhạc
+            </h1>
+
+            <p
+              style={{
+                margin: '0 auto 28px',
+                fontSize: 14,
+                color: '#94a3b8',
+                lineHeight: 1.6,
+                maxWidth: 540,
+                fontWeight: 500,
+              }}
+            >
+              Chế độ mini game trực tuyến Đoán Hình & Đoán Nhạc đang được nâng cấp toàn diện hệ thống âm thanh, kho câu hỏi đa phương tiện và đồng bộ realtime. Tính năng sẽ sớm được phát hành cho toàn thể thành viên!
+            </p>
+
+            {/* Feature preview cards */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 12,
+                marginBottom: 32,
+                textAlign: 'left',
+              }}
+            >
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 12,
+                  padding: '16px 14px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8', marginBottom: 6 }}>
+                  <ImageIcon size={18} />
+                  <strong style={{ fontSize: 13, color: '#ffffff' }}>Đoán Hình Ảnh</strong>
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4 }}>
+                  Thử thách thị giác nhanh tay tinh mắt với meme & biểu tượng
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 12,
+                  padding: '16px 14px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ec4899', marginBottom: 6 }}>
+                  <Music size={18} />
+                  <strong style={{ fontSize: 13, color: '#ffffff' }}>Đoán Bài Hát</strong>
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4 }}>
+                  Nghe giai điệu ngắn và đoán tên bài hát hot hit
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 12,
+                  padding: '16px 14px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f59e0b', marginBottom: 6 }}>
+                  <Trophy size={18} />
+                  <strong style={{ fontSize: 13, color: '#ffffff' }}>Thi Đấu Live</strong>
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4 }}>
+                  Đấu phòng nhiều người chơi và cập nhật BXH trực tiếp
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => navigate('/games/2048')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '12px 22px',
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: 14,
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
+                }}
+              >
+                <Gamepad2 size={16} />
+                <span>Chơi Game 2048 Ngay</span>
+                <ArrowRight size={16} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/games/capital-board')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '12px 18px',
+                  borderRadius: 10,
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>Cờ Tỷ Phú</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '12px 18px',
+                  borderRadius: 10,
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#94a3b8',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>Về Bảng Điều Khiển</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`quiz-game-shell ${!isPlayingOrShowing && !isFinished ? 'quiz-game-shell--scrollable' : ''}`}
+      style={{
+        width: '100vw',
+        minHeight: '100dvh',
+        background: 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: isPlayingOrShowing ? 'space-between' : 'flex-start',
+        overflowX: 'hidden',
+        overflowY: isPlayingOrShowing ? 'hidden' : 'auto',
+        userSelect: 'none',
+        position: 'relative',
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* 1. TOP BAR (Always Visible Across Entire Flow) */}
+      <QuizTopBar
+        room={room}
+        questionIndex={questionIndex}
+        totalQuestions={totalQuestions}
+        playerCount={players.length}
+        currentUser={user}
+        soundMuted={soundMuted}
+        onToggleSound={toggleSound}
+        onLeaveRoom={handleRequestLeave}
+        isLobby={!room}
+      />
+
+      {/* Global Error Notice */}
+      {errorMsg && (
+        <div
+          style={{
+            maxWidth: 1040,
+            margin: '12px auto 0',
+            padding: '10px 16px',
+            borderRadius: 10,
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#f87171',
+            fontSize: 13,
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            zIndex: 60,
+          }}
+        >
+          <AlertCircle size={16} />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* 2. LOBBY VIEW */}
+      {!room && (
+        <div style={{ width: '100%', padding: '20px 20px 40px', boxSizing: 'border-box' }}>
           <QuizLobby
             rooms={availableRooms}
             activeRejoinRoom={activeRejoinRoom}
@@ -410,79 +845,29 @@ export default function QuizGame() {
         </div>
       )}
 
-      {/* 2. WAITING ROOM VIEW */}
+      {/* 3. WAITING ROOM VIEW */}
       {room && isWaiting && (
-        <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
-          {errorMsg && (
-            <div
-              style={{
-                maxWidth: 860,
-                margin: '0 auto 14px',
-                padding: '10px 14px',
-                borderRadius: 8,
-                background: '#fee2e2',
-                border: '1px solid #ef4444',
-                color: '#dc2626',
-                fontSize: 13,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <AlertCircle size={16} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
+        <div style={{ width: '100%', padding: '24px 20px 40px', boxSizing: 'border-box' }}>
           <QuizWaitingRoom
             room={room}
             players={players}
             currentUser={user}
             isHost={isHost}
             onStartGame={handleStartGame}
-            onLeaveRoom={handleLeaveRoom}
+            onLeaveRoom={handleRequestLeave}
             actionLoading={actionLoading}
           />
         </div>
       )}
 
-      {/* 3. ACTIVE GAMEPLAY VIEW (FULL-SCREEN IMMERSIVE LIVE QUIZ SCREENSHOT MATCH) */}
+      {/* 4. ACTIVE GAMEPLAY VIEW */}
       {room && isPlayingOrShowing && !isFinished && currentQuestion && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 999,
-            width: '100vw',
-            height: '100vh',
-            background: 'radial-gradient(circle at center, #8d7969 0%, #766557 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            overflow: 'hidden',
-            userSelect: 'none',
-          }}
-        >
-          {/* Top Bar */}
-          <QuizTopBar
-            room={room}
-            questionIndex={questionIndex}
-            totalQuestions={totalQuestions}
-            playerCount={players.length}
-            soundMuted={soundMuted}
-            onToggleSound={toggleSound}
-            onLeaveRoom={handleLeaveRoom}
-          />
-
-          {/* Main 2-Column Gameplay Stage (Screenshot Match) */}
+        <>
           <div className="quiz-game-main-stage">
-            {/* Left Column (~42% width) — Question Text, 4 Large Answer Pills, Timer Bar */}
+            {/* Left Column — Question Text, 4 Large Answer Pills, Real Countdown Bar */}
             <div className="quiz-game-left-col">
-              {/* Question Text */}
               <QuizQuestionCard question={currentQuestion} />
 
-              {/* 4 Large Pastel Answer Pills */}
               <QuizAnswerPills
                 question={currentQuestion}
                 selectedOption={selectedOption}
@@ -491,13 +876,11 @@ export default function QuizGame() {
                 onSelectOption={handleSelectOption}
               />
 
-              {/* Timer Bar (Gradient Progress + Bold Numeric Counter) */}
               <QuizTimerBar
                 timeRemaining={timeRemaining}
                 timeTotal={timeTotal}
               />
 
-              {/* Round Result Floating Notification */}
               {roundResult && (
                 <QuizRoundResultModal
                   correctOption={roundResult.correctOption}
@@ -509,7 +892,7 @@ export default function QuizGame() {
               )}
             </div>
 
-            {/* Right Column (~58% width) — Large Media Box */}
+            {/* Right Column — Large Media Box (Image / Music Visualizer) */}
             <div className="quiz-game-right-col">
               <QuizMediaBox
                 question={currentQuestion}
@@ -518,32 +901,18 @@ export default function QuizGame() {
             </div>
           </div>
 
-          {/* Bottom Region — Live Activity Feed + Circular Player Avatars Dock */}
+          {/* Bottom Dock — Live Activity + Player Tokens */}
           <QuizPlayerStrip
             players={players}
             currentUserId={user?.id}
             recentActivity={recentActivity}
           />
-        </div>
+        </>
       )}
 
-      {/* 4. FINAL RESULTS VIEW (Full-screen victory theme) */}
+      {/* 5. FINAL RESULTS VIEW */}
       {room && isFinished && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 999,
-            width: '100vw',
-            height: '100vh',
-            background: 'radial-gradient(circle at center, #8d7969 0%, #766557 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            userSelect: 'none',
-          }}
-        >
+        <div style={{ width: '100%', padding: '24px 20px 40px', boxSizing: 'border-box' }}>
           <QuizFinalResults
             room={room}
             players={players}
@@ -559,6 +928,102 @@ export default function QuizGame() {
           />
         </div>
       )}
-    </>
+
+      {/* Leave Room Confirmation Modal */}
+      {showLeaveConfirmModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: '#0f172a',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderRadius: 16,
+              padding: 26,
+              width: '100%',
+              maxWidth: 420,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              color: '#ffffff',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#f87171',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+              }}
+            >
+              <AlertTriangle size={24} />
+            </div>
+
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#ffffff' }}>
+              Xác Nhận Rời Trận Đấu
+            </h3>
+
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
+              Trận đấu đang diễn ra. Nếu bạn rời phòng lúc này, điểm số của câu hỏi hiện tại sẽ không được bảo lưu.
+            </p>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirmModal(false)}
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: 8,
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Tiếp Tục Chơi
+              </button>
+
+              <button
+                type="button"
+                onClick={executeLeaveRoom}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 18px',
+                  borderRadius: 8,
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: 13,
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(239,68,68,0.4)',
+                }}
+              >
+                <LogOut size={14} />
+                <span>Rời Phòng</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

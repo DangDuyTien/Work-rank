@@ -25,19 +25,30 @@ async function issueTokens(user) {
 }
 
 async function register({ name, email, password, teamId }) {
-  const existing = await User.findOne({ where: { email } });
+  const normalizedIdentifier = String(email || '').trim().toLowerCase();
+  const existing = await User.findOne({ where: { email: normalizedIdentifier } });
   if (existing) {
-    const error = new Error('Email already registered');
+    const error = new Error('Tài khoản hoặc email này đã tồn tại');
     error.statusCode = 409;
     throw error;
   }
   const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
-  const user = await User.create({ name, email, passwordHash, teamId: teamId || null, role: 'user' });
+  const user = await User.create({ name, email: normalizedIdentifier, passwordHash, teamId: teamId || null, role: 'user' });
   return issueTokens(user);
 }
 
 async function login({ email, password }) {
-  const user = await User.findOne({ where: { email } });
+  const loginKey = String(email || '').trim().toLowerCase();
+  const user = await User.findOne({
+    where: {
+      [Op.or]: [
+        { email: loginKey },
+        { email: { [Op.like]: `${loginKey}@%` } },
+        { name: loginKey },
+      ],
+    },
+  });
+
   if (user && user.status !== 'active') {
     const error = new Error(ACCOUNT_LOCKED_MESSAGE);
     error.statusCode = 403;
@@ -45,7 +56,7 @@ async function login({ email, password }) {
   }
   const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
   if (!valid) {
-    const error = new Error('Invalid email or password');
+    const error = new Error('Tài khoản hoặc mật khẩu không chính xác');
     error.statusCode = 401;
     throw error;
   }

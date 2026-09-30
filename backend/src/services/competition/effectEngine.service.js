@@ -133,7 +133,7 @@ async function persistEffects({ eventId, ruleVersionId, seasonId, effects, reaso
       await ScoreLedger.create(ledgerData, { transaction });
       inserted++;
     } catch (err) {
-      if (err instanceof UniqueConstraintError) {
+      if (err instanceof UniqueConstraintError || err.name === 'SequelizeUniqueConstraintError') {
         // Already persisted — idempotent success
         skipped++;
       } else {

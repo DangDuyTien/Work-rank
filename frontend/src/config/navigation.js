@@ -14,6 +14,7 @@ import {
   Building2,
   Gamepad2,
   Sparkles,
+  LayoutGrid,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -23,7 +24,7 @@ import {
  * Groups all active platform routes into clean, logical parent-child categories:
  * - Overview (Dashboard, YouTube Analytics, Leaderboard)
  * - Competition (Arena, Grand Championship, Friends / Teams)
- * - Games (Capital Board Game)
+ * - Games (Capital Board Game, 2048, Guess Quiz)
  * - Admin (People & Privileges, Teams & YouTube, Seasons, Grand Championship, Operations & Logs)
  * - Account (Profile, Settings)
  */
@@ -101,22 +102,30 @@ export const NAVIGATION_CONFIG = [
     badge: 'Giải Trí',
     items: [
       {
+        to: '/games/capital-board',
+        label: 'Cờ Tỷ Phú',
+        shortLabel: 'Cờ Tỷ Phú',
+        icon: Gamepad2,
+        tourTarget: 'nav-capital-board',
+        description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản',
+      },
+      {
+        to: '/games/2048',
+        label: '2048',
+        shortLabel: '2048',
+        icon: LayoutGrid,
+        tourTarget: 'nav-game-2048',
+        description: 'Trò chơi ghép số 2048 trí tuệ & bảng xếp hạng công ty',
+      },
+      {
         to: '/games/quiz',
         label: 'Đoán Hình & Đoán Nhạc',
         shortLabel: 'Đoán Hình & Nhạc',
         icon: Sparkles,
-        tourTarget: 'nav-guess-quiz',
-        description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao',
-      },
-      {
-        to: '/games/capital-board',
-        label: 'Cờ Tỷ Phú (Cá Ngựa)',
-        shortLabel: 'Cờ Tỷ Phú',
-        icon: Gamepad2,
         badge: 'Coming Soon',
         comingSoon: true,
-        tourTarget: 'nav-capital-board',
-        description: 'Chế độ Cờ Tỷ Phú & Cá Ngựa đang tạm thời nâng cấp (Coming Soon)',
+        tourTarget: 'nav-guess-quiz',
+        description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao (Coming Soon)',
       },
     ],
   },
@@ -229,8 +238,9 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
+  if (pathname.startsWith('/games/2048')) return 'Game 2048';
+  if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú';
   if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
-  if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú (Cá Ngựa)';
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';
   if (pathname.startsWith('/admin/competition/seasons')) return 'Quản Lý Mùa Giải';

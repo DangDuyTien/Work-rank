@@ -1,12 +1,11 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, HelpCircle, LogOut, Menu, Settings, X } from 'lucide-react';
+import { Bell, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { resolveCurrentTitle } from '../config/navigation';
 import BrandMark from './BrandMark';
 import Sidebar from './Sidebar';
 import VerifiedBadge from './VerifiedBadge';
-import ProductTour, { PRODUCT_TOUR_EVENT } from './ProductTour';
 import FriendsDock from './FriendsDock';
 import { isVerifiedAccount } from '../utils/account';
 import { getStoredAvatar, removeStoredAvatar, initialsFromName } from '../utils/avatar';
@@ -496,29 +495,6 @@ export default function Layout() {
             </div>
 
             <button
-              data-tour="help"
-              type="button"
-              className="app-icon-action app-help-tour-button"
-              aria-label="Xem hướng dẫn sử dụng"
-              title="Xem hướng dẫn sử dụng"
-              onClick={() => window.dispatchEvent(new CustomEvent(PRODUCT_TOUR_EVENT))}
-              style={{
-                width: 34,
-                height: 34,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#666666',
-                borderRadius: 6,
-              }}
-            >
-              <HelpCircle size={17} />
-            </button>
-
-            <button
               type="button"
               className="app-icon-action"
               aria-label="Cài đặt"
@@ -637,9 +613,7 @@ export default function Layout() {
             }}
           >
             <Suspense fallback={<PageTransitionSkeleton />}>
-              <PageTransition key={location.pathname}>
-                <Outlet />
-              </PageTransition>
+              <Outlet />
             </Suspense>
           </main>
 
@@ -667,7 +641,6 @@ export default function Layout() {
         </div>
 
         <FriendsDock />
-        <ProductTour />
       </div>
     </div>
   );

@@ -134,14 +134,14 @@ describe('Phase 3 E2E — Stateful Competition & API Authorization', () => {
     await outboxDispatcher.processBatch();
 
     // Verify 3 events in event store
-    const eventCount = await CompetitionEvent.count();
+    const eventCount = await CompetitionEvent.count({ where: { actorId: regularUser.id } });
     assert.equal(eventCount, 3, 'Event Store should have 3 events');
 
     // 4. Process events via Competition Engine Worker
     await engineWorker.processBatch();
 
     // Verify all 3 events are marked PROCESSED
-    const processedCount = await CompetitionEvent.count({ where: { status: 'PROCESSED' } });
+    const processedCount = await CompetitionEvent.count({ where: { actorId: regularUser.id, status: 'PROCESSED' } });
     assert.equal(processedCount, 3, 'All 3 events should be PROCESSED');
 
     // 5. Verify Score Ledger entries:

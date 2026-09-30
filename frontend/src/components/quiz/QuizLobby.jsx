@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Plus,
   Users,
-  Play,
   Image,
   Music,
   Sparkles,
@@ -13,8 +12,9 @@ import {
   ArrowRight,
   Gamepad2,
   X,
+  RefreshCw,
 } from 'lucide-react';
-import { getUserAvatar } from '../../utils/avatar';
+import QuizAvatar from './QuizAvatar';
 
 export default function QuizLobby({
   rooms = [],
@@ -53,13 +53,24 @@ export default function QuizLobby({
   };
 
   const modeBadgeConfig = {
-    ALL: { label: 'ĐOÁN HÌNH & NHẠC', icon: Sparkles, color: '#0284c7', bg: 'rgba(2,132,199,0.08)' },
-    IMAGE: { label: 'ĐOÁN HÌNH', icon: Image, color: '#16a34a', bg: 'rgba(22,163,74,0.08)' },
-    MUSIC: { label: 'ĐOÁN NHẠC', icon: Music, color: '#9333ea', bg: 'rgba(147,51,234,0.08)' },
+    ALL: { label: 'ĐOÁN HÌNH & NHẠC', icon: Sparkles, color: '#38bdf8', bg: 'rgba(56,189,248,0.15)', border: 'rgba(56,189,248,0.35)' },
+    IMAGE: { label: 'ĐOÁN HÌNH', icon: Image, color: '#34d399', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.35)' },
+    MUSIC: { label: 'ĐOÁN NHẠC', icon: Music, color: '#c084fc', bg: 'rgba(192,132,252,0.15)', border: 'rgba(192,132,252,0.35)' },
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 1040, margin: '0 auto' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+        width: '100%',
+        maxWidth: 1080,
+        margin: '0 auto',
+        color: '#ffffff',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Top Header Card */}
       <div
         style={{
@@ -68,11 +79,12 @@ export default function QuizLobby({
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 16,
-          background: '#ffffff',
-          borderRadius: 14,
-          padding: '22px 26px',
-          border: '1px solid rgba(15,23,42,0.1)',
-          boxShadow: '0 2px 12px rgba(15,23,42,0.04)',
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: 16,
+          padding: '24px 28px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
         }}
       >
         <div>
@@ -81,48 +93,77 @@ export default function QuizLobby({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              background: 'rgba(2,132,199,0.08)',
-              color: '#0284c7',
-              padding: '3px 10px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#38bdf8',
+              padding: '4px 12px',
               borderRadius: 20,
               fontSize: 11,
-              fontWeight: 800,
+              fontWeight: 900,
               marginBottom: 8,
+              letterSpacing: '0.4px',
             }}
           >
             <Sparkles size={13} />
             <span>MINI GAME TRẮC NGHIỆM TỐC ĐỘ</span>
           </div>
 
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#0f172a' }}>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.3px' }}>
             Đoán Hình & Đoán Nhạc
           </h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
-            Nhìn hình ảnh, nghe giai điệu và chọn đáp án chính xác nhanh nhất để ghi điểm cao!
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
+            Nhìn hình ảnh, lắng nghe giai điệu và chọn đáp án chính xác nhanh nhất để bứt phá bảng xếp hạng!
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '10px 18px',
-            background: '#0f172a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
-          }}
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          <span>Tạo Phòng Chơi</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={loading}
+              title="Làm mới danh sách"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 42,
+                height: 42,
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#ffffff',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 10,
+                cursor: loading ? 'wait' : 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '11px 22px',
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 900,
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            }}
+          >
+            <Plus size={17} strokeWidth={2.5} />
+            <span>Tạo Phòng Chơi</span>
+          </button>
+        </div>
       </div>
 
       {/* Active Rejoin Banner */}
@@ -132,33 +173,35 @@ export default function QuizLobby({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '12px 18px',
-            background: 'rgba(2,132,199,0.06)',
-            border: '1.5px solid #0284c7',
-            borderRadius: 10,
+            padding: '14px 20px',
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1.5px solid #38bdf8',
+            borderRadius: 12,
+            boxShadow: '0 4px 16px rgba(56, 189, 248, 0.2)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
+                width: 38,
+                height: 38,
+                borderRadius: 10,
                 background: '#0284c7',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(2,132,199,0.5)',
               }}
             >
-              <Gamepad2 size={18} />
+              <Gamepad2 size={20} />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#ffffff' }}>
                 Bạn đang có trận đấu đang diễn ra (#{activeRejoinRoom.code})
               </div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>
-                Phòng: <strong>{activeRejoinRoom.title}</strong>
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                Phòng: <strong style={{ color: '#38bdf8' }}>{activeRejoinRoom.title}</strong>
               </div>
             </div>
           </div>
@@ -169,19 +212,20 @@ export default function QuizLobby({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
-              padding: '6px 14px',
-              background: '#0284c7',
-              color: '#ffffff',
+              gap: 6,
+              padding: '8px 18px',
+              background: '#38bdf8',
+              color: '#0f172a',
               border: 'none',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 800,
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 900,
               cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(56,189,248,0.4)',
             }}
           >
             <span>Vào lại</span>
-            <ArrowRight size={13} />
+            <ArrowRight size={14} strokeWidth={2.5} />
           </button>
         </div>
       )}
@@ -193,36 +237,37 @@ export default function QuizLobby({
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
             gap: 12,
-            background: '#ffffff',
-            border: '1px solid rgba(15,23,42,0.08)',
-            borderRadius: 12,
-            padding: '14px 18px',
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 14,
+            padding: '16px 20px',
           }}
         >
           <div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Trận đã chơi</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>{myStats.gamesPlayed || 0}</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Trận đã chơi</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#ffffff', marginTop: 2 }}>{myStats.gamesPlayed || 0}</div>
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
               <span>Chiến thắng</span>
-              <Trophy size={12} color="#d97706" />
+              <Trophy size={12} color="#f59e0b" />
             </div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#d97706', marginTop: 2 }}>{myStats.gamesWon || 0}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b', marginTop: 2 }}>{myStats.gamesWon || 0}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Tổng điểm</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0284c7', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Tổng điểm</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {Number(myStats.totalScore || 0).toLocaleString()}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Tỉ lệ đúng</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#16a34a', marginTop: 2 }}>{myStats.accuracy || 0}%</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Tỉ lệ đúng</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#34d399', marginTop: 2 }}>{myStats.accuracy || 0}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Điểm kỷ lục</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Điểm kỷ lục</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#c084fc', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {Number(myStats.highestScore || 0).toLocaleString()}
             </div>
           </div>
@@ -232,20 +277,21 @@ export default function QuizLobby({
       {/* Main Tab Controls & Filters */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         {/* Rooms / Leaderboard View Tabs */}
-        <div style={{ display: 'flex', gap: 6, background: 'rgba(15,23,42,0.05)', padding: 4, borderRadius: 8 }}>
+        <div style={{ display: 'flex', gap: 6, background: 'rgba(0, 0, 0, 0.4)', padding: 4, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
           <button
             type="button"
             onClick={() => setActiveTab('ROOMS')}
             style={{
-              padding: '6px 14px',
+              padding: '8px 16px',
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 13,
               fontWeight: 800,
-              background: activeTab === 'ROOMS' ? '#ffffff' : 'transparent',
-              color: activeTab === 'ROOMS' ? '#0f172a' : '#64748b',
+              background: activeTab === 'ROOMS' ? '#0284c7' : 'transparent',
+              color: activeTab === 'ROOMS' ? '#ffffff' : '#94a3b8',
               cursor: 'pointer',
-              boxShadow: activeTab === 'ROOMS' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: activeTab === 'ROOMS' ? '0 2px 8px rgba(2,132,199,0.4)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             Sảnh Phòng Đấu ({rooms.length})
@@ -257,19 +303,20 @@ export default function QuizLobby({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 14px',
+              padding: '8px 16px',
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 13,
               fontWeight: 800,
-              background: activeTab === 'LEADERBOARD' ? '#ffffff' : 'transparent',
-              color: activeTab === 'LEADERBOARD' ? '#0f172a' : '#64748b',
+              background: activeTab === 'LEADERBOARD' ? '#0284c7' : 'transparent',
+              color: activeTab === 'LEADERBOARD' ? '#ffffff' : '#94a3b8',
               cursor: 'pointer',
-              boxShadow: activeTab === 'LEADERBOARD' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: activeTab === 'LEADERBOARD' ? '0 2px 8px rgba(2,132,199,0.4)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>Bảng Xếp Hạng Quiz</span>
-            <Trophy size={14} color="#d97706" />
+            <Trophy size={14} color="#f59e0b" />
           </button>
         </div>
 
@@ -289,18 +336,19 @@ export default function QuizLobby({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 5,
-                  padding: '5px 12px',
-                  borderRadius: 6,
+                  padding: '7px 14px',
+                  borderRadius: 8,
                   border: '1px solid',
-                  borderColor: modeFilter === f.id ? '#0f172a' : 'rgba(15,23,42,0.1)',
-                  background: modeFilter === f.id ? '#0f172a' : '#ffffff',
-                  color: modeFilter === f.id ? '#ffffff' : '#64748b',
+                  borderColor: modeFilter === f.id ? '#38bdf8' : 'rgba(255,255,255,0.12)',
+                  background: modeFilter === f.id ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)',
+                  color: modeFilter === f.id ? '#38bdf8' : '#94a3b8',
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <f.icon size={12} />
+                <f.icon size={13} />
                 <span>{f.label}</span>
               </button>
             ))}
@@ -315,106 +363,110 @@ export default function QuizLobby({
             <div
               style={{
                 textAlign: 'center',
-                padding: '44px 24px',
-                background: '#ffffff',
-                borderRadius: 14,
-                border: '1px dashed rgba(15,23,42,0.15)',
+                padding: '48px 24px',
+                background: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 16,
+                border: '1px dashed rgba(255,255,255,0.18)',
               }}
             >
               <div
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   borderRadius: '50%',
-                  background: 'rgba(15,23,42,0.05)',
-                  color: '#64748b',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#94a3b8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 12px',
+                  margin: '0 auto 14px',
                 }}
               >
-                <Gamepad2 size={24} />
+                <Gamepad2 size={26} />
               </div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: '#ffffff' }}>
                 Chưa có phòng chơi nào đang chờ
               </div>
-              <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 16px' }}>
-                Hãy tạo phòng mới và mời đồng đội cùng tham gia thi đấu!
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: '6px 0 20px' }}>
+                Hãy tạo phòng mới và mời đồng đội cùng tham gia thi đấu ngay bây giờ!
               </p>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
                 style={{
-                  padding: '8px 16px',
-                  background: '#0f172a',
+                  padding: '10px 22px',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 900,
                   cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.4)',
                 }}
               >
                 + Tạo Phòng Ngay
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 14 }}>
               {filteredRooms.map((room) => {
                 const conf = modeBadgeConfig[room.mode] || modeBadgeConfig.ALL;
                 const ModeIcon = conf.icon;
-                const avatarUrl = room.host?.avatarUrl || getUserAvatar(room.hostUserId);
 
                 return (
                   <div
                     key={room.id}
                     style={{
-                      background: '#ffffff',
-                      borderRadius: 12,
-                      border: '1px solid rgba(15,23,42,0.1)',
-                      padding: '16px 18px',
-                      boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
+                      background: 'rgba(15, 23, 42, 0.8)',
+                      backdropFilter: 'blur(8px)',
+                      borderRadius: 14,
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      padding: '18px 20px',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      transition: 'border-color 0.15s ease',
+                      transition: 'border-color 0.15s ease, transform 0.15s ease',
                     }}
                   >
                     <div>
                       {/* Badge & Code */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                         <span
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
-                            padding: '3px 8px',
-                            borderRadius: 4,
+                            padding: '3px 9px',
+                            borderRadius: 6,
                             background: conf.bg,
+                            border: `1px solid ${conf.border}`,
                             color: conf.color,
                             fontSize: 10,
-                            fontWeight: 800,
+                            fontWeight: 900,
+                            letterSpacing: '0.3px',
                           }}
                         >
                           <ModeIcon size={11} />
                           <span>{conf.label}</span>
                         </span>
 
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 800, color: '#64748b' }}>
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 900, color: '#38bdf8' }}>
                           #{room.code}
                         </span>
                       </div>
 
                       {/* Title */}
-                      <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+                      <h3 style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 900, color: '#ffffff', lineHeight: 1.4 }}>
                         {room.title}
                       </h3>
 
-                      {/* Host & Info */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b' }}>
-                        <img src={avatarUrl} alt={room.host?.name} style={{ width: 18, height: 18, borderRadius: '50%' }} />
-                        <span>Host: <strong>{room.host?.name || 'Host'}</strong></span>
+                      {/* Host & Info with QuizAvatar */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#94a3b8' }}>
+                        <QuizAvatar user={room.host || { id: room.hostUserId }} userId={room.hostUserId} size="xs" />
+                        <span>Host: <strong style={{ color: '#ffffff' }}>{room.host?.name || 'Host'}</strong></span>
                       </div>
                     </div>
 
@@ -424,14 +476,14 @@ export default function QuizLobby({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginTop: 14,
-                        paddingTop: 10,
-                        borderTop: '1px solid rgba(15,23,42,0.06)',
+                        marginTop: 16,
+                        paddingTop: 12,
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569', fontWeight: 700 }}>
-                        <Users size={13} color="#0284c7" />
-                        <span>{room.playerCount || (room.players ? room.players.length : 1)} / {room.maxPlayers || 20}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#94a3b8', fontWeight: 800 }}>
+                        <Users size={14} color="#38bdf8" />
+                        <span>{room.playerCount || (room.players ? room.players.length : 1)} / {room.maxPlayers || 20} người</span>
                       </div>
 
                       <button
@@ -440,19 +492,20 @@ export default function QuizLobby({
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 4,
-                          padding: '6px 12px',
-                          background: '#0f172a',
+                          gap: 5,
+                          padding: '7px 14px',
+                          background: '#0284c7',
                           color: '#ffffff',
                           border: 'none',
-                          borderRadius: 6,
+                          borderRadius: 8,
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 900,
                           cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(2,132,199,0.35)',
                         }}
                       >
                         <span>Tham gia</span>
-                        <ArrowRight size={12} />
+                        <ArrowRight size={13} />
                       </button>
                     </div>
                   </div>
@@ -465,76 +518,75 @@ export default function QuizLobby({
         /* Leaderboard View */
         <div
           style={{
-            background: '#ffffff',
-            borderRadius: 14,
-            border: '1px solid rgba(15,23,42,0.1)',
+            background: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 16,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
             overflow: 'hidden',
-            boxShadow: '0 2px 10px rgba(15,23,42,0.03)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
           }}
         >
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
-              Bảng Xếp Hạng Quiz Toàn Công Ty
+          <div style={{ padding: '16px 22px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Trophy size={18} color="#f59e0b" />
+              <span>Bảng Xếp Hạng Quiz Toàn Công Ty</span>
             </h3>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: 'rgba(15,23,42,0.02)', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                  <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b' }}>Hạng</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b' }}>Thành viên</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b', textAlign: 'right' }}>Tổng điểm</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b', textAlign: 'right' }}>
+                <tr style={{ background: 'rgba(0, 0, 0, 0.3)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <th style={{ padding: '12px 18px', fontWeight: 900, color: '#94a3b8' }}>Hạng</th>
+                  <th style={{ padding: '12px 18px', fontWeight: 900, color: '#94a3b8' }}>Thành viên</th>
+                  <th style={{ padding: '12px 18px', fontWeight: 900, color: '#94a3b8', textAlign: 'right' }}>Tổng điểm</th>
+                  <th style={{ padding: '12px 18px', fontWeight: 900, color: '#94a3b8', textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <span>Thắng</span>
-                      <Trophy size={12} color="#d97706" />
+                      <Trophy size={12} color="#f59e0b" />
                     </div>
                   </th>
-                  <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b', textAlign: 'right' }}>Độ chính xác</th>
+                  <th style={{ padding: '12px 18px', fontWeight: 900, color: '#94a3b8', textAlign: 'right' }}>Độ chính xác</th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.map((item, idx) => {
-                  const avatarUrl = item.user?.avatarUrl || getUserAvatar(item.userId);
-                  return (
-                    <tr
-                      key={item.id || idx}
-                      style={{
-                        borderBottom: '1px solid rgba(15,23,42,0.05)',
-                        background: idx === 0 ? 'rgba(245,158,11,0.03)' : 'transparent',
-                      }}
-                    >
-                      <td style={{ padding: '12px 16px', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          {idx === 0 ? (
-                            <Crown size={14} color="#d97706" />
-                          ) : idx === 1 ? (
-                            <Medal size={14} color="#64748b" />
-                          ) : idx === 2 ? (
-                            <Medal size={14} color="#b45309" />
-                          ) : null}
-                          <span>#{idx + 1}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <img src={avatarUrl} alt={item.user?.name} style={{ width: 26, height: 26, borderRadius: '50%' }} />
-                          <span style={{ fontWeight: 700, color: '#0f172a' }}>{item.user?.name || `User #${item.userId}`}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace', color: '#0284c7' }}>
-                        {Number(item.totalScore || 0).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#d97706' }}>
-                        {item.gamesWon || 0}
-                      </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
-                        {item.accuracy || 0}%
-                      </td>
-                    </tr>
-                  );
-                })}
+                {leaderboard.map((item, idx) => (
+                  <tr
+                    key={item.id || idx}
+                    style={{
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      background: idx === 0 ? 'rgba(245,158,11,0.06)' : 'transparent',
+                    }}
+                  >
+                    <td style={{ padding: '14px 18px', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {idx === 0 ? (
+                          <Crown size={15} color="#f59e0b" />
+                        ) : idx === 1 ? (
+                          <Medal size={15} color="#94a3b8" />
+                        ) : idx === 2 ? (
+                          <Medal size={15} color="#d97706" />
+                        ) : null}
+                        <span style={{ color: idx === 0 ? '#f59e0b' : '#ffffff' }}>#{idx + 1}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <QuizAvatar user={item.user || { id: item.userId }} userId={item.userId} size="sm" />
+                        <span style={{ fontWeight: 800, color: '#ffffff' }}>{item.user?.name || `User #${item.userId}`}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 18px', textAlign: 'right', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace', color: '#38bdf8' }}>
+                      {Number(item.totalScore || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '14px 18px', textAlign: 'right', fontWeight: 800, color: '#f59e0b' }}>
+                      {item.gamesWon || 0}
+                    </td>
+                    <td style={{ padding: '14px 18px', textAlign: 'right', fontWeight: 800, color: '#34d399' }}>
+                      {item.accuracy || 0}%
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -547,7 +599,8 @@ export default function QuizLobby({
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15,23,42,0.6)',
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -557,31 +610,34 @@ export default function QuizLobby({
         >
           <div
             style={{
-              background: '#ffffff',
-              borderRadius: 14,
-              padding: 24,
+              background: '#0f172a',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: 16,
+              padding: 26,
               width: '100%',
-              maxWidth: 440,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              maxWidth: 460,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              color: '#ffffff',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: '#0f172a' }}>
-                Tạo Phòng Đấu Quiz Mới
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Sparkles size={18} color="#38bdf8" />
+                <span>Tạo Phòng Đấu Quiz Mới</span>
               </h2>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4 }}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
-                  Tên phòng
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#cbd5e1', marginBottom: 6 }}>
+                  Tên phòng đấu
                 </label>
                 <input
                   type="text"
@@ -591,17 +647,20 @@ export default function QuizLobby({
                   required
                   style={{
                     width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    border: '1px solid rgba(15,23,42,0.2)',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    color: '#ffffff',
                     fontSize: 13,
                     boxSizing: 'border-box',
+                    outline: 'none',
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#cbd5e1', marginBottom: 6 }}>
                   Chế độ câu hỏi
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -615,22 +674,23 @@ export default function QuizLobby({
                       type="button"
                       onClick={() => setMode(m.id)}
                       style={{
-                        padding: '8px 6px',
-                        borderRadius: 6,
+                        padding: '10px 8px',
+                        borderRadius: 8,
                         border: '1.5px solid',
-                        borderColor: mode === m.id ? '#0284c7' : 'rgba(15,23,42,0.12)',
-                        background: mode === m.id ? 'rgba(2,132,199,0.08)' : '#ffffff',
-                        color: mode === m.id ? '#0284c7' : '#475569',
+                        borderColor: mode === m.id ? '#38bdf8' : 'rgba(255,255,255,0.12)',
+                        background: mode === m.id ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: mode === m.id ? '#38bdf8' : '#94a3b8',
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 900,
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: 3,
+                        gap: 4,
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      <m.icon size={14} />
+                      <m.icon size={15} />
                       <span>{m.label}</span>
                     </button>
                   ))}
@@ -639,7 +699,7 @@ export default function QuizLobby({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#cbd5e1', marginBottom: 6 }}>
                     Số người tối đa
                   </label>
                   <select
@@ -647,11 +707,14 @@ export default function QuizLobby({
                     onChange={(e) => setMaxPlayers(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: 6,
-                      border: '1px solid rgba(15,23,42,0.2)',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(255, 255, 255, 0.18)',
+                      background: '#1e293b',
+                      color: '#ffffff',
                       fontSize: 13,
                       boxSizing: 'border-box',
+                      outline: 'none',
                     }}
                   >
                     <option value={4}>4 người</option>
@@ -662,7 +725,7 @@ export default function QuizLobby({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#cbd5e1', marginBottom: 6 }}>
                     Số câu hỏi
                   </label>
                   <select
@@ -670,11 +733,14 @@ export default function QuizLobby({
                     onChange={(e) => setTotalQuestions(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: 6,
-                      border: '1px solid rgba(15,23,42,0.2)',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(255, 255, 255, 0.18)',
+                      background: '#1e293b',
+                      color: '#ffffff',
                       fontSize: 13,
                       boxSizing: 'border-box',
+                      outline: 'none',
                     }}
                   >
                     <option value={5}>5 câu</option>
@@ -684,18 +750,18 @@ export default function QuizLobby({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   style={{
-                    padding: '8px 14px',
-                    borderRadius: 6,
+                    padding: '9px 16px',
+                    borderRadius: 8,
                     background: 'transparent',
-                    border: '1px solid rgba(15,23,42,0.2)',
-                    color: '#64748b',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: '#94a3b8',
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 800,
                     cursor: 'pointer',
                   }}
                 >
@@ -704,14 +770,15 @@ export default function QuizLobby({
                 <button
                   type="submit"
                   style={{
-                    padding: '8px 18px',
-                    borderRadius: 6,
-                    background: '#0f172a',
+                    padding: '9px 22px',
+                    borderRadius: 8,
+                    background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                     color: '#ffffff',
                     border: 'none',
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 900,
                     cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(2,132,199,0.4)',
                   }}
                 >
                   Tạo phòng

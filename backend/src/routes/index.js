@@ -18,6 +18,7 @@ router.use('/competition', require('./competition.routes'));
 router.use('/youtube', require('./youtube.routes'));
 router.use('/rankings', require('./ranking.routes'));
 router.use('/games/quiz', require('./quizGame.routes'));
+router.use('/games/2048', require('./game2048.routes'));
 router.use('/games', require('./capitalBoardGame.routes'));
 
 module.exports = router;

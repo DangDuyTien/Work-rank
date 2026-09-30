@@ -848,19 +848,19 @@ export default function Settings() {
             {/* 4. MVP */}
             <div style={{
               padding: 14,
-              background: isMvpBadge ? 'rgba(124,58,237,0.08)' : 'rgba(15,23,42,0.02)',
-              border: isMvpBadge ? '1px solid rgba(124,58,237,0.35)' : '1px solid rgba(15,23,42,0.08)',
+              background: isMvpBadge ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.02)',
+              border: isMvpBadge ? '1px solid rgba(180,83,9,0.35)' : '1px solid rgba(0,0,0,0.08)',
               display: 'flex', gap: 12, alignItems: 'flex-start',
             }}>
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: isMvpBadge ? 'rgba(124,58,237,0.15)' : 'rgba(15,23,42,0.05)',
-                color: isMvpBadge ? '#7c3aed' : '#94a3b8',
+                background: isMvpBadge ? 'rgba(180,83,9,0.15)' : 'rgba(0,0,0,0.05)',
+                color: isMvpBadge ? '#b45309' : '#94a3b8',
               }}>
                 <Star size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isMvpBadge ? '#7c3aed' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: isMvpBadge ? '#b45309' : '#0f172a' }}>
                   Nhân Viên Xuất Sắc {mvpCount > 1 && `(x${mvpCount})`}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>

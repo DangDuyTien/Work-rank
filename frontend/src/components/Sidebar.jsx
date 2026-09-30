@@ -356,7 +356,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
             style={{
               width: 34,
               height: 34,
-              borderRadius: 6,
+              borderRadius: '50%',
               background: '#141414',
               display: 'flex',
               alignItems: 'center',

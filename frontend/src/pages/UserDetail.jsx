@@ -57,7 +57,7 @@ import { TabTransition, PageTransitionSkeleton } from '../components/ui';
 const CARD = {
   background: '#ffffff',
   border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 0,
+  borderRadius: 6,
   boxShadow: 'none',
 };
 
@@ -438,7 +438,7 @@ export default function UserDetail() {
         style={{
           background: '#ffffff',
           border: '1px solid rgba(15,23,42,0.08)',
-          borderRadius: 0,
+          borderRadius: 6,
           boxShadow: 'none',
         }}
       >
@@ -449,6 +449,8 @@ export default function UserDetail() {
               style={{
                 width: 150,
                 height: 150,
+                borderRadius: '50%',
+                overflow: 'hidden',
                 border: '3px solid #ffffff',
                 boxShadow: '0 0 0 2px rgba(180,83,9,0.2), 0 10px 25px rgba(180,83,9,0.1)',
               }}
@@ -515,7 +517,7 @@ export default function UserDetail() {
                     fontWeight: 900,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
-                    borderRadius: 0,
+                    borderRadius: 4,
                     background: '#ecfeff',
                     color: '#0891b2',
                     border: '1px solid rgba(8,145,178,0.25)',
@@ -535,7 +537,7 @@ export default function UserDetail() {
                     fontWeight: 900,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
-                    borderRadius: 0,
+                    borderRadius: 4,
                     background: '#fef3c7',
                     color: '#b45309',
                     border: '1px solid rgba(245,158,11,0.3)',
@@ -555,7 +557,7 @@ export default function UserDetail() {
                     fontWeight: 900,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
-                    borderRadius: 0,
+                    borderRadius: 4,
                     background: '#f5f3ff',
                     color: '#7c3aed',
                     border: '1px solid rgba(124,58,237,0.3)',
@@ -598,7 +600,7 @@ export default function UserDetail() {
                   alignItems: 'center',
                   gap: 6,
                   padding: '5px 10px',
-                  borderRadius: 0,
+                  borderRadius: 9999,
                   background: statusTheme.bg,
                   border: `1px solid ${statusTheme.border}`,
                   color: statusTheme.color,
@@ -621,7 +623,7 @@ export default function UserDetail() {
                     alignItems: 'center',
                     gap: 6,
                     padding: '5px 12px',
-                    borderRadius: 0,
+                    borderRadius: 6,
                     background: hasLiked ? 'rgba(239,68,68,0.1)' : 'rgba(15,23,42,0.04)',
                     border: hasLiked ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(15,23,42,0.1)',
                     color: hasLiked ? '#dc2626' : '#64748b',
@@ -645,7 +647,7 @@ export default function UserDetail() {
                     alignItems: 'center',
                     gap: 6,
                     padding: '5px 14px',
-                    borderRadius: 0,
+                    borderRadius: 6,
                     background: '#0f172a',
                     color: '#ffffff',
                     border: 'none',
@@ -770,7 +772,7 @@ export default function UserDetail() {
           display: 'flex', gap: 4,
           background: '#ffffff',
           border: '1px solid rgba(15,23,42,0.08)',
-          borderRadius: 0, padding: 6,
+          borderRadius: 6, padding: 6,
           marginBottom: 18, overflowX: 'auto',
           scrollbarWidth: 'none',
         }}
@@ -789,7 +791,7 @@ export default function UserDetail() {
               onClick={() => setActiveTab(tab.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', borderRadius: 0, border: 'none',
+                padding: '8px 14px', borderRadius: 4, border: 'none',
                 background: isActive ? '#b45309' : 'transparent',
                 color: isActive ? '#ffffff' : '#64748b',
                 fontSize: 12, fontWeight: 700,
@@ -802,6 +804,7 @@ export default function UserDetail() {
               {tab.badge && (
                 <span style={{
                   fontSize: 9, fontWeight: 900, padding: '1px 5px',
+                  borderRadius: 4,
                   background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.06)',
                   color: isActive ? '#ffffff' : '#64748b',
                 }}>
@@ -943,13 +946,13 @@ export default function UserDetail() {
               {/* 4. MVP */}
               <div style={{
                 padding: '12px 14px',
-                background: isMvp ? 'rgba(124,58,237,0.08)' : 'rgba(15,23,42,0.02)',
-                border: isMvp ? '1px solid rgba(124,58,237,0.28)' : '1px solid rgba(15,23,42,0.06)',
+                background: isMvp ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.02)',
+                border: isMvp ? '1px solid rgba(180,83,9,0.28)' : '1px solid rgba(0,0,0,0.06)',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
-                <Sparkles size={20} color={isMvp ? '#7c3aed' : '#94a3b8'} />
+                <Sparkles size={20} color={isMvp ? '#b45309' : '#94a3b8'} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isMvp ? '#7c3aed' : '#64748b' }}>
+                  <div style={{ fontWeight: 800, fontSize: 12, color: isMvp ? '#b45309' : '#64748b' }}>
                     {isMvp ? `Nhân Viên Xuất Sắc (${mvpCount} MVP)` : 'Chưa Có Danh Hiệu MVP'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Vinh danh thành tích đóng góp nổi bật</div>
@@ -1035,11 +1038,11 @@ export default function UserDetail() {
             </div>
 
             {/* MVP & PHONG ĐỘ */}
-            <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #7c3aed' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={13} color="#7c3aed" /> Danh Hiệu MVP Mùa
+            <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={13} color="#b45309" /> Danh Hiệu MVP Mùa
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: '#7c3aed', fontFamily: "'JetBrains Mono',monospace" }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
                 {competition?.mvpCount || 0} <span style={{ fontSize: 12, color: '#64748b' }}>lần MVP</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>

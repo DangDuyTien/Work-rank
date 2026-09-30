@@ -86,7 +86,7 @@ function Avatar({ user, size = 42 }) {
       fontWeight: 900,
       flexShrink: 0,
       position: 'relative',
-      borderRadius: 0,
+      borderRadius: '50%',
     }}>
       {avatar ? (
         <img src={avatar} alt={`Ảnh ${name}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -113,6 +113,7 @@ function PresencePill({ status }) {
       fontWeight: 900,
       whiteSpace: 'nowrap',
       textTransform: 'uppercase',
+      borderRadius: 9999,
     }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta.dot, flexShrink: 0 }} />
       {meta.label}
@@ -1790,6 +1791,8 @@ const MODAL_PANEL = {
   background: '#ffffff',
   width: '100%',
   maxWidth: 480,
+  borderRadius: 10,
+  overflow: 'hidden',
   border: '1px solid rgba(15,23,42,0.15)',
   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
 };
@@ -1823,5 +1826,5 @@ const INPUT_STYLE = {
   fontWeight: 600,
   color: '#0f172a',
   outline: 'none',
-  borderRadius: 0,
+  borderRadius: 8,
 };

@@ -83,6 +83,25 @@ ScoreLedger.init(
     underscored: true,
     // INSERT-ONLY — no updatedAt
     updatedAt: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['idempotency_key', 'effect_type'],
+        name: 'score_ledger_idempotency_effect_unique',
+      },
+      {
+        fields: ['season_id', 'user_id'],
+        name: 'score_ledger_season_user',
+      },
+      {
+        fields: ['season_id', 'team_id'],
+        name: 'score_ledger_season_team',
+      },
+      {
+        fields: ['event_id'],
+        name: 'score_ledger_event',
+      },
+    ],
   },
 );
 

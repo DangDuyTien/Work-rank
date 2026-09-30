@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 module.exports = {
   async up(queryInterface) {
     const now = new Date();
-    const adminPasswordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'Admin@123456', 12);
+    const adminPasswordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || '123456', 12);
     const userPasswordHash = await bcrypt.hash('User@123456', 12);
 
     // 1. Tạo 4 Đội Nhóm (Teams)
@@ -27,11 +27,11 @@ module.exports = {
     const seedUsers = [
       {
         name: 'Duy Tiến (Admin)',
-        email: process.env.SEED_ADMIN_EMAIL || 'admin@workrank.local',
+        email: process.env.SEED_ADMIN_EMAIL || 'tienddph50842@gmail.com',
         password_hash: adminPasswordHash,
         role: 'admin',
-        job_title: 'Giám đốc',
-        department: 'Ban Giám Đốc',
+        job_title: 'Editor',
+        department: 'Engineering Core',
         team_id: alphaTeamId,
         is_verified: true,
         is_dev: true,

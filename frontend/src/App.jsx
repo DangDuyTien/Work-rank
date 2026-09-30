@@ -47,6 +47,7 @@ const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const CapitalBoardGame = lazyWithReload(() => import('./pages/CapitalBoardGame'));
 const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
+const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 
 
 const ProtectedRoute = ({ children }) => {
@@ -126,27 +127,41 @@ class AppErrorBoundary extends React.Component {
 function AnimatedAppRoutes() {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [transitionStage, setTransitionStage] = useState('fadeIn'); // 'fadeIn' | 'fadeOut'
+  const [transitionStage, setTransitionStage] = useState('none'); // 'none' | 'fadeIn' | 'fadeOut'
 
   useEffect(() => {
-    // Only trigger full page exit/enter transition when PATHNAME changes (switching pages)
+    // Only apply cinematic exit/enter transition when navigating to or from Homepage ('/')
+    const isToOrFromHome = location.pathname === '/' || displayLocation.pathname === '/';
+
     if (location.pathname !== displayLocation.pathname) {
-      setTransitionStage('fadeOut');
-      const timer = setTimeout(() => {
+      if (isToOrFromHome) {
+        setTransitionStage('fadeOut');
+        const timer = setTimeout(() => {
+          setDisplayLocation(location);
+          setTransitionStage('fadeIn');
+          window.scrollTo(0, 0);
+        }, 180);
+        return () => clearTimeout(timer);
+      } else {
+        // Internal page navigation (inside dashboard / authenticated app): instant switch with NO flicker
         setDisplayLocation(location);
-        setTransitionStage('fadeIn');
-        window.scrollTo(0, 0);
-      }, 180);
-      return () => clearTimeout(timer);
+        setTransitionStage('none');
+      }
     } else if (location.search !== displayLocation.search) {
-      // When switching tabs/query params on the SAME page (e.g. login <-> register), update instantly with NO flash
       setDisplayLocation(location);
     }
   }, [location, displayLocation]);
 
+  const transitionClass =
+    transitionStage === 'fadeOut'
+      ? 'wr-page-exit'
+      : transitionStage === 'fadeIn'
+      ? 'wr-page-enter'
+      : '';
+
   return (
     <div
-      className={`wr-route-transition-container ${transitionStage === 'fadeOut' ? 'wr-page-exit' : 'wr-page-enter'}`}
+      className={`wr-route-transition-container ${transitionClass}`}
     >
       <Suspense fallback={<PageFallback />}>
         <Routes location={displayLocation}>
@@ -168,11 +183,9 @@ function AnimatedAppRoutes() {
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
-            <Route path="/games" element={<Navigate to="/games/quiz" replace />} />
+            <Route path="/games" element={<Navigate to="/games/2048" replace />} />
             <Route path="/games/capital-board" element={<CapitalBoardGame />} />
             <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
-            <Route path="/games/quiz" element={<QuizGame />} />
-            <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
             <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
             <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
@@ -187,6 +200,31 @@ function AnimatedAppRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/users/:id" element={<UserDetail />} />
           </Route>
+          {/* Full-bleed Standalone Game Routes */}
+          <Route
+            path="/games/2048"
+            element={
+              <ProtectedRoute>
+                <Game2048 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/quiz"
+            element={
+              <ProtectedRoute>
+                <QuizGame />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/quiz/room/:roomId"
+            element={
+              <ProtectedRoute>
+                <QuizGame />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -237,8 +237,18 @@ api.interceptors.response.use(
 );
 
 export const auth = {
-  register: async (data) => { const res = await api.post('/api/auth/register', data); storeAuth(res.data); return res; },
-  login: async (data) => { const res = await api.post('/api/auth/login', data); storeAuth(res.data); return res; },
+  register: async (data, password, name) => {
+    const payload = (data && typeof data === 'object') ? data : { email: data, password, name };
+    const res = await api.post('/api/auth/register', payload);
+    storeAuth(res.data);
+    return res;
+  },
+  login: async (data, password) => {
+    const payload = (data && typeof data === 'object') ? data : { email: data, password };
+    const res = await api.post('/api/auth/login', payload);
+    storeAuth(res.data);
+    return res;
+  },
   refreshSession: refreshStoredAuth,
   clearLocalSession: clearAuth,
   logout: async () => {
@@ -969,6 +979,25 @@ export const quizGame = {
   },
   getMyStats: async () => {
     const res = await api.get('/api/games/quiz/my-stats');
+    return res.data?.data || null;
+  },
+};
+
+export const game2048 = {
+  startSession: async () => {
+    const res = await api.post('/api/games/2048/start');
+    return res.data?.data || null;
+  },
+  submitScore: async (data) => {
+    const res = await api.post('/api/games/2048/submit', data);
+    return res.data?.data || null;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/games/2048/leaderboard', { params });
+    return res.data || { data: [], myStats: null };
+  },
+  getMyStats: async () => {
+    const res = await api.get('/api/games/2048/my-stats');
     return res.data?.data || null;
   },
 };

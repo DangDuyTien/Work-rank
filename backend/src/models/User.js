@@ -7,7 +7,7 @@ User.init(
   {
     id: { type: DataTypes.BIGINT.UNSIGNED, autoIncrement: true, primaryKey: true },
     name: { type: DataTypes.STRING(120), allowNull: false },
-    email: { type: DataTypes.STRING(191), allowNull: false, unique: true, validate: { isEmail: true } },
+    email: { type: DataTypes.STRING(191), allowNull: false, unique: true },
     passwordHash: { type: DataTypes.STRING(191), allowNull: false, field: 'password_hash' },
     refreshTokenHash: { type: DataTypes.STRING(191), allowNull: true, field: 'refresh_token_hash' },
     role: { type: DataTypes.ENUM('admin', 'manager', 'user'), allowNull: false, defaultValue: 'user' },

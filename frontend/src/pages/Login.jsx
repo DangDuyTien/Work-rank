@@ -16,6 +16,7 @@ import {
   Crown,
   Sparkles,
   Award,
+  Medal,
   Gamepad2,
   Lock,
   Mail,
@@ -31,6 +32,251 @@ import VerifiedBadge from '../components/VerifiedBadge';
 import { initialsFromName } from '../utils/avatar';
 import { auth, competition } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+function MvpVisualAward({ mvp, championTeam, season }) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        minHeight: 580,
+        background: '#f5f4f0',
+        borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '36px 32px',
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* ── Top Header: Brand & Eyebrow & Kinetic Headline (Identical to Homepage) ── */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BrandMark size={28} showLabel={false} />
+            <span
+              style={{
+                fontFamily: "'Space Grotesk', -apple-system, sans-serif",
+                fontSize: 15,
+                fontWeight: 900,
+                letterSpacing: '-0.4px',
+                color: '#111111',
+                textTransform: 'uppercase',
+              }}
+            >
+              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>• 3WIN</span>
+            </span>
+          </Link>
+
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 900,
+              padding: '4px 10px',
+              background: 'rgba(0,0,0,0.06)',
+              color: '#111111',
+              borderRadius: 9999,
+              textTransform: 'uppercase',
+              letterSpacing: '0.6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <Crown size={12} color="#b45309" />
+            {season?.name ? season.name : 'MÙA GIẢI 2026'}
+          </span>
+        </div>
+
+        {/* Eyebrow */}
+        <div className="wr-award-eyebrow" style={{ marginBottom: 12 }}>
+          <Star size={14} color="#b45309" />
+          <span className="wr-award-eyebrow-accent">
+            {season?.name ? `${season.name} • MOST VALUABLE PLAYER` : 'MÙA GIẢI 2026 • DANH HIỆU MVP'}
+          </span>
+        </div>
+
+        {/* Big Editorial Headline */}
+        <h2
+          style={{
+            fontSize: 'clamp(28px, 3.2vw, 42px)',
+            fontWeight: 800,
+            lineHeight: 0.95,
+            letterSpacing: '-0.035em',
+            textTransform: 'uppercase',
+            color: '#111111',
+            margin: '0 0 14px 0',
+          }}
+        >
+          <span style={{ display: 'block' }}>MVP XUẤT SẮC</span>
+          <span style={{ display: 'block' }}>MÙA GIẢI</span>
+          <span style={{ display: 'block', color: mvp ? '#111111' : '#888888' }}>
+            {mvp ? mvp.name : 'CHỜ CHỦ NHÂN'}
+          </span>
+        </h2>
+
+        {/* Tagline description */}
+        <p
+          style={{
+            fontSize: 13,
+            lineHeight: 1.55,
+            color: '#555555',
+            margin: '0 0 24px 0',
+            fontWeight: 500,
+            maxWidth: 420,
+          }}
+        >
+          {mvp
+            ? (mvp.reason || 'Vinh danh cá nhân có hiệu suất đóng góp cao nhất và chỉ số tăng trưởng ấn tượng nhất toàn cơ quan.')
+            : 'Cá nhân có thành tích bứt phá và đóng góp nổi bật nhất sẽ được xướng tên tại vị trí danh giá này.'}
+        </p>
+      </div>
+
+      {/* ── Bottom Visual Boxes (Matching Homepage Exact Box 1 & Box 2) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14, marginTop: 'auto' }}>
+        {/* Box 1: MVP Portrait & Profile */}
+        <div
+          className="wr-award-visual-box"
+          style={{
+            background: '#ffffff',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            padding: 16,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
+              MVP RECOGNITION
+            </span>
+            <Sparkles size={14} color="#f59e0b" />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0' }}>
+            <div
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                background: '#111111',
+                border: '2px solid #f59e0b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 16px rgba(245,158,11,0.25)',
+                overflow: 'hidden',
+                position: 'relative',
+                flexShrink: 0,
+              }}
+            >
+              {mvp?.avatarData ? (
+                <img
+                  src={mvp.avatarData}
+                  alt={mvp.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : mvp ? (
+                <span
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 20,
+                    fontWeight: 900,
+                    color: '#facc15',
+                  }}
+                >
+                  {initialsFromName(mvp.name)}
+                </span>
+              ) : (
+                <UserRound size={26} color="#facc15" strokeWidth={2} />
+              )}
+              {mvp?.isVerified && (
+                <div style={{ position: 'absolute', bottom: 1, right: 1 }}>
+                  <VerifiedBadge size={14} />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 15, fontWeight: 900, color: '#111111', lineHeight: 1.2 }}>
+                  {mvp ? mvp.name : 'Nhân Tố Xuất Sắc'}
+                </span>
+                {mvp?.isVerified && <VerifiedBadge size={13} />}
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: '#777777', textTransform: 'uppercase', marginTop: 3 }}>
+                {mvp ? `${mvp.jobTitle || 'Chuyên viên'} • ${mvp.department || 'Media'}` : 'Chờ vinh danh'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666666' }}>
+            <span>Danh hiệu</span>
+            <span style={{ fontWeight: 800, color: '#b45309' }}>
+              {mvp ? 'MVP Mùa Giải' : 'Chờ xác định'}
+            </span>
+          </div>
+        </div>
+
+        {/* Box 2: Excellence Award & Score */}
+        <div
+          className="wr-award-visual-box"
+          style={{
+            background: '#ffffff',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            padding: 16,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
+              EXCELLENCE RECOGNITION
+            </span>
+            <Medal size={14} color="#111111" />
+          </div>
+
+          <div style={{ margin: 'auto 0', textAlign: 'center', padding: '10px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Award size={36} color="#f59e0b" strokeWidth={1.75} />
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 900, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+              {mvp ? 'DANH HIỆU MVP' : 'CHỜ XÁC ĐỊNH'}
+            </span>
+          </div>
+
+          <div
+            style={{
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+              paddingTop: 8,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 6,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: '#111111', marginTop: 1 }}>
+                {mvp ? `${mvp.score.toLocaleString()} XP` : '--- XP'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: '#0284c7', marginTop: 1 }}>
+                {mvp?.isVerified ? 'Đã Xác Thực' : 'Hệ Thống'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -115,8 +361,8 @@ export default function Login() {
         setError('Vui lòng nhập họ và tên');
         return;
       }
-      if (password.length < 6) {
-        setError('Mật khẩu phải có ít nhất 6 ký tự');
+      if (!password) {
+        setError('Vui lòng nhập mật khẩu');
         return;
       }
       if (password !== confirmPassword) {
@@ -128,7 +374,11 @@ export default function Login() {
     setLoading(true);
     try {
       if (isRegister) {
-        const res = await auth.register(email, password, name.trim());
+        const res = await auth.register({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+        });
         if (res.data?.user) {
           setUser(res.data.user);
           navigate('/dashboard');
@@ -137,7 +387,10 @@ export default function Login() {
           setIsRegister(false);
         }
       } else {
-        const res = await auth.login(email, password);
+        const res = await auth.login({
+          email: email.trim(),
+          password,
+        });
         if (res.data?.user) {
           setUser(res.data.user);
           const from = location.state?.from?.pathname || '/dashboard';
@@ -170,179 +423,18 @@ export default function Login() {
       <div
         style={{
           width: '100%',
-          maxWidth: 960,
+          maxWidth: 1040,
           background: '#ffffff',
           border: '1px solid rgba(0,0,0,0.08)',
-          borderRadius: 16,
-          boxShadow: '0 16px 40px rgba(0,0,0,0.06)',
+          borderRadius: 10,
+          boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
           overflow: 'hidden',
         }}
       >
-        {/* ── LEFT PANEL: SEASON MVP RECOGNITION ── */}
-        <div
-          style={{
-            background: '#141414',
-            color: '#ffffff',
-            padding: '40px 36px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            borderRight: '1px solid rgba(0,0,0,0.08)',
-          }}
-        >
-          <div>
-            {/* Brand Header */}
-            <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <BrandMark size={36} showLabel label="3WIN MEDIA" labelStyle={{ color: '#ffffff' }} />
-            </Link>
-
-            {/* Season & MVP Eyebrow Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 12px',
-                background: 'rgba(180, 83, 9, 0.2)',
-                border: '1px solid rgba(180, 83, 9, 0.45)',
-                borderRadius: 9999,
-                marginBottom: 16,
-              }}
-            >
-              <Star size={13} color="#facc15" />
-              <span style={{ fontSize: 10, fontWeight: 900, color: '#facc15', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                {season?.name ? `${season.name} • MVP MÙA GIẢI` : 'MÙA GIẢI HIỆN TẠI • MVP VINH DANH'}
-              </span>
-            </div>
-
-            <h1 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 900, color: '#ffffff', lineHeight: 1.25 }}>
-              {mvp ? mvp.name : 'Vinh Danh MVP Mùa Giải'}
-            </h1>
-
-            <p style={{ margin: 0, fontSize: 13, color: '#a3a3a3', lineHeight: 1.55 }}>
-              {mvp?.reason || 'Vinh danh cá nhân có hiệu suất đóng góp cao nhất và chỉ số tăng trưởng ấn tượng nhất trong mùa thi đấu.'}
-            </p>
-
-            {/* MVP Featured Spotlight Card */}
-            <div
-              style={{
-                marginTop: 22,
-                padding: 18,
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1.5px solid rgba(180, 83, 9, 0.4)',
-                borderRadius: 12,
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                {/* Avatar Box */}
-                <div
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 10,
-                    background: '#1f1f1f',
-                    border: '2px solid #b45309',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    position: 'relative',
-                    boxShadow: '0 4px 16px rgba(180, 83, 9, 0.3)',
-                  }}
-                >
-                  {mvp?.avatarData ? (
-                    <img src={mvp.avatarData} alt={mvp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : mvp ? (
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 900, color: '#facc15' }}>
-                      {initialsFromName(mvp.name)}
-                    </span>
-                  ) : (
-                    <UserRound size={30} color="#facc15" strokeWidth={2} />
-                  )}
-                  {mvp?.isVerified && (
-                    <div style={{ position: 'absolute', bottom: 2, right: 2 }}>
-                      <VerifiedBadge size={14} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Identity info */}
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 16, fontWeight: 900, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {mvp ? mvp.name : 'Chờ vinh danh'}
-                    </span>
-                    {mvp?.isVerified && <VerifiedBadge size={14} />}
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#f59e0b', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                    {mvp?.awardTitle || 'Danh hiệu MVP Cá Nhân'}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#a3a3a3', marginTop: 2 }}>
-                    {mvp ? `${mvp.jobTitle || 'Chuyên viên'} • ${mvp.department || 'Media Team'}` : 'Đang cập nhật'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Performance Metrics */}
-              <div
-                style={{
-                  marginTop: 14,
-                  paddingTop: 12,
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 10,
-                }}
-              >
-                <div style={{ padding: '8px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 6, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Điểm Mùa Giải</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#facc15', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
-                    {mvp?.score !== undefined ? `${mvp.score.toLocaleString()} XP` : 'Dẫn Đầu BXH'}
-                  </div>
-                </div>
-                <div style={{ padding: '8px 10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 6, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Đội Quán Quân</div>
-                  <div style={{ fontSize: 13, fontWeight: 900, color: '#ffffff', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {championTeam?.teamName || '3Win Studio'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Motivational Bullet Points */}
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#d4d4d4' }}>
-                <Crown size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
-                <span>Thi đấu sản lượng & hoàn thành thử thách tích điểm</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#f59e0b', flexShrink: 0 }}>
-                <Trophy size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
-                <span style={{ color: '#d4d4d4' }}>Vinh danh MVP & nhận giải thưởng lớn chung cuộc</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Security Note */}
-          <div
-            style={{
-              marginTop: 28,
-              paddingTop: 16,
-              borderTop: '1px solid rgba(255,255,255,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 11,
-              color: '#a3a3a3',
-            }}
-          >
-            <Sparkles size={15} color="#b45309" />
-            <span>Hệ thống vinh danh tự động theo thời gian thực • WorkRank 3Win</span>
-          </div>
-        </div>
+        {/* ── LEFT PANEL: FULL-BLEED MVP ARTWORK & FLOATING CARD ── */}
+        <MvpVisualAward mvp={mvp} championTeam={championTeam} season={season} />
 
         {/* ── RIGHT PANEL: AUTH FORMS & STATE ── */}
         <div
@@ -580,20 +672,20 @@ export default function Login() {
               </div>
             )}
 
-            {/* Email Field */}
+            {/* Email / Identifier Field */}
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>
-                Email công việc *
+                Email hoặc Tên đăng nhập *
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  autoComplete="email"
+                  placeholder="Nhập email hoặc tên đăng nhập"
+                  autoComplete="username"
                   style={{
                     width: '100%',
                     padding: '10px 12px 10px 38px',
@@ -807,7 +899,7 @@ export default function Login() {
           <div
             style={{
               background: '#ffffff',
-              borderRadius: 12,
+              borderRadius: 10,
               border: '1px solid rgba(0,0,0,0.08)',
               padding: 24,
               width: '100%',

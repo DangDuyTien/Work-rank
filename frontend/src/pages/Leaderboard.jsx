@@ -43,7 +43,7 @@ import { TabTransition, TableSkeleton, CardSkeleton } from '../components/ui';
 const CARD = {
   background: '#ffffff',
   border: '1px solid rgba(0,0,0,0.08)',
-  borderRadius: 10,
+  borderRadius: 6,
   boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
 };
 
@@ -118,6 +118,7 @@ function LevelText({ user, compact = false }) {
       fontWeight: 900,
       fontFamily: "'JetBrains Mono',monospace",
       whiteSpace: 'nowrap',
+      borderRadius: 4,
     }}>
       Lv.{level}
     </span>
@@ -129,7 +130,7 @@ function AvatarBox({ user, userId, name, size = 36, idx = 0 }) {
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <div style={{
-        width: size, height: size, borderRadius: 0, flexShrink: 0,
+        width: size, height: size, borderRadius: '50%', flexShrink: 0,
         background: AVATAR_GRADS[idx % AVATAR_GRADS.length],
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: Math.max(10, Math.floor(size * 0.35)), fontWeight: 900, color: '#fff',
@@ -216,10 +217,10 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
             <div style={{ position: 'relative' }}>
               <AvatarBox name={top2[nameKey]} userId={top2.userId || top2.id} size={44} idx={1} />
               <div style={{
-                position: 'absolute', bottom: -5, left: -5, width: 17, height: 17,
-                borderRadius: 0, background: '#64748b', display: 'flex',
+                position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
+                borderRadius: '50%', background: '#64748b', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 900, color: '#f8fafc',
+                fontWeight: 900, color: '#f8fafc', border: '1.5px solid #ffffff',
               }}>
                 2
               </div>
@@ -234,7 +235,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               width: '100%', height: 90,
               background: 'rgba(148,163,184,0.08)',
               border: '1px solid rgba(148,163,184,0.3)',
-              borderRadius: 0,
+              borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: '#64748b' }}>2</span>
@@ -256,10 +257,10 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
             <div style={{ position: 'relative' }}>
               <AvatarBox name={top1[nameKey]} userId={top1.userId || top1.id} size={54} idx={0} />
               <div style={{
-                position: 'absolute', bottom: -6, left: -6, width: 20, height: 20,
-                borderRadius: 0, background: '#f59e0b', display: 'flex',
+                position: 'absolute', bottom: -6, left: -6, width: 22, height: 22,
+                borderRadius: '50%', background: '#f59e0b', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 11,
-                fontWeight: 900, color: '#000',
+                fontWeight: 900, color: '#000', border: '1.5px solid #ffffff',
               }}>
                 1
               </div>
@@ -274,7 +275,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               width: '100%', height: 130,
               background: 'rgba(245,158,11,0.08)',
               border: '1.5px solid rgba(245,158,11,0.35)',
-              borderRadius: 0,
+              borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b' }}>1</span>
@@ -295,10 +296,10 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
             <div style={{ position: 'relative' }}>
               <AvatarBox name={top3[nameKey]} userId={top3.userId || top3.id} size={42} idx={2} />
               <div style={{
-                position: 'absolute', bottom: -5, left: -5, width: 17, height: 17,
-                borderRadius: 0, background: '#b45309', display: 'flex',
+                position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
+                borderRadius: '50%', background: '#b45309', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 900, color: '#fff',
+                fontWeight: 900, color: '#fff', border: '1.5px solid #ffffff',
               }}>
                 3
               </div>
@@ -313,7 +314,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               width: '100%', height: 70,
               background: 'rgba(180,83,9,0.08)',
               border: '1px solid rgba(180,83,9,0.25)',
-              borderRadius: 0,
+              borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>3</span>
@@ -339,14 +340,14 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '8px 12px',
                   background: 'rgba(15,23,42,0.02)',
-                  borderRadius: 0,
+                  borderRadius: 4,
                   border: '1px solid rgba(15,23,42,0.06)',
                   cursor: onNavigateUser ? 'pointer' : 'default',
                   transition: 'background .15s ease',
                 }}
               >
                 <div style={{
-                  width: 22, height: 22, borderRadius: 0,
+                  width: 22, height: 22, borderRadius: 4,
                   background: 'rgba(15,23,42,0.06)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 900, color: '#64748b', flexShrink: 0,

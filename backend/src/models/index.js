@@ -51,6 +51,9 @@ const QuizPlayer = require('./QuizPlayer');
 const QuizQuestion = require('./QuizQuestion');
 const QuizAnswer = require('./QuizAnswer');
 const QuizUserStat = require('./QuizUserStat');
+// Game 2048 V1 Models
+const Game2048Score = require('./Game2048Score');
+const Game2048UserStat = require('./Game2048UserStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -207,6 +210,13 @@ QuizAnswer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 User.hasOne(QuizUserStat, { as: 'quizStats', foreignKey: 'userId' });
 QuizUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
+// Game 2048 V1 Associations
+User.hasMany(Game2048Score, { as: 'game2048Scores', foreignKey: 'userId' });
+Game2048Score.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+User.hasOne(Game2048UserStat, { as: 'game2048Stats', foreignKey: 'userId' });
+Game2048UserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -268,5 +278,9 @@ module.exports = {
   QuizQuestion,
   QuizAnswer,
   QuizUserStat,
+  // Game 2048 V1
+  Game2048Score,
+  Game2048UserStat,
 };
+
 
