@@ -17,12 +17,17 @@ const app = express();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      scriptSrc: ["'self'"],
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcAttr: ["'none'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       workerSrc: ["'self'", "blob:"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https:', 'wss:'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      connectSrc: ["'self'", 'https:', 'wss:', 'ws:', '*'],
     },
   },
+  crossOriginEmbedderPolicy: false,
 }));
 app.use(morgan('combined', { skip: (req) => req.path.startsWith('/health') || req.path.startsWith('/api/health') }));
 app.use(cors(corsOptions));
