@@ -199,6 +199,45 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   }
 }
 
+/* ── 3-Column Spotlight Hero Responsive Grid ── */
+.wr-spotlight-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.35fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .wr-spotlight-hero-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .wr-spotlight-center-card {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+  .wr-spotlight-champion-card {
+    order: 2;
+  }
+  .wr-spotlight-mvp-card {
+    order: 3;
+  }
+}
+
+@media (max-width: 680px) {
+  .wr-spotlight-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .wr-spotlight-center-card {
+    order: 1;
+  }
+  .wr-spotlight-champion-card {
+    order: 2;
+  }
+  .wr-spotlight-mvp-card {
+    order: 3;
+  }
+}
+
 .leaderboard-dev-badge {
   position: relative;
   overflow: hidden;
@@ -859,7 +898,8 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   height: 28px;
   margin-right: 2px;
   background: #0f172a;
-  color: #ffffff;
+  color: #facc15;
+  border-radius: 7px;
   font-size: 16px;
   font-weight: 900;
   line-height: 1;
@@ -1530,7 +1570,8 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   width: 44px;
   height: 44px;
   background: #0f172a;
-  color: #ffffff;
+  color: #facc15;
+  border-radius: 10px;
   font-size: 24px;
   font-weight: 900;
   line-height: 1;
@@ -4743,19 +4784,21 @@ textarea:focus-visible,
 }
 
 .profile-hero {
-  display: grid;
-  grid-template-columns: max-content clamp(390px, 34vw, 460px);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 3vw, 44px);
+  flex-wrap: wrap;
+  gap: 24px;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   border: 1px solid var(--rank-border);
   border-radius: 0;
   background: var(--rank-hero-bg);
   box-shadow: var(--rank-glow);
-  padding: 22px 24px;
+  padding: 24px 28px;
   margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-hero::before {
@@ -4781,21 +4824,21 @@ textarea:focus-visible,
 
 .profile-hero-profile {
   min-width: 0;
-  min-height: 248px;
-  display: grid;
-  grid-template-columns: 150px minmax(0, 420px);
+  display: flex;
   align-items: center;
   gap: 24px;
+  flex: 1 1 380px;
 }
 
 .profile-photo-shell {
   position: relative;
-  width: 150px;
+  width: 140px;
+  flex-shrink: 0;
 }
 
 .profile-photo-frame {
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
   position: relative;
   flex-shrink: 0;
   border: 3px solid #ffffff;
@@ -4803,10 +4846,12 @@ textarea:focus-visible,
   background: #e2e8f0;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--rank-color) 28%, transparent), 0 14px 30px color-mix(in srgb, var(--rank-color) 14%, transparent);
   --avatar-hue: 28;
+  overflow: hidden;
 }
 
 .profile-identity-copy {
   min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -5292,14 +5337,14 @@ textarea:focus-visible,
 }
 
 .profile-gallery-grid {
-  width: 100%;
-  max-width: none;
+  width: 340px;
+  max-width: 100%;
   margin-left: 0;
   align-self: center;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  flex: 0 0 auto;
+  flex: 0 0 340px;
 }
 
 .profile-gallery-cell {

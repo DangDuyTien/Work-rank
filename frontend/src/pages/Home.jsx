@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -13,14 +13,51 @@ import {
   Lock,
   LogIn,
   UserPlus,
+  Star,
+  Crown,
+  Medal,
+  Calendar,
+  Flame,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { competition } from '../services/api';
 import BrandMark from '../components/BrandMark';
+import VerifiedBadge from '../components/VerifiedBadge';
+import { initialsFromName } from '../utils/avatar';
 
 export default function Home() {
   const { user } = useAuth();
   const isSignedIn = Boolean(user);
   const [activeTab, setActiveTab] = useState('ARENA');
+
+  const [spotlight, setSpotlight] = useState({
+    hasSpotlight: false,
+    season: null,
+    championTeam: null,
+    mvp: null,
+  });
+  const [spotlightLoading, setSpotlightLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    competition
+      .getPublicSpotlight()
+      .then((data) => {
+        if (isMounted && data) {
+          setSpotlight(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load public spotlight:', err);
+      })
+      .finally(() => {
+        if (isMounted) setSpotlightLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const previews = {
     ARENA: {
@@ -84,8 +121,10 @@ export default function Home() {
   const currentPreview = previews[activeTab];
   const CurrentIcon = currentPreview.icon;
 
+  const { season, championTeam, mvp } = spotlight;
+
   return (
-    <div style={{ minHeight: '100vh', background: '#ffffff', color: '#0f172a', fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#0f172a', fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {/* ── 1. PUBLIC HEADER / NAVIGATION BAR (VUÔNG VẮN) ── */}
       <header
         style={{
@@ -117,9 +156,9 @@ export default function Home() {
             }}
             className="wr-public-nav-links"
           >
-            <a href="#about" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Giới thiệu</a>
+            <a href="#spotlight-hero" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Vinh danh</a>
             <a href="#pillars" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Năng lực</a>
-            <a href="#architecture" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Bảo mật & Dữ liệu</a>
+            <a href="#architecture" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Bảo mật</a>
             <a href="#workflow" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Quy trình</a>
           </nav>
         </div>
@@ -191,161 +230,519 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── 2. HERO SECTION (VUÔNG VẮN) ── */}
+      {/* ── 2. HERO SECTION — TÔN VINH NHÀ VÔ ĐỊCH GẦN NHẤT + MVP (3-COLUMN LAYOUT) ── */}
       <section
-        id="about"
+        id="spotlight-hero"
         style={{
-          maxWidth: 1160,
+          maxWidth: 1240,
           margin: '0 auto',
-          padding: '64px 24px 48px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
+          padding: '40px 20px 48px',
         }}
       >
-        {/* Eyebrow Badge (Vuông vắn) */}
         <div
+          className="wr-spotlight-hero-grid"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '4px 12px',
-            borderRadius: 0,
-            background: 'rgba(2, 132, 199, 0.08)',
-            border: '1px solid rgba(2, 132, 199, 0.35)',
-            color: '#0284c7',
-            fontSize: 12,
-            fontWeight: 800,
-            marginBottom: 20,
-            letterSpacing: '0.4px',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(280px, 1fr) minmax(360px, 1.35fr) minmax(280px, 1fr)',
+            gap: 20,
+            alignItems: 'stretch',
           }}
         >
-          <Sparkles size={14} />
-          <span>NỀN TẢNG KẾT NỐI CÔNG VIỆC, THÀNH TÍCH VÀ ĐỘI NHÓM</span>
-        </div>
+          {/* ── LEFT: 🏆 ĐỘI VÔ ĐỊCH GIẢI GẦN NHẤT ── */}
+          <div
+            className="wr-spotlight-champion-card"
+            style={{
+              background: '#ffffff',
+              border: '1px solid rgba(15,23,42,0.14)',
+              borderTop: '4px solid #eab308',
+              borderRadius: 0,
+              padding: '24px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 8px 24px rgba(15,23,42,0.04)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Top Badge */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '3px 8px',
+                    borderRadius: 0,
+                    background: 'rgba(234,179,8,0.12)',
+                    border: '1px solid rgba(234,179,8,0.35)',
+                    color: '#b45309',
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: '0.4px',
+                  }}
+                >
+                  <Trophy size={13} color="#eab308" />
+                  <span>ĐỘI VÔ ĐỊCH</span>
+                </span>
 
-        {/* Hero Title */}
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 'clamp(32px, 5vw, 52px)',
-            fontWeight: 900,
-            color: '#0f172a',
-            lineHeight: 1.15,
-            letterSpacing: '-1px',
-            maxWidth: 900,
-          }}
-        >
-          Đồng Bộ Công Việc, Bứt Phá Thành Tích, Gắn Kết Đội Ngũ.
-        </h1>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  {season?.name || 'MÙA GẦN NHẤT'}
+                </span>
+              </div>
 
-        {/* Hero Subtitle */}
-        <p
-          style={{
-            margin: '18px 0 32px',
-            fontSize: 'clamp(15px, 2vw, 17px)',
-            color: '#475569',
-            lineHeight: 1.6,
-            maxWidth: 760,
-          }}
-        >
-          WorkRank mang lại không gian làm việc chuyên nghiệp: Tự động tổng hợp dữ liệu sản xuất Media & YouTube, thi đấu đối kháng mùa giải minh bạch, vinh danh thứ hạng thời gian thực và giải trí nội bộ lành mạnh.
-        </p>
+              {/* Team Emblem & Info */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 0,
+                    background: '#0f172a',
+                    border: '2px solid #eab308',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 14px rgba(234,179,8,0.25)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {championTeam?.avatarUrl ? (
+                    <img
+                      src={championTeam.avatarUrl}
+                      alt={championTeam.teamName}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 24,
+                        fontWeight: 900,
+                        color: '#facc15',
+                        letterSpacing: '-0.5px',
+                      }}
+                    >
+                      {championTeam ? initialsFromName(championTeam.teamName) : '🏆'}
+                    </span>
+                  )}
+                  {/* Floating Crown Icon */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      right: 2,
+                      background: '#eab308',
+                      color: '#0f172a',
+                      padding: 2,
+                      borderRadius: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Crown size={11} strokeWidth={3} />
+                  </div>
+                </div>
 
-        {/* Hero Action Buttons (Vuông vắn) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {isSignedIn ? (
-            <Link
-              to="/dashboard"
+                <h3
+                  style={{
+                    margin: '14px 0 4px',
+                    fontSize: 20,
+                    fontWeight: 900,
+                    color: '#0f172a',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {championTeam ? championTeam.teamName : 'Chưa có nhà vô địch'}
+                </h3>
+
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    color: '#eab308',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Award size={12} />
+                  <span>{championTeam ? 'CHAMPION TEAM • HẠNG #1' : 'CHỜ KẾT QUẢ MÙA GIẢI'}</span>
+                </span>
+
+                <p
+                  style={{
+                    margin: '10px 0 0',
+                    fontSize: 12,
+                    color: '#64748b',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {championTeam
+                    ? `Đội tuyển xuất sắc nhất mùa giải với thành tích ấn tượng và tinh thần đồng đội bứt phá.`
+                    : `Mùa giải đầu tiên đang diễn ra. Đội xuất sắc nhất giải đấu sẽ được tôn vinh trang trọng tại đây.`}
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Metrics / Standings Info */}
+            <div
+              style={{
+                marginTop: 20,
+                paddingTop: 14,
+                borderTop: '1px solid rgba(15,23,42,0.08)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 8,
+                background: '#f8fafc',
+                padding: '10px 12px',
+                borderRadius: 0,
+                border: '1px solid rgba(15,23,42,0.06)',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  Điểm Mùa Giải
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>
+                  {championTeam ? `${championTeam.seasonScore.toLocaleString()} XP` : '---'}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  Grand Points
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#0284c7', marginTop: 2 }}>
+                  {championTeam ? `+${championTeam.grandPoints} GP` : '---'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CENTER: 🌟 WORKRANK / 3WIN MEDIA HERO & CTA ── */}
+          <div
+            className="wr-spotlight-center-card"
+            style={{
+              background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+              border: '1px solid rgba(15,23,42,0.16)',
+              borderRadius: 0,
+              padding: '32px 28px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 30px rgba(15,23,42,0.06)',
+            }}
+          >
+            {/* Top Brand Logo */}
+            <div style={{ marginBottom: 14 }}>
+              <BrandMark size={48} showLabel={false} />
+            </div>
+
+            {/* Eyebrow Tag */}
+            <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '14px 28px',
-                background: '#0f172a',
-                color: '#ffffff',
-                textDecoration: 'none',
+                gap: 6,
+                padding: '4px 10px',
                 borderRadius: 0,
-                fontSize: 15,
+                background: 'rgba(2, 132, 199, 0.08)',
+                border: '1px solid rgba(2, 132, 199, 0.3)',
+                color: '#0284c7',
+                fontSize: 11,
                 fontWeight: 900,
-                boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
+                marginBottom: 14,
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase',
               }}
             >
-              <span>Vào Dashboard Làm Việc</span>
-              <ArrowRight size={18} />
-            </Link>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '14px 28px',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  textDecoration: 'none',
-                  borderRadius: 0,
-                  fontSize: 15,
-                  fontWeight: 900,
-                  boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
-                }}
-              >
-                <span>Đăng nhập hệ thống</span>
-                <ArrowRight size={18} />
-              </Link>
+              <Sparkles size={13} />
+              <span>Nền tảng Hiệu suất, Thi đấu & Đội nhóm</span>
+            </div>
 
-              <Link
-                to="/login?mode=register"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '14px 26px',
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  border: '1.5px solid rgba(15,23,42,0.25)',
-                  textDecoration: 'none',
-                  borderRadius: 0,
-                  fontSize: 15,
-                  fontWeight: 800,
-                }}
-              >
-                <UserPlus size={18} />
-                <span>Tạo tài khoản mới</span>
-              </Link>
-            </>
-          )}
+            {/* Headline */}
+            <h1
+              style={{
+                margin: '0 0 12px',
+                fontSize: 'clamp(24px, 3.2vw, 36px)',
+                fontWeight: 900,
+                color: '#0f172a',
+                lineHeight: 1.2,
+                letterSpacing: '-0.8px',
+              }}
+            >
+              Làm Việc. Cạnh Tranh. Ghi Dấu.
+            </h1>
 
-          <a
-            href="#pillars"
+            {/* Tagline */}
+            <p
+              style={{
+                margin: '0 0 24px',
+                fontSize: 14,
+                color: '#475569',
+                lineHeight: 1.6,
+                maxWidth: 420,
+              }}
+            >
+              Tự động đồng bộ số liệu sản xuất Media & YouTube, thi đấu đối kháng mùa giải bất biến và vinh danh thứ hạng minh bạch theo thời gian thực.
+            </p>
+
+            {/* Hero CTAs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
+              {isSignedIn ? (
+                <Link
+                  to="/dashboard"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '13px 24px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    textDecoration: 'none',
+                    borderRadius: 0,
+                    fontSize: 14,
+                    fontWeight: 900,
+                    boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
+                    transition: 'transform 0.1s ease',
+                  }}
+                >
+                  <span>Mở Dashboard Làm Việc</span>
+                  <ArrowRight size={16} />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      padding: '13px 24px',
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      textDecoration: 'none',
+                      borderRadius: 0,
+                      fontSize: 14,
+                      fontWeight: 900,
+                      boxShadow: '0 4px 16px rgba(15,23,42,0.25)',
+                    }}
+                  >
+                    <span>Đăng Nhập Workspace</span>
+                    <ArrowRight size={16} />
+                  </Link>
+
+                  <Link
+                    to="/login?mode=register"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      padding: '12px 20px',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1.5px solid rgba(15,23,42,0.25)',
+                      textDecoration: 'none',
+                      borderRadius: 0,
+                      fontSize: 14,
+                      fontWeight: 800,
+                    }}
+                  >
+                    <UserPlus size={16} />
+                    <span>Tạo Tài Khoản Thành Viên</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── RIGHT: ⭐ MVP GIẢI GẦN NHẤT ── */}
+          <div
+            className="wr-spotlight-mvp-card"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '14px 22px',
-              background: '#f1f5f9',
-              border: '1px solid rgba(15,23,42,0.1)',
-              color: '#334155',
-              textDecoration: 'none',
+              background: '#ffffff',
+              border: '1px solid rgba(15,23,42,0.14)',
+              borderTop: '4px solid #f59e0b',
               borderRadius: 0,
-              fontSize: 14,
-              fontWeight: 800,
+              padding: '24px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 8px 24px rgba(15,23,42,0.04)',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            <span>Khám phá tính năng</span>
-            <ChevronRight size={16} />
-          </a>
-        </div>
+            {/* Top Badge */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '3px 8px',
+                    borderRadius: 0,
+                    background: 'rgba(245,158,11,0.12)',
+                    border: '1px solid rgba(245,158,11,0.35)',
+                    color: '#b45309',
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: '0.4px',
+                  }}
+                >
+                  <Star size={13} color="#f59e0b" />
+                  <span>MVP XUẤT SẮC</span>
+                </span>
 
-        {/* ── 3. INTERACTIVE PRODUCT PREVIEW SHOWCASE (VUÔNG VẮN) ── */}
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  {season?.name || 'MÙA GẦN NHẤT'}
+                </span>
+              </div>
+
+              {/* MVP Avatar & Info */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 0,
+                    background: '#0f172a',
+                    border: '2px solid #f59e0b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 14px rgba(245,158,11,0.25)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {mvp?.avatarData ? (
+                    <img
+                      src={mvp.avatarData}
+                      alt={mvp.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 24,
+                        fontWeight: 900,
+                        color: '#facc15',
+                        letterSpacing: '-0.5px',
+                      }}
+                    >
+                      {mvp ? initialsFromName(mvp.name) : '⭐'}
+                    </span>
+                  )}
+                  {/* Verified Icon if user is verified */}
+                  {mvp?.isVerified && (
+                    <div style={{ position: 'absolute', bottom: 2, right: 2 }}>
+                      <VerifiedBadge size={16} />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '14px 0 4px', justifyContent: 'center' }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: 20,
+                      fontWeight: 900,
+                      color: '#0f172a',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {mvp ? mvp.name : 'Chưa có MVP'}
+                  </h3>
+                  {mvp?.isVerified && <VerifiedBadge size={15} />}
+                </div>
+
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    color: '#d97706',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Medal size={12} />
+                  <span>{mvp ? (mvp.awardTitle || 'MOST VALUABLE PLAYER') : 'CHỜ VINH DANH'}</span>
+                </span>
+
+                <p
+                  style={{
+                    margin: '10px 0 0',
+                    fontSize: 12,
+                    color: '#64748b',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {mvp
+                    ? `${mvp.jobTitle || 'Nhân viên'} • ${mvp.department || 'Media'}`
+                    : `Cá nhân có thành tích bứt phá và đóng góp nổi bật nhất sẽ được xướng tên tại vị trí danh giá này.`}
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom MVP Metric */}
+            <div
+              style={{
+                marginTop: 20,
+                paddingTop: 14,
+                borderTop: '1px solid rgba(15,23,42,0.08)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 8,
+                background: '#f8fafc',
+                padding: '10px 12px',
+                borderRadius: 0,
+                border: '1px solid rgba(15,23,42,0.06)',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  Điểm Cống Hiến
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>
+                  {mvp ? `${mvp.score.toLocaleString()} XP` : '---'}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  Danh Hiệu
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#d97706', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {mvp ? 'MVP Mùa Giải' : '---'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. INTERACTIVE PRODUCT PREVIEW SHOWCASE (VUÔNG VẮN) ── */}
+      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '0 20px 48px' }}>
         <div
           style={{
             width: '100%',
-            maxWidth: 1040,
-            marginTop: 48,
             background: '#ffffff',
             border: '1px solid rgba(15,23,42,0.16)',
             borderRadius: 0,
@@ -501,7 +898,7 @@ export default function Home() {
           padding: '64px 24px',
         }}
       >
-        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <span style={{ fontSize: 11, fontWeight: 900, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Kiến Trúc Sản Phẩm
@@ -673,7 +1070,7 @@ export default function Home() {
                 Trò Chơi Doanh Nghiệp
               </h3>
               <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
-                Mini game Cờ Tỷ Phú và Đoán Hình & Đoán Nhạc trắc nghiệm thời gian thực giúp giải tỏa căng thẳng trong giờ giải lao.
+                Mini game Cờ Tỷ Phú và Đoán Hình & Đoán Nhạc theo phong cách Live Quiz Kahoot giúp giải tỏa căng thẳng trong giờ giải lao.
               </p>
             </div>
           </div>
@@ -684,7 +1081,7 @@ export default function Home() {
       <section
         id="workflow"
         style={{
-          maxWidth: 1160,
+          maxWidth: 1240,
           margin: '0 auto',
           padding: '64px 24px',
         }}
@@ -768,7 +1165,7 @@ export default function Home() {
           padding: '64px 24px',
         }}
       >
-        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <span style={{ fontSize: 11, fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Độ Tin Cậy & Bảo Mật Doanh Nghiệp
@@ -851,9 +1248,9 @@ export default function Home() {
       {/* ── 7. FINAL CTA BANNER (VUÔNG VẮN) ── */}
       <section
         style={{
-          maxWidth: 1160,
+          maxWidth: 1240,
           margin: '0 auto',
-          padding: '64px 24px',
+          padding: '64px 20px',
           textAlign: 'center',
         }}
       >
@@ -952,7 +1349,7 @@ export default function Home() {
       >
         <div
           style={{
-            maxWidth: 1160,
+            maxWidth: 1240,
             margin: '0 auto',
             display: 'flex',
             alignItems: 'center',
@@ -969,14 +1366,14 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b' }}>
-            <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>Giới thiệu</a>
+            <a href="#spotlight-hero" style={{ color: 'inherit', textDecoration: 'none' }}>Vinh danh</a>
             <a href="#pillars" style={{ color: 'inherit', textDecoration: 'none' }}>Năng lực</a>
             <a href="#architecture" style={{ color: 'inherit', textDecoration: 'none' }}>Bảo mật</a>
             <Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Đăng nhập</Link>
           </div>
 
           <div style={{ width: '100%', borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#94a3b8', flexWrap: 'wrap', gap: 10 }}>
-            <span>© {new Date().getFullYear()} WorkRank Platform. Bảo lưu mọi quyền.</span>
+            <span>© {new Date().getFullYear()} 3WIN MEDIA Platform. Bảo lưu mọi quyền.</span>
             <span>Phiên bản Enterprise V3.3 • 100% Realtime Event Sourcing</span>
           </div>
         </div>

@@ -34,7 +34,11 @@ export function getStoredAvatar(userId) {
 export function setStoredAvatar(userId, dataUrl) {
   if (!userId || !dataUrl) return;
   avatarCache.set(String(userId), dataUrl);
-  localStorage.setItem(avatarStorageKey(userId), dataUrl);
+  try {
+    localStorage.setItem(avatarStorageKey(userId), dataUrl);
+  } catch (e) {
+    console.warn('Could not save avatar to localStorage:', e);
+  }
   window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT, {
     detail: { userId: String(userId), avatarUrl: dataUrl },
   }));
@@ -43,7 +47,11 @@ export function setStoredAvatar(userId, dataUrl) {
 export function removeStoredAvatar(userId) {
   if (!userId) return;
   avatarCache.set(String(userId), '');
-  localStorage.removeItem(avatarStorageKey(userId));
+  try {
+    localStorage.removeItem(avatarStorageKey(userId));
+  } catch (e) {
+    // silent
+  }
   window.dispatchEvent(new CustomEvent(AVATAR_UPDATED_EVENT, {
     detail: { userId: String(userId), avatarUrl: '' },
   }));
@@ -51,7 +59,9 @@ export function removeStoredAvatar(userId) {
 
 export function getUserAvatar(user = {}, fallbackUserId = '') {
   const userId = user?.id || user?.user_id || user?.userId || fallbackUserId;
-  return getStoredAvatar(userId) || user?.avatarData || user?.avatarUrl || user?.photoUrl || user?.imageUrl || '';
+  const stored = getStoredAvatar(userId);
+  if (stored) return stored;
+  return user?.avatarData || user?.avatarUrl || user?.photoUrl || user?.imageUrl || '';
 }
 
 export function initialsFromName(name) {
@@ -66,4 +76,45 @@ export function avatarHue(name, id) {
     ? numericId
     : String(name || 'User').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return (seed * 47) % 360;
+}
+
+/**
+ * Client-side high-quality image compression using HTML5 Canvas
+ * Prevents payload size errors (HTTP 400) and broken images on upload.
+ */
+export function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Vui lòng chọn file hình ảnh hợp lệ (PNG, JPG, WEBP)'));
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Không thể đọc file hình ảnh'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Không thể giải mã định dạng ảnh'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, width);
+        canvas.height = Math.max(1, height);
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }

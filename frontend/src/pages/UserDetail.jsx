@@ -8,6 +8,7 @@ import {
   getUserAvatar,
   setStoredAvatar,
   removeStoredAvatar,
+  compressImage,
 } from '../utils/avatar';
 import {
   Activity,
@@ -149,6 +150,7 @@ export default function UserDetail() {
   const [uploadingSlot, setUploadingSlot] = useState(null);
   const [galleryError, setGalleryError] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
+  const [avatarImgError, setAvatarImgError] = useState(false);
   const galleryInputRef = useRef(null);
 
   // Edit modal state
@@ -187,29 +189,20 @@ export default function UserDetail() {
       setGalleryError('Chỉ hỗ trợ file hình ảnh (PNG, JPG, WEBP)');
       return;
     }
-    if (file.size > 2_500_000) {
-      setGalleryError('Dung lượng ảnh tối đa 2.5MB');
-      return;
+    try {
+      setGalleryError('');
+      const base64 = await compressImage(file, 800, 800, 0.85);
+      await usersApi.updateGalleryImage(targetUserId, uploadingSlot, base64);
+      setGalleryImages((prev) => {
+        const next = prev.filter((img) => Number(img.slot) !== uploadingSlot);
+        return [...next, { slot: uploadingSlot, imageData: base64 }].sort((a, b) => a.slot - b.slot);
+      });
+    } catch (err) {
+      console.error('Failed to update gallery image:', err);
+      setGalleryError(err?.response?.data?.message || err?.message || 'Không thể tải ảnh lên');
+    } finally {
+      setUploadingSlot(null);
     }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        setGalleryError('');
-        const base64 = reader.result;
-        const res = await usersApi.updateGalleryImage(targetUserId, uploadingSlot, base64);
-        const updatedImg = res.data || { slot: uploadingSlot, imageData: base64 };
-        setGalleryImages((prev) => {
-          const next = prev.filter((img) => Number(img.slot) !== uploadingSlot);
-          return [...next, updatedImg].sort((a, b) => a.slot - b.slot);
-        });
-      } catch (err) {
-        console.error('Failed to update gallery image:', err);
-        setGalleryError(err?.response?.data?.message || 'Không thể tải ảnh lên');
-      } finally {
-        setUploadingSlot(null);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleDeleteSlotImage = async (e, slotIndex) => {
@@ -233,6 +226,7 @@ export default function UserDetail() {
     try {
       const res = await usersApi.get(targetUserId);
       setProfileData(res);
+      setAvatarImgError(false);
 
       // Load Likes
       try {
@@ -253,6 +247,7 @@ export default function UserDetail() {
 
       // Populate edit form
       const u = res.data || {};
+      const userAvatar = getUserAvatar(u, targetUserId) || u.avatarData || '';
       setEditForm({
         name: u.name || '',
         email: u.email || '',
@@ -265,7 +260,7 @@ export default function UserDetail() {
         phone: u.phone || '',
         isVerified: Boolean(u.isVerified || u.verified),
         isDev: Boolean(u.isDev),
-        avatarData: u.avatarData || '',
+        avatarData: userAvatar,
       });
     } catch (err) {
       console.error('Failed to load profile:', err);
@@ -331,6 +326,7 @@ export default function UserDetail() {
           if (editForm.avatarData) setStoredAvatar(targetUserId, editForm.avatarData);
           else removeStoredAvatar(targetUserId);
         }
+        setAvatarImgError(false);
       }
 
       setSaveSuccess('Cập nhật hồ sơ thành công!');
@@ -338,7 +334,7 @@ export default function UserDetail() {
         setShowEditModal(false);
         setSaveSuccess('');
         loadProfile(true);
-      }, 900);
+      }, 700);
     } catch (err) {
       console.error('Failed to update profile:', err);
       setSaveError(err?.response?.data?.message || err?.message || 'Không thể lưu hồ sơ.');
@@ -347,19 +343,17 @@ export default function UserDetail() {
     }
   };
 
-  // Avatar file upload handler
-  const handleAvatarFile = (e) => {
+  // Avatar file upload handler with automatic client-side compression
+  const handleAvatarFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Kích thước ảnh tối đa 2MB');
-      return;
+    try {
+      setSaveError('');
+      const base64 = await compressImage(file, 400, 400, 0.85);
+      setEditForm((prev) => ({ ...prev, avatarData: base64 }));
+    } catch (err) {
+      alert(err.message || 'Lỗi khi xử lý hình ảnh avatar');
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setEditForm((prev) => ({ ...prev, avatarData: reader.result }));
-    };
-    reader.readAsDataURL(file);
   };
 
   if (loading) {

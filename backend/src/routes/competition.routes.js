@@ -7,6 +7,9 @@ const ctrl = require('../controllers/competition.controller');
 
 const router = express.Router();
 
+// ─── Public routes (unauthenticated) ───────────────────────────────────────
+router.get('/public/spotlight', asyncHandler(ctrl.getPublicSpotlight));
+
 // ─── User routes (authenticated) ─────────────────────────────────────────────
 router.get('/my-state', auth, asyncHandler(ctrl.getMyState));
 router.get('/my-score-history', auth, asyncHandler(ctrl.getMyScoreHistory));

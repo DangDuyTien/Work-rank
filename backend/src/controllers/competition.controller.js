@@ -810,4 +810,12 @@ module.exports = {
   triggerProductionAction,
   triggerYouTubeMilestone,
   triggerCommunityKudos,
+  getPublicSpotlight,
 };
+
+async function getPublicSpotlight(req, res) {
+  const publicSpotlightService = require('../services/competition/publicSpotlight.service');
+  const spotlight = await publicSpotlightService.getPublicSpotlight();
+  return res.json(spotlight);
+}
+
