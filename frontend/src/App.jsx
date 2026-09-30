@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
@@ -123,54 +123,83 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
+function AnimatedAppRoutes() {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [transitionStage, setTransitionStage] = useState('fadeIn'); // 'fadeIn' | 'fadeOut'
+
+  useEffect(() => {
+    if (
+      location.pathname !== displayLocation.pathname ||
+      location.search !== displayLocation.search
+    ) {
+      setTransitionStage('fadeOut');
+      const timer = setTimeout(() => {
+        setDisplayLocation(location);
+        setTransitionStage('fadeIn');
+        window.scrollTo(0, 0);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [location, displayLocation]);
+
+  return (
+    <div
+      className={`wr-route-transition-container ${transitionStage === 'fadeOut' ? 'wr-page-exit' : 'wr-page-enter'}`}
+    >
+      <Suspense fallback={<PageFallback />}>
+        <Routes location={displayLocation}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/youtube" element={<YouTubeOverview />} />
+            <Route path="/arena" element={<Arena />} />
+            <Route path="/grand" element={<GrandHub />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/rankings" element={<Leaderboard />} />
+
+            <Route path="/groups" element={<Navigate to="/friends" replace />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/games" element={<Navigate to="/games/quiz" replace />} />
+            <Route path="/games/capital-board" element={<CapitalBoardGame />} />
+            <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
+            <Route path="/games/quiz" element={<QuizGame />} />
+            <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
+            <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
+            <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/security" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
+            <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
+            <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />
+            <Route path="/admin/competition/seasons" element={<AdminRoute><AdminSeasons /></AdminRoute>} />
+            <Route path="/admin/competition/grand" element={<AdminRoute><AdminGrand /></AdminRoute>} />
+            <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/users/:id" element={<UserDetail />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <UiProvider>
         <AuthProvider>
           <AppErrorBoundary>
-            <Suspense fallback={<PageFallback />}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <Layout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/youtube" element={<YouTubeOverview />} />
-                  <Route path="/arena" element={<Arena />} />
-                  <Route path="/grand" element={<GrandHub />} />
-                  <Route path="/leaderboard" element={<Leaderboard />} />
-                  <Route path="/rankings" element={<Leaderboard />} />
-
-                  <Route path="/groups" element={<Navigate to="/friends" replace />} />
-                  <Route path="/friends" element={<Friends />} />
-                  <Route path="/games" element={<Navigate to="/games/quiz" replace />} />
-                  <Route path="/games/capital-board" element={<CapitalBoardGame />} />
-                  <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
-                  <Route path="/games/quiz" element={<QuizGame />} />
-                  <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
-                  <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
-                  <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/security" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
-                  <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
-                  <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />
-                  <Route path="/admin/competition/seasons" element={<AdminRoute><AdminSeasons /></AdminRoute>} />
-                  <Route path="/admin/competition/grand" element={<AdminRoute><AdminGrand /></AdminRoute>} />
-                  <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/users/:id" element={<UserDetail />} />
-                </Route>
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
+            <AnimatedAppRoutes />
           </AppErrorBoundary>
         </AuthProvider>
       </UiProvider>

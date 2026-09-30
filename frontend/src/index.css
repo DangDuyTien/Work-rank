@@ -149,6 +149,49 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   100% { background-color: transparent; }
 }
 
+/* ── Global Route Page Transitions (Fade out completely -> Fade in smoothly) ── */
+@keyframes wr-page-fade-out {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0) scale(0.992);
+    filter: blur(1.5px);
+  }
+}
+
+@keyframes wr-page-fade-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0) scale(0.992);
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+.wr-route-transition-container {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.wr-page-exit {
+  animation: wr-page-fade-out 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards !important;
+  pointer-events: none;
+  will-change: opacity, transform, filter;
+}
+
+.wr-page-enter {
+  animation: wr-page-fade-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  will-change: opacity, transform, filter;
+}
+
 .page-transition {
   animation: page-enter var(--transition-page) forwards;
   will-change: opacity, transform;
@@ -5654,99 +5697,149 @@ textarea:focus-visible,
 }
 
 .profile-gallery-grid {
-  width: 340px;
+  width: 360px;
   max-width: 100%;
   margin-left: 0;
   align-self: center;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  flex: 0 0 340px;
+  flex: 0 0 360px;
 }
 
 .profile-gallery-cell {
   aspect-ratio: 1;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 0;
-  background: #e2e8f0;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 4px;
+  background: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
 }
 
-.profile-gallery-cell img {
-  width: 100%;
-  height: 100%;
-  display: block;
+/* Ambient blur background to prevent ugly black bars or crop artifacts */
+.profile-gallery-backdrop {
+  position: absolute;
+  inset: -14px;
+  width: calc(100% + 28px);
+  height: calc(100% + 28px);
   object-fit: cover;
-  transition: transform 0.18s ease, filter 0.18s ease;
+  filter: blur(14px) brightness(0.45) saturate(1.2);
+  transform: scale(1.15);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.profile-gallery-cell:hover img {
-  transform: scale(1.035);
-}
-
-.profile-gallery-placeholder {
+/* Foreground main image: 100% full view, never cropped, never distorted or stretched */
+.profile-gallery-cell img.gallery-main-img {
+  position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
-  display: grid;
-  place-items: center;
-  gap: 6px;
-  align-content: center;
-  background: #f1f5f9;
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.profile-gallery-placeholder span {
+  object-fit: contain;
   display: block;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.profile-gallery-add,
-.profile-gallery-change {
+.profile-gallery-cell:hover img.gallery-main-img {
+  transform: scale(1.04);
+}
+
+/* Hover overlay controls - completely hidden until hovered or focused */
+.profile-gallery-overlay {
   position: absolute;
   inset: 0;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.profile-gallery-cell:hover .profile-gallery-overlay,
+.profile-gallery-cell:focus-within .profile-gallery-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.profile-gallery-overlay-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.profile-gallery-overlay-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border: 0;
-  background: rgba(15, 23, 42, 0.46);
-  color: #ffffff;
+  gap: 6px;
+  width: 100%;
+  margin: auto 0;
+}
+
+.profile-gallery-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #ffffff;
+  color: #0f172a;
+  border: none;
+  border-radius: 3px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 800;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.profile-gallery-action-btn:hover {
+  background: #f8fafc;
+  transform: scale(1.04);
+}
+
+.profile-gallery-delete-btn {
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.profile-gallery-delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.profile-gallery-slot-badge {
+  font-size: 9px;
   font-weight: 900;
-  line-height: 1;
-  padding: 0;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
-  opacity: 0;
-  background: rgba(15, 23, 42, 0.34);
-  transition: background 0.18s ease, opacity 0.18s ease;
-}
-
-.profile-gallery-cell:hover .profile-gallery-add,
-.profile-gallery-cell:hover .profile-gallery-change,
-.profile-gallery-cell:focus-within .profile-gallery-add,
-.profile-gallery-cell:focus-within .profile-gallery-change,
-.profile-gallery-add:focus-visible,
-.profile-gallery-change:focus-visible {
-  opacity: 1;
-}
-
-.profile-gallery-add:hover,
-.profile-gallery-add:focus-visible,
-.profile-gallery-change:hover,
-.profile-gallery-change:focus-visible {
-  outline: none;
-  background: rgba(15, 23, 42, 0.62);
-}
-
-.profile-gallery-add svg,
-.profile-gallery-change svg {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.28));
+  color: rgba(255, 255, 255, 0.85);
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .profile-gallery-error {
@@ -5755,6 +5848,10 @@ textarea:focus-visible,
   font-size: 11px;
   font-weight: 800;
   line-height: 1.35;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
 }
 
 .profile-name-line {
@@ -9466,159 +9563,128 @@ html[data-workrank-contrast="true"] .profile-level-card {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   TIER 6: EXECUTIVE / FOUNDER / CEO / C-LEVEL / DIRECTOR
-   "Hoàng Gia Kim Cương - Imperial Amber Gold with Shimmer & Radiance"
+   WORKRANK 6 CANONICAL JOB TITLE BADGES
+   1. EDITOR (Scissors - Teal/Emerald Steel)
+   2. CONTENT (Sparkles - Violet/Amethyst)
+   3. QUẢN LÝ KÊNH (Tv - Royal Cobalt)
+   4. TRƯỞNG PHÒNG (Briefcase - Warm Amber)
+   5. PHÓ GIÁM ĐỐC (Building2 - Executive Bronze Gold)
+   6. GIÁM ĐỐC (Crown - Imperial Ruby Gold)
    ───────────────────────────────────────────────────────────────────────── */
-.job-badge-tier-6 {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 40%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid #f59e0b;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  position: relative;
-  overflow: hidden;
+
+/* 1. EDITOR */
+.job-badge-editor,
+.job-badge-tier-2 {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  box-shadow: 0 1px 2px rgba(15, 118, 110, 0.06);
 }
-.job-badge-tier-6 .job-title-badge-icon svg {
-  color: #d97706;
-  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.6));
+.job-badge-editor .job-title-badge-icon svg,
+.job-badge-tier-2 .job-title-badge-icon svg {
+  color: #0d9488;
 }
-.job-badge-tier-6::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    60deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.6) 50%,
-    transparent 70%
-  );
-  transform: rotate(25deg) translateX(-100%);
-  animation: badge-shimmer 3.5s infinite ease-in-out;
-}
-.job-badge-tier-6:hover {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.55), 0 2px 8px rgba(180, 83, 9, 0.25);
-  border-color: #d97706;
-  transform: translateY(-1px);
+.job-badge-editor:hover,
+.job-badge-tier-2:hover {
+  border-color: #0d9488;
+  box-shadow: 0 0 8px rgba(13, 148, 136, 0.25);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   TIER 5: SYSTEM ADMINISTRATION / SUPER ADMIN / HIGH PRIVILEGES
-   "Tím Thạch Anh Tối Thượng - Cyber Imperial Amethyst"
-   ───────────────────────────────────────────────────────────────────────── */
-.job-badge-tier-5 {
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 45%, #e9d5ff 100%);
-  color: #6b21a8;
-  border: 1px solid #a855f7;
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  position: relative;
-  overflow: hidden;
+/* 2. CONTENT */
+.job-badge-content {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+  box-shadow: 0 1px 2px rgba(109, 40, 217, 0.06);
 }
-.job-badge-tier-5 .job-title-badge-icon svg {
-  color: #9333ea;
-  filter: drop-shadow(0 0 3px rgba(147, 51, 234, 0.5));
+.job-badge-content .job-title-badge-icon svg {
+  color: #7c3aed;
 }
-.job-badge-tier-5::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    60deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.5) 50%,
-    transparent 65%
-  );
-  transform: rotate(25deg) translateX(-100%);
-  animation: badge-shimmer 4.5s infinite ease-in-out;
-}
-.job-badge-tier-5:hover {
-  box-shadow: 0 0 18px rgba(168, 85, 247, 0.5), 0 2px 6px rgba(107, 33, 168, 0.2);
-  border-color: #9333ea;
-  transform: translateY(-1px);
+.job-badge-content:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.25);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   TIER 4: MANAGEMENT / DEPARTMENT LEADS / TEAM LEADS / KÊNH TRƯỞNG
-   "Ngọc Lục Bảo / Đại Dương Xanh Ngọc - Emerald & Cyan Prestige"
-   ───────────────────────────────────────────────────────────────────────── */
-.job-badge-tier-4 {
-  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 50%, #a5f3fc 100%);
-  color: #0e7490;
-  border: 1px solid #06b6d4;
-  box-shadow: 0 0 9px rgba(6, 182, 212, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.8);
-}
-.job-badge-tier-4 .job-title-badge-icon svg {
-  color: #0891b2;
-  filter: drop-shadow(0 0 2px rgba(8, 145, 178, 0.4));
-}
-.job-badge-tier-4:hover {
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.45);
-  border-color: #0891b2;
-  transform: translateY(-1px);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   TIER 3: SENIOR SPECIALISTS & CORE ENGINEERS
-   "Lam Ngọc Sapphire Hoàng Gia - Royal Sapphire & Indigo"
-   ───────────────────────────────────────────────────────────────────────── */
+/* 3. QUẢN LÝ KÊNH */
+.job-badge-channel-manager,
 .job-badge-tier-3 {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 60%, #bfdbfe 100%);
+  background: #eff6ff;
   color: #1e40af;
-  border: 1px solid #3b82f6;
-  box-shadow: 0 0 7px rgba(59, 130, 246, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 1px 2px rgba(30, 64, 175, 0.06);
 }
+.job-badge-channel-manager .job-title-badge-icon svg,
 .job-badge-tier-3 .job-title-badge-icon svg {
   color: #2563eb;
 }
+.job-badge-channel-manager:hover,
 .job-badge-tier-3:hover {
-  box-shadow: 0 0 11px rgba(59, 130, 246, 0.35);
   border-color: #2563eb;
-  transform: translateY(-1px);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.25);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   TIER 2: SPECIALISTS & PRODUCTION (Editor / Content / Designer / Media)
-   "Xanh Thép Sáng Tạo - Steel Blue Modern"
-   ───────────────────────────────────────────────────────────────────────── */
-.job-badge-tier-2 {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  color: #0369a1;
-  border: 1px solid #38bdf8;
-  box-shadow: 0 0 5px rgba(56, 189, 248, 0.15);
+/* 4. TRƯỞNG PHÒNG */
+.job-badge-head-of-department,
+.job-badge-tier-4 {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 1px 2px rgba(194, 65, 12, 0.08);
 }
-.job-badge-tier-2 .job-title-badge-icon svg {
-  color: #0284c7;
+.job-badge-head-of-department .job-title-badge-icon svg,
+.job-badge-tier-4 .job-title-badge-icon svg {
+  color: #ea580c;
 }
-.job-badge-tier-2:hover {
-  box-shadow: 0 0 9px rgba(56, 189, 248, 0.3);
-  border-color: #0284c7;
-  transform: translateY(-1px);
+.job-badge-head-of-department:hover,
+.job-badge-tier-4:hover {
+  border-color: #ea580c;
+  box-shadow: 0 0 10px rgba(234, 88, 12, 0.3);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   TIER 1: STANDARD STAFF & GENERAL MEMBERS (Nhân Viên / Thành Viên)
-   "Kim Loại Bạc Tinh Tế - Polished Slate Minimalist"
-   ───────────────────────────────────────────────────────────────────────── */
+/* 5. PHÓ GIÁM ĐỐC */
+.job-badge-deputy-director,
+.job-badge-tier-5 {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  box-shadow: 0 1px 3px rgba(146, 64, 14, 0.1);
+}
+.job-badge-deputy-director .job-title-badge-icon svg,
+.job-badge-tier-5 .job-title-badge-icon svg {
+  color: #d97706;
+}
+.job-badge-deputy-director:hover,
+.job-badge-tier-5:hover {
+  border-color: #d97706;
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.35);
+}
+
+/* 6. GIÁM ĐỐC */
+.job-badge-director,
+.job-badge-tier-6 {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%);
+  color: #9f1239;
+  border: 1px solid #fb7185;
+  box-shadow: 0 1px 4px rgba(159, 18, 57, 0.15);
+}
+.job-badge-director .job-title-badge-icon svg,
+.job-badge-tier-6 .job-title-badge-icon svg {
+  color: #e11d48;
+  filter: drop-shadow(0 0 2px rgba(225, 29, 72, 0.3));
+}
+.job-badge-director:hover,
+.job-badge-tier-6:hover {
+  border-color: #e11d48;
+  box-shadow: 0 0 14px rgba(225, 29, 72, 0.4);
+}
+
 .job-badge-tier-1 {
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
 }
 .job-badge-tier-1 .job-title-badge-icon svg {
-  color: #64748b;
-}
-@keyframes badge-shimmer {
-  0% {
-    transform: rotate(25deg) translateX(-150%);
-  }
-  20%, 100% {
-    transform: rotate(25deg) translateX(150%);
-  }
+  color: #0d9488;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

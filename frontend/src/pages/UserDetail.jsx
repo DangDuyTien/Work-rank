@@ -151,6 +151,7 @@ export default function UserDetail() {
   const [galleryError, setGalleryError] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
   const [avatarImgError, setAvatarImgError] = useState(false);
+  const [imgErrors, setImgErrors] = useState({});
   const galleryInputRef = useRef(null);
 
   // Edit modal state
@@ -191,12 +192,13 @@ export default function UserDetail() {
     }
     try {
       setGalleryError('');
-      const base64 = await compressImage(file, 800, 800, 0.85);
+      const base64 = await compressImage(file, 1000, 1000, 0.88);
       await usersApi.updateGalleryImage(targetUserId, uploadingSlot, base64);
       setGalleryImages((prev) => {
         const next = prev.filter((img) => Number(img.slot) !== uploadingSlot);
         return [...next, { slot: uploadingSlot, imageData: base64 }].sort((a, b) => a.slot - b.slot);
       });
+      setImgErrors((prev) => ({ ...prev, [uploadingSlot]: false }));
     } catch (err) {
       console.error('Failed to update gallery image:', err);
       setGalleryError(err?.response?.data?.message || err?.message || 'Không thể tải ảnh lên');
@@ -211,6 +213,7 @@ export default function UserDetail() {
       setGalleryError('');
       await usersApi.removeGalleryImage(targetUserId, slotIndex);
       setGalleryImages((prev) => prev.filter((img) => Number(img.slot) !== slotIndex));
+      setImgErrors((prev) => ({ ...prev, [slotIndex]: false }));
     } catch (err) {
       console.error('Failed to remove gallery image:', err);
       setGalleryError(err?.response?.data?.message || 'Không thể xóa ảnh');
@@ -568,9 +571,7 @@ export default function UserDetail() {
               {/* Chức danh & Huy hiệu vinh danh */}
               <JobTitleBadge
                 jobTitle={jobTitle}
-                role={user.role}
                 size="md"
-                showTierTag
               />
             </div>
 
@@ -661,71 +662,101 @@ export default function UserDetail() {
           </div>
         </div>
 
-        {/* ── GIỚI THIỆU BẢN THÂN (GALLERY 6 KHUNG KÍCH THƯỚC TO RỘNG CỦA THIẾT KẾ CŨ) ── */}
+        {/* ── GIỚI THIỆU BẢN THÂN (GALLERY 6 KHUNG ẢNH) ── */}
         <div className="profile-gallery-grid" aria-label="Ảnh giới thiệu cá nhân">
           {DEFAULT_GALLERY_IMAGES.map((defaultUrl, index) => {
             const customImg = galleryImages.find((img) => Number(img.slot) === index);
-            const imageUrl = customImg?.imageData || defaultUrl;
-            const isCustom = Boolean(customImg?.imageData);
+            const hasCustom = Boolean(customImg?.imageData);
+            const isCorrupted = Boolean(imgErrors[index]);
+            const imageUrl = (!isCorrupted && customImg?.imageData) ? customImg.imageData : defaultUrl;
 
             return (
               <div
                 key={index}
                 className="profile-gallery-cell"
                 onClick={() => setPreviewImage(imageUrl)}
-                title={`Khung #${index + 1} - Bấm để xem ảnh phóng to`}
-                style={{ cursor: 'pointer' }}
+                title={`Ảnh #${index + 1} - Bấm để xem ảnh phóng to`}
+                tabIndex={0}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setPreviewImage(imageUrl);
+                  }
+                }}
               >
+                {/* Backdrop ambient blur for full contain without black bars */}
                 <img
+                  className="profile-gallery-backdrop"
+                  src={imageUrl}
+                  alt=""
+                  aria-hidden="true"
+                  onError={() => {
+                    setImgErrors((prev) => ({ ...prev, [index]: true }));
+                  }}
+                />
+
+                {/* Main foreground image (contain = 100% full view, no crop, no stretch) */}
+                <img
+                  className="gallery-main-img"
                   loading="lazy"
                   decoding="async"
                   src={imageUrl}
                   alt={`Ảnh giới thiệu ${index + 1}`}
-                  onError={(e) => {
-                    if (e.currentTarget.src !== defaultUrl) {
-                      e.currentTarget.src = defaultUrl;
-                    }
+                  onError={() => {
+                    setImgErrors((prev) => ({ ...prev, [index]: true }));
                   }}
                 />
-                {canEdit && (
-                  <button
-                    type="button"
-                    className="profile-gallery-change"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTriggerUpload(index);
-                    }}
-                    title={isCustom ? 'Thay đổi ảnh này' : 'Tải ảnh lên khung này'}
-                  >
-                    <ImagePlus size={18} strokeWidth={2.5} />
-                    <span>{isCustom ? 'Thay ảnh' : '+ Thêm ảnh'}</span>
-                  </button>
-                )}
-                {canEdit && isCustom && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteSlotImage(e, index)}
-                    style={{
-                      position: 'absolute',
-                      top: 6,
-                      right: 6,
-                      zIndex: 10,
-                      background: 'rgba(239, 68, 68, 0.9)',
-                      color: '#ffffff',
-                      border: 'none',
-                      padding: '3px 6px',
-                      fontSize: 9,
-                      fontWeight: 900,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                    }}
-                    title="Khôi phục ảnh mặc định"
-                  >
-                    <X size={10} />
-                  </button>
-                )}
+
+                {/* Hover overlay controls (only visible on hover/focus) */}
+                <div className="profile-gallery-overlay">
+                  <div className="profile-gallery-overlay-top">
+                    <span className="profile-gallery-slot-badge">#{index + 1}</span>
+                    {canEdit && hasCustom && (
+                      <button
+                        type="button"
+                        className="profile-gallery-delete-btn"
+                        onClick={(e) => handleDeleteSlotImage(e, index)}
+                        title="Xóa ảnh này, khôi phục ảnh mặc định"
+                      >
+                        <X size={11} strokeWidth={3} />
+                        <span>Xóa</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="profile-gallery-overlay-center">
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className="profile-gallery-action-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTriggerUpload(index);
+                        }}
+                        title={hasCustom ? 'Thay đổi ảnh này' : 'Tải ảnh mới lên'}
+                      >
+                        <ImagePlus size={13} strokeWidth={2.5} />
+                        <span>{hasCustom ? 'Đổi ảnh' : '+ Thêm ảnh'}</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="profile-gallery-action-btn"
+                      style={{ background: 'rgba(15,23,42,0.85)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewImage(imageUrl);
+                      }}
+                      title="Xem ảnh phóng to"
+                    >
+                      <ExternalLink size={12} />
+                      <span>Xem lớn</span>
+                    </button>
+                  </div>
+
+                  <div style={{ height: 12 }} />
+                </div>
               </div>
             );
           })}
@@ -799,7 +830,7 @@ export default function UserDetail() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <span style={{ color: '#64748b' }}>Huy hiệu chức danh:</span>
-                  <JobTitleBadge jobTitle={jobTitle} role={user.role} size="xs" />
+                  <JobTitleBadge jobTitle={jobTitle} size="xs" />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <span style={{ color: '#64748b' }}>Phòng ban:</span>
@@ -1275,7 +1306,7 @@ export default function UserDetail() {
                 )}
                 <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 11, color: '#64748b' }}>Huy hiệu:</span>
-                  <JobTitleBadge jobTitle={editForm.jobTitle} role={user.role} size="xs" showTierTag />
+                  <JobTitleBadge jobTitle={editForm.jobTitle} size="xs" />
                 </div>
               </div>
 

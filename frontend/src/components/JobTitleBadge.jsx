@@ -1,95 +1,124 @@
 import React from 'react';
 import {
-  Crown,
-  ShieldAlert,
-  ShieldCheck,
-  Award,
-  Star,
+  Scissors,
   Sparkles,
-  Video,
-  Code,
-  User,
-  Users,
-  Flame,
-  Zap,
+  Tv,
+  Briefcase,
+  Building2,
+  Crown,
 } from 'lucide-react';
 
 /**
- * WORKRANK TIERED JOB TITLE & ROLE BADGE HIERARCHY
+ * =========================================================================
+ * WORKRANK CANONICAL JOB TITLE SYSTEM — 6 OFFICIAL ROLES ONLY
+ * =========================================================================
  * 
- * Tier 6: Executive / Founder / CEO / Director (Hoàng Gia Kim Cương)
- * Tier 5: System Administrator / Super Admin (Quản Trị Tối Thượng)
- * Tier 4: Management / Department Leads / Team Leads (Lãnh Đạo & Quản Lý)
- * Tier 3: Senior Specialists & Core Engineers (Chuyên Viên Cao Cấp)
- * Tier 2: Specialists & Creative Roles (Chuyên Môn Sáng Tạo)
- * Tier 1: Standard Staff & General Members (Nhân Viên Chuẩn)
+ * 1. EDITOR           (Biên tập & dựng video - Scissors)
+ * 2. CONTENT          (Sáng tạo nội dung & kịch bản - Sparkles)
+ * 3. QUẢN LÝ KÊNH     (Quản trị kênh YouTube & Media - Tv)
+ * 4. TRƯỞNG PHÒNG     (Lãnh đạo & quản lý phòng ban - Briefcase)
+ * 5. PHÓ GIÁM ĐỐC     (Phó giám đốc điều hành & chiến lược - Building2)
+ * 6. GIÁM ĐỐC         (Giám đốc & ban điều hành tối cao - Crown)
  */
+
+export const JOB_TITLE_CONFIG = {
+  editor: {
+    id: 'editor',
+    label: 'Editor',
+    shortLabel: 'Editor',
+    icon: Scissors,
+    description: 'Biên tập & dựng video chuyên nghiệp',
+    priority: 1,
+    className: 'job-badge-editor',
+    color: '#0f766e',
+    accentColor: '#0d9488',
+    bgColor: '#f0fdfa',
+    borderColor: '#99f6e4',
+  },
+  content: {
+    id: 'content',
+    label: 'Content',
+    shortLabel: 'Content',
+    icon: Sparkles,
+    description: 'Sáng tạo nội dung & kịch bản truyền thông',
+    priority: 2,
+    className: 'job-badge-content',
+    color: '#6d28d9',
+    accentColor: '#7c3aed',
+    bgColor: '#f5f3ff',
+    borderColor: '#ddd6fe',
+  },
+  channel_manager: {
+    id: 'channel_manager',
+    label: 'Quản lý kênh',
+    shortLabel: 'QL Kênh',
+    icon: Tv,
+    description: 'Quản trị & tối ưu hóa kênh phát triển',
+    priority: 3,
+    className: 'job-badge-channel-manager',
+    color: '#1e40af',
+    accentColor: '#2563eb',
+    bgColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+  },
+  head_of_department: {
+    id: 'head_of_department',
+    label: 'Trưởng phòng',
+    shortLabel: 'Trưởng phòng',
+    icon: Briefcase,
+    description: 'Lãnh đạo & quản lý phòng ban chuyên môn',
+    priority: 4,
+    className: 'job-badge-head-of-department',
+    color: '#c2410c',
+    accentColor: '#ea580c',
+    bgColor: '#fff7ed',
+    borderColor: '#fed7aa',
+  },
+  deputy_director: {
+    id: 'deputy_director',
+    label: 'Phó giám đốc',
+    shortLabel: 'Phó GĐ',
+    icon: Building2,
+    description: 'Phó giám đốc điều hành & chiến lược',
+    priority: 5,
+    className: 'job-badge-deputy-director',
+    color: '#92400e',
+    accentColor: '#d97706',
+    bgColor: '#fffbeb',
+    borderColor: '#fde68a',
+  },
+  director: {
+    id: 'director',
+    label: 'Giám đốc',
+    shortLabel: 'Giám đốc',
+    icon: Crown,
+    description: 'Giám đốc & ban điều hành tối cao',
+    priority: 6,
+    className: 'job-badge-director',
+    color: '#9f1239',
+    accentColor: '#e11d48',
+    bgColor: '#fff1f2',
+    borderColor: '#fecdd3',
+  },
+};
+
+export const OFFICIAL_JOB_TITLES = [
+  'Editor',
+  'Content',
+  'Quản lý kênh',
+  'Trưởng phòng',
+  'Phó giám đốc',
+  'Giám đốc',
+];
 
 export const CATEGORIZED_JOB_TITLES = [
   {
-    category: 'Ban Lãnh Đạo Tối Cao (Tier 6)',
-    titles: [
-      'Founder / Nhà Sáng Lập',
-      'Chủ Tịch Hội Đồng Quản Trị',
-      'CEO / Tổng Giám Đốc',
-      'Giám Đốc Điều Hành (COO)',
-      'Giám Đốc Kỹ Thuật (CTO)',
-      'Giám Đốc Tài Chính (CFO)',
-      'Giám Đốc Marketing (CMO)',
-      'Giám Đốc / Executive Director',
-      'Phó Tổng Giám Đốc',
-    ],
+    category: 'Chuyên Môn & Sản Xuất (Production)',
+    titles: ['Editor', 'Content'],
   },
   {
-    category: 'Quản Trị Hệ Thống (Tier 5)',
-    titles: [
-      'Quản Trị Viên Hệ Thống (Admin)',
-      'Kỹ Sư Trưởng Hệ Thống (Principal Engineer)',
-      'System Administrator',
-      'Lead DevOps Engineer',
-    ],
-  },
-  {
-    category: 'Cấp Quản Lý & Trưởng Phòng (Tier 4)',
-    titles: [
-      'Trưởng Phòng / Team Lead',
-      'Phó Trưởng Phòng',
-      'Kênh Trưởng / Channel Manager',
-      'Trưởng Ban Biên Tập',
-      'Quản Lý Dự Án / Project Manager',
-      'Art Director / Giám Đốc Mỹ Thuật',
-    ],
-  },
-  {
-    category: 'Chuyên Viên Cao Cấp (Tier 3)',
-    titles: [
-      'Chuyên Viên Cao Cấp (Senior Specialist)',
-      'Senior Video Editor',
-      'Senior Content Creator',
-      'Kỹ Sư Phần Mềm (Senior Developer)',
-      'Chuyên Viên Truyền Thông',
-      'Producer / Nhà Sản Xuất',
-    ],
-  },
-  {
-    category: 'Chuyên Môn & Sáng Tạo (Tier 2)',
-    titles: [
-      'Video Editor',
-      'Content Creator',
-      'Graphic Designer',
-      'Media Specialist',
-      'Kỹ Thuật Viên Video',
-      'Copywriter / Biên Kịch',
-    ],
-  },
-  {
-    category: 'Nhân Sự Tiêu Chuẩn (Tier 1)',
-    titles: [
-      'Nhân Viên',
-      'Thành Viên Đội Ngũ',
-      'Cộng Tác Viên (Collaborator)',
-      'Thực Tập Sinh (Intern)',
-    ],
+    category: 'Cấp Quản Lý & Điều Hành (Management & Executive)',
+    titles: ['Quản lý kênh', 'Trưởng phòng', 'Phó giám đốc', 'Giám đốc'],
   },
 ];
 
@@ -104,157 +133,110 @@ export const CATEGORIZED_DEPARTMENTS = [
   'Phòng Hành Chính Nhân Sự',
 ];
 
-export function resolveJobTitleTier(jobTitle = '', role = 'user') {
-  const title = String(jobTitle || '').trim().toLowerCase();
-  const r = String(role || '').trim().toLowerCase();
+/**
+ * Resolve any raw job title string into one of the 6 canonical configs
+ */
+export function resolveJobTitleConfig(jobTitle = '') {
+  const str = String(jobTitle || '').trim().toLowerCase();
 
-  // Tier 6: Executive / Board / Founder / CEO / Director
   if (
-    title.includes('founder') ||
-    title.includes('sáng lập') ||
-    title.includes('ceo') ||
-    title.includes('chủ tịch') ||
-    title.includes('tổng giám đốc') ||
-    title.includes('giám đốc') ||
-    title.includes('director') ||
-    title.includes('c-level') ||
-    title.includes('cto') ||
-    title.includes('cfo') ||
-    title.includes('coo') ||
-    title.includes('cmo') ||
-    title.includes('executive')
+    str === 'giám đốc' ||
+    str === 'giam doc' ||
+    str === 'director' ||
+    str === 'ceo' ||
+    str === 'founder' ||
+    str === 'chủ tịch' ||
+    str === 'tổng giám đốc' ||
+    (str.includes('giám đốc') && !str.includes('phó')) ||
+    (str.includes('director') && !str.includes('deputy'))
   ) {
-    return {
-      tier: 6,
-      tierName: 'Ban Lãnh Đạo Tối Cao',
-      tierCode: 'EXECUTIVE',
-      icon: Crown,
-      badgeClass: 'job-badge-tier-6',
-      accentColor: '#f59e0b',
-      label: jobTitle || 'Giám Đốc',
-    };
+    return JOB_TITLE_CONFIG.director;
   }
 
-  // Tier 5: System Administration & High Privileges
   if (
-    r === 'admin' ||
-    title.includes('quản trị viên') ||
-    title.includes('administrator') ||
-    title.includes('admin') ||
-    title.includes('hệ thống') ||
-    title.includes('sysadmin') ||
-    title.includes('kỹ sư trưởng')
+    str === 'phó giám đốc' ||
+    str === 'pho giam doc' ||
+    str === 'deputy director' ||
+    str === 'phó gđ' ||
+    str.includes('phó giám đốc') ||
+    str.includes('deputy') ||
+    str.includes('phó tổng')
   ) {
-    return {
-      tier: 5,
-      tierName: 'Quản Trị Viên Hệ Thống',
-      tierCode: 'ADMIN',
-      icon: ShieldCheck,
-      badgeClass: 'job-badge-tier-5',
-      accentColor: '#a855f7',
-      label: jobTitle || (r === 'admin' ? 'Quản Trị Viên' : 'Kỹ Sư Hệ Thống'),
-    };
+    return JOB_TITLE_CONFIG.deputy_director;
   }
 
-  // Tier 4: Management & Department Leads
   if (
-    r === 'manager' ||
-    title.includes('phó giám đốc') ||
-    title.includes('trưởng phòng') ||
-    title.includes('phó phòng') ||
-    title.includes('trưởng ban') ||
-    title.includes('quản lý') ||
-    title.includes('manager') ||
-    title.includes('lead') ||
-    title.includes('kênh trưởng') ||
-    title.includes('art director')
+    str === 'trưởng phòng' ||
+    str === 'truong phong' ||
+    str === 'head of department' ||
+    str === 'lead' ||
+    str.includes('trưởng phòng') ||
+    str.includes('phó phòng') ||
+    str.includes('trưởng ban') ||
+    str.includes('team lead')
   ) {
-    return {
-      tier: 4,
-      tierName: 'Cấp Quản Lý & Lãnh Đạo',
-      tierCode: 'MANAGEMENT',
-      icon: Award,
-      badgeClass: 'job-badge-tier-4',
-      accentColor: '#06b6d4',
-      label: jobTitle || (r === 'manager' ? 'Trưởng Phòng' : 'Quản Lý'),
-    };
+    return JOB_TITLE_CONFIG.head_of_department;
   }
 
-  // Tier 3: Senior Specialists & Core Engineers
   if (
-    title.includes('chuyên viên cao cấp') ||
-    title.includes('chuyên viên') ||
-    title.includes('senior') ||
-    title.includes('kỹ sư') ||
-    title.includes('producer') ||
-    title.includes('truyền thông') ||
-    title.includes('master') ||
-    title.includes('developer') ||
-    title.includes('dev')
+    str === 'quản lý kênh' ||
+    str === 'quan ly kenh' ||
+    str === 'channel manager' ||
+    str === 'kênh trưởng' ||
+    str.includes('quản lý kênh') ||
+    str.includes('channel') ||
+    str.includes('kênh')
   ) {
-    return {
-      tier: 3,
-      tierName: 'Chuyên Viên Cao Cấp',
-      tierCode: 'SENIOR',
-      icon: Star,
-      badgeClass: 'job-badge-tier-3',
-      accentColor: '#3b82f6',
-      label: jobTitle || 'Chuyên Viên',
-    };
+    return JOB_TITLE_CONFIG.channel_manager;
   }
 
-  // Tier 2: Specialists & Creative Roles
   if (
-    title.includes('editor') ||
-    title.includes('video') ||
-    title.includes('content') ||
-    title.includes('creator') ||
-    title.includes('designer') ||
-    title.includes('media') ||
-    title.includes('marketing') ||
-    title.includes('sản xuất')
+    str === 'content' ||
+    str === 'content creator' ||
+    str.includes('content') ||
+    str.includes('kịch bản') ||
+    str.includes('copywriter') ||
+    str.includes('nội dung')
   ) {
-    return {
-      tier: 2,
-      tierName: 'Chuyên Môn & Sáng Tạo',
-      tierCode: 'SPECIALIST',
-      icon: Video,
-      badgeClass: 'job-badge-tier-2',
-      accentColor: '#0284c7',
-      label: jobTitle || 'Video Editor',
-    };
+    return JOB_TITLE_CONFIG.content;
   }
 
-  // Tier 1: Standard Staff & General Members
+  // Default to Editor
+  return JOB_TITLE_CONFIG.editor;
+}
+
+export function resolveJobTitleTier(jobTitle = '') {
+  const config = resolveJobTitleConfig(jobTitle);
   return {
-    tier: 1,
-    tierName: 'Nhân Sự Tiêu Chuẩn',
-    tierCode: 'STAFF',
-    icon: User,
-    badgeClass: 'job-badge-tier-1',
-    accentColor: '#64748b',
-    label: jobTitle || 'Nhân viên',
+    tier: config.priority,
+    tierName: config.label,
+    tierCode: config.id.toUpperCase(),
+    icon: config.icon,
+    badgeClass: config.className,
+    accentColor: config.accentColor,
+    label: config.label,
   };
 }
 
+/**
+ * Canonical JobTitleBadge Component
+ */
 export default function JobTitleBadge({
   jobTitle,
-  role = 'user',
-  size = 'md', // 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  size = 'md', // 'xs' | 'sm' | 'md' | 'lg'
   showIcon = true,
-  showTierTag = false,
   className = '',
   style = {},
   title,
 }) {
-  const config = resolveJobTitleTier(jobTitle, role);
+  const config = resolveJobTitleConfig(jobTitle);
   const IconComponent = config.icon;
-  const displayTitle = jobTitle || config.label;
-  const tooltip = title || `${displayTitle} • ${config.tierName} (Tier ${config.tier})`;
+  const displayLabel = config.label;
+  const tooltip = title || `${displayLabel} • ${config.description}`;
 
   return (
     <span
-      className={`job-title-badge job-title-badge-${size} ${config.badgeClass} ${className}`}
+      className={`job-title-badge job-title-badge-${size} ${config.className} ${className}`}
       title={tooltip}
       style={style}
     >
@@ -263,21 +245,7 @@ export default function JobTitleBadge({
           <IconComponent />
         </span>
       )}
-      <span className="job-title-badge-text">{displayTitle}</span>
-      {showTierTag && (
-        <span
-          style={{
-            fontSize: '0.75em',
-            opacity: 0.8,
-            padding: '1px 4px',
-            borderRadius: 2,
-            background: 'rgba(0,0,0,0.06)',
-            marginLeft: 2,
-          }}
-        >
-          T{config.tier}
-        </span>
-      )}
+      <span className="job-title-badge-text">{displayLabel}</span>
     </span>
   );
 }

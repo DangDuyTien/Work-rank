@@ -528,7 +528,7 @@ export default function AdminPrivileges() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div>
-                    <JobTitleBadge jobTitle={u.jobTitle} role={u.role} size="xs" showTierTag />
+                    <JobTitleBadge jobTitle={u.jobTitle} size="xs" />
                   </div>
                   <div style={{ marginTop: 3, fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.department || 'Media & Content'}
