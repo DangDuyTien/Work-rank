@@ -7,9 +7,7 @@ import {
   Crown,
   Medal,
   Award,
-  BadgeCheck,
   LogIn,
-  UserPlus,
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -101,7 +99,6 @@ export default function Home() {
     championTeam: null,
     mvp: null,
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,9 +111,6 @@ export default function Home() {
       })
       .catch((err) => {
         console.warn('Failed to load public spotlight:', err);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
       });
     return () => {
       isMounted = false;
@@ -128,7 +122,7 @@ export default function Home() {
   return (
     <div className="wr-award-canvas">
       {/* ── 1. ULTRA-MINIMAL TOP BAR (BRAND & AUTH) ── */}
-      <header className="wr-award-header">
+      <header className="wr-award-header wr-anim-header">
         <div className="wr-award-header-content">
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <BrandMark size={28} showLabel={false} />
@@ -186,9 +180,9 @@ export default function Home() {
 
       {/* ── 2. LEFT PANEL: CHAMPION TEAM (ĐỘI QUÁN QUÂN) ── */}
       <section className="wr-award-panel wr-award-panel-left">
-        {/* Top Zone: Headline & Metadata */}
+        {/* Top Zone: Kinetic Headline & Metadata */}
         <div>
-          <div className="wr-award-eyebrow">
+          <div className="wr-award-eyebrow wr-anim-meta-left">
             <Trophy size={14} color="#b45309" />
             <span className="wr-award-eyebrow-accent">
               {season?.name ? `${season.name} • CHAMPION TEAM` : 'MÙA GIẢI 2026 • ĐỘI VÔ ĐỊCH'}
@@ -196,14 +190,17 @@ export default function Home() {
           </div>
 
           <h1 className="wr-award-headline">
-            QUÁN QUÂN<br />
-            MÙA GIẢI<br />
-            <span style={{ color: championTeam ? '#111111' : '#888888' }}>
+            <span className="wr-award-headline-block wr-anim-h1-left">QUÁN QUÂN</span>
+            <span className="wr-award-headline-block wr-anim-h2-left">MÙA GIẢI</span>
+            <span
+              className="wr-award-headline-block wr-anim-h3-left"
+              style={{ color: championTeam ? '#111111' : '#888888' }}
+            >
               {championTeam ? championTeam.teamName : 'CHỜ VINH DANH'}
             </span>
           </h1>
 
-          <p className="wr-award-tagline">
+          <p className="wr-award-tagline wr-anim-desc-left">
             {championTeam
               ? `Đội tuyển dẫn đầu bảng xếp hạng tổng sắp với hiệu suất vượt trội và tinh thần đồng đội bứt phá.`
               : `Mùa giải đầu tiên đang diễn ra sôi nổi. Đội tuyển xuất sắc nhất sẽ được tôn vinh trang trọng tại đây.`}
@@ -211,7 +208,7 @@ export default function Home() {
 
           <Link
             to={isSignedIn ? '/leaderboard' : '/login'}
-            className="wr-award-pill-btn"
+            className="wr-award-pill-btn wr-anim-cta-left"
           >
             <span>{championTeam ? 'Xem kết quả giải đấu' : 'Khám phá bảng xếp hạng'}</span>
             <ArrowRight size={14} />
@@ -232,7 +229,7 @@ export default function Home() {
             }}
           >
             {/* Visual Box 1: Team Crest & Identity */}
-            <div className="wr-award-visual-box" style={{ minHeight: 210 }}>
+            <div className="wr-award-visual-box wr-anim-box1-left" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
                   CHAMPIONSHIP EMBLEM
@@ -294,7 +291,7 @@ export default function Home() {
             </div>
 
             {/* Visual Box 2: Stats & Trophy Artwork */}
-            <div className="wr-award-visual-box" style={{ minHeight: 210 }}>
+            <div className="wr-award-visual-box wr-anim-box2-left" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
                   SEASON PERFORMANCE
@@ -335,9 +332,9 @@ export default function Home() {
 
       {/* ── 3. RIGHT PANEL: MVP (NHÂN VIÊN XUẤT SẮC NHẤT) ── */}
       <section className="wr-award-panel wr-award-panel-right">
-        {/* Top Zone: Headline & Metadata */}
+        {/* Top Zone: Kinetic Headline & Metadata */}
         <div>
-          <div className="wr-award-eyebrow">
+          <div className="wr-award-eyebrow wr-anim-meta-right">
             <Star size={14} color="#b45309" />
             <span className="wr-award-eyebrow-accent">
               {season?.name ? `${season.name} • MOST VALUABLE PLAYER` : 'MÙA GIẢI 2026 • DANH HIỆU MVP'}
@@ -345,14 +342,17 @@ export default function Home() {
           </div>
 
           <h2 className="wr-award-headline">
-            MVP XUẤT SẮC<br />
-            MÙA GIẢI<br />
-            <span style={{ color: mvp ? '#111111' : '#888888' }}>
+            <span className="wr-award-headline-block wr-anim-h1-right">MVP XUẤT SẮC</span>
+            <span className="wr-award-headline-block wr-anim-h2-right">MÙA GIẢI</span>
+            <span
+              className="wr-award-headline-block wr-anim-h3-right"
+              style={{ color: mvp ? '#111111' : '#888888' }}
+            >
               {mvp ? mvp.name : 'CHỜ CHỦ NHÂN'}
             </span>
           </h2>
 
-          <p className="wr-award-tagline">
+          <p className="wr-award-tagline wr-anim-desc-right">
             {mvp
               ? `Vinh danh cá nhân có hiệu suất đóng góp cao nhất và chỉ số tăng trưởng ấn tượng nhất toàn cơ quan.`
               : `Cá nhân có thành tích bứt phá và đóng góp nổi bật nhất sẽ được xướng tên tại vị trí danh giá này.`}
@@ -360,7 +360,7 @@ export default function Home() {
 
           <Link
             to={isSignedIn ? '/arena' : '/login'}
-            className="wr-award-pill-btn"
+            className="wr-award-pill-btn wr-anim-cta-right"
           >
             <span>{mvp ? 'Khám phá đấu trường Arena' : 'Tham gia thi đấu mùa giải'}</span>
             <ArrowRight size={14} />
@@ -381,7 +381,7 @@ export default function Home() {
             }}
           >
             {/* Visual Box 1: MVP Portrait & Profile */}
-            <div className="wr-award-visual-box" style={{ minHeight: 210 }}>
+            <div className="wr-award-visual-box wr-anim-box1-right" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
                   MVP RECOGNITION
@@ -452,7 +452,7 @@ export default function Home() {
             </div>
 
             {/* Visual Box 2: Winged Star Artwork & Score */}
-            <div className="wr-award-visual-box" style={{ minHeight: 210 }}>
+            <div className="wr-award-visual-box wr-anim-box2-right" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
                   WINGED MEDAL OF EXCELLENCE
@@ -492,7 +492,7 @@ export default function Home() {
       </section>
 
       {/* ── 4. SUBTLE EDITORIAL FOOTER STRIP ── */}
-      <footer className="wr-award-footer">
+      <footer className="wr-award-footer wr-anim-footer">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <BrandMark size={20} showLabel={false} />
           <span style={{ fontWeight: 800, color: '#333333' }}>
