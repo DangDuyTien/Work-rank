@@ -256,21 +256,28 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
 }
 
 .wr-award-header {
-  position: absolute;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   height: 64px;
-  z-index: 50;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 clamp(20px, 4vw, 48px);
-  pointer-events: none;
+  background: rgba(244, 243, 239, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  grid-column: 1 / -1;
+  pointer-events: auto;
+  box-sizing: border-box;
 }
 
 .wr-award-header-content {
   pointer-events: auto;
+  display: flex;
+  align-items: center;
 }
 
 .wr-award-panel {

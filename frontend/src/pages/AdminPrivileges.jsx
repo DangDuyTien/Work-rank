@@ -771,7 +771,7 @@ export default function AdminPrivileges() {
                     ))}
                   </select>
                   <div style={{ marginTop: 6 }}>
-                    <JobTitleBadge jobTitle={createForm.jobTitle} role={createForm.role} size="xs" showTierTag />
+                    <JobTitleBadge jobTitle={createForm.jobTitle} size="xs" />
                   </div>
                 </div>
                 <div>
@@ -922,7 +922,7 @@ export default function AdminPrivileges() {
                     ))}
                   </select>
                   <div style={{ marginTop: 6 }}>
-                    <JobTitleBadge jobTitle={editForm.jobTitle} role={editForm.role} size="xs" showTierTag />
+                    <JobTitleBadge jobTitle={editForm.jobTitle} size="xs" />
                   </div>
                 </div>
                 <div>
@@ -1153,7 +1153,7 @@ export default function AdminPrivileges() {
               <div>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>CHỨC DANH CÔNG TÁC:</span>
                 <div style={{ marginTop: 4 }}>
-                  <JobTitleBadge jobTitle={detailDrawerUser.jobTitle} role={detailDrawerUser.role} size="sm" showTierTag />
+                  <JobTitleBadge jobTitle={detailDrawerUser.jobTitle} size="sm" />
                 </div>
               </div>
               <div>

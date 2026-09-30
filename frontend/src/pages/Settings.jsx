@@ -440,7 +440,7 @@ export default function Settings() {
               {isVerifiedBadge && <VerifiedBadge size={16} />}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              <JobTitleBadge jobTitle={user?.jobTitle} role={user?.role} size="xs" showTierTag />
+              <JobTitleBadge jobTitle={user?.jobTitle} size="xs" />
               <span style={{ color: '#cbd5e1' }}>•</span>
               <span style={{ fontSize: 12, color: '#64748b' }}>{user?.department || 'Media & Content'}</span>
             </div>
@@ -543,7 +543,7 @@ export default function Settings() {
             <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
               <span style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Huy hiệu chức danh</span>
               <div style={{ marginTop: 6 }}>
-                <JobTitleBadge jobTitle={user?.jobTitle} role={user?.role} size="md" showTierTag />
+                <JobTitleBadge jobTitle={user?.jobTitle} size="md" />
               </div>
             </div>
 
@@ -621,14 +621,8 @@ export default function Settings() {
                     </span>
                   </label>
                   <select
-                    value={adminJobForm.isCustomTitle ? '__custom__' : adminJobForm.jobTitle}
-                    onChange={(e) => {
-                      if (e.target.value === '__custom__') {
-                        setAdminJobForm({ ...adminJobForm, isCustomTitle: true, customTitle: adminJobForm.jobTitle || '' });
-                      } else {
-                        setAdminJobForm({ ...adminJobForm, isCustomTitle: false, jobTitle: e.target.value });
-                      }
-                    }}
+                    value={adminJobForm.jobTitle}
+                    onChange={(e) => setAdminJobForm({ ...adminJobForm, jobTitle: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '8px 10px',
@@ -647,28 +641,14 @@ export default function Settings() {
                         ))}
                       </optgroup>
                     ))}
-                    <optgroup label="Tùy chọn khác">
-                      <option value="__custom__">Nhập chức danh tùy chỉnh...</option>
-                    </optgroup>
                   </select>
-
-                  {adminJobForm.isCustomTitle && (
-                    <input
-                      value={adminJobForm.customTitle}
-                      onChange={(e) => setAdminJobForm({ ...adminJobForm, customTitle: e.target.value, jobTitle: e.target.value })}
-                      placeholder="Nhập tên chức vụ mới..."
-                      style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #cbd5e1', marginTop: 8, outline: 'none' }}
-                    />
-                  )}
 
                   {/* Live Badge Preview */}
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Huy hiệu hiển thị:</span>
                     <JobTitleBadge
-                      jobTitle={adminJobForm.isCustomTitle ? adminJobForm.customTitle : adminJobForm.jobTitle}
-                      role={adminJobForm.role}
+                      jobTitle={adminJobForm.jobTitle}
                       size="sm"
-                      showTierTag
                     />
                   </div>
                 </div>

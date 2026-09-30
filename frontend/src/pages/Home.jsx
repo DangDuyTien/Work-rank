@@ -8,6 +8,7 @@ import {
   Medal,
   Award,
   LogIn,
+  UserPlus,
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -121,11 +122,11 @@ export default function Home() {
 
   return (
     <div className="wr-award-canvas">
-      {/* ── 1. ULTRA-MINIMAL TOP BAR (BRAND & AUTH) ── */}
+      {/* ── 1. STICKY TOP BAR (BRAND & AUTH ACTION BUTTONS) ── */}
       <header className="wr-award-header wr-anim-header">
         <div className="wr-award-header-content">
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BrandMark size={28} showLabel={false} />
+            <BrandMark size={30} showLabel={false} />
             <span
               style={{
                 fontFamily: "'Space Grotesk', -apple-system, sans-serif",
@@ -141,15 +142,15 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="wr-award-header-content" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div className="wr-award-header-content" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {isSignedIn ? (
             <Link
               to="/dashboard"
               className="wr-award-pill-btn"
-              style={{ padding: '8px 18px', fontSize: 12 }}
+              style={{ padding: '9px 20px', fontSize: 13 }}
             >
               <span>Vào Workspace ({user?.name || 'Thành viên'})</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={14} />
             </Link>
           ) : (
             <>
@@ -157,20 +158,28 @@ export default function Home() {
                 to="/login?mode=register"
                 style={{
                   fontSize: 13,
-                  fontWeight: 700,
-                  color: '#444444',
+                  fontWeight: 800,
+                  color: '#111111',
                   textDecoration: 'none',
-                  padding: '6px 10px',
+                  padding: '8px 16px',
+                  borderRadius: 9999,
+                  border: '1.5px solid rgba(0,0,0,0.2)',
+                  background: 'rgba(255,255,255,0.85)',
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}
               >
-                Đăng ký
+                <UserPlus size={14} />
+                <span>Đăng ký</span>
               </Link>
               <Link
                 to="/login"
                 className="wr-award-pill-btn"
-                style={{ padding: '8px 18px', fontSize: 12 }}
+                style={{ padding: '9px 22px', fontSize: 13, background: '#0f172a' }}
               >
-                <LogIn size={13} />
+                <LogIn size={14} />
                 <span>Đăng nhập</span>
               </Link>
             </>
@@ -206,13 +215,39 @@ export default function Home() {
               : `Mùa giải đầu tiên đang diễn ra sôi nổi. Đội tuyển xuất sắc nhất sẽ được tôn vinh trang trọng tại đây.`}
           </p>
 
-          <Link
-            to={isSignedIn ? '/leaderboard' : '/login'}
-            className="wr-award-pill-btn wr-anim-cta-left"
-          >
-            <span>{championTeam ? 'Xem kết quả giải đấu' : 'Khám phá bảng xếp hạng'}</span>
-            <ArrowRight size={14} />
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Link
+              to={isSignedIn ? '/leaderboard' : '/login'}
+              className="wr-award-pill-btn wr-anim-cta-left"
+            >
+              <span>{championTeam ? 'Xem kết quả giải đấu' : 'Khám phá bảng xếp hạng'}</span>
+              <ArrowRight size={14} />
+            </Link>
+
+            {!isSignedIn && (
+              <Link
+                to="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '10px 18px',
+                  borderRadius: 9999,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: '#111111',
+                  background: 'rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.15)',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease',
+                }}
+                className="wr-anim-cta-left"
+              >
+                <LogIn size={13} />
+                <span>Đăng nhập</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Middle Zone: Editorial Whitespace */}
@@ -358,13 +393,39 @@ export default function Home() {
               : `Cá nhân có thành tích bứt phá và đóng góp nổi bật nhất sẽ được xướng tên tại vị trí danh giá này.`}
           </p>
 
-          <Link
-            to={isSignedIn ? '/arena' : '/login'}
-            className="wr-award-pill-btn wr-anim-cta-right"
-          >
-            <span>{mvp ? 'Khám phá đấu trường Arena' : 'Tham gia thi đấu mùa giải'}</span>
-            <ArrowRight size={14} />
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Link
+              to={isSignedIn ? '/arena' : '/login'}
+              className="wr-award-pill-btn wr-anim-cta-right"
+            >
+              <span>{mvp ? 'Khám phá đấu trường Arena' : 'Tham gia thi đấu mùa giải'}</span>
+              <ArrowRight size={14} />
+            </Link>
+
+            {!isSignedIn && (
+              <Link
+                to="/login?mode=register"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '10px 18px',
+                  borderRadius: 9999,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: '#b45309',
+                  background: 'rgba(234,179,8,0.1)',
+                  border: '1px solid rgba(234,179,8,0.35)',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease',
+                }}
+                className="wr-anim-cta-right"
+              >
+                <UserPlus size={13} />
+                <span>Đăng ký mới</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Middle Zone: Editorial Whitespace */}
@@ -513,8 +574,11 @@ export default function Home() {
           <Link to="/games/capital-board" style={{ color: '#666666', textDecoration: 'none', fontWeight: 700 }}>
             Trò chơi
           </Link>
-          <Link to="/login" style={{ color: '#111111', textDecoration: 'none', fontWeight: 800 }}>
+          <Link to="/login" style={{ color: '#111111', textDecoration: 'none', fontWeight: 900 }}>
             Đăng nhập
+          </Link>
+          <Link to="/login?mode=register" style={{ color: '#b45309', textDecoration: 'none', fontWeight: 900 }}>
+            Đăng ký
           </Link>
         </div>
       </footer>

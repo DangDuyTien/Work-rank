@@ -11,6 +11,87 @@ const {
   SeasonTeamMember,
 } = require('../models');
 
+const CANONICAL_JOB_TITLES = [
+  'Editor',
+  'Content',
+  'Quản lý kênh',
+  'Trưởng phòng',
+  'Phó giám đốc',
+  'Giám đốc',
+];
+
+/**
+ * Normalizes any job title input string into one of the 6 canonical WorkRank Job Titles.
+ */
+function normalizeJobTitle(jobTitle) {
+  if (!jobTitle) return 'Editor';
+  const str = String(jobTitle).trim().toLowerCase();
+
+  if (
+    str === 'giám đốc' ||
+    str === 'giam doc' ||
+    str === 'director' ||
+    str === 'ceo' ||
+    str === 'founder' ||
+    str === 'chủ tịch' ||
+    str === 'tổng giám đốc' ||
+    (str.includes('giám đốc') && !str.includes('phó')) ||
+    (str.includes('director') && !str.includes('deputy'))
+  ) {
+    return 'Giám đốc';
+  }
+
+  if (
+    str === 'phó giám đốc' ||
+    str === 'pho giam doc' ||
+    str === 'deputy director' ||
+    str === 'phó gđ' ||
+    str.includes('phó giám đốc') ||
+    str.includes('deputy') ||
+    str.includes('phó tổng')
+  ) {
+    return 'Phó giám đốc';
+  }
+
+  if (
+    str === 'trưởng phòng' ||
+    str === 'truong phong' ||
+    str === 'head of department' ||
+    str === 'lead' ||
+    str.includes('trưởng phòng') ||
+    str.includes('phó phòng') ||
+    str.includes('trưởng ban') ||
+    str.includes('team lead')
+  ) {
+    return 'Trưởng phòng';
+  }
+
+  if (
+    str === 'quản lý kênh' ||
+    str === 'quan ly kenh' ||
+    str === 'channel manager' ||
+    str === 'kênh trưởng' ||
+    str.includes('quản lý kênh') ||
+    str.includes('channel') ||
+    str.includes('kênh')
+  ) {
+    return 'Quản lý kênh';
+  }
+
+  if (
+    str === 'content' ||
+    str === 'content creator' ||
+    str.includes('content') ||
+    str.includes('kịch bản') ||
+    str.includes('copywriter') ||
+    str.includes('nội dung')
+  ) {
+    return 'Content';
+  }
+
+  return 'Editor';
+}
+
 /**
  * Get all recognitions and badges for a user.
  */
@@ -32,7 +113,7 @@ async function getUserRecognitions(userId) {
 
   return {
     userId: user.id,
-    jobTitle: user.jobTitle || 'Nhân viên',
+    jobTitle: normalizeJobTitle(user.jobTitle) || 'Editor',
     department: user.department || 'Media & Content',
     teamId: user.teamId,
     badges: {
@@ -394,6 +475,8 @@ async function syncSeasonChampionRecognitions(seasonId, actorId) {
 }
 
 module.exports = {
+  CANONICAL_JOB_TITLES,
+  normalizeJobTitle,
   getUserRecognitions,
   awardMVP,
   revokeMVP,
