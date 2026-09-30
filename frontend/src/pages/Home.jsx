@@ -67,14 +67,14 @@ export default function Home() {
     },
     GAMES: {
       title: 'Trò Chơi Giải Trí Nội Bộ',
-      subtitle: 'Cờ Tỷ Phú & Live Quiz Kahoot trong giờ giải lao',
+      subtitle: 'Cờ Tỷ Phú & Quiz Trắc Nghiệm Tốc Độ trong giờ giải lao',
       icon: Gamepad2,
       color: '#9333ea',
       bg: 'rgba(147,51,234,0.08)',
       badge: 'Break & Play',
       metrics: [
         { label: 'Cờ Tỷ Phú', value: 'Bàn cờ 28 ô & Mua tài sản' },
-        { label: 'Đoán Hình & Nhạc', value: 'Live Quiz phong cách Kahoot' },
+        { label: 'Đoán Hình & Nhạc', value: 'Quiz trắc nghiệm tốc độ' },
         { label: 'Tính độc lập', value: 'Không ảnh hưởng điểm công việc' },
       ],
       description: 'Không gian giải trí nhanh giúp gắn kết đồng đội sau giờ làm việc căng thẳng. Nhiều người chơi cùng tham gia trong phòng đấu realtime kịch tính.',
@@ -673,7 +673,7 @@ export default function Home() {
                 Trò Chơi Doanh Nghiệp
               </h3>
               <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.6, flex: 1 }}>
-                Mini game Cờ Tỷ Phú và Đoán Hình & Đoán Nhạc theo phong cách Live Quiz Kahoot giúp giải tỏa căng thẳng trong giờ giải lao.
+                Mini game Cờ Tỷ Phú và Đoán Hình & Đoán Nhạc trắc nghiệm thời gian thực giúp giải tỏa căng thẳng trong giờ giải lao.
               </p>
             </div>
           </div>

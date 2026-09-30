@@ -1,40 +1,7 @@
 import React, { useEffect } from 'react';
-import { Check, X, Triangle, Diamond, Circle, Square } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
-const OPTIONS_CONFIG = {
-  A: {
-    label: 'A',
-    bg: '#e11d48',
-    hoverBg: '#be123c',
-    border: '#9f1239',
-    icon: Triangle,
-    shortcut: 'A',
-  },
-  B: {
-    label: 'B',
-    bg: '#0284c7',
-    hoverBg: '#0369a1',
-    border: '#075985',
-    icon: Diamond,
-    shortcut: 'B',
-  },
-  C: {
-    label: 'C',
-    bg: '#d97706',
-    hoverBg: '#b45309',
-    border: '#92400e',
-    icon: Circle,
-    shortcut: 'C',
-  },
-  D: {
-    label: 'D',
-    bg: '#059669',
-    hoverBg: '#047857',
-    border: '#065f46',
-    icon: Square,
-    shortcut: 'D',
-  },
-};
+const OPTIONS_KEYS = ['A', 'B', 'C', 'D'];
 
 export default function QuizAnswerButtons({
   question,
@@ -57,6 +24,9 @@ export default function QuizAnswerButtons({
     if (disabled || selectedOption) return;
 
     const handleKeyDown = (e) => {
+      // Ignore if user is typing in an input
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
       const key = e.key.toUpperCase();
       if (['A', '1'].includes(key)) onSelectOption('A');
       else if (['B', '2'].includes(key)) onSelectOption('B');
@@ -72,44 +42,51 @@ export default function QuizAnswerButtons({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-        gap: 14,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: 12,
         width: '100%',
-        maxWidth: 900,
-        margin: '16px auto 0',
+        margin: '0 auto',
       }}
     >
       {options.map(({ key, text }) => {
-        const config = OPTIONS_CONFIG[key];
-        const Icon = config.icon;
         const isSelected = selectedOption === key;
         const isCorrect = revealedCorrectOption === key;
         const isWrong = revealedCorrectOption && isSelected && !isCorrect;
 
-        let background = config.bg;
+        let background = '#ffffff';
+        let borderColor = 'rgba(15,23,42,0.12)';
+        let textColor = '#0f172a';
+        let badgeBg = 'rgba(15,23,42,0.06)';
+        let badgeColor = '#475569';
         let opacity = 1;
-        let transform = 'translateY(0)';
-        let boxShadow = `0 5px 0 ${config.border}, 0 10px 20px rgba(0,0,0,0.15)`;
-        let border = '2px solid rgba(255,255,255,0.2)';
+        let shadow = '0 1px 3px rgba(15,23,42,0.04)';
 
         if (revealedCorrectOption) {
           if (isCorrect) {
-            background = '#10b981';
-            boxShadow = '0 0 28px rgba(16,185,129,0.7), 0 5px 0 #047857';
-            transform = 'scale(1.02)';
-            border = '2px solid #ffffff';
+            background = '#ecfdf5';
+            borderColor = '#10b981';
+            textColor = '#065f46';
+            badgeBg = '#10b981';
+            badgeColor = '#ffffff';
+            shadow = '0 4px 12px rgba(16,185,129,0.15)';
           } else if (isWrong) {
-            background = '#ef4444';
-            boxShadow = '0 2px 0 #991b1b';
-            opacity = 0.6;
+            background = '#fef2f2';
+            borderColor = '#ef4444';
+            textColor = '#991b1b';
+            badgeBg = '#ef4444';
+            badgeColor = '#ffffff';
+            shadow = '0 2px 8px rgba(239,68,68,0.1)';
           } else {
-            opacity = 0.35;
-            boxShadow = 'none';
+            opacity = 0.45;
+            borderColor = 'rgba(15,23,42,0.08)';
           }
         } else if (isSelected) {
-          boxShadow = `0 0 20px rgba(255,255,255,0.8), 0 2px 0 ${config.border}`;
-          transform = 'scale(0.98)';
-          border = '2px solid #ffffff';
+          background = 'rgba(2,132,199,0.08)';
+          borderColor = '#0284c7';
+          textColor = '#0369a1';
+          badgeBg = '#0284c7';
+          badgeColor = '#ffffff';
+          shadow = '0 0 0 1px #0284c7, 0 4px 12px rgba(2,132,199,0.15)';
         } else if (disabled) {
           opacity = 0.6;
         }
@@ -124,125 +101,135 @@ export default function QuizAnswerButtons({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              minHeight: 88,
-              padding: '16px 20px',
+              minHeight: 58,
+              padding: '12px 16px',
               background,
-              color: '#ffffff',
-              border,
-              borderRadius: 14,
-              boxShadow,
+              color: textColor,
+              border: `1.5px solid ${borderColor}`,
+              borderRadius: 10,
+              boxShadow: shadow,
               opacity,
-              transform,
               cursor: disabled || selectedOption ? 'default' : 'pointer',
-              transition: 'transform 0.1s ease, box-shadow 0.15s ease, opacity 0.2s ease',
+              transition: 'all 0.15s ease',
               textAlign: 'left',
               position: 'relative',
-              overflow: 'hidden',
               userSelect: 'none',
+              outline: 'none',
+            }}
+            onMouseEnter={(e) => {
+              if (!disabled && !selectedOption && !revealedCorrectOption) {
+                e.currentTarget.style.borderColor = '#0284c7';
+                e.currentTarget.style.background = 'rgba(2,132,199,0.03)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!disabled && !selectedOption && !revealedCorrectOption) {
+                e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)';
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }
             }}
           >
-            {/* Shape & Option Badge */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: 'rgba(0,0,0,0.25)',
-                marginRight: 14,
-                flexShrink: 0,
-                color: '#ffffff',
-              }}
-            >
-              <Icon size={24} strokeWidth={2.5} />
-            </div>
-
-            {/* Answer Text */}
-            <div
-              style={{
-                flex: 1,
-                fontSize: 16,
-                fontWeight: 800,
-                lineHeight: 1.35,
-                wordBreak: 'break-word',
-              }}
-            >
-              {text}
-            </div>
-
-            {/* Status Icons */}
-            {revealedCorrectOption ? (
-              isCorrect ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: '#ffffff',
-                    color: '#10b981',
-                    marginLeft: 10,
-                    flexShrink: 0,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  }}
-                >
-                  <Check size={20} strokeWidth={3.5} />
-                </div>
-              ) : isWrong ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: 'rgba(0,0,0,0.4)',
-                    color: '#ffffff',
-                    marginLeft: 10,
-                    flexShrink: 0,
-                  }}
-                >
-                  <X size={20} strokeWidth={3.5} />
-                </div>
-              ) : null
-            ) : isSelected ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+              {/* Option Letter Badge (A, B, C, D) */}
               <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 900,
-                  background: 'rgba(255,255,255,0.3)',
-                  padding: '5px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
                   borderRadius: 8,
-                  marginLeft: 10,
-                  flexShrink: 0,
-                  letterSpacing: '0.5px',
+                  background: badgeBg,
+                  color: badgeColor,
                   fontFamily: 'JetBrains Mono, monospace',
-                }}
-              >
-                ĐÃ CHỌN
-              </div>
-            ) : (
-              <div
-                style={{
-                  fontSize: 11,
+                  fontSize: 14,
                   fontWeight: 800,
-                  background: 'rgba(0,0,0,0.2)',
-                  padding: '3px 8px',
-                  borderRadius: 6,
-                  marginLeft: 8,
-                  opacity: 0.7,
-                  fontFamily: 'JetBrains Mono, monospace',
                   flexShrink: 0,
+                  transition: 'all 0.15s ease',
                 }}
               >
-                [{config.shortcut}]
+                {key}
               </div>
-            )}
+
+              {/* Option Answer Text */}
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: isSelected || isCorrect ? 800 : 600,
+                  lineHeight: 1.4,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {text}
+              </span>
+            </div>
+
+            {/* Right Status Indicator */}
+            <div style={{ marginLeft: 12, flexShrink: 0 }}>
+              {revealedCorrectOption ? (
+                isCorrect ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Check size={16} strokeWidth={3} />
+                  </div>
+                ) : isWrong ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      background: '#ef4444',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <X size={16} strokeWidth={3} />
+                  </div>
+                ) : null
+              ) : isSelected ? (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: 'rgba(2,132,199,0.15)',
+                    color: '#0284c7',
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    fontFamily: 'JetBrains Mono, monospace',
+                  }}
+                >
+                  ĐÃ CHỌN
+                </span>
+              ) : (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: '#94a3b8',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    background: 'rgba(15,23,42,0.04)',
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                  }}
+                >
+                  {key}
+                </span>
+              )}
+            </div>
           </button>
         );
       })}

@@ -10,7 +10,7 @@ import QuizAnswerButtons from '../components/quiz/QuizAnswerButtons';
 import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
 import QuizLiveLeaderboard from '../components/quiz/QuizLiveLeaderboard';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
-import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
+import { Volume2, VolumeX, AlertCircle, LogOut, Trophy, Sparkles } from 'lucide-react';
 
 export default function QuizGame() {
   const { user, socket } = useAuth();
@@ -211,7 +211,7 @@ export default function QuizGame() {
       setRoundResult(data);
       if (data.leaderboard) setPlayers(data.leaderboard);
 
-      // Play chime or buzz based on my result
+      // Play sound based on result
       const myAns = data.answers?.find((a) => Number(a.userId) === Number(user?.id));
       if (myAns?.isCorrect) {
         quizSound.playCorrect();
@@ -349,47 +349,114 @@ export default function QuizGame() {
   const isPlayingOrShowing = room?.status === 'PLAYING' || room?.status === 'SHOWING_RESULT';
   const isFinished = room?.status === 'FINISHED' || Boolean(finalResults);
 
+  const myCurrentPlayer = players.find((p) => Number(p.userId) === Number(user?.id));
+
   return (
-    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '20px 16px', userSelect: 'none' }}>
-      {/* Sound Toggle & Navigation Bar */}
+    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
+      {/* Top Bar (Audio toggle, user points, leave room) */}
       <div
         style={{
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           alignItems: 'center',
           maxWidth: 1040,
-          margin: '0 auto 14px',
+          margin: '0 auto 12px',
         }}
       >
-        <button
-          type="button"
-          onClick={toggleSound}
-          title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '4px 10px',
-            background: soundMuted ? 'rgba(239,68,68,0.1)' : 'rgba(15,23,42,0.05)',
-            color: soundMuted ? '#ef4444' : '#475569',
-            border: '1px solid rgba(15,23,42,0.1)',
-            borderRadius: 6,
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-          <span>{soundMuted ? 'Âm thanh: Tắt' : 'Âm thanh: Bật'}</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {room && (
+            <span
+              style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 12,
+                fontWeight: 800,
+                color: '#64748b',
+                background: 'rgba(15,23,42,0.05)',
+                padding: '3px 8px',
+                borderRadius: 4,
+              }}
+            >
+              Phòng #{room.code}
+            </span>
+          )}
+
+          {isPlayingOrShowing && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 10px',
+                borderRadius: 6,
+                background: 'rgba(2,132,199,0.08)',
+                color: '#0284c7',
+                fontSize: 12,
+                fontWeight: 800,
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
+            >
+              <Trophy size={13} color="#0284c7" />
+              <span>{Number(myCurrentPlayer?.score || 0).toLocaleString()} pts</span>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={toggleSound}
+            title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '4px 10px',
+              background: soundMuted ? 'rgba(239,68,68,0.08)' : 'rgba(15,23,42,0.04)',
+              color: soundMuted ? '#ef4444' : '#475569',
+              border: '1px solid rgba(15,23,42,0.08)',
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            <span>{soundMuted ? 'Tắt' : 'Bật'}</span>
+          </button>
+
+          {room && (
+            <button
+              type="button"
+              onClick={handleLeaveRoom}
+              disabled={actionLoading}
+              title="Rời khỏi phòng đấu"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 10px',
+                background: '#ffffff',
+                border: '1px solid rgba(239,68,68,0.25)',
+                color: '#ef4444',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <LogOut size={13} />
+              <span>Rời phòng</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error Alert */}
       {errorMsg && (
         <div
           style={{
-            maxWidth: 860,
-            margin: '0 auto 16px',
+            maxWidth: 1040,
+            margin: '0 auto 14px',
             padding: '10px 14px',
             borderRadius: 8,
             background: '#fee2e2',
@@ -441,12 +508,12 @@ export default function QuizGame() {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
-            maxWidth: 1040,
+            gap: 14,
+            maxWidth: 960,
             margin: '0 auto',
           }}
         >
-          {/* Question Card */}
+          {/* Question Card with Media */}
           <QuizQuestionCard
             question={currentQuestion}
             questionIndex={questionIndex}
@@ -456,7 +523,7 @@ export default function QuizGame() {
             isLocked={Boolean(roundResult) || Boolean(selectedOption) || timeRemaining <= 0}
           />
 
-          {/* 4 Large Kahoot-style Answer Buttons */}
+          {/* 4 Clean Multiple Choice Options (A, B, C, D) */}
           <QuizAnswerButtons
             question={currentQuestion}
             selectedOption={selectedOption}
@@ -465,7 +532,7 @@ export default function QuizGame() {
             onSelectOption={handleSelectOption}
           />
 
-          {/* Round Result Reveal Modal / Drawer */}
+          {/* Round Result Reveal Banner */}
           {roundResult && (
             <QuizRoundResultModal
               correctOption={roundResult.correctOption}
@@ -477,8 +544,8 @@ export default function QuizGame() {
             />
           )}
 
-          {/* Live Scoreboard */}
-          <div style={{ maxWidth: 860, width: '100%', margin: '8px auto 0' }}>
+          {/* Bottom Player Avatar Dock */}
+          <div style={{ marginTop: 6 }}>
             <QuizLiveLeaderboard
               players={players}
               currentUserId={user?.id}

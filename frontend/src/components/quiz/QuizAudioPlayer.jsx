@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, Music, AlertCircle } from 'lucide-react';
+import { Play, Pause, Music, Volume2, AlertCircle } from 'lucide-react';
 
 /**
- * Quiz Audio Player Component for Music Guessing Mode
+ * Modern Quiz Audio Player for Music Guessing Mode
+ * Clean, lightweight, professional UI
  */
 export default function QuizAudioPlayer({
   audioUrl,
@@ -11,10 +12,11 @@ export default function QuizAudioPlayer({
   disabled = false,
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(false);
   const audioRef = useRef(null);
-  const animFrameRef = useRef(null);
 
   // Initialize and auto-play
   useEffect(() => {
@@ -25,17 +27,24 @@ export default function QuizAudioPlayer({
       }
       setIsPlaying(false);
       setProgress(0);
+      setCurrentTime(0);
       return;
     }
 
     setError(false);
     setProgress(0);
+    setCurrentTime(0);
 
     const audio = new Audio(audioUrl);
     audio.preload = 'auto';
     audioRef.current = audio;
 
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration || 15);
+    };
+
     const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
       if (audio.duration) {
         setProgress((audio.currentTime / audio.duration) * 100);
       }
@@ -44,14 +53,16 @@ export default function QuizAudioPlayer({
     const handleEnded = () => {
       setIsPlaying(false);
       setProgress(100);
+      setCurrentTime(audio.duration || 0);
     };
 
     const handleError = () => {
-      console.warn('Audio URL failed to load, falling back to simulated track');
+      console.warn('Audio URL failed to load');
       setError(true);
       setIsPlaying(false);
     };
 
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
@@ -61,12 +72,12 @@ export default function QuizAudioPlayer({
         .play()
         .then(() => setIsPlaying(true))
         .catch(() => {
-          // Autoplay policy prevented playback, user can tap play button
           setIsPlaying(false);
         });
     }
 
     return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
@@ -75,7 +86,7 @@ export default function QuizAudioPlayer({
     };
   }, [audioUrl, autoPlay, disabled]);
 
-  // Stop immediately if round ends
+  // Stop immediately if round ends / disabled
   useEffect(() => {
     if (disabled && audioRef.current) {
       audioRef.current.pause();
@@ -96,6 +107,13 @@ export default function QuizAudioPlayer({
     }
   };
 
+  const formatTime = (secs) => {
+    const s = Math.floor(secs || 0);
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+  };
+
   return (
     <div
       style={{
@@ -106,101 +124,141 @@ export default function QuizAudioPlayer({
         width: '100%',
         maxWidth: 520,
         margin: '0 auto',
-        padding: '18px 24px',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        borderRadius: 16,
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(15,23,42,0.3)',
-        color: '#ffffff',
+        padding: '20px 24px',
+        background: '#ffffff',
+        borderRadius: 14,
+        border: '1px solid rgba(15,23,42,0.1)',
+        boxShadow: '0 4px 16px rgba(15,23,42,0.04)',
       }}
     >
-      {/* Visual Equalizer Waves */}
+      {/* Header Info */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          marginBottom: 16,
+          paddingBottom: 10,
+          borderBottom: '1px solid rgba(15,23,42,0.06)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+          <Music size={16} color="#0284c7" />
+          <span>Đoạn Nhạc Thử Thách</span>
+        </div>
+        <div
+          style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#64748b',
+          }}
+        >
+          {formatTime(currentTime)} / {formatTime(duration || 15)}
+        </div>
+      </div>
+
+      {/* Waveform Equalizer Display */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
-          height: 48,
+          gap: 4,
+          height: 52,
+          width: '100%',
           marginBottom: 16,
+          padding: '0 12px',
+          background: 'rgba(15,23,42,0.02)',
+          borderRadius: 8,
         }}
       >
-        {[0.4, 0.8, 0.6, 1, 0.7, 0.9, 0.5, 0.85, 0.65, 0.45].map((h, idx) => (
-          <div
-            key={idx}
-            style={{
-              width: 5,
-              height: isPlaying ? `${Math.max(12, h * 44)}px` : '8px',
-              borderRadius: 3,
-              background: isPlaying ? '#38bdf8' : 'rgba(255,255,255,0.2)',
-              transition: isPlaying ? 'height 0.15s ease' : 'height 0.3s ease',
-              animation: isPlaying ? `equalizer ${0.4 + (idx % 4) * 0.15}s ease-in-out infinite alternate` : 'none',
-            }}
-          />
-        ))}
+        {[0.3, 0.6, 0.85, 0.45, 1, 0.7, 0.9, 0.5, 0.8, 0.6, 0.95, 0.4, 0.75, 0.55, 0.35].map((h, idx) => {
+          const isActive = progress > (idx / 15) * 100;
+          return (
+            <div
+              key={idx}
+              style={{
+                flex: 1,
+                maxWidth: 6,
+                height: isPlaying ? `${Math.max(10, h * 42)}px` : '10px',
+                borderRadius: 3,
+                background: isPlaying
+                  ? isActive
+                    ? '#0284c7'
+                    : '#94a3b8'
+                  : 'rgba(15,23,42,0.15)',
+                transition: isPlaying ? 'height 0.12s ease' : 'height 0.3s ease',
+              }}
+            />
+          );
+        })}
       </div>
 
-      {/* Main Play Button & Status */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      {/* Play Controls & Progress */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%' }}>
         <button
           type="button"
           onClick={togglePlay}
           disabled={disabled}
-          title={isPlaying ? 'Tạm dừng nhạc' : 'Phát đoạn nhạc'}
+          title={isPlaying ? 'Tạm dừng nhạc' : 'Phát lại nhạc'}
           style={{
-            width: 56,
-            height: 56,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
-            background: isPlaying ? '#ef4444' : '#38bdf8',
+            background: isPlaying ? '#0f172a' : '#0284c7',
             color: '#ffffff',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: disabled ? 'not-allowed' : 'pointer',
-            boxShadow: isPlaying ? '0 0 20px rgba(239,68,68,0.5)' : '0 0 20px rgba(56,189,248,0.5)',
-            transition: 'transform 0.1s ease, box-shadow 0.2s ease',
+            boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
+            flexShrink: 0,
+            transition: 'transform 0.1s ease, background-color 0.2s ease',
           }}
         >
-          {isPlaying ? <Pause size={24} /> : <Play size={24} style={{ marginLeft: 3 }} />}
+          {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
         </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 700 }}>
-            <Music size={16} color="#38bdf8" />
-            <span>{isPlaying ? 'Đang phát đoạn nhạc...' : disabled ? 'Đã khóa âm thanh' : 'Nhấn để nghe nhạc'}</span>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* Progress Bar */}
+          <div
+            style={{
+              width: '100%',
+              height: 5,
+              background: 'rgba(15,23,42,0.08)',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${progress}%`,
+                background: '#0284c7',
+                transition: 'width 0.1s linear',
+              }}
+            />
           </div>
-          <span style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-            Nghe kỹ đoạn giai điệu và chọn tên bài hát đúng
-          </span>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: '#64748b' }}>
+              {isPlaying ? 'Đang phát âm thanh...' : disabled ? 'Đã khóa đoạn nhạc' : 'Nhấn nút để nghe lại'}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#0284c7', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Volume2 size={12} />
+              <span>Audio</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div
-        style={{
-          width: '100%',
-          height: 4,
-          background: 'rgba(255,255,255,0.15)',
-          borderRadius: 2,
-          marginTop: 16,
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: '#38bdf8',
-            transition: 'width 0.1s linear',
-          }}
-        />
-      </div>
-
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#f59e0b', marginTop: 8 }}>
-          <AlertCircle size={12} />
-          <span>Đoạn audio dự phòng đang được kích hoạt</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#b45309', marginTop: 12 }}>
+          <AlertCircle size={14} />
+          <span>Không thể tải file âm thanh hoặc trình duyệt chặn tự động phát.</span>
         </div>
       )}
     </div>

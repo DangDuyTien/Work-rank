@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Medal, Sparkles, Zap, CheckCircle2, RotateCcw, Home, Crown } from 'lucide-react';
+import { Trophy, Medal, Crown, Sparkles, Home, RotateCcw, CheckCircle2, Clock, Zap } from 'lucide-react';
 import { getUserAvatar } from '../../utils/avatar';
 
 export default function QuizFinalResults({
@@ -28,17 +28,18 @@ export default function QuizFinalResults({
         gap: 20,
       }}
     >
-      {/* Top Banner */}
+      {/* Top Header Card */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-          borderRadius: 16,
-          padding: '28px 24px',
-          color: '#ffffff',
+          background: '#ffffff',
+          borderRadius: 14,
+          padding: '24px 28px',
+          border: '1px solid rgba(15,23,42,0.1)',
+          boxShadow: '0 4px 20px rgba(15,23,42,0.04)',
           textAlign: 'center',
-          boxShadow: '0 8px 32px rgba(15,23,42,0.15)',
-          position: 'relative',
-          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
         }}
       >
         <div
@@ -46,61 +47,83 @@ export default function QuizFinalResults({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            background: 'rgba(245,158,11,0.2)',
-            color: '#f59e0b',
+            background: 'rgba(2,132,199,0.08)',
+            color: '#0284c7',
             padding: '4px 12px',
             borderRadius: 20,
             fontSize: 12,
             fontWeight: 800,
-            marginBottom: 12,
+            marginBottom: 10,
           }}
         >
-          <Trophy size={15} />
-          <span>KẾT QUẢ CHUNG CUỘC</span>
+          <Trophy size={14} color="#d97706" />
+          <span>TỔNG KẾT TRẬN ĐẤU</span>
         </div>
 
         <h1
           style={{
             margin: 0,
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: 900,
-            color: '#ffffff',
+            color: '#0f172a',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
             gap: 8,
           }}
         >
           <span>{winner ? `Chúc mừng ${winner.user?.name || 'Quán Quân'}!` : 'Trận Đấu Hoàn Tất!'}</span>
-          <Sparkles size={24} color="#f59e0b" />
+          <Sparkles size={22} color="#f59e0b" />
         </h1>
 
-        <p style={{ margin: '8px 0 0', fontSize: 14, color: '#94a3b8' }}>
-          Đã hoàn thành tất cả {room?.totalQuestions || 10} câu hỏi thử thách tốc độ
+        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#64748b' }}>
+          Đã hoàn thành tất cả {room?.totalQuestions || 10} câu hỏi trắc nghiệm
         </p>
       </div>
 
-      {/* Podium Top 3 */}
+      {/* Podium Top 3 Cards */}
       {sortedPlayers.length > 0 && (
         <div
           style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            gap: 16,
-            padding: '20px 0 10px',
+            display: 'grid',
+            gridTemplateColumns: sortedPlayers.length >= 3 ? 'repeat(3, 1fr)' : `repeat(${sortedPlayers.length}, 1fr)`,
+            gap: 14,
+            alignItems: 'stretch',
           }}
         >
-          {/* 2nd Place (Silver) */}
+          {/* 2nd Place */}
           {secondPlace && (
             <div
               style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.1)',
+                borderRadius: 14,
+                padding: '20px 16px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                width: 140,
+                textAlign: 'center',
+                boxShadow: '0 2px 10px rgba(15,23,42,0.03)',
+                order: 1,
               }}
             >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(100,116,139,0.1)',
+                  color: '#475569',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  marginBottom: 12,
+                }}
+              >
+                <Medal size={13} />
+                <span>HẠNG 2</span>
+              </div>
+
               <img
                 src={secondPlace.user?.avatarUrl || getUserAvatar(secondPlace.userId)}
                 alt={secondPlace.user?.name}
@@ -108,191 +131,194 @@ export default function QuizFinalResults({
                   width: 52,
                   height: 52,
                   borderRadius: '50%',
-                  border: '3px solid #94a3b8',
+                  border: '2px solid #cbd5e1',
                   objectFit: 'cover',
                   marginBottom: 8,
                 }}
               />
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', textAlign: 'center' }}>
+
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
                 {secondPlace.user?.name || 'Hạng 2'}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#64748b', fontFamily: 'JetBrains Mono, monospace' }}>
-                {Number(secondPlace.score || 0).toLocaleString()} pts
-              </div>
+
               <div
                 style={{
-                  width: '100%',
-                  height: 80,
-                  background: 'linear-gradient(to top, #94a3b8, #cbd5e1)',
-                  borderRadius: '10px 10px 0 0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  marginTop: 10,
-                  boxShadow: '0 4px 12px rgba(100,116,139,0.2)',
-                  gap: 2,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 16,
+                  fontWeight: 900,
+                  color: '#475569',
+                  marginTop: 4,
                 }}
               >
-                <Medal size={28} />
-                <span style={{ fontSize: 13, fontWeight: 900 }}>HẠNG 2</span>
+                {Number(secondPlace.score || 0).toLocaleString()} pts
               </div>
             </div>
           )}
 
-          {/* 1st Place (Gold / Champion) */}
+          {/* 1st Place (Champion) */}
           {firstPlace && (
             <div
               style={{
+                background: '#ffffff',
+                border: '2px solid #f59e0b',
+                borderRadius: 14,
+                padding: '20px 16px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                width: 160,
+                textAlign: 'center',
+                boxShadow: '0 4px 20px rgba(245,158,11,0.12)',
+                order: sortedPlayers.length >= 2 ? 2 : 1,
+                position: 'relative',
               }}
             >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(245,158,11,0.15)',
+                  color: '#b45309',
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 900,
+                  marginBottom: 12,
+                }}
+              >
+                <Crown size={14} strokeWidth={2.5} />
+                <span>QUÁN QUÂN</span>
+              </div>
+
               <div style={{ position: 'relative' }}>
                 <img
                   src={firstPlace.user?.avatarUrl || getUserAvatar(firstPlace.userId)}
                   alt={firstPlace.user?.name}
                   style={{
-                    width: 68,
-                    height: 68,
+                    width: 60,
+                    height: 60,
                     borderRadius: '50%',
-                    border: '4px solid #f59e0b',
+                    border: '3px solid #f59e0b',
                     objectFit: 'cover',
                     marginBottom: 8,
-                    boxShadow: '0 0 20px rgba(245,158,11,0.5)',
                   }}
                 />
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: -14,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#f59e0b',
-                    color: '#ffffff',
-                    borderRadius: '50%',
-                    padding: 4,
-                    boxShadow: '0 2px 8px rgba(245,158,11,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Crown size={16} strokeWidth={2.5} />
-                </div>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', textAlign: 'center' }}>
+
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
                 {firstPlace.user?.name || 'Quán Quân'}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#d97706', fontFamily: 'JetBrains Mono, monospace' }}>
-                {Number(firstPlace.score || 0).toLocaleString()} pts
-              </div>
+
               <div
                 style={{
-                  width: '100%',
-                  height: 120,
-                  background: 'linear-gradient(to top, #d97706, #f59e0b)',
-                  borderRadius: '12px 12px 0 0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  marginTop: 10,
-                  boxShadow: '0 6px 20px rgba(217,119,6,0.3)',
-                  gap: 4,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: '#d97706',
+                  marginTop: 4,
                 }}
               >
-                <Trophy size={34} strokeWidth={2.5} />
-                <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.5px' }}>QUÁN QUÂN</span>
+                {Number(firstPlace.score || 0).toLocaleString()} pts
               </div>
             </div>
           )}
 
-          {/* 3rd Place (Bronze) */}
+          {/* 3rd Place */}
           {thirdPlace && (
             <div
               style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.1)',
+                borderRadius: 14,
+                padding: '20px 16px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                width: 140,
+                textAlign: 'center',
+                boxShadow: '0 2px 10px rgba(15,23,42,0.03)',
+                order: 3,
               }}
             >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(217,119,6,0.1)',
+                  color: '#b45309',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  marginBottom: 12,
+                }}
+              >
+                <Medal size={13} />
+                <span>HẠNG 3</span>
+              </div>
+
               <img
                 src={thirdPlace.user?.avatarUrl || getUserAvatar(thirdPlace.userId)}
                 alt={thirdPlace.user?.name}
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   borderRadius: '50%',
-                  border: '3px solid #d97706',
+                  border: '2px solid #fed7aa',
                   objectFit: 'cover',
                   marginBottom: 8,
                 }}
               />
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', textAlign: 'center' }}>
+
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
                 {thirdPlace.user?.name || 'Hạng 3'}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#64748b', fontFamily: 'JetBrains Mono, monospace' }}>
-                {Number(thirdPlace.score || 0).toLocaleString()} pts
-              </div>
+
               <div
                 style={{
-                  width: '100%',
-                  height: 64,
-                  background: 'linear-gradient(to top, #b45309, #d97706)',
-                  borderRadius: '10px 10px 0 0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  marginTop: 10,
-                  boxShadow: '0 4px 12px rgba(180,83,9,0.2)',
-                  gap: 2,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 16,
+                  fontWeight: 900,
+                  color: '#b45309',
+                  marginTop: 4,
                 }}
               >
-                <Medal size={24} />
-                <span style={{ fontSize: 12, fontWeight: 900 }}>HẠNG 3</span>
+                {Number(thirdPlace.score || 0).toLocaleString()} pts
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Personal Match Stat Card */}
+      {/* Personal Match Performance Stats */}
       {myPlayer && (
         <div
           style={{
             background: '#ffffff',
-            border: '1.5px solid #38bdf8',
+            border: '1px solid rgba(2,132,199,0.25)',
             borderRadius: 14,
-            padding: '16px 20px',
-            boxShadow: '0 4px 16px rgba(56,189,248,0.1)',
+            padding: '18px 22px',
+            boxShadow: '0 2px 12px rgba(2,132,199,0.05)',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: 16,
           }}
         >
           <div>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
               Vị trí của bạn
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#0284c7', marginTop: 2 }}>
-              Hạng #{myPlayer.rank}
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#0284c7', marginTop: 2 }}>
+              Hạng #{myPlayer.rank || sortedPlayers.findIndex((p) => Number(p.userId) === Number(currentUserId)) + 1}
             </div>
           </div>
 
           <div>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
-              Tổng điểm
+              Tổng điểm đạt được
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
-              {Number(myPlayer.score || 0).toLocaleString()}
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+              {Number(myPlayer.score || 0).toLocaleString()} pts
             </div>
           </div>
 
@@ -300,7 +326,7 @@ export default function QuizFinalResults({
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
               Số câu đúng
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#16a34a', marginTop: 2 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#16a34a', marginTop: 2 }}>
               {myPlayer.correctAnswers || 0} / {room?.totalQuestions || 10}
             </div>
           </div>
@@ -309,15 +335,90 @@ export default function QuizFinalResults({
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
               Tốc độ trung bình
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {myPlayer.avgResponseTimeMs ? `${(myPlayer.avgResponseTimeMs / 1000).toFixed(1)}s` : 'N/A'}
             </div>
           </div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 8 }}>
+      {/* Full Scoreboard Table */}
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: 14,
+          border: '1px solid rgba(15,23,42,0.1)',
+          overflow: 'hidden',
+          boxShadow: '0 2px 10px rgba(15,23,42,0.03)',
+        }}
+      >
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
+            Bảng Xếp Hạng Trận Đấu
+          </h3>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'rgba(15,23,42,0.02)', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
+                <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b' }}>Hạng</th>
+                <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b' }}>Người chơi</th>
+                <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b', textAlign: 'right' }}>Tổng điểm</th>
+                <th style={{ padding: '10px 16px', fontWeight: 800, color: '#64748b', textAlign: 'right' }}>Số câu đúng</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedPlayers.map((player, idx) => {
+                const isMe = Number(player.userId) === Number(currentUserId);
+                const avatarUrl = player.user?.avatarUrl || getUserAvatar(player.userId);
+                const rank = idx + 1;
+
+                return (
+                  <tr
+                    key={player.id || idx}
+                    style={{
+                      borderBottom: '1px solid rgba(15,23,42,0.05)',
+                      background: isMe ? 'rgba(2,132,199,0.04)' : idx === 0 ? 'rgba(245,158,11,0.03)' : 'transparent',
+                    }}
+                  >
+                    <td style={{ padding: '12px 16px', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {rank === 1 ? (
+                          <Crown size={14} color="#d97706" />
+                        ) : rank === 2 ? (
+                          <Medal size={14} color="#64748b" />
+                        ) : rank === 3 ? (
+                          <Medal size={14} color="#b45309" />
+                        ) : null}
+                        <span>#{rank}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <img src={avatarUrl} alt="" style={{ width: 26, height: 26, borderRadius: '50%' }} />
+                        <span style={{ fontWeight: isMe ? 800 : 600, color: isMe ? '#0284c7' : '#0f172a' }}>
+                          {player.user?.name || `Người chơi ${player.userId}`}
+                          {isMe && ' (Bạn)'}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 900, fontFamily: 'JetBrains Mono, monospace', color: '#0284c7' }}>
+                      {Number(player.score || 0).toLocaleString()} pts
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
+                      {player.correctAnswers || 0} / {room?.totalQuestions || 10}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Action Footer */}
+      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 4 }}>
         <button
           type="button"
           onClick={onBackToLobby}
@@ -325,7 +426,7 @@ export default function QuizFinalResults({
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '12px 24px',
+            padding: '10px 20px',
             background: '#0f172a',
             color: '#ffffff',
             border: 'none',
@@ -333,7 +434,7 @@ export default function QuizFinalResults({
             fontSize: 14,
             fontWeight: 800,
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(15,23,42,0.2)',
+            boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
           }}
         >
           <Home size={16} />

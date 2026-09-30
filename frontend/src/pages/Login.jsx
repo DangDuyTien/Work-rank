@@ -187,7 +187,7 @@ export default function Login() {
                 { label: 'SẢN XUẤT & YOUTUBE REALTIME', desc: 'Đồng bộ chỉ số kênh media tự động theo chu kỳ', icon: Tv, color: '#ef4444' },
                 { label: 'ĐẤU TRƯỜNG MÙA GIẢI & GRAND', desc: 'Thi đấu đối kháng & tính điểm qua Event Store', icon: Swords, color: '#0284c7' },
                 { label: 'XẾP HẠNG & CHỨC DANH CHUẨN HÓA', desc: 'Leaderboard đa chiều & phân tầng chức vụ Tier 1-6', icon: Trophy, color: '#d97706' },
-                { label: 'TRÒ CHƠI DOANH NGHIỆP', desc: 'Cờ Tỷ Phú & Live Quiz Kahoot giải trí giải lao', icon: Gamepad2, color: '#a855f7' },
+                { label: 'TRÒ CHƠI DOANH NGHIỆP', desc: 'Cờ Tỷ Phú & Quiz Trắc Nghiệm Tốc Độ giải trí giải lao', icon: Gamepad2, color: '#a855f7' },
               ].map((item, idx) => {
                 const Icon = item.icon;
                 return (
