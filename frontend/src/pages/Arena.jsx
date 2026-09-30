@@ -474,7 +474,9 @@ export default function Arena() {
                 if (selectedTeamFilter !== 'all' && String(u.teamId) !== String(selectedTeamFilter)) return false;
                 if (searchQuery.trim()) {
                   const q = searchQuery.toLowerCase();
-                  return (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+                  const nameStr = u.userName || u.name || '';
+                  const emailStr = u.userEmail || u.email || '';
+                  return nameStr.toLowerCase().includes(q) || emailStr.toLowerCase().includes(q);
                 }
                 return true;
               });
@@ -522,7 +524,7 @@ export default function Arena() {
 
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name}</span>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.userName || emp.name}</span>
                               {isMe && (
                                 <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
                                   Bạn

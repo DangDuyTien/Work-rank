@@ -370,7 +370,7 @@ export default function UserDetail() {
       const base64 = await compressImage(file, 400, 400, 0.85);
       setEditForm((prev) => ({ ...prev, avatarData: base64 }));
     } catch (err) {
-      alert(err.message || 'Lỗi khi xử lý hình ảnh avatar');
+      toast.error(err.message || 'Lỗi khi xử lý hình ảnh avatar');
     }
   };
 

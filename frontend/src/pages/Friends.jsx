@@ -223,7 +223,7 @@ export default function Friends() {
       }
 
       if (rankingRes.status === 'fulfilled') {
-        const ranks = rankingRes.value.data || rankingRes.value.individuals || [];
+        const ranks = rankingRes.value.items || rankingRes.value.data || rankingRes.value.individuals || [];
         setRankingRows(Array.isArray(ranks) ? ranks : []);
       }
     } catch (err) {

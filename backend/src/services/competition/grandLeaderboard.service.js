@@ -265,6 +265,15 @@ async function getGrandIndividualStandings(grandId, options = {}) {
     transaction,
   });
 
+  const scoreMap = new Map();
+  for (const row of individualAggs) {
+    scoreMap.set(Number(row.user_id), {
+      totalGrandPoints: Number(row.totalGrandPoints || 0),
+      eventsCount: Number(row.eventsCount || 0),
+      lastScoredAt: row.lastScoredAt,
+    });
+  }
+
   // Calculate season wins and podiums for each user from individual projections
   const projectionWins = await SeasonIndividualLeaderboardProjection.findAll({
     where: {
@@ -285,45 +294,68 @@ async function getGrandIndividualStandings(grandId, options = {}) {
     podiumsMap.set(uid, (podiumsMap.get(uid) || 0) + 1);
   }
 
-  // Build raw list
-  const userIds = individualAggs.map((row) => Number(row.user_id));
+  // Fetch season members for linked seasons
+  const seasonMembers = await SeasonTeamMember.findAll({
+    where: { seasonId: { [Op.in]: seasonIds } },
+    transaction,
+  });
+  const memberUserIds = new Set(seasonMembers.map((sm) => Number(sm.userId)));
+
+  let targetUserIds = new Set([...scoreMap.keys(), ...memberUserIds]);
+  if (targetUserIds.size === 0) {
+    const allUsers = await User.findAll({
+      where: { status: { [Op.ne]: 'inactive' } },
+      attributes: ['id'],
+      transaction,
+    });
+    for (const u of allUsers) targetUserIds.add(Number(u.id));
+  }
+
+  const userIdsArray = Array.from(targetUserIds);
   const users = await User.findAll({
-    where: { id: { [Op.in]: userIds.length > 0 ? userIds : [0] } },
+    where: { id: { [Op.in]: userIdsArray.length > 0 ? userIdsArray : [0] } },
+    attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'],
     include: [{ model: Team, attributes: ['id', 'name'] }],
     transaction,
   });
-  const userMap = new Map();
-  for (const u of users) {
-    userMap.set(Number(u.id), u);
-  }
 
-  const rawList = individualAggs.map((row) => {
-    const uid = Number(row.user_id);
-    const u = userMap.get(uid);
+  const rawList = users.map((u) => {
+    const uid = Number(u.id);
+    const agg = scoreMap.get(uid) || { totalGrandPoints: 0, eventsCount: 0, lastScoredAt: null };
+    const grandPoints = Number(agg.totalGrandPoints || 0);
     return {
       userId: uid,
-      userName: u?.name || `User #${uid}`,
+      userName: u.name || `User #${uid}`,
+      userEmail: u.email || null,
+      jobTitle: u.jobTitle || null,
       userAvatar: null,
-      teamId: u?.teamId || null,
-      teamName: u?.Team?.name || null,
-      teamColor: u?.Team?.color || '#0284c7',
-      grandPoints: Number(row.totalGrandPoints || 0),
+      teamId: u.teamId || null,
+      teamName: u.Team?.name || null,
+      teamColor: u.Team?.color || '#0284c7',
+      grandPoints,
+      score: grandPoints,
+      totalScore: grandPoints,
       seasonWins: winsMap.get(uid) || 0,
       podiumCount: podiumsMap.get(uid) || 0,
-      eventsCount: Number(row.eventsCount || 0),
-      lastScoredAt: row.lastScoredAt,
+      eventsCount: Number(agg.eventsCount || 0),
+      lastScoredAt: agg.lastScoredAt || null,
+      createdAt: u.createdAt || null,
     };
   });
 
-  // Sort: grandPoints DESC, seasonWins DESC, podiumCount DESC, lastScoredAt ASC, userId ASC
+  // Sort: grandPoints DESC, seasonWins DESC, podiumCount DESC, (if scored) lastScoredAt ASC, createdAt ASC, userId ASC
   rawList.sort((a, b) => {
     if (b.grandPoints !== a.grandPoints) return b.grandPoints - a.grandPoints;
     if (b.seasonWins !== a.seasonWins) return b.seasonWins - a.seasonWins;
     if (b.podiumCount !== a.podiumCount) return b.podiumCount - a.podiumCount;
-    if (a.lastScoredAt && b.lastScoredAt) {
-      return new Date(a.lastScoredAt) - new Date(b.lastScoredAt);
+    if (a.grandPoints > 0 && b.grandPoints > 0 && a.lastScoredAt && b.lastScoredAt) {
+      const diff = new Date(a.lastScoredAt).getTime() - new Date(b.lastScoredAt).getTime();
+      if (diff !== 0) return diff;
     }
-    return a.userId - b.userId;
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated !== bCreated) return aCreated - bCreated;
+    return Number(a.userId) - Number(b.userId);
   });
 
   const overallRanked = rawList.map((item, idx) => ({

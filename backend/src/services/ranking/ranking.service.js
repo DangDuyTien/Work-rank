@@ -471,18 +471,19 @@ async function getIndividualRankings(params = {}) {
         teamName: r.teamName,
         grandPoints: Number(r.grandPoints || 0),
         score: Number(r.grandPoints || 0),
+        totalScore: Number(r.grandPoints || 0),
         trend: r.trend || 'SAME',
         gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(r.grandPoints || 0)),
       })),
       total: count,
       page: numPage,
       limit: numLimit,
-      totalPages: Math.ceil(count / numLimit),
+      totalPages: Math.ceil(count / numLimit) || 1,
     };
   }
 
   if (scope === 'all-time') {
-    const userWhere = {};
+    const userWhere = { status: { [Op.ne]: 'inactive' } };
     if (teamId) userWhere.teamId = teamId;
     if (search && search.trim()) {
       userWhere[Op.or] = [
@@ -491,29 +492,49 @@ async function getIndividualRankings(params = {}) {
       ];
     }
 
-    const { rows, count } = await User.findAndCountAll({
+    const allUsers = await User.findAll({
       where: userWhere,
-      attributes: ['id', 'name', 'email', 'role', 'teamId'],
+      attributes: ['id', 'name', 'email', 'role', 'teamId', 'jobTitle', 'createdAt'],
       include: [
         { model: Team, attributes: ['id', 'name'] },
         { model: CompetitionUserSummary, as: 'competitionSummary', required: false },
       ],
-      limit: numLimit,
-      offset,
     });
 
-    const leaderScore = Number(rows[0]?.competitionSummary?.currentSeasonScore || 0);
-    const items = rows.map((u, idx) => {
+    allUsers.sort((a, b) => {
+      const aScore = Number(a.competitionSummary?.currentSeasonScore || 0);
+      const bScore = Number(b.competitionSummary?.currentSeasonScore || 0);
+      if (bScore !== aScore) return bScore - aScore;
+
+      const aWins = Number(a.competitionSummary?.seasonWins || 0);
+      const bWins = Number(b.competitionSummary?.seasonWins || 0);
+      if (bWins !== aWins) return bWins - aWins;
+
+      const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (aCreated !== bCreated) return aCreated - bCreated;
+
+      return Number(a.id) - Number(b.id);
+    });
+
+    const total = allUsers.length;
+    const paginated = allUsers.slice(offset, offset + numLimit);
+    const leaderScore = Number(allUsers[0]?.competitionSummary?.currentSeasonScore || 0);
+
+    const items = paginated.map((u, idx) => {
       const summary = u.competitionSummary;
       const score = Number(summary?.currentSeasonScore || 0);
+      const rank = offset + idx + 1;
       return {
-        rank: offset + idx + 1,
+        rank,
         userId: u.id,
         userName: u.name,
         userEmail: u.email,
+        jobTitle: u.jobTitle,
         teamId: u.teamId,
         teamName: u.Team ? u.Team.name : '—',
         score,
+        totalScore: score,
         lifetimeScore: score,
         seasonsWon: Number(summary?.seasonWins || 0),
         mvpCount: Number(summary?.metadata?.mvpCount || 0),
@@ -525,10 +546,10 @@ async function getIndividualRankings(params = {}) {
     return {
       scope: 'all-time',
       items,
-      total: count,
+      total,
       page: numPage,
       limit: numLimit,
-      totalPages: Math.ceil(count / numLimit),
+      totalPages: Math.ceil(total / numLimit) || 1,
     };
   }
 
@@ -592,6 +613,7 @@ async function getIndividualRankings(params = {}) {
       teamName: r.teamName,
       score: Number(r.points || 0),
       points: Number(r.points || 0),
+      totalScore: Number(r.points || 0),
       userLevel: Number(r.metadata?.userLevel || 1),
       trend: r.trend || 'SAME',
       gap: Math.max(0, Number(rows[0]?.points || 0) - Number(r.points || 0)),
@@ -599,7 +621,7 @@ async function getIndividualRankings(params = {}) {
     total: count,
     page: numPage,
     limit: numLimit,
-    totalPages: Math.ceil(count / numLimit),
+    totalPages: Math.ceil(count / numLimit) || 1,
   };
 }
 

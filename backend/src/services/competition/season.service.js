@@ -360,7 +360,7 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   const seasonMembers = await SeasonTeamMember.findAll({
     where: { seasonId },
     include: [
-      { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'createdAt'] },
       { model: Season, as: 'season' },
     ],
     transaction,
@@ -417,40 +417,64 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   }
 
   // 3. Build complete set of all participants (from members or score ledger)
-  const allUserIds = new Set([...memberTeamMap.keys(), ...scoreMap.keys()]);
+  // If no members registered yet, include all active users
+  let allUserIds = new Set([...memberTeamMap.keys(), ...scoreMap.keys()]);
+  if (allUserIds.size === 0) {
+    const fallbackUsers = await User.findAll({
+      where: { status: { [Op.ne]: 'inactive' } },
+      attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'],
+      include: [{ model: Team, attributes: ['id', 'name'] }],
+      transaction,
+    });
+    for (const u of fallbackUsers) {
+      userMap.set(Number(u.id), u);
+      if (u.teamId) memberTeamMap.set(Number(u.id), Number(u.teamId));
+      allUserIds.add(Number(u.id));
+    }
+  }
+
   const rawList = [];
 
   for (const uid of allUserIds) {
     const scoreData = scoreMap.get(uid) || { points: 0, eventsCount: 0, lastScoredAt: null };
     let userObj = userMap.get(uid);
     if (!userObj) {
-      userObj = await User.findByPk(uid, { attributes: ['id', 'name', 'email'], transaction });
+      userObj = await User.findByPk(uid, { attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'], include: [{ model: Team, attributes: ['id', 'name'] }], transaction });
       if (userObj) userMap.set(uid, userObj);
     }
 
-    const tid = memberTeamMap.get(uid) || null;
-    const teamInfo = tid ? teamInfoMap.get(tid) : null;
+    const tid = memberTeamMap.get(uid) || userObj?.teamId || null;
+    const teamInfo = tid ? teamInfoMap.get(tid) || (userObj?.Team ? { name: userObj.Team.name, avatar: null, color: '#0284c7' } : null) : null;
 
     rawList.push({
       userId: uid,
       userName: userObj?.name || `User #${uid}`,
+      userEmail: userObj?.email || null,
+      jobTitle: userObj?.jobTitle || null,
       userAvatar: null,
       teamId: tid,
       teamName: teamInfo?.name || null,
       teamColor: teamInfo?.color || '#0284c7',
       points: scoreData.points,
+      score: scoreData.points,
+      totalScore: scoreData.points,
       eventsCount: scoreData.eventsCount,
       lastScoredAt: scoreData.lastScoredAt,
+      createdAt: userObj?.createdAt || null,
     });
   }
 
-  // 4. Sort strictly: points DESC, lastScoredAt ASC (earlier achieves rank), userId ASC
+  // 4. Sort strictly: points DESC, lastScoredAt ASC (if both scored > 0), createdAt ASC (account created earlier ranks higher), userId ASC
   rawList.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
-    if (a.lastScoredAt && b.lastScoredAt) {
-      return new Date(a.lastScoredAt) - new Date(b.lastScoredAt);
+    if (a.points > 0 && b.points > 0 && a.lastScoredAt && b.lastScoredAt) {
+      const timeDiff = new Date(a.lastScoredAt).getTime() - new Date(b.lastScoredAt).getTime();
+      if (timeDiff !== 0) return timeDiff;
     }
-    return a.userId - b.userId;
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated !== bCreated) return aCreated - bCreated;
+    return Number(a.userId) - Number(b.userId);
   });
 
   // Assign overall rank

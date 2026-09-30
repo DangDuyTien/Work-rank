@@ -85,6 +85,7 @@ const FIELD_SUGGESTIONS = [
 ];
 
 export default function CompetitionAdmin() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' | 'rules' | 'projections' | 'states' | 'inspector'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -266,7 +267,7 @@ export default function CompetitionAdmin() {
       const trace = await competition.getEventTrace(eventId);
       setTraceData(trace);
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể tải Event Trace');
+      toast.error(parseApiError(err, 'Không thể tải Event Trace'));
       setTraceModalOpen(false);
     } finally {
       setTraceLoading(false);
@@ -282,7 +283,7 @@ export default function CompetitionAdmin() {
   const handleSubmitRetry = async (e) => {
     e?.preventDefault();
     if (!retryReason.trim()) {
-      alert('Vui lòng nhập lý do Audit bắt buộc');
+      toast.warning('Vui lòng nhập lý do Audit bắt buộc');
       return;
     }
     try {
@@ -290,9 +291,9 @@ export default function CompetitionAdmin() {
       await competition.adminRetryIntegrationEvent(retryEventId, retryReason.trim());
       setRetryModalOpen(false);
       fetchIntegrationData();
-      alert('Đã thiết lập lại trạng thái PENDING cho sự kiện. Worker sẽ đánh giá lại trong lượt kế tiếp.');
+      toast.success('Đã thiết lập lại trạng thái PENDING cho sự kiện. Worker sẽ đánh giá lại trong lượt kế tiếp.');
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể retry sự kiện');
+      toast.error(parseApiError(err, 'Không thể retry sự kiện'));
     } finally {
       setRetryLoading(false);
     }
@@ -334,9 +335,10 @@ export default function CompetitionAdmin() {
         });
       }
       setSimActionSuccess('Bắn sự kiện thành công! Sự kiện đã được lưu vào Event Store và đưa vào luồng chấm điểm.');
+      toast.success('Bắn sự kiện mô phỏng thành công!');
       fetchIntegrationData();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Bắn sự kiện thất bại');
+      toast.error(parseApiError(err, 'Bắn sự kiện thất bại'));
     } finally {
       setSimActionLoading(false);
     }
@@ -369,7 +371,7 @@ export default function CompetitionAdmin() {
       setValidationResult(null);
       setBuilderModalOpen(true);
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể mở Rule Builder');
+      toast.error(parseApiError(err, 'Không thể mở Rule Builder'));
     } finally {
       setActionLoading(false);
     }
@@ -378,7 +380,7 @@ export default function CompetitionAdmin() {
   const handleCreateRuleSet = async (e) => {
     e?.preventDefault();
     if (!newRsName.trim() || !newRsCode.trim()) {
-      alert('Vui lòng nhập Tên và Mã Rule Set');
+      toast.warning('Vui lòng nhập Tên và Mã Rule Set');
       return;
     }
     try {
@@ -388,13 +390,14 @@ export default function CompetitionAdmin() {
         code: newRsCode.trim().toLowerCase().replace(/\s+/g, '_'),
         description: newRsDesc.trim(),
       });
+      toast.success(`Đã tạo Rule Set "${newRsName.trim()}" thành công`);
       setCreateRuleSetModalOpen(false);
       setNewRsName('');
       setNewRsCode('');
       setNewRsDesc('');
       fetchRuleSets();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Tạo Rule Set thất bại');
+      toast.error(parseApiError(err, 'Tạo Rule Set thất bại'));
     } finally {
       setActionLoading(false);
     }
@@ -446,7 +449,7 @@ export default function CompetitionAdmin() {
           effectiveTo: builderEffectiveTo || null,
           astPayload: builderRules,
         });
-        alert('Lưu bản nháp thành công!');
+        toast.success('Lưu bản nháp thành công!');
       } else {
         // Create new draft version
         const newVer = await competition.adminCreateRuleSetVersion(selectedRuleSet.id, {
@@ -455,12 +458,12 @@ export default function CompetitionAdmin() {
           astPayload: builderRules,
         });
         setSelectedVersion(newVer);
-        alert('Tạo phiên bản nháp mới thành công!');
+        toast.success('Tạo phiên bản nháp mới thành công!');
       }
       handleOpenBuilder(selectedRuleSet.id);
       fetchRuleSets();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể lưu bản nháp');
+      toast.error(parseApiError(err, 'Không thể lưu bản nháp'));
     } finally {
       setActionLoading(false);
     }
@@ -469,19 +472,19 @@ export default function CompetitionAdmin() {
   const handlePublishVersion = async () => {
     if (!selectedVersion || !selectedRuleSet) return;
     if (!publishReason.trim()) {
-      alert('Vui lòng nhập lý do xuất bản bắt buộc');
+      toast.warning('Vui lòng nhập lý do xuất bản bắt buộc');
       return;
     }
     try {
       setActionLoading(true);
       await competition.adminPublishRuleSetVersion(selectedRuleSet.id, selectedVersion.id, publishReason.trim());
-      alert(`Đã xuất bản Version #${selectedVersion.versionNumber} thành công!`);
+      toast.success(`Đã xuất bản Version #${selectedVersion.versionNumber} thành công!`);
       setPublishModalOpen(false);
       setPublishReason('');
       setBuilderModalOpen(false);
       fetchRuleSets();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Xuất bản thất bại');
+      toast.error(parseApiError(err, 'Xuất bản thất bại'));
     } finally {
       setActionLoading(false);
     }
@@ -492,11 +495,11 @@ export default function CompetitionAdmin() {
     try {
       setActionLoading(true);
       const res = await competition.adminDuplicateVersion(selectedRuleSet.id, versionId);
-      alert(`Đã nhân bản thành Version #${res.versionNumber} (Bản nháp)`);
+      toast.success(`Đã nhân bản thành Version #${res.versionNumber} (Bản nháp)`);
       handleOpenBuilder(selectedRuleSet.id, res);
       fetchRuleSets();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Nhân bản thất bại');
+      toast.error(parseApiError(err, 'Nhân bản thất bại'));
     } finally {
       setActionLoading(false);
     }
@@ -507,7 +510,7 @@ export default function CompetitionAdmin() {
     try {
       parsedPayload = JSON.parse(simEventPayload);
     } catch (e) {
-      alert('JSON Sự kiện mẫu không hợp lệ');
+      toast.warning('JSON Sự kiện mẫu không hợp lệ');
       return;
     }
 
@@ -518,8 +521,9 @@ export default function CompetitionAdmin() {
         eventPayload: parsedPayload,
       });
       setSimResult(res);
+      toast.info('Đã chạy mô phỏng quy tắc');
     } catch (err) {
-      alert(err?.response?.data?.message || 'Lỗi chạy mô phỏng');
+      toast.error(parseApiError(err, 'Lỗi chạy mô phỏng'));
     } finally {
       setSimLoading(false);
     }
@@ -527,15 +531,16 @@ export default function CompetitionAdmin() {
 
   const handleRunDiff = async () => {
     if (!diffVersionA || !diffVersionB) {
-      alert('Vui lòng chọn cả 2 phiên bản để so sánh');
+      toast.warning('Vui lòng chọn cả 2 phiên bản để so sánh');
       return;
     }
     try {
       setDiffLoading(true);
       const res = await competition.adminDiffVersions(selectedRuleSet.id, diffVersionA, diffVersionB);
       setDiffResult(res);
+      toast.info('Đã hoàn thành so sánh 2 phiên bản');
     } catch (err) {
-      alert(err?.response?.data?.message || 'Lỗi so sánh phiên bản');
+      toast.error(parseApiError(err, 'Lỗi so sánh phiên bản'));
     } finally {
       setDiffLoading(false);
     }
@@ -543,18 +548,19 @@ export default function CompetitionAdmin() {
 
   const handleRebuildProjections = async () => {
     if (!rebuildReason.trim()) {
-      alert('Vui lòng nhập lý do audit bắt buộc trước khi trigger rebuild');
+      toast.warning('Vui lòng nhập lý do audit bắt buộc trước khi trigger rebuild');
       return;
     }
     try {
       setRebuildLoading(true);
       const res = await competition.adminRebuildProjections(rebuildReason.trim());
       setRebuildSuccessMsg(`Rebuild thành công trong ${res.durationMs}ms: ${res.usersRebuilt} users, ${res.teamsRebuilt} teams, ${res.seasonsRebuilt} seasons, ${res.grandsRebuilt} grands.`);
+      toast.success('Đã rebuild projections thành công!');
       setRebuildModalOpen(false);
       setRebuildReason('');
       fetchProjections();
     } catch (err) {
-      alert(err?.response?.data?.error || err?.response?.data?.message || 'Rebuild thất bại');
+      toast.error(parseApiError(err, 'Rebuild thất bại'));
     } finally {
       setRebuildLoading(false);
     }
@@ -567,8 +573,9 @@ export default function CompetitionAdmin() {
       setInspectLoading(true);
       const res = await competition.adminScoreInspect(inspectUserId.trim());
       setInspectResult(res);
+      toast.success('Đã tải dữ liệu score drill-down');
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không tìm thấy dữ liệu điểm cho User ID này');
+      toast.error(parseApiError(err, 'Không tìm thấy dữ liệu điểm cho User ID này'));
     } finally {
       setInspectLoading(false);
     }
