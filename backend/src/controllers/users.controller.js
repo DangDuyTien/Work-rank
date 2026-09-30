@@ -1,10 +1,21 @@
 const bcrypt = require('bcryptjs');
 const env = require('../config/env');
 const { Op } = require('sequelize');
-const { User, UserProfileImage, UserProfilePreference } = require('../models');
+const {
+  User,
+  Team,
+  UserProfileImage,
+  UserProfilePreference,
+  CompetitionUserSummary,
+  SeasonIndividualLeaderboardProjection,
+  Season,
+  TeamYouTubeSummary,
+  CompetitionAuditLog,
+} = require('../models');
 const sanitizeUser = require('../utils/sanitizeUser');
 const { decorateUserPresence } = require('../services/userPresence.service');
 const profileLikeService = require('../services/profileLike.service');
+const recognitionService = require('../services/recognition.service');
 
 const GALLERY_SLOT_COUNT = 6;
 const FEATURED_BADGE_LIMIT = 12;
@@ -157,10 +168,87 @@ async function list(req, res) {
 
 async function getById(req, res) {
   const user = await User.findByPk(req.params.id, {
-    include: [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }],
+    include: [
+      { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+      { model: Team, attributes: ['id', 'name', 'description'], required: false },
+      { model: CompetitionUserSummary, as: 'competitionSummary', required: false },
+    ],
   });
   if (!user) return res.status(404).json({ message: 'User not found' });
-  return res.json({ user: serializeUserWithProfile(user) });
+
+  // 1. Historical Season Participations (Bảo toàn lịch sử thi đấu & team snapshot khi user chuyển đội)
+  let historicalProjections = [];
+  try {
+    historicalProjections = await SeasonIndividualLeaderboardProjection.findAll({
+      where: { userId: user.id },
+      order: [['seasonId', 'DESC']],
+    });
+  } catch (err) {
+    historicalProjections = [];
+  }
+
+  // 2. Team YouTube Context (Chỉ trả về nếu viewer là admin hoặc cùng team với user)
+  let youtubeSummary = null;
+  const isViewerAdmin = req.user?.role === 'admin';
+  const isSameTeam = user.teamId && req.user?.teamId && Number(user.teamId) === Number(req.user.teamId);
+  if (user.teamId && (isViewerAdmin || isSameTeam)) {
+    try {
+      const ytRow = await TeamYouTubeSummary.findOne({ where: { teamId: user.teamId } });
+      if (ytRow) {
+        youtubeSummary = {
+          teamId: ytRow.teamId,
+          teamName: ytRow.teamName,
+          channelsCount: ytRow.channelsCount,
+          videosCount: ytRow.videosCount,
+          totalViews: ytRow.totalViews,
+          totalSubscribers: ytRow.totalSubscribers,
+          viewsGrowth30dPct: ytRow.viewsGrowth30dPct,
+          rankByViews: ytRow.rankByViews,
+          topVideoTitle: ytRow.topVideoTitle,
+          topVideoViews: ytRow.topVideoViews,
+        };
+      }
+    } catch (err) {
+      youtubeSummary = null;
+    }
+  }
+
+  // 3. Official Recognitions & Badges
+  let recognitions = null;
+  try {
+    recognitions = await recognitionService.getUserRecognitions(user.id);
+  } catch (err) {
+    recognitions = null;
+  }
+
+  const serialized = serializeUserWithProfile(user);
+  const competition = user.competitionSummary ? {
+    currentSeasonRank: user.competitionSummary.currentSeasonRank || null,
+    currentSeasonScore: Number(user.competitionSummary.currentSeasonScore || 0),
+    grandRank: user.competitionSummary.grandRank || null,
+    grandPoints: Number(user.competitionSummary.grandPoints || 0),
+    seasonWins: Number(user.competitionSummary.seasonWins || 0),
+    podiumCount: Number(user.competitionSummary.podiumCount || 0),
+    currentStreak: Number(user.competitionSummary.currentStreak || 0),
+    mvpCount: Number(user.competitionSummary.metadata?.mvpCount || 0),
+  } : null;
+
+  return res.json({
+    user: serialized,
+    team: user.Team ? { id: user.Team.id, name: user.Team.name, description: user.Team.description } : null,
+    competition,
+    historicalSeasons: historicalProjections.map((p) => ({
+      seasonId: p.seasonId,
+      teamId: p.teamId,
+      teamName: p.teamName,
+      rank: p.rank,
+      points: Number(p.points || 0),
+      trend: p.trend,
+      lastScoredAt: p.lastScoredAt,
+    })),
+    youtubeSummary,
+    recognitions,
+  });
 }
 
 async function create(req, res) {
@@ -172,7 +260,87 @@ async function create(req, res) {
 async function update(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
-  await user.update(req.body);
+
+  const isAdmin = req.user?.role === 'admin';
+  const isSelf = String(req.user?.id || '') === String(user.id);
+
+  if (!isAdmin && !isSelf) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  // Nếu là user thường cập nhật hồ sơ chính mình
+  if (!isAdmin && isSelf) {
+    const allowed = {};
+    if (req.body.name !== undefined) allowed.name = req.body.name;
+    if (req.body.bio !== undefined) allowed.bio = req.body.bio;
+    if (req.body.phone !== undefined) allowed.phone = req.body.phone;
+
+    // Ngăn chặn leo thang đặc quyền / đổi vị trí công việc / huy hiệu
+    if (
+      (req.body.role !== undefined && req.body.role !== user.role) ||
+      (req.body.jobTitle !== undefined && req.body.jobTitle !== user.jobTitle) ||
+      (req.body.department !== undefined && req.body.department !== user.department) ||
+      (req.body.teamId !== undefined && Number(req.body.teamId) !== Number(user.teamId)) ||
+      (req.body.isVerified !== undefined && Boolean(req.body.isVerified) !== Boolean(user.isVerified)) ||
+      (req.body.isDev !== undefined && Boolean(req.body.isDev) !== Boolean(user.isDev)) ||
+      (req.body.status !== undefined && req.body.status !== user.status)
+    ) {
+      return res.status(403).json({
+        message: 'Bạn không có quyền chỉnh sửa chức danh, phòng ban, đội nhóm hoặc phân quyền/huy hiệu hệ thống. Vui lòng liên hệ Admin.',
+      });
+    }
+
+    await user.update(allowed);
+    return res.json({ user: sanitizeUser(user) });
+  }
+
+  // Nếu là Admin
+  const actorId = req.user?.id;
+  const reason = req.body.reason || 'Admin updated employee profile';
+
+  // Audit job title changes if any
+  if (
+    (req.body.jobTitle !== undefined && req.body.jobTitle !== user.jobTitle) ||
+    (req.body.department !== undefined && req.body.department !== user.department) ||
+    (req.body.teamId !== undefined && Number(req.body.teamId) !== Number(user.teamId))
+  ) {
+    await recognitionService.setJobTitle({
+      userId: user.id,
+      jobTitle: req.body.jobTitle !== undefined ? req.body.jobTitle : user.jobTitle,
+      department: req.body.department !== undefined ? req.body.department : user.department,
+      teamId: req.body.teamId !== undefined ? req.body.teamId : user.teamId,
+      actorId,
+      reason,
+    });
+  }
+
+  // Audit verified changes if any
+  if (req.body.isVerified !== undefined && Boolean(req.body.isVerified) !== Boolean(user.isVerified)) {
+    await recognitionService.setVerified({
+      userId: user.id,
+      isVerified: req.body.isVerified,
+      actorId,
+      reason,
+    });
+  }
+
+  // Audit dev badge changes if any
+  if (req.body.isDev !== undefined && Boolean(req.body.isDev) !== Boolean(user.isDev)) {
+    await recognitionService.setDevBadge({
+      userId: user.id,
+      isDev: req.body.isDev,
+      actorId,
+      reason,
+    });
+  }
+
+  const adminPayload = { ...req.body };
+  delete adminPayload.reason;
+  if (adminPayload.password) {
+    adminPayload.passwordHash = await bcrypt.hash(adminPayload.password, env.bcryptRounds);
+    delete adminPayload.password;
+  }
+  await user.update(adminPayload);
   return res.json({ user: sanitizeUser(user) });
 }
 
@@ -181,6 +349,119 @@ async function remove(req, res) {
   if (!user) return res.status(404).json({ message: 'User not found' });
   await user.update({ status: 'inactive' });
   return res.status(204).send();
+}
+
+async function getRecognitions(req, res) {
+  const data = await recognitionService.getUserRecognitions(req.params.id);
+  if (!data) return res.status(404).json({ message: 'User not found' });
+  return res.json({ data });
+}
+
+async function adminAwardMVP(req, res) {
+  const { userId, seasonId, grandId, title, reason } = req.body;
+  if (!userId) return res.status(400).json({ message: 'userId is required' });
+  try {
+    const recognition = await recognitionService.awardMVP({
+      userId,
+      seasonId,
+      grandId,
+      title,
+      reason,
+      actorId: req.user?.id,
+    });
+    return res.status(201).json({ recognition });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
+async function adminRevokeMVP(req, res) {
+  const { id } = req.params;
+  const { reason } = req.body || {};
+  try {
+    const result = await recognitionService.revokeMVP({
+      recognitionId: id,
+      actorId: req.user?.id,
+      reason,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
+async function adminAwardChampion(req, res) {
+  const { userId, seasonId, grandId, title, reason } = req.body;
+  if (!userId) return res.status(400).json({ message: 'userId is required' });
+  try {
+    const recognition = await recognitionService.awardChampion({
+      userId,
+      seasonId,
+      grandId,
+      title,
+      reason,
+      actorId: req.user?.id,
+    });
+    return res.status(201).json({ recognition });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
+async function adminUpdateJobProfile(req, res) {
+  const { id } = req.params;
+  const { jobTitle, department, teamId, isVerified, isDev, reason } = req.body;
+  const actorId = req.user?.id;
+
+  let user = await User.findByPk(id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  if (jobTitle !== undefined || department !== undefined || teamId !== undefined) {
+    user = await recognitionService.setJobTitle({
+      userId: id,
+      jobTitle,
+      department,
+      teamId,
+      actorId,
+      reason,
+    });
+  }
+
+  if (isVerified !== undefined && Boolean(isVerified) !== Boolean(user.isVerified)) {
+    user = await recognitionService.setVerified({
+      userId: id,
+      isVerified,
+      actorId,
+      reason,
+    });
+  }
+
+  if (isDev !== undefined && Boolean(isDev) !== Boolean(user.isDev)) {
+    user = await recognitionService.setDevBadge({
+      userId: id,
+      isDev,
+      actorId,
+      reason,
+    });
+  }
+
+  return res.json({ user: sanitizeUser(user) });
+}
+
+async function adminGetAuditLogs(req, res) {
+  const { userId, action, limit = 50, page = 1 } = req.query;
+  const where = {};
+  if (userId) where.entityId = String(userId);
+  if (action) where.action = action;
+
+  const logs = await CompetitionAuditLog.findAll({
+    where,
+    order: [['createdAt', 'DESC']],
+    limit: clampPositiveInt(limit, 50, 200),
+    offset: (clampPositiveInt(page, 1, 10000) - 1) * clampPositiveInt(limit, 50, 200),
+  });
+
+  return res.json({ logs });
 }
 
 async function getProfilePreferences(req, res) {
@@ -298,6 +579,12 @@ module.exports = {
   create,
   update,
   remove,
+  getRecognitions,
+  adminAwardMVP,
+  adminRevokeMVP,
+  adminAwardChampion,
+  adminUpdateJobProfile,
+  adminGetAuditLogs,
   getProfilePreferences,
   updateProfilePreferences,
   gallery,

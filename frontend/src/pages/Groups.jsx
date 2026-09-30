@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { activity, groups as groupsApi, users as usersApi } from '../services/api';
+import { groups as groupsApi, users as usersApi } from '../services/api';
 import { Clipboard, Edit3, Plus, RefreshCw, Swords, Trash2, Trophy, UserMinus, UserPlus, Users, X } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 
@@ -312,12 +313,9 @@ export default function Groups() {
 
     setAddingMember(side);
     try {
-      const [profileRes, statsRes] = await Promise.all([
-        usersApi.get(userId),
-        activity.userStats(userId).catch(() => ({ data: {} })),
-      ]);
+      const profileRes = await usersApi.get(userId);
       const profile = profileRes.data || {};
-      const baselineActions = actionCount(statsRes.data || {});
+      const baselineActions = Number(profile.competitionSummary?.current_season_score || 0);
       const entry = {
         id: String(profile.id || userId),
         name: profile.name || `User #${userId}`,
@@ -347,8 +345,8 @@ export default function Groups() {
     if (!ids.length) return;
     try {
       const entries = await Promise.all(ids.map(async (id) => {
-        const res = await activity.userStats(id);
-        return [String(id), actionCount(res.data || {})];
+        const res = await usersApi.get(id);
+        return [String(id), Number(res.data?.competitionSummary?.current_season_score || 0)];
       }));
       setContestStats((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
       toast('Đã cập nhật điểm cuộc thi', { type: 'success' });
@@ -356,6 +354,7 @@ export default function Groups() {
       toast(err.response?.data?.message || 'Không cập nhật được điểm cuộc thi', { type: 'error' });
     }
   };
+
 
   const createContest = (event) => {
     event.preventDefault();

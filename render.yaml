@@ -1,18 +1,18 @@
 services:
   - type: web
     runtime: node
-    name: workrank
+    name: work3winmedia
     plan: free
     region: singapore
     buildCommand: npm --prefix backend ci && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
-    startCommand: npm --prefix backend start
+    startCommand: npm --prefix backend run db:migrate && (npm --prefix backend run db:seed || true) && npm --prefix backend start
     healthCheckPath: /api/health
     autoDeployTrigger: commit
     envVars:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        value: https://workrank.onrender.com
+        value: https://work3winmedia.onrender.com
       - key: DB_DIALECT
         value: mysql
       - key: DB_SSL

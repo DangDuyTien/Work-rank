@@ -1,5 +1,7 @@
 const dashboardService = require('../services/dashboard.service');
-const activityService = require('../services/activity.service');
+const presence = require('../services/presence.service');
+const { User } = require('../models');
+const { Op } = require('sequelize');
 
 async function overview(req, res) {
   res.json(await dashboardService.overview({
@@ -9,7 +11,14 @@ async function overview(req, res) {
 }
 
 async function realtimeUsers(req, res) {
-  res.json({ users: await activityService.realtimeUsers() });
+  const onlineIds = presence.activeUserIds();
+  const users = onlineIds.length > 0
+    ? await User.findAll({
+      where: { id: { [Op.in]: onlineIds }, status: 'active' },
+      attributes: ['id', 'name', 'email', 'role', 'teamId'],
+    })
+    : [];
+  res.json({ users });
 }
 
 async function teamSummary(req, res) {

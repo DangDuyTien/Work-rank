@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
-import { Card, EmptyState, PageState } from '../components/ui';
+import { PageShell, PageHeader, Card, EmptyState, PageState, Section, StatCard } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 import { friends as friendsApi, users as usersApi } from '../services/api';
@@ -29,7 +29,6 @@ const STATUS_META = {
 
 const BUTTON_BASE = {
   minHeight: 34,
-  borderRadius: 0,
   border: '1px solid transparent',
   padding: '0 12px',
   cursor: 'pointer',
@@ -88,7 +87,6 @@ function Avatar({ user, size = 42 }) {
     <div style={{
       width: size,
       height: size,
-      borderRadius: 0,
       overflow: 'hidden',
       background: '#38bdf8',
       color: '#ffffff',
@@ -112,17 +110,17 @@ function PresencePill({ status }) {
       display: 'inline-flex',
       alignItems: 'center',
       gap: 6,
-      minHeight: 24,
-      borderRadius: 0,
+      minHeight: 22,
       border: `1px solid ${meta.border}`,
       background: meta.bg,
       color: meta.color,
-      padding: '0 9px',
-      fontSize: 11,
+      padding: '0 8px',
+      fontSize: 10,
       fontWeight: 900,
       whiteSpace: 'nowrap',
+      textTransform: 'uppercase',
     }}>
-      <span style={{ width: 7, height: 7, borderRadius: '50%', background: meta.dot }} />
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta.dot, flexShrink: 0 }} />
       {meta.label}
     </span>
   );
@@ -137,7 +135,7 @@ function UserIdentity({ user, subtitle, compact = false }) {
           <strong style={{ color: '#0f172a', fontSize: compact ? 13 : 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user.name || user.email || `User #${userIdOf(user)}`}
           </strong>
-          {isVerified(user) && <VerifiedBadge size={15} />}
+          {isVerified(user) && <VerifiedBadge size={14} />}
         </div>
         <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 800, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {subtitle || `${formatFriendCode(user)} · ${user.email || 'Không có email'}`}
@@ -151,8 +149,7 @@ function FriendCard({ item, busy, onRemove, onOpen }) {
   const user = item.friend;
   return (
     <article style={{
-      border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 0,
+      border: '1px solid var(--border)',
       padding: 14,
       display: 'grid',
       gap: 12,
@@ -189,8 +186,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
   const user = item.friend;
   return (
     <div style={{
-      border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 0,
+      border: '1px solid var(--border)',
       padding: 12,
       display: 'flex',
       alignItems: 'center',
@@ -262,8 +258,7 @@ function SearchResult({ user, state, busy, onSend, onAcceptIncoming, onOpen }) {
 
   return (
     <div style={{
-      border: '1px solid rgba(15,23,42,0.08)',
-      borderRadius: 0,
+      border: '1px solid var(--border)',
       padding: 12,
       display: 'flex',
       alignItems: 'center',
@@ -508,7 +503,7 @@ export default function Friends() {
   }
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 16 }}>
+    <PageShell>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 860px) {
@@ -516,73 +511,51 @@ export default function Friends() {
           .friends-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
         @media (max-width: 560px) {
-          .friends-page-head { align-items: stretch !important; }
           .friends-stat-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
-      <section
-        className="friends-page-head"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 0, background: 'rgba(56,189,248,0.08)', color: '#38bdf8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-            <Users size={14} />
-            Kết nối cá nhân
-          </div>
-          <h1 style={{ margin: '10px 0 6px', color: '#0f172a', fontSize: 28, lineHeight: 1.1 }}>Bạn bè</h1>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => loadData({ background: true })}
-          disabled={refreshing}
-          style={{ ...BUTTON_BASE, background: '#ffffff', borderColor: 'rgba(15,23,42,0.1)', color: '#475569', opacity: refreshing ? 0.65 : 1 }}
-        >
-          <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
-          Làm mới
-        </button>
-      </section>
+      <PageHeader
+        icon={Users}
+        eyebrow="Kết nối cá nhân"
+        title="Bạn Bè & Đội Nhóm"
+        description="Quản lý danh sách bạn bè, gửi lời mời kết bạn và theo dõi trạng thái hoạt động"
+        actions={
+          <button
+            type="button"
+            onClick={() => loadData({ background: true })}
+            disabled={refreshing}
+            style={{ ...BUTTON_BASE, background: '#ffffff', borderColor: 'rgba(15,23,42,0.12)', color: '#475569', opacity: refreshing ? 0.65 : 1 }}
+          >
+            <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
+            Làm mới
+          </button>
+        }
+      />
 
       {friendLoadError && (
-        <Card style={{ padding: 12, borderColor: 'rgba(217,119,6,0.22)', background: 'rgba(245,158,11,0.07)', boxShadow: 'none' }}>
+        <Card tone="warning" style={{ padding: 12 }}>
           <div style={{ color: '#92400e', fontSize: 12, fontWeight: 800, lineHeight: 1.5 }}>
             {friendLoadError}
           </div>
         </Card>
       )}
 
-      <section className="friends-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
-        {[
-          ['Bạn bè', friendRows.length, '#38bdf8'],
-          ['Đang online', onlineCount, '#16a34a'],
-          ['Lời mời đến', incoming.length, '#d97706'],
-          ['Đã gửi', outgoing.length, '#64748b'],
-        ].map(([label, value, color]) => (
-          <Card key={label} style={{ padding: 14, boxShadow: 'none' }}>
-            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 900, textTransform: 'uppercase' }}>{label}</div>
-            <strong style={{ display: 'block', color, fontSize: 24, marginTop: 4 }}>{Number(value).toLocaleString()}</strong>
-          </Card>
-        ))}
-      </section>
+      {/* STATS */}
+      <div className="friends-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
+        <StatCard icon={Users} label="Bạn bè" value={friendRows.length} color="#38bdf8" />
+        <StatCard label="Đang online" value={onlineCount} color="#16a34a" />
+        <StatCard label="Lời mời đến" value={incoming.length} color="#d97706" />
+        <StatCard label="Đã gửi" value={outgoing.length} color="#64748b" />
+      </div>
 
+      {/* MAIN 2-COLUMN LAYOUT */}
       <div className="friends-main-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.45fr) minmax(330px, 0.95fr)', gap: 16, alignItems: 'start' }}>
-        <Card style={{ padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-            <div>
-              <h2 style={{ margin: 0, color: '#0f172a', fontSize: 17, fontWeight: 900 }}>Danh sách bạn bè</h2>
-              <div style={{ marginTop: 4, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
-                {friendRows.length ? `${onlineCount}/${friendRows.length} người có tín hiệu hiện tại` : 'Chưa có bạn bè'}
-              </div>
-            </div>
-          </div>
-
+        {/* LEFT: Friend List */}
+        <Section
+          title="Danh sách bạn bè"
+          description={friendRows.length ? `${onlineCount}/${friendRows.length} người đang hoạt động` : 'Chưa có bạn bè'}
+        >
           {friendRows.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -602,25 +575,25 @@ export default function Friends() {
               ))}
             </div>
           )}
-        </Card>
+        </Section>
 
+        {/* RIGHT: Search + Requests */}
         <div style={{ display: 'grid', gap: 16 }}>
-          <Card style={{ padding: 16 }}>
-            <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 17, fontWeight: 900 }}>Tìm và kết bạn</h2>
+          <Section title="Tìm và kết bạn">
             <div style={{ position: 'relative', marginBottom: 12 }}>
               <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Nhập tên, email hoặc WR-0001..."
-                style={{ width: '100%', minHeight: 40, border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, padding: '0 12px 0 36px', outline: 'none', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
+                style={{ width: '100%', minHeight: 40, border: '1px solid var(--border-2)', padding: '0 12px 0 36px', outline: 'none', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
               />
             </div>
 
             {!query.trim() ? null : searchLoading ? (
-              <EmptyState icon={Search} title="Đang tìm người dùng..." description="Kết quả được lấy trực tiếp từ server." />
+              <EmptyState icon={Search} title="Đang tìm người dùng..." description="Kết quả được lấy trực tiếp từ server." compact />
             ) : searchResults.length === 0 ? (
-              <EmptyState icon={Search} title="Không tìm thấy người dùng" description="Thử nhập đúng tên, email hoặc mã WR của họ." />
+              <EmptyState icon={Search} title="Không tìm thấy người dùng" description="Thử nhập đúng tên, email hoặc mã WR của họ." compact />
             ) : (
               <div style={{ display: 'grid', gap: 10 }}>
                 {searchResults.map((item) => {
@@ -642,13 +615,12 @@ export default function Friends() {
                 })}
               </div>
             )}
-          </Card>
+          </Section>
 
-          <Card style={{ padding: 16 }}>
-            <h2 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: 17, fontWeight: 900 }}>Lời mời kết bạn</h2>
+          <Section title="Lời mời kết bạn">
             <div style={{ display: 'grid', gap: 10 }}>
               {incoming.length === 0 ? (
-                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 0, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed var(--border-2)', padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
                   Chưa có lời mời mới.
                 </div>
               ) : incoming.map((row) => (
@@ -664,12 +636,12 @@ export default function Friends() {
               ))}
             </div>
 
-            <div style={{ height: 1, background: 'rgba(15,23,42,0.08)', margin: '14px 0' }} />
+            <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
 
             <h3 style={{ margin: '0 0 10px', color: '#475569', fontSize: 13, fontWeight: 900 }}>Đã gửi</h3>
             <div style={{ display: 'grid', gap: 10 }}>
               {outgoing.length === 0 ? (
-                <div style={{ border: '1px dashed rgba(15,23,42,0.12)', borderRadius: 0, padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed var(--border-2)', padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
                   Không có lời mời đang chờ.
                 </div>
               ) : outgoing.map((row) => (
@@ -683,9 +655,9 @@ export default function Friends() {
                 />
               ))}
             </div>
-          </Card>
+          </Section>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

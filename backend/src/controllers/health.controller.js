@@ -1,10 +1,6 @@
-const { QueryTypes } = require('sequelize');
-const { sequelize, User } = require('../models');
-const activityService = require('../services/activity.service');
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
+const { User } = require('../models');
+const { sequelize } = require('../models');
+const presence = require('../services/presence.service');
 
 function formatUptime(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds || 0)));
@@ -17,35 +13,13 @@ function formatUptime(totalSeconds) {
 }
 
 async function loadPublicStats() {
-  const [onlineRows, activeUsers, daily] = await Promise.all([
-    activityService.realtimeUsers(),
-    User.count({ where: { status: 'active' } }),
-    sequelize.query(`
-      SELECT
-        COUNT(DISTINCT user_id) AS active_users_today,
-        COALESCE(SUM(keystroke_count), 0) AS keystrokes_today,
-        COALESCE(SUM(mouse_click_count), 0) AS clicks_today,
-        COALESCE(SUM(session_count), 0) AS sessions_today
-      FROM daily_stats
-      WHERE stat_date = :today
-    `, {
-      replacements: { today: todayKey() },
-      type: QueryTypes.SELECT,
-      plain: true,
-    }),
-  ]);
-
-  const keystrokesToday = Number(daily?.keystrokes_today || 0);
-  const clicksToday = Number(daily?.clicks_today || 0);
+  const onlineIds = presence.activeUserIds();
+  const activeUsers = await User.count({ where: { status: 'active' } });
 
   return {
-    usersOnline: Array.isArray(onlineRows) ? onlineRows.length : 0,
+    usersOnline: onlineIds.length,
     activeUsers,
-    activeUsersToday: Number(daily?.active_users_today || 0),
-    keystrokesToday,
-    clicksToday,
-    actionsToday: keystrokesToday + clicksToday,
-    sessionsToday: Number(daily?.sessions_today || 0),
+    activeUsersToday: onlineIds.length,
   };
 }
 
@@ -54,10 +28,6 @@ async function health(req, res) {
     usersOnline: 0,
     activeUsers: 0,
     activeUsersToday: 0,
-    keystrokesToday: 0,
-    clicksToday: 0,
-    actionsToday: 0,
-    sessionsToday: 0,
   };
   let database = 'ok';
 
@@ -81,4 +51,41 @@ async function health(req, res) {
   });
 }
 
-module.exports = { health };
+/**
+ * GET /health/live
+ * Lightweight liveness probe for Kubernetes / orchestrators.
+ */
+function live(req, res) {
+  res.set('Cache-Control', 'no-store');
+  return res.json({
+    status: 'live',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    pid: process.pid,
+  });
+}
+
+/**
+ * GET /health/ready
+ * Readiness probe checking database connectivity without heavy queries.
+ */
+async function ready(req, res) {
+  res.set('Cache-Control', 'no-store');
+  try {
+    await sequelize.authenticate();
+    return res.json({
+      status: 'ready',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(503).json({
+      status: 'unhealthy',
+      database: 'disconnected',
+      error: 'Database unreachable',
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+module.exports = { health, live, ready };

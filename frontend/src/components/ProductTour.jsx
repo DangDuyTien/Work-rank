@@ -5,48 +5,34 @@ import { useAuth } from '../context/AuthContext';
 
 export const PRODUCT_TOUR_EVENT = 'workrank:start-product-tour';
 
-const TOUR_VERSION = 'v2';
+const TOUR_VERSION = 'v3';
 
 const TOUR_STEPS = [
   {
     selector: '[data-tour="app-nav"]',
-    title: 'Tour chức năng chính',
-    description: 'Tour này chỉ đi qua các chức năng cần biết trước: Theo dõi, cài Desktop Tracker và Pomodoro. Bấm Tiếp, web sẽ tự chuyển trang khi cần.',
+    title: 'Tour hệ thống 3winmedia',
+    description: 'Điều hướng nhanh qua các khu vực chính: Đấu trường Arena, Grand Championship, Bảng xếp hạng và Bạn bè.',
   },
   {
-    selector: '[data-tour="tracker-widget"]',
-    title: 'Phiên theo dõi',
-    route: '/tracker',
-    description: 'Thẻ này cho biết web có đang nhận dữ liệu từ Desktop Tracker hay không, phiên đã chạy bao lâu và lượng thao tác hiện tại.',
+    selector: '[data-tour="dashboard-overview"]',
+    title: 'Tổng quan Realtime',
+    route: '/dashboard',
+    description: 'Theo dõi tổng quan số thành viên đang online, điểm thi đấu và tiến độ các thử thách.',
   },
   {
-    selector: '[data-tour="tracker-desktop-install"]',
-    title: 'Cài và kết nối app',
-    route: '/tracker',
-    description: 'Đây là khu vực quan trọng nhất: bấm Bắt đầu và mở app nếu đã cài, hoặc tải file .exe Windows nếu máy chưa có WorkRank Tracker.',
+    selector: '[data-tour="nav-arena"]',
+    title: 'Đấu trường Arena',
+    description: 'Tham gia các mùa giải đang diễn ra, theo dõi nhiệm vụ và tích lũy điểm XP thi đấu.',
   },
   {
-    selector: '[data-tour="tracker-download"]',
-    title: 'Tải Desktop Tracker',
-    route: '/tracker',
-    description: 'Nút này tải bản cài Windows. Sau khi cài, quay lại trang Theo dõi và bấm Bắt đầu và mở app để trình duyệt cấp quyền mở ứng dụng.',
-  },
-  {
-    selector: '[data-tour="pomodoro-timer"]',
-    title: 'Bộ đếm Pomodoro',
-    route: '/pomodoro',
-    description: 'Chọn preset 25/5, 50/10 hoặc 15/3, chọn chế độ tập trung/nghỉ, rồi bấm Bắt đầu để chạy phiên.',
-  },
-  {
-    selector: '[data-tour="pomodoro-focus-workflow"]',
-    title: 'Mục tiêu và việc focus',
-    route: '/pomodoro',
-    description: 'Đặt mục tiêu phút focus trong ngày, thêm việc cần làm, ghim việc đang focus và ghi chú nhanh cho phiên làm việc.',
+    selector: '[data-tour="nav-leaderboard"]',
+    title: 'Bảng Xếp Hạng',
+    description: 'Xem thứ hạng cá nhân, nhóm và bạn bè theo thời gian thực.',
   },
   {
     selector: '[data-tour="help"]',
     title: 'Xem lại hướng dẫn',
-    description: 'Sau khi hoàn tất, tour sẽ không tự hiện lại. Bạn có thể bấm nút này để mở lại bất cứ lúc nào.',
+    description: 'Sau khi hoàn tất, bạn có thể bấm nút này bất cứ lúc nào để xem lại hướng dẫn.',
   },
 ];
 
@@ -270,7 +256,7 @@ export default function ProductTour() {
   const totalSteps = TOUR_STEPS.length;
 
   return createPortal(
-    <div className="product-tour-layer" role="dialog" aria-modal="true" aria-label="Hướng dẫn sử dụng WorkRank">
+    <div className="product-tour-layer" role="dialog" aria-modal="true" aria-label="Hướng dẫn sử dụng 3winmedia">
       <div className="product-tour-mask product-tour-mask-top" style={{ height: targetRect.top }} />
       <div className="product-tour-mask product-tour-mask-left" style={{ top: targetRect.top, width: targetRect.left, height: targetRect.height }} />
       <div className="product-tour-mask product-tour-mask-right" style={{ top: targetRect.top, left: targetRect.right, height: targetRect.height }} />

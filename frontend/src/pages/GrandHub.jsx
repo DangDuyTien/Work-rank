@@ -1,0 +1,816 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Trophy, Crown, Flame, Award, Calendar, ChevronRight, RefreshCw, Clock, Star, Zap, Sparkles, Tv, ExternalLink, CheckCircle2, Search } from 'lucide-react';
+import { competition, youtube } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton } from '../components/ui';
+
+
+function formatDaysRemaining(endAt) {
+  if (!endAt) return 'Không giới hạn';
+  const diff = new Date(endAt).getTime() - Date.now();
+  if (diff <= 0) return 'Đã kết thúc';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return `Còn ${days} ngày`;
+}
+
+function calculateYearProgress(startAt, endAt) {
+  const start = new Date(startAt).getTime();
+  const end = new Date(endAt).getTime();
+  const now = Date.now();
+  if (now <= start) return 0;
+  if (now >= end) return 100;
+  return Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
+}
+
+export default function GrandHub() {
+  const { user, socket } = useAuth();
+  const navigate = useNavigate();
+
+  const [grand, setGrand] = useState(null);
+  const [standings, setStandings] = useState([]);
+  const [individualStandings, setIndividualStandings] = useState([]);
+  const [individualChampion, setIndividualChampion] = useState(null);
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [timeline, setTimeline] = useState([]);
+  const [myTeamJourney, setMyTeamJourney] = useState(null);
+  const [youtubeStandings, setYoutubeStandings] = useState([]);
+  const [activeTab, setActiveTab] = useState('standings');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchGrandData = useCallback(async () => {
+    try {
+      setError(null);
+      const currentGrand = await competition.getCurrentGrand();
+      if (!currentGrand) {
+        setGrand(null);
+        setLoading(false);
+        return;
+      }
+
+      setGrand(currentGrand);
+
+      const [standingsRes, indRes, timelineRes, ytRes] = await Promise.all([
+        competition.getGrandStandings(currentGrand.id),
+        competition.getGrandIndividualStandings(currentGrand.id).catch(() => ({ standings: [], grandIndividualChampion: null })),
+        competition.getGrandTimeline(currentGrand.id),
+        youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })),
+      ]);
+
+      setStandings(standingsRes.standings || []);
+      setIndividualStandings(indRes.standings || []);
+      setIndividualChampion(indRes.grandIndividualChampion || (indRes.standings?.[0] || null));
+      setTimeline(timelineRes || []);
+      setYoutubeStandings(ytRes.items || []);
+
+      if (user?.teamId) {
+        const journeyRes = await competition.getGrandTeamJourney(currentGrand.id, user.teamId);
+        setMyTeamJourney(journeyRes || null);
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Không thể tải dữ liệu Grand Championship');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.teamId]);
+
+  useEffect(() => {
+    fetchGrandData();
+  }, [fetchGrandData]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleUpdate = () => fetchGrandData();
+    socket.on('grand:standings_updated', handleUpdate);
+    socket.on('grand:season_settled', handleUpdate);
+    socket.on('grand:finished', handleUpdate);
+    return () => {
+      socket.off('grand:standings_updated', handleUpdate);
+      socket.off('grand:season_settled', handleUpdate);
+      socket.off('grand:finished', handleUpdate);
+    };
+  }, [socket, fetchGrandData]);
+
+  const yearProgress = useMemo(() => {
+    if (!grand?.startAt || !grand?.endAt) return 0;
+    return calculateYearProgress(grand.startAt, grand.endAt);
+  }, [grand]);
+
+  const myTeamStandings = useMemo(() => {
+    if (!user?.teamId) return null;
+    return standings.find((s) => Number(s.teamId) === Number(user.teamId)) || null;
+  }, [user?.teamId, standings]);
+
+  const activeSeasons = useMemo(() => timeline.filter((s) => s.status === 'ACTIVE').length, [timeline]);
+  const finishedSeasons = useMemo(() => timeline.filter((s) => s.status === 'FINISHED').length, [timeline]);
+
+  if (loading) {
+    return (
+      <PageShell>
+        <PageTransitionSkeleton />
+      </PageShell>
+    );
+  }
+
+  if (error) {
+    return <PageState type="error" title="Lỗi tải Grand Hub" description={error} onRetry={fetchGrandData} />;
+  }
+
+  if (!grand) {
+    return (
+      <PageShell narrow>
+        <div style={{ padding: '40px 0' }}>
+          <EmptyState
+            icon={Trophy}
+            title="Chưa Có Grand Championship Đang Hoạt Động"
+            description="Ban tổ chức chưa khởi tạo giải đấu lớn cho năm nay. Hãy quay lại sau!"
+          />
+        </div>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell>
+      <style>{`
+        @media (max-width: 860px) {
+          .grand-hero-body { flex-direction: column !important; }
+          .grand-hero-team { min-width: 0 !important; width: 100% !important; }
+          .grand-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 560px) {
+          .grand-stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      {/* HERO GRAND CHAMPIONSHIP BANNER */}
+      <section
+        style={{
+          padding: '28px 32px',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+          color: '#ffffff',
+          border: '1.5px solid rgba(234,179,8,0.25)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          className="grand-hero-body"
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}
+        >
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <span
+                style={{
+                  padding: '3px 12px',
+                  fontSize: 10,
+                  fontWeight: 900,
+                  background: 'linear-gradient(90deg, #eab308, #ca8a04)',
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}
+              >
+                <Crown size={12} /> NĂM {grand.year}
+              </span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}>
+                <Clock size={12} /> {formatDaysRemaining(grand.endAt)}
+              </span>
+            </div>
+
+            <h1 style={{ fontSize: 26, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Trophy size={26} color="#f59e0b" /> {grand.name}
+            </h1>
+            <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, fontWeight: 650, maxWidth: 600 }}>
+              {grand.description || 'Giải đấu lớn nhất toàn công ty tích lũy điểm Grand Points từ tất cả các Mùa Giải trong năm.'}
+            </p>
+
+            {/* Year Progress Bar */}
+            <div style={{ maxWidth: 400 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: 5, textTransform: 'uppercase' }}>
+                <span>Đường đua năm {grand.year}</span>
+                <span>{yearProgress}%</span>
+              </div>
+              <div style={{ height: 6, width: '100%', background: 'rgba(255,255,255,0.1)' }}>
+                <div style={{ height: '100%', width: `${yearProgress}%`, background: 'linear-gradient(90deg, #eab308, #f59e0b)', transition: 'width 0.4s ease' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* MY TEAM STANDING */}
+          {myTeamStandings ? (
+            <div
+              className="grand-hero-team"
+              style={{
+                padding: '16px 22px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(234,179,8,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  background: 'linear-gradient(135deg, #eab308, #ca8a04)',
+                  color: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  fontWeight: 900,
+                }}
+              >
+                #{myTeamStandings.rank}
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 800, textTransform: 'uppercase' }}>Đội của bạn</div>
+                <div style={{ fontSize: 16, fontWeight: 900 }}>{myTeamStandings.teamName}</div>
+                <div style={{ fontSize: 13, color: '#facc15', fontWeight: 900, marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {myTeamStandings.grandPoints} GP
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2, fontWeight: 700 }}>
+                  {myTeamStandings.seasonWins} Vô địch • {myTeamStandings.podiumCount} Top 3
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: '14px 18px', background: 'rgba(255,255,255,0.04)', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
+              Đội của bạn chưa có điểm Grand Points nào trong năm {grand.year}.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* QUICK STATS */}
+      <div className="grand-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
+        <StatCard icon={Trophy} label="Đội tranh tài" value={standings.length} color="#eab308" />
+        <StatCard icon={Star} label="Cá nhân xếp hạng" value={individualStandings.length} color="#0284c7" />
+        <StatCard icon={Calendar} label="Mùa giải trong năm" value={timeline.length} detail={activeSeasons > 0 ? `${activeSeasons} đang diễn ra` : `${finishedSeasons} đã kết thúc`} color="#16a34a" />
+        <StatCard icon={Tv} label="Kênh YouTube" value={youtubeStandings.length} color="#ef4444" />
+      </div>
+
+      {/* TABS */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <SegmentedControl
+          ariaLabel="Grand Hub Tabs"
+          options={[
+            { key: 'standings', label: `BXH Đội (${standings.length})` },
+            { key: 'individual', label: `BXH Cá Nhân (${individualStandings.length})` },
+            { key: 'youtube', label: `YouTube (${youtubeStandings.length})` },
+            { key: 'timeline', label: `Dòng Thời Gian (${timeline.length})` },
+            { key: 'journey', label: 'Hành Trình Đội' },
+            { key: 'milestones', label: 'Vinh Danh' },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+
+        <Button variant="secondary" size="sm" onClick={fetchGrandData} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <RefreshCw size={13} /> Cập nhật
+        </Button>
+      </div>
+
+      <TabTransition key={activeTab} minHeight={420}>
+        {/* TAB: TEAM STANDINGS (preview) */}
+        {activeTab === 'standings' && (
+          <Section
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Trophy size={18} color="#eab308" /> Bảng Tổng Sắp Đội Nhóm Năm {grand.year}</span>}
+            description="Xếp theo: Điểm tích lũy GP → Số lần Vô địch mùa giải → Top 3"
+            actions={
+              grand?.id && (
+                <Link
+                  to={`/rankings?scope=grand&grandId=${grand.id}&ranking=team`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '7px 14px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Xem toàn bộ BXH Grand <ExternalLink size={12} />
+                </Link>
+              )
+            }
+          >
+            {standings.length === 0 ? (
+              <EmptyState title="Chưa có điểm Grand Points" description="Các đội sẽ nhận Grand Points sau khi các Season trong năm được kết thúc." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {standings.map((team) => {
+                  const isTop1 = team.rank === 1;
+                  const isMyTeam = user?.teamId && Number(team.teamId) === Number(user.teamId);
+                  return (
+                    <div
+                      key={team.teamId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 16px',
+                        background: isMyTeam ? 'rgba(56,189,248,0.06)' : isTop1 ? 'rgba(234,179,8,0.05)' : '#ffffff',
+                        border: isMyTeam ? '1.5px solid rgba(56,189,248,0.35)' : isTop1 ? '1.5px solid rgba(234,179,8,0.25)' : '1px solid var(--border)',
+                        gap: 12,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            background: isTop1 ? '#eab308' : team.rank === 2 ? '#94a3b8' : team.rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)',
+                            color: team.rank <= 3 ? '#ffffff' : '#475569',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 13,
+                            fontWeight: 900,
+                            flexShrink: 0,
+                          }}
+                        >
+                          #{team.rank}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
+                            {isMyTeam && (
+                              <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#38bdf8', color: '#fff', textTransform: 'uppercase' }}>
+                                Đội của bạn
+                              </span>
+                            )}
+                            {isTop1 && (
+                              <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#eab308', color: '#000', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Crown size={10} /> Dẫn đầu năm
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                            {team.seasonWins} Vô địch • {team.podiumCount} Top 3 • {team.completedSeasons} giải
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: '#ca8a04', fontFamily: "'JetBrains Mono', monospace" }}>
+                          {team.grandPoints} <span style={{ fontSize: 12, color: '#94a3b8' }}>GP</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 700 }}>
+                          {isTop1 ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#ca8a04' }}>
+                              <Crown size={11} color="#ca8a04" /> Vị trí số 1
+                            </span>
+                          ) : (
+                            `Kém top 1: ${standings[0].grandPoints - team.grandPoints} GP`
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* TAB: INDIVIDUAL GRAND STANDINGS (preview) */}
+        {activeTab === 'individual' && (
+          <Section
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Star size={18} color="#0284c7" /> Bảng Tổng Sắp Cá Nhân Năm {grand.year}</span>}
+            description={`Tổng hợp điểm thi đấu cá nhân từ tất cả các Mùa Giải trong năm ${grand.year}`}
+            actions={
+              grand?.id && (
+                <Link
+                  to={`/rankings?scope=grand&grandId=${grand.id}&ranking=individual`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '7px 14px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Xem toàn bộ BXH <ExternalLink size={12} />
+                </Link>
+              )
+            }
+          >
+            {/* Filters */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: '1 1 200px', display: 'flex', alignItems: 'center' }}>
+                <Search size={14} style={{ position: 'absolute', left: 10, color: '#94a3b8', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  placeholder="Tìm nhân viên..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 32px',
+                    border: '1px solid var(--border-2)',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    outline: 'none',
+                  }}
+                />
+              </div>
+              <select
+                value={selectedTeamFilter}
+                onChange={(e) => setSelectedTeamFilter(e.target.value)}
+                style={{ padding: '8px 12px', border: '1px solid var(--border-2)', fontSize: 13, fontWeight: 700, background: '#fff' }}
+              >
+                <option value="all">Tất cả đội</option>
+                {standings.map((t) => (
+                  <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
+                ))}
+              </select>
+            </div>
+
+            {(() => {
+              const filtered = individualStandings.filter((u) => {
+                if (selectedTeamFilter !== 'all' && String(u.teamId) !== String(selectedTeamFilter)) return false;
+                if (searchQuery.trim()) {
+                  const q = searchQuery.toLowerCase();
+                  return (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+                }
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return <EmptyState title="Không tìm thấy nhân viên" description="Chưa có dữ liệu cá nhân nào được tích lũy trong Grand Championship này." />;
+              }
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {filtered.map((emp) => {
+                    const isTop1 = emp.rank === 1;
+                    const isMe = user && (Number(emp.userId) === Number(user.id) || Number(emp.id) === Number(user.id));
+                    return (
+                      <div
+                        key={emp.userId || emp.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          background: isMe ? 'rgba(56,189,248,0.06)' : isTop1 ? 'rgba(234,179,8,0.05)' : '#ffffff',
+                          border: isMe ? '1.5px solid rgba(56,189,248,0.35)' : isTop1 ? '1.5px solid rgba(234,179,8,0.25)' : '1px solid var(--border)',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: 30,
+                              height: 30,
+                              background: isTop1 ? '#eab308' : emp.rank === 2 ? '#94a3b8' : emp.rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)',
+                              color: emp.rank <= 3 ? '#ffffff' : '#475569',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 13,
+                              fontWeight: 900,
+                              flexShrink: 0,
+                            }}
+                          >
+                            #{emp.rank}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name}</span>
+                              {isMe && (
+                                <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#38bdf8', color: '#fff', textTransform: 'uppercase' }}>
+                                  Bạn
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                              Đội: <strong style={{ color: '#64748b' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 1} mùa giải • {emp.seasonWins || 0} MVP
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 900, color: '#0284c7', fontFamily: "'JetBrains Mono', monospace" }}>
+                            {(emp.grandPoints ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#94a3b8' }}>GP</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 700 }}>
+                            {isTop1 ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#ca8a04' }}>
+                                <Crown size={11} color="#ca8a04" /> Top 1
+                              </span>
+                            ) : (
+                              `Kém top 1: ${((individualStandings[0]?.grandPoints || 0) - (emp.grandPoints || 0)).toLocaleString()} GP`
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </Section>
+        )}
+
+        {/* TAB: YOUTUBE YEARLY PERFORMANCE */}
+        {activeTab === 'youtube' && (
+          <Section
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Tv size={18} color="#ef4444" /> Thành Tích YouTube Toàn Năm {grand.year}</span>}
+            description="Tổng hợp sản lượng lượt xem, người theo dõi và video của các Team"
+            actions={
+              <Button variant="secondary" size="sm" onClick={() => navigate('/youtube')}>
+                Mở YouTube Studio <ChevronRight size={14} />
+              </Button>
+            }
+          >
+            <Notice type="info" icon={Zap}>
+              <strong>Chỉ số kinh doanh độc lập:</strong> Thành tích YouTube thể hiện sức ảnh hưởng truyền thông. Điểm Grand Points chỉ được kết toán thông qua thứ hạng chung cuộc của các Mùa Giải.
+            </Notice>
+
+            <div style={{ marginTop: 16 }}>
+              {youtubeStandings.length === 0 ? (
+                <EmptyState title="Chưa có dữ liệu YouTube" description="Chưa có kênh YouTube nào được liên kết và đồng bộ số liệu." />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {youtubeStandings.map((team, idx) => {
+                    const isMyTeam = myTeamStandings && Number(team.teamId) === Number(myTeamStandings.teamId);
+                    return (
+                      <div
+                        key={team.teamId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          border: isMyTeam ? '1.5px solid rgba(239,68,68,0.35)' : '1px solid var(--border)',
+                          background: idx < 3 ? (idx === 0 ? 'rgba(234,179,8,0.05)' : idx === 1 ? 'rgba(148,163,184,0.06)' : 'rgba(249,115,22,0.05)') : '#ffffff',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              background: idx === 0 ? '#eab308' : idx === 1 ? '#94a3b8' : idx === 2 ? '#f97316' : 'rgba(15,23,42,0.06)',
+                              color: idx < 3 ? '#ffffff' : '#475569',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 900,
+                              fontSize: 13,
+                              flexShrink: 0,
+                            }}
+                          >
+                            #{idx + 1}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
+                              {isMyTeam && (
+                                <span style={{ padding: '2px 6px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }}>
+                                  Đội của bạn
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                              {team.channelsCount} kênh • {team.videosCount} video
+                              {team.topVideoTitle ? ` • Top: ${team.topVideoTitle}` : ''}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 900, color: '#ef4444', fontFamily: "'JetBrains Mono', monospace" }}>
+                            {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#94a3b8' }}>views</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#059669', fontWeight: 700, marginTop: 2 }}>
+                            {(team.totalSubscribers || 0).toLocaleString()} subs • +{team.viewsGrowth30dPct || 0}% 30D
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* TAB: TIMELINE */}
+        {activeTab === 'timeline' && (
+          <Section
+            title="Dòng Thời Gian Mùa Giải"
+            description={`Tất cả Mùa Giải trong khuôn khổ Grand Championship Năm ${grand.year}`}
+            actions={
+              <Button variant="secondary" size="sm" onClick={() => navigate('/arena')}>
+                Vào Đấu Trường <ChevronRight size={14} />
+              </Button>
+            }
+          >
+            {timeline.length === 0 ? (
+              <EmptyState title="Chưa có mùa giải nào" description="Chưa có mùa giải nào được liên kết vào Grand Championship này." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {timeline.map((s) => {
+                  const isFinished = s.status === 'FINISHED';
+                  const isActive = s.status === 'ACTIVE';
+                  return (
+                    <div
+                      key={s.seasonId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 16,
+                        background: isActive ? 'rgba(34,197,94,0.04)' : isFinished ? 'rgba(15,23,42,0.02)' : '#ffffff',
+                        border: isActive ? '1.5px solid rgba(34,197,94,0.25)' : '1px solid var(--border)',
+                        flexWrap: 'wrap',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 900,
+                              padding: '2px 6px',
+                              background: isActive ? '#22c55e' : isFinished ? '#64748b' : '#38bdf8',
+                              color: '#fff',
+                              textTransform: 'uppercase',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            {isActive ? (
+                              <><Flame size={9} color="#fff" /> Đang diễn ra</>
+                            ) : isFinished ? (
+                              <><CheckCircle2 size={9} color="#fff" /> Đã kết thúc</>
+                            ) : (
+                              <><Clock size={9} color="#fff" /> Sắp diễn ra</>
+                            )}
+                          </span>
+                          <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>{s.seasonType}</span>
+                        </div>
+                        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>{s.name}</h3>
+                        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>
+                          {new Date(s.startAt).toLocaleDateString('vi-VN')} — {new Date(s.endAt).toLocaleDateString('vi-VN')}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                        {s.winner ? (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Đội chiến thắng</div>
+                            <div style={{ fontSize: 14, fontWeight: 900, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <Trophy size={13} color="#16a34a" /> {s.winner.teamName}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Giải thưởng Top 1</div>
+                            <div style={{ fontSize: 14, fontWeight: 900, color: '#ca8a04', fontFamily: "'JetBrains Mono', monospace" }}>
+                              +{(s.grandPointsDistribution?.distribution?.[0]?.points) || 10} GP
+                            </div>
+                          </div>
+                        )}
+
+                        <Button variant="secondary" size="sm" onClick={() => navigate('/arena')}>
+                          Arena
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* TAB: TEAM JOURNEY */}
+        {activeTab === 'journey' && (
+          <Section
+            title={`Hành Trình: ${myTeamStandings?.teamName || 'Đội Của Bạn'}`}
+            description="Lịch sử các giải đấu đã tham gia và điểm Grand Points tích lũy"
+          >
+            {!myTeamJourney || myTeamJourney.history.length === 0 ? (
+              <EmptyState title="Chưa có dữ liệu thi đấu" description="Đội của bạn chưa hoàn thành giải đấu nào trong Grand Championship này." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {myTeamJourney.history.map((h) => (
+                  <div
+                    key={h.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#ffffff',
+                      border: '1px solid var(--border)',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>{h.seasonName}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontWeight: 700 }}>
+                        Hạng #{h.rankPosition} • {h.reason}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#16a34a', fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
+                      +{h.grandPointsAwarded} GP
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* TAB: MILESTONES */}
+        {activeTab === 'milestones' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+            {[
+              { id: 1, title: 'Khởi Đầu Vinh Quang', desc: 'Đạt mốc 25 Grand Points đầu tiên', target: 25, current: myTeamStandings?.grandPoints || 0, icon: Sparkles },
+              { id: 2, title: 'Ứng Cử Viên Vô Địch', desc: 'Vượt mốc 50 Grand Points tích lũy', target: 50, current: myTeamStandings?.grandPoints || 0, icon: Award },
+              { id: 3, title: 'Huyền Thoại Tranh Đấu', desc: 'Đạt 100 Grand Points trong cả năm', target: 100, current: myTeamStandings?.grandPoints || 0, icon: Crown },
+              { id: 4, title: 'Chuỗi Bất Bại', desc: 'Giành Vô địch tại 3 Mùa Giải', target: 3, current: myTeamStandings?.seasonWins || 0, icon: Trophy },
+            ].map((m) => {
+              const isUnlocked = m.current >= m.target;
+              const pct = Math.min(100, Math.round((m.current / m.target) * 100));
+              const Icon = m.icon;
+              return (
+                <Card
+                  key={m.id}
+                  style={{
+                    padding: 20,
+                    background: isUnlocked ? 'rgba(234,179,8,0.05)' : '#ffffff',
+                    border: isUnlocked ? '1.5px solid rgba(234,179,8,0.3)' : '1px solid var(--border)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        background: isUnlocked ? 'rgba(234,179,8,0.12)' : 'rgba(15,23,42,0.05)',
+                        color: isUnlocked ? '#ca8a04' : '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon size={18} />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 900,
+                        padding: '2px 8px',
+                        background: isUnlocked ? 'rgba(34,197,94,0.12)' : 'rgba(15,23,42,0.05)',
+                        color: isUnlocked ? '#16a34a' : '#94a3b8',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {isUnlocked ? 'Đã mở khóa' : `${m.current} / ${m.target}`}
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>{m.title}</h3>
+                  <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 12px 0', lineHeight: 1.4, fontWeight: 650 }}>{m.desc}</p>
+
+                  {/* Progress bar */}
+                  <div style={{ height: 4, width: '100%', background: 'rgba(15,23,42,0.06)' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: isUnlocked ? '#16a34a' : '#38bdf8', transition: 'width 0.3s ease' }} />
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </TabTransition>
+    </PageShell>
+  );
+}

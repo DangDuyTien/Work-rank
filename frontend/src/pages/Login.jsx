@@ -123,7 +123,7 @@ export default function Login() {
     { label: 'Desktop tracker', value: live.online > 0 ? `${fmtNum(live.online)} phiên đang gửi` : 'Chưa có phiên live', ok: live.online > 0 },
     { label: 'Dữ liệu dashboard', value: relativeSyncLabel(live.timestamp), ok: !statsError },
   ];
-  const modeTitle = isRegister ? 'Tạo tài khoản WorkRank' : 'Đăng nhập workspace';
+  const modeTitle = isRegister ? 'Tạo tài khoản 3winmedia' : 'Đăng nhập workspace';
   const SubmitIcon = loading ? Loader2 : isRegister ? UserPlus : ArrowRight;
 
   const switchMode = (nextIsRegister) => {
@@ -159,14 +159,14 @@ export default function Login() {
       <section className="login-shell">
         <div className="login-brand-panel">
           <div className="login-brand-top">
-            <span className="login-logo-block">W</span>
+            <span className="login-logo-block" style={{ fontSize: 13, letterSpacing: -0.5 }}>3W</span>
             <div>
-              <span className="login-kicker">WorkRank Realtime</span>
+              <span className="login-kicker">3winmedia Realtime</span>
               <h1>Workspace tracker</h1>
             </div>
           </div>
 
-          <div className="login-stats" aria-label="Thông số realtime WorkRank">
+          <div className="login-stats" aria-label="Thông số realtime 3winmedia">
             {statItems.map((item) => {
               const Icon = item.icon;
               return (

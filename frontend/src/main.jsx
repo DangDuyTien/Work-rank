@@ -9,6 +9,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Auto-recover from stale chunks on new deployments without crashing
+window.addEventListener('vite:preloadError', (event) => {
+  console.warn('Stale chunk detected or network drop, reloading latest bundle...', event);
+  window.location.reload();
+});
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

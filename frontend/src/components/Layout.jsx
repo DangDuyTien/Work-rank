@@ -1,285 +1,37 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, BadgeCheck, Bell, Coffee, HelpCircle, LogOut, Monitor, Play, Settings, Shield, Square, Timer, Trophy } from 'lucide-react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Bell, HelpCircle, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTracking } from '../context/TrackingContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName, removeStoredAvatar } from '../utils/avatar';
 import { getAppSettings, shouldStoreNotification, subscribeAppSettings } from '../utils/settings';
-import { playPomodoroChime, sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
+import { sendBrowserNotification, vibrateDevice, requestNotificationPermission } from '../utils/notifications';
 import BrandMark from './BrandMark';
 import FriendsDock from './FriendsDock';
 import ProductTour, { PRODUCT_TOUR_EVENT } from './ProductTour';
 import VerifiedBadge from './VerifiedBadge';
-
-const NAV_LINKS = [
-  { to: '/dashboard', label: 'Bảng Điều Khiển', shortLabel: 'Tổng quan', icon: Activity },
-  { to: '/tracker', label: 'Theo Dõi', shortLabel: 'Tracker', icon: Monitor },
-  { to: '/leaderboard', label: 'Xếp Hạng', shortLabel: 'Xếp hạng', icon: Trophy },
-  { to: '/pomodoro', label: 'Pomodoro', shortLabel: 'Pomodoro', icon: Timer },
-  { to: '/security', label: 'Bảo Mật', shortLabel: 'Bảo mật', icon: Shield, adminOnly: true },
-  { to: '/admin/privileges', label: 'Đặc Quyền', shortLabel: 'Đặc quyền', icon: BadgeCheck, adminOnly: true },
-];
-
-const NAV_TOUR_TARGETS = {
-  '/dashboard': 'nav-dashboard',
-  '/leaderboard': 'nav-leaderboard',
-  '/tracker': 'nav-tracker',
-  '/pomodoro': 'nav-pomodoro',
-};
+import Sidebar from './Sidebar';
+import { PageTransition, PageTransitionSkeleton } from './ui';
 
 const PAGE_TITLES = {
-  '/dashboard': 'WorkRank Realtime',
-  '/leaderboard': 'WorkRank Realtime',
-  '/friends': 'Bạn Bè',
-  '/tracker': 'Theo Dõi & Hiệu Suất',
-  '/pomodoro': 'Pomodoro Timer',
-  '/security': 'Bảo Mật & Chống Gian Lận',
-  '/admin/privileges': 'Quản Lý Đặc Quyền',
-  '/settings': 'Cài Đặt',
+  '/dashboard': 'Bảng Điều Khiển Tổng Quan',
+  '/arena': 'Đấu Trường Mùa Giải',
+  '/grand': 'Giải Vô Địch Toàn Năm',
+  '/leaderboard': 'Trung Tâm Bảng Xếp Hạng',
+  '/rankings': 'Trung Tâm Bảng Xếp Hạng',
+  '/friends': 'Bạn Bè & Đội Nhóm',
+  '/youtube': 'Số Liệu YouTube & Đội Nhóm',
+  '/games': 'Trò Chơi Cờ Tỷ Phú',
+  '/games/capital-board': 'Trò Chơi Cờ Tỷ Phú',
+  '/admin/privileges': 'Quản Lý Nhân Sự & Đặc Quyền',
+  '/admin/teams-youtube': 'Quản Lý Đội Nhóm & Kênh YouTube',
+  '/admin/competition/seasons': 'Quản Lý Mùa Giải Thi Đua',
+  '/admin/competition/grand': 'Quản Lý Giải Vô Địch Năm',
+  '/admin/operations': 'Giám Sát & Nhật Ký Kiểm Toán',
+  '/settings': 'Cài Đặt Hệ Thống',
 };
 
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
 const NOTIFICATIONS_CLEARED_EVENT = 'workrank:notifications-cleared';
-const POMODORO_STORAGE_KEY = 'workrank:pomodoro-state';
-const POMODORO_HISTORY_KEY = 'workrank:pomodoro-history';
-const POMODORO_SYNC_EVENT = 'workrank:pomodoro-sync';
-const POMODORO_COMPLETION_LOCK_KEY = 'workrank:pomodoro-completion-lock';
-const POMODORO_TASK_COMPLETION_LOCK_KEY = 'workrank:pomodoro-task-completion-lock';
-const POMODORO_TASKS_KEY = 'workrank:pomodoro-tasks';
-const POMODORO_ACTIVE_TASK_KEY = 'workrank:pomodoro-active-task';
-const POMODORO_HISTORY_MAX = 300;
-const ACTION_MILESTONES = [500, 1000, 2500, 5000, 10000, 25000, 50000];
-
-const POMODORO_PRESETS = {
-  classic: { key: 'classic', focusSeconds: 25 * 60, shortBreakSeconds: 5 * 60, longBreakSeconds: 15 * 60 },
-  deep: { key: 'deep', focusSeconds: 50 * 60, shortBreakSeconds: 10 * 60, longBreakSeconds: 25 * 60 },
-  sprint: { key: 'sprint', focusSeconds: 15 * 60, shortBreakSeconds: 3 * 60, longBreakSeconds: 10 * 60 },
-};
-
-const POMODORO_MODE_LABELS = {
-  focus: 'Tập trung',
-  shortBreak: 'Nghỉ ngắn',
-  longBreak: 'Nghỉ dài',
-};
-
-function getPomodoroPreset(key) {
-  return POMODORO_PRESETS[key] || POMODORO_PRESETS.classic;
-}
-
-function getPomodoroModeSeconds(preset, mode) {
-  if (mode === 'longBreak') return preset.longBreakSeconds;
-  if (mode === 'shortBreak') return preset.shortBreakSeconds;
-  return preset.focusSeconds;
-}
-
-function pomodoroCompletionKey(state) {
-  return [
-    state.presetKey || 'classic',
-    state.mode || 'focus',
-    state.endsAt || 'manual',
-    Math.max(0, Number(state.completedFocusCount || 0)),
-  ].join(':');
-}
-
-function reservePomodoroCompletion(state) {
-  try {
-    const key = pomodoroCompletionKey(state);
-    const existing = JSON.parse(localStorage.getItem(POMODORO_COMPLETION_LOCK_KEY) || '{}');
-    if (existing.key === key) return false;
-    localStorage.setItem(POMODORO_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
-    return true;
-  } catch {
-    return true;
-  }
-}
-
-function reservePomodoroTaskCompletion(state) {
-  try {
-    const key = pomodoroCompletionKey(state);
-    const existing = JSON.parse(localStorage.getItem(POMODORO_TASK_COMPLETION_LOCK_KEY) || '{}');
-    if (existing.key === key) return false;
-    localStorage.setItem(POMODORO_TASK_COMPLETION_LOCK_KEY, JSON.stringify({ key, at: Date.now() }));
-    return true;
-  } catch {
-    return true;
-  }
-}
-
-function savePomodoroHistoryEntry(entry) {
-  try {
-    const history = JSON.parse(localStorage.getItem(POMODORO_HISTORY_KEY) || '[]');
-    if (!Array.isArray(history)) return;
-    history.push(entry);
-    if (history.length > POMODORO_HISTORY_MAX) history.splice(0, history.length - POMODORO_HISTORY_MAX);
-    localStorage.setItem(POMODORO_HISTORY_KEY, JSON.stringify(history));
-  } catch {}
-}
-
-function completeActivePomodoroTask(state, completedAt = Date.now()) {
-  try {
-    if (!reservePomodoroTaskCompletion(state)) return;
-    const activeTaskId = localStorage.getItem(POMODORO_ACTIVE_TASK_KEY);
-    if (!activeTaskId) return;
-    const tasks = JSON.parse(localStorage.getItem(POMODORO_TASKS_KEY) || '[]');
-    if (!Array.isArray(tasks)) return;
-    const nextTasks = tasks.map((task) => {
-      if (!task || task.id !== activeTaskId || task.completed) return task;
-      const sessions = Math.min(999, Number(task.sessions || 0) + 1);
-      const estimate = Math.max(1, Number(task.estimate || 1));
-      return {
-        ...task,
-        sessions,
-        completed: sessions >= estimate,
-        completedAt: sessions >= estimate ? completedAt : task.completedAt,
-      };
-    });
-    localStorage.setItem(POMODORO_TASKS_KEY, JSON.stringify(nextTasks));
-  } catch {}
-}
-
-function writePomodoroState(state) {
-  localStorage.setItem(POMODORO_STORAGE_KEY, JSON.stringify(state));
-  window.dispatchEvent(new CustomEvent(POMODORO_SYNC_EVENT, { detail: state }));
-}
-
-function completeStoredPomodoroStep(state, now = Date.now()) {
-  const preset = getPomodoroPreset(state.presetKey);
-  const mode = POMODORO_MODE_LABELS[state.mode] ? state.mode : 'focus';
-  const shouldNotify = reservePomodoroCompletion(state);
-  const completedFocusCount = mode === 'focus'
-    ? Number(state.completedFocusCount || 0) + 1
-    : Number(state.completedFocusCount || 0);
-  const nextMode = mode === 'focus'
-    ? (completedFocusCount % 4 === 0 ? 'longBreak' : 'shortBreak')
-    : 'focus';
-  const totalSeconds = getPomodoroModeSeconds(preset, mode);
-  const elapsedSeconds = totalSeconds - Math.max(0, Number(state.remainingSeconds || 0));
-  const nextSeconds = getPomodoroModeSeconds(preset, nextMode);
-
-  if (shouldNotify && elapsedSeconds >= 10) {
-    savePomodoroHistoryEntry({
-      at: now,
-      mode,
-      elapsed: elapsedSeconds,
-      total: totalSeconds,
-      preset: preset.key,
-    });
-    if (mode === 'focus') completeActivePomodoroTask(state, now);
-  }
-
-  const nextState = {
-    ...state,
-    presetKey: preset.key,
-    mode: nextMode,
-    remainingSeconds: nextSeconds,
-    running: true,
-    completedFocusCount,
-    completedAt: now,
-    startedOnce: true,
-    endsAt: now + nextSeconds * 1000,
-    notified: true,
-  };
-
-  writePomodoroState(nextState);
-
-  if (shouldNotify) {
-    const nextModeLabel = POMODORO_MODE_LABELS[nextMode] || 'phiên tiếp theo';
-    window.dispatchEvent(new CustomEvent(WORKRANK_NOTIFICATION_EVENT, {
-      detail: {
-        type: 'pomodoro',
-        title: mode === 'focus' ? 'Hết phiên tập trung' : 'Hết giờ nghỉ',
-        message: mode === 'focus'
-          ? `Đến giờ ${nextModeLabel.toLowerCase()}. Pomodoro đang tự chạy phiên tiếp theo.`
-          : 'Pomodoro đang tự quay lại phiên tập trung tiếp theo.',
-        actionTo: '/pomodoro',
-        actionLabel: 'Mở Pomodoro',
-        playSound: true,
-        vibrate: true,
-      },
-    }));
-  }
-
-  return { state: nextState, changed: true, completed: true };
-}
-
-function reconcileStoredPomodoroState({ updateRunningState = true, completeExpired = true } = {}) {
-  try {
-    const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed?.running) return { state: parsed, changed: false, completed: false };
-
-    const preset = getPomodoroPreset(parsed.presetKey);
-    const mode = POMODORO_MODE_LABELS[parsed.mode] ? parsed.mode : 'focus';
-    const fallbackRemaining = getPomodoroModeSeconds(preset, mode);
-    let endsAt = Number(parsed.endsAt || 0);
-    let changed = false;
-
-    if (!endsAt) {
-      const remaining = Math.max(1, Number(parsed.remainingSeconds || fallbackRemaining));
-      endsAt = Date.now() + remaining * 1000;
-      parsed.endsAt = endsAt;
-      changed = true;
-    }
-
-    const remainingSeconds = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-    if (remainingSeconds <= 0) {
-      if (!completeExpired) return { state: parsed, changed: false, completed: false };
-      return completeStoredPomodoroStep({
-        ...parsed,
-        presetKey: preset.key,
-        mode,
-        remainingSeconds: 0,
-      });
-    }
-
-    if (!updateRunningState) return { state: parsed, changed: false, completed: false };
-
-    if (
-      changed
-      || Number(parsed.remainingSeconds || 0) !== remainingSeconds
-      || parsed.presetKey !== preset.key
-      || parsed.mode !== mode
-    ) {
-      const nextState = {
-        ...parsed,
-        presetKey: preset.key,
-        mode,
-        remainingSeconds,
-        endsAt,
-        completedAt: 0,
-        notified: false,
-      };
-      writePomodoroState(nextState);
-      return { state: nextState, changed: true, completed: false };
-    }
-
-    return { state: parsed, changed: false, completed: false };
-  } catch {
-    return null;
-  }
-}
-
-function pomodoroSocketPayload(state = {}) {
-  const preset = getPomodoroPreset(state.presetKey);
-  const mode = POMODORO_MODE_LABELS[state.mode] ? state.mode : 'focus';
-  const totalSeconds = getPomodoroModeSeconds(preset, mode);
-  const completedFocusCount = Math.max(0, Number(state.completedFocusCount || 0));
-  const cycle = mode === 'longBreak'
-    ? 4
-    : Math.max(1, Math.min(4, (completedFocusCount % 4) + 1));
-  return {
-    presetKey: preset.key,
-    mode,
-    label: POMODORO_MODE_LABELS[mode],
-    remainingSeconds: Math.max(0, Number(state.remainingSeconds || 0)),
-    totalSeconds,
-    running: Boolean(state.running),
-    endsAt: state.endsAt || null,
-    completedFocusCount,
-    cycle,
-  };
-}
 
 function notificationStorageKey(userId) {
   return `workrank:notifications:${userId || 'guest'}`;
@@ -298,13 +50,6 @@ function persistNotifications(userId, notifications) {
   localStorage.setItem(notificationStorageKey(userId), JSON.stringify(notifications));
 }
 
-function localDateKey(value = new Date()) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function formatNotificationTime(value) {
   const date = value ? new Date(value) : new Date();
   const now = Date.now();
@@ -316,9 +61,9 @@ function formatNotificationTime(value) {
 }
 
 function notificationTone(type) {
-  if (type === 'warning' || type === 'security') return { dot: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
+  if (type === 'warning') return { dot: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
   if (type === 'danger') return { dot: '#dc2626', bg: 'rgba(220,38,38,0.08)' };
-  if (type === 'success' || type === 'pomodoro') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
+  if (type === 'success') return { dot: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
   return { dot: '#38bdf8', bg: 'rgba(56,189,248,0.08)' };
 }
 
@@ -331,20 +76,15 @@ function isVerifiedAccount(user) {
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, socket, logout } = useAuth();
-  const { tracking, trackingPending, seconds, formatTime, startTrack, stopTrack } = useTracking();
+  const { user, isAdmin, logout } = useAuth();
 
-  const [pageVisible, setPageVisible] = useState(true);
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [donateOpen, setDonateOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [securityAlert, setSecurityAlert] = useState(null);
   const [accountAvatarUrl, setAccountAvatarUrl] = useState('');
   const [appSettings, setAppSettings] = useState(getAppSettings);
   const dropRef = useRef(null);
   const notificationRef = useRef(null);
-  const pomodoroEmitRef = useRef(0);
 
   const addNotification = useCallback((item) => {
     if (!user?.id) return;
@@ -395,12 +135,6 @@ export default function Layout() {
   }, [user?.id]);
 
   useEffect(() => {
-    setPageVisible(false);
-    const t = window.setTimeout(() => setPageVisible(true), 80);
-    return () => window.clearTimeout(t);
-  }, [location.pathname]);
-
-  useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
       if (notificationRef.current && !notificationRef.current.contains(e.target)) setNotifOpen(false);
@@ -425,57 +159,6 @@ export default function Layout() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!socket) return undefined;
-    let timer = null;
-    const handler = (payload) => {
-      const isOwnAlert = String(payload?.userId || payload?.user_id || '') === String(user?.id || '')
-        || (payload?.email && String(payload.email).toLowerCase() === String(user?.email || '').toLowerCase());
-      if (!isAdmin && !isOwnAlert) return;
-      if (!appSettings.notifications?.security) return;
-
-      setSecurityAlert(payload);
-      addNotification({
-        type: isAdmin ? 'security' : 'danger',
-        title: isAdmin ? 'Thiết bị bị khóa' : 'Tracker của bạn bị khóa',
-        message: `${payload.deviceName || payload.deviceUuid || 'Thiết bị'} có ${payload.flaggedEventsInWindow || 0} event nghi vấn cao trong ${payload.windowMinutes || 0} phút.`,
-        actionTo: isAdmin ? '/security' : '/tracker',
-        actionLabel: isAdmin ? 'Xem bảo mật' : 'Xem tracker',
-        dedupeKey: `security:${payload.deviceId || payload.deviceUuid || payload.email || Date.now()}:${payload.createdAt || payload.windowStartedAt || localDateKey()}`,
-      });
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => setSecurityAlert(null), 12000);
-    };
-    socket.on('security:device:quarantined', handler);
-    return () => {
-      if (timer) clearTimeout(timer);
-      socket.off('security:device:quarantined', handler);
-    };
-  }, [addNotification, appSettings.notifications?.security, isAdmin, socket, user?.email, user?.id]);
-
-  useEffect(() => {
-    if (!socket || !user?.id) return undefined;
-    const handleActivity = (data = {}) => {
-      const userId = String(data.userId || data.user_id || '');
-      if (userId !== String(user.id)) return;
-      const totals = data.totals || data;
-      const actions = Number(totals.keystrokeCount || totals.keystrokes || 0)
-        + Number(totals.mouseClickCount || totals.clicks || 0);
-      const milestone = [...ACTION_MILESTONES].reverse().find((value) => actions >= value);
-      if (!milestone) return;
-      addNotification({
-        type: 'success',
-        title: `Đạt ${milestone.toLocaleString()} thao tác`,
-        message: `Bạn đã đạt mốc ${milestone.toLocaleString()} thao tác hôm nay. Tiếp tục giữ nhịp để tăng hạng.`,
-        actionTo: `/users/${user.id}`,
-        actionLabel: 'Xem hồ sơ',
-        dedupeKey: `activity:${user.id}:${localDateKey()}:${milestone}`,
-      });
-    };
-    socket.on('activity:user:update', handleActivity);
-    return () => socket.off('activity:user:update', handleActivity);
-  }, [addNotification, socket, user?.id]);
-
-  useEffect(() => {
     const handler = (event) => {
       const detail = event.detail || {};
       const allowed = shouldStoreNotification(detail.type || 'info', appSettings);
@@ -484,7 +167,7 @@ export default function Layout() {
         if (document.hidden && ('Notification' in window)) {
           requestNotificationPermission().then((permission) => {
             if (permission === 'granted') {
-              sendBrowserNotification(detail.title || 'WorkRank', {
+              sendBrowserNotification(detail.title || '3winmedia', {
                 body: detail.message || '',
                 tag: detail.dedupeKey || `notif-${Date.now()}`,
                 data: { url: detail.actionTo || '/' },
@@ -493,117 +176,10 @@ export default function Layout() {
           });
         }
       }
-      if (detail.type === 'pomodoro') {
-        if (detail.playSound && appSettings.notifications?.sound) {
-          playPomodoroChime(appSettings.pomodoro?.volume ?? 0.12);
-        }
-        if (detail.vibrate !== false) vibrateDevice([180]);
-      }
     };
     window.addEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
     return () => window.removeEventListener(WORKRANK_NOTIFICATION_EVENT, handler);
   }, [addNotification, appSettings]);
-
-  useEffect(() => {
-    const DEFAULT_TITLE = 'WorkRank Realtime';
-    const blob = new Blob([`self.onmessage=()=>setInterval(()=>postMessage(1),1000)`], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
-    let worker = null;
-    try { worker = new Worker(url); } catch {}
-    URL.revokeObjectURL(url);
-    if (!worker) {
-      const fallbackInterval = window.setInterval(() => {
-        try {
-          const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-          if (!raw) { document.title = DEFAULT_TITLE; return; }
-          const parsed = JSON.parse(raw);
-          if (!parsed.running) { document.title = DEFAULT_TITLE; return; }
-          const endsAt = Number(parsed.endsAt || 0);
-          if (!endsAt) return;
-          const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-          if (rem <= 0) { document.title = DEFAULT_TITLE; return; }
-          const m = String(Math.floor(rem / 60)).padStart(2, '0');
-          const s = String(rem % 60).padStart(2, '0');
-          if (document.title !== m + ':' + s + ' · Pomodoro') document.title = m + ':' + s + ' · Pomodoro';
-        } catch {}
-      }, 1000);
-      return () => { window.clearInterval(fallbackInterval); document.title = DEFAULT_TITLE; };
-    }
-    let prevRunning = false;
-    worker.onmessage = () => {
-      try {
-        const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
-        if (!raw) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; return; }
-        const parsed = JSON.parse(raw);
-        const running = Boolean(parsed.running);
-        if (!running) { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; return; }
-        prevRunning = true;
-        const endsAt = Number(parsed.endsAt || 0);
-        if (!endsAt) { document.title = DEFAULT_TITLE; return; }
-        const rem = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-        if (rem <= 0) { document.title = DEFAULT_TITLE; return; }
-        const m = String(Math.floor(rem / 60)).padStart(2, '0');
-        const s = String(rem % 60).padStart(2, '0');
-        document.title = m + ':' + s + ' · Pomodoro';
-      } catch { if (prevRunning) { document.title = DEFAULT_TITLE; } prevRunning = false; }
-    };
-    worker.postMessage(null);
-    return () => { worker.terminate(); document.title = DEFAULT_TITLE; };
-  }, []);
-
-  useEffect(() => {
-    const emitPomodoroState = (state, force = false) => {
-      if (!socket || !state) return;
-      const now = Date.now();
-      if (!force && now - pomodoroEmitRef.current < 5000) return;
-      pomodoroEmitRef.current = now;
-      socket.emit('pomodoro:state', pomodoroSocketPayload(state));
-    };
-
-    const tickPomodoro = (forceEmit = false) => {
-      const shouldOwnTick = location.pathname !== '/pomodoro' || document.hidden;
-      const result = reconcileStoredPomodoroState({
-        updateRunningState: shouldOwnTick,
-        completeExpired: shouldOwnTick,
-      });
-      if (!result?.state) return;
-      emitPomodoroState(result.state, forceEmit || result.completed);
-    };
-
-    const handleWake = () => tickPomodoro(true);
-    const handleStorage = (event) => {
-      if (event.key === POMODORO_STORAGE_KEY) tickPomodoro(true);
-    };
-
-    tickPomodoro(true);
-    const interval = window.setInterval(() => tickPomodoro(false), 1000);
-    window.addEventListener('focus', handleWake);
-    window.addEventListener('pageshow', handleWake);
-    window.addEventListener('storage', handleStorage);
-    document.addEventListener('visibilitychange', handleWake);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('focus', handleWake);
-      window.removeEventListener('pageshow', handleWake);
-      window.removeEventListener('storage', handleStorage);
-      document.removeEventListener('visibilitychange', handleWake);
-    };
-  }, [location.pathname, socket]);
-
-  useEffect(() => {
-    if (!user?.id || tracking || trackingPending || location.pathname === '/tracker' || !appSettings.notifications?.trackerIdle) return undefined;
-    const timer = window.setTimeout(() => {
-      addNotification({
-        type: 'warning',
-        title: 'Tracker chưa chạy',
-        message: 'Bạn đang mở WorkRank nhưng Desktop Tracker chưa ghi nhận phiên làm việc.',
-        actionTo: '/tracker',
-        actionLabel: 'Mở tracker',
-        dedupeKey: `tracker-idle:${user.id}:${localDateKey()}`,
-      });
-    }, 90000);
-    return () => window.clearTimeout(timer);
-  }, [addNotification, appSettings.notifications?.trackerIdle, location.pathname, tracking, trackingPending, user?.id]);
 
   useEffect(() => {
     const userId = user?.id;
@@ -617,699 +193,495 @@ export default function Layout() {
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, handler);
   }, [user]);
 
-  const pageTitle = PAGE_TITLES[location.pathname] || 'WorkRank Realtime';
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileDrawerOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileDrawerOpen) {
+        setMobileDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileDrawerOpen]);
+
+  const pageTitle = PAGE_TITLES[location.pathname]
+    || (location.pathname.startsWith('/users') ? 'Hồ Sơ Cá Nhân' : (location.pathname.startsWith('/games') ? 'Trò Chơi Cờ Tỷ Phú' : '3winmedia Realtime'));
   const accountInitials = initialsFromName(user?.name || user?.email || '??');
   const accountVerified = isVerifiedAccount(user);
-  const visibleNavLinks = NAV_LINKS.filter((link) => !link.adminOnly || isAdmin);
-
-  const goToNav = useCallback((event, to) => {
-    event.preventDefault();
-    event.stopPropagation();
-    navigate(to);
-  }, [navigate]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      background: '#f8fafc',
-      color: '#0f172a',
-      fontFamily: "'JetBrains Mono', monospace",
-      overflow: 'hidden',
-    }}>
-      <style>{`
-        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
-        @keyframes slide-down { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-        .top-nav-scroll::-webkit-scrollbar { display: none; }
-      `}</style>
+    <div
+      className="workrank-app-shell"
+      style={{
+        display: 'flex',
+        height: '100vh',
+        width: '100vw',
+        background: '#f8fafc',
+        color: '#0f172a',
+        fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
+        overflow: 'hidden',
+      }}
+    >
+      {/* Desktop Fixed Sidebar */}
+      <aside className="workrank-desktop-sidebar">
+        <Sidebar user={user} isAdmin={isAdmin} />
+      </aside>
 
-      {securityAlert && (
-        <div style={{
-          position: 'fixed',
-          top: 64,
-          right: 24,
-          width: 360,
-          maxWidth: 'calc(100vw - 48px)',
-          zIndex: 500,
-          background: '#ffffff',
-          border: '1px solid rgba(220,38,38,0.28)',
-          borderLeft: '4px solid #dc2626',
-          borderRadius: 0,
-          boxShadow: 'none',
-          padding: '14px 16px',
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#991b1b', marginBottom: 4 }}>
-            {isAdmin ? 'Đã tự khóa thiết bị nghi vấn' : 'Desktop Tracker bị khóa'}
-          </div>
-          <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.45 }}>
-            {securityAlert.deviceName || securityAlert.deviceUuid || 'Thiết bị'} của {securityAlert.email || securityAlert.name || 'người dùng'} có {securityAlert.flaggedEventsInWindow} event nghi vấn cao trong {securityAlert.windowMinutes} phút.
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate(isAdmin ? '/security' : '/tracker')}
+      {/* Mobile Off-Canvas Navigation Drawer */}
+      {mobileDrawerOpen && (
+        <div
+          className="workrank-mobile-drawer-overlay modal-backdrop-enter"
+          onClick={() => setMobileDrawerOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15,23,42,0.45)',
+            backdropFilter: 'blur(2px)',
+            zIndex: 300,
+            display: 'flex',
+          }}
+        >
+          <aside
+            className="workrank-mobile-drawer drawer-slide-enter"
+            onClick={(e) => e.stopPropagation()}
             style={{
-              marginTop: 10,
-              border: '1px solid rgba(220,38,38,0.22)',
-              background: 'rgba(220,38,38,0.06)',
-              color: '#b91c1c',
-              borderRadius: 0,
-              padding: '6px 10px',
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: 'pointer',
+              width: 280,
+              maxWidth: '85vw',
+              height: '100%',
+              background: '#ffffff',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              zIndex: 301,
             }}
           >
-            {isAdmin ? 'Xem Bảo Mật' : 'Xem Tracker'}
-          </button>
+            <div
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                zIndex: 10,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                aria-label="Đóng menu"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 6,
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  background: '#f8fafc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <Sidebar
+              user={user}
+              isAdmin={isAdmin}
+              onNavigate={() => setMobileDrawerOpen(false)}
+              isMobile
+            />
+          </aside>
         </div>
       )}
 
-      <header
-        className="app-header"
-        style={{
-          height: 52,
-          flexShrink: 0,
-          background: '#ffffff',
-          borderBottom: '1px solid rgba(15,23,42,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          gap: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: 24, flexShrink: 0 }}>
-          <BrandMark
-            size={28}
-            showLabel
-            labelStyle={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.3px' }}
-          />
-        </div>
-
-        <div
-          className="app-header-title"
+      {/* Main Content & Header Column */}
+      <div className="workrank-main-shell">
+        <header
+          className="app-header"
           style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: '#38bdf8',
-            marginRight: 24,
-            letterSpacing: '-0.2px',
+            height: 56,
             flexShrink: 0,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 170,
-          }}
-        >
-          {pageTitle}
-        </div>
-
-        <nav
-          data-tour="app-nav"
-          className="top-nav-scroll app-desktop-nav"
-          style={{
+            background: '#ffffff',
+            borderBottom: '1px solid rgba(15,23,42,0.08)',
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
-            flex: 1,
-            minWidth: 0,
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            scrollbarWidth: 'none',
-            whiteSpace: 'nowrap',
+            justifyContent: 'space-between',
+            padding: '0 24px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
           }}
         >
-          {visibleNavLinks.map(({ to, label }) => {
-            const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
-            return (
-              <NavLink
-                key={to}
-                data-tour={NAV_TOUR_TARGETS[to]}
-                to={to}
-                title={label}
-                aria-label={label}
-                onClick={(event) => goToNav(event, to)}
+          {/* Left: Mobile Menu Toggle Button + Page Title Breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <button
+              type="button"
+              className="mobile-menu-toggle"
+              onClick={() => setMobileDrawerOpen(true)}
+              aria-label="Mở menu điều hướng"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 6,
+                border: '1px solid rgba(15,23,42,0.1)',
+                background: '#f8fafc',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#0f172a',
+                flexShrink: 0,
+              }}
+            >
+              <Menu size={18} />
+            </button>
+
+            <div className="mobile-brand-mark">
+              <BrandMark size={24} showLabel={false} />
+            </div>
+
+            <div
+              className="app-header-title"
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: '#0f172a',
+                letterSpacing: '-0.2px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {pageTitle}
+            </div>
+          </div>
+
+          <div data-tour="quick-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
+            <div ref={notificationRef} style={{ position: 'relative' }}>
+              <button
+                data-tour="notifications"
+                type="button"
+                className="app-icon-action"
+                aria-label="Thông báo"
+                onClick={() => {
+                  const nextOpen = !notifOpen;
+                  setNotifOpen(nextOpen);
+                  if (nextOpen) markNotificationsRead();
+                }}
                 style={{
-                  padding: '6px 14px',
-                  minWidth: to === '/friends' ? 74 : 'auto',
-                  fontSize: 13,
-                  fontWeight: active ? 700 : 500,
-                  color: active ? '#38bdf8' : '#64748b',
-                  textDecoration: 'none',
-                  borderRadius: 0,
-                  background: active ? 'rgba(56,189,248,0.08)' : 'transparent',
-                  border: '1px solid transparent',
                   position: 'relative',
-                  display: 'inline-flex',
+                  width: 34,
+                  height: 34,
+                  display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flex: '0 0 auto',
-                  whiteSpace: 'nowrap',
-                  lineHeight: 1,
-                  zIndex: active ? 2 : 1,
-                  transition: 'all 0.15s ease',
+                  background: notifOpen ? 'rgba(56,189,248,0.08)' : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: notifOpen ? '#38bdf8' : '#64748b',
+                  borderRadius: 0,
                 }}
               >
-                {label}
-              </NavLink>
-            );
-          })}
-          <NavLink
-            data-tour="profile"
-            to={`/users/${user?.id || 1}`}
-            style={{
-              padding: '6px 14px',
-              fontSize: 13,
-              fontWeight: location.pathname.startsWith('/users') ? 700 : 500,
-              color: location.pathname.startsWith('/users') ? '#38bdf8' : '#64748b',
-              textDecoration: 'none',
-              borderRadius: 0,
-              background: location.pathname.startsWith('/users') ? 'rgba(56,189,248,0.08)' : 'transparent',
-              border: '1px solid transparent',
-              display: 'inline-flex',
-              alignItems: 'center',
-              flex: '0 0 auto',
-              whiteSpace: 'nowrap',
-              lineHeight: 1,
-              position: 'relative',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Hồ Sơ Cá Nhân
-          </NavLink>
-        </nav>
+                <Bell size={17} />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: 4,
+                    right: 4,
+                    minWidth: 15,
+                    height: 15,
+                    padding: '0 4px',
+                    borderRadius: 0,
+                    background: '#ef4444',
+                    color: '#ffffff',
+                    border: '2px solid #ffffff',
+                    fontSize: 9,
+                    fontWeight: 900,
+                    lineHeight: '11px',
+                    textAlign: 'center',
+                  }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
 
-        <div data-tour="quick-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
-          {tracking && (
-            <button
-              type="button"
-              className="app-tracking-timer"
-              onClick={() => navigate('/tracker')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '5px 12px',
-                borderRadius: 0,
-                background: 'rgba(34,197,94,0.1)',
-                border: '1px solid rgba(34,197,94,0.3)',
-                cursor: 'pointer',
-                marginRight: 6,
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', animation: 'pulse-dot 1.5s infinite' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e', fontFamily: "'JetBrains Mono',monospace" }}>
-                {formatTime(seconds)}
-              </span>
-            </button>
-          )}
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: -42,
+                  width: 340,
+                  maxWidth: 'calc(100vw - 24px)',
+                  background: '#ffffff',
+                  border: '1px solid rgba(15,23,42,0.12)',
+                  borderRadius: 0,
+                  overflow: 'hidden',
+                  boxShadow: 'none',
+                  animation: 'slide-down 0.15s ease',
+                  zIndex: 220,
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    borderBottom: '1px solid rgba(15,23,42,0.08)',
+                  }}>
+                    <div>
+                      <div style={{ color: '#0f172a', fontSize: 13, fontWeight: 900 }}>Thông báo</div>
+                      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700 }}>
+                        {notifications.length ? `${notifications.length} mục gần nhất` : 'Chưa có thông báo'}
+                      </div>
+                    </div>
+                    {notifications.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearNotifications}
+                        style={{
+                          border: '1px solid rgba(15,23,42,0.1)',
+                          background: '#f8fafc',
+                          color: '#64748b',
+                          borderRadius: 0,
+                          padding: '5px 8px',
+                          cursor: 'pointer',
+                          fontSize: 11,
+                          fontWeight: 800,
+                        }}
+                      >
+                        Xóa hết
+                      </button>
+                    )}
+                  </div>
 
-          {!tracking && (
-            <button
-              type="button"
-              className="app-start-tracking-button"
-              disabled={trackingPending}
-              onClick={() => { void startTrack(); navigate('/tracker'); }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 14px',
-                borderRadius: 0,
-                background: '#38bdf8',
-                border: 'none',
-                cursor: trackingPending ? 'wait' : 'pointer',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 700,
-                boxShadow: 'none',
-                marginRight: 6,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                opacity: trackingPending ? 0.72 : 1,
-              }}
-            >
-              <Play size={11} fill="currentColor" strokeWidth={0} />
-              <span>{trackingPending ? 'Đang Kết Nối' : 'Bắt Đầu Theo Dõi'}</span>
-            </button>
-          )}
+                  <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: 18, color: '#64748b', fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>
+                        Các thông báo thi đấu, kết quả mùa giải và tin nhắn sẽ xuất hiện ở đây.
+                      </div>
+                    ) : notifications.map((notification) => {
+                      const tone = notificationTone(notification.type);
+                      return (
+                        <button
+                          key={notification.id}
+                          type="button"
+                          onClick={() => {
+                            if (notification.actionTo) navigate(notification.actionTo);
+                            setNotifOpen(false);
+                          }}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 10,
+                            padding: '12px 14px',
+                            border: 'none',
+                            borderBottom: '1px solid rgba(15,23,42,0.06)',
+                            background: notification.read ? '#ffffff' : 'rgba(56,189,248,0.035)',
+                            cursor: notification.actionTo ? 'pointer' : 'default',
+                            textAlign: 'left',
+                            fontFamily: "'JetBrains Mono',monospace",
+                          }}
+                        >
+                          <span style={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: 0,
+                            background: tone.bg,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            marginTop: 1,
+                          }}>
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: tone.dot }} />
+                          </span>
+                          <span style={{ minWidth: 0, flex: 1 }}>
+                            <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                              <strong style={{ color: '#0f172a', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>
+                                {notification.title}
+                              </strong>
+                              <span style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                {formatNotificationTime(notification.createdAt)}
+                              </span>
+                            </span>
+                            <span style={{ display: 'block', marginTop: 3, color: '#64748b', fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
+                              {notification.message}
+                            </span>
+                            {notification.actionTo && (
+                              <span style={{ display: 'block', marginTop: 6, color: '#38bdf8', fontSize: 11, fontWeight: 900 }}>
+                                {notification.actionLabel || 'Mở'}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
-          <div ref={notificationRef} style={{ position: 'relative' }}>
             <button
-              data-tour="notifications"
+              data-tour="help"
               type="button"
-              className="app-icon-action"
-              aria-label="Thông báo"
-              onClick={() => {
-                const nextOpen = !notifOpen;
-                setNotifOpen(nextOpen);
-                if (nextOpen) markNotificationsRead();
-              }}
+              className="app-icon-action app-help-tour-button"
+              aria-label="Xem hướng dẫn sử dụng"
+              title="Xem hướng dẫn sử dụng"
+              onClick={() => window.dispatchEvent(new CustomEvent(PRODUCT_TOUR_EVENT))}
               style={{
-                position: 'relative',
                 width: 34,
                 height: 34,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: notifOpen ? 'rgba(56,189,248,0.08)' : 'none',
+                background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: notifOpen ? '#38bdf8' : '#64748b',
+                color: '#64748b',
                 borderRadius: 0,
               }}
             >
-              <Bell size={17} />
-              {unreadCount > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: 4,
-                  right: 4,
-                  minWidth: 15,
-                  height: 15,
-                  padding: '0 4px',
-                  borderRadius: 0,
-                  background: '#ef4444',
-                  color: '#ffffff',
-                  border: '2px solid #ffffff',
-                  fontSize: 9,
-                  fontWeight: 900,
-                  lineHeight: '11px',
-                  textAlign: 'center',
-                }}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
+              <HelpCircle size={17} />
             </button>
 
-            {notifOpen && (
-              <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: -42,
-                width: 340,
-                maxWidth: 'calc(100vw - 24px)',
-                background: '#ffffff',
-                border: '1px solid rgba(15,23,42,0.12)',
-                borderRadius: 0,
-                overflow: 'hidden',
-                boxShadow: 'none',
-                animation: 'slide-down 0.15s ease',
-                zIndex: 220,
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 14px',
-                  borderBottom: '1px solid rgba(15,23,42,0.08)',
-                }}>
-                  <div>
-                    <div style={{ color: '#0f172a', fontSize: 13, fontWeight: 900 }}>Thông báo</div>
-                    <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700 }}>
-                      {notifications.length ? `${notifications.length} mục gần nhất` : 'Chưa có thông báo'}
-                    </div>
-                  </div>
-                  {notifications.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={clearNotifications}
-                      style={{
-                        border: '1px solid rgba(15,23,42,0.1)',
-                        background: '#f8fafc',
-                        color: '#64748b',
-                        borderRadius: 0,
-                        padding: '5px 8px',
-                        cursor: 'pointer',
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      Xóa hết
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: 18, color: '#64748b', fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>
-                      Các thông báo cá nhân như Pomodoro, mốc thao tác và trạng thái tracker sẽ xuất hiện ở đây.
-                    </div>
-                  ) : notifications.map((notification) => {
-                    const tone = notificationTone(notification.type);
-                    return (
-                      <button
-                        key={notification.id}
-                        type="button"
-                        onClick={() => {
-                          if (notification.actionTo) navigate(notification.actionTo);
-                          setNotifOpen(false);
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 10,
-                          padding: '12px 14px',
-                          border: 'none',
-                          borderBottom: '1px solid rgba(15,23,42,0.06)',
-                          background: notification.read ? '#ffffff' : 'rgba(56,189,248,0.035)',
-                          cursor: notification.actionTo ? 'pointer' : 'default',
-                          textAlign: 'left',
-                          fontFamily: "'JetBrains Mono',monospace",
-                        }}
-                      >
-                        <span style={{
-                          width: 26,
-                          height: 26,
-                          borderRadius: 0,
-                          background: tone.bg,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          marginTop: 1,
-                        }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: tone.dot }} />
-                        </span>
-                        <span style={{ minWidth: 0, flex: 1 }}>
-                          <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                            <strong style={{ color: '#0f172a', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>
-                              {notification.title}
-                            </strong>
-                            <span style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                              {formatNotificationTime(notification.createdAt)}
-                            </span>
-                          </span>
-                          <span style={{ display: 'block', marginTop: 3, color: '#64748b', fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
-                            {notification.message}
-                          </span>
-                          {notification.actionTo && (
-                            <span style={{ display: 'block', marginTop: 6, color: '#38bdf8', fontSize: 11, fontWeight: 900 }}>
-                              {notification.actionLabel || 'Mở'}
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            data-tour="help"
-            type="button"
-            className="app-icon-action app-help-tour-button"
-            aria-label="Xem hướng dẫn sử dụng"
-            title="Xem hướng dẫn sử dụng"
-            onClick={() => window.dispatchEvent(new CustomEvent(PRODUCT_TOUR_EVENT))}
-            style={{
-              width: 34,
-              height: 34,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#64748b',
-              borderRadius: 0,
-            }}
-          >
-            <HelpCircle size={17} />
-          </button>
-
-          <button
-            type="button"
-            className="app-icon-action"
-            aria-label="Mời Cà Phê"
-            onClick={() => setDonateOpen(true)}
-            style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', borderRadius: 0, transition: 'transform 0.15s ease' }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            title="Ủng hộ Dev 1 ly cà phê"
-          >
-            <Coffee size={17} />
-          </button>
-
-          <button
-            type="button"
-            className="app-icon-action"
-            aria-label="Cài đặt"
-            onClick={() => navigate('/settings')}
-            style={{
-              width: 34,
-              height: 34,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: location.pathname === '/settings' ? 'rgba(56,189,248,0.08)' : 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: location.pathname === '/settings' ? '#38bdf8' : '#64748b',
-              borderRadius: 0,
-            }}
-          >
-            <Settings size={17} />
-          </button>
-
-          <div ref={dropRef} style={{ position: 'relative' }}>
             <button
               type="button"
-              aria-label="Mở menu tài khoản"
-              onClick={() => setDropOpen((open) => !open)}
+              className="app-icon-action"
+              aria-label="Cài đặt"
+              onClick={() => navigate('/settings')}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 0,
-                position: 'relative',
-                background: '#38bdf8',
-                border: '2px solid rgba(56,189,248,0.4)',
+                width: 34,
+                height: 34,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                background: location.pathname === '/settings' ? 'rgba(56,189,248,0.08)' : 'none',
+                border: 'none',
                 cursor: 'pointer',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 800,
+                color: location.pathname === '/settings' ? '#38bdf8' : '#64748b',
+                borderRadius: 0,
               }}
             >
-              {accountAvatarUrl ? (
-                <img
-                  src={accountAvatarUrl}
-                  alt="Ảnh đại diện"
-                  style={{ width: '100%', height: '100%', borderRadius: 0, objectFit: 'cover' }}
-                  onError={() => {
-                    removeStoredAvatar(user?.id);
-                    setAccountAvatarUrl('');
-                  }}
-                />
-              ) : accountInitials}
-
-              {accountVerified && (
-                <div style={{ position: 'absolute', bottom: -6, right: -6, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
-                  <VerifiedBadge size={14} />
-                </div>
-              )}
+              <Settings size={17} />
             </button>
 
-            {dropOpen && (
-              <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: 180,
-                background: '#ffffff',
-                border: '1px solid rgba(15,23,42,0.12)',
-                borderRadius: 0,
-                overflow: 'hidden',
-                boxShadow: 'none',
-                animation: 'slide-down 0.15s ease',
-                zIndex: 200,
-              }}>
-                {tracking && (
-                  <button
-                    type="button"
-                    onClick={() => { void stopTrack(); setDropOpen(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', borderBottom: '1px solid rgba(15,23,42,0.08)', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", textAlign: 'left' }}
-                  >
-                    <Square size={10} fill="currentColor" strokeWidth={0} />
-                    Dừng Theo Dõi
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => { void logout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 13, fontWeight: 600, fontFamily: "'JetBrains Mono',monospace", textAlign: 'left' }}
-                >
-                  <LogOut size={14} />
-                  Đăng xuất
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <main
-          className="app-main"
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '32px 36px',
-            opacity: pageVisible ? 1 : 0,
-            transform: pageVisible ? 'translateY(0)' : 'translateY(6px)',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
-          }}
-        >
-          <Outlet />
-        </main>
-
-        <footer
-          className="app-footer"
-          style={{
-            borderTop: '1px solid rgba(15,23,42,0.06)',
-            padding: '10px 36px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 11,
-            color: '#94a3b8',
-            background: '#ffffff',
-            flexShrink: 0,
-          }}
-        >
-          <span>© {new Date().getFullYear()} WorkRank Realtime. Giám Sát Hiệu Suất Cao.</span>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8', textDecoration: 'none', fontWeight: 800 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              Liên hệ Developer
-            </a>
-            {['Chính sách bảo mật', 'Điều khoản dịch vụ', 'Tài liệu API'].map((item) => (
-              <span key={item}>{item}</span>
-            ))}
-          </div>
-        </footer>
-      </div>
-
-      <FriendsDock />
-      <ProductTour />
-
-      <nav data-tour="app-nav" className="mobile-bottom-nav" aria-label="Điều hướng chính trên mobile">
-        {visibleNavLinks.map(({ to, shortLabel, icon: Icon }) => {
-          const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
-          return (
-            <NavLink
-              key={to}
-              data-tour={NAV_TOUR_TARGETS[to]}
-              to={to}
-              aria-label={shortLabel}
-              title={shortLabel}
-              onClick={(event) => goToNav(event, to)}
-              className="mobile-bottom-link"
-              style={{
-                color: active ? '#38bdf8' : '#64748b',
-                background: active ? 'rgba(56,189,248,0.08)' : 'transparent',
-              }}
-            >
-              <Icon size={18} strokeWidth={2.2} />
-              <span>{shortLabel}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Donate Modal */}
-      {donateOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(15,23,42,0.6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-        }} onClick={() => setDonateOpen(false)}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: 0,
-            width: 400,
-            maxWidth: '100%',
-            overflow: 'hidden',
-            boxShadow: 'none',
-            animation: 'slide-down 0.2s ease',
-            fontFamily: "'JetBrains Mono', monospace",
-          }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '24px 24px 16px', textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Coffee size={28} />
-              </div>
-              <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 900, color: '#0f172a' }}>Mời Dev ly cà phê nhé!</h2>
-              <p style={{ margin: 0, color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>
-                WorkRank được duy trì hoàn toàn miễn phí. Bất kỳ khoản donate nào của bạn đều giúp server sống khỏe hơn.
-              </p>
-            </div>
-            
-            <div style={{ padding: '0 24px 24px' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 0, padding: 16, textAlign: 'center', marginBottom: 20 }}>
-                <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 8 }}>Quét mã Momo / VNPay</div>
-                <div style={{ width: 140, height: 140, background: '#e2e8f0', margin: '0 auto', borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 12 }}>
-                  [Hình QR Code]
-                </div>
-              </div>
-              
-              <div style={{ background: 'rgba(56,189,248,0.08)', padding: 16, borderRadius: 0, border: '1px solid rgba(56,189,248,0.2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <VerifiedBadge size={18} />
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>Đặc quyền Supporter</span>
-                </div>
-                <div style={{ color: '#475569', fontSize: 12, lineHeight: 1.5, fontWeight: 600 }}>
-                  Sau khi ủng hộ, tên của bạn sẽ có <strong>Tích Xanh</strong> giống hệt Twitter trên Leaderboard và Profile để mọi người cùng chiêm ngưỡng!
-                </div>
-              </div>
-
-              <div style={{ marginTop: 24, textAlign: 'center' }}>
-                <a 
-                  href="https://www.facebook.com/ddyn.fz/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '10px 20px', borderRadius: 0,
-                    background: '#1877F2', color: '#fff', 
-                    fontSize: 14, fontWeight: 800, textDecoration: 'none',
-                    boxShadow: 'none',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                  Inbox Developer
-                </a>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
+            <div ref={dropRef} style={{ position: 'relative' }}>
               <button
                 type="button"
-                onClick={() => setDonateOpen(false)}
-                style={{ flex: 1, padding: '16px', background: 'none', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+                aria-label="Mở menu tài khoản"
+                onClick={() => setDropOpen((open) => !open)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 0,
+                  position: 'relative',
+                  background: '#38bdf8',
+                  border: '2px solid rgba(56,189,248,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 800,
+                }}
               >
-                Để sau nhé
+                {accountAvatarUrl ? (
+                  <img
+                    src={accountAvatarUrl}
+                    alt="Ảnh đại diện"
+                    style={{ width: '100%', height: '100%', borderRadius: 0, objectFit: 'cover' }}
+                    onError={() => {
+                      removeStoredAvatar(user?.id);
+                      setAccountAvatarUrl('');
+                    }}
+                  />
+                ) : accountInitials}
+
+                {accountVerified && (
+                  <div style={{ position: 'absolute', bottom: -6, right: -6, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
+                    <VerifiedBadge size={14} />
+                  </div>
+                )}
               </button>
+
+              {dropOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: 180,
+                  background: '#ffffff',
+                  border: '1px solid rgba(15,23,42,0.12)',
+                  borderRadius: 0,
+                  overflow: 'hidden',
+                  boxShadow: 'none',
+                  animation: 'slide-down 0.15s ease',
+                  zIndex: 200,
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => { void logout(); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 13, fontWeight: 600, fontFamily: "'JetBrains Mono',monospace", textAlign: 'left' }}
+                  >
+                    <LogOut size={14} />
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+        </header>
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <main
+            className="app-main"
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '32px 36px',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            <Suspense fallback={<PageTransitionSkeleton />}>
+              <PageTransition key={location.pathname}>
+                <Outlet />
+              </PageTransition>
+            </Suspense>
+          </main>
+
+          <footer
+            className="app-footer"
+            style={{
+              borderTop: '1px solid rgba(15,23,42,0.06)',
+              padding: '10px 36px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: 11,
+              color: '#94a3b8',
+              background: '#ffffff',
+              flexShrink: 0,
+            }}
+          >
+            <span>© {new Date().getFullYear()} 3winmedia. Đấu Trường Thi Đấu & Bảng Xếp Hạng.</span>
+            <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+              {['Chính sách bảo mật', 'Điều khoản dịch vụ', 'Tài liệu API'].map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </footer>
         </div>
-      )}
+
+        <FriendsDock />
+        <ProductTour />
+      </div>
     </div>
   );
 }

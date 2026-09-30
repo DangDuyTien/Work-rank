@@ -164,17 +164,6 @@ function normalizeLeaderboardRow(row, index = 0) {
   };
 }
 
-function normalizeStat(row = {}) {
-  return {
-    ...row,
-    total_keystrokes: Number(row.keystrokeCount ?? row.total_keystrokes ?? 0),
-    total_mouse_clicks: Number(row.mouseClickCount ?? row.total_mouse_clicks ?? 0),
-    total_active_seconds: Number(row.activeSeconds ?? row.total_active_seconds ?? 0),
-    total_idle_seconds: Number(row.idleSeconds ?? row.total_idle_seconds ?? 0),
-    score: Number(row.focusScore ?? row.score ?? 0),
-  };
-}
-
 function normalizeUserSummary(user = {}) {
   return {
     ...user,
@@ -182,7 +171,6 @@ function normalizeUserSummary(user = {}) {
     id: user.id ?? user.userId ?? user.user_id,
     isVerified: normalizeVerified(user),
     verified: normalizeVerified(user),
-    isSimulated: toBoolean(user.isSimulated ?? user.is_simulated),
     accountStatus: user.accountStatus || user.status || 'active',
     status: user.presence || user.presenceStatus || user.status || 'offline',
     presence: user.presence || user.presenceStatus || user.status || 'offline',
@@ -265,62 +253,6 @@ export const auth = {
   changePassword: (data) => api.patch('/api/auth/password', data),
 };
 
-export const activity = {
-  today: async () => {
-    const res = await api.get('/api/activity/me/today');
-    return { ...res, data: normalizeStat(res.data?.stat || {}) };
-  },
-  userStats: async (id) => {
-    const res = await api.get(`/api/reports/users/${id}/today`);
-    const row = unwrapArray(res.data)[0] || {};
-    return { ...res, data: normalizeStat(row) };
-  },
-  daily: async (id, limit = 90) => {
-    const res = await api.get(`/api/reports/users/${id}/daily?limit=${limit}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  level: async (id) => {
-    const res = await api.get(`/api/reports/users/${id}/level`, {
-      params: { _: Date.now() },
-      headers: { 'Cache-Control': 'no-cache' },
-    });
-    return { ...res, data: res.data?.data || res.data || {} };
-  },
-  timeline: async (id, date, granularity = 'hour') => {
-    const params = new URLSearchParams();
-    if (date) params.set('date', date);
-    if (granularity) params.set('granularity', granularity);
-    params.set('timezoneOffsetMinutes', String(new Date().getTimezoneOffset()));
-    const qs = params.toString() ? `?${params.toString()}` : '';
-    const res = await api.get(`/api/reports/users/${id}/timeline${qs}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  heatmap: async (id, days = 365) => {
-    const res = await api.get(`/api/reports/users/${id}/heatmap?days=${days}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  sessions: async (id, limit = 10) => {
-    const res = await api.get(`/api/reports/users/${id}/sessions?limit=${limit}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  weekly: async (id, limit = 12) => {
-    const res = await api.get(`/api/reports/users/${id}/weekly?limit=${limit}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  monthly: async (id, limit = 12) => {
-    const res = await api.get(`/api/reports/users/${id}/monthly?limit=${limit}`);
-    return { ...res, data: unwrapArray(res.data) };
-  },
-  desktopStatus: () => api.get('/api/activity/desktop-status', {
-    headers: { 'Cache-Control': 'no-store' },
-  }),
-  desktopLaunch: (action, options = {}) => api.post('/api/activity/desktop-launch', {
-    action,
-    refreshToken: localStorage.getItem('refreshToken'),
-    ...options,
-  }),
-};
-
 export const dashboard = {
   overview: (range = 'today') => api.get(`/api/dashboard/overview?range=${range}`),
   realtimeUsers: () => api.get('/api/dashboard/realtime-users'),
@@ -377,22 +309,6 @@ export const leaderboard = {
       totalPages: Number(res.data?.totalPages || 1),
     };
   },
-};
-
-export const security = {
-  anomalies: (days = 1) => api.get(`/api/security/anomalies?days=${days}`),
-  events: (days = 1, limit = 50) => api.get(`/api/security/events?days=${days}&limit=${limit}`),
-  devices: (includeRevoked = true) => api.get(`/api/security/devices?includeRevoked=${includeRevoked}`),
-  revokeDevice: (id) => api.post(`/api/security/devices/${id}/revoke`),
-  restoreDevice: (id) => api.post(`/api/security/devices/${id}/restore`),
-  baseline: (userId, days = 7) => api.get(`/api/security/users/${userId}/baseline?days=${days}`),
-};
-
-export const simulation = {
-  status: () => api.get('/api/simulation/status'),
-  start: (data = {}) => api.post('/api/simulation/start', data),
-  stop: () => api.post('/api/simulation/stop'),
-  tick: () => api.post('/api/simulation/tick'),
 };
 
 export const groups = {
@@ -502,11 +418,24 @@ export const users = {
       return {
         ...res,
         data: normalizeUserSummary(user),
+        team: res.data?.team || null,
+        competition: res.data?.competition || null,
+        historicalSeasons: res.data?.historicalSeasons || [],
+        youtubeSummary: res.data?.youtubeSummary || null,
+        recognitions: res.data?.recognitions || null,
       };
     } catch (err) {
       if (err.response?.status === 403) return { data: { id, user_id: id, name: `User #${id}`, accountStatus: 'active', status: 'offline' } };
       throw err;
     }
+  },
+  create: async (data) => {
+    const res = await api.post('/api/users', data);
+    return res.data?.user || res.data;
+  },
+  delete: async (id) => {
+    const res = await api.delete(`/api/users/${id}`);
+    return res.data;
   },
   update: async (id, data) => {
     const res = await api.patch(`/api/users/${id}`, data);
@@ -515,6 +444,38 @@ export const users = {
       ...res,
       data: normalizeUserSummary(user),
     };
+  },
+  updateProfile: async (id, data) => {
+    const res = await api.patch(`/api/users/${id}/profile`, data);
+    const user = res.data?.user || res.data || {};
+    return {
+      ...res,
+      data: normalizeUserSummary(user),
+    };
+  },
+  getRecognitions: async (id) => {
+    const res = await api.get(`/api/users/${id}/recognitions`);
+    return res.data?.data || null;
+  },
+  adminAwardMVP: async (data) => {
+    const res = await api.post('/api/users/admin/recognitions/mvp', data);
+    return res.data?.recognition;
+  },
+  adminRevokeMVP: async (id, reason) => {
+    const res = await api.delete(`/api/users/admin/recognitions/${id}`, { data: { reason } });
+    return res.data;
+  },
+  adminAwardChampion: async (data) => {
+    const res = await api.post('/api/users/admin/recognitions/champion', data);
+    return res.data?.recognition;
+  },
+  adminUpdateJobProfile: async (id, data) => {
+    const res = await api.patch(`/api/users/admin/users/${id}/job-profile`, data);
+    return res.data?.user;
+  },
+  adminGetRecognitionAuditLogs: async (params = {}) => {
+    const res = await api.get('/api/users/admin/recognitions/audit-logs', { params });
+    return res.data?.logs || [];
   },
   profilePreferences: async (id) => {
     const res = await api.get(`/api/users/${id}/profile-preferences`);
@@ -543,5 +504,464 @@ export const users = {
   removeGalleryImage: (id, slot) => api.delete(`/api/users/${id}/gallery/${slot}`),
 };
 
+export const competition = {
+  getMyState: async (params = {}) => {
+    const res = await api.get('/api/competition/my-state', { params });
+    return { ...res, data: res.data?.states || [] };
+  },
+  getMyScoreHistory: async (params = {}) => {
+    const res = await api.get('/api/competition/my-score-history', { params });
+    return { ...res, data: res.data?.history || [] };
+  },
+  adminListStates: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/states', { params });
+    return res.data || { total: 0, states: [] };
+  },
+  adminGetStateDetail: async (id) => {
+    const res = await api.get(`/api/competition/admin/states/${id}`);
+    return res.data || {};
+  },
+  adminScoreInspect: async (userId, params = {}) => {
+    const res = await api.get(`/api/competition/admin/score-inspect/${userId}`, { params });
+    return res.data || { total: 0, entries: [] };
+  },
+  // Phase 4 — Season & Arena
+  getActiveSeason: async () => {
+    const res = await api.get('/api/competition/seasons/active');
+    return res.data?.season || null;
+  },
+  getSeasonDetail: async (id) => {
+    const res = await api.get(`/api/competition/seasons/${id}`);
+    return res.data || {};
+  },
+  getSeasonLeaderboard: async (id) => {
+    const res = await api.get(`/api/competition/seasons/${id}/leaderboard`);
+    return res.data || { rankings: [] };
+  },
+  getSeasonIndividualLeaderboard: async (id, params = {}) => {
+    const res = await api.get(`/api/competition/seasons/${id}/individual-leaderboard`, { params });
+    return res.data || { rankings: [], total: 0 };
+  },
+  getSeasonChallenges: async (id) => {
+    const res = await api.get(`/api/competition/seasons/${id}/challenges`);
+    return res.data?.challenges || [];
+  },
+  getSeasonRules: async (id) => {
+    const res = await api.get(`/api/competition/seasons/${id}/rules`);
+    return res.data || { hasRules: false, rules: [] };
+  },
+  // Admin Season Management
+  adminListSeasons: async () => {
+    const res = await api.get('/api/competition/admin/seasons');
+    return res.data?.seasons || [];
+  },
+  adminCreateSeason: async (data) => {
+    const res = await api.post('/api/competition/admin/seasons', data);
+    return res.data?.season;
+  },
+  adminUpdateSeasonStatus: async (id, status, reason) => {
+    const res = await api.patch(`/api/competition/admin/seasons/${id}/status`, { status, reason });
+    return res.data?.season;
+  },
+  adminAddTeamToSeason: async (id, data) => {
+    const res = await api.post(`/api/competition/admin/seasons/${id}/teams`, data);
+    return res.data?.seasonTeam;
+  },
+  // Phase 7 Visual Rule Builder & Rules Management
+  adminListRuleSets: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/rules', { params });
+    return res.data?.ruleSets || [];
+  },
+  adminGetRuleSet: async (id) => {
+    const res = await api.get(`/api/competition/admin/rules/${id}`);
+    return res.data?.ruleSet;
+  },
+  adminCreateRuleSet: async (data) => {
+    const res = await api.post('/api/competition/admin/rules', data);
+    return res.data?.ruleSet;
+  },
+  adminUpdateRuleSet: async (id, data) => {
+    const res = await api.put(`/api/competition/admin/rules/${id}`, data);
+    return res.data?.ruleSet;
+  },
+  adminArchiveRuleSet: async (id, reason) => {
+    const res = await api.post(`/api/competition/admin/rules/${id}/archive`, { reason });
+    return res.data;
+  },
+  adminCreateRuleSetVersion: async (ruleSetId, data) => {
+    const res = await api.post(`/api/competition/admin/rules/${ruleSetId}/versions`, data);
+    return res.data?.version;
+  },
+  adminGetRuleSetVersion: async (ruleSetId, versionId) => {
+    const res = await api.get(`/api/competition/admin/rules/${ruleSetId}/versions/${versionId}`);
+    return res.data?.version;
+  },
+  adminUpdateDraftVersion: async (ruleSetId, versionId, data) => {
+    const res = await api.put(`/api/competition/admin/rules/${ruleSetId}/versions/${versionId}`, data);
+    return res.data?.version;
+  },
+  adminDuplicateVersion: async (ruleSetId, versionId) => {
+    const res = await api.post(`/api/competition/admin/rules/${ruleSetId}/versions/${versionId}/duplicate`);
+    return res.data?.version;
+  },
+  adminValidateVersion: async (ruleSetId, versionId, astPayload) => {
+    const res = await api.post(`/api/competition/admin/rules/${ruleSetId}/versions/${versionId}/validate`, { astPayload });
+    return res.data;
+  },
+  adminPublishRuleSetVersion: async (ruleSetId, versionId, reason) => {
+    const res = await api.post(`/api/competition/admin/rules/${ruleSetId}/versions/${versionId}/publish`, { reason });
+    return res.data?.version;
+  },
+  adminSimulateRule: async (data) => {
+    const res = await api.post('/api/competition/admin/rules/simulate', data);
+    return res.data;
+  },
+  adminDiffVersions: async (ruleSetId, fromVersionId, toVersionId) => {
+    const res = await api.get(`/api/competition/admin/rules/${ruleSetId}/diff/${fromVersionId}/${toVersionId}`);
+    return res.data;
+  },
+  adminCreateChallenge: async (seasonId, data) => {
+    const res = await api.post(`/api/competition/admin/seasons/${seasonId}/challenges`, data);
+    return res.data?.challenge;
+  },
+  adminListAuditLogs: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/audit-logs', { params });
+    return res.data?.logs || [];
+  },
+  // Phase 5 — Grand Championship
+  getCurrentGrand: async () => {
+    const res = await api.get('/api/competition/grand/current');
+    return res.data?.grand || null;
+  },
+  getGrandStandings: async (id) => {
+    const res = await api.get(`/api/competition/grand/${id}/standings`);
+    return res.data || { standings: [] };
+  },
+  getGrandIndividualStandings: async (id, params = {}) => {
+    const res = await api.get(`/api/competition/grand/${id}/individual-standings`, { params });
+    return res.data || { standings: [], total: 0 };
+  },
+  getGrandTimeline: async (id) => {
+    const res = await api.get(`/api/competition/grand/${id}/timeline`);
+    return res.data?.timeline || [];
+  },
+  getGrandTeamJourney: async (id, teamId) => {
+    const res = await api.get(`/api/competition/grand/${id}/teams/${teamId}/journey`);
+    return res.data || { history: [] };
+  },
+  getTopPerformers: async (params = {}) => {
+    const res = await api.get('/api/competition/top-performers', { params });
+    return res.data || { topSeasonPerformers: [], topGrandPerformers: [] };
+  },
+  getUserCompetitionProfile: async (userId, params = {}) => {
+    const res = await api.get(`/api/competition/users/${userId}/competition-profile`, { params });
+    return res.data || {};
+  },
+  adminListGrands: async () => {
+    const res = await api.get('/api/competition/admin/grand');
+    return res.data?.championships || [];
+  },
+  adminCreateGrand: async (data) => {
+    const res = await api.post('/api/competition/admin/grand', data);
+    return res.data?.grand;
+  },
+  adminUpdateGrandStatus: async (id, status, reason, forceOverride = false) => {
+    const res = await api.patch(`/api/competition/admin/grand/${id}/status`, { status, reason, forceOverride });
+    return res.data?.grand;
+  },
+  adminLinkSeasonToGrand: async (id, seasonId) => {
+    const res = await api.post(`/api/competition/admin/grand/${id}/seasons/${seasonId}/link`);
+    return res.data?.season;
+  },
+  adminSettleGrandPoints: async (id, seasonId) => {
+    const res = await api.post(`/api/competition/admin/grand/${id}/seasons/${seasonId}/settle`);
+    return res.data;
+  },
+  adminReconcileGrandPoints: async (id, data) => {
+    const res = await api.post(`/api/competition/admin/grand/${id}/reconcile`, data);
+    return res.data?.record;
+  },
+  // Phase 6 — Read Models & Company Dashboard
+  getDashboard: async () => {
+    const res = await api.get('/api/competition/dashboard');
+    return res.data;
+  },
+  getTeamSummary: async (teamId) => {
+    const res = await api.get(`/api/competition/teams/${teamId}/summary`);
+    return res.data;
+  },
+  getActivityFeed: async (params = {}) => {
+    const res = await api.get('/api/competition/activity', { params });
+    return res.data;
+  },
+  getCompanyOverview: async () => {
+    const res = await api.get('/api/competition/company-overview');
+    return res.data;
+  },
+  getProjectedSeasonLeaderboard: async (seasonId, params = {}) => {
+    const res = await api.get(`/api/competition/projections/seasons/${seasonId}/leaderboard`, { params });
+    return res.data;
+  },
+  getProjectedGrandLeaderboard: async (grandId, params = {}) => {
+    const res = await api.get(`/api/competition/projections/grand/${grandId}/leaderboard`, { params });
+    return res.data;
+  },
+  adminGetDashboard: async () => {
+    const res = await api.get('/api/competition/admin/dashboard');
+    return res.data;
+  },
+  adminGetEmployeeExcellence: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/employee-excellence', { params });
+    return res.data;
+  },
+  adminGetProjectionsStatus: async () => {
+    const res = await api.get('/api/competition/admin/projections/status');
+    return res.data;
+  },
+  adminCheckProjectionsConsistency: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/projections/consistency', { params });
+    return res.data;
+  },
+  adminRebuildProjections: async (reason) => {
+    const res = await api.post('/api/competition/admin/projections/rebuild', { reason });
+    return res.data;
+  },
+  // Phase 8 — Product Integration & Event Tracing
+  getEventTrace: async (eventId) => {
+    const res = await api.get(`/api/competition/events/${eventId}/trace`);
+    return res.data;
+  },
+  listEventContracts: async () => {
+    const res = await api.get('/api/competition/contracts');
+    return res.data?.contracts || [];
+  },
+  publishEvent: async (data) => {
+    const res = await api.post('/api/competition/events/publish', data);
+    return res.data;
+  },
+  triggerProductionAction: async (data) => {
+    const res = await api.post('/api/competition/integration/production/video-action', data);
+    return res.data;
+  },
+  triggerYouTubeMilestone: async (data) => {
+    const res = await api.post('/api/competition/integration/youtube/milestone', data);
+    return res.data;
+  },
+  triggerCommunityKudos: async (data) => {
+    const res = await api.post('/api/competition/integration/community/kudos', data);
+    return res.data;
+  },
+  adminGetIntegrationHealth: async () => {
+    const res = await api.get('/api/competition/admin/integration/health');
+    return res.data;
+  },
+  adminListIntegrationEvents: async (params = {}) => {
+    const res = await api.get('/api/competition/admin/integration/events', { params });
+    return res.data;
+  },
+  adminRetryIntegrationEvent: async (eventId, reason) => {
+    const res = await api.post(`/api/competition/admin/events/${eventId}/retry`, { reason });
+    return res.data;
+  },
+};
+
+export const youtube = {
+  getOverview: async () => {
+    const res = await api.get('/api/youtube/overview');
+    return res.data;
+  },
+  getMyTeam: async () => {
+    const res = await api.get('/api/youtube/my-team');
+    return res.data;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/youtube/leaderboard', { params });
+    return res.data;
+  },
+  getTopVideos: async (params = {}) => {
+    const res = await api.get('/api/youtube/top-videos', { params });
+    return res.data;
+  },
+  getTeamDetails: async (teamId) => {
+    const res = await api.get(`/api/youtube/teams/${teamId}`);
+    return res.data;
+  },
+  getChannelDetails: async (id) => {
+    const res = await api.get(`/api/youtube/channels/${id}`);
+    return res.data;
+  },
+  compareTeams: async (teamA, teamB) => {
+    const res = await api.get('/api/youtube/compare', { params: { teamA, teamB } });
+    return res.data;
+  },
+  getChannels: async (params = {}) => {
+    const res = await api.get('/api/youtube/channels', { params });
+    return res.data;
+  },
+  adminGetOverview: async () => {
+    const res = await api.get('/api/youtube/admin/overview');
+    return res.data;
+  },
+  adminGetChannels: async (params = {}) => {
+    const res = await api.get('/api/youtube/admin/channels', { params });
+    return res.data;
+  },
+  adminCreateChannel: async (data) => {
+    const res = await api.post('/api/youtube/admin/channels', data);
+    return res.data;
+  },
+  adminLinkChannel: async (id, teamId) => {
+    const res = await api.patch(`/api/youtube/admin/channels/${id}/link`, { teamId });
+    return res.data;
+  },
+  adminUnlinkChannel: async (id) => {
+    const res = await api.post(`/api/youtube/admin/channels/${id}/unlink`);
+    return res.data;
+  },
+  adminSyncChannel: async (id) => {
+    const res = await api.post(`/api/youtube/admin/channels/${id}/sync`);
+    return res.data;
+  },
+  adminSyncAll: async () => {
+    const res = await api.post('/api/youtube/admin/sync-all');
+    return res.data;
+  },
+  adminDeleteChannel: async (id) => {
+    const res = await api.delete(`/api/youtube/admin/channels/${id}`);
+    return res.data;
+  },
+  adminGetHealth: async () => {
+    const res = await api.get('/api/youtube/admin/health');
+    return res.data;
+  },
+};
+
+export const rankings = {
+  getOverview: async () => {
+    const res = await api.get('/api/rankings/overview');
+    return res.data;
+  },
+  getTeams: async (params = {}) => {
+    const res = await api.get('/api/rankings/teams', { params });
+    return res.data;
+  },
+  getIndividuals: async (params = {}) => {
+    const res = await api.get('/api/rankings/individuals', { params });
+    return res.data;
+  },
+  getSeasons: async () => {
+    const res = await api.get('/api/rankings/seasons');
+    return res.data?.seasons || [];
+  },
+  getGrands: async () => {
+    const res = await api.get('/api/rankings/grands');
+    return res.data?.grands || [];
+  },
+  getYouTube: async (params = {}) => {
+    const res = await api.get('/api/rankings/youtube', { params });
+    return res.data;
+  },
+  getTopPerformers: async () => {
+    const res = await api.get('/api/rankings/top-performers');
+    return res.data;
+  },
+};
+
+export const capitalBoardGame = {
+  listRooms: async (params = {}) => {
+    const res = await api.get('/api/games/rooms', { params });
+    return res.data?.data || [];
+  },
+  getActiveRoom: async () => {
+    const res = await api.get('/api/games/active-room');
+    return res.data?.data || null;
+  },
+  getRoom: async (id) => {
+    const res = await api.get(`/api/games/rooms/${id}`);
+    return res.data?.data || null;
+  },
+  createRoom: async (data) => {
+    const res = await api.post('/api/games/rooms', data);
+    return res.data?.data || null;
+  },
+  joinRoom: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/join`);
+    return res.data?.data || null;
+  },
+  leaveRoom: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/leave`);
+    return res.data?.data || null;
+  },
+  startGame: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/start`);
+    return res.data?.data || null;
+  },
+  rollDice: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/roll`);
+    return res.data?.data || null;
+  },
+  buyProperty: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/buy`);
+    return res.data?.data || null;
+  },
+  endTurn: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/end-turn`);
+    return res.data?.data || null;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/games/leaderboard', { params });
+    return res.data || { data: [], myProfile: null };
+  },
+  getMyHistory: async (params = {}) => {
+    const res = await api.get('/api/games/history', { params });
+    return res.data?.data || [];
+  },
+};
+
+export const quizGame = {
+  listRooms: async (params = {}) => {
+    const res = await api.get('/api/games/quiz/rooms', { params });
+    return res.data?.data || [];
+  },
+  getActiveRoom: async () => {
+    const res = await api.get('/api/games/quiz/active-room');
+    return res.data?.data || null;
+  },
+  getRoom: async (id) => {
+    const res = await api.get(`/api/games/quiz/rooms/${id}`);
+    return res.data?.data || null;
+  },
+  createRoom: async (data) => {
+    const res = await api.post('/api/games/quiz/rooms', data);
+    return res.data?.data || null;
+  },
+  joinRoom: async (id) => {
+    const res = await api.post(`/api/games/quiz/rooms/${id}/join`);
+    return res.data?.data || null;
+  },
+  leaveRoom: async (id) => {
+    const res = await api.post(`/api/games/quiz/rooms/${id}/leave`);
+    return res.data?.data || null;
+  },
+  startGame: async (id) => {
+    const res = await api.post(`/api/games/quiz/rooms/${id}/start`);
+    return res.data?.data || null;
+  },
+  submitAnswer: async (id, data) => {
+    const res = await api.post(`/api/games/quiz/rooms/${id}/answer`, data);
+    return res.data?.data || null;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/games/quiz/leaderboard', { params });
+    return res.data || { data: [], myStats: null };
+  },
+  getMyStats: async () => {
+    const res = await api.get('/api/games/quiz/my-stats');
+    return res.data?.data || null;
+  },
+};
+
 export { storeAuth };
 export default api;
+
+

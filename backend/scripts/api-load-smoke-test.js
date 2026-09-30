@@ -111,8 +111,8 @@ async function main() {
     { name: 'leaderboard.daily', path: '/api/leaderboard/daily?page=1&limit=20' },
     { name: 'leaderboard.weekly', path: '/api/leaderboard/weekly?page=1&limit=20' },
     { name: 'users.list', path: '/api/users?page=1&limit=20' },
-    { name: 'reports.weekly', path: `/api/reports/users/${userId}/weekly?limit=6` },
-    { name: 'reports.monthly', path: `/api/reports/users/${userId}/monthly?limit=3` },
+    { name: 'competition.dashboard', path: '/api/competition/dashboard' },
+    { name: 'competition.myState', path: '/api/competition/my-state' },
   ];
 
   const jobs = [];

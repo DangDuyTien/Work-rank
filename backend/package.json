@@ -10,10 +10,9 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "lint": "node --check src/server.js",
-    "test": "node --test test/*.test.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all",
-    "test:anti-cheat": "node scripts/anti-cheat-smoke-test.js",
     "test:load": "node scripts/api-load-smoke-test.js"
   },
   "keywords": [],

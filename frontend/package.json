@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "check": "node scripts/verify-frontend.js",
+    "test": "node scripts/verify-frontend.js && node scripts/route-smoke-test.cjs",
+    "test:routes": "node scripts/route-smoke-test.cjs",
+    "build": "node scripts/verify-frontend.js && vite build",
     "preview": "vite preview",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:list": "playwright test --list"

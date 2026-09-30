@@ -1,7 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { TrackingProvider } from './context/TrackingContext';
 import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
 
@@ -33,14 +32,22 @@ function lazyWithReload(importer) {
 const Login = lazyWithReload(() => import('./pages/Login'));
 const Home = lazyWithReload(() => import('./pages/Home'));
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
-const Tracker = lazyWithReload(() => import('./pages/Tracker'));
 const Leaderboard = lazyWithReload(() => import('./pages/Leaderboard'));
 const UserDetail = lazyWithReload(() => import('./pages/UserDetail'));
 const Friends = lazyWithReload(() => import('./pages/Friends'));
-const Security = lazyWithReload(() => import('./pages/Security'));
 const Settings = lazyWithReload(() => import('./pages/Settings'));
 const AdminPrivileges = lazyWithReload(() => import('./pages/AdminPrivileges'));
-const Pomodoro = lazyWithReload(() => import('./pages/Pomodoro'));
+const CompetitionAdmin = lazyWithReload(() => import('./pages/CompetitionAdmin'));
+const AdminSeasons = lazyWithReload(() => import('./pages/AdminSeasons'));
+const AdminGrand = lazyWithReload(() => import('./pages/AdminGrand'));
+const AdminTeamsYouTube = lazyWithReload(() => import('./pages/AdminTeamsYouTube'));
+const AdminOperations = lazyWithReload(() => import('./pages/AdminOperations'));
+const Arena = lazyWithReload(() => import('./pages/Arena'));
+const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
+const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
+const CapitalBoardGame = lazyWithReload(() => import('./pages/CapitalBoardGame'));
+const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
+
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -129,21 +136,35 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute>
-                      <TrackingProvider>
-                        <Layout />
-                      </TrackingProvider>
+                      <Layout />
                     </ProtectedRoute>
                   }
                 >
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/youtube" element={<YouTubeOverview />} />
+                  <Route path="/arena" element={<Arena />} />
+                  <Route path="/grand" element={<GrandHub />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/rankings" element={<Leaderboard />} />
+
                   <Route path="/groups" element={<Navigate to="/friends" replace />} />
                   <Route path="/friends" element={<Friends />} />
-                  <Route path="/tracker" element={<Tracker />} />
-                  <Route path="/pomodoro" element={<Pomodoro />} />
-                  <Route path="/performance" element={<Navigate to="/tracker" replace />} />
-                  <Route path="/security" element={<AdminRoute><Security /></AdminRoute>} />
+                  <Route path="/games" element={<Navigate to="/games/capital-board" replace />} />
+                  <Route path="/games/capital-board" element={<CapitalBoardGame />} />
+                  <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
+                  <Route path="/games/quiz" element={<QuizGame />} />
+                  <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
+                  <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
+                  <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/security" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
+                  <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
+                  <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />
+                  <Route path="/admin/competition/seasons" element={<AdminRoute><AdminSeasons /></AdminRoute>} />
+                  <Route path="/admin/competition/grand" element={<AdminRoute><AdminGrand /></AdminRoute>} />
+                  <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/users/:id" element={<UserDetail />} />
                 </Route>

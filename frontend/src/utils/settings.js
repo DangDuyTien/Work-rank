@@ -3,19 +3,8 @@ export const APP_SETTINGS_UPDATED_EVENT = 'workrank:app-settings-updated';
 
 export const DEFAULT_APP_SETTINGS = {
   notifications: {
-    activityMilestones: true,
-    trackerIdle: true,
-    pomodoro: true,
-    security: true,
+    competition: true,
     sound: true,
-  },
-  tracker: {
-    autoLaunchDesktop: true,
-    autoStartWithPomodoro: true,
-  },
-  pomodoro: {
-    defaultPreset: 'classic',
-    volume: 0.12,
   },
   appearance: {
     density: 'comfortable',
@@ -74,9 +63,6 @@ export function subscribeAppSettings(listener) {
 
 export function shouldStoreNotification(type, settings = getAppSettings()) {
   const notifications = settings.notifications || DEFAULT_APP_SETTINGS.notifications;
-  if (type === 'success') return notifications.activityMilestones;
-  if (type === 'warning') return notifications.trackerIdle;
-  if (type === 'pomodoro') return notifications.pomodoro;
-  if (type === 'security' || type === 'danger') return notifications.security;
+  if (type === 'competition') return notifications.competition;
   return true;
 }

@@ -1,65 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Activity,
   ArrowRight,
-  BarChart3,
-  CheckCircle2,
   ChevronRight,
-  Clock3,
-  Code2,
-  Download,
+  CheckCircle2,
+  Crown,
   Flame,
-  MousePointerClick,
   ShieldCheck,
-  TimerReset,
+  Swords,
   Trophy,
   Users,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const metrics = [
-  { value: '2.5s', label: 'chu kỳ đồng bộ' },
-  { value: '99.9%', label: 'uptime dashboard' },
-  { value: '30d', label: 'raw event retention' },
+  { value: 'Realtime', label: 'đồng bộ thi đấu' },
+  { value: '99.9%', label: 'uptime hệ thống' },
+  { value: 'Audit', label: 'ledger tính điểm minh bạch' },
 ];
 
 const features = [
   {
-    icon: Activity,
-    title: 'Realtime tracker',
-    text: 'Theo dõi nhịp làm việc theo phiên, trạng thái online và tổng thao tác trong ngày.',
+    icon: Swords,
+    title: 'Đấu Trường Arena',
+    text: 'Tham gia thi đấu mùa giải, hoàn thành thử thách và thăng hạng XP cùng đồng đội.',
+  },
+  {
+    icon: Crown,
+    title: 'Grand Championship',
+    text: 'Giải đấu đỉnh cao tích lũy Grand Points xuyên suốt các mùa để tranh ngôi vương.',
   },
   {
     icon: Trophy,
-    title: 'Leaderboard nhanh',
-    text: 'Xếp hạng theo ngày, tuần, tháng với phân trang backend và query đã tối ưu.',
+    title: 'Leaderboard Realtime',
+    text: 'Xếp hạng cá nhân, nhóm và bạn bè tức thời với hệ thống điểm số cập nhật chuẩn xác.',
   },
   {
     icon: ShieldCheck,
-    title: 'Chống gian lận',
-    text: 'Chấm điểm nghi vấn, khóa thiết bị bất thường và lưu dấu vết để admin kiểm tra.',
-  },
-  {
-    icon: TimerReset,
-    title: 'Pomodoro liền mạch',
-    text: 'Đồng hồ tập trung gắn với tracker để giữ nhịp làm việc mà không cần tab phụ.',
+    title: 'Ledger Minh Bạch',
+    text: 'Mọi điểm số đều được đối soát qua Event Store và Outbox, đảm bảo công bằng tuyệt đối.',
   },
 ];
 
 const leaderboardRows = [
   { rank: 1, name: 'Đặng Duy Tiến', score: '4,314', badge: 'Dev' },
-  { rank: 2, name: 'Minh Anh', score: '3,280', badge: 'Top ngày' },
-  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Bạn bè' },
-];
-
-const timeline = [
-  { time: '09:00', value: 62 },
-  { time: '10:00', value: 84 },
-  { time: '11:00', value: 52 },
-  { time: '13:00', value: 91 },
-  { time: '14:00', value: 74 },
-  { time: '15:00', value: 88 },
+  { rank: 2, name: 'Minh Anh', score: '3,280', badge: 'Top 1 Season' },
+  { rank: 3, name: 'Quang Huy', score: '2,926', badge: 'Grand Master' },
 ];
 
 function useScrollReveal() {
@@ -95,15 +81,15 @@ export default function Home() {
   return (
     <main className="wr-home-page">
       <header className="wr-home-nav">
-        <Link to="/" className="wr-home-brand" aria-label="WorkRank">
-          <span>W</span>
-          <strong>WorkRank</strong>
+        <Link to="/" className="wr-home-brand" aria-label="3winmedia">
+          <span style={{ fontSize: 11, fontWeight: 900, fontFamily: "'JetBrains Mono', monospace", letterSpacing: -0.5 }}>3W</span>
+          <strong>3winmedia</strong>
         </Link>
         <nav className="wr-home-links" aria-label="Điều hướng trang chủ">
           <Link to="/dashboard">Dashboard</Link>
+          <Link to="/arena">Arena</Link>
+          <Link to="/grand">Grand Hub</Link>
           <Link to="/leaderboard">Xếp hạng</Link>
-          <Link to="/pomodoro">Pomodoro</Link>
-          <Link to="/tracker">Tracker</Link>
           <Link to="/friends">Bạn bè</Link>
         </nav>
         <Link className="wr-home-nav-action" to={primaryTo}>
@@ -118,32 +104,27 @@ export default function Home() {
             <div className="wr-preview-topbar">
               <div className="wr-preview-brand">
                 <span></span>
-                WorkRank Live
+                3winmedia Arena
               </div>
               <div className="wr-preview-status">
                 <span></span>
-                realtime
+                live season
               </div>
             </div>
             <div className="wr-preview-grid">
               <div className="wr-preview-panel wr-preview-panel-main">
                 <div className="wr-panel-head">
-                  <span>Hoạt động hôm nay</span>
-                  <strong>4,314</strong>
+                  <span>Mùa giải hiện tại</span>
+                  <strong>Championship 2026</strong>
                 </div>
-                <div className="wr-activity-chart">
-                  {timeline.map((item) => (
-                    <span key={item.time} style={{ height: `${item.value}%` }}></span>
-                  ))}
-                </div>
-                <div className="wr-chart-labels">
-                  {timeline.map((item) => <span key={item.time}>{item.time}</span>)}
+                <div style={{ padding: '16px 0', color: '#64748b', fontSize: 13, lineHeight: 1.6 }}>
+                  Hệ thống thi đấu đối kháng, tính điểm sự kiện thời gian thực và ghi nhận bảng vàng thành tích.
                 </div>
               </div>
 
               <div className="wr-preview-panel wr-preview-rank">
                 <div className="wr-panel-head">
-                  <span>Top ngày</span>
+                  <span>Top Điểm Mùa Giải</span>
                   <Trophy size={17} />
                 </div>
                 {leaderboardRows.map((row) => (
@@ -157,24 +138,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-
-              <div className="wr-preview-panel wr-preview-tiles">
-                <div className="wr-mini-tile">
-                  <MousePointerClick size={16} />
-                  <strong>926</strong>
-                  <span>click</span>
-                </div>
-                <div className="wr-mini-tile">
-                  <Code2 size={16} />
-                  <strong>3.2k</strong>
-                  <span>phím</span>
-                </div>
-                <div className="wr-mini-tile">
-                  <Clock3 size={16} />
-                  <strong>6h 12m</strong>
-                  <span>active</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -182,27 +145,27 @@ export default function Home() {
         <div className="wr-home-hero-content">
           <div className="wr-home-pill" data-wr-reveal>
             <span>New</span>
-            Desktop tracker cho Windows, macOS và Linux
+            Hệ thống Đấu Trường Mùa Giải & Grand Championship
           </div>
           <h1 data-wr-reveal>
-            WorkRank
-            <span> realtime workspace tracker</span>
+            3winmedia
+            <span> nền tảng thi đấu & vinh danh hiệu suất</span>
           </h1>
           <p data-wr-reveal>
-            Dashboard gọn để xem nhịp làm việc, bạn bè, xếp hạng, Pomodoro và trạng thái tracker trong một nơi.
+            Đấu trường công bằng, xếp hạng realtime, giải đấu mùa giải và bảng vàng thành tích cho cá nhân và đội nhóm.
           </p>
           <div className="wr-home-actions" data-wr-reveal>
             <Link className="wr-home-primary" to={primaryTo}>
               {isSignedIn ? 'Vào Dashboard' : 'Đăng nhập để bắt đầu'}
               <ArrowRight size={17} strokeWidth={2.5} />
             </Link>
+            <Link className="wr-home-secondary" to="/arena">
+              <Swords size={16} />
+              Vào Arena
+            </Link>
             <Link className="wr-home-secondary" to="/leaderboard">
               <Trophy size={16} />
               Xem xếp hạng
-            </Link>
-            <Link className="wr-home-secondary" to="/tracker">
-              <Download size={16} />
-              Tải tracker
             </Link>
           </div>
         </div>
@@ -219,12 +182,12 @@ export default function Home() {
 
       <section className="wr-home-section wr-home-product" data-wr-reveal>
         <div className="wr-section-copy">
-          <span className="wr-section-kicker">Product</span>
-          <h2>Từ tracker đến leaderboard trong một luồng rõ ràng.</h2>
+          <span className="wr-section-kicker">Engine</span>
+          <h2>Kiến trúc sự kiện và tính điểm phân tán.</h2>
         </div>
         <div className="wr-command-card">
           <div className="wr-command-tabs">
-            {['curl', 'npm', 'desktop'].map((tab) => (
+            {['curl', 'npm'].map((tab) => (
               <button
                 type="button"
                 key={tab}
@@ -237,21 +200,20 @@ export default function Home() {
           </div>
           <div className="wr-command-line">
             <span>$</span>
-            {activeTerminal === 'curl' && 'curl -s https://workrank.local/api/status'}
-            {activeTerminal === 'npm' && 'npm run dev --workspace workrank-realtime'}
-            {activeTerminal === 'desktop' && 'workrank://open?tracker=desktop'}
+            {activeTerminal === 'curl' && 'curl -s https://api.3winmedia.vn/health'}
+            {activeTerminal === 'npm' && 'npm run dev'}
           </div>
           <div className="wr-command-output">
             <CheckCircle2 size={16} />
-            online users cached · leaderboard paginated · socket batched
+            database connected · competition ledger active · realtime projections live
           </div>
         </div>
       </section>
 
       <section className="wr-home-section wr-feature-section" data-wr-reveal>
         <div className="wr-section-head">
-          <span className="wr-section-kicker">Workspace</span>
-          <h2>Đủ công cụ để theo dõi nhịp làm việc hằng ngày.</h2>
+          <span className="wr-section-kicker">Features</span>
+          <h2>Trải nghiệm thi đấu chuyên nghiệp.</h2>
         </div>
         <div className="wr-feature-grid">
           {features.map((feature) => {
@@ -267,53 +229,29 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="wr-home-section wr-workflow-section" data-wr-reveal>
-        <div className="wr-workflow-copy">
-          <span className="wr-section-kicker">Flow</span>
-          <h2>Một màn hình đủ để biết bạn bè đang chạy ra sao.</h2>
-        </div>
-        <div className="wr-workflow-list">
-          <div>
-            <span><Activity size={17} /></span>
-            <strong>Tracker ghi nhận</strong>
-            <p>Desktop app gửi batch hoạt động thay vì đẩy từng event rời rạc.</p>
-          </div>
-          <div>
-            <span><BarChart3 size={17} /></span>
-            <strong>Backend tổng hợp</strong>
-            <p>Summary theo phút/ngày, cache dashboard và rank để giảm tải DB.</p>
-          </div>
-          <div>
-            <span><Users size={17} /></span>
-            <strong>Bạn bè theo dõi</strong>
-            <p>Dashboard, bạn bè và leaderboard lấy dữ liệu phân trang đã tối ưu.</p>
-          </div>
-        </div>
-      </section>
-
       <section className="wr-home-final" data-wr-reveal>
         <div>
           <span><Flame size={18} /></span>
-          <h2>Bắt đầu theo dõi năng suất ngay hôm nay.</h2>
+          <h2>Sẵn sàng bước vào đấu trường 3winmedia.</h2>
         </div>
         <Link className="wr-home-primary" to={primaryTo}>
-          {isSignedIn ? 'Mở dashboard' : 'Đăng nhập'}
+          {isSignedIn ? 'Mở Dashboard' : 'Đăng nhập'}
           <ArrowRight size={17} strokeWidth={2.5} />
         </Link>
       </section>
 
       <footer className="wr-home-footer">
         <div className="wr-home-brand">
-          <span>W</span>
-          <strong>WorkRank</strong>
+          <span style={{ fontSize: 11, fontWeight: 900, fontFamily: "'JetBrains Mono', monospace", letterSpacing: -0.5 }}>3W</span>
+          <strong>3winmedia</strong>
         </div>
         <div>
           <Link to="/dashboard">Dashboard</Link>
+          <Link to="/arena">Arena</Link>
+          <Link to="/grand">Grand Hub</Link>
           <Link to="/leaderboard">Xếp hạng</Link>
-          <Link to="/pomodoro">Pomodoro</Link>
-          <a href="https://www.facebook.com/ddyn.fz/" target="_blank" rel="noopener noreferrer">Liên hệ</a>
         </div>
-        <small>2026 · realtime workspace tracker</small>
+        <small>© {new Date().getFullYear()} 3winmedia Realtime Competition Platform</small>
       </footer>
     </main>
   );
