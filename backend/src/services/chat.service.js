@@ -1,5 +1,5 @@
 const { Op, UniqueConstraintError } = require('sequelize');
-const { ChatMessage, Friendship, sequelize } = require('../models');
+const { ChatMessage, Friendship, User, sequelize } = require('../models');
 
 const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_LIMIT = 40;
@@ -61,9 +61,10 @@ async function assertCanChat(userId, friendValue) {
     err.status = 400;
     throw err;
   }
-  if (!(await areFriends(userId, friendId))) {
-    const err = new Error('Chỉ có thể nhắn tin với bạn bè');
-    err.status = 403;
+  const recipient = await User.findByPk(friendId);
+  if (!recipient || recipient.status === 'inactive') {
+    const err = new Error('Thành viên không tồn tại hoặc tài khoản đã bị vô hiệu hóa');
+    err.status = 404;
     throw err;
   }
   return friendId;

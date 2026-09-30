@@ -406,7 +406,6 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
             >
               <JobTitleBadge
                 jobTitle={user?.jobTitle}
-                role={user?.role}
                 size="xs"
               />
             </div>

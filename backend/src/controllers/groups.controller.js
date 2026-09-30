@@ -4,6 +4,10 @@ async function list(req, res) {
   res.json({ data: await groupService.listForUser(req.user) });
 }
 
+async function listAll(req, res) {
+  res.json({ data: await groupService.listAllTeams() });
+}
+
 async function create(req, res) {
   const group = await groupService.create(req.user, req.body);
   res.status(201).json({ group, data: group });
@@ -34,4 +38,9 @@ async function kick(req, res) {
   res.json({ group, data: group });
 }
 
-module.exports = { list, create, join, leave, update, remove, kick };
+async function addMember(req, res) {
+  const group = await groupService.addMember(req.user, req.params.id, req.body.userId || req.body.user_id);
+  res.json({ group, data: group });
+}
+
+module.exports = { list, listAll, create, join, leave, update, remove, kick, addMember };

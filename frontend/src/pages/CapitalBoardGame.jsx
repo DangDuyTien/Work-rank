@@ -559,7 +559,7 @@ export default function CapitalBoardGame() {
                 boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
               }}
             >
-              <Gamepad2 size={24} color="#38bdf8" />
+              <Gamepad2 size={24} color="#b45309" />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -631,7 +631,7 @@ export default function CapitalBoardGame() {
               width: 220,
               height: 220,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0) 70%)',
+              background: 'radial-gradient(circle, rgba(180,83,9,0.08) 0%, rgba(56,189,248,0) 70%)',
               pointerEvents: 'none',
             }}
           />
@@ -642,13 +642,13 @@ export default function CapitalBoardGame() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                background: 'rgba(56,189,248,0.15)',
-                border: '1px solid rgba(56,189,248,0.3)',
+                background: 'rgba(180,83,9,0.08)',
+                border: '1px solid rgba(180,83,9,0.25)',
                 padding: '4px 10px',
                 borderRadius: 999,
                 fontSize: 12,
                 fontWeight: 800,
-                color: '#38bdf8',
+                color: "#b45309",
                 marginBottom: 16,
               }}
             >
@@ -672,7 +672,7 @@ export default function CapitalBoardGame() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
-                  background: '#38bdf8',
+                  background: "#141414",
                   color: '#0f172a',
                   border: 'none',
                   borderRadius: 6,
@@ -726,14 +726,14 @@ export default function CapitalBoardGame() {
                 width: 36,
                 height: 36,
                 borderRadius: 8,
-                background: 'rgba(56,189,248,0.1)',
+                background: 'rgba(180,83,9,0.08)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 12,
               }}
             >
-              <Gamepad2 size={20} color="#0284c7" />
+              <Gamepad2 size={20} color="#b45309" />
             </div>
             <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
               Bản Đồ 28 Ô Độc Quyền
@@ -856,7 +856,7 @@ export default function CapitalBoardGame() {
               boxShadow: '0 4px 10px rgba(15,23,42,0.15)',
             }}
           >
-            <Gamepad2 size={22} color="#38bdf8" />
+            <Gamepad2 size={22} color="#b45309" />
           </div>
 
           <div>
@@ -868,8 +868,8 @@ export default function CapitalBoardGame() {
                 style={{
                   fontSize: 10,
                   fontWeight: 800,
-                  background: 'rgba(56,189,248,0.15)',
-                  color: '#0284c7',
+                  background: 'rgba(180,83,9,0.08)',
+                  color: "#b45309",
                   padding: '2px 6px',
                   borderRadius: 4,
                 }}
@@ -990,7 +990,7 @@ export default function CapitalBoardGame() {
       {!isInsideRoom && activeRejoinRoom && (
         <div
           style={{
-            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            background: "#141414",
             color: '#ffffff',
             borderRadius: 8,
             padding: '14px 18px',
@@ -1028,7 +1028,7 @@ export default function CapitalBoardGame() {
             onClick={() => handleJoinRoom(activeRejoinRoom.id)}
             style={{
               background: '#ffffff',
-              color: '#0284c7',
+              color: "#b45309",
               border: 'none',
               borderRadius: 6,
               padding: '8px 16px',
@@ -1307,8 +1307,8 @@ export default function CapitalBoardGame() {
               style={{
                 fontSize: 11,
                 fontWeight: 800,
-                background: 'rgba(56,189,248,0.15)',
-                color: '#0284c7',
+                background: 'rgba(180,83,9,0.08)',
+                color: "#b45309",
                 padding: '3px 8px',
                 borderRadius: 4,
                 textTransform: 'uppercase',
@@ -1329,7 +1329,7 @@ export default function CapitalBoardGame() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 24 }}>
             {Array.from({ length: room.maxPlayers || 4 }).map((_, idx) => {
               const p = players.find((pl) => pl.seatIndex === idx);
-              const seatColors = ['#38bdf8', '#ef4444', '#10b981', '#f59e0b'];
+              const seatColors = ["#141414", "#b91c1c", "#15803d", "#b45309"];
               const sColor = seatColors[idx] || '#94a3b8';
 
               return (

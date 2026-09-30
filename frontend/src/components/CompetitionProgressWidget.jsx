@@ -6,7 +6,6 @@ import {
   Trophy,
   Users,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   Sparkles,
   RefreshCw,
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 import { competition } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Card, PageState, Button } from './ui';
+import { Card, Button } from './ui';
 
 export default function CompetitionProgressWidget() {
   const navigate = useNavigate();
@@ -82,10 +81,10 @@ export default function CompetitionProgressWidget() {
 
   if (loading && !data) {
     return (
-      <Card style={{ padding: 18, marginBottom: 20 }}>
+      <Card style={{ padding: 18, marginBottom: 20, background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <RefreshCw size={16} className="spin" color="#0284c7" />
-          <span style={{ fontSize: 13, color: '#64748b' }}>Đang tải bảng tổng quan thi đấu...</span>
+          <RefreshCw size={16} className="spin" color="#b45309" />
+          <span style={{ fontSize: 13, color: '#555555' }}>Đang tải bảng tổng quan thi đấu...</span>
         </div>
       </Card>
     );
@@ -93,9 +92,9 @@ export default function CompetitionProgressWidget() {
 
   if (error && !data) {
     return (
-      <Card style={{ padding: 18, marginBottom: 20, border: '1px solid rgba(239,68,68,0.2)' }}>
+      <Card style={{ padding: 18, marginBottom: 20, background: '#ffffff', border: '1px solid rgba(185,28,28,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c' }}>
             <ShieldAlert size={18} />
             <span style={{ fontSize: 13, fontWeight: 600 }}>{error}</span>
           </div>
@@ -115,36 +114,36 @@ export default function CompetitionProgressWidget() {
 
   return (
     <div style={{ marginBottom: 24 }}>
-      {/* SECTION HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      {/* ── SECTION HEADER ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #0284c7, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-            <Trophy size={16} />
+          <div style={{ width: 28, height: 28, borderRadius: 6, background: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
+            <Trophy size={15} />
           </div>
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#111111', margin: 0 }}>
               Company Competition Overview
             </h2>
-            <span style={{ fontSize: 11, color: '#64748b' }}>
+            <span style={{ fontSize: 11, color: '#777777' }}>
               Read Model Projection • Cập nhật tức thì
             </span>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button variant="outline" size="sm" onClick={() => navigate('/rankings')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#0284c7' }}>
-            <Trophy size={13} color="#0284c7" /> Trung Tâm BXH <ArrowUpRight size={14} />
+          <Button variant="outline" size="sm" onClick={() => navigate('/rankings')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#111111', border: '1px solid rgba(0,0,0,0.12)' }}>
+            <Trophy size={13} color="#b45309" /> Trung Tâm BXH <ArrowUpRight size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/arena')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/arena')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#555555' }}>
             Đấu trường Season <ArrowUpRight size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/grand')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#ea580c' }}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/grand')} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontWeight: 700 }}>
             Grand Championship <ArrowUpRight size={14} />
           </Button>
         </div>
       </div>
 
-      {/* 4 SUMMARY STAT CARDS */}
+      {/* ── 4 SUMMARY STAT CARDS (UNIFIED NEUTRAL WITH GOLD HIGHLIGHTS) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginBottom: 14 }}>
         {/* 1. MY SEASON SCORE */}
         <Card
@@ -152,30 +151,32 @@ export default function CompetitionProgressWidget() {
           title="Bấm để xem Bảng Xếp Hạng Cá Nhân"
           style={{
             padding: 16,
-            background: 'linear-gradient(135deg, rgba(2,132,199,0.05), rgba(99,102,241,0.03))',
-            border: '1px solid rgba(2,132,199,0.18)',
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 10,
             cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Cá Nhân (Season) <ArrowUpRight size={11} color="#0284c7" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#555555', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Cá Nhân (Season) <ArrowUpRight size={11} color="#888888" />
             </span>
-            <div style={{ padding: '2px 8px', borderRadius: 12, background: 'rgba(2,132,199,0.12)', color: '#0284c7', fontSize: 11, fontWeight: 800 }}>
+            <div style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 800 }}>
               {uSum?.currentSeasonRank ? `Hạng #${uSum.currentSeasonRank}` : 'Chưa xếp hạng'}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#0f172a' }}>
+            <span style={{ fontSize: 24, fontWeight: 900, color: '#111111' }}>
               {uSum?.currentSeasonScore?.toLocaleString() || 0}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#64748b' }}>XP</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#777777' }}>XP</span>
           </div>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#64748b' }}>
-            <span>Streak: <strong>{uSum?.currentStreak || 0} ngày</strong></span>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#777777' }}>
+            <span>Streak: <strong style={{ color: '#111111' }}>{uSum?.currentStreak || 0} ngày</strong></span>
             {uSum?.recentScoreDelta ? (
-              <span style={{ color: uSum.recentScoreDelta > 0 ? '#16a34a' : '#dc2626', fontWeight: 700 }}>
+              <span style={{ color: uSum.recentScoreDelta > 0 ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
                 {uSum.recentScoreDelta > 0 ? `+${uSum.recentScoreDelta}` : uSum.recentScoreDelta} gần nhất
               </span>
             ) : null}
@@ -188,28 +189,30 @@ export default function CompetitionProgressWidget() {
           title="Bấm để xem Bảng Xếp Hạng Đội"
           style={{
             padding: 16,
-            background: 'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(5,150,105,0.03))',
-            border: '1px solid rgba(16,185,129,0.18)',
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 10,
             cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Đội Nhóm (Team) <ArrowUpRight size={11} color="#059669" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#555555', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Đội Nhóm (Team) <ArrowUpRight size={11} color="#888888" />
             </span>
-            <div style={{ padding: '2px 8px', borderRadius: 12, background: 'rgba(16,185,129,0.12)', color: '#059669', fontSize: 11, fontWeight: 800 }}>
+            <div style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(0,0,0,0.06)', color: '#111111', fontSize: 11, fontWeight: 800 }}>
               {tSum?.currentSeasonRank ? `Hạng #${tSum.currentSeasonRank}` : 'Chưa xếp hạng'}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#0f172a' }}>
+            <span style={{ fontSize: 24, fontWeight: 900, color: '#111111' }}>
               {tSum?.currentSeasonScore?.toLocaleString() || 0}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#64748b' }}>XP</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#777777' }}>XP</span>
           </div>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#64748b' }}>
-            <span>Đội: <strong>{tSum?.teamName || data?.user?.team?.name || 'Chưa vào đội'}</strong></span>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#777777' }}>
+            <span>Đội: <strong style={{ color: '#111111' }}>{tSum?.teamName || data?.user?.team?.name || 'Chưa vào đội'}</strong></span>
             <span>{tSum?.membersCount || 1} thành viên</span>
           </div>
         </Card>
@@ -220,70 +223,72 @@ export default function CompetitionProgressWidget() {
           title="Bấm để xem Bảng Xếp Hạng Grand Championship"
           style={{
             padding: 16,
-            background: 'linear-gradient(135deg, rgba(249,115,22,0.05), rgba(234,88,12,0.03))',
-            border: '1px solid rgba(249,115,22,0.18)',
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 10,
             cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#ea580c', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Grand Race {grand?.year || '2026'} <ArrowUpRight size={11} color="#ea580c" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Grand Race {grand?.year || '2026'} <ArrowUpRight size={11} color="#b45309" />
             </span>
-            <div style={{ padding: '2px 8px', borderRadius: 12, background: 'rgba(249,115,22,0.12)', color: '#ea580c', fontSize: 11, fontWeight: 800 }}>
+            <div style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 800 }}>
               {uSum?.grandRank ? `Hạng #${uSum.grandRank}` : (tSum?.grandRank ? `Hạng #${tSum.grandRank}` : '—')}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#ea580c' }}>
+            <span style={{ fontSize: 24, fontWeight: 900, color: '#111111' }}>
               {(uSum?.grandPoints ?? tSum?.grandPoints ?? 0).toLocaleString()}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#ea580c' }}>GP</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#b45309' }}>GP</span>
           </div>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#64748b' }}>
-            <span>Vô địch mùa: <strong>{uSum?.seasonWins || tSum?.seasonWins || 0}</strong></span>
-            <span>Podiums: <strong>{uSum?.podiumCount || tSum?.podiumCount || 0}</strong></span>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#777777' }}>
+            <span>Vô địch mùa: <strong style={{ color: '#111111' }}>{uSum?.seasonWins || tSum?.seasonWins || 0}</strong></span>
+            <span>Podiums: <strong style={{ color: '#111111' }}>{uSum?.podiumCount || tSum?.podiumCount || 0}</strong></span>
           </div>
         </Card>
 
         {/* 4. WEEKLY PROGRESS */}
-        <Card style={{ padding: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
+        <Card style={{ padding: 16, background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#555555', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Tiến Độ Tuần Này
             </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#111111' }}>
               {uSum?.weeklyProgress || 0}%
             </span>
           </div>
           {/* Progress Bar */}
-          <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, overflow: 'hidden', margin: '10px 0 8px 0' }}>
+          <div style={{ height: 8, background: '#f4f3ef', borderRadius: 4, overflow: 'hidden', margin: '10px 0 8px 0' }}>
             <div
               style={{
                 width: `${Math.min(100, uSum?.weeklyProgress || 0)}%`,
                 height: '100%',
-                background: 'linear-gradient(90deg, #0284c7, #10b981)',
-                borderRadius: 6,
+                background: '#141414',
+                borderRadius: 4,
                 transition: 'width 0.5s ease',
               }}
             />
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Mục tiêu tuần: 500 XP</span>
+          <div style={{ fontSize: 11, color: '#777777', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Mục tiêu: 500 XP</span>
             <span>{uSum?.currentSeasonScore || 0} / 500</span>
           </div>
         </Card>
       </div>
 
-      {/* RECENT COMPETITION ACTIVITIES FEED */}
+      {/* ── RECENT COMPETITION ACTIVITIES FEED ── */}
       {activities.length > 0 && (
-        <Card style={{ padding: '14px 18px', background: '#fafafa', border: '1px solid #e2e8f0' }}>
+        <Card style={{ padding: '14px 18px', background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#334155' }}>
-              <Clock size={14} color="#64748b" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#111111' }}>
+              <Clock size={14} color="#777777" />
               <span>Hoạt động thi đua gần nhất</span>
             </div>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>Realtime projection feed</span>
+            <span style={{ fontSize: 11, color: '#777777' }}>Realtime projection feed</span>
           </div>
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
             {activities.slice(0, 5).map((act, idx) => (
@@ -293,17 +298,16 @@ export default function CompetitionProgressWidget() {
                   minWidth: 200,
                   maxWidth: 240,
                   padding: '8px 12px',
-                  background: '#fff',
-                  borderRadius: 8,
-                  border: '1px solid #e2e8f0',
+                  background: '#f4f3ef',
+                  borderRadius: 6,
+                  border: '1px solid rgba(0,0,0,0.06)',
                   fontSize: 12,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
                 }}
               >
-                <div style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontWeight: 700, color: '#111111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {act.title}
                 </div>
-                <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: '#777777', marginTop: 2 }}>
                   {new Date(act.occurredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {act.type}
                 </div>
               </div>

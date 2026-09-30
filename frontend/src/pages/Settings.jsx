@@ -434,15 +434,15 @@ export default function Settings() {
           <div className="settings-account-avatar">
             {String(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="settings-account-meta">
+            <div className="settings-account-name-row">
               <strong>{user?.name || 'Người dùng'}</strong>
               {isVerifiedBadge && <VerifiedBadge size={16} />}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <div className="settings-account-sub-row">
               <JobTitleBadge jobTitle={user?.jobTitle} size="xs" />
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <span style={{ fontSize: 12, color: '#64748b' }}>{user?.department || 'Media & Content'}</span>
+              <span className="settings-account-dot">•</span>
+              <span className="settings-account-dept">{user?.department || 'Media & Content'}</span>
             </div>
           </div>
         </div>
@@ -570,9 +570,9 @@ export default function Settings() {
           </div>
 
           {isAdmin ? (
-            <form onSubmit={saveAdminJobProfile} style={{ padding: 16, background: 'rgba(56,189,248,0.04)', border: '1px solid rgba(56,189,248,0.25)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={saveAdminJobProfile} style={{ padding: 16, background: 'rgba(180,83,9,0.04)', border: '1px solid rgba(180,83,9,0.25)', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#0284c7', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Edit3 size={15} /> Điều chỉnh Chức danh & Huy hiệu (Dành cho Quản trị viên)
                 </div>
                 <span style={{ fontSize: 11, color: '#64748b' }}>
@@ -584,7 +584,7 @@ export default function Settings() {
               <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                 <label style={{ display: 'block', marginBottom: 4 }}>
                   <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Users size={13} color="#0284c7" /> Trỏ xuống chọn nhân viên cần gán chức vụ:
+                    <Users size={13} color="#b45309" /> Trỏ xuống chọn nhân viên cần gán chức vụ:
                   </span>
                 </label>
                 <select
@@ -657,7 +657,7 @@ export default function Settings() {
                 <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                   <label style={{ display: 'block', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Building2 size={13} color="#0284c7" /> Phòng ban công tác:
+                      <Building2 size={13} color="#b45309" /> Phòng ban công tác:
                     </span>
                   </label>
                   <select
@@ -700,7 +700,7 @@ export default function Settings() {
                   )}
 
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Building2 size={13} color="#0284c7" />
+                    <Building2 size={13} color="#b45309" />
                     <span>Phòng ban: <strong style={{ color: '#0f172a' }}>{adminJobForm.isCustomDept ? (adminJobForm.customDept || 'Chưa đặt') : adminJobForm.department}</strong></span>
                   </div>
                 </div>
@@ -733,7 +733,7 @@ export default function Settings() {
 
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Shield size={13} color="#dc2626" />
-                    <span>Phân quyền: <strong style={{ color: adminJobForm.role === 'admin' ? '#dc2626' : '#0284c7' }}>{roleLabel(adminJobForm.role)}</strong></span>
+                    <span>Phân quyền: <strong style={{ color: adminJobForm.role === 'admin' ? '#dc2626' : '#b45309' }}>{roleLabel(adminJobForm.role)}</strong></span>
                   </div>
                 </div>
               </div>
@@ -746,7 +746,7 @@ export default function Settings() {
             </form>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
-              <Lightbulb size={14} color="#0284c7" />
+              <Lightbulb size={14} color="#b45309" />
               <em>Chức danh công tác và phân bổ phòng ban được quản lý tập trung bởi Ban Quản Trị / Nhân sự để đảm bảo tính chuẩn hóa tổ chức.</em>
             </div>
           )}
@@ -776,19 +776,19 @@ export default function Settings() {
             {/* 1. Verified */}
             <div style={{
               padding: 14,
-              background: isVerifiedBadge ? 'rgba(56,189,248,0.06)' : 'rgba(15,23,42,0.02)',
-              border: isVerifiedBadge ? '1px solid rgba(56,189,248,0.3)' : '1px solid rgba(15,23,42,0.08)',
+              background: isVerifiedBadge ? 'rgba(180,83,9,0.06)' : 'rgba(15,23,42,0.02)',
+              border: isVerifiedBadge ? '1px solid rgba(180,83,9,0.3)' : '1px solid rgba(15,23,42,0.08)',
               display: 'flex', gap: 12, alignItems: 'flex-start',
             }}>
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: isVerifiedBadge ? 'rgba(56,189,248,0.15)' : 'rgba(15,23,42,0.05)',
-                color: isVerifiedBadge ? '#0284c7' : '#94a3b8',
+                background: isVerifiedBadge ? 'rgba(180,83,9,0.15)' : 'rgba(15,23,42,0.05)',
+                color: isVerifiedBadge ? '#b45309' : '#94a3b8',
               }}>
                 <BadgeCheck size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isVerifiedBadge ? '#0284c7' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: isVerifiedBadge ? '#b45309' : '#0f172a' }}>
                   Đã Xác Minh (Verified)
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
@@ -864,7 +864,7 @@ export default function Settings() {
                   Nhân Viên Xuất Sắc {mvpCount > 1 && `(x${mvpCount})`}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                  {isMvpBadge ? `⭐ Đã nhận ${mvpCount} danh hiệu MVP` : 'Chưa có danh hiệu MVP'}
+                  {isMvpBadge ? `Đã nhận ${mvpCount} danh hiệu MVP xuất sắc` : 'Chưa có danh hiệu MVP'}
                 </div>
               </div>
             </div>
@@ -878,7 +878,7 @@ export default function Settings() {
                 type="button"
                 onClick={loadRecognitions}
                 disabled={loadingRecognitions}
-                style={{ background: 'transparent', border: 'none', color: '#0284c7', fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
                 <RefreshCw size={12} className={loadingRecognitions ? 'spin' : ''} /> Làm mới
               </button>
@@ -1096,7 +1096,7 @@ export default function Settings() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Award size={18} color="#0284c7" />
+                <Award size={18} color="#b45309" />
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
                   Trao Thưởng Danh Hiệu Chính Thức
                 </h3>

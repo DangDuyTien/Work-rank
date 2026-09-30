@@ -223,7 +223,7 @@ export default function AdminOperations() {
       {/* ── HEADER / OPERATIONS HERO ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(56,189,248,0.08)', color: '#0284c7', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
             <Activity size={14} />
             Trung tâm kiểm toán & Giám sát vận hành
           </div>
@@ -245,7 +245,7 @@ export default function AdminOperations() {
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
             <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Sự Kiện Xử Lý</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#0284c7', fontWeight: 900 }}>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>
               {fmtNum(integrationHealth?.events?.totalProcessed || events.length)}
             </strong>
           </div>
@@ -312,7 +312,7 @@ export default function AdminOperations() {
               <div style={{ ...CARD, padding: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Activity size={18} color="#0284c7" />
+                    <Activity size={18} color="#b45309" />
                     <strong style={{ fontSize: 14, color: '#0f172a' }}>API & Competition Engine</strong>
                   </div>
                   <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 900 }}>
@@ -415,7 +415,7 @@ export default function AdminOperations() {
                   onClick={handleCheckConsistency}
                   style={{
                     padding: '6px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.15)',
-                    fontSize: 11, fontWeight: 800, color: '#0284c7', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: 11, fontWeight: 800, color: '#b45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
                   <RefreshCw size={12} /> Kiểm tra độ lệch (Drift Check)
@@ -521,8 +521,8 @@ export default function AdminOperations() {
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{
                             fontSize: 10, fontWeight: 900, padding: '2px 8px',
-                            background: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? 'rgba(124,58,237,0.1)' : 'rgba(56,189,248,0.12)',
-                            color: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? '#7c3aed' : '#0284c7',
+                            background: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? 'rgba(124,58,237,0.1)' : 'rgba(180,83,9,0.12)',
+                            color: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? '#7c3aed' : '#b45309',
                           }}>
                             {log.action}
                           </span>
@@ -542,7 +542,7 @@ export default function AdminOperations() {
                             onClick={() => setSelectedAuditLog(log)}
                             style={{
                               padding: '4px 8px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.1)',
-                              fontSize: 11, fontWeight: 800, color: '#0284c7', cursor: 'pointer',
+                              fontSize: 11, fontWeight: 800, color: '#b45309', cursor: 'pointer',
                             }}
                           >
                             Xem
@@ -725,7 +725,7 @@ export default function AdminOperations() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={18} color="#0284c7" /> Chi Tiết Nhật Ký Kiểm Toán
+                <FileText size={18} color="#b45309" /> Chi Tiết Nhật Ký Kiểm Toán
               </h3>
               <button type="button" onClick={() => setSelectedAuditLog(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={18} />
@@ -735,7 +735,7 @@ export default function AdminOperations() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                 <span style={{ color: '#64748b' }}>Hành động:</span>
-                <strong style={{ color: '#0284c7' }}>{selectedAuditLog.action}</strong>
+                <strong style={{ color: '#b45309' }}>{selectedAuditLog.action}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                 <span style={{ color: '#64748b' }}>Thời gian:</span>
@@ -780,7 +780,7 @@ export default function AdminOperations() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <RotateCcw size={18} color="#0284c7" /> Thử Lại Sự Kiện
+                <RotateCcw size={18} color="#b45309" /> Thử Lại Sự Kiện
               </h3>
               <button type="button" onClick={() => setRetryModalEvent(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={18} />
@@ -810,7 +810,7 @@ export default function AdminOperations() {
                 <button type="button" onClick={() => setRetryModalEvent(null)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: '#0284c7', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
                   {submittingRetry ? 'Đang gửi...' : 'Xác Nhận Thử Lại'}
                 </button>
               </div>

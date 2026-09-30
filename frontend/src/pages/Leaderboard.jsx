@@ -42,37 +42,37 @@ import { TabTransition, TableSkeleton, CardSkeleton } from '../components/ui';
 
 const CARD = {
   background: '#ffffff',
-  border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 0,
-  boxShadow: 'none',
+  border: '1px solid rgba(0,0,0,0.08)',
+  borderRadius: 10,
+  boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
 };
 
 const AVATAR_GRADS = [
-  '#f59e0b',
-  '#64748b',
   '#b45309',
-  '#38bdf8',
-  '#22c55e',
-  '#a78bfa',
+  '#555555',
+  '#15803d',
+  '#141414',
+  '#777777',
+  '#0369a1',
 ];
 
 const BADGE_STYLES = {
   dev: {
-    bg: 'linear-gradient(180deg, rgba(255,255,255,0.99), rgba(246,252,255,0.96))',
-    border: 'rgba(125,211,252,0.34)',
-    color: '#0284c7',
+    bg: 'rgba(0,0,0,0.05)',
+    border: 'rgba(0,0,0,0.14)',
+    color: '#111111',
     icon: Code2,
   },
-  partner: { bg: 'rgba(236,253,245,0.98)', border: 'rgba(20,184,166,0.5)', color: '#047857', icon: ShieldCheck },
-  champion: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Crown },
-  weekly: { bg: 'rgba(56,189,248,0.12)', border: 'rgba(56,189,248,0.26)', color: '#38bdf8', icon: Medal },
-  monthly: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.28)', color: '#7c3aed', icon: Sparkles },
-  rankLegend: { bg: 'linear-gradient(135deg, rgba(190,18,60,0.14), rgba(245,158,11,0.18))', border: 'rgba(190,18,60,0.34)', color: '#be123c', icon: Crown },
-  rankDiamond: { bg: 'linear-gradient(135deg, rgba(124,58,237,0.13), rgba(34,211,238,0.16))', border: 'rgba(124,58,237,0.3)', color: '#6d28d9', icon: Sparkles },
-  rankGold: { bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.3)', color: '#b45309', icon: Medal },
-  rankSilver: { bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.24)', color: '#64748b', icon: ShieldCheck },
-  rankBronze: { bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.18)', color: '#92400e', icon: BadgeCheck },
-  streak: { bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.24)', color: '#16a34a', icon: CheckCheck },
+  partner: { bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.25)', color: '#15803d', icon: ShieldCheck },
+  champion: { bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.25)', color: '#b45309', icon: Crown },
+  weekly: { bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.12)', color: '#111111', icon: Medal },
+  monthly: { bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.25)', color: '#b45309', icon: Sparkles },
+  rankLegend: { bg: 'rgba(180,83,9,0.1)', border: 'rgba(180,83,9,0.3)', color: '#b45309', icon: Crown },
+  rankDiamond: { bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.15)', color: '#111111', icon: Sparkles },
+  rankGold: { bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.25)', color: '#b45309', icon: Medal },
+  rankSilver: { bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.12)', color: '#555555', icon: ShieldCheck },
+  rankBronze: { bg: 'rgba(180,83,9,0.06)', border: 'rgba(180,83,9,0.18)', color: '#92400e', icon: BadgeCheck },
+  streak: { bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.24)', color: '#15803d', icon: CheckCheck },
 };
 
 function fmtNum(n) {
@@ -360,7 +360,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                     {u.userLevel && <LevelText user={u} compact />}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#38bdf8', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
                   {fmtNum(scoreVal)} <span style={{ fontSize: 10, color: '#94a3b8' }}>{scoreSuffix}</span>
                 </div>
               </div>
@@ -409,15 +409,15 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 14,
-        borderColor: 'rgba(56,189,248,0.3)',
-        background: 'rgba(56,189,248,0.05)',
+        borderColor: 'rgba(180,83,9,0.3)',
+        background: 'rgba(180,83,9,0.05)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         {/* Hộp số hạng màu xanh nổi tiếng */}
         <div style={{
           width: 44, height: 44, borderRadius: 0,
-          background: '#38bdf8', color: '#ffffff',
+          background: '#b45309', color: '#ffffff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, fontWeight: 900, flexShrink: 0,
           fontFamily: "'JetBrains Mono',monospace",
@@ -450,8 +450,8 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
           onClick={() => onNavigateUser && onNavigateUser(currentUser)}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            border: '1px solid rgba(56,189,248,0.25)',
-            background: '#ffffff', color: '#0284c7',
+            border: '1px solid rgba(180,83,9,0.25)',
+            background: '#ffffff', color: '#b45309',
             borderRadius: 0, padding: '8px 14px',
             fontSize: 12, fontWeight: 900, cursor: 'pointer',
             flexShrink: 0,
@@ -693,12 +693,12 @@ export default function Leaderboard() {
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <Trophy size={22} color="#38bdf8" />
+            <Trophy size={22} color="#b45309" />
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', color: '#ffffff' }}>
               Bảng Xếp Hạng Toàn Hệ Thống
             </h1>
             <span style={{
-              background: 'rgba(56,189,248,0.2)', color: '#38bdf8',
+              background: 'rgba(180,83,9,0.2)', color: '#b45309',
               fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 0,
               textTransform: 'uppercase',
             }}>
@@ -747,7 +747,7 @@ export default function Leaderboard() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 14px', borderRadius: 0, border: 'none',
-                background: isActive ? '#38bdf8' : 'transparent',
+                background: isActive ? '#b45309' : 'transparent',
                 color: isActive ? '#ffffff' : '#64748b',
                 fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',
@@ -901,10 +901,10 @@ function OverviewSection({ data, onSelectTab, navigate }) {
       {/* 3 THẺ TÓM TẮT ĐỈNH CAO */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14 }}>
         {/* ĐỘI DẪN ĐẦU */}
-        <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #0284c7' }}>
+        <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Users size={14} color="#0284c7" /> Đội Dẫn Đầu Mùa Giải
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Users size={14} color="#b45309" /> Đội Dẫn Đầu Mùa Giải
             </span>
             <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', fontSize: 10, fontWeight: 900 }}>
               #1 TOP TEAM
@@ -913,7 +913,7 @@ function OverviewSection({ data, onSelectTab, navigate }) {
           {topTeam ? (
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>{topTeam.teamName}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#0284c7', marginTop: 4 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#b45309', marginTop: 4 }}>
                 {fmtNum(topTeam.totalScore ?? topTeam.score ?? 0)}{' '}
                 <span style={{ fontSize: 12, color: '#64748b' }}>pts ({data.activeSeason?.name || 'Mùa giải'})</span>
               </div>
@@ -924,8 +924,8 @@ function OverviewSection({ data, onSelectTab, navigate }) {
           <button
             onClick={() => onSelectTab('team')}
             style={{
-              marginTop: 14, width: '100%', background: 'rgba(2,132,199,0.06)',
-              border: '1px solid rgba(2,132,199,0.2)', color: '#0284c7',
+              marginTop: 14, width: '100%', background: 'rgba(180,83,9,0.06)',
+              border: '1px solid rgba(180,83,9,0.2)', color: '#b45309',
               padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
             }}
@@ -1009,14 +1009,14 @@ function OverviewSection({ data, onSelectTab, navigate }) {
         <div style={{ ...CARD, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Swords size={18} color="#0284c7" />
+              <Swords size={18} color="#b45309" />
               <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
                 Mùa Giải: {data.activeSeason?.name || 'Hiện tại'}
               </span>
             </div>
             <button
               onClick={() => onSelectTab('season')}
-              style={{ border: 'none', background: 'transparent', color: '#0284c7', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              style={{ border: 'none', background: 'transparent', color: '#b45309', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
               Chi tiết <ArrowRight size={13} />
             </button>
@@ -1103,7 +1103,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
               onClick={() => setParam('teamScope', s.id)}
               style={{
                 border: 'none',
-                background: currentScope === s.id ? '#38bdf8' : 'transparent',
+                background: currentScope === s.id ? '#b45309' : 'transparent',
                 color: currentScope === s.id ? '#ffffff' : '#64748b',
                 padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
               }}
@@ -1165,7 +1165,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                     className="leaderboard-row"
                     style={{
                       borderBottom: '1px solid rgba(15,23,42,0.04)',
-                      background: isMyTeam ? 'rgba(56,189,248,0.06)' : 'transparent',
+                      background: isMyTeam ? 'rgba(180,83,9,0.06)' : 'transparent',
                     }}
                   >
                     <td style={{ padding: '12px 16px' }}>
@@ -1184,7 +1184,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                       <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
                         {row.teamName}
                         {isMyTeam && (
-                          <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#38bdf8', color: '#fff' }}>
+                          <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>
                             ĐỘI BẠN
                           </span>
                         )}
@@ -1192,7 +1192,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                       {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} pts so với #1</div>}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: currentScope === 'grand' ? '#d97706' : '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: currentScope === 'grand' ? '#d97706' : '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
                         {fmtNum(scoreVal)}
                       </span>
                     </td>
@@ -1252,7 +1252,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                 onClick={() => setParam('indScope', s.id)}
                 style={{
                   border: 'none',
-                  background: currentScope === s.id ? '#38bdf8' : 'transparent',
+                  background: currentScope === s.id ? '#b45309' : 'transparent',
                   color: currentScope === s.id ? '#ffffff' : '#64748b',
                   padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}
@@ -1332,7 +1332,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                     style={{
                       borderBottom: '1px solid rgba(15,23,42,0.04)',
                       cursor: 'pointer',
-                      background: isMe ? 'rgba(56,189,248,0.06)' : 'transparent',
+                      background: isMe ? 'rgba(180,83,9,0.06)' : 'transparent',
                     }}
                   >
                     <td style={{ padding: '12px 16px' }}>
@@ -1353,8 +1353,8 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{u.userName}</span>
-                            {u.jobTitle && <JobTitleBadge jobTitle={u.jobTitle} role={u.role} size="xs" />}
-                            {isMe && <span style={{ fontSize: 9, fontWeight: 900, padding: '1px 4px', background: '#38bdf8', color: '#fff' }}>BẠN</span>}
+                            {u.jobTitle && <JobTitleBadge jobTitle={u.jobTitle} size="xs" />}
+                            {isMe && <span style={{ fontSize: 9, fontWeight: 900, padding: '1px 4px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                           </div>
                           <div style={{ fontSize: 10, color: '#94a3b8' }}>{u.userEmail}</div>
                           {gap > 0 && <div style={{ fontSize: 10, color: '#dc2626' }}>-{fmtNum(gap)} XP so với #1</div>}
@@ -1421,7 +1421,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
             <button
               onClick={() => setRankingType('team')}
               style={{
-                border: 'none', background: rankingType === 'team' ? '#38bdf8' : 'transparent',
+                border: 'none', background: rankingType === 'team' ? '#b45309' : 'transparent',
                 color: rankingType === 'team' ? '#fff' : '#64748b', padding: '6px 12px',
                 fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1432,7 +1432,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
             <button
               onClick={() => setRankingType('individual')}
               style={{
-                border: 'none', background: rankingType === 'individual' ? '#38bdf8' : 'transparent',
+                border: 'none', background: rankingType === 'individual' ? '#b45309' : 'transparent',
                 color: rankingType === 'individual' ? '#fff' : '#64748b', padding: '6px 12px',
                 fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1445,8 +1445,8 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
             href="/arena"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              border: '1px solid rgba(2,132,199,0.25)', background: 'rgba(2,132,199,0.06)',
-              color: '#0284c7', padding: '6px 12px', fontSize: 11, fontWeight: 800, textDecoration: 'none',
+              border: '1px solid rgba(180,83,9,0.25)', background: 'rgba(180,83,9,0.06)',
+              color: '#b45309', padding: '6px 12px', fontSize: 11, fontWeight: 800, textDecoration: 'none',
             }}
           >
             Đấu Trường Arena <ExternalLink size={12} />
@@ -1500,7 +1500,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
               const scoreVal = r.totalScore ?? r.score ?? 0;
               const gap = leader && rank > 1 ? Number(leader.totalScore ?? leader.score ?? 0) - Number(scoreVal) : 0;
               return (
-                <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(56,189,248,0.06)' : 'transparent' }}>
+                <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
@@ -1512,12 +1512,12 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
                       {rankingType === 'individual' ? r.userName : r.teamName}
-                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#38bdf8', color: '#fff' }}>BẠN</span>}
+                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                     </div>
                     {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} pts so với #1</div>}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: '#16a34a' }}>Realtime</span>
@@ -1569,7 +1569,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
             <button
               onClick={() => setRankingType('team')}
               style={{
-                border: 'none', background: rankingType === 'team' ? '#38bdf8' : 'transparent',
+                border: 'none', background: rankingType === 'team' ? '#b45309' : 'transparent',
                 color: rankingType === 'team' ? '#fff' : '#64748b', padding: '6px 12px',
                 fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1580,7 +1580,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
             <button
               onClick={() => setRankingType('individual')}
               style={{
-                border: 'none', background: rankingType === 'individual' ? '#38bdf8' : 'transparent',
+                border: 'none', background: rankingType === 'individual' ? '#b45309' : 'transparent',
                 color: rankingType === 'individual' ? '#fff' : '#64748b', padding: '6px 12px',
                 fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1648,7 +1648,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
               const scoreVal = r.grandPoints ?? r.score ?? 0;
               const gap = leader && rank > 1 ? Number(leader.grandPoints ?? 0) - Number(scoreVal) : 0;
               return (
-                <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(56,189,248,0.06)' : 'transparent' }}>
+                <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
@@ -1660,7 +1660,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
                       {rankingType === 'individual' ? r.userName : r.teamName}
-                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#38bdf8', color: '#fff' }}>BẠN</span>}
+                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                     </div>
                     {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} GP so với #1</div>}
                   </td>
@@ -1717,7 +1717,7 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
                 key={m.id}
                 onClick={() => setMetric(m.id)}
                 style={{
-                  border: 'none', background: metric === m.id ? '#38bdf8' : 'transparent',
+                  border: 'none', background: metric === m.id ? '#b45309' : 'transparent',
                   color: metric === m.id ? '#fff' : '#64748b', padding: '6px 12px',
                   fontSize: 11, fontWeight: 700, cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1780,7 +1780,7 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
               const rank = row.rank || idx + 1;
               const isMyTeam = Number(row.teamId) === Number(currentUser?.teamId);
               return (
-                <tr key={row.teamId || idx} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMyTeam ? 'rgba(56,189,248,0.06)' : 'transparent' }}>
+                <tr key={row.teamId || idx} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMyTeam ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
                       {rank}
@@ -1789,7 +1789,7 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
                       {row.teamName}
-                      {isMyTeam && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#38bdf8', color: '#fff' }}>ĐỘI BẠN</span>}
+                      {isMyTeam && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>ĐỘI BẠN</span>}
                     </div>
                     <div style={{ fontSize: 10, color: '#94a3b8' }}>{row.channelsCount} kênh · {row.videosCount} video</div>
                   </td>
@@ -1851,7 +1851,7 @@ function HallOfFameSection({ data, navigate }) {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{mvp.userName}</div>
-                    <JobTitleBadge jobTitle={mvp.jobTitle || 'Nhân viên'} role={mvp.role} size="xs" />
+                    <JobTitleBadge jobTitle={mvp.jobTitle} size="xs" />
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>{mvp.teamName || 'Thành viên'}</div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1869,7 +1869,7 @@ function HallOfFameSection({ data, navigate }) {
       {/* CHAMPION TEAMS */}
       <div style={{ ...CARD, padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <Trophy size={18} color="#0284c7" />
+          <Trophy size={18} color="#b45309" />
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
             Đội Vô Địch Mùa Giải
           </h2>
@@ -1880,16 +1880,16 @@ function HallOfFameSection({ data, navigate }) {
               <div
                 key={t.teamId || i}
                 style={{
-                  padding: '12px 14px', border: '1px solid rgba(2,132,199,0.2)',
-                  background: 'rgba(2,132,199,0.04)', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '12px 14px', border: '1px solid rgba(180,83,9,0.2)',
+                  background: 'rgba(180,83,9,0.04)', display: 'flex', alignItems: 'center', gap: 10,
                 }}
               >
-                <div style={{ width: 36, height: 36, background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, background: '#b45309', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trophy size={18} color="#fff" />
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{t.teamName}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', marginTop: 2 }}>
                     {t.seasonsWon} Mùa Vô Địch · {fmtNum(t.grandPoints)} GP
                   </div>
                 </div>

@@ -21,10 +21,10 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
 
 const STATUS_META = {
-  active: { label: 'Đang hoạt động', color: '#16a34a', bg: 'rgba(22,163,74,0.1)', border: 'rgba(22,163,74,0.28)', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', color: '#38bdf8', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.25)', dot: '#38bdf8' },
-  idle: { label: 'Tạm nghỉ', color: '#ca8a04', bg: 'rgba(234,179,8,0.13)', border: 'rgba(234,179,8,0.3)', dot: '#eab308' },
-  offline: { label: 'Ngoại tuyến', color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.22)', dot: '#94a3b8' },
+  active: { label: 'Đang hoạt động', color: '#15803d', bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.2)', dot: '#15803d' },
+  online: { label: 'Trực tuyến', color: '#15803d', bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.2)', dot: '#15803d' },
+  idle: { label: 'Tạm nghỉ', color: '#b45309', bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.2)', dot: '#b45309' },
+  offline: { label: 'Ngoại tuyến', color: '#777777', bg: 'rgba(0,0,0,0.04)', border: 'rgba(0,0,0,0.1)', dot: '#a3a3a3' },
 };
 
 const BUTTON_BASE = {
@@ -88,7 +88,7 @@ function Avatar({ user, size = 42 }) {
       width: size,
       height: size,
       overflow: 'hidden',
-      background: '#38bdf8',
+      background: '#141414',
       color: '#ffffff',
       display: 'flex',
       alignItems: 'center',
@@ -132,12 +132,12 @@ function UserIdentity({ user, subtitle, compact = false }) {
       <Avatar user={user} size={compact ? 36 : 42} />
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-          <strong style={{ color: '#0f172a', fontSize: compact ? 13 : 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <strong style={{ color: '#111111', fontSize: compact ? 13 : 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user.name || user.email || `User #${userIdOf(user)}`}
           </strong>
           {isVerified(user) && <VerifiedBadge size={14} />}
         </div>
-        <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 800, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ color: '#777777', fontSize: 11, fontWeight: 800, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {subtitle || `${formatFriendCode(user)} · ${user.email || 'Không có email'}`}
         </div>
       </div>
@@ -163,7 +163,7 @@ function FriendCard({ item, busy, onRemove, onOpen }) {
         <button
           type="button"
           onClick={() => onOpen(user)}
-          style={{ ...BUTTON_BASE, borderColor: 'rgba(56,189,248,0.18)', background: 'rgba(56,189,248,0.08)', color: '#38bdf8' }}
+          style={{ ...BUTTON_BASE, borderColor: 'var(--border)', background: '#ffffff', color: '#111111' }}
         >
           <Eye size={14} />
           Hồ sơ
@@ -172,7 +172,7 @@ function FriendCard({ item, busy, onRemove, onOpen }) {
           type="button"
           disabled={busy}
           onClick={() => onRemove(user)}
-          style={{ ...BUTTON_BASE, borderColor: 'rgba(220,38,38,0.18)', background: '#ffffff', color: '#dc2626', opacity: busy ? 0.6 : 1 }}
+          style={{ ...BUTTON_BASE, borderColor: 'rgba(185,28,28,0.2)', background: '#ffffff', color: '#b91c1c', opacity: busy ? 0.6 : 1 }}
         >
           <Trash2 size={14} />
           Xóa bạn
@@ -203,7 +203,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
         <button
           type="button"
           onClick={() => onOpen(user)}
-          style={{ ...BUTTON_BASE, minHeight: 32, width: 34, padding: 0, borderColor: 'rgba(15,23,42,0.1)', background: '#ffffff', color: '#64748b' }}
+          style={{ ...BUTTON_BASE, minHeight: 32, width: 34, padding: 0, borderColor: 'var(--border)', background: '#ffffff', color: '#555555' }}
           aria-label="Mở hồ sơ"
         >
           <Eye size={14} />
@@ -214,7 +214,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
               type="button"
               disabled={busy}
               onClick={() => onAccept(item)}
-              style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'rgba(22,163,74,0.22)', background: 'rgba(22,163,74,0.1)', color: '#16a34a', opacity: busy ? 0.6 : 1 }}
+              style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'rgba(21,128,61,0.25)', background: 'rgba(21,128,61,0.1)', color: '#15803d', opacity: busy ? 0.6 : 1 }}
             >
               <Check size={14} />
               Nhận
@@ -223,7 +223,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
               type="button"
               disabled={busy}
               onClick={() => onDecline(item)}
-              style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'rgba(220,38,38,0.18)', background: '#ffffff', color: '#dc2626', opacity: busy ? 0.6 : 1 }}
+              style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'rgba(185,28,28,0.2)', background: '#ffffff', color: '#b91c1c', opacity: busy ? 0.6 : 1 }}
             >
               <X size={14} />
               Từ chối
@@ -234,7 +234,7 @@ function RequestRow({ item, type, busy, onAccept, onDecline, onCancel, onOpen })
             type="button"
             disabled={busy}
             onClick={() => onCancel(item)}
-            style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'rgba(15,23,42,0.1)', background: '#ffffff', color: '#64748b', opacity: busy ? 0.6 : 1 }}
+            style={{ ...BUTTON_BASE, minHeight: 32, borderColor: 'var(--border)', background: '#ffffff', color: '#777777', opacity: busy ? 0.6 : 1 }}
           >
             <X size={14} />
             Hủy
@@ -271,7 +271,7 @@ function SearchResult({ user, state, busy, onSend, onAcceptIncoming, onOpen }) {
         <button
           type="button"
           onClick={() => onOpen(user)}
-          style={{ ...BUTTON_BASE, minHeight: 32, width: 34, padding: 0, borderColor: 'rgba(15,23,42,0.1)', background: '#ffffff', color: '#64748b' }}
+          style={{ ...BUTTON_BASE, minHeight: 32, width: 34, padding: 0, borderColor: 'var(--border)', background: '#ffffff', color: '#555555' }}
           aria-label="Mở hồ sơ"
         >
           <Eye size={14} />
@@ -283,9 +283,9 @@ function SearchResult({ user, state, busy, onSend, onAcceptIncoming, onOpen }) {
           style={{
             ...BUTTON_BASE,
             minHeight: 32,
-            borderColor: disabled ? 'rgba(15,23,42,0.1)' : 'rgba(56,189,248,0.24)',
-            background: disabled ? '#f8fafc' : '#38bdf8',
-            color: disabled ? '#94a3b8' : '#ffffff',
+            borderColor: disabled ? 'var(--border)' : '#141414',
+            background: disabled ? 'rgba(0,0,0,0.04)' : '#141414',
+            color: disabled ? '#777777' : '#ffffff',
             opacity: busy ? 0.65 : 1,
           }}
         >
@@ -525,7 +525,7 @@ export default function Friends() {
             type="button"
             onClick={() => loadData({ background: true })}
             disabled={refreshing}
-            style={{ ...BUTTON_BASE, background: '#ffffff', borderColor: 'rgba(15,23,42,0.12)', color: '#475569', opacity: refreshing ? 0.65 : 1 }}
+            style={{ ...BUTTON_BASE, background: '#ffffff', borderColor: 'var(--border)', color: '#111111', opacity: refreshing ? 0.65 : 1 }}
           >
             <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
             Làm mới
@@ -535,7 +535,7 @@ export default function Friends() {
 
       {friendLoadError && (
         <Card tone="warning" style={{ padding: 12 }}>
-          <div style={{ color: '#92400e', fontSize: 12, fontWeight: 800, lineHeight: 1.5 }}>
+          <div style={{ color: '#b45309', fontSize: 12, fontWeight: 800, lineHeight: 1.5 }}>
             {friendLoadError}
           </div>
         </Card>
@@ -543,10 +543,10 @@ export default function Friends() {
 
       {/* STATS */}
       <div className="friends-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
-        <StatCard icon={Users} label="Bạn bè" value={friendRows.length} color="#38bdf8" />
-        <StatCard label="Đang online" value={onlineCount} color="#16a34a" />
-        <StatCard label="Lời mời đến" value={incoming.length} color="#d97706" />
-        <StatCard label="Đã gửi" value={outgoing.length} color="#64748b" />
+        <StatCard icon={Users} label="Bạn bè" value={friendRows.length} color="#b45309" />
+        <StatCard label="Đang online" value={onlineCount} color="#15803d" />
+        <StatCard label="Lời mời đến" value={incoming.length} color="#b45309" />
+        <StatCard label="Đã gửi" value={outgoing.length} color="#777777" />
       </div>
 
       {/* MAIN 2-COLUMN LAYOUT */}
@@ -581,12 +581,12 @@ export default function Friends() {
         <div style={{ display: 'grid', gap: 16 }}>
           <Section title="Tìm và kết bạn">
             <div style={{ position: 'relative', marginBottom: 12 }}>
-              <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#777777' }} />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Nhập tên, email hoặc WR-0001..."
-                style={{ width: '100%', minHeight: 40, border: '1px solid var(--border-2)', padding: '0 12px 0 36px', outline: 'none', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
+                style={{ width: '100%', minHeight: 40, border: '1px solid var(--border)', padding: '0 12px 0 36px', outline: 'none', color: '#111111', fontSize: 13, fontWeight: 700, background: '#ffffff' }}
               />
             </div>
 
@@ -620,7 +620,7 @@ export default function Friends() {
           <Section title="Lời mời kết bạn">
             <div style={{ display: 'grid', gap: 10 }}>
               {incoming.length === 0 ? (
-                <div style={{ border: '1px dashed var(--border-2)', padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed var(--border)', padding: 14, color: '#777777', fontSize: 12, fontWeight: 700, background: '#ffffff' }}>
                   Chưa có lời mời mới.
                 </div>
               ) : incoming.map((row) => (
@@ -638,10 +638,10 @@ export default function Friends() {
 
             <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
 
-            <h3 style={{ margin: '0 0 10px', color: '#475569', fontSize: 13, fontWeight: 900 }}>Đã gửi</h3>
+            <h3 style={{ margin: '0 0 10px', color: '#111111', fontSize: 13, fontWeight: 900 }}>Đã gửi</h3>
             <div style={{ display: 'grid', gap: 10 }}>
               {outgoing.length === 0 ? (
-                <div style={{ border: '1px dashed var(--border-2)', padding: 14, color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ border: '1px dashed var(--border)', padding: 14, color: '#777777', fontSize: 12, fontWeight: 700, background: '#ffffff' }}>
                   Không có lời mời đang chờ.
                 </div>
               ) : outgoing.map((row) => (

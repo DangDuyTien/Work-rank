@@ -8,10 +8,10 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
 
 const STATUS_META = {
-  active: { label: 'Active', color: '#16a34a', dot: '#22c55e' },
-  online: { label: 'Online', color: '#38bdf8', dot: '#38bdf8' },
-  idle: { label: 'Tạm nghỉ', color: '#ca8a04', dot: '#eab308' },
-  offline: { label: 'Offline', color: '#94a3b8', dot: '#94a3b8' },
+  active: { label: 'Active', color: '#15803d', dot: '#15803d' },
+  online: { label: 'Online', color: '#b45309', dot: '#b45309' },
+  idle: { label: 'Tạm nghỉ', color: '#b45309', dot: '#d97706' },
+  offline: { label: 'Offline', color: '#777777', dot: '#a3a3a3' },
 };
 
 function userIdOf(user = {}) {

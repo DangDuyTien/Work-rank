@@ -105,10 +105,17 @@ function serializeUserWithProfile(user) {
 function serializeUserListItem(user) {
   const plain = sanitizeUser(user);
   const preference = plain.UserProfilePreference || plain.userProfilePreference || null;
+  const team = plain.Team || plain.team || null;
   delete plain.UserProfilePreference;
   delete plain.userProfilePreference;
+  delete plain.Team;
+  delete plain.team;
   return decorateUserPresence({
     ...plain,
+    team: team ? { id: team.id, name: team.name, ownerId: team.ownerId } : null,
+    teamId: plain.teamId || team?.id || null,
+    teamName: team?.name || null,
+    isTeamLeader: team ? String(team.ownerId || '') === String(plain.id) : false,
     featuredBadges: Array.isArray(preference?.featuredBadges) ? preference.featuredBadges : [],
   });
 }
@@ -131,6 +138,8 @@ async function list(req, res) {
   const page = clampPositiveInt(req.query.page, 1, 1000000);
   const offset = (page - 1) * limit;
   const search = String(req.query.search || '').trim();
+  const department = String(req.query.department || '').trim();
+  const hasTeam = req.query.hasTeam;
   const withCount = req.query.withCount !== '0' && req.query.withCount !== 'false';
   const withProfile = req.query.withProfile !== '0' && req.query.withProfile !== 'false';
   const where = {};
@@ -139,9 +148,19 @@ async function list(req, res) {
     const searchClauses = [
       { name: { [Op.like]: `%${search}%` } },
       { email: { [Op.like]: `%${search}%` } },
+      { jobTitle: { [Op.like]: `%${search}%` } },
+      { department: { [Op.like]: `%${search}%` } },
     ];
     if (idMatch) searchClauses.push({ id: Number(idMatch[1]) });
     where[Op.or] = searchClauses;
+  }
+  if (department && department !== 'all') {
+    where.department = department;
+  }
+  if (hasTeam === 'true') {
+    where.teamId = { [Op.ne]: null };
+  } else if (hasTeam === 'false') {
+    where.teamId = null;
   }
 
   const queryOptions = {
@@ -149,7 +168,10 @@ async function list(req, res) {
     order: [['createdAt', 'DESC'], ['id', 'DESC']],
     limit,
     offset,
-    include: withProfile ? [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }] : [],
+    include: [
+      ...(withProfile ? [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }] : []),
+      { model: Team, attributes: ['id', 'name', 'ownerId'], required: false },
+    ],
   };
   const { count, rows } = withCount
     ? await User.findAndCountAll(queryOptions)

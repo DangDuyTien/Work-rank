@@ -23,17 +23,18 @@ async function ensureInviteCode(team) {
 async function toGroupPayload(team, userId) {
   await ensureInviteCode(team);
   const memberWhere = { teamId: team.id, status: 'active' };
-  const [memberCount, members] = await Promise.all([
+  const [memberCount, members, owner] = await Promise.all([
     User.count({ where: memberWhere }),
     User.findAll({
       where: memberWhere,
-      attributes: ['id', 'name', 'email', 'role', 'isVerified', 'status'],
+      attributes: ['id', 'name', 'email', 'role', 'jobTitle', 'department', 'isVerified', 'status', 'lastSeenAt'],
       order: [
         ['name', 'ASC'],
         ['id', 'ASC'],
       ],
       limit: 100,
     }),
+    team.ownerId ? User.findByPk(team.ownerId, { attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified'] }) : null,
   ]);
   return {
     id: team.id,
@@ -43,6 +44,14 @@ async function toGroupPayload(team, userId) {
     inviteCode: team.inviteCode,
     owner_id: team.ownerId,
     ownerId: team.ownerId,
+    owner: owner ? {
+      id: owner.id,
+      name: owner.name,
+      email: owner.email,
+      jobTitle: owner.jobTitle,
+      department: owner.department,
+      isVerified: owner.isVerified,
+    } : null,
     member_count: memberCount,
     memberCount,
     members: members.map((member) => ({
@@ -50,11 +59,16 @@ async function toGroupPayload(team, userId) {
       name: member.name,
       email: member.email,
       role: member.role,
+      jobTitle: member.jobTitle,
+      department: member.department,
       isVerified: member.isVerified,
       status: member.status,
+      lastSeenAt: member.lastSeenAt,
       groupRole: String(team.ownerId || '') === String(member.id) ? 'owner' : 'member',
+      isLeader: String(team.ownerId || '') === String(member.id),
     })),
     role: String(team.ownerId || '') === String(userId) ? 'owner' : 'member',
+    isLeader: String(team.ownerId || '') === String(userId),
   };
 }
 
@@ -91,6 +105,35 @@ async function listForUser(user) {
   const team = await Team.findByPk(user.teamId);
   if (!team) return [];
   return [await toGroupPayload(team, user.id)];
+}
+
+async function listAllTeams() {
+  const teams = await Team.findAll({
+    order: [['name', 'ASC']],
+    include: [
+      { model: User, as: 'Owner', attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified'] },
+    ],
+  });
+  const teamsWithCounts = await Promise.all(teams.map(async (t) => {
+    const count = await User.count({ where: { teamId: t.id, status: 'active' } });
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      inviteCode: t.inviteCode,
+      ownerId: t.ownerId,
+      owner: t.Owner ? {
+        id: t.Owner.id,
+        name: t.Owner.name,
+        email: t.Owner.email,
+        jobTitle: t.Owner.jobTitle,
+        department: t.Owner.department,
+        isVerified: t.Owner.isVerified,
+      } : null,
+      memberCount: count,
+    };
+  }));
+  return teamsWithCounts;
 }
 
 async function create(user, payload) {
@@ -186,4 +229,27 @@ async function kick(user, teamId, targetUserId) {
   return toGroupPayload(team, user.id);
 }
 
-module.exports = { listForUser, create, join, leave, update, remove, kick };
+async function addMember(user, teamId, targetUserId) {
+  const team = await loadTeamOrThrow(teamId);
+  assertCanManage(user, team);
+  const target = await User.findByPk(targetUserId);
+  if (!target || target.status === 'inactive') {
+    const error = new Error('Thành viên không tồn tại hoặc tài khoản đã bị vô hiệu hóa');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (target.teamId) {
+    if (String(target.teamId) === String(team.id)) {
+      const error = new Error('Thành viên này đã ở trong đội của bạn');
+      error.statusCode = 400;
+      throw error;
+    }
+    const error = new Error('Thành viên này đang thuộc một đội khác');
+    error.statusCode = 400;
+    throw error;
+  }
+  await target.update({ teamId: team.id });
+  return toGroupPayload(team, user.id);
+}
+
+module.exports = { listForUser, listAllTeams, create, join, leave, update, remove, kick, addMember };

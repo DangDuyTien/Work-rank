@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { friends as friendsApi, users as usersApi } from '../services/api';
+import { users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   avatarHue,
@@ -94,7 +94,7 @@ const DEPARTMENT_SUGGESTIONS = [
 
 // Official Recognition Badges Definition
 const OFFICIAL_BADGE_CONFIG = {
-  verified: { label: 'Đã xác minh', desc: 'Tài khoản nhân sự đã xác thực chính thức', icon: BadgeCheck, color: '#0284c7' },
+  verified: { label: 'Đã xác minh', desc: 'Tài khoản nhân sự đã xác thực chính thức', icon: BadgeCheck, color: '#b45309' },
   dev:      { label: 'Kỹ thuật / Dev', desc: 'Đội ngũ phát triển và kỹ thuật hệ thống', icon: ShieldCheck, color: '#0891b2' },
   champion: { label: 'Vô địch giải đấu', desc: 'Quán quân mùa giải / Giải vô địch năm', icon: Trophy, color: '#d97706' },
   mvp:      { label: 'Nhân viên xuất sắc', desc: 'Danh hiệu MVP được ban quản trị vinh danh', icon: Sparkles, color: '#7c3aed' },
@@ -450,7 +450,7 @@ export default function UserDetail() {
                 width: 150,
                 height: 150,
                 border: '3px solid #ffffff',
-                boxShadow: '0 0 0 2px rgba(2,132,199,0.2), 0 10px 25px rgba(2,132,199,0.1)',
+                boxShadow: '0 0 0 2px rgba(180,83,9,0.2), 0 10px 25px rgba(180,83,9,0.1)',
               }}
             >
               {(() => {
@@ -474,7 +474,7 @@ export default function UserDetail() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: '#0284c7',
+                      background: '#b45309',
                       color: '#ffffff',
                       fontSize: 42,
                       fontWeight: 900,
@@ -790,7 +790,7 @@ export default function UserDetail() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 14px', borderRadius: 0, border: 'none',
-                background: isActive ? '#38bdf8' : 'transparent',
+                background: isActive ? '#b45309' : 'transparent',
                 color: isActive ? '#ffffff' : '#64748b',
                 fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',
@@ -822,7 +822,7 @@ export default function UserDetail() {
             {/* Cột 1: Thông tin nhân sự */}
             <div style={{ ...CARD, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <Shield size={16} color="#0284c7" />
+                <Shield size={16} color="#b45309" />
                 <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
                   Thông Tin Nhân Sự & Chức Danh
                 </h3>
@@ -886,7 +886,7 @@ export default function UserDetail() {
           {/* Khối Huy Hiệu & Vinh Danh Chính Thức */}
           <div style={{ ...CARD, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Award size={18} color="#0284c7" />
+              <Award size={18} color="#b45309" />
               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
                 Huy Hiệu & Vinh Danh Chính Thức (Official Recognitions)
               </h3>
@@ -895,13 +895,13 @@ export default function UserDetail() {
               {/* 1. Verified */}
               <div style={{
                 padding: '12px 14px',
-                background: isVerified ? 'rgba(56,189,248,0.06)' : 'rgba(15,23,42,0.02)',
-                border: isVerified ? '1px solid rgba(56,189,248,0.25)' : '1px solid rgba(15,23,42,0.06)',
+                background: isVerified ? 'rgba(180,83,9,0.06)' : 'rgba(15,23,42,0.02)',
+                border: isVerified ? '1px solid rgba(180,83,9,0.25)' : '1px solid rgba(15,23,42,0.06)',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
                 <VerifiedBadge size={22} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isVerified ? '#0284c7' : '#64748b' }}>
+                  <div style={{ fontWeight: 800, fontSize: 12, color: isVerified ? '#b45309' : '#64748b' }}>
                     {isVerified ? 'Tài Khoản Đã Xác Thực' : 'Chưa Cấp Tích Xanh'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Được Ban Quản Trị cấp tích xanh định danh</div>
@@ -986,12 +986,12 @@ export default function UserDetail() {
           {/* 4 Thẻ KPI Competition Thực Tế */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
             {/* MÙA GIẢI HIỆN TẠI */}
-            <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #0284c7' }}>
+            <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Swords size={13} color="#0284c7" /> Đấu Trường Mùa Giải
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Swords size={13} color="#b45309" /> Đấu Trường Mùa Giải
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#0284c7' }}>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#b45309' }}>
                   {competition?.currentSeasonRank ? `HẠNG #${competition.currentSeasonRank}` : 'Chưa xếp hạng'}
                 </span>
               </div>
@@ -1055,7 +1055,7 @@ export default function UserDetail() {
           </div>
 
           {/* Nút Chuyển Đến Bảng Xếp Hạng */}
-          <div style={{ ...CARD, padding: 18, background: 'rgba(56,189,248,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ ...CARD, padding: 18, background: 'rgba(180,83,9,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Xem đối chiếu thứ hạng toàn diện trên Bảng Xếp Hạng</div>
               <div style={{ fontSize: 11, color: '#64748b' }}>So sánh điểm số cùng đồng đội trong Đội và toàn thể công ty</div>
@@ -1122,9 +1122,9 @@ export default function UserDetail() {
 
           {/* PHÂN HỆ SẢN XUẤT NỘI DUNG (PRODUCTION) */}
           {isEditor && (
-            <div style={{ ...CARD, padding: 20, borderLeft: '4px solid #0284c7' }}>
+            <div style={{ ...CARD, padding: 20, borderLeft: '4px solid #b45309' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <Video size={18} color="#0284c7" />
+                <Video size={18} color="#b45309" />
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
                   Nhiệm Vụ Sản Xuất Video & Biên Tập (Editor Workspace)
                 </h3>
@@ -1189,7 +1189,7 @@ export default function UserDetail() {
                       <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0f172a' }}>
                         Season #{h.seasonId}
                       </td>
-                      <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0284c7' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 800, color: '#b45309' }}>
                         {h.teamName || 'Đội độc lập'}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -1237,7 +1237,7 @@ export default function UserDetail() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color="#0284c7" />
+                <Edit3 size={18} color="#b45309" />
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
                   {isAdmin ? 'Quản Trị Hồ Sơ Nhân Sự (Admin)' : 'Cập Nhật Thông Tin Cá Nhân'}
                 </h2>
@@ -1377,7 +1377,7 @@ export default function UserDetail() {
                       height: 52,
                       borderRadius: '50%',
                       overflow: 'hidden',
-                      border: '2px solid #0284c7',
+                      border: '2px solid #b45309',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1392,7 +1392,7 @@ export default function UserDetail() {
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <span style={{ fontSize: 18, fontWeight: 900, color: '#0284c7' }}>
+                      <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>
                         {initialsFromName(editForm.name || user.name)}
                       </span>
                     )}
@@ -1465,7 +1465,7 @@ export default function UserDetail() {
                         checked={editForm.isVerified}
                         onChange={(e) => setEditForm({ ...editForm, isVerified: e.target.checked })}
                       />
-                      <label htmlFor="isVerifiedCheck" style={{ fontSize: 12, fontWeight: 800, color: '#0284c7', cursor: 'pointer' }}>
+                      <label htmlFor="isVerifiedCheck" style={{ fontSize: 12, fontWeight: 800, color: '#b45309', cursor: 'pointer' }}>
                         Cấp Tích Xanh Chính Thức (Verified Badge)
                       </label>
                     </div>
@@ -1498,7 +1498,7 @@ export default function UserDetail() {
                   type="submit"
                   disabled={saving}
                   style={{
-                    padding: '8px 20px', background: '#0284c7', color: '#fff', border: 'none',
+                    padding: '8px 20px', background: '#b45309', color: '#fff', border: 'none',
                     fontSize: 12, fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -1594,7 +1594,7 @@ export default function UserDetail() {
                 borderTop: '1px solid rgba(255,255,255,0.08)',
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38bdf8' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#b45309' }}>
                 <Sparkles size={14} /> Bộ Sưu Tập Ảnh Hoạt Động & Làm Việc
               </span>
               <button

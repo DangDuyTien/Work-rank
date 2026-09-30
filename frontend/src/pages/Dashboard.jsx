@@ -28,10 +28,10 @@ function isVerifiedUser(user) {
 }
 
 const STATUS_CONFIG = {
-  active: { label: 'Đang hoạt động', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.35)', color: '#16a34a', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.35)', color: '#38bdf8', dot: '#38bdf8' },
-  idle: { label: 'Không hoạt động', bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.35)', color: '#ca8a04', dot: '#eab308' },
-  offline: { label: 'Ngoại tuyến', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.25)', color: '#64748b', dot: '#94a3b8' },
+  active: { label: 'Đang hoạt động', bg: 'rgba(21,128,61,0.08)', border: 'rgba(21,128,61,0.25)', color: '#15803d', dot: '#15803d' },
+  online: { label: 'Trực tuyến', bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.25)', color: '#b45309', dot: '#b45309' },
+  idle: { label: 'Không hoạt động', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', color: '#b45309', dot: '#d97706' },
+  offline: { label: 'Ngoại tuyến', bg: 'rgba(0,0,0,0.04)', border: 'rgba(0,0,0,0.08)', color: '#777777', dot: '#a3a3a3' },
 };
 
 const RANGES = [
@@ -262,16 +262,16 @@ export default function Dashboard() {
       delta: buildDelta(currentOnlineUsers, prevTotals?.online),
       note: `${currentOnlineUsers.toLocaleString()} thành viên đang hoạt động`,
       icon: Users,
-      color: '#38bdf8',
-      iconBg: 'rgba(56,189,248,0.1)',
+      color: '#111111',
+      iconBg: 'rgba(0,0,0,0.05)',
     },
     {
       label: 'Tổng thành viên xếp hạng',
       value: users.length.toLocaleString(),
       delta: buildDelta(users.length, prevTotals ? users.length : null),
       icon: Activity,
-      color: '#16a34a',
-      iconBg: 'rgba(22,163,74,0.1)',
+      color: '#111111',
+      iconBg: 'rgba(0,0,0,0.05)',
     },
   ]), [currentOnlineUsers, prevTotals, users.length]);
 
@@ -347,8 +347,10 @@ export default function Dashboard() {
         <section
           style={{
             background: '#ffffff',
-            border: '1px solid rgba(15,23,42,0.08)',
-            padding: '16px 20px',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 10,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+            padding: '18px 22px',
             marginBottom: 20,
             display: 'flex',
             alignItems: 'center',
@@ -360,29 +362,30 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div
               style={{
-                width: 44,
-                height: 44,
-                background: '#fee2e2',
-                color: '#ef4444',
+                width: 42,
+                height: 42,
+                borderRadius: 8,
+                background: 'rgba(185,28,28,0.08)',
+                color: '#b91c1c',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Tv size={22} />
+              <Tv size={20} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#111111' }}>
                   {teamYouTube.team?.name ? `Thành Tích YouTube: ${teamYouTube.team.name}` : 'YouTube Studio Toàn Công Ty'}
                 </span>
                 {teamYouTube.summary?.rankByViews && (
-                  <span style={{ padding: '2px 8px', background: '#fee2e2', color: '#dc2626', fontSize: 11, fontWeight: 800 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(185,28,28,0.08)', color: '#b91c1c', fontSize: 11, fontWeight: 800 }}>
                     Hạng #{teamYouTube.summary.rankByViews}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: '#666666', marginTop: 2 }}>
                 {teamYouTube.summary
                   ? `${teamYouTube.channels?.length || teamYouTube.summary.channelsCount || 0} kênh • ${teamYouTube.summary.videosCount || 0} video xuất bản`
                   : `${teamYouTube.kpis?.totalChannels || 0} kênh hoạt động • ${teamYouTube.kpis?.totalVideos || 0} video`}
@@ -392,21 +395,21 @@ export default function Dashboard() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TỔNG LƯỢT XEM</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#ef4444' }}>
+              <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
                 {formatNum(teamYouTube.summary?.totalViews ?? teamYouTube.kpis?.totalViews ?? 0)}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>SUBSCRIBERS</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+              <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>SUBSCRIBERS</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
                 {formatNum(teamYouTube.summary?.totalSubscribers ?? teamYouTube.kpis?.totalSubscribers ?? 0)}
               </div>
             </div>
             {teamYouTube.summary && (
               <div>
-                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TĂNG TRƯỞNG 30D</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: '#10b981' }}>
+                <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>TĂNG TRƯỞNG 30D</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#15803d' }}>
                   +{teamYouTube.summary.viewsGrowth30dPct || 0}%
                 </div>
               </div>
@@ -419,13 +422,17 @@ export default function Dashboard() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '8px 14px',
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
-                color: '#0f172a',
+                background: '#ffffff',
+                border: '1px solid rgba(0,0,0,0.12)',
+                borderRadius: 6,
+                color: '#111111',
                 fontSize: 13,
                 fontWeight: 700,
                 cursor: 'pointer',
+                transition: 'background 0.15s ease',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
             >
               <span>Xem BXH YouTube</span>
               <ChevronRight size={14} />
@@ -494,7 +501,7 @@ export default function Dashboard() {
                       <div className="dashboard-user-name" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span>{user.name || `User #${user.id}`}</span>
                         {isVerifiedUser(user) && <VerifiedBadge size={14} />}
-                        {user.jobTitle && <JobTitleBadge jobTitle={user.jobTitle} role={user.role} size="xs" />}
+                        {user.jobTitle && <JobTitleBadge jobTitle={user.jobTitle} size="xs" />}
                       </div>
                       <div className="dashboard-online-meta">
                         <span>{user.score?.toLocaleString() || 0} điểm XP</span>

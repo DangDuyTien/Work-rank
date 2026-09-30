@@ -408,7 +408,7 @@ export default function AdminTeamsYouTube() {
       {/* ── HEADER / CONTROL CENTER HERO ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(56,189,248,0.08)', color: '#0284c7', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
             <Building2 size={14} />
             Quản trị tổ chức & Kênh xuất bản
           </div>
@@ -423,7 +423,7 @@ export default function AdminTeamsYouTube() {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
             <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Đội Nhóm (Teams)</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#0284c7', fontWeight: 900 }}>{teams.length}</strong>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>{teams.length}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
             <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Kênh YouTube</div>
@@ -457,7 +457,7 @@ export default function AdminTeamsYouTube() {
               type="button"
               onClick={() => setCreateTeamModalOpen(true)}
               style={{
-                padding: '8px 16px', background: '#0284c7', color: '#ffffff', border: 'none',
+                padding: '8px 16px', background: '#b45309', color: '#ffffff', border: 'none',
                 fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -574,7 +574,7 @@ export default function AdminTeamsYouTube() {
                             <button
                               type="button"
                               onClick={() => openEditTeam(team)}
-                              style={{ width: 28, height: 28, background: 'rgba(15,23,42,0.04)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}
+                              style={{ width: 28, height: 28, background: 'rgba(15,23,42,0.04)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b45309' }}
                               title="Chỉnh sửa đội"
                             >
                               <Edit3 size={13} />
@@ -598,7 +598,7 @@ export default function AdminTeamsYouTube() {
                           <div>
                             <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Nhân sự</span>
                             <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Users size={14} color="#0284c7" /> {membersCount} thành viên
+                              <Users size={14} color="#b45309" /> {membersCount} thành viên
                             </div>
                           </div>
                           <div>
@@ -629,7 +629,7 @@ export default function AdminTeamsYouTube() {
                         <button
                           type="button"
                           onClick={() => openMembersDrawer(team)}
-                          style={{ background: 'transparent', border: 'none', color: '#0284c7', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                         >
                           <Users size={13} /> Quản lý thành viên ({membersCount}) <ChevronRight size={13} />
                         </button>
@@ -744,8 +744,8 @@ export default function AdminTeamsYouTube() {
                               onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
                               style={{
                                 padding: '5px 8px', fontSize: 11, fontWeight: 800,
-                                border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(56,189,248,0.06)' : '#fff',
-                                color: assignedTeam ? '#0284c7' : '#64748b',
+                                border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(180,83,9,0.06)' : '#fff',
+                                color: assignedTeam ? '#b45309' : '#64748b',
                               }}
                             >
                               <option value="">-- Chưa gán đội --</option>
@@ -790,7 +790,7 @@ export default function AdminTeamsYouTube() {
                                 disabled={isSyncing}
                                 style={{
                                   padding: '5px 8px', background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
-                                  fontSize: 11, fontWeight: 800, color: '#0284c7', cursor: isSyncing ? 'not-allowed' : 'pointer',
+                                  fontSize: 11, fontWeight: 800, color: '#b45309', cursor: isSyncing ? 'not-allowed' : 'pointer',
                                   display: 'inline-flex', alignItems: 'center', gap: 4,
                                 }}
                                 title="Đồng bộ lại từ YouTube API"
@@ -897,7 +897,7 @@ export default function AdminTeamsYouTube() {
                             href={`https://www.youtube.com/watch?v=${vid.videoId}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ marginLeft: 'auto', color: '#0284c7', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, textDecoration: 'none', fontWeight: 800 }}
+                            style={{ marginLeft: 'auto', color: '#b45309', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, textDecoration: 'none', fontWeight: 800 }}
                           >
                             Xem <ExternalLink size={11} />
                           </a>
@@ -920,7 +920,7 @@ export default function AdminTeamsYouTube() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Building2 size={18} color="#0284c7" /> Thêm Đội Nhóm Mới
+                <Building2 size={18} color="#b45309" /> Thêm Đội Nhóm Mới
               </h3>
               <button type="button" onClick={() => setCreateTeamModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={18} />
@@ -985,7 +985,7 @@ export default function AdminTeamsYouTube() {
                 <button type="button" onClick={() => setCreateTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#0284c7', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
                   {savingTeam ? 'Đang tạo...' : 'Tạo Đội Nhóm'}
                 </button>
               </div>
@@ -1002,7 +1002,7 @@ export default function AdminTeamsYouTube() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color="#0284c7" /> Cập Nhật Đội: {selectedTeam.name}
+                <Edit3 size={18} color="#b45309" /> Cập Nhật Đội: {selectedTeam.name}
               </h3>
               <button type="button" onClick={() => setEditTeamModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={18} />
@@ -1065,7 +1065,7 @@ export default function AdminTeamsYouTube() {
                 <button type="button" onClick={() => setEditTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#0284c7', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
                   {savingTeam ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                 </button>
               </div>
@@ -1083,7 +1083,7 @@ export default function AdminTeamsYouTube() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Users size={18} color="#0284c7" /> Thành Viên Đội: {membersDrawerTeam.name}
+                  <Users size={18} color="#b45309" /> Thành Viên Đội: {membersDrawerTeam.name}
                 </h3>
                 <span style={{ fontSize: 11, color: '#64748b' }}>Phòng ban: {membersDrawerTeam.department} · {teamMembersList.length} nhân sự</span>
               </div>
@@ -1110,7 +1110,7 @@ export default function AdminTeamsYouTube() {
                 type="submit"
                 disabled={addingMember || !selectedUserIdToAdd}
                 style={{
-                  padding: '7px 14px', background: '#0284c7', color: '#ffffff', border: 'none',
+                  padding: '7px 14px', background: '#b45309', color: '#ffffff', border: 'none',
                   fontSize: 12, fontWeight: 900, cursor: addingMember || !selectedUserIdToAdd ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                 }}

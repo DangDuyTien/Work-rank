@@ -80,6 +80,12 @@ import {
   Diamond,
   Circle,
   Square,
+  Scissors,
+  PenLine,
+  Briefcase,
+  UserRound,
+  CircleUserRound,
+  UsersRound,
 } from 'lucide-react';
 
 /**
@@ -225,6 +231,18 @@ const ICON_MAP = {
   diamond: Diamond,
   circle: Circle,
   square: Square,
+  scissors: Scissors,
+  cut: Scissors,
+  editor: Scissors,
+  penline: PenLine,
+  'pen-line': PenLine,
+  content: PenLine,
+  briefcase: Briefcase,
+  'briefcase-business': Briefcase,
+  'user-round': UserRound,
+  'circle-user': CircleUserRound,
+  'circle-user-round': CircleUserRound,
+  'users-round': UsersRound,
 };
 
 /**

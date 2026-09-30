@@ -26,7 +26,7 @@ export default function AdminSeasons() {
   const [selectedSeasonForTeam, setSelectedSeasonForTeam] = useState(null);
   const [availableTeams, setAvailableTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
-  const [teamColor, setTeamColor] = useState('#0284c7');
+  const [teamColor, setTeamColor] = useState('#b45309');
 
   const fetchSeasons = useCallback(async () => {
     try {

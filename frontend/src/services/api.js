@@ -316,6 +316,10 @@ export const groups = {
     const res = await api.get('/api/groups');
     return { ...res, data: unwrapArray(res.data) };
   },
+  listAll: async () => {
+    const res = await api.get('/api/groups/all');
+    return { ...res, data: unwrapArray(res.data) };
+  },
   get: async (id) => {
     const res = await api.get('/api/groups');
     return { ...res, data: unwrapArray(res.data).find((group) => String(group.id) === String(id)) || null };
@@ -336,6 +340,10 @@ export const groups = {
   leave: (id) => api.post(`/api/groups/${id}/leave`),
   kick: async (id, userId) => {
     const res = await api.post(`/api/groups/${id}/kick`, { userId });
+    return { ...res, data: res.data?.data || res.data?.group };
+  },
+  addMember: async (id, userId) => {
+    const res = await api.post(`/api/groups/${id}/add-member`, { userId });
     return { ...res, data: res.data?.data || res.data?.group };
   },
 };

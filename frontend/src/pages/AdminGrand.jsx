@@ -329,7 +329,7 @@ export default function AdminGrand() {
                     <button
                       type="button"
                       onClick={() => setSelectedGrandForSeason(g)}
-                      style={{ border: '1px solid #0284c7', background: 'rgba(2,132,199,0.06)', color: '#0284c7', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      style={{ border: '1px solid #b45309', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                     >
                       + Ghép Season
                     </button>
@@ -346,7 +346,7 @@ export default function AdminGrand() {
                 {/* Linked Seasons List */}
                 <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Layers size={14} color="#0284c7" />
+                    <Layers size={14} color="#b45309" />
                     Các Mùa Giải Đã Ghép ({linkedSeasons.length}):
                   </div>
                   {linkedSeasons.length === 0 ? (
@@ -376,7 +376,7 @@ export default function AdminGrand() {
                                 fontSize: 11,
                                 fontWeight: 700,
                                 cursor: 'pointer',
-                                color: '#0284c7',
+                                color: '#b45309',
                               }}
                             >
                               Phát / Quyết Toán Grand Points
@@ -557,7 +557,7 @@ export default function AdminGrand() {
                 </button>
                 <button
                   type="submit"
-                  style={{ border: 'none', background: '#0284c7', color: '#fff', padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ border: 'none', background: '#b45309', color: '#fff', padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                 >
                   Xác Nhận Ghép
                 </button>

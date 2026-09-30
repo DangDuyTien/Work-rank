@@ -54,7 +54,7 @@ export default function QuizGame() {
   };
 
   // Push activity feed message
-  const pushActivity = (name, text, color = '#38bdf8', avatar = null) => {
+  const pushActivity = (name, text, color = "#b45309", avatar = null) => {
     setRecentActivity((prev) => [...prev.slice(-8), { name, text, color, avatar, time: Date.now() }]);
   };
 

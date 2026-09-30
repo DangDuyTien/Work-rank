@@ -77,7 +77,7 @@ function Avatar({ user, size = 40 }) {
       height: size,
       borderRadius: 0,
       overflow: 'hidden',
-      background: '#0284c7',
+      background: '#b45309',
       color: '#ffffff',
       display: 'flex',
       alignItems: 'center',
@@ -386,7 +386,7 @@ export default function AdminPrivileges() {
       {/* ── HEADER & STATS ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(56,189,248,0.08)', color: '#0284c7', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
             <BadgeCheck size={14} />
             Quản trị nhân sự & Đặc quyền vận hành
           </div>
@@ -404,7 +404,7 @@ export default function AdminPrivileges() {
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
             <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Tích xanh</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#0284c7', fontWeight: 900 }}>{verifiedCount}</strong>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>{verifiedCount}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
             <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Dev Team</div>
@@ -420,7 +420,7 @@ export default function AdminPrivileges() {
             style={{
               minHeight: 44,
               padding: '0 16px',
-              background: '#0284c7',
+              background: '#b45309',
               color: '#ffffff',
               border: 'none',
               display: 'inline-flex',
@@ -461,8 +461,8 @@ export default function AdminPrivileges() {
               onClick={() => setFilter(key)}
               style={{
                 minHeight: 34,
-                border: filter === key ? '1px solid #0284c7' : '1px solid rgba(15,23,42,0.1)',
-                background: filter === key ? '#0284c7' : '#ffffff',
+                border: filter === key ? '1px solid #b45309' : '1px solid rgba(15,23,42,0.1)',
+                background: filter === key ? '#b45309' : '#ffffff',
                 color: filter === key ? '#ffffff' : '#64748b',
                 padding: '0 12px',
                 fontSize: 12,
@@ -477,7 +477,7 @@ export default function AdminPrivileges() {
             type="button"
             onClick={() => loadData(query, page)}
             disabled={loading}
-            style={{ minHeight: 34, border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.06)', color: '#0284c7', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, cursor: loading ? 'wait' : 'pointer' }}
+            style={{ minHeight: 34, border: '1px solid rgba(180,83,9,0.2)', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, cursor: loading ? 'wait' : 'pointer' }}
           >
             <RefreshCw size={13} className={loading ? 'spin' : ''} />
             Làm mới
@@ -553,9 +553,9 @@ export default function AdminPrivileges() {
                   onClick={() => toggleVerified(u)}
                   style={{
                     minHeight: 30,
-                    border: userHasVerified ? '1px solid rgba(2,132,199,0.3)' : '1px solid rgba(15,23,42,0.1)',
-                    background: userHasVerified ? 'rgba(2,132,199,0.08)' : '#ffffff',
-                    color: userHasVerified ? '#0284c7' : '#64748b',
+                    border: userHasVerified ? '1px solid rgba(180,83,9,0.3)' : '1px solid rgba(15,23,42,0.1)',
+                    background: userHasVerified ? 'rgba(180,83,9,0.08)' : '#ffffff',
+                    color: userHasVerified ? '#b45309' : '#64748b',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
                     fontSize: 11, fontWeight: 900, cursor: pending ? 'wait' : 'pointer',
@@ -694,7 +694,7 @@ export default function AdminPrivileges() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserPlus size={18} color="#0284c7" />
+                <UserPlus size={18} color="#b45309" />
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
                   Thêm Nhân Sự Mới Vào Hệ Thống
                 </h3>
@@ -838,7 +838,7 @@ export default function AdminPrivileges() {
                   type="submit"
                   disabled={creating}
                   style={{
-                    padding: '8px 18px', background: '#0284c7', color: '#ffffff', border: 'none',
+                    padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
                     fontSize: 12, fontWeight: 900, cursor: creating ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -861,7 +861,7 @@ export default function AdminPrivileges() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color="#0284c7" />
+                <Edit3 size={18} color="#b45309" />
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
                   Chỉnh Sửa Hồ Sơ Nhân Sự #{editModalUser.id}
                 </h3>
@@ -1003,7 +1003,7 @@ export default function AdminPrivileges() {
                   type="submit"
                   disabled={savingEdit}
                   style={{
-                    padding: '8px 18px', background: '#0284c7', color: '#ffffff', border: 'none',
+                    padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
                     fontSize: 12, fontWeight: 900, cursor: savingEdit ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -1164,7 +1164,7 @@ export default function AdminPrivileges() {
               </div>
               <div>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>VAI TRÒ / PHÂN QUYỀN:</span>
-                <div style={{ fontSize: 13, fontWeight: 900, color: detailDrawerUser.role === 'admin' ? '#dc2626' : '#0284c7', marginTop: 2 }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: detailDrawerUser.role === 'admin' ? '#dc2626' : '#b45309', marginTop: 2 }}>
                   {detailDrawerUser.role === 'admin' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (User)'}
                 </div>
               </div>
@@ -1184,7 +1184,7 @@ export default function AdminPrivileges() {
                   setDetailDrawerUser(null);
                 }}
                 style={{
-                  width: '100%', padding: '10px', background: '#0284c7', color: '#ffffff',
+                  width: '100%', padding: '10px', background: '#b45309', color: '#ffffff',
                   border: 'none', fontSize: 13, fontWeight: 900, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}

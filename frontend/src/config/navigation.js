@@ -86,10 +86,10 @@ export const NAVIGATION_CONFIG = [
       },
       {
         to: '/friends',
-        label: 'Bạn Bè & Đội Nhóm',
-        shortLabel: 'Bạn bè',
+        label: 'Thành Viên & Đội Nhóm',
+        shortLabel: 'Thành viên',
         icon: Users,
-        description: 'Đồng đội, bảng xếp hạng nhóm và tin nhắn nội bộ',
+        description: 'Mạng lưới đồng nghiệp, quản lý đội nhóm và bảng xếp hạng thành viên',
       },
     ],
   },
@@ -217,3 +217,35 @@ export function resolveItemPath(item, userId) {
   }
   return item.to;
 }
+
+/**
+ * Resolves the display title for the current route path.
+ */
+export function resolveCurrentTitle(pathname) {
+  if (!pathname) return 'WorkRank';
+  if (pathname === '/dashboard') return 'Bảng Điều Khiển';
+  if (pathname.startsWith('/leaderboard') || pathname.startsWith('/rankings')) return 'Bảng Xếp Hạng';
+  if (pathname.startsWith('/youtube')) return 'Số Liệu YouTube & Đội Nhóm';
+  if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';
+  if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
+  if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
+  if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
+  if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú (Cá Ngựa)';
+  if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
+  if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';
+  if (pathname.startsWith('/admin/competition/seasons')) return 'Quản Lý Mùa Giải';
+  if (pathname.startsWith('/admin/competition/grand')) return 'Quản Lý Giải Vô Địch Năm';
+  if (pathname.startsWith('/admin/operations')) return 'Giám Sát & Nhật Ký Kiểm Toán';
+  if (pathname.startsWith('/users')) return 'Hồ Sơ Cá Nhân';
+  if (pathname.startsWith('/settings')) return 'Cài Đặt Hệ Thống';
+
+  for (const group of NAVIGATION_CONFIG) {
+    for (const item of group.items) {
+      if (typeof item.to === 'string' && isRouteActive(pathname, item.to)) {
+        return item.label;
+      }
+    }
+  }
+  return 'WorkRank';
+}
+

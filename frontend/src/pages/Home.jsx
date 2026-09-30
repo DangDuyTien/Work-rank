@@ -10,85 +10,14 @@ import {
   LogIn,
   UserPlus,
   Sparkles,
+  Users,
+  UserRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { competition } from '../services/api';
 import BrandMark from '../components/BrandMark';
 import VerifiedBadge from '../components/VerifiedBadge';
 import { initialsFromName } from '../utils/avatar';
-
-// ── SVG ARTWORK: CHAMPIONSHIP LAUREL & CUP ──
-function ChampionshipArtwork({ size = 140 }) {
-  return (
-    <svg width={size} height={size * 0.62} viewBox="0 0 200 124" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="champGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="35%" stopColor="#eab308" />
-          <stop offset="70%" stopColor="#b45309" />
-          <stop offset="100%" stopColor="#78350f" />
-        </linearGradient>
-      </defs>
-      {/* Laurel Wreath Left */}
-      <path d="M56 90 C42 75 40 50 50 30 C52 40 58 50 66 57 C56 45 58 33 66 20 C70 31 76 41 82 49" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      {/* Laurel Wreath Right */}
-      <path d="M144 90 C158 75 160 50 150 30 C148 40 142 50 134 57 C144 45 142 33 134 20 C130 31 124 41 118 49" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      {/* Trophy Cup */}
-      <path d="M76 26 L124 26 L118 64 C118 74 110 82 100 82 C90 82 82 74 82 64 Z" fill="url(#champGoldGrad)" stroke="#1a1a1a" strokeWidth="2.2" />
-      {/* Trophy Handles */}
-      <path d="M76 32 C62 32 62 54 77 56" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      <path d="M124 32 C138 32 138 54 123 56" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      {/* Trophy Stem & Base */}
-      <rect x="96" y="82" width="8" height="16" fill="#1a1a1a" />
-      <rect x="78" y="98" width="44" height="12" fill="url(#champGoldGrad)" stroke="#1a1a1a" strokeWidth="2.2" />
-      {/* Star on Cup */}
-      <polygon points="100,38 102,44 108,44 103,48 105,54 100,50 95,54 97,48 92,44 98,44" fill="#ffffff" stroke="#1a1a1a" strokeWidth="1" />
-    </svg>
-  );
-}
-
-// ── SVG ARTWORK: WINGED STAR / LAUREL MEDAL OF EXCELLENCE (D&AD INSPIRED) ──
-function WingedStarArtwork({ size = 150, isGold = true }) {
-  return (
-    <svg width={size} height={size * 0.62} viewBox="0 0 200 124" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="mvpGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="35%" stopColor="#eab308" />
-          <stop offset="70%" stopColor="#ca8a04" />
-          <stop offset="100%" stopColor="#854d0e" />
-        </linearGradient>
-      </defs>
-      {/* Left Wing Feathers (Detailed Engraved Lineart) */}
-      <g stroke="#1a1a1a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill={isGold ? 'rgba(234, 179, 8, 0.1)' : 'rgba(0,0,0,0.03)'}>
-        <path d="M78 64 C58 46 35 34 12 38 C28 50 44 61 68 72 Z" />
-        <path d="M80 70 C56 56 28 48 8 56 C26 66 46 76 72 82 Z" />
-        <path d="M82 78 C58 70 32 66 14 76 C32 82 52 88 76 90 Z" />
-        <path d="M84 86 C64 84 42 84 26 94 C42 97 60 98 80 96 Z" />
-        <line x1="70" y1="61" x2="30" y2="44" stroke="#444" strokeWidth="1" />
-        <line x1="72" y1="71" x2="25" y2="61" stroke="#444" strokeWidth="1" />
-        <line x1="74" y1="80" x2="30" y2="78" stroke="#444" strokeWidth="1" />
-      </g>
-      {/* Right Wing Feathers (Detailed Engraved Lineart) */}
-      <g stroke="#1a1a1a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill={isGold ? 'rgba(234, 179, 8, 0.1)' : 'rgba(0,0,0,0.03)'}>
-        <path d="M122 64 C142 46 165 34 188 38 C172 50 156 61 132 72 Z" />
-        <path d="M120 70 C144 56 172 48 192 56 C174 66 154 76 128 82 Z" />
-        <path d="M118 78 C142 70 168 66 186 76 C168 82 148 88 124 90 Z" />
-        <path d="M116 86 C136 84 158 84 174 94 C158 97 140 98 120 96 Z" />
-        <line x1="130" y1="61" x2="170" y2="44" stroke="#444" strokeWidth="1" />
-        <line x1="128" y1="71" x2="175" y2="61" stroke="#444" strokeWidth="1" />
-        <line x1="126" y1="80" x2="170" y2="78" stroke="#444" strokeWidth="1" />
-      </g>
-      {/* Central Star Emblem */}
-      <g transform="translate(100, 74)">
-        <circle r="28" stroke={isGold ? '#ca8a04' : '#1a1a1a'} strokeWidth="1.8" strokeDasharray="3 3" fill="none" opacity="0.6" />
-        <circle r="23" fill={isGold ? '#fef08a' : '#ffffff'} stroke="#1a1a1a" strokeWidth="2.2" />
-        <polygon points="0,-14 4,-4 14,-3 7,4 9,14 0,9 -9,14 -7,4 -14,-3 -4,-4" fill={isGold ? 'url(#mvpGoldGrad)' : '#1a1a1a'} stroke="#1a1a1a" strokeWidth="1.4" />
-        <circle r="2.5" fill="#ffffff" />
-      </g>
-    </svg>
-  );
-}
 
 export default function Home() {
   const { user } = useAuth();
@@ -293,17 +222,19 @@ export default function Home() {
                       alt={championTeam.teamName}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
-                  ) : (
+                  ) : championTeam ? (
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: 26,
+                        fontSize: 24,
                         fontWeight: 900,
                         color: '#facc15',
                       }}
                     >
-                      {championTeam ? initialsFromName(championTeam.teamName) : '🏆'}
+                      {initialsFromName(championTeam.teamName)}
                     </span>
+                  ) : (
+                    <Users size={32} color="#facc15" strokeWidth={2} />
                   )}
                 </div>
 
@@ -325,7 +256,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Visual Box 2: Stats & Trophy Artwork */}
+            {/* Visual Box 2: Stats & Trophy Presentation */}
             <div className="wr-award-visual-box wr-anim-box2-left" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
@@ -334,8 +265,13 @@ export default function Home() {
                 <Award size={15} color="#111111" />
               </div>
 
-              <div style={{ margin: 'auto 0', textAlign: 'center', padding: '10px 0' }}>
-                <ChampionshipArtwork size={130} />
+              <div style={{ margin: 'auto 0', textAlign: 'center', padding: '16px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Trophy size={48} color="#d97706" strokeWidth={1.75} />
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#92400e', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {championTeam ? 'QUÁN QUÂN GIẢI ĐẤU' : 'CHỜ VINH DANH'}
+                </span>
               </div>
 
               <div
@@ -472,17 +408,19 @@ export default function Home() {
                       alt={mvp.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
-                  ) : (
+                  ) : mvp ? (
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: 26,
+                        fontSize: 24,
                         fontWeight: 900,
                         color: '#facc15',
                       }}
                     >
-                      {mvp ? initialsFromName(mvp.name) : '⭐'}
+                      {initialsFromName(mvp.name)}
                     </span>
+                  ) : (
+                    <UserRound size={32} color="#facc15" strokeWidth={2} />
                   )}
                   {mvp?.isVerified && (
                     <div style={{ position: 'absolute', bottom: 2, right: 2 }}>
@@ -512,17 +450,22 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Visual Box 2: Winged Star Artwork & Score */}
+            {/* Visual Box 2: Excellence Award & Score */}
             <div className="wr-award-visual-box wr-anim-box2-right" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
-                  WINGED MEDAL OF EXCELLENCE
+                  EXCELLENCE RECOGNITION
                 </span>
                 <Medal size={15} color="#111111" />
               </div>
 
-              <div style={{ margin: 'auto 0', textAlign: 'center', padding: '10px 0' }}>
-                <WingedStarArtwork size={140} isGold={Boolean(mvp)} />
+              <div style={{ margin: 'auto 0', textAlign: 'center', padding: '16px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Award size={48} color="#f59e0b" strokeWidth={1.75} />
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {mvp ? 'DANH HIỆU MVP' : 'CHỜ XÁC ĐỊNH'}
+                </span>
               </div>
 
               <div
