@@ -199,7 +199,168 @@ tbody tr:hover { background: rgba(15,23,42,0.03) !important; }
   }
 }
 
-/* ── 3-Column Spotlight Hero Responsive Grid ── */
+/* ── Full-Viewport D&AD Editorial Award Showcase ── */
+.wr-award-canvas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100vw;
+  min-height: 100vh;
+  background: #f4f3ef;
+  color: #111111;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.wr-award-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(20px, 4vw, 48px);
+  pointer-events: none;
+}
+
+.wr-award-header-content {
+  pointer-events: auto;
+}
+
+.wr-award-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: clamp(80px, 11vh, 120px) clamp(24px, 4vw, 56px) clamp(40px, 5vh, 48px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.wr-award-panel-left {
+  border-right: 1px solid rgba(0, 0, 0, 0.09);
+  background: #f4f3ef;
+}
+
+.wr-award-panel-right {
+  background: #f5f4f0;
+}
+
+.wr-award-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #666666;
+  margin-bottom: 14px;
+}
+
+.wr-award-eyebrow-accent {
+  color: #b45309;
+}
+
+.wr-award-headline {
+  font-size: clamp(38px, 4.6vw, 84px);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: #111111;
+  margin: 0 0 16px 0;
+  word-break: break-word;
+}
+
+.wr-award-tagline {
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.55;
+  color: #555555;
+  max-width: 480px;
+  margin: 0 0 24px 0;
+  font-weight: 500;
+}
+
+.wr-award-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: #141414;
+  color: #ffffff !important;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  width: fit-content;
+}
+
+.wr-award-pill-btn:hover {
+  background: #2b2b2b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.wr-award-visual-box {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.wr-award-visual-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.wr-award-footer {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f0eee9;
+  padding: 16px clamp(20px, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #777777;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 960px) {
+  .wr-award-canvas {
+    grid-template-columns: 1fr;
+  }
+  .wr-award-header {
+    position: relative;
+    background: #f4f3ef;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    pointer-events: auto;
+  }
+  .wr-award-panel-left {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+    min-height: auto;
+    padding-top: 48px;
+  }
+  .wr-award-panel-right {
+    min-height: auto;
+    padding-top: 48px;
+  }
+}
+
+/* ── 3-Column Spotlight Hero Responsive Grid (Legacy Fallback) ── */
 .wr-spotlight-hero-grid {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.35fr) minmax(280px, 1fr);
