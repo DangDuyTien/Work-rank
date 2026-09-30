@@ -170,7 +170,7 @@ export default function Login() {
           <div>
             {/* Brand Header */}
             <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-              <BrandMark size={36} showLabel label="WorkRank" labelStyle={{ color: '#ffffff' }} />
+              <BrandMark size={36} showLabel label="3WIN MEDIA" labelStyle={{ color: '#ffffff' }} />
             </Link>
 
             <h1 style={{ margin: '0 0 10px', fontSize: 24, fontWeight: 900, color: '#ffffff', lineHeight: 1.25 }}>

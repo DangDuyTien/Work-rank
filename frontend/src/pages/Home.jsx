@@ -104,7 +104,7 @@ export default function Home() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BrandMark size={32} showLabel label="WorkRank" />
+            <BrandMark size={32} showLabel label="3WIN MEDIA" />
           </Link>
 
           <nav
@@ -962,7 +962,7 @@ export default function Home() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <BrandMark size={28} showLabel label="WorkRank" />
+            <BrandMark size={28} showLabel label="3WIN MEDIA" />
             <span style={{ fontSize: 12, color: '#64748b' }}>
               • Nền tảng Hiệu suất, Thi đấu & Vinh danh Doanh nghiệp
             </span>

@@ -13,8 +13,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'WorkRank';
   const options = {
     body: data.body || '',
-    icon: '/workrank-mark.svg',
-    badge: '/workrank-mark.svg',
+    icon: '/3win-mark.png',
+    badge: '/3win-mark.png',
     data: { url: data.url || '/' },
   };
   event.waitUntil(self.registration.showNotification(title, options));

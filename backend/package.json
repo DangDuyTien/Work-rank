@@ -13,6 +13,7 @@
     "test": "node --test --test-concurrency=1 test/*.test.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all",
+    "db:reset-clean": "node scripts/reset-and-seed-local.js",
     "test:load": "node scripts/api-load-smoke-test.js"
   },
   "keywords": [],

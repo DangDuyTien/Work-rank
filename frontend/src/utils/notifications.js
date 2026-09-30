@@ -10,8 +10,8 @@ export function sendBrowserNotification(title, options = {}) {
   if (Notification.permission !== 'granted') return null;
   try {
     return new Notification(title, {
-      icon: '/workrank-mark.svg',
-      badge: '/workrank-mark.svg',
+      icon: '/3win-mark.png',
+      badge: '/3win-mark.png',
       ...options,
     });
   } catch {
