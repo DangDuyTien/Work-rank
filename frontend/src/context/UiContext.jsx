@@ -11,10 +11,10 @@ const TOAST_ICON = {
 };
 
 const TOAST_COLOR = {
-  success: '#16a34a',
-  error: '#dc2626',
-  warning: '#d97706',
-  info: '#38bdf8',
+  success: '#15803d',
+  error: '#b91c1c',
+  warning: '#b45309',
+  info: '#141414',
 };
 
 export function UiProvider({ children }) {
@@ -64,6 +64,7 @@ export function UiProvider({ children }) {
     <UiContext.Provider value={value}>
       {children}
 
+      {/* ── TOAST NOTIFICATIONS (Editorial, Clean & High-Contrast) ── */}
       <div style={{
         position: 'fixed',
         right: 18,
@@ -87,17 +88,17 @@ export function UiProvider({ children }) {
                 alignItems: 'flex-start',
                 gap: 10,
                 background: '#ffffff',
-                border: '1px solid rgba(15,23,42,0.12)',
+                border: '1px solid rgba(0,0,0,0.08)',
                 borderLeft: `4px solid ${color}`,
-                borderRadius: 0,
-                boxShadow: 'none',
-                padding: '12px 12px',
+                borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                padding: '12px 14px',
               }}
             >
               <Icon size={18} color={color} style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                {item.title && <div style={{ color: '#0f172a', fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
-                <div style={{ color: '#475569', fontSize: 12, lineHeight: 1.45 }}>{item.message}</div>
+                {item.title && <div style={{ color: '#111111', fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
+                <div style={{ color: '#555555', fontSize: 12, lineHeight: 1.45 }}>{item.message}</div>
               </div>
               <button
                 type="button"
@@ -106,7 +107,7 @@ export function UiProvider({ children }) {
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#94a3b8',
+                  color: '#888888',
                   cursor: 'pointer',
                   padding: 2,
                   display: 'flex',
@@ -119,6 +120,7 @@ export function UiProvider({ children }) {
         })}
       </div>
 
+      {/* ── CONFIRM DIALOG MODAL (Warm Minimalist Theme) ── */}
       {confirmState && (
         <div
           role="presentation"
@@ -129,7 +131,8 @@ export function UiProvider({ children }) {
             position: 'fixed',
             inset: 0,
             zIndex: 2100,
-            background: 'rgba(15,23,42,0.42)',
+            background: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -144,31 +147,31 @@ export function UiProvider({ children }) {
               width: '100%',
               maxWidth: 420,
               background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.12)',
-              borderRadius: 0,
-              boxShadow: 'none',
-              padding: 20,
+              border: '1px solid rgba(0,0,0,0.08)',
+              borderRadius: 12,
+              boxShadow: '0 16px 36px rgba(0,0,0,0.12)',
+              padding: 24,
             }}
           >
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 18 }}>
               <div style={{
-                width: 34,
-                height: 34,
-                borderRadius: 0,
+                width: 36,
+                height: 36,
+                borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: confirmState.tone === 'danger' ? 'rgba(220,38,38,0.1)' : 'rgba(56,189,248,0.1)',
-                color: confirmState.tone === 'danger' ? '#dc2626' : '#38bdf8',
+                background: confirmState.tone === 'danger' ? 'rgba(185,28,28,0.08)' : 'rgba(0,0,0,0.06)',
+                color: confirmState.tone === 'danger' ? '#b91c1c' : '#141414',
                 flexShrink: 0,
               }}>
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: '#0f172a', fontSize: 18, fontWeight: 900 }}>
+                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: '#111111', fontSize: 17, fontWeight: 800 }}>
                   {confirmState.title}
                 </h2>
-                <div style={{ color: '#475569', fontSize: 13, lineHeight: 1.55 }}>
+                <div style={{ color: '#555555', fontSize: 13, lineHeight: 1.55 }}>
                   {confirmState.message}
                 </div>
               </div>
@@ -179,15 +182,18 @@ export function UiProvider({ children }) {
                 type="button"
                 onClick={() => closeConfirm(false)}
                 style={{
-                  border: '1px solid rgba(15,23,42,0.12)',
+                  border: '1px solid rgba(0,0,0,0.12)',
                   background: '#ffffff',
-                  color: '#475569',
-                  borderRadius: 6,
-                  padding: '9px 14px',
+                  color: '#555555',
+                  borderRadius: 8,
+                  padding: '9px 16px',
                   cursor: 'pointer',
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 700,
+                  transition: 'background 0.15s ease',
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
               >
                 {confirmState.cancelText}
               </button>
@@ -196,13 +202,20 @@ export function UiProvider({ children }) {
                 onClick={() => closeConfirm(true)}
                 style={{
                   border: 'none',
-                  background: confirmState.tone === 'danger' ? '#dc2626' : '#38bdf8',
+                  background: confirmState.tone === 'danger' ? '#b91c1c' : '#141414',
                   color: '#ffffff',
-                  borderRadius: 6,
-                  padding: '9px 14px',
+                  borderRadius: 8,
+                  padding: '9px 18px',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 800,
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = confirmState.tone === 'danger' ? '#991b1b' : '#2b2b2b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = confirmState.tone === 'danger' ? '#b91c1c' : '#141414';
                 }}
               >
                 {confirmState.confirmText}

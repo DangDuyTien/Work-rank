@@ -129,17 +129,18 @@ function AnimatedAppRoutes() {
   const [transitionStage, setTransitionStage] = useState('fadeIn'); // 'fadeIn' | 'fadeOut'
 
   useEffect(() => {
-    if (
-      location.pathname !== displayLocation.pathname ||
-      location.search !== displayLocation.search
-    ) {
+    // Only trigger full page exit/enter transition when PATHNAME changes (switching pages)
+    if (location.pathname !== displayLocation.pathname) {
       setTransitionStage('fadeOut');
       const timer = setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage('fadeIn');
         window.scrollTo(0, 0);
-      }, 200);
+      }, 180);
       return () => clearTimeout(timer);
+    } else if (location.search !== displayLocation.search) {
+      // When switching tabs/query params on the SAME page (e.g. login <-> register), update instantly with NO flash
+      setDisplayLocation(location);
     }
   }, [location, displayLocation]);
 
