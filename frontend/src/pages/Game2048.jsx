@@ -279,23 +279,26 @@ export default function Game2048() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button
             type="button"
-            onClick={() => navigate('/games')}
+            onClick={() => navigate('/dashboard')}
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
               borderRadius: 8,
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 34,
-              height: 34,
+              gap: 6,
+              padding: '6px 12px',
               cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 800,
               transition: 'background 0.15s ease',
             }}
-            title="Quay lại danh sách game"
+            title="Thoát game về Trang chủ"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={15} />
+            <span>Thoát</span>
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

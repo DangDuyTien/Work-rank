@@ -183,7 +183,7 @@ function AnimatedAppRoutes() {
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
-            <Route path="/games" element={<Navigate to="/games/2048" replace />} />
+            <Route path="/games" element={<Navigate to="/dashboard" replace />} />
             <Route path="/games/capital-board" element={<CapitalBoardGame />} />
             <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
