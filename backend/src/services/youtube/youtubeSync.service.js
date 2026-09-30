@@ -59,10 +59,28 @@ async function syncChannel(channelIdentifier, options = {}) {
     // 1. Try Live API if configured (bypassed in test environment)
     if (process.env.YOUTUBE_API_KEY && process.env.NODE_ENV !== 'test') {
       try {
-        const apiRes = await fetchYouTubeApi('channels', {
+        const queryParams = {
           part: 'snippet,statistics',
-          id: channel.channelId,
-        });
+        };
+
+        const rawChannelId = (channel.channelId || '').trim();
+        if (rawChannelId.startsWith('@')) {
+          queryParams.forHandle = rawChannelId;
+        } else if (rawChannelId.startsWith('UC') || rawChannelId.length === 24) {
+          queryParams.id = rawChannelId;
+        } else {
+          queryParams.forHandle = `@${rawChannelId.replace(/^@/, '')}`;
+        }
+
+        let apiRes = await fetchYouTubeApi('channels', queryParams);
+
+        // Fallback to id if forHandle returned empty
+        if ((!apiRes || !apiRes.items || apiRes.items.length === 0) && queryParams.forHandle) {
+          apiRes = await fetchYouTubeApi('channels', {
+            part: 'snippet,statistics',
+            id: rawChannelId,
+          });
+        }
 
         if (apiRes && apiRes.items && apiRes.items.length > 0) {
           const item = apiRes.items[0];
@@ -75,6 +93,8 @@ async function syncChannel(channelIdentifier, options = {}) {
             subscribers: Number(item.statistics.subscriberCount || 0),
             videosCount: Number(item.statistics.videoCount || 0),
           };
+        } else if (apiRes && (!apiRes.items || apiRes.items.length === 0)) {
+          throw new Error(`Không tìm thấy kênh trên YouTube với Channel ID/Handle "${rawChannelId}". Vui lòng kiểm tra lại Channel ID (bắt đầu bằng UC...) hoặc Handle (@ten_kenh).`);
         }
       } catch (err) {
         if (process.env.NODE_ENV !== 'test') throw err;
@@ -106,7 +126,7 @@ async function syncChannel(channelIdentifier, options = {}) {
     }
 
     if (!channelStats) {
-      throw new Error('YOUTUBE_API_KEY is not configured in environment variables');
+      throw new Error('Chưa cấu hình biến môi trường YOUTUBE_API_KEY trên Render. Vui lòng vào Render Dashboard > Environment và thêm YOUTUBE_API_KEY.');
     }
 
     // 3. Persist Channel Details & Metric Snapshot

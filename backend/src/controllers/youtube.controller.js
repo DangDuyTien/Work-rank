@@ -388,11 +388,21 @@ async function unlinkAdminChannel(req, res, next) {
 async function syncAdminChannel(req, res, next) {
   try {
     const { id } = req.params;
-    const syncRes = await youtubeSyncService.syncChannel(Number(id));
+    const channelIdNum = Number(id);
+    if (!channelIdNum || isNaN(channelIdNum)) {
+      return res.status(400).json({ status: 'ERROR', error: 'ID kênh không hợp lệ' });
+    }
+    const syncRes = await youtubeSyncService.syncChannel(channelIdNum);
+    if (syncRes.status === 'ERROR') {
+      return res.status(400).json(syncRes);
+    }
     await youtubeAggregationService.recalculateAllTeamYouTubeSummaries();
     return res.status(200).json(syncRes);
   } catch (err) {
-    return next(err);
+    return res.status(err.status || 400).json({
+      status: 'ERROR',
+      error: err.message || 'Lỗi khi đồng bộ kênh YouTube',
+    });
   }
 }
 
@@ -404,7 +414,10 @@ async function syncAllAdminChannels(req, res, next) {
     const results = await youtubeSyncService.syncAllChannels();
     return res.status(200).json(results);
   } catch (err) {
-    return next(err);
+    return res.status(err.status || 400).json({
+      status: 'ERROR',
+      error: err.message || 'Lỗi khi đồng bộ tất cả kênh YouTube',
+    });
   }
 }
 
