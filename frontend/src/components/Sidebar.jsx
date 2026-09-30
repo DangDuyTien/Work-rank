@@ -16,7 +16,7 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
  * - Route-aware auto expansion (expanded on active child)
  * - Accessible keyboard navigation and ARIA attributes
  * - Role-based visibility (Admin vs Member)
- * - Compact user profile footer
+ * - Warm editorial neutral aesthetic synced with public homepage
  */
 export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false }) {
   const location = useLocation();
@@ -40,7 +40,6 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
   const [expandedGroups, setExpandedGroups] = useState(() => {
     const initial = {};
     NAVIGATION_CONFIG.forEach((group) => {
-      // By default open if not collapsible, or if has active child, or defaultExpanded
       initial[group.id] = !group.collapsible || group.id === 'competition' || activeGroupIds.has(group.id);
     });
     return initial;
@@ -89,21 +88,22 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
         fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      {/* Brand Header */}
+      {/* ── 1. BRAND HEADER (Editorial Warm Style) ── */}
       <div
         style={{
           height: 56,
-          padding: '0 20px',
+          padding: '0 18px',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          borderBottom: '1px solid rgba(0,0,0,0.08)',
           flexShrink: 0,
         }}
       >
         <BrandMark
           size={28}
           showLabel
-          labelStyle={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.3px', color: '#0f172a' }}
+          label="3WIN MEDIA"
+          labelStyle={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.3px', color: '#111111' }}
         />
         {isAdmin && (
           <span
@@ -113,8 +113,9 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               fontWeight: 800,
               padding: '2px 6px',
               borderRadius: 4,
-              background: 'rgba(56,189,248,0.12)',
-              color: '#0284c7',
+              background: 'rgba(180,83,9,0.08)',
+              color: '#b45309',
+              border: '1px solid rgba(180,83,9,0.2)',
               letterSpacing: '0.4px',
               textTransform: 'uppercase',
             }}
@@ -124,27 +125,23 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
         )}
       </div>
 
-      {/* Navigation Groups List */}
+      {/* ── 2. NAVIGATION GROUPS LIST ── */}
       <nav
         data-tour="app-nav"
         aria-label="Điều hướng chính"
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '16px 12px',
+          padding: '14px 10px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 16,
+          gap: 12,
         }}
       >
         {NAVIGATION_CONFIG.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
-
-          const isExpanded = Boolean(expandedGroups[group.id]);
-          const hasActiveChild = group.items.some((item) => {
-            const path = resolveItemPath(item, user?.id);
-            return isRouteActive(location.pathname, path);
-          });
+          const isExpanded = !!expandedGroups[group.id];
+          const hasActiveChild = activeGroupIds.has(group.id);
           const GroupIcon = group.icon;
 
           return (
@@ -161,12 +158,12 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     width: '100%',
-                    padding: '8px 10px',
+                    padding: '7px 9px',
                     borderRadius: 6,
-                    background: hasActiveChild && !isExpanded ? 'rgba(56,189,248,0.06)' : 'transparent',
+                    background: hasActiveChild && !isExpanded ? 'rgba(0,0,0,0.04)' : 'transparent',
                     border: 'none',
                     cursor: 'pointer',
-                    color: hasActiveChild ? '#0284c7' : '#64748b',
+                    color: hasActiveChild ? '#111111' : '#555555',
                     fontSize: 12,
                     fontWeight: 700,
                     letterSpacing: '0.2px',
@@ -174,15 +171,15 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     transition: 'background 0.15s ease, color 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    if (!hasActiveChild || isExpanded) e.currentTarget.style.background = 'rgba(15,23,42,0.04)';
+                    if (!hasActiveChild || isExpanded) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = hasActiveChild && !isExpanded ? 'rgba(56,189,248,0.06)' : 'transparent';
+                    e.currentTarget.style.background = hasActiveChild && !isExpanded ? 'rgba(0,0,0,0.04)' : 'transparent';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <GroupIcon size={16} strokeWidth={2.2} style={{ color: hasActiveChild ? '#38bdf8' : '#94a3b8' }} />
-                    <span style={{ color: hasActiveChild ? '#0f172a' : '#475569' }}>{group.label}</span>
+                    <GroupIcon size={15} strokeWidth={2.2} style={{ color: hasActiveChild ? '#111111' : '#777777' }} />
+                    <span style={{ color: hasActiveChild ? '#111111' : '#555555' }}>{group.label}</span>
                     {group.badge && (
                       <span
                         style={{
@@ -190,8 +187,8 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           fontWeight: 800,
                           padding: '1px 5px',
                           borderRadius: 3,
-                          background: group.adminOnly ? 'rgba(239,68,68,0.1)' : 'rgba(56,189,248,0.12)',
-                          color: group.adminOnly ? '#ef4444' : '#0284c7',
+                          background: group.adminOnly ? 'rgba(185,28,28,0.08)' : 'rgba(180,83,9,0.08)',
+                          color: group.adminOnly ? '#b91c1c' : '#b45309',
                         }}
                       >
                         {group.badge}
@@ -202,7 +199,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      color: '#94a3b8',
+                      color: '#888888',
                       transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
                       transition: 'transform 0.15s ease',
                     }}
@@ -213,10 +210,10 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               ) : (
                 <div
                   style={{
-                    padding: '4px 10px 6px',
+                    padding: '4px 9px 6px',
                     fontSize: 11,
                     fontWeight: 800,
-                    color: '#94a3b8',
+                    color: '#888888',
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
                     display: 'flex',
@@ -237,9 +234,9 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     flexDirection: 'column',
                     gap: 2,
                     marginTop: group.collapsible ? 2 : 0,
-                    paddingLeft: group.collapsible ? 12 : 0,
-                    borderLeft: group.collapsible ? '1px solid rgba(15,23,42,0.06)' : 'none',
-                    marginLeft: group.collapsible ? 16 : 0,
+                    paddingLeft: group.collapsible ? 10 : 0,
+                    borderLeft: group.collapsible ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                    marginLeft: group.collapsible ? 14 : 0,
                     minHeight: 'auto',
                   }}
                 >
@@ -261,19 +258,19 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           display: 'flex',
                           alignItems: 'center',
                           gap: 9,
-                          padding: '7px 10px',
+                          padding: '7px 9px',
                           borderRadius: 6,
                           fontSize: 13,
-                          fontWeight: isActive ? 700 : 500,
-                          color: isActive ? '#0284c7' : '#475569',
-                          background: isActive ? 'rgba(56,189,248,0.09)' : 'transparent',
+                          fontWeight: isActive ? 750 : 500,
+                          color: isActive ? '#111111' : '#555555',
+                          background: isActive ? 'rgba(0,0,0,0.06)' : 'transparent',
                           textDecoration: 'none',
                           lineHeight: 1.3,
                           position: 'relative',
                           transition: 'background 0.15s ease, color 0.15s ease',
                         }}
                         onMouseEnter={(e) => {
-                          if (!isActive) e.currentTarget.style.background = 'rgba(15,23,42,0.04)';
+                          if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
                         }}
                         onMouseLeave={(e) => {
                           if (!isActive) e.currentTarget.style.background = 'transparent';
@@ -283,7 +280,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           size={15}
                           strokeWidth={isActive ? 2.3 : 1.8}
                           style={{
-                            color: isActive ? '#0284c7' : '#94a3b8',
+                            color: isActive ? '#111111' : '#777777',
                             flexShrink: 0,
                           }}
                         />
@@ -298,8 +295,8 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                               fontWeight: 800,
                               padding: '1.5px 5px',
                               borderRadius: 4,
-                              background: item.comingSoon ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.12)',
-                              color: item.comingSoon ? '#b45309' : '#0284c7',
+                              background: item.comingSoon ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.06)',
+                              color: item.comingSoon ? '#b45309' : '#111111',
                               letterSpacing: '0.2px',
                               flexShrink: 0,
                               textTransform: 'uppercase',
@@ -315,7 +312,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                               width: 5,
                               height: 5,
                               borderRadius: '50%',
-                              background: '#38bdf8',
+                              background: '#b45309',
                               flexShrink: 0,
                             }}
                           />
@@ -330,15 +327,15 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
         })}
       </nav>
 
-      {/* User Profile / Status Footer */}
+      {/* ── 3. USER PROFILE / STATUS FOOTER ── */}
       <div
         style={{
           padding: '12px 14px',
-          borderTop: '1px solid rgba(15,23,42,0.08)',
+          borderTop: '1px solid rgba(0,0,0,0.08)',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          background: '#f8fafc',
+          background: '#fafaf8',
           flexShrink: 0,
         }}
       >
@@ -360,7 +357,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               width: 34,
               height: 34,
               borderRadius: 6,
-              background: '#38bdf8',
+              background: '#141414',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -387,7 +384,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: '#0f172a',
+                color: '#111111',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
