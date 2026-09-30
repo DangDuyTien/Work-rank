@@ -111,7 +111,7 @@ describe('Corporate User Profile & Job Position Redesign Test Suite', () => {
     });
 
     // Team YouTube Summary for Phoenix
-    await TeamYouTubeSummary.create({
+    await TeamYouTubeSummary.upsert({
       teamId: teamPhoenix.id,
       teamName: teamPhoenix.name,
       channelsCount: 3,
