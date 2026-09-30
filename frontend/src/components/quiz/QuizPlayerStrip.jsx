@@ -1,6 +1,6 @@
 import React from 'react';
 import { Crown } from 'lucide-react';
-import { getUserAvatar } from '../../utils/avatar';
+import QuizAvatar from './QuizAvatar';
 
 export default function QuizPlayerStrip({
   players = [],
@@ -16,10 +16,11 @@ export default function QuizPlayerStrip({
         alignItems: 'flex-end',
         justifyContent: 'space-between',
         width: '100%',
-        padding: '0 24px 16px',
+        padding: '8px 24px 16px',
         gap: 20,
         zIndex: 40,
         flexShrink: 0,
+        userSelect: 'none',
       }}
     >
       {/* Left Side: Live Activity / Chat Feed */}
@@ -29,7 +30,7 @@ export default function QuizPlayerStrip({
           flexDirection: 'column',
           gap: 4,
           maxWidth: 280,
-          minWidth: 200,
+          minWidth: 180,
           maxHeight: 110,
           overflowY: 'hidden',
         }}
@@ -49,11 +50,7 @@ export default function QuizPlayerStrip({
             }}
           >
             {act.avatar && (
-              <img
-                src={act.avatar}
-                alt=""
-                style={{ width: 18, height: 18, borderRadius: '50%', border: '1px solid #000' }}
-              />
+              <QuizAvatar user={{ avatarUrl: act.avatar, name: act.name }} size="xs" />
             )}
             <span style={{ color: act.color || '#38bdf8' }}>{act.name}:</span>
             <span style={{ opacity: 0.9 }}>{act.text}</span>
@@ -80,10 +77,15 @@ export default function QuizPlayerStrip({
       >
         {sortedPlayers.map((player, idx) => {
           const isMe = Number(player.userId) === Number(currentUserId);
-          const avatarUrl = player.user?.avatarUrl || getUserAvatar(player.userId);
           const rank = idx + 1;
           const name = player.user?.name || `User ${player.userId}`;
           const shortName = name.split(' ').slice(-2).join(' ');
+
+          const borderColor = isMe
+            ? '#38bdf8'
+            : rank === 1
+            ? '#f59e0b'
+            : 'rgba(255,255,255,0.4)';
 
           return (
             <div
@@ -102,11 +104,11 @@ export default function QuizPlayerStrip({
                   fontSize: 10,
                   fontWeight: 900,
                   color: isMe ? '#38bdf8' : '#ffffff',
-                  background: 'rgba(0,0,0,0.7)',
+                  background: 'rgba(0,0,0,0.75)',
                   padding: '1px 6px',
                   borderRadius: 10,
-                  border: isMe ? '1px solid #38bdf8' : '1px solid #000000',
-                  marginBottom: 3,
+                  border: isMe ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.2)',
+                  marginBottom: 4,
                   whiteSpace: 'nowrap',
                   maxWidth: 72,
                   overflow: 'hidden',
@@ -120,26 +122,17 @@ export default function QuizPlayerStrip({
 
               {/* Avatar Token with Thick Border */}
               <div style={{ position: 'relative' }}>
-                <img
-                  src={avatarUrl}
-                  alt={name}
+                <QuizAvatar
+                  user={player.user || { id: player.userId }}
+                  userId={player.userId}
+                  size="lg"
+                  border={`3.5px solid ${borderColor}`}
                   style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: isMe
-                      ? '3.5px solid #38bdf8'
-                      : rank === 1
-                      ? '3.5px solid #f59e0b'
-                      : '3px solid #000000',
-                    background: '#ffffff',
                     boxShadow: isMe
                       ? '0 0 14px rgba(56,189,248,0.7), 0 4px 10px rgba(0,0,0,0.4)'
                       : rank === 1
                       ? '0 0 14px rgba(245,158,11,0.7), 0 4px 10px rgba(0,0,0,0.4)'
                       : '0 4px 10px rgba(0,0,0,0.35)',
-                    display: 'block',
                   }}
                 />
 
@@ -155,6 +148,7 @@ export default function QuizPlayerStrip({
                       padding: 3,
                       border: '1.5px solid #000000',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                      zIndex: 2,
                     }}
                   >
                     <Crown size={11} strokeWidth={3} />

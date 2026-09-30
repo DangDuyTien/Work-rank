@@ -542,23 +542,23 @@ export default function FriendsDock() {
     if (connectionMaps.friends.has(targetId)) return 'friend';
     if (connectionMaps.incomingByUser.has(targetId)) return 'incoming';
     if (connectionMaps.outgoingByUser.has(targetId)) return 'outgoing';
-    return 'none';
+    return 'friend';
   };
 
   return (
     <aside className={open ? 'friends-dock is-open' : 'friends-dock'}>
-      <button type="button" className="friends-dock-tab" onClick={() => setOpen((value) => !value)} aria-label="Mở danh sách bạn bè">
+      <button type="button" className="friends-dock-tab" onClick={() => setOpen((value) => !value)} aria-label="Mở danh bạ đồng nghiệp">
         <Users size={18} />
-        {incoming.length + unreadTotal > 0 && <b>{incoming.length + unreadTotal}</b>}
+        {unreadTotal > 0 && <b>{unreadTotal}</b>}
       </button>
 
       <div className="friends-dock-panel">
         <div className="friends-dock-head">
           <div>
-            <strong>Bạn bè</strong>
-            <span>{friendRows.length ? `${friendRows.length} kết nối` : 'Tìm người để kết bạn'}</span>
+            <strong>Đồng nghiệp</strong>
+            <span>{friendRows.length ? `${friendRows.length} liên hệ` : 'Danh bạ nội bộ'}</span>
           </div>
-          <button type="button" onClick={() => setOpen(false)} aria-label="Thu gọn bạn bè">
+          <button type="button" onClick={() => setOpen(false)} aria-label="Thu gọn">
             <ChevronRight size={17} />
           </button>
         </div>
@@ -566,7 +566,7 @@ export default function FriendsDock() {
         {activeChatUser ? (
           <div className="friends-chat">
             <div className="friends-chat-head">
-              <button type="button" onClick={() => setActiveChatUser(null)} aria-label="Quay lại danh sách bạn bè">
+              <button type="button" onClick={() => setActiveChatUser(null)} aria-label="Quay lại danh bạ">
                 <ArrowLeft size={15} />
               </button>
               <Avatar user={activeChatUser} />
@@ -634,13 +634,10 @@ export default function FriendsDock() {
               <div className="friends-dock-section">
                 <div className="friends-dock-section-title">Kết quả tìm kiếm</div>
                 {searchLoading ? (
-                  <div className="friends-dock-empty">Đang tìm người dùng...</div>
+                  <div className="friends-dock-empty">Đang tìm đồng nghiệp...</div>
                 ) : searchResults.length === 0 ? (
                   <div className="friends-dock-empty">Không tìm thấy người dùng.</div>
                 ) : searchResults.map((item) => {
-                  const state = stateFor(item);
-                  const incomingRequest = connectionMaps.incomingByUser.get(userIdOf(item));
-                  const disabled = state === 'outgoing' || busyKey === `send:${userIdOf(item)}`;
                   return (
                     <CompactUser
                       key={userIdOf(item)}
@@ -650,16 +647,11 @@ export default function FriendsDock() {
                       action={(
                         <button
                           type="button"
-                          className={state === 'friend' ? 'friends-dock-icon-action is-done' : 'friends-dock-icon-action'}
-                          disabled={disabled}
-                          onClick={() => {
-                            if (state === 'friend') openChat(item);
-                            else if (state === 'incoming' && incomingRequest) acceptRequest(incomingRequest);
-                            else sendRequest(item);
-                          }}
-                          aria-label={state === 'friend' ? 'Nhắn tin' : state === 'incoming' ? 'Chấp nhận' : 'Kết bạn'}
+                          className="friends-dock-icon-action is-done"
+                          onClick={() => openChat(item)}
+                          aria-label="Nhắn tin"
                         >
-                          {state === 'friend' ? <MessageCircle size={14} /> : state === 'incoming' ? <Check size={14} /> : <UserPlus size={14} />}
+                          <MessageCircle size={14} />
                         </button>
                       )}
                     />
@@ -668,34 +660,10 @@ export default function FriendsDock() {
               </div>
             ) : (
               <>
-                {incoming.length > 0 && (
-                  <div className="friends-dock-section">
-                    <div className="friends-dock-section-title">Lời mời</div>
-                    {incoming.slice(0, 4).map((row) => (
-                      <CompactUser
-                        key={row.friendshipId}
-                        user={row.friend}
-                        detail="Muốn kết bạn"
-                        onOpen={openProfile}
-                        action={(
-                          <span className="friends-dock-request-actions">
-                            <button type="button" disabled={busyKey === `accept:${row.friendshipId}`} onClick={() => acceptRequest(row)} aria-label="Nhận lời mời">
-                              <Check size={13} />
-                            </button>
-                            <button type="button" disabled={busyKey === `decline:${row.friendshipId}`} onClick={() => declineRequest(row)} aria-label="Từ chối">
-                              <X size={13} />
-                            </button>
-                          </span>
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
-
                 <div className="friends-dock-section">
                   <div className="friends-dock-section-title">Đang hoạt động</div>
                   {visibleFriends.length === 0 ? (
-                    <div className="friends-dock-empty">Chưa có bạn bè. Dùng ô tìm kiếm phía trên để kết bạn.</div>
+                    <div className="friends-dock-empty">Chưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.</div>
                   ) : visibleFriends.map((row) => {
                     const friendId = userIdOf(row.friend);
                     const meta = statusMeta(row.friend?.presence || row.friend?.status);
@@ -721,7 +689,7 @@ export default function FriendsDock() {
 
             <button type="button" className="friends-dock-full" onClick={() => navigate('/friends')}>
               <MessageCircle size={14} />
-              Mở trang bạn bè
+              Thành Viên & Đội Nhóm
             </button>
           </>
         )}
