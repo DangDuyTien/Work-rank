@@ -1,5 +1,5 @@
-import React from 'react';
-import { Volume2, VolumeX, LogOut, Users, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Volume2, VolumeX, LogOut, Users, Sparkles, Maximize, Minimize } from 'lucide-react';
 
 export default function QuizTopBar({
   room,
@@ -10,6 +10,25 @@ export default function QuizTopBar({
   onToggleSound,
   onLeaveRoom,
 }) {
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleNativeFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  };
+
   return (
     <div
       style={{
@@ -72,7 +91,7 @@ export default function QuizTopBar({
       </div>
 
       {/* Right: Question Slide Progress + Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div
           style={{
             fontFamily: 'JetBrains Mono, monospace',
@@ -89,6 +108,28 @@ export default function QuizTopBar({
           Câu {questionIndex + 1} / {totalQuestions}
         </div>
 
+        {/* Native Fullscreen Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleNativeFullscreen}
+          title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình (F11)'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 6,
+            background: isFullscreen ? 'rgba(56,189,248,0.25)' : 'rgba(0,0,0,0.35)',
+            color: '#ffffff',
+            border: isFullscreen ? '1px solid rgba(56,189,248,0.5)' : '1px solid rgba(255,255,255,0.2)',
+            cursor: 'pointer',
+          }}
+        >
+          {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+        </button>
+
+        {/* Sound Toggle */}
         <button
           type="button"
           onClick={onToggleSound}
@@ -109,6 +150,7 @@ export default function QuizTopBar({
           {soundMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
         </button>
 
+        {/* Leave Room Button */}
         {onLeaveRoom && (
           <button
             type="button"
