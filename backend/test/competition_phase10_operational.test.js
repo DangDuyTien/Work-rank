@@ -277,6 +277,7 @@ describe('Phase 10 — Operational Readiness & Go-Live Verification', () => {
       const manifest = await bootstrapProductionEnvironment({
         grandYear: 2026,
         adminEmail: 'ops.admin@workrank.com',
+        seedDemoUsers: true,
       });
 
       assert.strictEqual(manifest.status, 'BOOTSTRAPPED');
@@ -296,7 +297,7 @@ describe('Phase 10 — Operational Readiness & Go-Live Verification', () => {
       assert.strictEqual(audit.entityId, 'SYSTEM_PROD_INIT');
 
       // Clean bootstrap re-run is 100% idempotent
-      const reRunManifest = await bootstrapProductionEnvironment({ grandYear: 2026 });
+      const reRunManifest = await bootstrapProductionEnvironment({ grandYear: 2026, seedDemoUsers: true });
       assert.strictEqual(reRunManifest.status, 'BOOTSTRAPPED');
     });
   });
@@ -310,7 +311,7 @@ describe('Phase 10 — Operational Readiness & Go-Live Verification', () => {
     let creatorJwt;
 
     before(async () => {
-      bootstrapData = await bootstrapProductionEnvironment({ grandYear: 2026 });
+      bootstrapData = await bootstrapProductionEnvironment({ grandYear: 2026, seedDemoUsers: true });
       prodCreator = await User.findOne({ where: { email: 'alice.creator@workrank.com' } });
       prodTeam = await Team.findByPk(prodCreator.teamId);
       prodSeason = await Season.findOne({ where: { slug: 'season-1-kickoff-2026' } });

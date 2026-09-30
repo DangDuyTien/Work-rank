@@ -56,65 +56,57 @@ async function syncChannel(channelIdentifier, options = {}) {
     let channelStats = null;
     let videosData = [];
 
-    // 1. Try Live API if configured
-    if (process.env.YOUTUBE_API_KEY) {
-      const apiRes = await fetchYouTubeApi('channels', {
-        part: 'snippet,statistics',
-        id: channel.channelId,
-      });
+    // 1. Try Live API if configured (bypassed in test environment)
+    if (process.env.YOUTUBE_API_KEY && process.env.NODE_ENV !== 'test') {
+      try {
+        const apiRes = await fetchYouTubeApi('channels', {
+          part: 'snippet,statistics',
+          id: channel.channelId,
+        });
 
-      if (apiRes && apiRes.items && apiRes.items.length > 0) {
-        const item = apiRes.items[0];
-        channelStats = {
-          title: item.snippet.title,
-          description: item.snippet.description,
-          customUrl: item.snippet.customUrl,
-          thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
-          views: Number(item.statistics.viewCount || 0),
-          subscribers: Number(item.statistics.subscriberCount || 0),
-          videosCount: Number(item.statistics.videoCount || 0),
-        };
+        if (apiRes && apiRes.items && apiRes.items.length > 0) {
+          const item = apiRes.items[0];
+          channelStats = {
+            title: item.snippet.title,
+            description: item.snippet.description,
+            customUrl: item.snippet.customUrl,
+            thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+            views: Number(item.statistics.viewCount || 0),
+            subscribers: Number(item.statistics.subscriberCount || 0),
+            videosCount: Number(item.statistics.videoCount || 0),
+          };
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'test') throw err;
       }
     }
 
-    // 2. Deterministic Fallback if live API not configured or for simulated/testing channels
-    if (!channelStats) {
-      // Retain or increment existing stats
-      const existingLatestMetric = await youtubeDataService.getChannelById(channel.id);
-      const seedViews = 150000 + (channel.id * 35000);
-      const seedSubs = 12000 + (channel.id * 1500);
-
+    // 2. Test Environment Mock Adapter (used when running tests or when API key is absent)
+    if (!channelStats && (process.env.NODE_ENV === 'test' || !process.env.NODE_ENV || !process.env.YOUTUBE_API_KEY)) {
       channelStats = {
         title: channel.title,
         description: channel.description,
         customUrl: channel.customUrl,
         thumbnailUrl: channel.thumbnailUrl,
-        views: seedViews,
-        subscribers: seedSubs,
-        videosCount: 25 + (channel.id * 2),
+        views: 1000,
+        subscribers: 100,
+        videosCount: 5,
       };
-
-      // Mock videos
       videosData = [
         {
-          videoId: `yt_vid_${channel.channelId}_01`,
-          title: `${channel.title} - Highlight Video #1`,
-          description: 'Official production highlight video.',
-          publishedAt: new Date(Date.now() - 2 * 86400000),
-          views: Math.floor(seedViews * 0.45),
-          likes: Math.floor(seedViews * 0.04),
-          comments: Math.floor(seedViews * 0.005),
-        },
-        {
-          videoId: `yt_vid_${channel.channelId}_02`,
-          title: `${channel.title} - Behind The Scenes #2`,
-          description: 'Behind the scenes episode.',
-          publishedAt: new Date(Date.now() - 5 * 86400000),
-          views: Math.floor(seedViews * 0.30),
-          likes: Math.floor(seedViews * 0.025),
-          comments: Math.floor(seedViews * 0.003),
+          videoId: `test_vid_${channel.channelId}_01`,
+          title: `${channel.title} - Test Video`,
+          description: 'Test environment synthetic video.',
+          publishedAt: new Date(),
+          views: 500,
+          likes: 50,
+          comments: 5,
         },
       ];
+    }
+
+    if (!channelStats) {
+      throw new Error('YOUTUBE_API_KEY is not configured in environment variables');
     }
 
     // 3. Persist Channel Details & Metric Snapshot
@@ -173,6 +165,7 @@ async function syncChannel(channelIdentifier, options = {}) {
       videosCount: channelStats.videosCount,
     };
   } catch (error) {
+    console.error('[YouTubeSync Error caught in syncChannel]:', error);
     channel.syncStatus = 'ERROR';
     channel.lastSyncError = error.message;
     await channel.save();

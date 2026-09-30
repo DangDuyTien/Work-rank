@@ -31,7 +31,7 @@ async function getPublicSpotlight() {
       },
     ],
     order: [
-      ['frozen_at', 'DESC'],
+      ['frozenAt', 'DESC'],
       ['id', 'DESC'],
     ],
   });

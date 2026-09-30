@@ -15,7 +15,9 @@ const {
   GrandPointsLedger,
   Season,
   SeasonFrozenResult,
+  SeasonTeamMember,
   Team,
+  User,
 } = require('../../models');
 
 /**

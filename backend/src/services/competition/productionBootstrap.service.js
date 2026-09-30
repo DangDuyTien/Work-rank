@@ -96,66 +96,77 @@ async function bootstrapProductionEnvironment(options = {}) {
   const adminPassword = options.adminPassword || process.env.PROD_ADMIN_PASSWORD || 'WorkRank@Enterprise2026';
 
   return await sequelize.transaction(async (t) => {
-    // 1. Bootstrap Teams
-    const teamsData = [
-      { name: 'Engineering Core', description: 'Core Platform & Infrastructure Engineers', color: '#0284c7' },
-      { name: 'Media & Content Creators', description: 'Video Production & Creative Media', color: '#8b5cf6' },
-      { name: 'Community & Growth', description: 'User Community, Growth & Relations', color: '#10b981' },
-    ];
-
     const seededTeams = [];
-    for (const td of teamsData) {
-      const [team] = await Team.findOrCreate({
-        where: { name: td.name },
-        defaults: {
-          name: td.name,
-          description: td.description,
-        },
-        transaction: t,
-      });
-      seededTeams.push(team);
+    const seededUsers = [];
+
+    let defaultTeam = null;
+    if (options.seedDemoUsers) {
+      const teamsData = [
+        { name: 'Engineering Core', description: 'Core Platform & Infrastructure Engineers', color: '#0284c7' },
+        { name: 'Media & Content Creators', description: 'Video Production & Creative Media', color: '#8b5cf6' },
+        { name: 'Community & Growth', description: 'User Community, Growth & Relations', color: '#10b981' },
+      ];
+
+      for (const td of teamsData) {
+        const [team] = await Team.findOrCreate({
+          where: { name: td.name },
+          defaults: {
+            name: td.name,
+            description: td.description,
+          },
+          transaction: t,
+        });
+        seededTeams.push(team);
+      }
+      defaultTeam = seededTeams[0];
+    } else {
+      const existingTeams = await Team.findAll({ transaction: t });
+      seededTeams.push(...existingTeams);
+      defaultTeam = seededTeams[0] || null;
     }
 
-    const defaultTeam = seededTeams[0];
     const passwordHash = await bcrypt.hash(adminPassword, 12);
 
-    // 2. Bootstrap Company Admin
-    const [adminUser] = await User.findOrCreate({
-      where: { email: adminEmail },
-      defaults: {
+    // 2. Bootstrap Company Admin (only if adminEmail specified and doesn't exist)
+    let adminUser = await User.findOne({ where: { role: 'admin' }, transaction: t });
+    if (!adminUser && adminEmail) {
+      adminUser = await User.create({
         name: 'WorkRank System Administrator',
         email: adminEmail,
         passwordHash: passwordHash,
         role: 'admin',
-        teamId: defaultTeam.id,
+        teamId: defaultTeam ? defaultTeam.id : null,
         status: 'active',
-      },
-      transaction: t,
-    });
+      }, { transaction: t });
+    }
+    if (adminUser) {
+      seededUsers.push(adminUser);
+    }
 
-    // 3. Bootstrap Initial Verified Department Users
-    const seededUsers = [adminUser];
-    const initialUsersData = [
-      { name: 'Alice Media Lead', email: 'alice.creator@workrank.com', role: 'user', teamIdx: 1 },
-      { name: 'Bob Community Host', email: 'bob.community@workrank.com', role: 'user', teamIdx: 2 },
-      { name: 'Charlie Core Dev', email: 'charlie.dev@workrank.com', role: 'user', teamIdx: 0 },
-    ];
+    // 3. Bootstrap Initial Verified Department Users (only in test environment with explicit flag)
+    if (options.seedDemoUsers && seededTeams.length >= 3) {
+      const initialUsersData = [
+        { name: 'Alice Media Lead', email: 'alice.creator@workrank.com', role: 'user', teamIdx: 1 },
+        { name: 'Bob Community Host', email: 'bob.community@workrank.com', role: 'user', teamIdx: 2 },
+        { name: 'Charlie Core Dev', email: 'charlie.dev@workrank.com', role: 'user', teamIdx: 0 },
+      ];
 
-    for (const ud of initialUsersData) {
-      const targetTeam = seededTeams[ud.teamIdx];
-      const [u] = await User.findOrCreate({
-        where: { email: ud.email },
-        defaults: {
-          name: ud.name,
-          email: ud.email,
-          passwordHash: passwordHash,
-          role: ud.role,
-          teamId: targetTeam.id,
-          status: 'active',
-        },
-        transaction: t,
-      });
-      seededUsers.push(u);
+      for (const ud of initialUsersData) {
+        const targetTeam = seededTeams[ud.teamIdx];
+        const [u] = await User.findOrCreate({
+          where: { email: ud.email },
+          defaults: {
+            name: ud.name,
+            email: ud.email,
+            passwordHash: passwordHash,
+            role: ud.role,
+            teamId: targetTeam.id,
+            status: 'active',
+          },
+          transaction: t,
+        });
+        seededUsers.push(u);
+      }
     }
 
     // 4. Bootstrap Standard Enterprise Rule Set & Version
