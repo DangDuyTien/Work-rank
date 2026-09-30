@@ -5873,14 +5873,14 @@ textarea:focus-visible,
 }
 
 .profile-gallery-grid {
-  width: 360px;
+  width: 460px;
   max-width: 100%;
   margin-left: 0;
   align-self: center;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  flex: 0 0 360px;
+  gap: 10px;
+  flex: 0 0 460px;
 }
 
 .profile-gallery-cell {
@@ -5888,14 +5888,20 @@ textarea:focus-visible,
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 4px;
+  border-radius: 6px;
   background: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-gallery-cell:hover {
+  border-color: rgba(180, 83, 9, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
 /* Ambient blur background to prevent ugly black bars or crop artifacts */
@@ -7981,7 +7987,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
 
   .profile-gallery-grid {
     width: 100%;
-    max-width: 380px;
+    max-width: 480px;
     margin: 0 auto;
   }
 

@@ -265,7 +265,7 @@ export default function Friends() {
   const handleCreateTeam = async (e) => {
     e?.preventDefault?.();
     if (!newTeamName.trim()) {
-      toast('Vui lòng nhập tên đội nhóm', { type: 'error' });
+      toast.warning('Vui lòng nhập tên đội nhóm');
       return;
     }
     setBusyAction('create-team');
@@ -274,13 +274,13 @@ export default function Friends() {
         name: newTeamName.trim(),
         description: newTeamDesc.trim() || undefined,
       });
-      toast(`Đã tạo đội "${res.data?.name || newTeamName}" thành công! Bạn là Trưởng nhóm.`, { type: 'success' });
+      toast.success(`Đã tạo đội "${res.data?.name || newTeamName}" thành công! Bạn là Trưởng nhóm.`);
       setShowCreateTeamModal(false);
       setNewTeamName('');
       setNewTeamDesc('');
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể tạo đội nhóm', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tạo đội nhóm'));
     } finally {
       setBusyAction('');
     }
@@ -289,18 +289,18 @@ export default function Friends() {
   const handleJoinTeam = async (e) => {
     e?.preventDefault?.();
     if (!joinInviteCode.trim()) {
-      toast('Vui lòng nhập mã mời đội', { type: 'error' });
+      toast.warning('Vui lòng nhập mã mời đội');
       return;
     }
     setBusyAction('join-team');
     try {
       const res = await groupsApi.join(joinInviteCode.trim());
-      toast(`Gia nhập đội "${res.data?.name}" thành công!`, { type: 'success' });
+      toast.success(`Gia nhập đội "${res.data?.name}" thành công!`);
       setShowJoinModal(false);
       setJoinInviteCode('');
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Mã mời không hợp lệ hoặc đã hết hạn', { type: 'error' });
+      toast.error(parseApiError(err, 'Mã mời không hợp lệ hoặc đã hết hạn'));
     } finally {
       setBusyAction('');
     }
@@ -310,7 +310,7 @@ export default function Friends() {
     e?.preventDefault?.();
     if (!myTeam) return;
     if (!editTeamName.trim()) {
-      toast('Tên đội không được để trống', { type: 'error' });
+      toast.warning('Tên đội không được để trống');
       return;
     }
     setBusyAction('edit-team');
@@ -319,11 +319,11 @@ export default function Friends() {
         name: editTeamName.trim(),
         description: editTeamDesc.trim() || undefined,
       });
-      toast('Đã cập nhật thông tin đội thành công!', { type: 'success' });
+      toast.success('Đã cập nhật thông tin đội thành công!');
       setShowEditTeamModal(false);
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể cập nhật thông tin đội', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật thông tin đội'));
     } finally {
       setBusyAction('');
     }
@@ -332,7 +332,7 @@ export default function Friends() {
   const handleLeaveTeam = async () => {
     if (!myTeam) return;
     if (isTeamLeader && myTeam.memberCount > 1) {
-      toast('Trưởng nhóm phải giải tán đội hoặc chuyển quyền trước khi rời đội.', { type: 'error' });
+      toast.warning('Trưởng nhóm phải giải tán đội hoặc chuyển quyền trước khi rời đội.');
       return;
     }
     const ok = await confirm({
@@ -347,14 +347,14 @@ export default function Friends() {
     try {
       if (isTeamLeader) {
         await groupsApi.delete(myTeam.id);
-        toast(`Đã giải tán đội "${myTeam.name}".`, { type: 'success' });
+        toast.success(`Đã giải tán đội "${myTeam.name}".`);
       } else {
         await groupsApi.leave(myTeam.id);
-        toast(`Bạn đã rời đội "${myTeam.name}".`, { type: 'success' });
+        toast.success(`Bạn đã rời đội "${myTeam.name}".`);
       }
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể rời đội', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể rời đội'));
     } finally {
       setBusyAction('');
     }
@@ -373,10 +373,10 @@ export default function Friends() {
     setBusyAction('delete-team');
     try {
       await groupsApi.delete(myTeam.id);
-      toast(`Đã giải tán đội "${myTeam.name}".`, { type: 'success' });
+      toast.success(`Đã giải tán đội "${myTeam.name}".`);
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể giải tán đội', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể giải tán đội'));
     } finally {
       setBusyAction('');
     }
@@ -396,10 +396,10 @@ export default function Friends() {
     setBusyAction(`kick:${memberId}`);
     try {
       await groupsApi.kick(myTeam.id, memberId);
-      toast(`Đã đưa ${member.name || 'thành viên'} ra khỏi đội.`, { type: 'success' });
+      toast.success(`Đã đưa ${member.name || 'thành viên'} ra khỏi đội.`);
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể xóa thành viên', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể xóa thành viên'));
     } finally {
       setBusyAction('');
     }
@@ -407,17 +407,17 @@ export default function Friends() {
 
   const handleDirectAddMember = async (targetUser) => {
     if (!myTeam) {
-      toast('Bạn chưa có đội để thêm thành viên. Hãy tạo đội trước.', { type: 'error' });
+      toast.warning('Bạn chưa có đội để thêm thành viên. Hãy tạo đội trước.');
       return;
     }
     const targetId = userIdOf(targetUser);
     setBusyAction(`add:${targetId}`);
     try {
       await groupsApi.addMember(myTeam.id, targetId);
-      toast(`Đã thêm ${targetUser.name || 'đồng nghiệp'} vào đội "${myTeam.name}"!`, { type: 'success' });
+      toast.success(`Đã thêm ${targetUser.name || 'đồng nghiệp'} vào đội "${myTeam.name}"!`);
       await loadData({ background: true });
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Không thể thêm thành viên vào đội', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể thêm thành viên vào đội'));
     } finally {
       setBusyAction('');
     }
@@ -427,7 +427,7 @@ export default function Friends() {
     if (!myTeam?.inviteCode && !myTeam?.invite_code) return;
     const code = myTeam.inviteCode || myTeam.invite_code;
     navigator.clipboard.writeText(code);
-    toast(`Đã sao chép mã mời: ${code}`, { type: 'success' });
+    toast.success(`Đã sao chép mã mời: ${code}`);
   };
 
   const openProfile = (targetUser) => {

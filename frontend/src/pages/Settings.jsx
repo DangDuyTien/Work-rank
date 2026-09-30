@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { auth, users as usersApi, competition as compApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
@@ -248,7 +249,7 @@ export default function Settings() {
       const base64 = await compressImage(file, 400, 400, 0.85);
       setProfile((current) => ({ ...current, avatarData: base64 }));
     } catch (err) {
-      toast(err.message || 'Lỗi khi xử lý hình ảnh avatar', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi xử lý hình ảnh avatar'));
     }
   };
 
@@ -273,7 +274,7 @@ export default function Settings() {
   const saveProfile = async (event) => {
     event.preventDefault();
     if (!profile.name.trim() || !profile.email.trim()) {
-      toast('Tên và email không được để trống.', { type: 'warning' });
+      toast.warning('Tên và email không được để trống.');
       return;
     }
 
@@ -299,12 +300,9 @@ export default function Settings() {
         ...updatedUser,
         avatarData: profile.avatarData || null,
       }));
-      toast('Đã cập nhật hồ sơ cá nhân và ảnh đại diện thành công!', { type: 'success' });
+      toast.success('Đã cập nhật hồ sơ cá nhân và ảnh đại diện thành công!');
     } catch (err) {
-      const message = err.response?.status === 409
-        ? 'Email này đã được tài khoản khác sử dụng.'
-        : err.response?.data?.message || 'Không thể cập nhật hồ sơ.';
-      toast(message, { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật hồ sơ.'));
     } finally {
       setSavingProfile(false);
     }
@@ -316,7 +314,7 @@ export default function Settings() {
     const finalDept = (adminJobForm.isCustomDept ? adminJobForm.customDept : adminJobForm.department).trim();
     
     if (!finalJobTitle) {
-      toast('Chức danh công tác không được để trống.', { type: 'warning' });
+      toast.warning('Chức danh công tác không được để trống.');
       return;
     }
 
@@ -343,9 +341,9 @@ export default function Settings() {
         setUser((prev) => ({ ...prev, ...updatedUser }));
       }
       setUserList((prev) => prev.map((u) => (Number(u.id) === Number(targetId) ? { ...u, ...updatedUser } : u)));
-      toast(`Đã cập nhật chức danh, phòng ban & huy hiệu cho nhân sự #${targetId}.`, { type: 'success' });
+      toast.success(`Đã cập nhật chức danh, phòng ban & huy hiệu cho nhân sự #${targetId}.`);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể cập nhật chức danh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật chức danh.'));
     } finally {
       setSavingJobProfile(false);
     }
@@ -355,11 +353,11 @@ export default function Settings() {
     event.preventDefault();
     const targetId = Number(awardForm.targetUserId) || user?.id;
     if (!targetId) {
-      toast('Hãy chọn nhân viên nhận giải thưởng.', { type: 'warning' });
+      toast.warning('Hãy chọn nhân viên nhận giải thưởng.');
       return;
     }
     if (!awardForm.reason.trim()) {
-      toast('Hãy nhập lý do và căn cứ vinh danh.', { type: 'warning' });
+      toast.warning('Hãy nhập lý do và căn cứ vinh danh.');
       return;
     }
 
@@ -372,7 +370,7 @@ export default function Settings() {
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
-        toast('Đã trao giải thưởng MVP thành công!', { type: 'success' });
+        toast.success('Đã trao giải thưởng MVP thành công!');
       } else {
         await usersApi.adminAwardChampion({
           userId: targetId,
@@ -380,14 +378,14 @@ export default function Settings() {
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
-        toast('Đã trao danh hiệu Vô Địch (Champion) thành công!', { type: 'success' });
+        toast.success('Đã trao danh hiệu Vô Địch (Champion) thành công!');
       }
 
       setShowAwardModal(false);
       setAwardForm({ awardType: 'MVP', targetUserId: '', seasonId: '', title: '', reason: '' });
       loadRecognitions();
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể trao giải thưởng.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể trao giải thưởng.'));
     } finally {
       setAwarding(false);
     }
@@ -396,15 +394,15 @@ export default function Settings() {
   const savePassword = async (event) => {
     event.preventDefault();
     if (!password.currentPassword || !password.newPassword) {
-      toast('Hãy nhập mật khẩu hiện tại và mật khẩu mới.', { type: 'warning' });
+      toast.warning('Hãy nhập mật khẩu hiện tại và mật khẩu mới.');
       return;
     }
     if (password.newPassword.length < 6) {
-      toast('Mật khẩu mới cần ít nhất 6 ký tự.', { type: 'warning' });
+      toast.warning('Mật khẩu mới cần ít nhất 6 ký tự.');
       return;
     }
     if (password.newPassword !== password.confirmPassword) {
-      toast('Xác nhận mật khẩu mới chưa khớp.', { type: 'warning' });
+      toast.warning('Xác nhận mật khẩu mới chưa khớp.');
       return;
     }
 
@@ -415,12 +413,9 @@ export default function Settings() {
         newPassword: password.newPassword,
       });
       setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      toast('Đã đổi mật khẩu thành công.', { type: 'success' });
+      toast.success('Đã đổi mật khẩu thành công.');
     } catch (err) {
-      const message = err.response?.status === 400
-        ? 'Mật khẩu hiện tại không đúng.'
-        : err.response?.data?.message || 'Không thể đổi mật khẩu.';
-      toast(message, { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể đổi mật khẩu.'));
     } finally {
       setSavingPassword(false);
     }
@@ -431,17 +426,17 @@ export default function Settings() {
     window.dispatchEvent(new CustomEvent(NOTIFICATIONS_CLEARED_EVENT, {
       detail: { userId: String(user?.id || '') },
     }));
-    toast('Đã xóa thông báo cục bộ.', { type: 'success' });
+    toast.success('Đã xóa thông báo cục bộ.');
   };
 
   const clearAvatar = () => {
     removeStoredAvatar(user?.id);
-    toast('Đã xóa ảnh đại diện lưu trên trình duyệt.', { type: 'success' });
+    toast.success('Đã xóa ảnh đại diện lưu trên trình duyệt.');
   };
 
   const restoreDefaults = () => {
     setSettings(resetAppSettings());
-    toast('Đã khôi phục tùy chọn mặc định.', { type: 'success' });
+    toast.success('Đã khôi phục tùy chọn mặc định.');
   };
 
   const badges = recognitions?.badges || {};

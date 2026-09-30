@@ -39,6 +39,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { competition } from '../services/api';
+import { useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition } from '../components/ui';
 
 const CONDITION_OPERATORS = [
