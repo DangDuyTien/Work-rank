@@ -64,7 +64,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
                 textTransform: 'uppercase',
               }}
             >
-              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>• 3WIN</span>
+              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>3WIN MEDIA</span>
             </span>
           </Link>
 

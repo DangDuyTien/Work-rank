@@ -66,7 +66,7 @@ export default function Home() {
                 textTransform: 'uppercase',
               }}
             >
-              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>• 3WIN</span>
+              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>3WIN MEDIA</span>
             </span>
           </Link>
         </div>
@@ -502,7 +502,7 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <BrandMark size={20} showLabel={false} />
           <span style={{ fontWeight: 800, color: '#333333' }}>
-            © {new Date().getFullYear()} 3WIN MEDIA • WORKRANK ENTERPRISE
+            © {new Date().getFullYear()} 3WIN MEDIA — WORKRANK ENTERPRISE
           </span>
         </div>
 
