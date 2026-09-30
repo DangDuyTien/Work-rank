@@ -21,7 +21,7 @@ export function UiProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
 
-  const toast = useCallback((message, options = {}) => {
+  const toastFn = useCallback((message, options = {}) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const item = {
       id,
@@ -35,6 +35,16 @@ export function UiProvider({ children }) {
     }, options.duration || 4500);
     return id;
   }, []);
+
+  const toast = useMemo(() => {
+    const fn = (message, options) => toastFn(message, options);
+    fn.success = (message, options = {}) => toastFn(message, { ...options, type: 'success' });
+    fn.error = (message, options = {}) => toastFn(message, { ...options, type: 'error' });
+    fn.warning = (message, options = {}) => toastFn(message, { ...options, type: 'warning' });
+    fn.info = (message, options = {}) => toastFn(message, { ...options, type: 'info' });
+    fn.toast = fn;
+    return fn;
+  }, [toastFn]);
 
   const removeToast = useCallback((id) => {
     setToasts((current) => current.filter((item) => item.id !== id));

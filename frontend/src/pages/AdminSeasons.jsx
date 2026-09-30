@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Plus, Play, Pause, CheckCircle, Archive, Shield, Users, RefreshCw, Calendar, Target, AlertTriangle, Clock } from 'lucide-react';
 import { competition, groups } from '../services/api';
+import { useToast, useConfirm } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl } from '../components/ui';
 
 export default function AdminSeasons() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +26,8 @@ export default function AdminSeasons() {
     gracePeriodHours: 2,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [statusChangingId, setStatusChangingId] = useState(null);
+  const [addingTeam, setAddingTeam] = useState(false);
 
   // Add Team Modal State
   const [selectedSeasonForTeam, setSelectedSeasonForTeam] = useState(null);
@@ -35,11 +42,13 @@ export default function AdminSeasons() {
       const data = await competition.adminListSeasons();
       setSeasons(data || []);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Không thể tải danh sách mùa giải');
+      const errMsg = parseApiError(err, 'Không thể tải danh sách mùa giải');
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const fetchAvailableTeams = async () => {
     try {
@@ -56,22 +65,35 @@ export default function AdminSeasons() {
   }, [fetchSeasons]);
 
   const handleStatusChange = async (seasonId, newStatus) => {
-    const reason = window.prompt(`Lý do chuyển trạng thái sang ${newStatus}:`, 'Cập nhật từ trang quản trị');
-    if (reason === null) return; // user cancelled
+    const ok = await confirm({
+      title: `Chuyển trạng thái Mùa giải sang ${newStatus}`,
+      message: newStatus === 'FINISHED'
+        ? 'Bạn có chắc muốn kết thúc và đóng băng điểm số mùa giải này không?'
+        : `Bạn có chắc muốn chuyển trạng thái mùa giải sang ${newStatus}?`,
+      confirmText: 'Xác nhận chuyển',
+      cancelText: 'Hủy',
+      type: newStatus === 'FINISHED' ? 'danger' : 'primary',
+    });
+    if (!ok) return;
 
+    setStatusChangingId(seasonId);
     try {
-      await competition.adminUpdateSeasonStatus(seasonId, newStatus, reason);
-      fetchSeasons();
+      await competition.adminUpdateSeasonStatus(seasonId, newStatus, `Cập nhật sang ${newStatus} từ trang quản trị`);
+      toast.success(`Đã chuyển trạng thái mùa giải sang ${newStatus}!`);
+      await fetchSeasons();
     } catch (err) {
-      alert(err?.response?.data?.message || `Không thể chuyển trạng thái sang ${newStatus}`);
+      toast.error(parseApiError(err, `Không thể chuyển trạng thái sang ${newStatus}`));
+    } finally {
+      setStatusChangingId(null);
     }
   };
 
   const handleCreateSeason = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
-      setSubmitting(true);
       await competition.adminCreateSeason(formData);
+      toast.success(`Đã tạo mùa giải "${formData.name}" thành công!`);
       setShowCreateModal(false);
       setFormData({
         name: '',
@@ -82,9 +104,9 @@ export default function AdminSeasons() {
         endAt: '',
         gracePeriodHours: 2,
       });
-      fetchSeasons();
+      await fetchSeasons();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể tạo mùa giải');
+      toast.error(parseApiError(err, 'Không thể tạo mùa giải'));
     } finally {
       setSubmitting(false);
     }
@@ -92,17 +114,24 @@ export default function AdminSeasons() {
 
   const handleAddTeam = async (e) => {
     e.preventDefault();
-    if (!selectedTeamId || !selectedSeasonForTeam) return;
+    if (!selectedTeamId || !selectedSeasonForTeam) {
+      toast.warning('Vui lòng chọn đội để thêm vào mùa giải.');
+      return;
+    }
+    setAddingTeam(true);
     try {
       await competition.adminAddTeamToSeason(selectedSeasonForTeam.id, {
         teamId: Number(selectedTeamId),
         color: teamColor,
       });
+      toast.success('Đã thêm đội vào mùa giải và snapshot thành công!');
       setSelectedSeasonForTeam(null);
       setSelectedTeamId('');
-      fetchSeasons();
+      await fetchSeasons();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể thêm đội vào mùa giải');
+      toast.error(parseApiError(err, 'Không thể thêm đội vào mùa giải'));
+    } finally {
+      setAddingTeam(false);
     }
   };
 
@@ -209,46 +238,88 @@ export default function AdminSeasons() {
 
                   {s.status === 'DRAFT' && (
                     <>
-                      <Button variant="primary" size="sm" onClick={() => handleStatusChange(s.id, 'ACTIVE')}>
-                        <Play size={14} /> Kích hoạt
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'ACTIVE')}
+                      >
+                        <Play size={14} /> {statusChangingId === s.id ? 'Đang kích hoạt...' : 'Kích hoạt'}
                       </Button>
-                      <Button variant="secondary" size="sm" onClick={() => handleStatusChange(s.id, 'SCHEDULED')}>
-                        Lên lịch
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'SCHEDULED')}
+                      >
+                        {statusChangingId === s.id ? 'Đang lên lịch...' : 'Lên lịch'}
                       </Button>
                     </>
                   )}
 
                   {s.status === 'SCHEDULED' && (
-                    <Button variant="primary" size="sm" onClick={() => handleStatusChange(s.id, 'ACTIVE')}>
-                      <Play size={14} /> Kích hoạt ngay
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={statusChangingId === s.id}
+                      onClick={() => handleStatusChange(s.id, 'ACTIVE')}
+                    >
+                      <Play size={14} /> {statusChangingId === s.id ? 'Đang kích hoạt...' : 'Kích hoạt ngay'}
                     </Button>
                   )}
 
                   {s.status === 'ACTIVE' && (
                     <>
-                      <Button variant="secondary" size="sm" onClick={() => handleStatusChange(s.id, 'PAUSED')} style={{ color: '#ca8a04' }}>
-                        <Pause size={14} /> Tạm dừng
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'PAUSED')}
+                        style={{ color: '#ca8a04' }}
+                      >
+                        <Pause size={14} /> {statusChangingId === s.id ? 'Đang tạm dừng...' : 'Tạm dừng'}
                       </Button>
-                      <Button variant="primary" size="sm" onClick={() => handleStatusChange(s.id, 'FINISHED')} style={{ background: '#16a34a' }}>
-                        <CheckCircle size={14} /> Kết thúc & Đóng băng
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'FINISHED')}
+                        style={{ background: '#16a34a' }}
+                      >
+                        <CheckCircle size={14} /> {statusChangingId === s.id ? 'Đang kết thúc...' : 'Kết thúc & Đóng băng'}
                       </Button>
                     </>
                   )}
 
                   {s.status === 'PAUSED' && (
                     <>
-                      <Button variant="primary" size="sm" onClick={() => handleStatusChange(s.id, 'ACTIVE')}>
-                        <Play size={14} /> Tiếp tục (Resume)
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'ACTIVE')}
+                      >
+                        <Play size={14} /> {statusChangingId === s.id ? 'Đang tiếp tục...' : 'Tiếp tục (Resume)'}
                       </Button>
-                      <Button variant="secondary" size="sm" onClick={() => handleStatusChange(s.id, 'FINISHED')}>
-                        Kết thúc
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'FINISHED')}
+                      >
+                        {statusChangingId === s.id ? 'Đang kết thúc...' : 'Kết thúc'}
                       </Button>
                     </>
                   )}
 
                   {s.status === 'FINISHED' && (
-                    <Button variant="secondary" size="sm" onClick={() => handleStatusChange(s.id, 'ARCHIVED')}>
-                      <Archive size={14} /> Lưu trữ (Archive)
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={statusChangingId === s.id}
+                      onClick={() => handleStatusChange(s.id, 'ARCHIVED')}
+                    >
+                      <Archive size={14} /> {statusChangingId === s.id ? 'Đang lưu trữ...' : 'Lưu trữ (Archive)'}
                     </Button>
                   )}
                 </div>
@@ -367,7 +438,9 @@ export default function AdminSeasons() {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
                 <Button variant="secondary" type="button" onClick={() => setSelectedSeasonForTeam(null)}>Đóng</Button>
-                <Button variant="primary" type="submit">Thêm và Snapshot</Button>
+                <Button variant="primary" type="submit" disabled={addingTeam}>
+                  {addingTeam ? 'Đang thêm...' : 'Thêm và Snapshot'}
+                </Button>
               </div>
             </form>
           </div>

@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Award, Plus, Play, Pause, CheckCircle, Archive, Shield, Users, RefreshCw, Calendar, Target, AlertTriangle, ChevronRight, Hash, Layers } from 'lucide-react';
 import { competition, groups } from '../services/api';
+import { useToast, useConfirm } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl } from '../components/ui';
 
 export default function AdminGrand() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [grands, setGrands] = useState([]);
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +27,10 @@ export default function AdminGrand() {
     tieBreakOrder: 'grand_points,season_wins,podium_count,earliest_award',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [statusChangingId, setStatusChangingId] = useState(null);
+  const [settlingSeasonId, setSettlingSeasonId] = useState(null);
+  const [submittingLink, setSubmittingLink] = useState(false);
+  const [submittingReconcile, setSubmittingReconcile] = useState(false);
 
   // Link Season Modal State
   const [selectedGrandForSeason, setSelectedGrandForSeason] = useState(null);
@@ -47,11 +56,13 @@ export default function AdminGrand() {
       setGrands(grandsData || []);
       setSeasons(seasonsData || []);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Không thể tải danh sách Grand Championship');
+      const errMsg = parseApiError(err, 'Không thể tải danh sách Grand Championship');
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const fetchAvailableTeams = async () => {
     try {
@@ -68,31 +79,43 @@ export default function AdminGrand() {
   }, [fetchData]);
 
   const handleStatusChange = async (grandId, newStatus) => {
-    const reason = window.prompt(`Lý do chuyển trạng thái sang ${newStatus}:`, 'Cập nhật từ trang quản trị');
-    if (reason === null) return;
+    const ok = await confirm({
+      title: `Chuyển trạng thái Grand sang ${newStatus}`,
+      message: newStatus === 'FINISHED'
+        ? 'Bạn có chắc chắn muốn kết thúc và đóng băng kết quả Grand Championship này không? Nếu có Season chưa hoàn thành, hệ thống sẽ chốt force override.'
+        : `Bạn có chắc muốn chuyển trạng thái Grand sang ${newStatus}?`,
+      confirmText: 'Xác nhận chuyển',
+      cancelText: 'Hủy',
+      type: newStatus === 'FINISHED' ? 'danger' : 'primary',
+    });
+    if (!ok) return;
 
-    let forceOverride = false;
-    if (newStatus === 'FINISHED') {
-      const force = window.confirm('Nếu có Season chưa hoàn thành, bạn có muốn BẮT BUỘC chốt (Force Override) không?');
-      forceOverride = force;
-    }
-
+    setStatusChangingId(grandId);
     try {
-      await competition.adminUpdateGrandStatus(grandId, newStatus, reason, forceOverride);
-      fetchData();
+      await competition.adminUpdateGrandStatus(
+        grandId,
+        newStatus,
+        `Chuyển sang ${newStatus} từ trang quản trị`,
+        newStatus === 'FINISHED'
+      );
+      toast.success(`Đã chuyển trạng thái Grand sang ${newStatus}!`);
+      await fetchData();
     } catch (err) {
-      alert(err?.response?.data?.message || `Không thể chuyển trạng thái sang ${newStatus}`);
+      toast.error(parseApiError(err, `Không thể chuyển trạng thái sang ${newStatus}`));
+    } finally {
+      setStatusChangingId(null);
     }
   };
 
   const handleCreateGrand = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
-      setSubmitting(true);
       await competition.adminCreateGrand({
         ...formData,
         year: Number(formData.year),
       });
+      toast.success(`Đã tạo Grand Championship "${formData.name}" thành công!`);
       setShowCreateModal(false);
       setFormData({
         name: '',
@@ -103,9 +126,9 @@ export default function AdminGrand() {
         endAt: '',
         tieBreakOrder: 'grand_points,season_wins,podium_count,earliest_award',
       });
-      fetchData();
+      await fetchData();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể tạo Grand Championship');
+      toast.error(parseApiError(err, 'Không thể tạo Grand Championship'));
     } finally {
       setSubmitting(false);
     }
@@ -113,46 +136,67 @@ export default function AdminGrand() {
 
   const handleLinkSeason = async (e) => {
     e.preventDefault();
-    if (!selectedGrandForSeason || !selectedSeasonId) return;
+    if (!selectedGrandForSeason || !selectedSeasonId) {
+      toast.warning('Vui lòng chọn một Mùa giải để liên kết.');
+      return;
+    }
+    setSubmittingLink(true);
     try {
       await competition.adminLinkSeasonToGrand(selectedGrandForSeason.id, Number(selectedSeasonId));
+      toast.success('Đã liên kết Season vào Grand Championship thành công!');
       setSelectedGrandForSeason(null);
       setSelectedSeasonId('');
-      fetchData();
+      await fetchData();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể liên kết Season vào Grand');
+      toast.error(parseApiError(err, 'Không thể liên kết Season vào Grand'));
+    } finally {
+      setSubmittingLink(false);
     }
   };
 
   const handleManualSettle = async (grandId, seasonId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn phát Grand Points từ Season này?')) return;
+    const ok = await confirm({
+      title: 'Quyết toán Grand Points',
+      message: 'Bạn có chắc chắn muốn phát và ghi nhận Grand Points từ Season này vào Ledger?',
+      confirmText: 'Quyết toán ngay',
+      cancelText: 'Hủy',
+      type: 'warning',
+    });
+    if (!ok) return;
+
+    setSettlingSeasonId(seasonId);
     try {
       const res = await competition.adminSettleGrandPoints(grandId, seasonId);
-      alert(`Đã hoàn tất quyết toán Grand Points. Số bản ghi đã lưu: ${res?.count || 0}`);
-      fetchData();
+      toast.success(`Đã hoàn tất quyết toán Grand Points. Số bản ghi đã lưu: ${res?.count || 0}`);
+      await fetchData();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể quyết toán Grand Points');
+      toast.error(parseApiError(err, 'Không thể quyết toán Grand Points'));
+    } finally {
+      setSettlingSeasonId(null);
     }
   };
 
   const handleReconcilePoints = async (e) => {
     e.preventDefault();
     if (!selectedGrandForReconcile || !reconcileData.teamId || !reconcileData.points || !reconcileData.reason) {
-      alert('Vui lòng điền đầy đủ thông tin điều chỉnh và lý do.');
+      toast.warning('Vui lòng điền đầy đủ thông tin điều chỉnh và lý do.');
       return;
     }
+    setSubmittingReconcile(true);
     try {
       await competition.adminReconcileGrandPoints(selectedGrandForReconcile.id, {
         teamId: Number(reconcileData.teamId),
         points: Number(reconcileData.points),
         reason: reconcileData.reason,
       });
-      alert('Đã thêm bản ghi điều chỉnh Grand Points vào Immutable Ledger!');
+      toast.success('Đã ghi nhận điều chỉnh Grand Points vào Ledger bất biến thành công!');
       setSelectedGrandForReconcile(null);
       setReconcileData({ teamId: '', points: 0, reason: '' });
-      fetchData();
+      await fetchData();
     } catch (err) {
-      alert(err?.response?.data?.message || 'Không thể điều chỉnh Grand Points');
+      toast.error(parseApiError(err, 'Không thể điều chỉnh Grand Points'));
+    } finally {
+      setSubmittingReconcile(false);
     }
   };
 
@@ -294,36 +338,74 @@ export default function AdminGrand() {
                       <button
                         type="button"
                         onClick={() => handleStatusChange(g.id, 'SCHEDULED')}
-                        style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        disabled={statusChangingId === g.id}
+                        style={{
+                          border: '1px solid #cbd5e1',
+                          background: '#fff',
+                          padding: '6px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
+                          opacity: statusChangingId === g.id ? 0.6 : 1,
+                        }}
                       >
-                        Lên lịch
+                        {statusChangingId === g.id ? 'Đang chuyển...' : 'Lên lịch'}
                       </button>
                     )}
                     {['DRAFT', 'SCHEDULED'].includes(g.status) && (
                       <button
                         type="button"
                         onClick={() => handleStatusChange(g.id, 'ACTIVE')}
-                        style={{ border: 'none', background: '#16a34a', color: '#fff', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        disabled={statusChangingId === g.id}
+                        style={{
+                          border: 'none',
+                          background: '#16a34a',
+                          color: '#fff',
+                          padding: '6px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
+                          opacity: statusChangingId === g.id ? 0.6 : 1,
+                        }}
                       >
-                        Kích hoạt
+                        {statusChangingId === g.id ? 'Đang kích hoạt...' : 'Kích hoạt'}
                       </button>
                     )}
                     {g.status === 'ACTIVE' && (
                       <button
                         type="button"
                         onClick={() => handleStatusChange(g.id, 'FINISHED')}
-                        style={{ border: 'none', background: '#eab308', color: '#000', padding: '6px 10px', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                        disabled={statusChangingId === g.id}
+                        style={{
+                          border: 'none',
+                          background: '#eab308',
+                          color: '#000',
+                          padding: '6px 10px',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
+                          opacity: statusChangingId === g.id ? 0.6 : 1,
+                        }}
                       >
-                        Đóng & Đóng Băng Kết Quả
+                        {statusChangingId === g.id ? 'Đang đóng băng...' : 'Đóng & Đóng Băng Kết Quả'}
                       </button>
                     )}
                     {g.status === 'FINISHED' && (
                       <button
                         type="button"
                         onClick={() => handleStatusChange(g.id, 'ARCHIVED')}
-                        style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        disabled={statusChangingId === g.id}
+                        style={{
+                          border: '1px solid #cbd5e1',
+                          background: '#fff',
+                          padding: '6px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
+                          opacity: statusChangingId === g.id ? 0.6 : 1,
+                        }}
                       >
-                        Lưu trữ
+                        {statusChangingId === g.id ? 'Đang lưu trữ...' : 'Lưu trữ'}
                       </button>
                     )}
                     <button
@@ -368,6 +450,7 @@ export default function AdminGrand() {
                             <button
                               type="button"
                               onClick={() => handleManualSettle(g.id, s.id)}
+                              disabled={settlingSeasonId === s.id}
                               style={{
                                 width: '100%',
                                 border: '1px solid #cbd5e1',
@@ -375,11 +458,12 @@ export default function AdminGrand() {
                                 padding: '4px 8px',
                                 fontSize: 11,
                                 fontWeight: 700,
-                                cursor: 'pointer',
+                                cursor: settlingSeasonId === s.id ? 'not-allowed' : 'pointer',
                                 color: '#b45309',
+                                opacity: settlingSeasonId === s.id ? 0.6 : 1,
                               }}
                             >
-                              Phát / Quyết Toán Grand Points
+                              {settlingSeasonId === s.id ? 'Đang quyết toán...' : 'Phát / Quyết Toán Grand Points'}
                             </button>
                           )}
                         </div>
@@ -557,9 +641,19 @@ export default function AdminGrand() {
                 </button>
                 <button
                   type="submit"
-                  style={{ border: 'none', background: '#b45309', color: '#fff', padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  disabled={submittingLink}
+                  style={{
+                    border: 'none',
+                    background: '#b45309',
+                    color: '#fff',
+                    padding: '8px 16px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: submittingLink ? 'not-allowed' : 'pointer',
+                    opacity: submittingLink ? 0.6 : 1,
+                  }}
                 >
-                  Xác Nhận Ghép
+                  {submittingLink ? 'Đang ghép...' : 'Xác Nhận Ghép'}
                 </button>
               </div>
             </form>
@@ -636,9 +730,19 @@ export default function AdminGrand() {
                 </button>
                 <button
                   type="submit"
-                  style={{ border: 'none', background: '#ea580c', color: '#fff', padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  disabled={submittingReconcile}
+                  style={{
+                    border: 'none',
+                    background: '#ea580c',
+                    color: '#fff',
+                    padding: '8px 16px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: submittingReconcile ? 'not-allowed' : 'pointer',
+                    opacity: submittingReconcile ? 0.6 : 1,
+                  }}
                 >
-                  Ghi Nhận Điều Chỉnh
+                  {submittingReconcile ? 'Đang ghi nhận...' : 'Ghi Nhận Điều Chỉnh'}
                 </button>
               </div>
             </form>

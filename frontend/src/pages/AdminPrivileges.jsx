@@ -28,6 +28,7 @@ import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '
 import { users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 
 const PAGE_SIZE = 50;
 
@@ -150,7 +151,7 @@ export default function AdminPrivileges() {
       setUsers(list);
       setPagination(res.pagination);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không tải được danh sách người dùng.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không tải được danh sách người dùng.'));
     } finally {
       setLoading(false);
     }
@@ -200,12 +201,12 @@ export default function AdminPrivileges() {
     )));
     try {
       await usersApi.update(user.id, { isVerified: next });
-      toast(next ? `Đã cấp tích xanh cho ${user.name}.` : `Đã gỡ tích xanh của ${user.name}.`, { type: 'success' });
+      toast.success(next ? `Đã cấp tích xanh cho ${user.name}.` : `Đã gỡ tích xanh của ${user.name}.`);
     } catch (err) {
       setUsers((current) => current.map((item) => (
         String(item.id) === userId ? { ...item, isVerified: !next, verified: !next } : item
       )));
-      toast(err.response?.data?.message || 'Không cập nhật được tích xanh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không cập nhật được tích xanh.'));
     } finally {
       setUserSaving(userId, false);
     }
@@ -220,12 +221,12 @@ export default function AdminPrivileges() {
     )));
     try {
       await usersApi.update(user.id, { isDev: next });
-      toast(next ? `Đã cấp huy hiệu Dev cho ${user.name}.` : `Đã gỡ huy hiệu Dev của ${user.name}.`, { type: 'success' });
+      toast.success(next ? `Đã cấp huy hiệu Dev cho ${user.name}.` : `Đã gỡ huy hiệu Dev của ${user.name}.`);
     } catch (err) {
       setUsers((current) => current.map((item) => (
         String(item.id) === userId ? { ...item, isDev: !next } : item
       )));
-      toast(err.response?.data?.message || 'Không cập nhật được huy hiệu Dev.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không cập nhật được huy hiệu Dev.'));
     } finally {
       setUserSaving(userId, false);
     }
@@ -234,7 +235,7 @@ export default function AdminPrivileges() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!createForm.name.trim() || !createForm.email.trim() || !createForm.password.trim()) {
-      toast('Vui lòng điền đầy đủ họ tên, email và mật khẩu.', { type: 'warning' });
+      toast.warning('Vui lòng điền đầy đủ họ tên, email và mật khẩu.');
       return;
     }
     setCreating(true);
@@ -249,7 +250,7 @@ export default function AdminPrivileges() {
         isVerified: createForm.isVerified,
         isDev: createForm.isDev,
       });
-      toast(`Đã tạo thành công nhân sự ${createForm.name}!`, { type: 'success' });
+      toast.success(`Đã tạo thành công nhân sự ${createForm.name}!`);
       setCreateModalOpen(false);
       setCreateForm({
         name: '',
@@ -263,7 +264,7 @@ export default function AdminPrivileges() {
       });
       loadData(query, 1);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể tạo nhân sự mới.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tạo nhân sự mới.'));
     } finally {
       setCreating(false);
     }
@@ -287,7 +288,7 @@ export default function AdminPrivileges() {
     e.preventDefault();
     if (!editModalUser) return;
     if (!editForm.name.trim() || !editForm.email.trim()) {
-      toast('Tên và email không được để trống.', { type: 'warning' });
+      toast.warning('Tên và email không được để trống.');
       return;
     }
     setSavingEdit(true);
@@ -309,10 +310,10 @@ export default function AdminPrivileges() {
       if (detailDrawerUser?.id === editModalUser.id) {
         setDetailDrawerUser((prev) => ({ ...prev, ...editForm, ...updated }));
       }
-      toast(`Đã cập nhật hồ sơ của ${editForm.name}!`, { type: 'success' });
+      toast.success(`Đã cập nhật hồ sơ của ${editForm.name}!`);
       setEditModalUser(null);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể cập nhật hồ sơ.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật hồ sơ.'));
     } finally {
       setSavingEdit(false);
     }
@@ -327,10 +328,10 @@ export default function AdminPrivileges() {
       if (detailDrawerUser?.id === deleteConfirmUser.id) {
         setDetailDrawerUser(null);
       }
-      toast(`Đã xóa nhân sự ${deleteConfirmUser.name}.`, { type: 'success' });
+      toast.success(`Đã xóa nhân sự ${deleteConfirmUser.name}.`);
       setDeleteConfirmUser(null);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể xóa nhân sự.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể xóa nhân sự.'));
     } finally {
       setDeleting(false);
     }
@@ -346,7 +347,7 @@ export default function AdminPrivileges() {
     e.preventDefault();
     if (!awardModalUser) return;
     if (!awardForm.reason.trim()) {
-      toast('Hãy nhập lý do vinh danh.', { type: 'warning' });
+      toast.warning('Hãy nhập lý do vinh danh.');
       return;
     }
 
@@ -359,7 +360,7 @@ export default function AdminPrivileges() {
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
-        toast(`Đã trao giải MVP cho ${awardModalUser.name}!`, { type: 'success' });
+        toast.success(`Đã trao giải MVP cho ${awardModalUser.name}!`);
       } else {
         await usersApi.adminAwardChampion({
           userId: awardModalUser.id,
@@ -367,11 +368,11 @@ export default function AdminPrivileges() {
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
-        toast(`Đã trao danh hiệu Champion cho ${awardModalUser.name}!`, { type: 'success' });
+        toast.success(`Đã trao danh hiệu Champion cho ${awardModalUser.name}!`);
       }
       setAwardModalUser(null);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể trao giải thưởng.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể trao giải thưởng.'));
     } finally {
       setAwarding(false);
     }

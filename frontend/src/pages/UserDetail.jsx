@@ -2,6 +2,8 @@ import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'rea
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import {
   avatarHue,
   initialsFromName,
@@ -129,7 +131,8 @@ function fmtDate(d) {
 export default function UserDetail() {
   const { id: routeUserId } = useParams();
   const navigate = useNavigate();
-  const { user: authUser, isAdmin } = useAuth();
+  const { user: authUser, setUser: setAuthUser, isAdmin } = useAuth();
+  const toast = useToast();
   const pageVisible = usePageVisibility();
 
   const targetUserId = routeUserId ? Number(routeUserId) : authUser?.id;
@@ -187,7 +190,9 @@ export default function UserDetail() {
     const file = e.target.files?.[0];
     if (!file || uploadingSlot === null) return;
     if (!file.type.startsWith('image/')) {
-      setGalleryError('Chỉ hỗ trợ file hình ảnh (PNG, JPG, WEBP)');
+      const msg = 'Chỉ hỗ trợ file hình ảnh (PNG, JPG, WEBP)';
+      setGalleryError(msg);
+      toast.warning(msg);
       return;
     }
     try {
@@ -199,9 +204,11 @@ export default function UserDetail() {
         return [...next, { slot: uploadingSlot, imageData: base64 }].sort((a, b) => a.slot - b.slot);
       });
       setImgErrors((prev) => ({ ...prev, [uploadingSlot]: false }));
+      toast.success('Đã tải ảnh lên phòng trưng bày thành công!');
     } catch (err) {
-      console.error('Failed to update gallery image:', err);
-      setGalleryError(err?.response?.data?.message || err?.message || 'Không thể tải ảnh lên');
+      const errMsg = parseApiError(err, 'Không thể tải ảnh lên.');
+      setGalleryError(errMsg);
+      toast.error(errMsg);
     } finally {
       setUploadingSlot(null);
     }
@@ -214,9 +221,11 @@ export default function UserDetail() {
       await usersApi.removeGalleryImage(targetUserId, slotIndex);
       setGalleryImages((prev) => prev.filter((img) => Number(img.slot) !== slotIndex));
       setImgErrors((prev) => ({ ...prev, [slotIndex]: false }));
+      toast.success('Đã gỡ ảnh khỏi phòng trưng bày!');
     } catch (err) {
-      console.error('Failed to remove gallery image:', err);
-      setGalleryError(err?.response?.data?.message || 'Không thể xóa ảnh');
+      const errMsg = parseApiError(err, 'Không thể xóa ảnh.');
+      setGalleryError(errMsg);
+      toast.error(errMsg);
     }
   };
 
@@ -266,8 +275,9 @@ export default function UserDetail() {
         avatarData: userAvatar,
       });
     } catch (err) {
-      console.error('Failed to load profile:', err);
-      setError(err?.response?.data?.message || err?.message || 'Không tải được hồ sơ nhân viên');
+      const errMsg = parseApiError(err, 'Không tải được hồ sơ nhân viên');
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       if (!silent) setLoading(false);
     }
@@ -288,7 +298,7 @@ export default function UserDetail() {
       setLikesCount(Number(res.data?.totalLikes || (hasLiked ? likesCount - 1 : likesCount + 1)));
       setHasLiked(Boolean(res.data?.viewerHasLiked ?? !hasLiked));
     } catch (err) {
-      console.error('Failed to like profile:', err);
+      toast.error(parseApiError(err, 'Không thể cập nhật lượt yêu thích'));
     } finally {
       setLiking(false);
     }
@@ -328,10 +338,14 @@ export default function UserDetail() {
         if (isSelf) {
           if (editForm.avatarData) setStoredAvatar(targetUserId, editForm.avatarData);
           else removeStoredAvatar(targetUserId);
+          if (setAuthUser) {
+            setAuthUser((prev) => (prev ? { ...prev, avatarData: editForm.avatarData || null } : prev));
+          }
         }
         setAvatarImgError(false);
       }
 
+      toast.success('Cập nhật hồ sơ thành công!');
       setSaveSuccess('Cập nhật hồ sơ thành công!');
       setTimeout(() => {
         setShowEditModal(false);
@@ -339,8 +353,9 @@ export default function UserDetail() {
         loadProfile(true);
       }, 700);
     } catch (err) {
-      console.error('Failed to update profile:', err);
-      setSaveError(err?.response?.data?.message || err?.message || 'Không thể lưu hồ sơ.');
+      const errMsg = parseApiError(err, 'Không thể lưu hồ sơ.');
+      setSaveError(errMsg);
+      toast.error(errMsg);
     } finally {
       setSaving(false);
     }

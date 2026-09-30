@@ -30,7 +30,8 @@ import {
 } from 'lucide-react';
 import { youtube, groups as groupsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/UiContext';
+import { useToast, useConfirm } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { TabTransition, TableSkeleton } from '../components/ui';
 
 function formatNumber(num) {
@@ -60,7 +61,8 @@ function formatRelativeTime(dateStr) {
 
 export default function YouTubeOverview() {
   const { user, isAdmin } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   const userTeamId = user?.teamId || user?.team_id || null;
 
@@ -107,8 +109,11 @@ export default function YouTubeOverview() {
   const [newChannelTitle, setNewChannelTitle] = useState('');
   const [newCustomUrl, setNewCustomUrl] = useState('');
   const [newTeamId, setNewTeamId] = useState('');
+  const [creatingChannel, setCreatingChannel] = useState(false);
   const [adminSyncingId, setAdminSyncingId] = useState(null);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [linkingChannelId, setLinkingChannelId] = useState(null);
+  const [deletingChannelId, setDeletingChannelId] = useState(null);
 
   // Fetch Company Overview
   const fetchOverviewData = async () => {
@@ -227,9 +232,14 @@ export default function YouTubeOverview() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadAll();
-    setRefreshing(false);
-    toast('Đã làm mới dữ liệu YouTube', { type: 'success' });
+    try {
+      await loadAll();
+      toast.success('Đã làm mới dữ liệu YouTube!');
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể làm mới dữ liệu YouTube'));
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleCompare = async (aId, bId) => {
@@ -239,7 +249,7 @@ export default function YouTubeOverview() {
       const res = await youtube.compareTeams(aId, bId);
       setComparison(res);
     } catch (err) {
-      toast('Không thể so sánh 2 team', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể so sánh 2 đội tuyển'));
     } finally {
       setCompareLoading(false);
     }
@@ -248,7 +258,7 @@ export default function YouTubeOverview() {
   const handleOpenTeamDetails = async (targetTeamId) => {
     // If user is member and clicks a team other than their own, block access
     if (!isAdmin && userTeamId && Number(targetTeamId) !== Number(userTeamId)) {
-      toast('Dữ liệu chi tiết của đội khác được bảo mật. Bạn chỉ có thể xem YouTube của đội mình.', { type: 'info' });
+      toast.info('Dữ liệu chi tiết của đội khác được bảo mật. Bạn chỉ có thể xem YouTube của đội mình.');
       return;
     }
 
@@ -258,7 +268,7 @@ export default function YouTubeOverview() {
       const res = await youtube.getTeamDetails(targetTeamId);
       setTeamDetails(res);
     } catch (err) {
-      toast(err.response?.data?.message || 'Không thể tải chi tiết team', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tải chi tiết team'));
     } finally {
       setTeamDetailsLoading(false);
     }
@@ -267,9 +277,11 @@ export default function YouTubeOverview() {
   const handleCreateChannel = async (e) => {
     e.preventDefault();
     if (!newChannelId.trim() || !newChannelTitle.trim()) {
-      toast('Vui lòng điền Channel ID và Tên kênh', { type: 'error' });
+      toast.warning('Vui lòng điền Channel ID và Tên kênh YouTube');
       return;
     }
+
+    setCreatingChannel(true);
     try {
       await youtube.adminCreateChannel({
         channelId: newChannelId.trim(),
@@ -277,17 +289,21 @@ export default function YouTubeOverview() {
         customUrl: newCustomUrl.trim() || null,
         teamId: newTeamId ? Number(newTeamId) : null,
       });
-      toast('Đã đăng ký kênh YouTube mới thành công', { type: 'success' });
+      toast.success('Đã đăng ký kênh YouTube mới thành công!');
       setShowAddChannel(false);
       setNewChannelId('');
       setNewChannelTitle('');
       setNewCustomUrl('');
       setNewTeamId('');
-      fetchAdminChannelsData();
-      fetchOverviewData();
-      fetchLeaderboardData();
+      await Promise.all([
+        fetchAdminChannelsData(),
+        fetchOverviewData(),
+        fetchLeaderboardData(),
+      ]);
     } catch (err) {
-      toast(err.response?.data?.message || err.message || 'Lỗi khi tạo kênh', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi tạo kênh YouTube'));
+    } finally {
+      setCreatingChannel(false);
     }
   };
 
@@ -295,17 +311,20 @@ export default function YouTubeOverview() {
     setAdminSyncingId(channelId);
     try {
       const res = await youtube.adminSyncChannel(channelId);
-      if (res.status === 'SUCCESS') {
-        toast(`Đã đồng bộ kênh thành công: ${formatNumber(res.views)} views`, { type: 'success' });
+      if (res.status === 'SUCCESS' || res.data?.status === 'SUCCESS') {
+        const viewsCount = res.views ?? res.data?.views;
+        toast.success(`Đã đồng bộ kênh thành công${viewsCount ? `: ${formatNumber(viewsCount)} views` : ''}!`);
       } else {
-        toast(`Đồng bộ thất bại: ${res.error}`, { type: 'error' });
+        toast.error(`Đồng bộ kênh thất bại: ${res.error || res.data?.error?.message || 'Lỗi không xác định'}`);
       }
-      fetchAdminChannelsData();
-      fetchOverviewData();
-      fetchLeaderboardData();
-      fetchMyTeamData();
+      await Promise.all([
+        fetchAdminChannelsData(),
+        fetchOverviewData(),
+        fetchLeaderboardData(),
+        fetchMyTeamData(),
+      ]);
     } catch (err) {
-      toast('Lỗi khi kích hoạt đồng bộ', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi kích hoạt đồng bộ kênh'));
     } finally {
       setAdminSyncingId(null);
     }
@@ -315,48 +334,67 @@ export default function YouTubeOverview() {
     setSyncingAll(true);
     try {
       const res = await youtube.adminSyncAll();
-      toast(`Hoàn tất đồng bộ ${res.total} kênh (${res.success} thành công, ${res.failed} lỗi)`, { type: 'success' });
-      fetchAdminChannelsData();
-      fetchOverviewData();
-      fetchLeaderboardData();
-      fetchTopVideosData();
-      fetchMyTeamData();
+      toast.success(`Hoàn tất đồng bộ ${res.total || 0} kênh (${res.success || 0} thành công, ${res.failed || 0} lỗi)`);
+      await Promise.all([
+        fetchAdminChannelsData(),
+        fetchOverviewData(),
+        fetchLeaderboardData(),
+        fetchTopVideosData(),
+        fetchMyTeamData(),
+      ]);
     } catch (err) {
-      toast('Lỗi khi đồng bộ toàn bộ', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi đồng bộ tất cả kênh YouTube'));
     } finally {
       setSyncingAll(false);
     }
   };
 
   const handleLinkTeam = async (channelId, tId) => {
+    setLinkingChannelId(channelId);
     try {
       if (tId) {
         await youtube.adminLinkChannel(channelId, tId);
-        toast('Đã liên kết kênh với Team thành công', { type: 'success' });
+        toast.success('Đã liên kết kênh với Team thành công!');
       } else {
         await youtube.adminUnlinkChannel(channelId);
-        toast('Đã gỡ liên kết kênh khỏi Team', { type: 'success' });
+        toast.success('Đã gỡ liên kết kênh khỏi Team');
       }
-      fetchAdminChannelsData();
-      fetchOverviewData();
-      fetchLeaderboardData();
-      fetchMyTeamData();
+      await Promise.all([
+        fetchAdminChannelsData(),
+        fetchOverviewData(),
+        fetchLeaderboardData(),
+        fetchMyTeamData(),
+      ]);
     } catch (err) {
-      toast('Lỗi khi cập nhật liên kết Team', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi cập nhật liên kết Team'));
+    } finally {
+      setLinkingChannelId(null);
     }
   };
 
   const handleDeleteChannel = async (channelId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa kênh này khỏi hệ thống?')) return;
+    const confirmed = await confirm({
+      title: 'Xóa kênh YouTube',
+      message: 'Bạn có chắc chắn muốn xóa kênh này khỏi hệ thống? Dữ liệu lịch sử và video liên quan sẽ bị gỡ bỏ.',
+      confirmText: 'Xóa kênh',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    setDeletingChannelId(channelId);
     try {
       await youtube.adminDeleteChannel(channelId);
-      toast('Đã xóa kênh YouTube', { type: 'success' });
-      fetchAdminChannelsData();
-      fetchOverviewData();
-      fetchLeaderboardData();
-      fetchMyTeamData();
+      toast.success('Đã xóa kênh YouTube thành công');
+      await Promise.all([
+        fetchAdminChannelsData(),
+        fetchOverviewData(),
+        fetchLeaderboardData(),
+        fetchMyTeamData(),
+      ]);
     } catch (err) {
-      toast('Lỗi khi xóa kênh', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi xóa kênh'));
+    } finally {
+      setDeletingChannelId(null);
     }
   };
 

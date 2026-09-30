@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { competition, youtube } from '../services/api';
 import { useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, CardSkeleton, TableSkeleton } from '../components/ui';
 
 const CARD = {
@@ -86,6 +87,7 @@ export default function AdminOperations() {
   const [rebuildModalOpen, setRebuildModalOpen] = useState(false);
   const [rebuildReason, setRebuildReason] = useState('');
   const [rebuildLoading, setRebuildLoading] = useState(false);
+  const [checkingConsistency, setCheckingConsistency] = useState(false);
   const [consistencyResult, setConsistencyResult] = useState(null);
 
   // Fetch Operations Data
@@ -108,7 +110,7 @@ export default function AdminOperations() {
       setAuditLogs(Array.isArray(logsRes) ? logsRes : logsRes?.logs || []);
       setEvents(eventsRes.events || []);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể tải dữ liệu giám sát vận hành.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tải dữ liệu giám sát vận hành.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -158,50 +160,53 @@ export default function AdminOperations() {
     e.preventDefault();
     if (!retryModalEvent) return;
     if (!retryReason.trim()) {
-      toast('Hãy nhập lý do thử lại sự kiện.', { type: 'warning' });
+      toast.warning('Hãy nhập lý do thử lại sự kiện.');
       return;
     }
 
     setSubmittingRetry(true);
     try {
       await competition.adminRetryIntegrationEvent(retryModalEvent.id, retryReason.trim());
-      toast(`Đã kích hoạt thử lại sự kiện ${retryModalEvent.contractKey}!`, { type: 'success' });
+      toast.success(`Đã kích hoạt thử lại sự kiện ${retryModalEvent.contractKey}!`);
       setRetryModalEvent(null);
       setRetryReason('');
-      loadOperationsData(true);
+      await loadOperationsData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể thử lại sự kiện.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể thử lại sự kiện.'));
     } finally {
       setSubmittingRetry(false);
     }
   };
 
   const handleCheckConsistency = async () => {
+    setCheckingConsistency(true);
     try {
       const res = await competition.adminCheckProjectionsConsistency();
       setConsistencyResult(res);
-      toast('Đã kiểm tra tính nhất quán bảng tính sẵn!', { type: 'success' });
+      toast.success('Đã kiểm tra tính nhất quán bảng tính sẵn!');
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể kiểm tra tính nhất quán.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể kiểm tra tính nhất quán.'));
+    } finally {
+      setCheckingConsistency(false);
     }
   };
 
   const handleRebuildProjections = async (e) => {
     e.preventDefault();
     if (!rebuildReason.trim()) {
-      toast('Vui lòng nhập lý do rebuild bảng xếp hạng.', { type: 'warning' });
+      toast.warning('Vui lòng nhập lý do rebuild bảng xếp hạng.');
       return;
     }
 
     setRebuildLoading(true);
     try {
       await competition.adminRebuildProjections(rebuildReason.trim());
-      toast('Đã hoàn tất tính toán lại toàn bộ Bảng Xếp Hạng từ Source of Truth!', { type: 'success' });
+      toast.success('Đã hoàn tất tính toán lại toàn bộ Bảng Xếp Hạng từ Source of Truth!');
       setRebuildModalOpen(false);
       setRebuildReason('');
-      loadOperationsData(true);
+      await loadOperationsData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể rebuild bảng xếp hạng.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể rebuild bảng xếp hạng.'));
     } finally {
       setRebuildLoading(false);
     }
@@ -704,12 +709,14 @@ export default function AdminOperations() {
                 <button
                   type="button"
                   onClick={handleCheckConsistency}
+                  disabled={checkingConsistency}
                   style={{
                     padding: '10px 16px', background: '#ffffff', color: '#0f172a', border: '1px solid rgba(15,23,42,0.15)',
-                    fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                    fontSize: 13, fontWeight: 800, cursor: checkingConsistency ? 'not-allowed' : 'pointer',
+                    opacity: checkingConsistency ? 0.6 : 1,
                   }}
                 >
-                  Kiểm Tra Tính Nhất Quán
+                  {checkingConsistency ? 'Đang kiểm tra...' : 'Kiểm Tra Tính Nhất Quán'}
                 </button>
               </div>
             </div>

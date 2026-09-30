@@ -31,7 +31,8 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { youtube, groups as groupsApi, users as usersApi } from '../services/api';
-import { useToast } from '../context/UiContext';
+import { useToast, useConfirm } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, CardSkeleton, TableSkeleton } from '../components/ui';
 
 const CARD = {
@@ -74,6 +75,7 @@ function fmtNum(n) {
 export default function AdminTeamsYouTube() {
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [activeTab, setActiveTab] = useState('teams'); // 'teams' | 'channels' | 'insights'
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,14 @@ export default function AdminTeamsYouTube() {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teamForm, setTeamForm] = useState({ name: '', description: '', department: 'Media & Content', color: '#3b82f6' });
   const [savingTeam, setSavingTeam] = useState(false);
+  const [deletingTeamId, setDeletingTeamId] = useState(null);
 
   // Team Members Drawer State
   const [membersDrawerTeam, setMembersDrawerTeam] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUserIdToAdd, setSelectedUserIdToAdd] = useState('');
   const [addingMember, setAddingMember] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState(null);
 
   // Channels State
   const [channels, setChannels] = useState([]);
@@ -105,6 +109,8 @@ export default function AdminTeamsYouTube() {
   const [savingChannel, setSavingChannel] = useState(false);
   const [syncingChannelId, setSyncingChannelId] = useState(null);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [linkingChannelId, setLinkingChannelId] = useState(null);
+  const [deletingChannelId, setDeletingChannelId] = useState(null);
 
   // Insights State
   const [topVideos, setTopVideos] = useState([]);
@@ -129,7 +135,7 @@ export default function AdminTeamsYouTube() {
       setOverview(overviewRes);
       setAllUsers(usersRes.data || []);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể tải dữ liệu Đội nhóm & Kênh YouTube.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tải dữ liệu Đội nhóm & Kênh YouTube.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -164,7 +170,7 @@ export default function AdminTeamsYouTube() {
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     if (!teamForm.name.trim()) {
-      toast('Tên đội nhóm không được để trống.', { type: 'warning' });
+      toast.warning('Tên đội nhóm không được để trống.');
       return;
     }
 
@@ -176,12 +182,12 @@ export default function AdminTeamsYouTube() {
         department: teamForm.department,
         color: teamForm.color,
       });
-      toast(`Đã tạo đội "${teamForm.name}" thành công!`, { type: 'success' });
+      toast.success(`Đã tạo đội "${teamForm.name}" thành công!`);
       setCreateTeamModalOpen(false);
       setTeamForm({ name: '', description: '', department: 'Media & Content', color: '#3b82f6' });
-      loadData(true);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể tạo đội nhóm.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể tạo đội nhóm.'));
     } finally {
       setSavingTeam(false);
     }
@@ -202,7 +208,7 @@ export default function AdminTeamsYouTube() {
     e.preventDefault();
     if (!selectedTeam) return;
     if (!teamForm.name.trim()) {
-      toast('Tên đội nhóm không được để trống.', { type: 'warning' });
+      toast.warning('Tên đội nhóm không được để trống.');
       return;
     }
 
@@ -214,27 +220,36 @@ export default function AdminTeamsYouTube() {
         department: teamForm.department,
         color: teamForm.color,
       });
-      toast(`Đã cập nhật thông tin đội "${teamForm.name}"!`, { type: 'success' });
+      toast.success(`Đã cập nhật thông tin đội "${teamForm.name}"!`);
       setEditTeamModalOpen(false);
       setSelectedTeam(null);
-      loadData(true);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể cập nhật đội nhóm.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật đội nhóm.'));
     } finally {
       setSavingTeam(false);
     }
   };
 
   const handleDeleteTeam = async (team) => {
-    const confirmMsg = `Bạn có chắc chắn muốn xóa Đội "${team.name}"? Thao tác này sẽ gỡ thành viên khỏi đội hiện tại.`;
-    if (!window.confirm(confirmMsg)) return;
+    const ok = await confirm({
+      title: 'Xác nhận xóa đội nhóm',
+      message: `Bạn có chắc chắn muốn xóa Đội "${team.name}"? Thao tác này sẽ gỡ thành viên khỏi đội hiện tại.`,
+      confirmText: 'Xóa đội',
+      cancelText: 'Hủy',
+      type: 'danger',
+    });
+    if (!ok) return;
 
+    setDeletingTeamId(team.id);
     try {
       await groupsApi.delete(team.id);
-      toast(`Đã xóa đội "${team.name}".`, { type: 'success' });
-      loadData(true);
+      toast.success(`Đã xóa đội "${team.name}".`);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể xóa đội.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể xóa đội nhóm.'));
+    } finally {
+      setDeletingTeamId(null);
     }
   };
 
@@ -246,7 +261,7 @@ export default function AdminTeamsYouTube() {
   const handleAddMemberToTeam = async (e) => {
     e.preventDefault();
     if (!membersDrawerTeam || !selectedUserIdToAdd) {
-      toast('Hãy chọn nhân viên cần thêm vào đội.', { type: 'warning' });
+      toast.warning('Hãy chọn nhân viên cần thêm vào đội.');
       return;
     }
 
@@ -256,28 +271,38 @@ export default function AdminTeamsYouTube() {
         teamId: membersDrawerTeam.id,
         reason: `Admin added employee to team ${membersDrawerTeam.name}`,
       });
-      toast('Đã thêm nhân viên vào đội!', { type: 'success' });
+      toast.success('Đã thêm nhân viên vào đội!');
       setSelectedUserIdToAdd('');
-      loadData(true);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể thêm thành viên.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể thêm thành viên vào đội.'));
     } finally {
       setAddingMember(false);
     }
   };
 
   const handleRemoveMemberFromTeam = async (userId, memberName) => {
-    if (!window.confirm(`Gỡ ${memberName} khỏi đội hiện tại?`)) return;
+    const ok = await confirm({
+      title: 'Gỡ thành viên khỏi đội',
+      message: `Bạn có chắc muốn gỡ "${memberName}" khỏi đội hiện tại?`,
+      confirmText: 'Gỡ thành viên',
+      cancelText: 'Hủy',
+      type: 'danger',
+    });
+    if (!ok) return;
 
+    setRemovingMemberId(userId);
     try {
       await usersApi.update(userId, {
         teamId: null,
         reason: `Admin removed employee from team`,
       });
-      toast(`Đã gỡ ${memberName} khỏi đội.`, { type: 'success' });
-      loadData(true);
+      toast.success(`Đã gỡ "${memberName}" khỏi đội.`);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể gỡ thành viên.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể gỡ thành viên.'));
+    } finally {
+      setRemovingMemberId(null);
     }
   };
 
@@ -286,7 +311,7 @@ export default function AdminTeamsYouTube() {
   const handleCreateChannel = async (e) => {
     e.preventDefault();
     if (!newChannelForm.channelId.trim()) {
-      toast('Mã Channel ID (YouTube ID) không được để trống.', { type: 'warning' });
+      toast.warning('Mã Channel ID (YouTube ID) không được để trống.');
       return;
     }
 
@@ -298,29 +323,32 @@ export default function AdminTeamsYouTube() {
         customUrl: newChannelForm.customUrl.trim() || undefined,
         teamId: newChannelForm.teamId ? Number(newChannelForm.teamId) : null,
       });
-      toast('Đã thêm kênh YouTube mới thành công!', { type: 'success' });
+      toast.success('Đã thêm kênh YouTube mới thành công!');
       setCreateChannelModalOpen(false);
       setNewChannelForm({ channelId: '', title: '', customUrl: '', teamId: '' });
-      loadData(true);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể thêm kênh YouTube.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể thêm kênh YouTube.'));
     } finally {
       setSavingChannel(false);
     }
   };
 
   const handleLinkChannel = async (channelId, teamId) => {
+    setLinkingChannelId(channelId);
     try {
       if (teamId) {
         await youtube.adminLinkChannel(channelId, Number(teamId));
-        toast('Đã gán kênh cho đội thành công!', { type: 'success' });
+        toast.success('Đã gán kênh cho đội thành công!');
       } else {
         await youtube.adminUnlinkChannel(channelId);
-        toast('Đã hủy gán kênh.', { type: 'success' });
+        toast.success('Đã hủy gán kênh.');
       }
-      loadData(true);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể cập nhật liên kết kênh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể cập nhật liên kết kênh.'));
+    } finally {
+      setLinkingChannelId(null);
     }
   };
 
@@ -328,10 +356,10 @@ export default function AdminTeamsYouTube() {
     setSyncingChannelId(channelId);
     try {
       await youtube.adminSyncChannel(channelId);
-      toast(`Đã đồng bộ dữ liệu mới nhất cho kênh "${title}"!`, { type: 'success' });
-      loadData(true);
+      toast.success(`Đã đồng bộ dữ liệu mới nhất cho kênh "${title}"!`);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Lỗi khi đồng bộ kênh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Lỗi khi đồng bộ kênh từ YouTube.'));
     } finally {
       setSyncingChannelId(null);
     }
@@ -341,24 +369,34 @@ export default function AdminTeamsYouTube() {
     setSyncingAll(true);
     try {
       const res = await youtube.adminSyncAll();
-      toast(`Đã đồng bộ hoàn tất ${res.success || 0}/${res.total || 0} kênh YouTube!`, { type: 'success' });
-      loadData(true);
+      toast.success(`Đã đồng bộ hoàn tất ${res.success || 0}/${res.total || 0} kênh YouTube!`);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể đồng bộ tất cả kênh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể đồng bộ tất cả kênh YouTube.'));
     } finally {
       setSyncingAll(false);
     }
   };
 
   const handleDeleteChannel = async (channel) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa kênh "${channel.title || channel.channelId}" khỏi hệ thống?`)) return;
+    const ok = await confirm({
+      title: 'Xác nhận xóa kênh YouTube',
+      message: `Bạn có chắc chắn muốn xóa kênh "${channel.title || channel.channelId}" khỏi hệ thống?`,
+      confirmText: 'Xóa kênh',
+      cancelText: 'Hủy',
+      type: 'danger',
+    });
+    if (!ok) return;
 
+    setDeletingChannelId(channel.id);
     try {
       await youtube.adminDeleteChannel(channel.id);
-      toast(`Đã xóa kênh "${channel.title || channel.channelId}".`, { type: 'success' });
-      loadData(true);
+      toast.success(`Đã xóa kênh "${channel.title || channel.channelId}".`);
+      await loadData(true);
     } catch (err) {
-      toast(err?.response?.data?.message || 'Không thể xóa kênh.', { type: 'error' });
+      toast.error(parseApiError(err, 'Không thể xóa kênh YouTube.'));
+    } finally {
+      setDeletingChannelId(null);
     }
   };
 
@@ -582,7 +620,19 @@ export default function AdminTeamsYouTube() {
                             <button
                               type="button"
                               onClick={() => handleDeleteTeam(team)}
-                              style={{ width: 28, height: 28, background: 'rgba(239,68,68,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}
+                              disabled={deletingTeamId === team.id}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                background: 'rgba(239,68,68,0.06)',
+                                border: 'none',
+                                cursor: deletingTeamId === team.id ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#ef4444',
+                                opacity: deletingTeamId === team.id ? 0.5 : 1,
+                              }}
                               title="Xóa đội"
                             >
                               <Trash2 size={13} />
@@ -742,10 +792,13 @@ export default function AdminTeamsYouTube() {
                             <select
                               value={ch.teamId || ''}
                               onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
+                              disabled={linkingChannelId === ch.id}
                               style={{
                                 padding: '5px 8px', fontSize: 11, fontWeight: 800,
                                 border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(180,83,9,0.06)' : '#fff',
                                 color: assignedTeam ? '#b45309' : '#64748b',
+                                opacity: linkingChannelId === ch.id ? 0.6 : 1,
+                                cursor: linkingChannelId === ch.id ? 'not-allowed' : 'pointer',
                               }}
                             >
                               <option value="">-- Chưa gán đội --</option>
@@ -801,9 +854,12 @@ export default function AdminTeamsYouTube() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteChannel(ch)}
+                                disabled={deletingChannelId === ch.id}
                                 style={{
                                   padding: '5px 8px', background: '#fee2e2', border: 'none',
-                                  fontSize: 11, fontWeight: 800, color: '#dc2626', cursor: 'pointer',
+                                  fontSize: 11, fontWeight: 800, color: '#dc2626',
+                                  cursor: deletingChannelId === ch.id ? 'not-allowed' : 'pointer',
+                                  opacity: deletingChannelId === ch.id ? 0.5 : 1,
                                 }}
                                 title="Xóa kênh"
                               >
@@ -1149,13 +1205,15 @@ export default function AdminTeamsYouTube() {
                     <button
                       type="button"
                       onClick={() => handleRemoveMemberFromTeam(m.id, m.name)}
+                      disabled={removingMemberId === m.id}
                       style={{
                         padding: '4px 8px', background: '#fee2e2', color: '#dc2626', border: 'none',
-                        fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                        fontSize: 11, fontWeight: 800, cursor: removingMemberId === m.id ? 'not-allowed' : 'pointer',
+                        opacity: removingMemberId === m.id ? 0.5 : 1,
                       }}
                       title="Gỡ khỏi đội"
                     >
-                      Gỡ
+                      {removingMemberId === m.id ? 'Đang gỡ...' : 'Gỡ'}
                     </button>
                   </div>
                 ))

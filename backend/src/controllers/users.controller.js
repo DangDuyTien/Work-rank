@@ -19,8 +19,8 @@ const recognitionService = require('../services/recognition.service');
 
 const GALLERY_SLOT_COUNT = 6;
 const FEATURED_BADGE_LIMIT = 12;
-const MAX_PROFILE_IMAGE_CHARS = 2_500_000;
-const MAX_AVATAR_IMAGE_CHARS = 1_500_000;
+const MAX_PROFILE_IMAGE_CHARS = 5_000_000;
+const MAX_AVATAR_IMAGE_CHARS = 5_000_000;
 const DEFAULT_USER_LIST_LIMIT = 50;
 const MAX_USER_LIST_LIMIT = 100;
 const ADMIN_PRIVILEGE_BADGE_LABELS = new Set([
@@ -46,11 +46,18 @@ function parseGallerySlot(value) {
   return slot;
 }
 
-function validateImageData(value, maxLength) {
+function validateImageData(value, maxLength = 5_000_000) {
   const imageData = String(value || '').trim();
   if (!imageData) return { error: 'Missing image data' };
-  if (!imageData.startsWith('data:image/')) return { error: 'Image data must be a data URL' };
-  if (imageData.length > maxLength) return { error: 'Image data is too large' };
+  if (
+    !imageData.startsWith('data:image/') &&
+    !imageData.startsWith('http://') &&
+    !imageData.startsWith('https://') &&
+    !imageData.startsWith('/')
+  ) {
+    return { error: 'Image data must be a valid image data URL or HTTP URL' };
+  }
+  if (imageData.length > maxLength) return { error: 'Image data is too large (max 5MB)' };
   return { value: imageData };
 }
 
@@ -313,7 +320,21 @@ async function update(req, res) {
     }
 
     await user.update(allowed);
-    return res.json({ user: sanitizeUser(user) });
+
+    if (req.body.avatarData !== undefined) {
+      const avatarVal = req.body.avatarData === '' || req.body.avatarData === null ? null : req.body.avatarData;
+      let pref = await UserProfilePreference.findByPk(user.id);
+      if (pref) {
+        await pref.update({ avatarData: avatarVal });
+      } else {
+        await UserProfilePreference.create({ userId: user.id, avatarData: avatarVal });
+      }
+    }
+
+    const reloaded = await User.findByPk(user.id, {
+      include: [{ model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false }],
+    });
+    return res.json({ user: serializeUserWithProfile(reloaded || user) });
   }
 
   // Nếu là Admin
@@ -362,8 +383,26 @@ async function update(req, res) {
     adminPayload.passwordHash = await bcrypt.hash(adminPayload.password, env.bcryptRounds);
     delete adminPayload.password;
   }
+
+  const avatarPayload = adminPayload.avatarData;
+  delete adminPayload.avatarData;
+
   await user.update(adminPayload);
-  return res.json({ user: sanitizeUser(user) });
+
+  if (avatarPayload !== undefined) {
+    const avatarVal = avatarPayload === '' || avatarPayload === null ? null : avatarPayload;
+    let pref = await UserProfilePreference.findByPk(user.id);
+    if (pref) {
+      await pref.update({ avatarData: avatarVal });
+    } else {
+      await UserProfilePreference.create({ userId: user.id, avatarData: avatarVal });
+    }
+  }
+
+  const reloaded = await User.findByPk(user.id, {
+    include: [{ model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false }],
+  });
+  return res.json({ user: serializeUserWithProfile(reloaded || user) });
 }
 
 async function remove(req, res) {

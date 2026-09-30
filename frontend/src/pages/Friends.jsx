@@ -31,6 +31,7 @@ import JobTitleBadge, { CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBa
 import { PageShell, PageHeader, Card, EmptyState, PageState, TabTransition } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
+import { parseApiError } from '../utils/errors';
 import {
   groups as groupsApi,
   users as usersApi,

@@ -38,7 +38,14 @@ import { useToast } from '../context/UiContext';
 import { auth, users as usersApi, competition as compApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
-import { removeStoredAvatar } from '../utils/avatar';
+import {
+  getUserAvatar,
+  getStoredAvatar,
+  setStoredAvatar,
+  removeStoredAvatar,
+  compressImage,
+  initialsFromName,
+} from '../utils/avatar';
 import {
   getAppSettings,
   resetAppSettings,
@@ -137,6 +144,7 @@ export default function Settings() {
     email: user?.email || '',
     phone: user?.phone || '',
     bio: user?.bio || '',
+    avatarData: user?.avatarData || getStoredAvatar(user?.id) || '',
   });
   const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -179,6 +187,7 @@ export default function Settings() {
       email: user?.email || '',
       phone: user?.phone || '',
       bio: user?.bio || '',
+      avatarData: user?.avatarData || getStoredAvatar(user?.id) || '',
     });
     setAdminJobForm((prev) => ({
       ...prev,
@@ -187,7 +196,7 @@ export default function Settings() {
       department: prev.targetUserId && prev.targetUserId !== user?.id ? prev.department : (user?.department || 'Media & Content'),
       role: prev.targetUserId && prev.targetUserId !== user?.id ? prev.role : (user?.role || 'user'),
     }));
-  }, [user?.bio, user?.department, user?.email, user?.id, user?.jobTitle, user?.name, user?.phone, user?.role]);
+  }, [user?.avatarData, user?.bio, user?.department, user?.email, user?.id, user?.jobTitle, user?.name, user?.phone, user?.role]);
 
   // Load user recognitions
   const loadRecognitions = async () => {
@@ -232,12 +241,24 @@ export default function Settings() {
     });
   };
 
+  const handleAvatarFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await compressImage(file, 400, 400, 0.85);
+      setProfile((current) => ({ ...current, avatarData: base64 }));
+    } catch (err) {
+      toast(err.message || 'Lỗi khi xử lý hình ảnh avatar', { type: 'error' });
+    }
+  };
+
   const profileDirty = useMemo(() => (
     profile.name.trim() !== String(user?.name || '').trim()
     || profile.email.trim().toLowerCase() !== String(user?.email || '').trim().toLowerCase()
     || profile.phone.trim() !== String(user?.phone || '').trim()
     || profile.bio.trim() !== String(user?.bio || '').trim()
-  ), [profile.bio, profile.email, profile.name, profile.phone, user?.bio, user?.email, user?.name, user?.phone]);
+    || profile.avatarData !== (user?.avatarData || getStoredAvatar(user?.id) || '')
+  ), [profile.avatarData, profile.bio, profile.email, profile.name, profile.phone, user?.avatarData, user?.bio, user?.email, user?.id, user?.name, user?.phone]);
 
   const updateSetting = (section, key, value) => {
     setSettings((current) => saveAppSettings({
@@ -263,9 +284,22 @@ export default function Settings() {
         email: profile.email.trim().toLowerCase(),
         phone: profile.phone.trim(),
         bio: profile.bio.trim(),
+        avatarData: profile.avatarData || null,
       });
-      setUser(res.data?.user || res.data);
-      toast('Đã cập nhật hồ sơ cá nhân.', { type: 'success' });
+
+      if (profile.avatarData) {
+        setStoredAvatar(user.id, profile.avatarData);
+      } else {
+        removeStoredAvatar(user.id);
+      }
+
+      const updatedUser = res.data?.user || res.data || {};
+      setUser((prev) => ({
+        ...(prev || {}),
+        ...updatedUser,
+        avatarData: profile.avatarData || null,
+      }));
+      toast('Đã cập nhật hồ sơ cá nhân và ảnh đại diện thành công!', { type: 'success' });
     } catch (err) {
       const message = err.response?.status === 409
         ? 'Email này đã được tài khoản khác sử dụng.'
@@ -431,8 +465,16 @@ export default function Settings() {
           </p>
         </div>
         <div className="settings-account-card">
-          <div className="settings-account-avatar">
-            {String(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
+          <div className="settings-account-avatar" style={{ overflow: 'hidden' }}>
+            {(profile.avatarData || user?.avatarData || getStoredAvatar(user?.id)) ? (
+              <img
+                src={profile.avatarData || user?.avatarData || getStoredAvatar(user?.id)}
+                alt="Avatar"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              String(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()
+            )}
           </div>
           <div className="settings-account-meta">
             <div className="settings-account-name-row">
@@ -458,6 +500,68 @@ export default function Settings() {
           className="settings-card-wide"
         >
           <form className="settings-form" onSubmit={saveProfile}>
+            {/* Ảnh đại diện Avatar */}
+            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 4 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '2px solid #b45309',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#e0f2fe',
+                  flexShrink: 0,
+                }}
+              >
+                {profile.avatarData ? (
+                  <img
+                    src={profile.avatarData}
+                    alt="Avatar Preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>
+                    {initialsFromName(profile.name || user?.name || 'U')}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>
+                  Ảnh Đại Diện (Avatar)
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <label style={{ cursor: 'pointer', padding: '5px 12px', background: '#0f172a', color: '#ffffff', fontSize: 12, fontWeight: 700, borderRadius: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFile}
+                      style={{ display: 'none' }}
+                    />
+                    <span>Tải ảnh mới...</span>
+                  </label>
+                  {profile.avatarData && (
+                    <button
+                      type="button"
+                      onClick={() => setProfile((current) => ({ ...current, avatarData: '' }))}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: '#dc2626',
+                        background: '#fee2e2',
+                        border: '1px solid #fecaca',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Xóa ảnh đại diện
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
               <label>
                 <span>Họ và tên hiển thị *</span>
