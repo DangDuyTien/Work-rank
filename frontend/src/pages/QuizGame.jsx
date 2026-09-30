@@ -5,12 +5,15 @@ import { quizGame } from '../services/api';
 import quizSound from '../components/quiz/quizSound';
 import QuizLobby from '../components/quiz/QuizLobby';
 import QuizWaitingRoom from '../components/quiz/QuizWaitingRoom';
+import QuizTopBar from '../components/quiz/QuizTopBar';
 import QuizQuestionCard from '../components/quiz/QuizQuestionCard';
-import QuizAnswerButtons from '../components/quiz/QuizAnswerButtons';
+import QuizAnswerPills from '../components/quiz/QuizAnswerPills';
+import QuizTimerBar from '../components/quiz/QuizTimerBar';
+import QuizMediaBox from '../components/quiz/QuizMediaBox';
+import QuizPlayerStrip from '../components/quiz/QuizPlayerStrip';
 import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
-import QuizLiveLeaderboard from '../components/quiz/QuizLiveLeaderboard';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
-import { Volume2, VolumeX, AlertCircle, LogOut, Trophy, Sparkles } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export default function QuizGame() {
   const { user, socket } = useAuth();
@@ -27,6 +30,7 @@ export default function QuizGame() {
   const [selectedOption, setSelectedOption] = useState(null);
   const [roundResult, setRoundResult] = useState(null);
   const [finalResults, setFinalResults] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   // Lobby state
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -47,6 +51,11 @@ export default function QuizGame() {
   const toggleSound = () => {
     const isNowMuted = quizSound.toggleMute();
     setSoundMuted(isNowMuted);
+  };
+
+  // Push activity feed message
+  const pushActivity = (name, text, color = '#38bdf8', avatar = null) => {
+    setRecentActivity((prev) => [...prev.slice(-8), { name, text, color, avatar, time: Date.now() }]);
   };
 
   // Fetch lobby rooms & stats
@@ -168,6 +177,10 @@ export default function QuizGame() {
     const onPlayerJoined = (data) => {
       if (data.players) setPlayers(data.players);
       if (data.room) setRoom(data.room);
+      const joinedUser = data.joinedUser || data.user;
+      if (joinedUser) {
+        pushActivity(joinedUser.name || 'Người chơi', 'đã tham gia phòng!', '#34d399');
+      }
     };
 
     const onPlayerLeft = (data) => {
@@ -187,6 +200,7 @@ export default function QuizGame() {
         setRoundResult(null);
         setFinalResults(null);
         startTimer(Math.round((data.questionDurationMs || 10000) / 1000));
+        pushActivity('Hệ thống', 'Trận đấu bắt đầu! Câu hỏi số 1', '#f59e0b');
       }
     };
 
@@ -199,11 +213,15 @@ export default function QuizGame() {
         setQuestionIndex(data.questionIndex || 0);
         setTotalQuestions(data.totalQuestions || 10);
         startTimer(Math.round((data.questionDurationMs || 10000) / 1000));
+        pushActivity('Hệ thống', `Chuyển sang Câu ${Number(data.questionIndex || 0) + 1}`, '#f59e0b');
       }
     };
 
     const onAnswerSubmitted = (data) => {
-      // Someone answered
+      const p = players.find((pl) => Number(pl.userId) === Number(data.userId));
+      if (p) {
+        pushActivity(p.user?.name || 'Người chơi', 'đã chọn đáp án', '#94a3b8');
+      }
     };
 
     const onQuestionResult = (data) => {
@@ -215,6 +233,7 @@ export default function QuizGame() {
       const myAns = data.answers?.find((a) => Number(a.userId) === Number(user?.id));
       if (myAns?.isCorrect) {
         quizSound.playCorrect();
+        pushActivity('Bạn', `Đã trả lời đúng! (+${myAns.score}đ)`, '#34d399');
       } else {
         quizSound.playWrong();
       }
@@ -226,6 +245,7 @@ export default function QuizGame() {
       if (data.room) setRoom(data.room);
       if (data.players) setPlayers(data.players);
       setFinalResults(data);
+      pushActivity('Hệ thống', 'Trận đấu kết thúc!', '#f59e0b');
     };
 
     socket.on('quiz:roomUpdated', onRoomUpdated);
@@ -249,7 +269,7 @@ export default function QuizGame() {
       socket.off('quiz:questionResult', onQuestionResult);
       socket.off('quiz:finished', onGameFinished);
     };
-  }, [socket, room?.id, user?.id, startTimer]);
+  }, [socket, room?.id, user?.id, startTimer, players]);
 
   // Actions
   const handleCreateRoom = async (formData) => {
@@ -349,227 +369,196 @@ export default function QuizGame() {
   const isPlayingOrShowing = room?.status === 'PLAYING' || room?.status === 'SHOWING_RESULT';
   const isFinished = room?.status === 'FINISHED' || Boolean(finalResults);
 
-  const myCurrentPlayer = players.find((p) => Number(p.userId) === Number(user?.id));
-
   return (
-    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
-      {/* Top Bar (Audio toggle, user points, leave room) */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          maxWidth: 1040,
-          margin: '0 auto 12px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {room && (
-            <span
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 12,
-                fontWeight: 800,
-                color: '#64748b',
-                background: 'rgba(15,23,42,0.05)',
-                padding: '3px 8px',
-                borderRadius: 4,
-              }}
-            >
-              Phòng #{room.code}
-            </span>
-          )}
-
-          {isPlayingOrShowing && (
+    <>
+      {/* 1. LOBBY VIEW (Standard in-app layout) */}
+      {!room && (
+        <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
+          {errorMsg && (
             <div
               style={{
+                maxWidth: 1040,
+                margin: '0 auto 14px',
+                padding: '10px 14px',
+                borderRadius: 8,
+                background: '#fee2e2',
+                border: '1px solid #ef4444',
+                color: '#dc2626',
+                fontSize: 13,
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
-                padding: '3px 10px',
-                borderRadius: 6,
-                background: 'rgba(2,132,199,0.08)',
-                color: '#0284c7',
-                fontSize: 12,
-                fontWeight: 800,
-                fontFamily: 'JetBrains Mono, monospace',
+                gap: 6,
               }}
             >
-              <Trophy size={13} color="#0284c7" />
-              <span>{Number(myCurrentPlayer?.score || 0).toLocaleString()} pts</span>
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
             </div>
           )}
+
+          <QuizLobby
+            rooms={availableRooms}
+            activeRejoinRoom={activeRejoinRoom}
+            myStats={myStats}
+            leaderboard={leaderboard}
+            loading={lobbyLoading}
+            onCreateRoom={handleCreateRoom}
+            onJoinRoom={handleJoinRoom}
+            onRejoinRoom={(rId) => navigate(`/games/quiz/room/${rId}`)}
+            onRefresh={fetchLobbyData}
+          />
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            type="button"
-            onClick={toggleSound}
-            title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              background: soundMuted ? 'rgba(239,68,68,0.08)' : 'rgba(15,23,42,0.04)',
-              color: soundMuted ? '#ef4444' : '#475569',
-              border: '1px solid rgba(15,23,42,0.08)',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            <span>{soundMuted ? 'Tắt' : 'Bật'}</span>
-          </button>
-
-          {room && (
-            <button
-              type="button"
-              onClick={handleLeaveRoom}
-              disabled={actionLoading}
-              title="Rời khỏi phòng đấu"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '4px 10px',
-                background: '#ffffff',
-                border: '1px solid rgba(239,68,68,0.25)',
-                color: '#ef4444',
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <LogOut size={13} />
-              <span>Rời phòng</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Error Alert */}
-      {errorMsg && (
-        <div
-          style={{
-            maxWidth: 1040,
-            margin: '0 auto 14px',
-            padding: '10px 14px',
-            borderRadius: 8,
-            background: '#fee2e2',
-            border: '1px solid #ef4444',
-            color: '#dc2626',
-            fontSize: 13,
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <AlertCircle size={16} />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* 1. LOBBY VIEW */}
-      {!room && (
-        <QuizLobby
-          rooms={availableRooms}
-          activeRejoinRoom={activeRejoinRoom}
-          myStats={myStats}
-          leaderboard={leaderboard}
-          loading={lobbyLoading}
-          onCreateRoom={handleCreateRoom}
-          onJoinRoom={handleJoinRoom}
-          onRejoinRoom={(rId) => navigate(`/games/quiz/room/${rId}`)}
-          onRefresh={fetchLobbyData}
-        />
       )}
 
       {/* 2. WAITING ROOM VIEW */}
       {room && isWaiting && (
-        <QuizWaitingRoom
-          room={room}
-          players={players}
-          currentUser={user}
-          isHost={isHost}
-          onStartGame={handleStartGame}
-          onLeaveRoom={handleLeaveRoom}
-          actionLoading={actionLoading}
-        />
-      )}
-
-      {/* 3. ACTIVE GAMEPLAY VIEW */}
-      {room && isPlayingOrShowing && !isFinished && currentQuestion && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-            maxWidth: 960,
-            margin: '0 auto',
-          }}
-        >
-          {/* Question Card with Media */}
-          <QuizQuestionCard
-            question={currentQuestion}
-            questionIndex={questionIndex}
-            totalQuestions={totalQuestions}
-            timeRemaining={timeRemaining}
-            timeTotal={timeTotal}
-            isLocked={Boolean(roundResult) || Boolean(selectedOption) || timeRemaining <= 0}
-          />
-
-          {/* 4 Clean Multiple Choice Options (A, B, C, D) */}
-          <QuizAnswerButtons
-            question={currentQuestion}
-            selectedOption={selectedOption}
-            revealedCorrectOption={roundResult?.correctOption}
-            disabled={Boolean(roundResult) || timeRemaining <= 0}
-            onSelectOption={handleSelectOption}
-          />
-
-          {/* Round Result Reveal Banner */}
-          {roundResult && (
-            <QuizRoundResultModal
-              correctOption={roundResult.correctOption}
-              explanation={roundResult.explanation}
-              myAnswer={myAnswer}
-              answers={roundResult.answers || []}
-              leaderboard={players}
-              isLastQuestion={roundResult.isLastQuestion}
-            />
+        <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', padding: '16px 16px 24px', userSelect: 'none' }}>
+          {errorMsg && (
+            <div
+              style={{
+                maxWidth: 860,
+                margin: '0 auto 14px',
+                padding: '10px 14px',
+                borderRadius: 8,
+                background: '#fee2e2',
+                border: '1px solid #ef4444',
+                color: '#dc2626',
+                fontSize: 13,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
+            </div>
           )}
 
-          {/* Bottom Player Avatar Dock */}
-          <div style={{ marginTop: 6 }}>
-            <QuizLiveLeaderboard
-              players={players}
-              currentUserId={user?.id}
-            />
-          </div>
+          <QuizWaitingRoom
+            room={room}
+            players={players}
+            currentUser={user}
+            isHost={isHost}
+            onStartGame={handleStartGame}
+            onLeaveRoom={handleLeaveRoom}
+            actionLoading={actionLoading}
+          />
         </div>
       )}
 
-      {/* 4. FINAL RESULTS VIEW */}
-      {room && isFinished && (
-        <QuizFinalResults
-          room={room}
-          players={players}
-          currentUserId={user?.id}
-          onPlayAgain={() => {
-            navigate('/games/quiz');
-            fetchLobbyData();
+      {/* 3. ACTIVE GAMEPLAY VIEW (FULL-SCREEN IMMERSIVE LIVE QUIZ SCREENSHOT MATCH) */}
+      {room && isPlayingOrShowing && !isFinished && currentQuestion && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999,
+            width: '100vw',
+            height: '100vh',
+            background: 'radial-gradient(circle at center, #8d7969 0%, #766557 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            overflow: 'hidden',
+            userSelect: 'none',
           }}
-          onBackToLobby={() => {
-            navigate('/games/quiz');
-            fetchLobbyData();
-          }}
-        />
+        >
+          {/* Top Bar */}
+          <QuizTopBar
+            room={room}
+            questionIndex={questionIndex}
+            totalQuestions={totalQuestions}
+            playerCount={players.length}
+            soundMuted={soundMuted}
+            onToggleSound={toggleSound}
+            onLeaveRoom={handleLeaveRoom}
+          />
+
+          {/* Main 2-Column Gameplay Stage (Screenshot Match) */}
+          <div className="quiz-game-main-stage">
+            {/* Left Column (~42% width) — Question Text, 4 Large Answer Pills, Timer Bar */}
+            <div className="quiz-game-left-col">
+              {/* Question Text */}
+              <QuizQuestionCard question={currentQuestion} />
+
+              {/* 4 Large Pastel Answer Pills */}
+              <QuizAnswerPills
+                question={currentQuestion}
+                selectedOption={selectedOption}
+                revealedCorrectOption={roundResult?.correctOption}
+                disabled={Boolean(roundResult) || timeRemaining <= 0}
+                onSelectOption={handleSelectOption}
+              />
+
+              {/* Timer Bar (Gradient Progress + Bold Numeric Counter) */}
+              <QuizTimerBar
+                timeRemaining={timeRemaining}
+                timeTotal={timeTotal}
+              />
+
+              {/* Round Result Floating Notification */}
+              {roundResult && (
+                <QuizRoundResultModal
+                  correctOption={roundResult.correctOption}
+                  explanation={roundResult.explanation}
+                  myAnswer={myAnswer}
+                  answers={roundResult.answers || []}
+                  isLastQuestion={roundResult.isLastQuestion}
+                />
+              )}
+            </div>
+
+            {/* Right Column (~58% width) — Large Media Box */}
+            <div className="quiz-game-right-col">
+              <QuizMediaBox
+                question={currentQuestion}
+                isLocked={Boolean(roundResult) || timeRemaining <= 0}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Region — Live Activity Feed + Circular Player Avatars Dock */}
+          <QuizPlayerStrip
+            players={players}
+            currentUserId={user?.id}
+            recentActivity={recentActivity}
+          />
+        </div>
       )}
-    </div>
+
+      {/* 4. FINAL RESULTS VIEW (Full-screen victory theme) */}
+      {room && isFinished && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999,
+            width: '100vw',
+            height: '100vh',
+            background: 'radial-gradient(circle at center, #8d7969 0%, #766557 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            userSelect: 'none',
+          }}
+        >
+          <QuizFinalResults
+            room={room}
+            players={players}
+            currentUserId={user?.id}
+            onPlayAgain={() => {
+              navigate('/games/quiz');
+              fetchLobbyData();
+            }}
+            onBackToLobby={() => {
+              navigate('/games/quiz');
+              fetchLobbyData();
+            }}
+          />
+        </div>
+      )}
+    </>
   );
 }

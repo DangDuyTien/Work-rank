@@ -9311,5 +9311,61 @@ html[data-workrank-contrast="true"] .profile-level-card {
   animation: dice-roll-spin 0.4s ease-in-out infinite;
 }
 
+/* ── QUIZ GAME SCREENSHOT MATCHING STYLES ── */
+.quiz-game-main-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 32px 14px;
+  gap: 28px;
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.quiz-game-left-col {
+  flex: 0 0 42%;
+  max-width: 44%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.quiz-game-right-col {
+  flex: 1 1 58%;
+  height: 100%;
+  max-height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .quiz-game-main-stage {
+    flex-direction: column;
+    padding: 6px 14px 10px;
+    gap: 14px;
+    overflow-y: auto;
+  }
+
+  .quiz-game-left-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    order: 2;
+  }
+
+  .quiz-game-right-col {
+    flex: none;
+    width: 100%;
+    max-height: 220px;
+    order: 1;
+  }
+}
+
+
 
 
