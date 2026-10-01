@@ -4,6 +4,25 @@ import { Trophy, ArrowRight, X, Search } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import { competition } from '../services/api';
 
+/**
+ * Geometric Block Quote SVG Glyphs matching Windham-Campbell Reference
+ */
+function BlockQuoteLeft({ className = 'w-14 sm:w-18 lg:w-24 h-auto' }) {
+  return (
+    <svg viewBox="0 0 110 200" className={`fill-black flex-shrink-0 select-none ${className}`} aria-hidden="true">
+      <polygon points="38,0 110,0 110,120 55,200 0,200 38,120" />
+    </svg>
+  );
+}
+
+function BlockQuoteRight({ className = 'w-14 sm:w-18 lg:w-24 h-auto' }) {
+  return (
+    <svg viewBox="0 0 110 200" className={`fill-black flex-shrink-0 select-none ${className}`} aria-hidden="true">
+      <polygon points="0,0 72,0 110,80 55,200 0,200 38,120 0,120" />
+    </svg>
+  );
+}
+
 export default function Award() {
   const [searchParams, setSearchParams] = useSearchParams();
   const seasonParam = searchParams.get('season');
@@ -94,20 +113,20 @@ export default function Award() {
   }, [seasons, selectedYear, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-[#111111] font-['Space_Grotesk'] antialiased selection:bg-[#c25e40]/20 flex flex-col">
+    <div className="min-h-screen bg-[#eee9e0] text-[#111111] antialiased selection:bg-[#b85d43]/20 flex flex-col">
       <PublicHeader />
 
-      {/* ── MAIN EDITORIAL ARCHIVE CONTAINER (MATCHING IMAGE 1) ── */}
-      <main className="flex-1 w-full max-w-[1560px] mx-auto px-6 sm:px-12 lg:px-16 xl:px-20 pt-8 sm:pt-12 pb-24 sm:pb-36">
-        {/* Giant Display Title: Vinh danh */}
-        <div className="mb-2 sm:mb-4">
-          <h1 className="text-[clamp(90px,13vw,185px)] font-black tracking-[-0.04em] text-[#c25e40] leading-[0.88] select-none">
+      {/* ── MAIN EDITORIAL CANVAS ── */}
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-16 xl:px-20 pt-8 sm:pt-12 pb-24 sm:pb-36">
+        {/* Giant Title */}
+        <div className="mb-1 sm:mb-2">
+          <h1 className="font-condensed text-[clamp(96px,14.5vw,210px)] font-black tracking-[-0.03em] text-[#b85d43] leading-[0.84] select-none">
             Vinh danh
           </h1>
         </div>
 
         {/* Minimal Search & Year Filter Toolbar */}
-        <div className="mb-10 sm:mb-14 pb-4 border-b border-[#c25e40]/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-10 sm:mb-14 pb-4 border-b border-[#b85d43]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Year Buttons */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
             <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#777777] mr-1">
@@ -166,10 +185,10 @@ export default function Award() {
         {seasonsByYear.length > 0 ? (
           <div className="space-y-20 sm:space-y-28">
             {seasonsByYear.map(({ year, seasonsList }) => (
-              <div key={year} className="space-y-12 sm:space-y-16">
-                {/* Massive Year Header */}
+              <div key={year} className="space-y-8 sm:space-y-12">
+                {/* Year Header */}
                 <div>
-                  <h2 className="text-[clamp(68px,8.5vw,115px)] font-black tracking-[-0.03em] text-[#111111] leading-none select-none">
+                  <h2 className="font-condensed text-[clamp(68px,8.5vw,125px)] font-black tracking-[-0.02em] text-[#111111] leading-none select-none">
                     {year}
                   </h2>
                 </div>
@@ -182,21 +201,16 @@ export default function Award() {
 
                     return (
                       <div key={seasonItem.id || sIdx} className="space-y-4">
-                        {/* 3-Column Editorial Grid matching Image 1 */}
+                        {/* 3-Column Editorial Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-center">
-                          {/* Column 1 (Left ~32%): Large Rectangular Team Visual Framed with Giant Solid Quotes */}
+                          {/* Column 1 (Left ~32%): Team Image framed by solid polygonal block quotes */}
                           <div className="lg:col-span-4 flex items-center justify-center lg:justify-start">
-                            <div className="flex items-center gap-2 sm:gap-3.5">
-                              {/* Left Solid Quote Glyph */}
-                              <span
-                                className="font-['Space_Grotesk'] text-7xl sm:text-8xl lg:text-[130px] font-black text-[#111111] select-none leading-none -mr-1"
-                                aria-hidden="true"
-                              >
-                                “
-                              </span>
+                            <div className="flex items-center gap-3 sm:gap-4">
+                              {/* Left Solid Polygonal Quote */}
+                              <BlockQuoteLeft className="w-12 sm:w-16 lg:w-20" />
 
-                              {/* Large Rectangular Image Frame */}
-                              <div className="relative aspect-[3/3.8] w-48 sm:w-56 lg:w-64 bg-[#ede8df] border border-black/80 overflow-hidden shadow-none flex items-center justify-center">
+                              {/* Large Rectangular Team Image Frame */}
+                              <div className="relative aspect-[3/3.8] w-48 sm:w-56 lg:w-64 bg-[#dfd9ce] border border-black/80 overflow-hidden shadow-none flex items-center justify-center">
                                 {featuredTeam?.avatarUrl ? (
                                   <img
                                     src={featuredTeam.avatarUrl}
@@ -205,65 +219,60 @@ export default function Award() {
                                   />
                                 ) : (
                                   <div
-                                    className="w-full h-full flex flex-col items-center justify-center text-white p-4 text-center"
+                                    className="w-full h-full flex flex-col items-center justify-center text-white p-5 text-center"
                                     style={{ backgroundColor: featuredTeam?.color || '#18181b' }}
                                   >
                                     <Trophy size={48} className="text-[#facc15] mb-2" />
-                                    <span className="font-bold text-base sm:text-lg uppercase tracking-tight line-clamp-2">
+                                    <span className="font-condensed text-xl sm:text-2xl font-black uppercase tracking-tight line-clamp-2">
                                       {featuredTeam?.teamName || 'VÔ ĐỊCH'}
                                     </span>
-                                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/70 mt-1">
-                                      CHAMPION
+                                    <span className="font-condensed text-xs uppercase tracking-[0.16em] text-white/70 mt-1 font-bold">
+                                      CHAMPION TEAM
                                     </span>
                                   </div>
                                 )}
                               </div>
 
-                              {/* Right Solid Quote Glyph */}
-                              <span
-                                className="font-['Space_Grotesk'] text-7xl sm:text-8xl lg:text-[130px] font-black text-[#111111] select-none leading-none -ml-1"
-                                aria-hidden="true"
-                              >
-                                ”
-                              </span>
+                              {/* Right Solid Polygonal Quote */}
+                              <BlockQuoteRight className="w-12 sm:w-16 lg:w-20" />
                             </div>
                           </div>
 
-                          {/* Column 2 (Middle ~28%): Stacked Large Bold Categories */}
-                          <div className="lg:col-span-3 flex flex-col justify-center space-y-0.5 sm:space-y-1">
-                            <span className="text-[clamp(32px,4vw,52px)] font-black tracking-[-0.03em] leading-[0.98] text-[#111111] block select-none">
+                          {/* Column 2 (Middle ~28%): Stacked Condensed Categories */}
+                          <div className="lg:col-span-3 flex flex-col justify-center space-y-0 sm:space-y-0.5">
+                            <span className="font-condensed text-[clamp(36px,4.5vw,62px)] font-black tracking-[-0.02em] leading-[0.95] text-[#111111] block select-none">
                               Drama
                             </span>
-                            <span className="text-[clamp(32px,4vw,52px)] font-black tracking-[-0.03em] leading-[0.98] text-[#111111] block select-none">
+                            <span className="font-condensed text-[clamp(36px,4.5vw,62px)] font-black tracking-[-0.02em] leading-[0.95] text-[#111111] block select-none">
                               Fiction
                             </span>
-                            <span className="text-[clamp(32px,4vw,52px)] font-black tracking-[-0.03em] leading-[0.98] text-[#111111] block select-none">
+                            <span className="font-condensed text-[clamp(36px,4.5vw,62px)] font-black tracking-[-0.02em] leading-[0.95] text-[#111111] block select-none">
                               Nonfiction
                             </span>
-                            <span className="text-[clamp(32px,4vw,52px)] font-black tracking-[-0.03em] leading-[0.98] text-[#111111] block select-none">
+                            <span className="font-condensed text-[clamp(36px,4.5vw,62px)] font-black tracking-[-0.02em] leading-[0.95] text-[#111111] block select-none">
                               Poetry
                             </span>
                           </div>
 
-                          {/* Column 3 (Right ~40%): Clean Roster Table with Thin Terracotta Dividers */}
-                          <div className="lg:col-span-5 flex flex-col justify-center divide-y divide-[#c25e40]/30 border-t border-b border-[#c25e40]/30">
+                          {/* Column 3 (Right ~40%): Editorial Serif Roster with Thin Terracotta Lines */}
+                          <div className="lg:col-span-5 flex flex-col justify-center divide-y divide-[#b85d43]/35 border-t border-b border-[#b85d43]/35">
                             {teamsList.length > 0 ? (
                               teamsList.slice(0, 8).map((team, tIdx) => (
                                 <div
                                   key={team.teamId || tIdx}
-                                  className="py-2.5 sm:py-3 flex items-baseline justify-between gap-4 cursor-pointer hover:bg-black/[0.02] px-1 transition-colors group"
+                                  className="py-2 sm:py-2.5 flex items-baseline justify-between gap-4 cursor-pointer hover:bg-black/[0.02] px-1 transition-colors group"
                                   onClick={() => handleOpenSeasonDetail(seasonItem.id)}
                                 >
-                                  <span className="font-medium text-sm sm:text-base text-[#111111] tracking-tight group-hover:text-[#c25e40] transition-colors">
+                                  <span className="font-serif text-[15px] sm:text-[17px] text-[#111111] tracking-normal group-hover:text-[#b85d43] transition-colors">
                                     {team.teamName}
                                   </span>
-                                  <span className="font-normal text-xs sm:text-sm text-[#444444] text-right">
+                                  <span className="font-serif text-[13px] sm:text-[15px] text-[#444444] text-right">
                                     {team.role || (team.rank === 1 ? 'Vô địch' : `Hạng #${team.rank || tIdx + 1}`)}
                                   </span>
                                 </div>
                               ))
                             ) : (
-                              <div className="py-6 text-sm text-[#777777] italic">
+                              <div className="py-6 text-sm font-serif text-[#777777] italic">
                                 Đang tổng hợp dữ liệu đội tuyển cho mùa giải này.
                               </div>
                             )}
@@ -271,7 +280,7 @@ export default function Award() {
                         </div>
 
                         {/* Thin Bottom Full-width Divider */}
-                        <div className="pt-8 border-b border-[#c25e40]/25" />
+                        <div className="pt-8 border-b border-[#b85d43]/30" />
                       </div>
                     );
                   })}
@@ -293,7 +302,7 @@ export default function Award() {
       {/* ── 2. SEASON DETAIL MODAL ── */}
       {selectedSeasonDetail && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-          <div className="bg-[#f4f1ea] border border-black w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2px] p-6 sm:p-8 shadow-2xl relative">
+          <div className="bg-[#eee9e0] border border-black w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2px] p-6 sm:p-8 shadow-2xl relative">
             {/* Close Button */}
             <button
               type="button"
@@ -305,10 +314,10 @@ export default function Award() {
 
             {/* Header */}
             <div className="border-b border-black/15 pb-4 mb-6">
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#c25e40]">
+              <span className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#b85d43]">
                 CHI TIẾT MÙA GIẢI
               </span>
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-[#111111] mt-1">
+              <h3 className="font-condensed text-3xl sm:text-4xl font-black tracking-tight text-[#111111] mt-1">
                 {selectedSeasonDetail.season?.name}
               </h3>
               <p className="text-xs text-[#666666] font-mono mt-1">
@@ -331,7 +340,7 @@ export default function Award() {
                       <span className="font-semibold text-[#111111]">{team.teamName}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="font-mono text-xs text-[#c25e40] font-bold">+{team.grandPoints || 0} GP</span>
+                      <span className="font-mono text-xs text-[#b85d43] font-bold">+{team.grandPoints || 0} GP</span>
                       <span className="font-mono font-bold text-xs">{team.score?.toLocaleString() || 0} XP</span>
                     </div>
                   </div>
@@ -367,8 +376,8 @@ export default function Award() {
       )}
 
       {/* ── 3. MINIMAL FOOTER ── */}
-      <footer className="py-10 border-t border-black/10 bg-[#ede8df] text-[#666666] text-xs">
-        <div className="max-w-[1560px] mx-auto px-6 sm:px-12 lg:px-16 xl:px-20 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="py-10 border-t border-black/10 bg-[#dfd9ce] text-[#666666] text-xs">
+        <div className="max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-16 xl:px-20 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="font-bold text-[#111111] uppercase tracking-tight">
               WORKRANK / 3WIN MEDIA
