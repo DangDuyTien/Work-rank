@@ -25,12 +25,6 @@ TeamYouTubeSummary.init(
       defaultValue: 0,
       field: 'channels_count',
     },
-    videosCount: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      defaultValue: 0,
-      field: 'videos_count',
-    },
     totalViews: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
@@ -90,22 +84,6 @@ TeamYouTubeSummary.init(
       allowNull: false,
       defaultValue: 0.0000,
       field: 'sub_growth_30d_pct',
-    },
-    topVideoId: {
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true,
-      field: 'top_video_id',
-    },
-    topVideoTitle: {
-      type: DataTypes.STRING(500),
-      allowNull: true,
-      field: 'top_video_title',
-    },
-    topVideoViews: {
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false,
-      defaultValue: 0,
-      field: 'top_video_views',
     },
     rankByViews: {
       type: DataTypes.INTEGER.UNSIGNED,

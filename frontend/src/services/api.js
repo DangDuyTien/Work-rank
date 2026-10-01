@@ -800,10 +800,6 @@ export const youtube = {
     const res = await api.get('/api/youtube/leaderboard', { params });
     return res.data;
   },
-  getTopVideos: async (params = {}) => {
-    const res = await api.get('/api/youtube/top-videos', { params });
-    return res.data;
-  },
   getTeamDetails: async (teamId) => {
     const res = await api.get(`/api/youtube/teams/${teamId}`);
     return res.data;
@@ -973,6 +969,10 @@ export const quizGame = {
     const res = await api.post(`/api/games/quiz/rooms/${id}/answer`, data);
     return res.data?.data || null;
   },
+  listSets: async () => {
+    const res = await api.get('/api/games/quiz/sets');
+    return res.data?.data || [];
+  },
   getLeaderboard: async (params = {}) => {
     const res = await api.get('/api/games/quiz/leaderboard', { params });
     return res.data || { data: [], myStats: null };
@@ -983,13 +983,103 @@ export const quizGame = {
   },
 };
 
+export const quizAdmin = {
+  // Questions Management
+  listQuestions: async (params = {}) => {
+    const res = await api.get('/api/admin/quiz/questions', { params });
+    return res.data || { data: [], pagination: {} };
+  },
+  getQuestion: async (id) => {
+    const res = await api.get(`/api/admin/quiz/questions/${id}`);
+    return res.data?.data || null;
+  },
+  createQuestion: async (data) => {
+    const res = await api.post('/api/admin/quiz/questions', data);
+    return res.data;
+  },
+  updateQuestion: async (id, data) => {
+    const res = await api.put(`/api/admin/quiz/questions/${id}`, data);
+    return res.data;
+  },
+  duplicateQuestion: async (id) => {
+    const res = await api.post(`/api/admin/quiz/questions/${id}/duplicate`);
+    return res.data;
+  },
+  deleteQuestion: async (id) => {
+    const res = await api.delete(`/api/admin/quiz/questions/${id}`);
+    return res.data;
+  },
+  // Direct Image Upload
+  uploadImage: async (file, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await api.post('/api/admin/quiz/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return res.data;
+  },
+  // Reorder Questions
+  reorderQuestions: async (questionIds) => {
+    const res = await api.post('/api/admin/quiz/questions/reorder', { questionIds });
+    return res.data;
+  },
+  // Quiz Sets Management
+  listQuizSets: async (params = {}) => {
+    const res = await api.get('/api/admin/quiz/sets', { params });
+    return res.data?.data || [];
+  },
+  getQuizSet: async (id) => {
+    const res = await api.get(`/api/admin/quiz/sets/${id}`);
+    return res.data?.data || null;
+  },
+  createQuizSet: async (data) => {
+    const res = await api.post('/api/admin/quiz/sets', data);
+    return res.data;
+  },
+  updateQuizSet: async (id, data) => {
+    const res = await api.put(`/api/admin/quiz/sets/${id}`, data);
+    return res.data;
+  },
+  duplicateQuizSet: async (id) => {
+    const res = await api.post(`/api/admin/quiz/sets/${id}/duplicate`);
+    return res.data;
+  },
+  deleteQuizSet: async (id) => {
+    const res = await api.delete(`/api/admin/quiz/sets/${id}`);
+    return res.data;
+  },
+  // Import & Export & Share
+  validateImport: async (data) => {
+    const res = await api.post('/api/admin/quiz/import/validate', data);
+    return res.data?.data || null;
+  },
+  confirmImport: async (data) => {
+    const res = await api.post('/api/admin/quiz/import/confirm', data);
+    return res.data;
+  },
+  exportQuizSetUrl: (id, format = 'json') => `/api/admin/quiz/sets/${id}/export?format=${format}`,
+  getSharedQuizSet: async (code) => {
+    const res = await api.get(`/api/admin/quiz/share/${code}`);
+    return res.data?.data || null;
+  },
+};
+
 export const game2048 = {
-  startSession: async () => {
-    const res = await api.post('/api/games/2048/start');
+  startSession: async (data = {}) => {
+    const res = await api.post('/api/games/2048/start', data);
+    return res.data?.data || null;
+  },
+  checkpoint: async (data) => {
+    const res = await api.post('/api/games/2048/checkpoint', data);
     return res.data?.data || null;
   },
   submitScore: async (data) => {
     const res = await api.post('/api/games/2048/submit', data);
+    return res.data?.data || null;
+  },
+  getActiveSession: async () => {
+    const res = await api.get('/api/games/2048/active-session');
     return res.data?.data || null;
   },
   getLeaderboard: async (params = {}) => {
@@ -1049,6 +1139,43 @@ export const samGame = {
   },
   getMyStats: async () => {
     const res = await api.get('/api/games/sam/my-stats');
+    return res.data;
+  },
+  // Admin Bot Test APIs
+  createBotTestRoom: async (data) => {
+    const res = await api.post('/api/games/sam/admin/bot-room', data);
+    return res.data;
+  },
+  listBotTestRooms: async () => {
+    const res = await api.get('/api/games/sam/admin/bot-rooms');
+    return res.data;
+  },
+  pauseBotTest: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/pause`);
+    return res.data;
+  },
+  resumeBotTest: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/resume`);
+    return res.data;
+  },
+  stepBotTest: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/step`);
+    return res.data;
+  },
+  restartBotTest: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/restart`);
+    return res.data;
+  },
+  fillBots: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/fill-bots`);
+    return res.data;
+  },
+  stopBotTest: async (id) => {
+    const res = await api.post(`/api/games/sam/admin/rooms/${id}/stop`);
+    return res.data;
+  },
+  getBotDebugState: async (id) => {
+    const res = await api.get(`/api/games/sam/admin/rooms/${id}/debug`);
     return res.data;
   },
 };

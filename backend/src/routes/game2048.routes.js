@@ -10,9 +10,11 @@ const router = express.Router();
 // All 2048 game endpoints require authentication
 router.use(auth);
 
-// Game session & score submission
+// Game session, checkpoints & score submission
 router.post('/start', asyncHandler(controller.startSession));
+router.post('/checkpoint', asyncHandler(controller.checkpointSession));
 router.post('/submit', asyncHandler(controller.submitScore));
+router.get('/active-session', asyncHandler(controller.getActiveSession));
 
 // Company Leaderboard & Personal Stats
 router.get('/leaderboard', asyncHandler(controller.getLeaderboard));

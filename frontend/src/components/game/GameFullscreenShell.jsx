@@ -72,9 +72,30 @@ export default function GameFullscreenShell({
     };
   }, [isReducedMotion]);
 
+  // Saving state during async onExit
+  const [isSavingExit, setIsSavingExit] = useState(false);
+
   // Handle Exit with reverse transition
-  const handleExit = useCallback(() => {
-    if (isExitingRef.current) return; // Prevent double-trigger race condition
+  const handleExit = useCallback(async () => {
+    if (isExitingRef.current || isSavingExit) return; // Prevent double-trigger race condition
+
+    if (typeof onExit === 'function') {
+      try {
+        setIsSavingExit(true);
+        const canExit = await onExit();
+        if (canExit === false) {
+          setIsSavingExit(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Error during onExit execution:', err);
+        setIsSavingExit(false);
+        return;
+      } finally {
+        setIsSavingExit(false);
+      }
+    }
+
     isExitingRef.current = true;
     setTransitionState('EXITING');
 
@@ -84,15 +105,13 @@ export default function GameFullscreenShell({
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
 
-      if (typeof onExit === 'function') {
-        onExit();
-      } else if (exitTo) {
+      if (exitTo) {
         navigate(exitTo);
       } else {
         navigate(-1);
       }
     }, exitDuration);
-  }, [navigate, onExit, exitTo, isReducedMotion]);
+  }, [navigate, onExit, exitTo, isReducedMotion, isSavingExit]);
 
   // Compute CSS transition class
   const transitionClass =
@@ -144,7 +163,7 @@ export default function GameFullscreenShell({
             <button
               type="button"
               onClick={handleExit}
-              disabled={transitionState === 'EXITING'}
+              disabled={transitionState === 'EXITING' || isSavingExit}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -156,19 +175,20 @@ export default function GameFullscreenShell({
                 color: '#111111',
                 fontSize: 12,
                 fontWeight: 800,
-                cursor: transitionState === 'EXITING' ? 'default' : 'pointer',
+                cursor: (transitionState === 'EXITING' || isSavingExit) ? 'default' : 'pointer',
                 transition: 'background 0.15s ease, border-color 0.15s ease',
+                opacity: isSavingExit ? 0.75 : 1,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#eceae4';
+                if (!isSavingExit && transitionState !== 'EXITING') e.currentTarget.style.background = '#eceae4';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#f4f3ef';
+                if (!isSavingExit && transitionState !== 'EXITING') e.currentTarget.style.background = '#f4f3ef';
               }}
               title="Thoát trò chơi về WorkRank"
             >
               <ArrowLeft size={15} />
-              <span>{exitLabel}</span>
+              <span>{isSavingExit ? 'Đang lưu...' : exitLabel}</span>
             </button>
 
             <div style={{ height: 18, width: 1, background: 'rgba(0, 0, 0, 0.1)' }} />

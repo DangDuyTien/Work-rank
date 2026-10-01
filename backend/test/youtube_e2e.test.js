@@ -10,7 +10,6 @@ const {
   User,
   Team,
   YouTubeChannel,
-  YouTubeVideo,
   TeamYouTubeSummary,
   ScoreLedger,
 } = require('../src/models');
@@ -146,7 +145,6 @@ describe('YouTube ↔ Team Analytics End-to-End (E2E) Flow', () => {
 
     assert.equal(teamDetailsRes.body.team.id, teamPhoenix.id);
     assert.ok(teamDetailsRes.body.channels.length >= 1);
-    assert.ok(teamDetailsRes.body.topVideos.length >= 1);
 
     // 9. User compares Team Phoenix vs Team Dragon
     const compareRes = await request(app)

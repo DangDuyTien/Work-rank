@@ -12,7 +12,12 @@ Game2048Score.init(
     score: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
     maxTile: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 2, field: 'max_tile' },
     moves: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
+    status: { type: DataTypes.STRING(32), allowNull: false, defaultValue: 'ACTIVE' },
     gameSessionId: { type: DataTypes.STRING(64), allowNull: false, unique: true, field: 'game_session_id' },
+    boardState: { type: DataTypes.TEXT, allowNull: true, field: 'board_state' },
+    startedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW, field: 'started_at' },
+    lastActivityAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW, field: 'last_activity_at' },
+    endedAt: { type: DataTypes.DATE, allowNull: true, field: 'ended_at' },
     playedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW, field: 'played_at' },
   },
   { sequelize, modelName: 'Game2048Score', tableName: 'game_2048_scores', underscored: true }

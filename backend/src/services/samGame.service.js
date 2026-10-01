@@ -11,11 +11,41 @@ const {
   sequelize,
 } = require('../models');
 const samEngine = require('../utils/samEngine');
+const samBotAI = require('../utils/samBotAI');
 const samRealtime = require('./samRealtime.service');
 
 /**
  * Sam Lốc Game Service (Server Authoritative)
+ * Supports standard live multiplayer, real-time spectator mode,
+ * and admin-only test bot simulation with zero production data pollution.
  */
+
+// In-memory bot timer tracker to safely schedule and clear bot delays
+const botTimers = new Map();
+
+function scheduleBotTimer(roomId, fn, delayMs = 800) {
+  const numId = Number(roomId);
+  if (botTimers.has(numId)) {
+    clearTimeout(botTimers.get(numId));
+  }
+  const timer = setTimeout(async () => {
+    botTimers.delete(numId);
+    try {
+      await fn();
+    } catch (err) {
+      console.error(`[SamBotTimer Error room ${numId}]:`, err.message);
+    }
+  }, delayMs);
+  botTimers.set(numId, timer);
+}
+
+function clearBotTimers(roomId) {
+  const numId = Number(roomId);
+  if (botTimers.has(numId)) {
+    clearTimeout(botTimers.get(numId));
+    botTimers.delete(numId);
+  }
+}
 
 // Helper to generate room code
 function generateRoomCode() {
@@ -27,10 +57,33 @@ function generateRoomCode() {
   return code;
 }
 
+// Helper to match player by userId or bot identifier
+function isPlayerMatch(p, identifier) {
+  if (!p || identifier == null) return false;
+  if (p.userId != null && Number(p.userId) === Number(identifier)) return true;
+  if (p.id != null && Number(p.id) === Number(identifier)) return true;
+  if (p.botId && p.botId === String(identifier)) return true;
+  if (String(identifier) === `bot_${p.seatIndex + 1}`) return true;
+  return false;
+}
+
 // ── LOBBY & ROOM MANAGEMENT ──
 
-async function listRooms(filters = {}) {
+async function listRooms(filters = {}, requestingUser = null) {
   const where = {};
+  const isTestQuery = filters.isTest === 'true' || filters.isTest === true || filters.roomType === 'BOT_TEST';
+
+  if (isTestQuery) {
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      // Non-admins cannot see bot test rooms
+      return [];
+    }
+    where.isTest = true;
+  } else {
+    // Regular members only see official LIVE rooms
+    where.isTest = false;
+  }
+
   if (filters.status) {
     where.status = filters.status;
   } else {
@@ -56,19 +109,20 @@ async function listRooms(filters = {}) {
     return {
       ...data,
       playerCount: data.players ? data.players.length : 0,
+      spectatorCount: samRealtime.getSpectatorCount(r.id),
     };
   });
 }
 
-async function createRoom(data) {
+async function createRoom(data, requestingUser = null) {
   const { title = 'Phòng Đánh Sâm', maxPlayers = 4, userId } = data;
 
-  if (!userId) {
+  const actualUserId = userId || (requestingUser ? requestingUser.id : null);
+  if (!actualUserId) {
     throw new Error('Yêu cầu xác thực người dùng để tạo phòng');
   }
 
   const validMax = Math.min(4, Math.max(2, Number(maxPlayers) || 4));
-
   const code = generateRoomCode();
 
   const result = await sequelize.transaction(async (t) => {
@@ -76,12 +130,17 @@ async function createRoom(data) {
       {
         code,
         title: title.trim() || 'Phòng Đánh Sâm',
-        hostUserId: userId,
+        hostUserId: actualUserId,
         status: 'WAITING',
         maxPlayers: validMax,
         roundNumber: 1,
         passPlayerIds: [],
         samPhase: 'WAITING',
+        roomType: 'LIVE',
+        isTest: false,
+        botDifficulty: 'NORMAL',
+        botPaused: false,
+        spectatorCount: 0,
       },
       { transaction: t }
     );
@@ -90,11 +149,13 @@ async function createRoom(data) {
     await SamPlayer.create(
       {
         roomId: room.id,
-        userId,
+        userId: actualUserId,
         seatIndex: 0,
         handCards: [],
         remainingCardsCount: 0,
         status: 'WAITING',
+        playerType: 'HUMAN',
+        isBot: false,
       },
       { transaction: t }
     );
@@ -103,10 +164,100 @@ async function createRoom(data) {
   });
 
   samRealtime.emitToRoom(result.id, 'sam:roomListChanged', { roomId: result.id });
-  return getRoomDetail(result.id, userId);
+  return getRoomDetail(result.id, actualUserId);
 }
 
-async function joinRoom(roomId, userId) {
+// ── BOT TEST ROOM CREATION (ADMIN ONLY) ──
+
+async function createBotTestRoom(data, adminUser) {
+  if (!adminUser || adminUser.role !== 'admin') {
+    const error = new Error('Chỉ Quản trị viên (Admin) mới có quyền tạo phòng Bot Test');
+    error.status = 403;
+    throw error;
+  }
+
+  const {
+    title = 'Đánh Sâm — Bot Test',
+    playerCount = 4,
+    botCount = 3,
+    difficulty = 'NORMAL',
+    scenario = 'DEFAULT_TEST',
+    includeAdmin = true,
+  } = data;
+
+  const totalSeats = Math.min(4, Math.max(2, Number(playerCount) || 4));
+  const validDifficulty = ['EASY', 'NORMAL', 'HARD'].includes(difficulty) ? difficulty : 'NORMAL';
+  const code = generateRoomCode();
+
+  const result = await sequelize.transaction(async (t) => {
+    const room = await SamRoom.create(
+      {
+        code,
+        title: title.trim() || 'Đánh Sâm — Bot Test',
+        hostUserId: adminUser.id,
+        status: 'WAITING',
+        maxPlayers: totalSeats,
+        roundNumber: 1,
+        passPlayerIds: [],
+        samPhase: 'WAITING',
+        roomType: 'BOT_TEST',
+        isTest: true,
+        botDifficulty: validDifficulty,
+        testScenario: scenario,
+        botPaused: false,
+        spectatorCount: 0,
+      },
+      { transaction: t }
+    );
+
+    let currentSeat = 0;
+
+    // Optional: Add Admin as Player in seat 0
+    if (includeAdmin) {
+      await SamPlayer.create(
+        {
+          roomId: room.id,
+          userId: adminUser.id,
+          seatIndex: currentSeat++,
+          handCards: [],
+          remainingCardsCount: 0,
+          status: 'WAITING',
+          playerType: 'HUMAN',
+          isBot: false,
+        },
+        { transaction: t }
+      );
+    }
+
+    // Add Bots for remaining seats
+    const numBotsToAdd = includeAdmin ? Math.min(botCount, totalSeats - 1) : totalSeats;
+    for (let b = 1; b <= numBotsToAdd && currentSeat < totalSeats; b++) {
+      const botIndex = currentSeat + 1;
+      await SamPlayer.create(
+        {
+          roomId: room.id,
+          userId: null,
+          seatIndex: currentSeat++,
+          handCards: [],
+          remainingCardsCount: 0,
+          status: 'WAITING',
+          playerType: 'BOT',
+          isBot: true,
+          botId: `BOT_TEST_0${botIndex}`,
+          botName: `BOT-0${botIndex}`,
+        },
+        { transaction: t }
+      );
+    }
+
+    return room;
+  });
+
+  samRealtime.emitToRoom(result.id, 'sam:roomListChanged', { roomId: result.id });
+  return getRoomDetail(result.id, adminUser.id, 'admin');
+}
+
+async function joinRoom(roomId, userId, requestingUser = null) {
   if (!roomId || !userId) {
     throw new Error('Thiếu roomId hoặc userId');
   }
@@ -119,26 +270,35 @@ async function joinRoom(roomId, userId) {
     throw new Error('Phòng chơi không tồn tại');
   }
 
+  // If this is a test room, verify admin role
+  const userRole = requestingUser ? requestingUser.role : (await User.findByPk(userId))?.role;
+  if (room.isTest && userRole !== 'admin') {
+    const error = new Error('Bạn không có quyền tham gia phòng thử nghiệm này');
+    error.status = 403;
+    throw error;
+  }
+
   if (room.status !== 'WAITING') {
     // Check if player is already in this playing room -> reconnect
-    const existingPlayer = room.players.find((p) => Number(p.userId) === Number(userId));
+    const existingPlayer = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
     if (existingPlayer) {
-      return getRoomDetail(room.id, userId);
+      return getRoomDetail(room.id, userId, userRole);
     }
-    throw new Error('Phòng đã bắt đầu ván hoặc đã kết thúc');
+    // If not a player, allow spectating
+    return getRoomDetail(room.id, userId, userRole);
   }
 
   // Check if player already in room
-  const alreadyIn = room.players.find((p) => Number(p.userId) === Number(userId));
+  const alreadyIn = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
   if (alreadyIn) {
-    return getRoomDetail(room.id, userId);
+    return getRoomDetail(room.id, userId, userRole);
   }
 
   if (room.players.length >= room.maxPlayers) {
     throw new Error('Phòng chơi đã đủ người');
   }
 
-  // Find next available seat index (0, 1, 2, 3)
+  // Find next available seat index
   const takenSeats = room.players.map((p) => p.seatIndex);
   let availableSeat = 0;
   for (let s = 0; s < room.maxPlayers; s++) {
@@ -155,9 +315,11 @@ async function joinRoom(roomId, userId) {
     handCards: [],
     remainingCardsCount: 0,
     status: 'WAITING',
+    playerType: 'HUMAN',
+    isBot: false,
   });
 
-  const detail = await getRoomDetail(room.id, userId);
+  const detail = await getRoomDetail(room.id, userId, userRole);
   samRealtime.emitToRoom(room.id, 'sam:playerJoined', {
     roomId: room.id,
     userId,
@@ -177,7 +339,7 @@ async function leaveRoom(roomId, userId) {
     throw new Error('Phòng chơi không tồn tại');
   }
 
-  const player = room.players.find((p) => Number(p.userId) === Number(userId));
+  const player = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
   if (!player) {
     return { success: true };
   }
@@ -190,13 +352,17 @@ async function leaveRoom(roomId, userId) {
       order: [['seatIndex', 'ASC']],
     });
 
-    if (remainingPlayers.length === 0) {
+    if (remainingPlayers.length === 0 || remainingPlayers.every((p) => p.isBot)) {
+      clearBotTimers(room.id);
       room.status = 'ABANDONED';
       await room.save();
     } else if (Number(room.hostUserId) === Number(userId)) {
-      // Transfer host to next player
-      room.hostUserId = remainingPlayers[0].userId;
-      await room.save();
+      // Transfer host to next human player if available
+      const nextHuman = remainingPlayers.find((p) => !p.isBot && p.userId);
+      if (nextHuman) {
+        room.hostUserId = nextHuman.userId;
+        await room.save();
+      }
     }
 
     const detail = await getRoomDetail(room.id, userId).catch(() => null);
@@ -209,17 +375,17 @@ async function leaveRoom(roomId, userId) {
     return { success: true };
   }
 
-  // If in active playing game -> surrender / disconnect
+  // If in active playing game -> surrender
   player.status = 'SURRENDERED';
   await player.save();
 
   // If only 1 active player remains, that player wins!
   const activeRemaining = room.players.filter(
-    (p) => Number(p.userId) !== Number(userId) && p.status === 'ACTIVE'
+    (p) => (!p.userId || Number(p.userId) !== Number(userId)) && p.status === 'ACTIVE'
   );
 
   if (activeRemaining.length === 1) {
-    await finishMatch(room.id, activeRemaining[0].userId, 'SURRENDER_WIN');
+    await finishMatch(room.id, activeRemaining[0].userId || activeRemaining[0].botId, 'SURRENDER_WIN');
   }
 
   return { success: true };
@@ -227,7 +393,7 @@ async function leaveRoom(roomId, userId) {
 
 // ── MATCH LIFECYCLE ──
 
-async function startMatch(roomId, hostUserId) {
+async function startMatch(roomId, hostUserId, isAdmin = false) {
   const room = await SamRoom.findByPk(roomId, {
     include: [
       {
@@ -242,11 +408,11 @@ async function startMatch(roomId, hostUserId) {
     throw new Error('Phòng chơi không tồn tại');
   }
 
-  if (Number(room.hostUserId) !== Number(hostUserId)) {
+  if (!isAdmin && Number(room.hostUserId) !== Number(hostUserId)) {
     throw new Error('Chỉ có chủ phòng mới có quyền bắt đầu trận đấu');
   }
 
-  if (room.status !== 'WAITING' && room.status !== 'FINISHED') {
+  if (room.status !== 'WAITING' && room.status !== 'FINISHED' && !isAdmin && !room.isTest) {
     throw new Error('Phòng đang trong trận đấu');
   }
 
@@ -264,14 +430,14 @@ async function startMatch(roomId, hostUserId) {
       p.handCards = dealtHands[i];
       p.remainingCardsCount = dealtHands[i].length;
       p.status = 'ACTIVE';
-      p.hasDeclaredSam = false;
+      p.hasDeclaredSam = null;
       p.isBaoMot = false;
       p.scoreDelta = 0;
       p.rank = null;
       await p.save({ transaction: t });
     }
 
-    // 2. Set phase to SAM_DECLARING (players have 10s window to declare Sâm)
+    // 2. Set phase to SAM_DECLARING (10s window to declare Sâm)
     room.status = 'PLAYING';
     room.samPhase = 'SAM_DECLARING';
     room.samDeclarerId = null;
@@ -282,9 +448,10 @@ async function startMatch(roomId, hostUserId) {
     room.winnerUserId = null;
     room.startedAt = new Date();
     room.finishedAt = null;
+    room.botPaused = false;
 
-    // Default first turn: host (seat 0)
-    room.currentTurnUserId = room.hostUserId;
+    // Default first turn: seat 0
+    room.currentTurnUserId = players[0].userId || null;
     room.currentTurnSeat = 0;
     // 10s window for declaring Sam
     room.turnDeadline = new Date(Date.now() + 10 * 1000);
@@ -293,16 +460,16 @@ async function startMatch(roomId, hostUserId) {
     await SamAction.create(
       {
         roomId: room.id,
-        userId: hostUserId,
+        userId: hostUserId || players[0].userId || 1,
         actionType: 'DEAL',
-        metadata: { playerCount: players.length },
+        metadata: { playerCount: players.length, isTest: room.isTest },
       },
       { transaction: t }
     );
   });
 
   // 3. Broadcast match started to room
-  const detail = await getRoomDetail(room.id, hostUserId);
+  const detail = await getRoomDetail(room.id, hostUserId, isAdmin ? 'admin' : 'user');
   samRealtime.emitToRoom(room.id, 'sam:started', {
     roomId: room.id,
     room: detail.room,
@@ -311,21 +478,112 @@ async function startMatch(roomId, hostUserId) {
     samDeadline: room.turnDeadline,
   });
 
-  // 4. Send private hand cards exclusively to each player
+  // 4. Send private hand cards exclusively to human players
   for (let i = 0; i < players.length; i++) {
     const p = players[i];
-    samRealtime.emitToUser(p.userId, 'sam:handCards', {
-      roomId: room.id,
-      handCards: dealtHands[i],
-    });
+    if (!p.isBot && p.userId) {
+      samRealtime.emitToUser(p.userId, 'sam:handCards', {
+        roomId: room.id,
+        handCards: dealtHands[i],
+      });
+    }
+  }
+
+  // 5. Schedule server-side timeout to auto-resolve Sâm phase if timer expires
+  scheduleSamPhaseTimer(room.id);
+
+  // 6. If test room with bots, trigger bot AI lifecycle
+  if (room.isTest) {
+    triggerBotLifecycle(room.id);
   }
 
   return detail;
 }
 
-async function declareSam(roomId, userId, declare = true) {
+// ── SÂM DECLARATION ──
+
+function findSmallestCardPlayer(players) {
+  let bestPlayer = null;
+  let minRankValue = 999;
+
+  for (const p of players) {
+    if (!Array.isArray(p.handCards)) continue;
+    for (const card of p.handCards) {
+      const parsed = samEngine.parseCard(card);
+      if (parsed && parsed.rankValue < minRankValue) {
+        minRankValue = parsed.rankValue;
+        bestPlayer = p;
+      }
+    }
+  }
+
+  return bestPlayer;
+}
+
+function scheduleSamPhaseTimer(roomId) {
+  setTimeout(async () => {
+    try {
+      const room = await SamRoom.findByPk(roomId, {
+        include: [{ model: SamPlayer, as: 'players', include: [{ model: User, as: 'user' }] }],
+      });
+      if (!room || room.status !== 'PLAYING' || room.samPhase !== 'SAM_DECLARING') {
+        return;
+      }
+
+      // Mark all undecided players as hasDeclaredSam = false
+      for (const p of room.players) {
+        if (p.hasDeclaredSam === null || p.hasDeclaredSam === undefined) {
+          p.hasDeclaredSam = false;
+          await p.save();
+        }
+      }
+
+      if (!room.samDeclarerId) {
+        room.samPhase = 'PLAYING';
+        const firstPlayer =
+          findSmallestCardPlayer(room.players) ||
+          room.players.find((p) => p.seatIndex === 0) ||
+          room.players[0];
+        room.currentTurnUserId = firstPlayer.userId || null;
+        room.currentTurnSeat = firstPlayer.seatIndex;
+        room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
+        await room.save();
+
+        samRealtime.emitToRoom(room.id, 'sam:samResolved', {
+          roomId: room.id,
+          isSam: false,
+          declarerSeat: null,
+          currentTurnUserId: room.currentTurnUserId,
+          currentTurnSeat: room.currentTurnSeat,
+          turnDeadline: room.turnDeadline,
+        });
+
+        samRealtime.emitToRoom(room.id, 'sam:turnChanged', {
+          roomId: room.id,
+          currentTurnUserId: room.currentTurnUserId,
+          currentTurnSeat: room.currentTurnSeat,
+          turnDeadline: room.turnDeadline,
+        });
+      }
+
+      if (room.isTest) {
+        triggerBotLifecycle(room.id);
+      }
+    } catch (err) {
+      console.error('scheduleSamPhaseTimer error:', err);
+    }
+  }, process.env.NODE_ENV === 'test' ? 400 : 10500);
+}
+
+async function declareSam(roomId, userOrBotId, declare = true) {
   const room = await SamRoom.findByPk(roomId, {
-    include: [{ model: SamPlayer, as: 'players' }],
+    include: [
+      {
+        model: SamPlayer,
+        as: 'players',
+        include: [{ model: User, as: 'user', attributes: ['id', 'name'] }],
+      },
+    ],
   });
 
   if (!room || room.status !== 'PLAYING') {
@@ -336,7 +594,7 @@ async function declareSam(roomId, userId, declare = true) {
     throw new Error('Đã qua thời gian báo Sâm');
   }
 
-  const player = room.players.find((p) => Number(p.userId) === Number(userId));
+  const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
   if (!player) {
     throw new Error('Người chơi không ở trong phòng này');
   }
@@ -344,58 +602,104 @@ async function declareSam(roomId, userId, declare = true) {
   player.hasDeclaredSam = !!declare;
   await player.save();
 
-  await SamAction.create({
+  if (player.userId) {
+    await SamAction.create({
+      roomId: room.id,
+      userId: player.userId,
+      actionType: declare ? 'DECLARE_SAM' : 'SKIP_SAM',
+    }).catch(() => {});
+  }
+
+  // Broadcast decision to all clients
+  samRealtime.emitToRoom(room.id, 'sam:samDecision', {
     roomId: room.id,
-    userId,
-    actionType: declare ? 'DECLARE_SAM' : 'SKIP_SAM',
+    userId: player.userId || player.botId,
+    seatIndex: player.seatIndex,
+    hasDeclaredSam: player.hasDeclaredSam,
   });
 
   if (declare) {
     // First player who successfully declares Sam gets prioritized turn
     if (!room.samDeclarerId) {
-      room.samDeclarerId = userId;
+      room.samDeclarerId = player.userId || player.id;
       room.samPhase = 'PLAYING';
-      room.currentTurnUserId = userId;
+      room.currentTurnUserId = player.userId || null;
       room.currentTurnSeat = player.seatIndex;
       room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
       await room.save();
 
+      const declarerName = player.isBot ? player.botName : (player.user?.name || 'Người chơi');
+
       samRealtime.emitToRoom(room.id, 'sam:samDeclared', {
         roomId: room.id,
-        userId,
+        userId: player.userId || player.botId,
         declarerSeat: player.seatIndex,
-        currentTurnUserId: userId,
+        declarerName,
+        currentTurnUserId: room.currentTurnUserId,
+        currentTurnSeat: room.currentTurnSeat,
+        turnDeadline: room.turnDeadline,
+        isSam: true,
+      });
+
+      samRealtime.emitToRoom(room.id, 'sam:samResolved', {
+        roomId: room.id,
+        isSam: true,
+        declarerSeat: player.seatIndex,
+        declarerName,
+        currentTurnUserId: room.currentTurnUserId,
+        currentTurnSeat: room.currentTurnSeat,
         turnDeadline: room.turnDeadline,
       });
 
-      return getRoomDetail(room.id, userId);
+      if (room.isTest) {
+        triggerBotLifecycle(room.id);
+      }
+
+      return getRoomDetail(room.id, userOrBotId);
     }
   }
 
   // Check if all players have made their decision (or skipped)
-  const allDecided = room.players.every((p) => p.hasDeclaredSam !== false);
+  const allDecided = room.players.every((p) => p.hasDeclaredSam !== null && p.hasDeclaredSam !== undefined);
   if (allDecided && !room.samDeclarerId) {
     // No one declared Sam -> proceed to normal playing phase
     room.samPhase = 'PLAYING';
-    room.currentTurnUserId = room.hostUserId;
-    room.currentTurnSeat = 0;
+    const firstPlayer =
+      findSmallestCardPlayer(room.players) ||
+      room.players.find((p) => p.seatIndex === 0) ||
+      room.players[0];
+    room.currentTurnUserId = firstPlayer.userId || null;
+    room.currentTurnSeat = firstPlayer.seatIndex;
     room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
     await room.save();
+
+    samRealtime.emitToRoom(room.id, 'sam:samResolved', {
+      roomId: room.id,
+      isSam: false,
+      declarerSeat: null,
+      currentTurnUserId: room.currentTurnUserId,
+      currentTurnSeat: room.currentTurnSeat,
+      turnDeadline: room.turnDeadline,
+    });
 
     samRealtime.emitToRoom(room.id, 'sam:turnChanged', {
       roomId: room.id,
       currentTurnUserId: room.currentTurnUserId,
-      currentTurnSeat: 0,
+      currentTurnSeat: room.currentTurnSeat,
       turnDeadline: room.turnDeadline,
     });
   }
 
-  return getRoomDetail(room.id, userId);
+  if (room.isTest) {
+    triggerBotLifecycle(room.id);
+  }
+
+  return getRoomDetail(room.id, userOrBotId);
 }
 
 // ── PLAY CARDS & PASS TURN ──
 
-async function playCards(roomId, userId, cardIds) {
+async function playCards(roomId, userOrBotId, cardIds) {
   if (!Array.isArray(cardIds) || cardIds.length === 0) {
     throw new Error('Vui lòng chọn ít nhất 1 lá bài để đánh');
   }
@@ -420,16 +724,16 @@ async function playCards(roomId, userId, cardIds) {
     await room.save();
   }
 
-  if (Number(room.currentTurnUserId) !== Number(userId)) {
-    throw new Error('Chưa đến lượt của bạn');
-  }
-
-  const player = room.players.find((p) => Number(p.userId) === Number(userId));
+  const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
   if (!player) {
     throw new Error('Người chơi không tồn tại trong phòng');
   }
 
-  // 1. Verify card ownership (Security check against client forgery)
+  if (room.currentTurnSeat !== player.seatIndex && (!player.userId || Number(room.currentTurnUserId) !== Number(player.userId))) {
+    throw new Error('Chưa đến lượt của bạn');
+  }
+
+  // 1. Verify card ownership
   const hand = player.handCards || [];
   const hasAllCards = cardIds.every((c) => hand.includes(c));
   if (!hasAllCards) {
@@ -453,8 +757,8 @@ async function playCards(roomId, userId, cardIds) {
     player.isBaoMot = true;
     samRealtime.emitToRoom(room.id, 'sam:baoMot', {
       roomId: room.id,
-      userId,
-      playerName: player.user ? player.user.name : 'Người chơi',
+      userId: player.userId || player.botId,
+      playerName: player.isBot ? (player.botName || 'Bot') : (player.user ? player.user.name : 'Người chơi'),
     });
   }
 
@@ -464,9 +768,8 @@ async function playCards(roomId, userId, cardIds) {
   let isChop = !!beatCheck.isChop;
   let chopReward = 0;
   if (isChop && room.lastPlayUserId) {
-    // 15 points penalty for chopped two
     chopReward = 15;
-    const victim = room.players.find((p) => Number(p.userId) === Number(room.lastPlayUserId));
+    const victim = room.players.find((p) => isPlayerMatch(p, room.lastPlayUserId));
     if (victim) {
       victim.scoreDelta -= chopReward;
       await victim.save();
@@ -476,52 +779,52 @@ async function playCards(roomId, userId, cardIds) {
 
     samRealtime.emitToRoom(room.id, 'sam:chopped', {
       roomId: room.id,
-      chopperId: userId,
+      chopperId: player.userId || player.botId,
       victimId: room.lastPlayUserId,
       points: chopReward,
       chopType: beatCheck.chopType,
     });
   }
 
-  await SamAction.create({
-    roomId: room.id,
-    userId,
-    actionType: isChop ? 'CHOP' : 'PLAY',
-    cards: cardIds,
-    comboType: beatCheck.combo.type,
-    metadata: {
-      isChop,
-      chopReward,
-      remainingCards: player.remainingCardsCount,
-    },
-  });
+  if (player.userId) {
+    await SamAction.create({
+      roomId: room.id,
+      userId: player.userId,
+      actionType: isChop ? 'CHOP' : 'PLAY',
+      cards: cardIds,
+      comboType: beatCheck.combo.type,
+      metadata: {
+        isChop,
+        chopReward,
+        remainingCards: player.remainingCardsCount,
+      },
+    }).catch(() => {});
+  }
 
   // 5. Update room board state
   room.lastPlayedCards = {
     cards: cardIds,
-    userId,
+    userId: player.userId || player.botId,
     comboType: beatCheck.combo.type,
     rankValue: beatCheck.combo.rankValue,
     name: beatCheck.combo.name,
   };
-  room.lastPlayUserId = userId;
+  room.lastPlayUserId = player.userId || player.id;
 
   // 6. Check Win (Finished Hand)
   if (player.remainingCardsCount === 0) {
     // Check Thối 2 on final play
     const wasThoi2 = samEngine.checkThoi2(cardIds, hand);
     if (wasThoi2) {
-      // Ending on a 2 is a penalty!
       return handleThoi2Finish(room, player, cardIds);
     }
 
-    // Normal or Sâm win
     return handleGameWin(room, player);
   }
 
-  // 7. Advance turn to next active player who hasn't passed in this round
+  // 7. Advance turn to next active player
   const nextPlayer = findNextTurnPlayer(room, player.seatIndex);
-  room.currentTurnUserId = nextPlayer.userId;
+  room.currentTurnUserId = nextPlayer.userId || null;
   room.currentTurnSeat = nextPlayer.seatIndex;
   room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
   await room.save();
@@ -529,24 +832,32 @@ async function playCards(roomId, userId, cardIds) {
   // 8. Realtime notifications
   samRealtime.emitToRoom(room.id, 'sam:cardsPlayed', {
     roomId: room.id,
-    userId,
+    userId: player.userId || player.botId,
     cards: cardIds,
     comboName: beatCheck.combo.name,
     remainingCount: player.remainingCardsCount,
-    nextTurnUserId: nextPlayer.userId,
+    nextTurnUserId: nextPlayer.userId || nextPlayer.botId,
+    nextTurnSeat: nextPlayer.seatIndex,
     turnDeadline: room.turnDeadline,
   });
 
-  // Send private hand update to player
-  samRealtime.emitToUser(userId, 'sam:handCards', {
-    roomId: room.id,
-    handCards: player.handCards,
-  });
+  // Send private hand update to player (if human)
+  if (!player.isBot && player.userId) {
+    samRealtime.emitToUser(player.userId, 'sam:handCards', {
+      roomId: room.id,
+      handCards: player.handCards,
+    });
+  }
 
-  return getRoomDetail(room.id, userId);
+  // 9. If next player is a bot in test room, schedule bot move
+  if (room.isTest) {
+    triggerBotLifecycle(room.id);
+  }
+
+  return getRoomDetail(room.id, userOrBotId);
 }
 
-async function passTurn(roomId, userId) {
+async function passTurn(roomId, userOrBotId) {
   const room = await SamRoom.findByPk(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
@@ -555,7 +866,12 @@ async function passTurn(roomId, userId) {
     throw new Error('Trận đấu chưa bắt đầu hoặc đã kết thúc');
   }
 
-  if (Number(room.currentTurnUserId) !== Number(userId)) {
+  const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
+  if (!player) {
+    throw new Error('Người chơi không tồn tại');
+  }
+
+  if (room.currentTurnSeat !== player.seatIndex && (!player.userId || Number(room.currentTurnUserId) !== Number(player.userId))) {
     throw new Error('Chưa đến lượt của bạn để bỏ lượt');
   }
 
@@ -563,60 +879,77 @@ async function passTurn(roomId, userId) {
     throw new Error('Bạn đang là người đánh đầu vòng, không thể bỏ lượt');
   }
 
+  const playerId = player.userId ? Number(player.userId) : player.id;
   const passList = Array.isArray(room.passPlayerIds) ? [...room.passPlayerIds] : [];
-  if (!passList.includes(Number(userId))) {
-    passList.push(Number(userId));
+  if (!passList.includes(playerId)) {
+    passList.push(playerId);
   }
   room.passPlayerIds = passList;
 
-  await SamAction.create({
-    roomId: room.id,
-    userId,
-    actionType: 'PASS',
-  });
+  if (player.userId) {
+    await SamAction.create({
+      roomId: room.id,
+      userId: player.userId,
+      actionType: 'PASS',
+    }).catch(() => {});
+  }
 
   // Check if all OTHER players have passed
   const activePlayers = room.players.filter((p) => p.status === 'ACTIVE' && p.remainingCardsCount > 0);
-  const eligiblePlayers = activePlayers.filter((p) => !passList.includes(Number(p.userId)));
+  const eligiblePlayers = activePlayers.filter((p) => {
+    const pid = p.userId ? Number(p.userId) : p.id;
+    return !passList.includes(pid);
+  });
 
   if (eligiblePlayers.length <= 1) {
     // Round is finished! The last play user takes the new round
     const roundWinnerId = room.lastPlayUserId;
-    const roundWinner = room.players.find((p) => Number(p.userId) === Number(roundWinnerId)) || eligiblePlayers[0];
+    const roundWinner = room.players.find((p) => isPlayerMatch(p, roundWinnerId)) || eligiblePlayers[0] || room.players[0];
 
     room.lastPlayedCards = null;
     room.passPlayerIds = [];
     room.roundNumber += 1;
-    room.currentTurnUserId = roundWinner ? roundWinner.userId : room.hostUserId;
-    room.currentTurnSeat = roundWinner ? roundWinner.seatIndex : 0;
+    room.currentTurnUserId = roundWinner.userId || null;
+    room.currentTurnSeat = roundWinner.seatIndex;
     room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
     await room.save();
 
     samRealtime.emitToRoom(room.id, 'sam:roundReset', {
       roomId: room.id,
-      roundWinnerId: room.currentTurnUserId,
+      roundWinnerId: roundWinner.userId || roundWinner.botId,
+      roundWinnerSeat: roundWinner.seatIndex,
       roundNumber: room.roundNumber,
       turnDeadline: room.turnDeadline,
     });
 
-    return getRoomDetail(room.id, userId);
+    if (room.isTest) {
+      triggerBotLifecycle(room.id);
+    }
+
+    return getRoomDetail(room.id, userOrBotId);
   }
 
   // Next player in round
   const nextPlayer = findNextTurnPlayer(room, room.currentTurnSeat);
-  room.currentTurnUserId = nextPlayer.userId;
+  room.currentTurnUserId = nextPlayer.userId || null;
   room.currentTurnSeat = nextPlayer.seatIndex;
   room.turnDeadline = new Date(Date.now() + room.turnDurationSeconds * 1000);
   await room.save();
 
   samRealtime.emitToRoom(room.id, 'sam:pass', {
     roomId: room.id,
-    userId,
-    nextTurnUserId: nextPlayer.userId,
+    userId: player.userId || player.botId,
+    seatIndex: player.seatIndex,
+    nextTurnUserId: nextPlayer.userId || nextPlayer.botId,
+    nextTurnSeat: nextPlayer.seatIndex,
     turnDeadline: room.turnDeadline,
   });
 
-  return getRoomDetail(room.id, userId);
+  if (room.isTest) {
+    triggerBotLifecycle(room.id);
+  }
+
+  return getRoomDetail(room.id, userOrBotId);
 }
 
 // ── ROUND & TURN HELPERS ──
@@ -628,32 +961,35 @@ function findNextTurnPlayer(room, currentSeatIndex) {
   // Sort players by seat index ascending
   players.sort((a, b) => a.seatIndex - b.seatIndex);
 
-  // Search sequentially starting from next seat index (circular counter-clockwise)
-  const totalSeats = 4;
+  // Search sequentially starting from next seat index
+  const totalSeats = room.maxPlayers || 4;
   for (let step = 1; step <= totalSeats; step++) {
     const targetSeat = (currentSeatIndex + step) % totalSeats;
     const candidate = players.find((p) => p.seatIndex === targetSeat);
-    if (candidate && !passList.includes(Number(candidate.userId))) {
-      return candidate;
+    if (candidate) {
+      const cid = candidate.userId ? Number(candidate.userId) : candidate.id;
+      if (!passList.includes(cid)) {
+        return candidate;
+      }
     }
   }
 
-  // Fallback to first active player
   return players[0];
 }
 
 // ── GAME WIN & RESULT CALCULATIONS ──
 
 async function handleGameWin(room, winnerPlayer) {
-  const winnerUserId = winnerPlayer.userId;
-  const isSamWin = room.samDeclarerId && Number(room.samDeclarerId) === Number(winnerUserId);
-  const isDenSam = room.samDeclarerId && Number(room.samDeclarerId) !== Number(winnerUserId);
+  clearBotTimers(room.id);
+  const winnerUserId = winnerPlayer.userId || winnerPlayer.id;
+  const isSamWin = room.samDeclarerId && isPlayerMatch(winnerPlayer, room.samDeclarerId);
+  const isDenSam = room.samDeclarerId && !isPlayerMatch(winnerPlayer, room.samDeclarerId);
 
   let totalWinPoints = 0;
   const playerResults = [];
 
   for (const p of room.players) {
-    if (Number(p.userId) === Number(winnerUserId)) {
+    if (isPlayerMatch(p, winnerUserId)) {
       continue;
     }
 
@@ -661,14 +997,12 @@ async function handleGameWin(room, winnerPlayer) {
     let reason = 'THUA';
 
     if (isSamWin) {
-      penalty = 20; // 20 points per player when Sam is won
+      penalty = 20;
       reason = 'THUA_SAM';
-    } else if (isDenSam && Number(p.userId) === Number(room.samDeclarerId)) {
-      // Sam declarer got blocked! Pays full village penalty to the winner
+    } else if (isDenSam && isPlayerMatch(p, room.samDeclarerId)) {
       penalty = 20 * (room.players.length - 1);
       reason = 'DEN_SAM';
     } else if (!isDenSam) {
-      // Normal win: 1 point per remaining card, 15 points if burned (Cóng)
       const remaining = p.remainingCardsCount;
       if (remaining === 10) {
         penalty = 15;
@@ -681,17 +1015,18 @@ async function handleGameWin(room, winnerPlayer) {
 
     p.scoreDelta -= penalty;
     totalWinPoints += penalty;
-    p.rank = 2; // Runner up
+    p.rank = 2;
     await p.save();
 
     playerResults.push({
-      userId: p.userId,
-      name: p.user ? p.user.name : `Người chơi ${p.seatIndex + 1}`,
+      userId: p.userId || p.botId,
+      name: p.isBot ? (p.botName || `BOT-0${p.seatIndex + 1}`) : (p.user ? p.user.name : `Người chơi ${p.seatIndex + 1}`),
       seatIndex: p.seatIndex,
       remainingCards: p.remainingCardsCount,
       scoreDelta: -penalty,
       reason,
       rank: 2,
+      isBot: p.isBot || false,
     });
   }
 
@@ -700,49 +1035,52 @@ async function handleGameWin(room, winnerPlayer) {
   await winnerPlayer.save();
 
   playerResults.unshift({
-    userId: winnerPlayer.userId,
-    name: winnerPlayer.user ? winnerPlayer.user.name : `Người chơi ${winnerPlayer.seatIndex + 1}`,
+    userId: winnerPlayer.userId || winnerPlayer.botId,
+    name: winnerPlayer.isBot ? (winnerPlayer.botName || `BOT-0${winnerPlayer.seatIndex + 1}`) : (winnerPlayer.user ? winnerPlayer.user.name : `Người chơi ${winnerPlayer.seatIndex + 1}`),
     seatIndex: winnerPlayer.seatIndex,
     remainingCards: 0,
     scoreDelta: totalWinPoints,
     reason: isSamWin ? 'THANG_SAM' : 'VE_NHAT',
     rank: 1,
+    isBot: winnerPlayer.isBot || false,
   });
 
   room.status = 'FINISHED';
-  room.winnerUserId = winnerUserId;
+  room.winnerUserId = winnerPlayer.userId || null;
   room.finishedAt = new Date();
   await room.save();
 
   // Save game result
-  const gameResult = await SamResult.create({
+  await SamResult.create({
     roomId: room.id,
-    winnerUserId,
+    winnerUserId: winnerPlayer.userId || null,
     details: playerResults,
-  });
+  }).catch(() => {});
 
-  // Update user stats
-  await updateUserStats(playerResults, winnerUserId, isSamWin);
+  // STRICT DATA ISOLATION: Never update production stats for Bot Test rooms!
+  if (!room.isTest && room.roomType !== 'BOT_TEST') {
+    await updateUserStats(playerResults, winnerPlayer.userId, isSamWin);
+  }
 
   samRealtime.emitToRoom(room.id, 'sam:gameFinished', {
     roomId: room.id,
-    winnerUserId,
+    winnerUserId: winnerPlayer.userId || winnerPlayer.botId,
     results: playerResults,
     isSamWin,
+    isTest: room.isTest || false,
   });
 
-  return getRoomDetail(room.id, winnerUserId);
+  return getRoomDetail(room.id, winnerUserId, room.isTest ? 'admin' : 'user');
 }
 
 async function handleThoi2Finish(room, player, cardIds) {
-  // Ending on 2: Player receives 20 points penalty, runner up with least cards wins
+  clearBotTimers(room.id);
   const penalty = 20;
   player.scoreDelta -= penalty;
   player.rank = room.players.length;
   await player.save();
 
-  // Find candidate with lowest remaining cards
-  const otherPlayers = room.players.filter((p) => Number(p.userId) !== Number(player.userId));
+  const otherPlayers = room.players.filter((p) => !isPlayerMatch(p, player.userId || player.id));
   otherPlayers.sort((a, b) => a.remainingCardsCount - b.remainingCardsCount);
   const substituteWinner = otherPlayers[0];
 
@@ -751,49 +1089,70 @@ async function handleThoi2Finish(room, player, cardIds) {
   await substituteWinner.save();
 
   room.status = 'FINISHED';
-  room.winnerUserId = substituteWinner.userId;
+  room.winnerUserId = substituteWinner.userId || null;
   room.finishedAt = new Date();
   await room.save();
 
   const playerResults = [
     {
-      userId: substituteWinner.userId,
-      name: substituteWinner.user?.name || 'Người chơi',
+      userId: substituteWinner.userId || substituteWinner.botId,
+      name: substituteWinner.isBot ? (substituteWinner.botName || 'Bot') : (substituteWinner.user?.name || 'Người chơi'),
       seatIndex: substituteWinner.seatIndex,
       scoreDelta: penalty,
       reason: 'THANG_DO_DOI_THU_THOI_2',
       rank: 1,
+      isBot: substituteWinner.isBot || false,
     },
     {
-      userId: player.userId,
-      name: player.user?.name || 'Người chơi',
+      userId: player.userId || player.botId,
+      name: player.isBot ? (player.botName || 'Bot') : (player.user?.name || 'Người chơi'),
       seatIndex: player.seatIndex,
       scoreDelta: -penalty,
       reason: 'THOI_2',
       rank: room.players.length,
+      isBot: player.isBot || false,
     },
   ];
 
   await SamResult.create({
     roomId: room.id,
-    winnerUserId: substituteWinner.userId,
+    winnerUserId: substituteWinner.userId || null,
     details: playerResults,
-  });
+  }).catch(() => {});
 
-  await updateUserStats(playerResults, substituteWinner.userId, false);
+  if (!room.isTest && room.roomType !== 'BOT_TEST') {
+    await updateUserStats(playerResults, substituteWinner.userId, false);
+  }
 
   samRealtime.emitToRoom(room.id, 'sam:gameFinished', {
     roomId: room.id,
-    winnerUserId: substituteWinner.userId,
+    winnerUserId: substituteWinner.userId || substituteWinner.botId,
     results: playerResults,
     isThoi2: true,
+    isTest: room.isTest || false,
   });
 
-  return getRoomDetail(room.id, player.userId);
+  return getRoomDetail(room.id, player.userId || player.id, room.isTest ? 'admin' : 'user');
+}
+
+async function finishMatch(roomId, winnerId, reason = 'NORMAL') {
+  const room = await SamRoom.findByPk(roomId, {
+    include: [{ model: SamPlayer, as: 'players' }],
+  });
+  if (!room) return;
+  const winner = room.players.find((p) => isPlayerMatch(p, winnerId)) || room.players[0];
+  if (winner) {
+    return handleGameWin(room, winner);
+  }
 }
 
 async function updateUserStats(playerResults, winnerUserId, isSamWin) {
   for (const pr of playerResults) {
+    // Strictly ignore bot players
+    if (pr.isBot || !pr.userId || typeof pr.userId === 'string' && pr.userId.startsWith('BOT')) {
+      continue;
+    }
+
     const isWinner = Number(pr.userId) === Number(winnerUserId);
     const [stat] = await SamUserStat.findOrCreate({
       where: { userId: pr.userId },
@@ -830,16 +1189,16 @@ async function updateUserStats(playerResults, winnerUserId, isSamWin) {
   }
 }
 
-// ── GET ROOM DETAIL (SECURITY & RECONNECT SAFE) ──
+// ── GET ROOM DETAIL (SECURITY & SPECTATOR & RECONNECT SAFE) ──
 
-async function getRoomDetail(roomId, requestingUserId) {
+async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'user') {
   const room = await SamRoom.findByPk(roomId, {
     include: [
-      { model: User, as: 'host', attributes: ['id', 'name', 'email', 'jobTitle', 'department'] },
+      { model: User, as: 'host', attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'role'] },
       {
         model: SamPlayer,
         as: 'players',
-        include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId'] }],
+        include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId', 'role'] }],
       },
       { model: SamResult, as: 'result' },
     ],
@@ -849,17 +1208,42 @@ async function getRoomDetail(roomId, requestingUserId) {
     throw new Error('Phòng không tồn tại');
   }
 
-  // Format players securely: NEVER expose opponent hand cards!
+  // Security: Non-admins cannot access bot test rooms
+  if (room.isTest && requestingUserRole !== 'admin') {
+    if (requestingUserId && Number(room.hostUserId) === Number(requestingUserId)) {
+      // Host is admin
+    } else {
+      const error = new Error('Bạn không có quyền truy cập phòng thử nghiệm');
+      error.status = 403;
+      throw error;
+    }
+  }
+
+  // Determine if requesting user is a player or spectator
+  const isPlayer = room.players.some((p) => p.userId && requestingUserId && Number(p.userId) === Number(requestingUserId));
+  const isSpectator = !isPlayer;
+
   let myHandCards = [];
   const sanitizedPlayers = room.players.map((p) => {
-    const isMe = requestingUserId && Number(p.userId) === Number(requestingUserId);
+    const isMe = p.userId && requestingUserId && Number(p.userId) === Number(requestingUserId);
     if (isMe) {
       myHandCards = p.handCards || [];
     }
 
+    const userObj = p.isBot
+      ? {
+          id: `bot_${p.seatIndex + 1}`,
+          name: p.botName || `BOT_TEST_0${p.seatIndex + 1}`,
+          jobTitle: 'Test Bot',
+          department: 'QA & Testing',
+          isBot: true,
+          botId: p.botId,
+        }
+      : p.user;
+
     return {
       id: p.id,
-      userId: p.userId,
+      userId: p.userId || `bot_${p.seatIndex + 1}`,
       seatIndex: p.seatIndex,
       remainingCardsCount: p.remainingCardsCount,
       status: p.status,
@@ -867,9 +1251,12 @@ async function getRoomDetail(roomId, requestingUserId) {
       isBaoMot: p.isBaoMot,
       scoreDelta: p.scoreDelta,
       rank: p.rank,
-      user: p.user,
+      user: userObj,
       isHost: Number(room.hostUserId) === Number(p.userId),
-      // Opponent cards are masked completely
+      isBot: p.isBot || false,
+      botId: p.botId,
+      playerType: p.playerType,
+      // Private Hand Security: Opponents and Spectators NEVER receive handCards!
       handCards: isMe ? p.handCards : undefined,
     };
   });
@@ -892,13 +1279,21 @@ async function getRoomDetail(roomId, requestingUserId) {
       passPlayerIds: room.passPlayerIds || [],
       samDeclarerId: room.samDeclarerId,
       samPhase: room.samPhase,
+      roomType: room.roomType || 'LIVE',
+      isTest: room.isTest || false,
+      botDifficulty: room.botDifficulty || 'NORMAL',
+      botPaused: room.botPaused || false,
+      testScenario: room.testScenario,
+      spectatorCount: samRealtime.getSpectatorCount(room.id),
       winnerUserId: room.winnerUserId,
       startedAt: room.startedAt,
       finishedAt: room.finishedAt,
       host: room.host,
     },
     players: sanitizedPlayers,
-    myHandCards,
+    myHandCards: isSpectator ? [] : myHandCards,
+    isSpectator,
+    spectatorCount: samRealtime.getSpectatorCount(room.id),
     result: room.result ? room.result.details : null,
   };
 }
@@ -914,7 +1309,7 @@ async function getActiveRoom(userId) {
       {
         model: SamRoom,
         as: 'room',
-        where: { status: { [Op.in]: ['WAITING', 'PLAYING'] } },
+        where: { status: { [Op.in]: ['WAITING', 'PLAYING'] }, isTest: false },
       },
     ],
   });
@@ -924,6 +1319,198 @@ async function getActiveRoom(userId) {
   }
 
   return getRoomDetail(activePlayer.room.id, userId);
+}
+
+// ── BOT AUTOMATION & LIFECYCLE ──
+
+function triggerBotLifecycle(roomId) {
+  scheduleBotTimer(
+    roomId,
+    async () => {
+      const room = await SamRoom.findByPk(roomId, {
+        include: [{ model: SamPlayer, as: 'players' }],
+      });
+
+      if (!room || room.status !== 'PLAYING' || room.botPaused) {
+        return;
+      }
+
+      // 1. Sâm declaration phase for bots
+      if (room.samPhase === 'SAM_DECLARING') {
+        const undecidedBots = room.players.filter(
+          (p) => p.isBot && p.hasDeclaredSam === null
+        );
+
+        if (undecidedBots.length > 0) {
+          const bot = undecidedBots[0];
+          const shouldDeclare = samBotAI.decideSam(bot.handCards, room.botDifficulty);
+          await declareSam(room.id, bot.botId || bot.id, shouldDeclare);
+          return;
+        }
+      }
+
+      // 2. Playing turn phase for bot at current turn
+      if (room.samPhase === 'PLAYING') {
+        const currentSeat = room.currentTurnSeat;
+        const currentBot = room.players.find(
+          (p) => p.seatIndex === currentSeat && p.isBot && p.status === 'ACTIVE'
+        );
+
+        if (!currentBot) return;
+
+        const anyOpponentBaoMot = room.players.some(
+          (p) => p.seatIndex !== currentSeat && p.isBaoMot
+        );
+
+        const move = samBotAI.chooseMove(
+          currentBot.handCards,
+          room.lastPlayedCards,
+          anyOpponentBaoMot,
+          room.botDifficulty
+        );
+
+        samRealtime.emitToRoom(room.id, 'sam:botDebug', {
+          botId: currentBot.botId,
+          seatIndex: currentBot.seatIndex,
+          action: move.action,
+          cardIds: move.cardIds,
+          comboName: move.combo?.name,
+          decisionReason: move.decisionReason,
+          legalMoveCount: move.allLegalMoves?.length || 0,
+        });
+
+        if (move.action === 'PLAY' && move.cardIds && move.cardIds.length > 0) {
+          await playCards(room.id, currentBot.botId || currentBot.id, move.cardIds);
+        } else {
+          await passTurn(room.id, currentBot.botId || currentBot.id);
+        }
+      }
+    },
+    // Random natural delay between 600ms and 1400ms
+    process.env.NODE_ENV === 'test' ? 50 : Math.floor(Math.random() * 800) + 600
+  );
+}
+
+// ── ADMIN BOT TEST CONTROLS ──
+
+async function fillBots(roomId, adminUserId) {
+  const room = await SamRoom.findByPk(roomId, {
+    include: [{ model: SamPlayer, as: 'players' }],
+  });
+
+  if (!room) throw new Error('Phòng không tồn tại');
+  if (!room.isTest) throw new Error('Chỉ có thể thêm bot vào phòng Bot Test');
+
+  const takenSeats = room.players.map((p) => p.seatIndex);
+  for (let s = 0; s < room.maxPlayers; s++) {
+    if (!takenSeats.includes(s)) {
+      await SamPlayer.create({
+        roomId: room.id,
+        userId: null,
+        seatIndex: s,
+        handCards: [],
+        remainingCardsCount: 0,
+        status: 'WAITING',
+        playerType: 'BOT',
+        isBot: true,
+        botId: `BOT_TEST_0${s + 1}`,
+        botName: `BOT-0${s + 1}`,
+      });
+    }
+  }
+
+  const detail = await getRoomDetail(room.id, adminUserId, 'admin');
+  samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+  return detail;
+}
+
+async function pauseBotTest(roomId, adminUserId) {
+  const room = await SamRoom.findByPk(roomId);
+  if (!room) throw new Error('Phòng không tồn tại');
+  room.botPaused = true;
+  await room.save();
+  clearBotTimers(room.id);
+  const detail = await getRoomDetail(room.id, adminUserId, 'admin');
+  samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+  return detail;
+}
+
+async function resumeBotTest(roomId, adminUserId) {
+  const room = await SamRoom.findByPk(roomId);
+  if (!room) throw new Error('Phòng không tồn tại');
+  room.botPaused = false;
+  await room.save();
+  triggerBotLifecycle(room.id);
+  const detail = await getRoomDetail(room.id, adminUserId, 'admin');
+  samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+  return detail;
+}
+
+async function stepBotTest(roomId, adminUserId) {
+  const room = await SamRoom.findByPk(roomId, {
+    include: [{ model: SamPlayer, as: 'players' }],
+  });
+  if (!room || room.status !== 'PLAYING') throw new Error('Trận đấu chưa bắt đầu');
+
+  const currentBot = room.players.find(
+    (p) => p.seatIndex === room.currentTurnSeat && p.isBot
+  );
+  if (!currentBot) throw new Error('Lượt hiện tại không phải của Bot');
+
+  const anyOpponentBaoMot = room.players.some((p) => p.seatIndex !== room.currentTurnSeat && p.isBaoMot);
+  const move = samBotAI.chooseMove(currentBot.handCards, room.lastPlayedCards, anyOpponentBaoMot, room.botDifficulty);
+
+  if (move.action === 'PLAY' && move.cardIds) {
+    return playCards(room.id, currentBot.botId || currentBot.id, move.cardIds);
+  }
+  return passTurn(room.id, currentBot.botId || currentBot.id);
+}
+
+async function restartBotTest(roomId, adminUserId) {
+  clearBotTimers(roomId);
+  return startMatch(roomId, adminUserId, true);
+}
+
+async function stopBotTest(roomId, adminUserId) {
+  clearBotTimers(roomId);
+  const room = await SamRoom.findByPk(roomId);
+  if (room) {
+    room.status = 'ABANDONED';
+    await room.save();
+    samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: null });
+  }
+  return { success: true };
+}
+
+async function getBotDebugState(roomId, adminUserId) {
+  const room = await SamRoom.findByPk(roomId, {
+    include: [
+      {
+        model: SamPlayer,
+        as: 'players',
+        include: [{ model: User, as: 'user', attributes: ['id', 'name'] }],
+      },
+    ],
+  });
+  if (!room) throw new Error('Phòng không tồn tại');
+
+  return {
+    roomId: room.id,
+    status: room.status,
+    samPhase: room.samPhase,
+    currentTurnSeat: room.currentTurnSeat,
+    botPaused: room.botPaused,
+    lastPlayedCards: room.lastPlayedCards,
+    players: room.players.map((p) => ({
+      seatIndex: p.seatIndex,
+      isBot: p.isBot,
+      botId: p.botId,
+      name: p.isBot ? p.botName : p.user?.name,
+      handCards: p.handCards,
+      remainingCardsCount: p.remainingCardsCount,
+      legalMoves: samBotAI.getLegalMoves(p.handCards, room.lastPlayedCards),
+    })),
+  };
 }
 
 // ── LEADERBOARD & STATS ──
@@ -989,6 +1576,7 @@ async function getMyStats(userId) {
 module.exports = {
   listRooms,
   createRoom,
+  createBotTestRoom,
   joinRoom,
   leaveRoom,
   startMatch,
@@ -997,6 +1585,14 @@ module.exports = {
   passTurn,
   getRoomDetail,
   getActiveRoom,
+  fillBots,
+  pauseBotTest,
+  resumeBotTest,
+  stepBotTest,
+  restartBotTest,
+  stopBotTest,
+  getBotDebugState,
   getLeaderboard,
   getMyStats,
+  finishMatch,
 };

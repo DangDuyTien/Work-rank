@@ -233,7 +233,6 @@ async function getById(req, res) {
           teamId: ytRow.teamId,
           teamName: ytRow.teamName,
           channelsCount: ytRow.channelsCount,
-          videosCount: ytRow.videosCount,
           totalViews: ytRow.totalViews,
           totalSubscribers: ytRow.totalSubscribers,
           viewsGrowth30dPct: ytRow.viewsGrowth30dPct,

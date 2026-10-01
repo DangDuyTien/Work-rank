@@ -130,11 +130,6 @@ export default function AdminTeamsYouTube() {
   // Channel Detail Modal State
   const [selectedChannelDetail, setSelectedChannelDetail] = useState(null);
 
-  // Insights State
-  const [topVideos, setTopVideos] = useState([]);
-  const [videoTimeframe, setVideoTimeframe] = useState('30d');
-  const [loadingVideos, setLoadingVideos] = useState(false);
-
   // Load All Data
   const loadData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -176,25 +171,6 @@ export default function AdminTeamsYouTube() {
       window.removeEventListener('workrank:user-updated', handleUpdate);
     };
   }, [loadData]);
-
-  // Load Top Videos for Insights Tab
-  const loadTopVideos = useCallback(async () => {
-    setLoadingVideos(true);
-    try {
-      const res = await youtube.getTopVideos({ timeframe: videoTimeframe, limit: 30 });
-      setTopVideos(res.items || res.videos || []);
-    } catch (err) {
-      console.error('Failed to load top videos:', err);
-    } finally {
-      setLoadingVideos(false);
-    }
-  }, [videoTimeframe]);
-
-  useEffect(() => {
-    if (activeTab === 'insights') {
-      loadTopVideos();
-    }
-  }, [activeTab, loadTopVideos]);
 
   // ─── TEAM HANDLERS ──────────────────────────────────────────────────────────
 
@@ -634,7 +610,6 @@ export default function AdminTeamsYouTube() {
           options={[
             { key: 'channels', label: `Kênh YouTube & Đồng Bộ (${channels.length})` },
             { key: 'teams', label: `Đội Nhóm & Phòng Ban (${teams.length})` },
-            { key: 'insights', label: 'Top Video & Hiệu Suất' },
           ]}
           value={activeTab}
           onChange={setActiveTab}
@@ -873,8 +848,12 @@ export default function AdminTeamsYouTube() {
                           {/* 1. Channel Info */}
                           <td style={{ padding: '12px 14px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
-                                <Tv size={18} />
+                              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>
+                                {ch.thumbnailUrl ? (
+                                  <img src={ch.thumbnailUrl} alt={ch.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                  <Tv size={18} />
+                                )}
                               </div>
                               <div>
                                 <div
@@ -920,7 +899,7 @@ export default function AdminTeamsYouTube() {
                                 cursor: linkingChannelId === ch.id ? 'not-allowed' : 'pointer',
                               }}
                             >
-                              <option value="">-- Chưa gán đội --</option>
+                              <option value="">-- Chưa gán đội (Độc lập) --</option>
                               {teams.map((t) => (
                                 <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
                               ))}
@@ -928,12 +907,12 @@ export default function AdminTeamsYouTube() {
                           </td>
 
                           {/* 3. Views */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', fontSize: 13 }}>
                             {fmtNum(ch.views || 0)}
                           </td>
 
                           {/* 4. Subs */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#16a34a', fontSize: 13 }}>
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#16a34a', fontSize: 13 }}>
                             {fmtNum(ch.subscribers || 0)}
                           </td>
 
@@ -1174,96 +1153,6 @@ export default function AdminTeamsYouTube() {
             )}
           </div>
         )}
-
-        {/* ══════════════════════════════════════════════════════════════════════
-            TAB 3: TOP VIDEOS & PRODUCTION INSIGHTS
-           ══════════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'insights' && (
-          <div style={{ display: 'grid', gap: 14 }}>
-            {/* Filter Bar */}
-            <div style={{ ...CARD, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Flame size={18} color="#ef4444" />
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Top Video Xuất Sắc Toàn Công Ty</span>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[
-                  ['7d', '7 Ngày Gần Nhất'],
-                  ['30d', '30 Ngày'],
-                  ['all', 'Toàn Thời Gian'],
-                ].map(([tf, label]) => (
-                  <button
-                    key={tf}
-                    type="button"
-                    onClick={() => setVideoTimeframe(tf)}
-                    style={{
-                      padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                      border: videoTimeframe === tf ? '1px solid #ef4444' : '1px solid rgba(15,23,42,0.1)',
-                      background: videoTimeframe === tf ? '#ef4444' : '#ffffff',
-                      color: videoTimeframe === tf ? '#ffffff' : '#64748b',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Videos Grid */}
-            {loadingVideos ? (
-              <TableSkeleton rows={6} />
-            ) : topVideos.length === 0 ? (
-              <Card style={{ padding: 40, textAlign: 'center' }}>
-                <EmptyState title="Chưa có dữ liệu video" description="Hãy đồng bộ các kênh YouTube để kéo danh sách video xuất sắc về hệ thống." />
-              </Card>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
-                {topVideos.map((vid, idx) => (
-                  <div key={vid.id || idx} style={{ ...CARD, padding: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{
-                      width: 32, height: 32, flexShrink: 0, background: idx < 3 ? '#ef4444' : '#f1f5f9',
-                      color: idx < 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 700, fontSize: 13,
-                    }}>
-                      #{idx + 1}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {vid.title}
-                      </h4>
-                      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
-                        Kênh: <strong>{vid.channel?.title || vid.channelTitle || 'YouTube'}</strong> {vid.channel?.team?.name && `· Đội: ${vid.channel.team.name}`}
-                      </div>
-                      <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 12 }}>
-                        <span style={{ fontWeight: 700, color: '#ef4444' }}>
-                          {fmtNum(vid.views || 0)} views
-                        </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#64748b' }}>
-                          <ThumbsUp size={12} />
-                          <span>{fmtNum(vid.likes || 0)}</span>
-                        </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#64748b' }}>
-                          <MessageSquare size={12} />
-                          <span>{fmtNum(vid.comments || 0)}</span>
-                        </span>
-                        {vid.videoId && (
-                          <a
-                            href={`https://www.youtube.com/watch?v=${vid.videoId}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ marginLeft: 'auto', color: '#b45309', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, textDecoration: 'none', fontWeight: 600 }}
-                          >
-                            Xem <ExternalLink size={11} />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </TabTransition>
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -1291,7 +1180,7 @@ export default function AdminTeamsYouTube() {
 
             <div style={{ padding: 20, overflowY: 'auto', display: 'grid', gap: 16 }}>
               {/* Snapshot Tiles */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Views</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>
@@ -1302,12 +1191,6 @@ export default function AdminTeamsYouTube() {
                   <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#16a34a', marginTop: 4 }}>
                     {fmtNum(selectedChannelDetail.subscribers || 0)}
-                  </div>
-                </div>
-                <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Videos</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#8b5cf6', marginTop: 4 }}>
-                    {selectedChannelDetail.videosCount || 0}
                   </div>
                 </div>
               </div>

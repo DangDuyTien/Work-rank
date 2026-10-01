@@ -375,15 +375,13 @@ export default function Dashboard() {
 
       <CompetitionProgressWidget />
 
-      {/* YOUTUBE PERFORMANCE CARD */}
+      {/* YOUTUBE PERFORMANCE CARD (HIERARCHICAL SCOPE) */}
       {teamYouTube && (
         <section
           style={{
             background: '#ffffff',
-            border: '1px solid rgba(0,0,0,0.08)',
-            borderRadius: 10,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-            padding: '18px 22px',
+            border: '1px solid #e2e8f0',
+            padding: '18px 20px',
             marginBottom: 20,
             display: 'flex',
             alignItems: 'center',
@@ -395,81 +393,112 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: 8,
-                background: 'rgba(185,28,28,0.08)',
-                color: '#b91c1c',
+                width: 44,
+                height: 44,
+                background: '#fee2e2',
+                color: '#ef4444',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <Tv size={20} />
+              <Tv size={22} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: '#111111' }}>
-                  {teamYouTube.team?.name ? `Thành Tích YouTube: ${teamYouTube.team.name}` : 'YouTube Studio Toàn Công Ty'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
+                  {teamYouTube.team?.name ? `YouTube: ${teamYouTube.team.name}` : 'YouTube Studio — Toàn Công Ty'}
+                </span>
+                <span
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    background: teamYouTube.team?.name ? '#e0e7ff' : '#ecfdf5',
+                    color: teamYouTube.team?.name ? '#4338ca' : '#047857',
+                    border: `1px solid ${teamYouTube.team?.name ? '#c7d2fe' : '#a7f3d0'}`,
+                  }}
+                >
+                  {teamYouTube.team?.name ? 'Cấp 2: Đội Nhóm' : 'Cấp 1: Toàn Công Ty'}
                 </span>
                 {teamYouTube.summary?.rankByViews && (
-                  <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(185,28,28,0.08)', color: '#b91c1c', fontSize: 11, fontWeight: 600 }}>
+                  <span style={{ padding: '2px 8px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontSize: 11, fontWeight: 700 }}>
                     Hạng #{teamYouTube.summary.rankByViews}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#666666', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
                 {teamYouTube.summary
-                  ? `${teamYouTube.channels?.length || teamYouTube.summary.channelsCount || 0} kênh • ${teamYouTube.summary.videosCount || 0} video xuất bản`
-                  : `${teamYouTube.kpis?.totalChannels || 0} kênh hoạt động • ${teamYouTube.kpis?.totalVideos || 0} video`}
+                  ? `${teamYouTube.channels?.length || teamYouTube.summary.channelsCount || 0} kênh thuộc đội`
+                  : `${teamYouTube.kpis?.totalChannels || 0} kênh (${teamYouTube.kpis?.totalTeams || 0} teams${teamYouTube.kpis?.unassignedChannelsCount ? ` • ${teamYouTube.kpis.unassignedChannelsCount} chưa gán` : ''})`}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#111111' }}>
+              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
                 {formatNum(teamYouTube.summary?.totalViews ?? teamYouTube.kpis?.totalViews ?? 0)}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>SUBSCRIBERS</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#111111' }}>
+              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>SUBSCRIBERS</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
                 {formatNum(teamYouTube.summary?.totalSubscribers ?? teamYouTube.kpis?.totalSubscribers ?? 0)}
               </div>
             </div>
-            {teamYouTube.summary && (
+            {(teamYouTube.summary || teamYouTube.kpis) && (
               <div>
-                <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>TĂNG TRƯỞNG 30D</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#15803d' }}>
-                  +{teamYouTube.summary.viewsGrowth30dPct || 0}%
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>TĂNG TRƯỞNG (30D)</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: Number(teamYouTube.summary?.viewsGrowth30dPct ?? teamYouTube.kpis?.viewsGrowth30dPct ?? 0) >= 0 ? '#10b981' : '#ef4444' }}>
+                  {Number(teamYouTube.summary?.viewsGrowth30dPct ?? teamYouTube.kpis?.viewsGrowth30dPct ?? 0) >= 0 ? '+' : ''}
+                  {teamYouTube.summary?.viewsGrowth30dPct ?? teamYouTube.kpis?.viewsGrowth30dPct ?? 0}%
                 </div>
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => navigate('/rankings?scope=youtube')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 14px',
-                background: '#ffffff',
-                border: '1px solid rgba(0,0,0,0.12)',
-                borderRadius: 6,
-                color: '#111111',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
-            >
-              <span>Xem BXH YouTube</span>
-              <ChevronRight size={14} />
-            </button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/youtube')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '7px 12px',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#334155',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>Studio Hub</span>
+                <ChevronRight size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/rankings?scope=youtube')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '7px 12px',
+                  background: '#0f172a',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>Xem BXH</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
           </div>
         </section>
       )}

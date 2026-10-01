@@ -22,6 +22,9 @@ router.post('/rooms/:id/start', asyncHandler(controller.startGame));
 // Gameplay Actions
 router.post('/rooms/:id/answer', asyncHandler(controller.submitAnswer));
 
+// Sets for Room Creation
+router.get('/sets', asyncHandler(controller.listActiveSets));
+
 // Leaderboard & Stats
 router.get('/leaderboard', asyncHandler(controller.getLeaderboard));
 router.get('/my-stats', asyncHandler(controller.getMyStats));

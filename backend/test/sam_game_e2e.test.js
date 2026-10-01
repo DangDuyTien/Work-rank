@@ -23,11 +23,11 @@ test('Comprehensive Sam Lốc V1 Full Vertical Slice E2E Test Suite', async (t) 
   let testRoomId = null;
 
   before(async () => {
-    await SamRoom.sync();
-    await SamPlayer.sync();
-    await SamAction.sync();
-    await SamResult.sync();
-    await SamUserStat.sync();
+    await SamRoom.sync({ alter: true });
+    await SamPlayer.sync({ alter: true });
+    await SamAction.sync({ alter: true });
+    await SamResult.sync({ alter: true });
+    await SamUserStat.sync({ alter: true });
 
     const ts = Date.now();
     hostUser = await User.create({

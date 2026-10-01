@@ -4,9 +4,7 @@ const { Op } = require('sequelize');
 const {
   Team,
   YouTubeChannel,
-  YouTubeVideo,
   YouTubeChannelMetric,
-  YouTubeVideoMetric,
   TeamYouTubeSummary,
   sequelize,
 } = require('../../models');
@@ -46,7 +44,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       defaults: {
         teamId,
         channelsCount: 0,
-        videosCount: 0,
         totalViews: 0,
         totalSubscribers: 0,
         viewsToday: 0,
@@ -57,9 +54,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         subscriberGrowth30d: 0,
         viewsGrowth30dPct: 0.0,
         subGrowth30dPct: 0.0,
-        topVideoId: null,
-        topVideoTitle: null,
-        topVideoViews: 0,
         rankByViews: 0,
         rankBySubs: 0,
         rankByGrowth: 0,
@@ -72,7 +66,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
     return summary.update(
       {
         channelsCount: 0,
-        videosCount: 0,
         totalViews: 0,
         totalSubscribers: 0,
         viewsToday: 0,
@@ -83,9 +76,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         subscriberGrowth30d: 0,
         viewsGrowth30dPct: 0.0,
         subGrowth30dPct: 0.0,
-        topVideoId: null,
-        topVideoTitle: null,
-        topVideoViews: 0,
       },
       options,
     );
@@ -177,12 +167,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
     }
   }
 
-  // Count videos
-  const videosCount = await YouTubeVideo.count({
-    where: { channelId: { [Op.in]: channelIds }, status: 'ACTIVE' },
-    transaction: options.transaction,
-  });
-
   // Calculate percentage growths safely (clamped to DECIMAL(10,4) limit [-999999.9999, 999999.9999])
   const baselineViews30d = Math.max(0, totalViews - views30d);
   const rawViewsGrowth = baselineViews30d > 0 ? (views30d / baselineViews30d) * 100 : (totalViews > 0 ? 100.0 : 0.0);
@@ -191,33 +175,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
   const baselineSubs30d = Math.max(0, totalSubscribers - subscriberGrowth30d);
   const rawSubGrowth = baselineSubs30d > 0 ? (subscriberGrowth30d / baselineSubs30d) * 100 : (totalSubscribers > 0 ? 100.0 : 0.0);
   const subGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawSubGrowth)).toFixed(4));
-
-  // Top Video across team channels
-  const topVideoRecord = await YouTubeVideo.findAll({
-    where: { channelId: { [Op.in]: channelIds }, status: 'ACTIVE' },
-    include: [
-      {
-        model: YouTubeVideoMetric,
-        as: 'metrics',
-        limit: 1,
-        order: [['capturedAt', 'DESC']],
-      },
-    ],
-    transaction: options.transaction,
-  });
-
-  let topVideoId = null;
-  let topVideoTitle = null;
-  let topVideoViews = 0;
-
-  for (const v of topVideoRecord) {
-    const vViews = v.metrics && v.metrics.length > 0 ? Number(v.metrics[0].views) : 0;
-    if (vViews >= topVideoViews) {
-      topVideoViews = vViews;
-      topVideoId = v.id;
-      topVideoTitle = v.title;
-    }
-  }
 
   // Freshness status calculation
   let freshnessStatus = 'FRESH';
@@ -232,7 +189,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
     defaults: {
       teamId,
       channelsCount,
-      videosCount,
       totalViews,
       totalSubscribers,
       viewsToday,
@@ -243,9 +199,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       subscriberGrowth30d,
       viewsGrowth30dPct,
       subGrowth30dPct,
-      topVideoId,
-      topVideoTitle,
-      topVideoViews,
       freshnessStatus,
       lastSyncedAt,
     },
@@ -255,7 +208,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
   await summary.update(
     {
       channelsCount,
-      videosCount,
       totalViews,
       totalSubscribers,
       viewsToday,
@@ -266,9 +218,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       subscriberGrowth30d,
       viewsGrowth30dPct,
       subGrowth30dPct,
-      topVideoId,
-      topVideoTitle,
-      topVideoViews,
       freshnessStatus,
       lastSyncedAt,
     },
@@ -347,12 +296,10 @@ async function getCompanyYouTubeOverview() {
 
   let totalViews = 0;
   let totalSubscribers = 0;
-  let totalVideos = 0;
   let totalChannels = allChannels.length;
   let unassignedChannelsCount = 0;
   let unassignedViews = 0;
   let unassignedSubscribers = 0;
-  let unassignedVideos = 0;
   let companyViews30d = 0;
   let latestSync = null;
   let hasStale = false;
@@ -375,16 +322,13 @@ async function getCompanyYouTubeOverview() {
     if (latestMetric) {
       const cViews = Number(latestMetric.views || 0);
       const cSubs = Number(latestMetric.subscribers || 0);
-      const cVideos = Number(latestMetric.videosCount || 0);
 
       totalViews += cViews;
       totalSubscribers += cSubs;
-      totalVideos += cVideos;
 
       if (isUnassigned) {
         unassignedViews += cViews;
         unassignedSubscribers += cSubs;
-        unassignedVideos += cVideos;
       }
 
       // Calculate 30d views delta for this channel
@@ -401,14 +345,6 @@ async function getCompanyYouTubeOverview() {
         companyViews30d += cViews;
       }
     }
-  }
-
-  // Count active videos across all channels if metric videosCount is 0
-  const actualVideosCount = await YouTubeVideo.count({
-    where: { status: 'ACTIVE' },
-  });
-  if (actualVideosCount > totalVideos) {
-    totalVideos = actualVideosCount;
   }
 
   // Company 30D views growth percentage
@@ -456,13 +392,11 @@ async function getCompanyYouTubeOverview() {
     kpis: {
       totalViews,
       totalSubscribers,
-      totalVideos,
       totalChannels,
       totalTeams: summaries.length,
       unassignedChannelsCount,
       unassignedViews,
       unassignedSubscribers,
-      unassignedVideos,
       viewsGrowth30dPct,
       freshnessStatus,
       lastSyncedAt: latestSync,
@@ -473,7 +407,6 @@ async function getCompanyYouTubeOverview() {
       totalChannels: unassignedChannelsCount,
       totalViews: unassignedViews,
       totalSubscribers: unassignedSubscribers,
-      totalVideos: unassignedVideos,
     },
   };
 }
@@ -509,42 +442,6 @@ async function getTeamYouTubeDetails(teamId) {
   });
 
   const channelIds = channels.map((c) => c.id);
-
-  // Top 10 videos
-  const topVideos = await YouTubeVideo.findAll({
-    where: { channelId: { [Op.in]: channelIds.length > 0 ? channelIds : [-1] }, status: 'ACTIVE' },
-    include: [
-      {
-        model: YouTubeVideoMetric,
-        as: 'metrics',
-        limit: 1,
-        order: [['capturedAt', 'DESC']],
-      },
-      {
-        model: YouTubeChannel,
-        as: 'channel',
-        attributes: ['id', 'title', 'channelId'],
-      },
-    ],
-  });
-
-  const formattedVideos = topVideos
-    .map((v) => {
-      const metric = v.metrics && v.metrics.length > 0 ? v.metrics[0] : null;
-      return {
-        id: v.id,
-        videoId: v.videoId,
-        title: v.title,
-        publishedAt: v.publishedAt,
-        thumbnailUrl: v.thumbnailUrl,
-        channelTitle: v.channel ? v.channel.title : '',
-        views: metric ? Number(metric.views) : 0,
-        likes: metric ? Number(metric.likes) : 0,
-        comments: metric ? Number(metric.comments) : 0,
-      };
-    })
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 10);
 
   // 30D historical snapshots
   const t30d = new Date(Date.now() - 30 * 86400000);
@@ -585,10 +482,8 @@ async function getTeamYouTubeDetails(teamId) {
         lastSyncError: c.lastSyncError,
         views: m ? Number(m.views) : 0,
         subscribers: m ? Number(m.subscribers) : 0,
-        videosCount: m ? Number(m.videosCount) : 0,
       };
     }),
-    topVideos: formattedVideos,
     history,
   };
 }
@@ -607,7 +502,6 @@ async function compareTeams(teamIdA, teamIdB) {
       id: dataA.team.id,
       name: dataA.team.name,
       channelsCount: Number(dataA.summary.channelsCount),
-      videosCount: Number(dataA.summary.videosCount),
       totalViews: Number(dataA.summary.totalViews),
       totalSubscribers: Number(dataA.summary.totalSubscribers),
       views7d: Number(dataA.summary.views7d),
@@ -615,15 +509,12 @@ async function compareTeams(teamIdA, teamIdB) {
       subscriberGrowth30d: Number(dataA.summary.subscriberGrowth30d),
       viewsGrowth30dPct: Number(dataA.summary.viewsGrowth30dPct),
       subGrowth30dPct: Number(dataA.summary.subGrowth30dPct),
-      topVideoTitle: dataA.summary.topVideoTitle,
-      topVideoViews: Number(dataA.summary.topVideoViews),
       rankByViews: dataA.summary.rankByViews,
     },
     teamB: {
       id: dataB.team.id,
       name: dataB.team.name,
       channelsCount: Number(dataB.summary.channelsCount),
-      videosCount: Number(dataB.summary.videosCount),
       totalViews: Number(dataB.summary.totalViews),
       totalSubscribers: Number(dataB.summary.totalSubscribers),
       views7d: Number(dataB.summary.views7d),
@@ -631,64 +522,207 @@ async function compareTeams(teamIdA, teamIdB) {
       subscriberGrowth30d: Number(dataB.summary.subscriberGrowth30d),
       viewsGrowth30dPct: Number(dataB.summary.viewsGrowth30dPct),
       subGrowth30dPct: Number(dataB.summary.subGrowth30dPct),
-      topVideoTitle: dataB.summary.topVideoTitle,
-      topVideoViews: Number(dataB.summary.topVideoViews),
       rankByViews: dataB.summary.rankByViews,
     },
   };
 }
 
+
+
 /**
- * Get YouTube Team Leaderboard (paginated, sorted by metric)
+ * Get YouTube Team Leaderboard (ranks all teams by YouTube aggregated metrics)
  */
 async function getYouTubeTeamLeaderboard(params = {}) {
-  const { sortBy = 'views', limit = 50, page = 1 } = params;
-  const offset = (Number(page) - 1) * Number(limit);
+  const {
+    sortBy = 'views',
+    search = '',
+    limit = 50,
+    page = 1,
+  } = params;
 
-  let order;
-  if (sortBy === 'subscribers') {
-    order = [['rankBySubs', 'ASC'], ['totalSubscribers', 'DESC']];
-  } else if (sortBy === 'growth') {
-    order = [['rankByGrowth', 'ASC'], ['viewsGrowth30dPct', 'DESC']];
-  } else {
-    order = [['rankByViews', 'ASC'], ['totalViews', 'DESC']];
-  }
-
-  const { rows, count } = await TeamYouTubeSummary.findAndCountAll({
+  let summaries = await TeamYouTubeSummary.findAll({
     include: [{ model: Team, as: 'team', attributes: ['id', 'name', 'description'] }],
-    order,
-    limit: Number(limit),
-    offset,
   });
 
+  if (summaries.length === 0) {
+    await recalculateAllTeamYouTubeSummaries();
+    summaries = await TeamYouTubeSummary.findAll({
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name', 'description'] }],
+    });
+  }
+
+  let formatted = summaries.map((s) => ({
+    teamId: s.teamId,
+    teamName: s.team ? s.team.name : `Team ${s.teamId}`,
+    team: s.team ? { id: s.team.id, name: s.team.name, description: s.team.description } : null,
+    channelsCount: Number(s.channelsCount || 0),
+    totalViews: Number(s.totalViews || 0),
+    totalSubscribers: Number(s.totalSubscribers || 0),
+    views30d: Number(s.views30d || 0),
+    subscriberGrowth30d: Number(s.subscriberGrowth30d || 0),
+    viewsGrowth30dPct: Number(s.viewsGrowth30dPct || 0),
+    subGrowth30dPct: Number(s.subGrowth30dPct || 0),
+    lastSyncedAt: s.lastSyncedAt,
+  }));
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    formatted = formatted.filter((t) => t.teamName.toLowerCase().includes(q));
+  }
+
+  if (sortBy === 'subscribers') {
+    formatted.sort((a, b) => b.totalSubscribers - a.totalSubscribers || b.totalViews - a.totalViews);
+  } else if (sortBy === 'growth') {
+    formatted.sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.totalViews - a.totalViews);
+  } else {
+    formatted.sort((a, b) => b.totalViews - a.totalViews || b.totalSubscribers - a.totalSubscribers);
+  }
+
+  const ranked = formatted.map((t, idx) => ({ ...t, rank: idx + 1 }));
+  const numLimit = Math.max(1, Math.min(100, Number(limit) || 50));
+  const numPage = Math.max(1, Number(page) || 1);
+  const offset = (numPage - 1) * numLimit;
+  const paginated = ranked.slice(offset, offset + numLimit);
+
   return {
-    items: rows.map((r) => ({
-      id: r.id,
-      teamId: r.teamId,
-      teamName: r.team ? r.team.name : `Team ${r.teamId}`,
-      channelsCount: r.channelsCount,
-      videosCount: r.videosCount,
-      totalViews: Number(r.totalViews),
-      totalSubscribers: Number(r.totalSubscribers),
-      viewsToday: Number(r.viewsToday),
-      views7d: Number(r.views7d),
-      views30d: Number(r.views30d),
-      subscribersToday: Number(r.subscribersToday),
-      subscriberGrowth7d: Number(r.subscriberGrowth7d),
-      subscriberGrowth30d: Number(r.subscriberGrowth30d),
-      viewsGrowth30dPct: Number(r.viewsGrowth30dPct),
-      subGrowth30dPct: Number(r.subGrowth30dPct),
-      topVideoTitle: r.topVideoTitle,
-      topVideoViews: Number(r.topVideoViews),
-      rank: sortBy === 'subscribers' ? r.rankBySubs : (sortBy === 'growth' ? r.rankByGrowth : r.rankByViews),
-      freshnessStatus: r.freshnessStatus,
-      lastSyncedAt: r.lastSyncedAt,
-    })),
-    total: count,
-    page: Number(page),
-    limit: Number(limit),
-    totalPages: Math.ceil(count / Number(limit)),
+    items: paginated,
+    teams: paginated,
+    total: ranked.length,
+    page: numPage,
+    limit: numLimit,
+    totalPages: Math.max(1, Math.ceil(ranked.length / numLimit)),
     sortBy,
+  };
+}
+
+/**
+ * Get YouTube Channel Leaderboard (ranks all active channels, assigned and unassigned)
+ */
+async function getYouTubeChannelLeaderboard(params = {}) {
+  const {
+    teamId = null,
+    sortBy = 'views',
+    search = '',
+    limit = 50,
+    page = 1,
+  } = params;
+
+  const where = { status: 'ACTIVE' };
+  if (teamId === 'unassigned' || teamId === 'null') {
+    where.teamId = null;
+  } else if (teamId && teamId !== 'all') {
+    where.teamId = Number(teamId);
+  }
+
+  if (search && search.trim()) {
+    const q = `%${search.trim()}%`;
+    where[Op.or] = [
+      { title: { [Op.like]: q } },
+      { channelId: { [Op.like]: q } },
+      { customUrl: { [Op.like]: q } },
+    ];
+  }
+
+  const allChannels = await YouTubeChannel.findAll({
+    where,
+    include: [
+      { model: Team, as: 'team', attributes: ['id', 'name', 'description'] },
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
+    ],
+  });
+
+  const now = new Date();
+  const t30d = new Date(now.getTime() - 30 * 86400000);
+
+  // Compute metrics and 30d deltas for all matching channels
+  const channelsWithMetrics = await Promise.all(
+    allChannels.map(async (c) => {
+      const latestMetric = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
+      const views = latestMetric ? Number(latestMetric.views || 0) : 0;
+      const subscribers = latestMetric ? Number(latestMetric.subscribers || 0) : 0;
+
+      // 30 days ago metric
+      let views30d = 0;
+      let viewsGrowth30dPct = 0;
+
+      if (latestMetric) {
+        const metric30d = await YouTubeChannelMetric.findOne({
+          where: {
+            channelId: c.id,
+            capturedAt: { [Op.lte]: t30d },
+          },
+          order: [['capturedAt', 'DESC']],
+        });
+
+        if (metric30d) {
+          views30d = Math.max(0, views - Number(metric30d.views || 0));
+        } else {
+          views30d = views;
+        }
+
+        const baseline = Math.max(0, views - views30d);
+        const rawGrowth = baseline > 0 ? (views30d / baseline) * 100 : (views > 0 ? 100.0 : 0.0);
+        viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawGrowth)).toFixed(2));
+      }
+
+      return {
+        id: c.id,
+        channelId: c.channelId,
+        title: c.title,
+        customUrl: c.customUrl,
+        thumbnailUrl: c.thumbnailUrl,
+        teamId: c.teamId,
+        teamName: c.team ? c.team.name : 'Chưa gán đội',
+        team: c.team ? { id: c.team.id, name: c.team.name } : null,
+        isUnassigned: !c.teamId,
+        views,
+        totalViews: views,
+        subscribers,
+        totalSubscribers: subscribers,
+        views30d,
+        viewsGrowth30dPct,
+        syncStatus: c.syncStatus,
+        lastSyncedAt: c.lastSyncedAt,
+        status: c.status,
+      };
+    })
+  );
+
+  // Sort channels according to sortBy
+  if (sortBy === 'subscribers') {
+    channelsWithMetrics.sort((a, b) => b.subscribers - a.subscribers || b.views - a.views);
+  } else if (sortBy === 'growth') {
+    channelsWithMetrics.sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.views - a.views);
+  } else {
+    // Default: views
+    channelsWithMetrics.sort((a, b) => b.views - a.views || b.subscribers - a.subscribers);
+  }
+
+  // Assign ranked positions
+  const ranked = channelsWithMetrics.map((c, idx) => ({
+    ...c,
+    rank: idx + 1,
+  }));
+
+  const numLimit = Math.max(1, Math.min(1000, Number(limit) || 50));
+  const numPage = Math.max(1, Number(page) || 1);
+  const offset = (numPage - 1) * numLimit;
+  const paginated = ranked.slice(offset, offset + numLimit);
+
+  return {
+    items: paginated,
+    channels: paginated,
+    total: ranked.length,
+    page: numPage,
+    limit: numLimit,
+    totalPages: Math.max(1, Math.ceil(ranked.length / numLimit)),
+    sortBy,
+    teamId,
   };
 }
 
@@ -699,4 +733,6 @@ module.exports = {
   getTeamYouTubeDetails,
   compareTeams,
   getYouTubeTeamLeaderboard,
+  getYouTubeChannelLeaderboard,
 };
+

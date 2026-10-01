@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Image, Music } from 'lucide-react';
+import { HelpCircle, Image, Music, Zap } from 'lucide-react';
 
 export default function QuizQuestionCard({
   question,
@@ -8,6 +8,7 @@ export default function QuizQuestionCard({
 
   const isMusic = question.type === 'MUSIC';
   const isImage = question.type === 'IMAGE';
+  const maxPts = question.points || 1000;
 
   return (
     <div
@@ -20,9 +21,10 @@ export default function QuizQuestionCard({
         padding: '16px 20px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
         boxSizing: 'border-box',
+        animation: 'fadeIn 0.25s ease-out',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span
           style={{
             display: 'inline-flex',
@@ -43,11 +45,23 @@ export default function QuizQuestionCard({
           <span>{question.category || (isMusic ? 'Đoán Bài Hát' : isImage ? 'Đoán Hình Ảnh' : 'Câu Hỏi')}</span>
         </span>
 
-        {question.points && (
-          <span style={{ fontSize: 11, color: '#666666', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>
-            +{question.points} điểm
-          </span>
-        )}
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 3,
+            fontSize: 11,
+            color: '#b45309',
+            fontWeight: 700,
+            fontFamily: 'JetBrains Mono, monospace',
+            background: 'rgba(180, 83, 9, 0.08)',
+            padding: '1px 6px',
+            borderRadius: 4,
+          }}
+        >
+          <Zap size={10} />
+          <span>Tối đa {maxPts.toLocaleString()}đ</span>
+        </span>
       </div>
 
       <h2

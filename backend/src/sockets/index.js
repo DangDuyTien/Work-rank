@@ -3,6 +3,7 @@ const env = require('../config/env');
 const { User } = require('../models');
 const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
+const samRealtime = require('../services/samRealtime.service');
 
 function emitPresence(io, user, status) {
   const payload = {
@@ -143,8 +144,12 @@ function registerSockets(io) {
     // ── Sam Lốc Game Socket Rooms ──
     socket.on('sam:joinRoom', (payload = {}) => {
       const roomId = Number(payload.roomId);
+      const isSpectator = !!payload.isSpectator;
       if (roomId) {
         socket.join(`sam:${roomId}`);
+        if (isSpectator) {
+          samRealtime.addSpectator(roomId, socket.id);
+        }
       }
     });
 
@@ -152,10 +157,12 @@ function registerSockets(io) {
       const roomId = Number(payload.roomId);
       if (roomId) {
         socket.leave(`sam:${roomId}`);
+        samRealtime.removeSpectator(roomId, socket.id);
       }
     });
 
     socket.on('disconnect', () => {
+      samRealtime.removeSpectatorFromAll(socket.id);
       const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
         emitPresence(io, offlineUser, 'offline');
       });

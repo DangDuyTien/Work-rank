@@ -15,15 +15,18 @@ import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import {
   Trophy,
   RotateCcw,
-  ArrowLeft,
   Crown,
   Medal,
-  Gamepad2,
   HelpCircle,
   RefreshCw,
   Sparkles,
   LayoutGrid,
+  AlertTriangle,
+  Loader2,
+  X,
 } from 'lucide-react';
+
+const ACTIVE_SESSION_STORAGE_KEY = 'wr_2048_active_session';
 
 const TILE_STYLES = {
   2: { bg: '#ffffff', text: '#141414', border: '1px solid rgba(0,0,0,0.08)', shadow: '0 1px 3px rgba(0,0,0,0.04)' },
@@ -69,21 +72,37 @@ export default function Game2048() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // References for touch and timeouts
+  // Save error modal / state
+  const [saveError, setSaveError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // References for touch, timeouts, and state synchronization
   const touchStartRef = useRef({ x: 0, y: 0 });
   const cleanupTimerRef = useRef(null);
+  const checkpointTimerRef = useRef(null);
+  const lastPersistedScoreRef = useRef(0);
+  const gameStateRef = useRef({
+    tiles,
+    score: 0,
+    moves: 0,
+    gameSessionId: null,
+    gameOver: false,
+    hasWon: false,
+    keepPlaying: false,
+  });
 
-  // Start new session from backend
-  const initNewSession = useCallback(async () => {
-    try {
-      const res = await game2048.startSession();
-      if (res?.gameSessionId) {
-        setGameSessionId(res.gameSessionId);
-      }
-    } catch (err) {
-      console.error('Failed to start 2048 session:', err);
-    }
-  }, []);
+  // Keep gameStateRef in sync with latest state
+  useEffect(() => {
+    gameStateRef.current = {
+      tiles,
+      score,
+      moves,
+      gameSessionId,
+      gameOver,
+      hasWon,
+      keepPlaying,
+    };
+  }, [tiles, score, moves, gameSessionId, gameOver, hasWon, keepPlaying]);
 
   // Fetch leaderboard & personal stats
   const fetchLeaderboardData = useCallback(async () => {
@@ -93,7 +112,7 @@ export default function Game2048() {
       if (res) {
         setLeaderboard(Array.isArray(res.data) ? res.data : []);
         if (res.myStats) {
-          setBestScore(res.myStats.bestScore || 0);
+          setBestScore((prev) => Math.max(prev, res.myStats.bestScore || 0));
           setMyRank(res.myStats.rank);
         }
       }
@@ -104,19 +123,295 @@ export default function Game2048() {
     }
   }, []);
 
+  // Checkpoint session score to backend and localStorage
+  const performCheckpoint = useCallback(
+    async (currentScore, currentTiles, currentMoves, currentSessionId) => {
+      if (!currentSessionId || currentScore <= 0) return;
+      if (currentScore <= lastPersistedScoreRef.current) return;
+
+      const maxTile = getMaxTileFromTiles(currentTiles);
+      try {
+        const res = await game2048.checkpoint({
+          score: currentScore,
+          maxTile,
+          moves: currentMoves,
+          gameSessionId: currentSessionId,
+          boardState: currentTiles,
+        });
+
+        lastPersistedScoreRef.current = currentScore;
+        if (res?.bestScore !== undefined) {
+          setBestScore((prev) => Math.max(prev, res.bestScore));
+        }
+        if (res?.isNewBest) {
+          fetchLeaderboardData();
+        }
+
+        // Save local copy
+        try {
+          localStorage.setItem(
+            ACTIVE_SESSION_STORAGE_KEY,
+            JSON.stringify({
+              gameSessionId: currentSessionId,
+              score: currentScore,
+              moves: currentMoves,
+              tiles: currentTiles,
+              savedAt: Date.now(),
+            })
+          );
+        } catch (e) {
+          // Ignore localStorage quota errors
+        }
+      } catch (err) {
+        console.warn('2048 background checkpoint error:', err);
+      }
+    },
+    [fetchLeaderboardData]
+  );
+
+  // Start new session or restore active session
+  const initSession = useCallback(async () => {
+    // 1. Check local storage for active saved session
+    let restored = false;
+    try {
+      const localSaved = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+      if (localSaved) {
+        const parsed = JSON.parse(localSaved);
+        if (parsed?.gameSessionId && Array.isArray(parsed?.tiles) && parsed.tiles.length > 0) {
+          setTiles(parsed.tiles);
+          setScore(parsed.score || 0);
+          setMoves(parsed.moves || 0);
+          setGameSessionId(parsed.gameSessionId);
+          lastPersistedScoreRef.current = parsed.score || 0;
+          restored = true;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (!restored) {
+      // 2. Try fetching active session from server
+      try {
+        const serverActive = await game2048.getActiveSession();
+        if (serverActive?.gameSessionId && Array.isArray(serverActive?.boardState) && serverActive.boardState.length > 0) {
+          setTiles(serverActive.boardState);
+          setScore(serverActive.score || 0);
+          setMoves(serverActive.moves || 0);
+          setGameSessionId(serverActive.gameSessionId);
+          lastPersistedScoreRef.current = serverActive.score || 0;
+          restored = true;
+        }
+      } catch (err) {
+        console.warn('Could not check server active session:', err);
+      }
+    }
+
+    // 3. If no active session to restore, create new session
+    if (!restored) {
+      try {
+        const initialTiles = createInitialTileState();
+        setTiles(initialTiles);
+        setScore(0);
+        setMoves(0);
+        lastPersistedScoreRef.current = 0;
+        const res = await game2048.startSession({ boardState: initialTiles });
+        if (res?.gameSessionId) {
+          setGameSessionId(res.gameSessionId);
+        }
+      } catch (err) {
+        console.error('Failed to start 2048 session:', err);
+      }
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
-    initNewSession();
+    initSession();
     fetchLeaderboardData();
+
     return () => {
       if (cleanupTimerRef.current) clearTimeout(cleanupTimerRef.current);
+      if (checkpointTimerRef.current) clearInterval(checkpointTimerRef.current);
     };
-  }, [initNewSession, fetchLeaderboardData]);
+  }, [initSession, fetchLeaderboardData]);
 
-  // Restart game
-  const handleRestart = useCallback(() => {
+  // Periodic checkpoint timer (every 25 seconds if score changed)
+  useEffect(() => {
+    checkpointTimerRef.current = setInterval(() => {
+      const state = gameStateRef.current;
+      if (state.gameSessionId && state.score > lastPersistedScoreRef.current) {
+        performCheckpoint(state.score, state.tiles, state.moves, state.gameSessionId);
+      }
+    }, 25000);
+
+    return () => {
+      if (checkpointTimerRef.current) clearInterval(checkpointTimerRef.current);
+    };
+  }, [performCheckpoint]);
+
+  // Browser lifecycle event handlers (visibilitychange, pagehide, beforeunload)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        const state = gameStateRef.current;
+        if (state.gameSessionId && state.score > lastPersistedScoreRef.current) {
+          performCheckpoint(state.score, state.tiles, state.moves, state.gameSessionId);
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      const state = gameStateRef.current;
+      if (state.gameSessionId && state.score > lastPersistedScoreRef.current) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const maxTile = getMaxTileFromTiles(state.tiles);
+          const payload = JSON.stringify({
+            score: state.score,
+            maxTile,
+            moves: state.moves,
+            gameSessionId: state.gameSessionId,
+            status: 'ABANDONED',
+            boardState: state.tiles,
+          });
+          try {
+            fetch('/api/games/2048/checkpoint', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: payload,
+              keepalive: true,
+            });
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [performCheckpoint]);
+
+  // Submit score to backend on Game Over
+  const handleSubmitScore = useCallback(
+    async (finalScore, finalTiles, finalMoves, currentSessionId) => {
+      if (!currentSessionId || submitted || finalScore <= 0) return;
+      setSubmitted(true);
+
+      const maxTile = getMaxTileFromTiles(finalTiles);
+      try {
+        setIsSaving(true);
+        const res = await game2048.submitScore({
+          score: finalScore,
+          maxTile,
+          moves: finalMoves,
+          gameSessionId: currentSessionId,
+          status: 'COMPLETED',
+          playedAt: new Date().toISOString(),
+          boardState: finalTiles,
+        });
+
+        lastPersistedScoreRef.current = finalScore;
+        if (res?.bestScore !== undefined) {
+          setBestScore((prev) => Math.max(prev, res.bestScore));
+        }
+        localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+        await fetchLeaderboardData();
+      } catch (err) {
+        console.error('Failed to submit 2048 score on game over:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [submitted, fetchLeaderboardData]
+  );
+
+  // Explicit Save & Exit Flow (Runs before transitioning away)
+  const handleExitGame = useCallback(async () => {
+    const state = gameStateRef.current;
+    const currentScore = state.score;
+    const currentSessionId = state.gameSessionId;
+    const currentTiles = state.tiles;
+    const currentMoves = state.moves;
+
+    // If score is 0, allow clean exit without blocking
+    if (!currentSessionId || currentScore <= 0) {
+      localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+      return true;
+    }
+
+    // Submit current session result as ABANDONED
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+      const maxTile = getMaxTileFromTiles(currentTiles);
+
+      const res = await game2048.submitScore({
+        score: currentScore,
+        maxTile,
+        moves: currentMoves,
+        gameSessionId: currentSessionId,
+        status: 'ABANDONED',
+        playedAt: new Date().toISOString(),
+        boardState: currentTiles,
+      });
+
+      lastPersistedScoreRef.current = currentScore;
+      if (res?.bestScore !== undefined) {
+        setBestScore((prev) => Math.max(prev, res.bestScore));
+      }
+
+      localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+      await fetchLeaderboardData();
+      return true;
+    } catch (err) {
+      console.error('Failed to save 2048 score on exit:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Lỗi kết nối máy chủ';
+      setSaveError(`Không thể lưu điểm hiện tại (${currentScore.toLocaleString()} pts). ${errMsg}. Bạn có muốn thử lại?`);
+      return false; // Blocks exit until user retries or force exits
+    } finally {
+      setIsSaving(false);
+    }
+  }, [fetchLeaderboardData]);
+
+  // Restart game: Finalize previous score if > 0, then reset
+  const handleRestart = useCallback(async () => {
+    const state = gameStateRef.current;
     if (cleanupTimerRef.current) clearTimeout(cleanupTimerRef.current);
-    setTiles(createInitialTileState());
+
+    // If previous game had score > 0 and wasn't finalized yet, persist it first!
+    if (state.gameSessionId && state.score > 0 && !submitted && state.score > lastPersistedScoreRef.current) {
+      const maxTile = getMaxTileFromTiles(state.tiles);
+      try {
+        await game2048.submitScore({
+          score: state.score,
+          maxTile,
+          moves: state.moves,
+          gameSessionId: state.gameSessionId,
+          status: 'ABANDONED',
+          playedAt: new Date().toISOString(),
+          boardState: state.tiles,
+        });
+      } catch (e) {
+        console.warn('Could not persist previous session on restart:', e);
+      }
+    }
+
+    localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+
+    const initialTiles = createInitialTileState();
+    setTiles(initialTiles);
     setScore(0);
     setLastScoreGain(null);
     setMoves(0);
@@ -124,35 +419,17 @@ export default function Game2048() {
     setHasWon(false);
     setKeepPlaying(false);
     setSubmitted(false);
-    initNewSession();
-  }, [initNewSession]);
+    lastPersistedScoreRef.current = 0;
 
-  // Submit score to backend when game over
-  const handleSubmitScore = useCallback(
-    async (finalScore, finalMatrix, finalMoves, currentSessionId) => {
-      if (!currentSessionId || submitted || finalScore <= 0) return;
-      setSubmitted(true);
-
-      const maxTile = getMaxTileFromTiles(tiles);
-      try {
-        const res = await game2048.submitScore({
-          score: finalScore,
-          maxTile,
-          moves: finalMoves,
-          gameSessionId: currentSessionId,
-          playedAt: new Date().toISOString(),
-        });
-
-        if (res?.bestScore !== undefined) {
-          setBestScore(res.bestScore);
-        }
-        fetchLeaderboardData();
-      } catch (err) {
-        console.error('Failed to submit 2048 score:', err);
+    try {
+      const res = await game2048.startSession({ boardState: initialTiles });
+      if (res?.gameSessionId) {
+        setGameSessionId(res.gameSessionId);
       }
-    },
-    [submitted, tiles, fetchLeaderboardData]
-  );
+    } catch (err) {
+      console.error('Failed to start new 2048 session:', err);
+    }
+  }, [submitted]);
 
   // Trigger move in a given direction
   const handleMove = useCallback(
@@ -180,19 +457,24 @@ export default function Game2048() {
           setHasWon(true);
         }
 
-        // Clean up disappearing/merged tiles after the 130ms slide transition finishes
+        // Clean up disappearing/merged tiles after slide transition finishes
         if (cleanupTimerRef.current) clearTimeout(cleanupTimerRef.current);
         cleanupTimerRef.current = setTimeout(() => {
           setTiles((prev) => cleanupDisappearingTiles(prev));
         }, 130);
 
+        // Checkpoint threshold: If score grew by >= 500 since last save
+        if (newScore - lastPersistedScoreRef.current >= 500) {
+          performCheckpoint(newScore, result.tiles, newMoves, gameSessionId);
+        }
+
         if (result.gameOver) {
           setGameOver(true);
-          handleSubmitScore(newScore, result.matrix, newMoves, gameSessionId);
+          handleSubmitScore(newScore, result.tiles, newMoves, gameSessionId);
         }
       }
     },
-    [tiles, score, moves, bestScore, gameOver, keepPlaying, gameSessionId, handleSubmitScore]
+    [tiles, score, moves, bestScore, gameOver, keepPlaying, gameSessionId, performCheckpoint, handleSubmitScore]
   );
 
   // Keyboard controls listener
@@ -257,7 +539,7 @@ export default function Game2048() {
       badge="Ghép số"
       exitLabel="Thoát"
       exitTo="/arena"
-      onExit={() => navigate('/arena')}
+      onExit={handleExitGame}
       actions={
         <button
           type="button"
@@ -283,6 +565,106 @@ export default function Game2048() {
         </button>
       }
     >
+      {/* SAVE ERROR RETRY MODAL */}
+      {saveError && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 8,
+              maxWidth: 440,
+              width: '100%',
+              padding: '24px 20px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.12)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <AlertTriangle size={26} color="#dc2626" />
+            </div>
+
+            <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px', color: '#111111' }}>
+              Không thể lưu điểm hiện tại
+            </h3>
+            <p style={{ fontSize: 13, color: '#555555', margin: '0 0 20px', lineHeight: 1.5 }}>
+              {saveError}
+            </p>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSaveError(null);
+                  navigate('/arena');
+                }}
+                style={{
+                  padding: '9px 16px',
+                  background: '#f4f3ef',
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#555555',
+                  cursor: 'pointer',
+                }}
+              >
+                Thoát không lưu
+              </button>
+
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={async () => {
+                  const success = await handleExitGame();
+                  if (success) {
+                    navigate('/arena');
+                  }
+                }}
+                style={{
+                  padding: '9px 18px',
+                  background: '#141414',
+                  border: 'none',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {isSaving && <Loader2 size={14} className="animate-spin" />}
+                <span>Thử lưu lại</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAIN WORKSPACE */}
       <main
         style={{
@@ -664,7 +1046,7 @@ export default function Game2048() {
             <HelpCircle size={15} color="#b45309" style={{ marginTop: 2, flexShrink: 0 }} />
             <div>
               <strong style={{ color: '#111111' }}>Cách chơi: </strong>
-              Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Hai ô có cùng số khi chạm vào nhau sẽ trượt và hợp nhất thành một ô có giá trị gấp đôi!
+              Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Điểm số của bạn luôn được tự động lưu liên tục — bạn có thể an tâm thoát game bất kỳ lúc nào mà không sợ mất điểm!
             </div>
           </div>
         </div>

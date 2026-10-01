@@ -46,6 +46,7 @@ const GameTransaction = require('./GameTransaction');
 const GameResult = require('./GameResult');
 const GameLeaderboardProfile = require('./GameLeaderboardProfile');
 // Quiz Game V1 Models
+const QuizSet = require('./QuizSet');
 const QuizRoom = require('./QuizRoom');
 const QuizPlayer = require('./QuizPlayer');
 const QuizQuestion = require('./QuizQuestion');
@@ -132,9 +133,7 @@ SeasonLeaderboardProjection.belongsTo(Team, { foreignKey: 'teamId', as: 'team', 
 
 // YouTube & Team Analytics
 const YouTubeChannel = require('./YouTubeChannel');
-const YouTubeVideo = require('./YouTubeVideo');
 const YouTubeChannelMetric = require('./YouTubeChannelMetric');
-const YouTubeVideoMetric = require('./YouTubeVideoMetric');
 const TeamYouTubeSummary = require('./TeamYouTubeSummary');
 
 Season.hasMany(SeasonIndividualLeaderboardProjection, { foreignKey: 'seasonId', as: 'individualLeaderboardProjections', constraints: false });
@@ -155,18 +154,11 @@ GrandIndividualLeaderboardProjection.belongsTo(Team, { foreignKey: 'teamId', as:
 Team.hasMany(YouTubeChannel, { foreignKey: 'teamId', as: 'youtubeChannels' });
 YouTubeChannel.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
 
-YouTubeChannel.hasMany(YouTubeVideo, { foreignKey: 'channelId', as: 'videos' });
-YouTubeVideo.belongsTo(YouTubeChannel, { foreignKey: 'channelId', as: 'channel' });
-
 YouTubeChannel.hasMany(YouTubeChannelMetric, { foreignKey: 'channelId', as: 'metrics' });
 YouTubeChannelMetric.belongsTo(YouTubeChannel, { foreignKey: 'channelId', as: 'channel' });
 
-YouTubeVideo.hasMany(YouTubeVideoMetric, { foreignKey: 'videoId', as: 'metrics' });
-YouTubeVideoMetric.belongsTo(YouTubeVideo, { foreignKey: 'videoId', as: 'video' });
-
 Team.hasOne(TeamYouTubeSummary, { foreignKey: 'teamId', as: 'youtubeSummary' });
 TeamYouTubeSummary.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
-TeamYouTubeSummary.belongsTo(YouTubeVideo, { foreignKey: 'topVideoId', as: 'topVideo', constraints: false });
 
 // Recognition & Badges
 const UserRecognition = require('./UserRecognition');
@@ -199,10 +191,16 @@ GameResult.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 User.hasOne(GameLeaderboardProfile, { as: 'gameProfile', foreignKey: 'userId' });
 GameLeaderboardProfile.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
-// Quiz Game V1 Associations
+// Quiz Game Associations
+QuizSet.hasMany(QuizQuestion, { as: 'questions', foreignKey: 'quizSetId' });
+QuizQuestion.belongsTo(QuizSet, { as: 'quizSet', foreignKey: 'quizSetId' });
+QuizSet.belongsTo(User, { as: 'creator', foreignKey: 'createdByUserId' });
+QuizQuestion.belongsTo(User, { as: 'creator', foreignKey: 'createdByUserId' });
+
 QuizRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
 QuizRoom.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
 QuizRoom.belongsTo(QuizQuestion, { as: 'currentQuestion', foreignKey: 'currentQuestionId' });
+QuizRoom.belongsTo(QuizSet, { as: 'quizSet', foreignKey: 'quizSetId' });
 
 QuizRoom.hasMany(QuizPlayer, { as: 'players', foreignKey: 'roomId' });
 QuizPlayer.belongsTo(QuizRoom, { as: 'room', foreignKey: 'roomId' });
@@ -285,9 +283,7 @@ module.exports = {
   ProjectionCheckpoint,
   // YouTube & Team Analytics
   YouTubeChannel,
-  YouTubeVideo,
   YouTubeChannelMetric,
-  YouTubeVideoMetric,
   TeamYouTubeSummary,
   // Capital Board Game V1
   GameRoom,
@@ -298,6 +294,7 @@ module.exports = {
   GameResult,
   GameLeaderboardProfile,
   // Quiz Game V1
+  QuizSet,
   QuizRoom,
   QuizPlayer,
   QuizQuestion,

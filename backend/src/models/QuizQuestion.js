@@ -8,12 +8,13 @@ class QuizQuestion extends Model {}
 QuizQuestion.init(
   {
     id: { type: DataTypes.BIGINT.UNSIGNED, autoIncrement: true, primaryKey: true },
+    quizSetId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'quiz_set_id' },
     type: {
-      type: DataTypes.ENUM('IMAGE', 'MUSIC'),
+      type: DataTypes.ENUM('IMAGE', 'MUSIC', 'TEXT'),
       allowNull: false,
       defaultValue: 'IMAGE',
     },
-    category: { type: DataTypes.STRING(60), allowNull: false, defaultValue: 'General' },
+    category: { type: DataTypes.STRING(60), allowNull: false, defaultValue: 'Chung' },
     question: { type: DataTypes.TEXT, allowNull: false },
     imageUrl: { type: DataTypes.TEXT, allowNull: true, field: 'image_url' },
     audioUrl: { type: DataTypes.TEXT, allowNull: true, field: 'audio_url' },
@@ -27,11 +28,19 @@ QuizQuestion.init(
       field: 'correct_option',
     },
     explanation: { type: DataTypes.TEXT, allowNull: true },
-    timeLimit: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 10, field: 'time_limit' },
+    timeLimit: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 15, field: 'time_limit' },
     points: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 1000 },
+    orderIndex: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'order_index' },
     isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true, field: 'is_active' },
+    createdByUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'created_by_user_id' },
   },
-  { sequelize, modelName: 'QuizQuestion', tableName: 'quiz_questions', underscored: true }
+  {
+    sequelize,
+    modelName: 'QuizQuestion',
+    tableName: 'quiz_questions',
+    underscored: true,
+    timestamps: true,
+  }
 );
 
 module.exports = QuizQuestion;

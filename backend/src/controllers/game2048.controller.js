@@ -8,7 +8,31 @@ const game2048Service = require('../services/game2048.service');
  */
 async function startSession(req, res) {
   const userId = req.user.id;
-  const result = await game2048Service.startSession(userId);
+  const { boardState } = req.body || {};
+  const result = await game2048Service.startSession(userId, { boardState });
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+}
+
+/**
+ * POST /api/games/2048/checkpoint
+ * Periodically saves in-progress score and board state during active gameplay
+ */
+async function checkpointSession(req, res) {
+  const userId = req.user.id;
+  const { score, maxTile, moves, gameSessionId, boardState } = req.body || {};
+
+  const result = await game2048Service.checkpointSession({
+    userId,
+    score,
+    maxTile,
+    moves,
+    gameSessionId,
+    boardState,
+  });
+
   return res.status(200).json({
     success: true,
     data: result,
@@ -17,11 +41,11 @@ async function startSession(req, res) {
 
 /**
  * POST /api/games/2048/submit
- * Submits a completed 2048 game score
+ * Submits a completed or exited 2048 game score (GAME OVER or EXIT before GAME OVER)
  */
 async function submitScore(req, res) {
   const userId = req.user.id;
-  const { score, maxTile, moves, gameSessionId, playedAt } = req.body;
+  const { score, maxTile, moves, gameSessionId, playedAt, status, boardState } = req.body || {};
 
   const result = await game2048Service.submitScore({
     userId,
@@ -30,7 +54,23 @@ async function submitScore(req, res) {
     moves,
     gameSessionId,
     playedAt,
+    status,
+    boardState,
   });
+
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+}
+
+/**
+ * GET /api/games/2048/active-session
+ * Retrieves current active session if any to restore gameplay upon reload
+ */
+async function getActiveSession(req, res) {
+  const userId = req.user.id;
+  const result = await game2048Service.getActiveSession(userId);
 
   return res.status(200).json({
     success: true,
@@ -74,7 +114,9 @@ async function getMyStats(req, res) {
 
 module.exports = {
   startSession,
+  checkpointSession,
   submitScore,
+  getActiveSession,
   getLeaderboard,
   getMyStats,
 };

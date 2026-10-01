@@ -24,7 +24,7 @@ async function getRoom(req, res) {
 }
 
 async function createRoom(req, res) {
-  const { title, mode, maxPlayers, totalQuestions } = req.body || {};
+  const { title, mode, maxPlayers, totalQuestions, quizSetId } = req.body || {};
   try {
     const roomState = await quizService.createRoom({
       hostUserId: req.user.id,
@@ -32,11 +32,28 @@ async function createRoom(req, res) {
       mode,
       maxPlayers,
       totalQuestions,
+      quizSetId,
     });
     return res.status(201).json({ data: roomState });
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }
+}
+
+async function listActiveSets(req, res) {
+  const { QuizSet, QuizQuestion } = require('../models');
+  const sets = await QuizSet.findAll({
+    where: { isActive: true, status: 'PUBLISHED' },
+    include: [{ model: QuizQuestion, as: 'questions', attributes: ['id', 'isActive'] }],
+    order: [['title', 'ASC']],
+  });
+  const formatted = sets.map((s) => {
+    const json = s.toJSON();
+    json.questionCount = (json.questions || []).filter((q) => q.isActive).length;
+    delete json.questions;
+    return json;
+  });
+  return res.json({ data: formatted });
 }
 
 async function joinRoom(req, res) {
@@ -110,6 +127,7 @@ module.exports = {
   getActiveRoom,
   getRoom,
   createRoom,
+  listActiveSets,
   joinRoom,
   leaveRoom,
   startGame,

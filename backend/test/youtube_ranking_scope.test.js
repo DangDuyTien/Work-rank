@@ -48,7 +48,6 @@ describe('YouTube Public Ranking vs Private Analytics Separation Test Suite', ()
       channelId: chanPhoenix.id,
       views: 1800000,
       subscribers: 85000,
-      videosCount: 40,
     });
 
     chanDragon = await youtubeDataService.createChannel({
@@ -60,7 +59,6 @@ describe('YouTube Public Ranking vs Private Analytics Separation Test Suite', ()
       channelId: chanDragon.id,
       views: 2100000,
       subscribers: 91000,
-      videosCount: 50,
     });
 
     await youtubeAggregationService.aggregateTeamYouTubeSummary(teamPhoenix.id);

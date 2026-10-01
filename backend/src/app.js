@@ -44,6 +44,9 @@ app.get('/health', asyncHandler(healthController.health));
 app.get('/health/live', asyncHandler(healthController.live));
 app.get('/health/ready', asyncHandler(healthController.ready));
 
+// Static files for uploads (Quiz images, user assets, etc.)
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
+
 app.post('/webhook/tradingview', asyncHandler(tradingViewController.receiveWebhook));
 app.get('/debug/tradingview', asyncHandler(tradingViewController.debug));
 app.use('/api/auth', authLimiter);

@@ -6,7 +6,7 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../src/app');
 const env = require('../src/config/env');
-const { User, Team, YouTubeChannel, YouTubeVideo } = require('../src/models');
+const { User, Team, YouTubeChannel } = require('../src/models');
 const youtubeDataService = require('../src/services/youtube/youtubeData.service');
 const youtubeAggregationService = require('../src/services/youtube/youtubeAggregation.service');
 
@@ -186,16 +186,7 @@ describe('YouTube Team Scope & Anti-IDOR Protection Test Suite', () => {
     });
   });
 
-  describe('4. Top Videos & Compare Team Scoping', () => {
-    test('Member attempting to query top videos of another team is rejected with 403', async () => {
-      const res = await request(app)
-        .get(`/api/youtube/top-videos?teamId=${dragonTeam.id}`)
-        .set('Authorization', `Bearer ${phoenixToken}`)
-        .expect(403);
-
-      assert.equal(res.body.code, 'CROSS_TEAM_FORBIDDEN');
-    });
-
+  describe('4. Compare Team Scoping', () => {
     test('Member comparing two foreign teams is rejected with 403', async () => {
       // Create a 3rd team to test comparing 2 foreign teams
       const tigerTeam = await Team.create({ name: `Tiger Scope ${Date.now()}` });

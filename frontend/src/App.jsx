@@ -47,6 +47,7 @@ const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const CapitalBoardGame = lazyWithReload(() => import('./pages/CapitalBoardGame'));
 const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
+const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 
@@ -213,6 +214,8 @@ function AnimatedAppRoutes() {
             <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
             <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
             <Route path="/security" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
+            <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
             <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
             <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />

@@ -33,12 +33,6 @@ YouTubeChannelMetric.init(
       allowNull: false,
       defaultValue: 0,
     },
-    videosCount: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      defaultValue: 0,
-      field: 'videos_count',
-    },
     watchTimeHours: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,

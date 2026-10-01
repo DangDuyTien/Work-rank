@@ -645,8 +645,7 @@ export default function Arena() {
                               )}
                             </div>
                             <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 400 }}>
-                              {team.channelsCount} kênh • {team.videosCount} video
-                              {team.topVideoTitle ? ` • Top: ${team.topVideoTitle}` : ''}
+                              {team.channelsCount} kênh
                             </div>
                           </div>
                         </div>

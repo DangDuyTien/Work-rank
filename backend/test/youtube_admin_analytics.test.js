@@ -6,7 +6,7 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../src/app');
 const env = require('../src/config/env');
-const { User, Team, YouTubeChannel, YouTubeVideo } = require('../src/models');
+const { User, Team, YouTubeChannel } = require('../src/models');
 const youtubeDataService = require('../src/services/youtube/youtubeData.service');
 const youtubeAggregationService = require('../src/services/youtube/youtubeAggregation.service');
 
@@ -49,7 +49,6 @@ describe('YouTube Admin Company-wide Analytics & Multi-Channel Test Suite', () =
       channelId: phoenixChan1.id,
       views: 1000000,
       subscribers: 50000,
-      videosCount: 20,
     });
 
     phoenixChan2 = await youtubeDataService.createChannel({
@@ -61,7 +60,6 @@ describe('YouTube Admin Company-wide Analytics & Multi-Channel Test Suite', () =
       channelId: phoenixChan2.id,
       views: 800000,
       subscribers: 35000,
-      videosCount: 15,
     });
 
     // Dragon has 1 channel
@@ -74,7 +72,6 @@ describe('YouTube Admin Company-wide Analytics & Multi-Channel Test Suite', () =
       channelId: dragonChan.id,
       views: 2100000,
       subscribers: 91000,
-      videosCount: 30,
     });
 
     // Aggregate both

@@ -3,16 +3,14 @@
 const { Op } = require('sequelize');
 const {
   YouTubeChannel,
-  YouTubeVideo,
   YouTubeChannelMetric,
-  YouTubeVideoMetric,
   Team,
   sequelize,
 } = require('../../models');
 
 /**
  * YouTube Data Service
- * Handles persistence and queries for channels, videos, and metrics snapshots.
+ * Handles persistence and queries for channels and channel metrics snapshots.
  */
 
 // ================= CHANNEL MANAGEMENT =================
@@ -133,7 +131,6 @@ async function getChannelById(id, options = {}) {
     updatedAt: channel.updatedAt,
     views: m ? Number(m.views) : 0,
     subscribers: m ? Number(m.subscribers) : 0,
-    videosCount: m ? Number(m.videosCount) : 0,
     engagementRate: m ? Number(m.engagementRate) : 0,
   };
 }
@@ -173,7 +170,6 @@ async function getChannelByExternalId(channelId, options = {}) {
     updatedAt: channel.updatedAt,
     views: m ? Number(m.views) : 0,
     subscribers: m ? Number(m.subscribers) : 0,
-    videosCount: m ? Number(m.videosCount) : 0,
     engagementRate: m ? Number(m.engagementRate) : 0,
   };
 }
@@ -233,120 +229,8 @@ async function listChannels(filters = {}, options = {}) {
       updatedAt: c.updatedAt,
       views: m ? Number(m.views) : 0,
       subscribers: m ? Number(m.subscribers) : 0,
-      videosCount: m ? Number(m.videosCount) : 0,
       engagementRate: m ? Number(m.engagementRate) : 0,
     };
-  });
-}
-
-// ================= VIDEO MANAGEMENT =================
-
-async function upsertVideo(data, options = {}) {
-  const {
-    channelId,
-    videoId,
-    title,
-    description = null,
-    publishedAt,
-    thumbnailUrl = null,
-    durationSeconds = 0,
-    status = 'ACTIVE',
-  } = data;
-
-  if (!channelId || !videoId || !title || !publishedAt) {
-    throw new Error('channelId, videoId, title, and publishedAt are required to upsert a video');
-  }
-
-  const existing = await YouTubeVideo.findOne({
-    where: { videoId },
-    transaction: options.transaction,
-  });
-
-  if (existing) {
-    return existing.update(
-      {
-        channelId,
-        title,
-        description: description !== undefined ? description : existing.description,
-        publishedAt: new Date(publishedAt),
-        thumbnailUrl: thumbnailUrl !== undefined ? thumbnailUrl : existing.thumbnailUrl,
-        durationSeconds: durationSeconds !== undefined ? durationSeconds : existing.durationSeconds,
-        status: status || existing.status,
-      },
-      options,
-    );
-  }
-
-  return YouTubeVideo.create(
-    {
-      channelId,
-      videoId,
-      title,
-      description,
-      publishedAt: new Date(publishedAt),
-      thumbnailUrl,
-      durationSeconds,
-      status,
-    },
-    options,
-  );
-}
-
-async function getVideoById(id, options = {}) {
-  return YouTubeVideo.findByPk(id, {
-    include: [
-      {
-        model: YouTubeChannel,
-        as: 'channel',
-        include: [{ model: Team, as: 'team', attributes: ['id', 'name'] }],
-      },
-    ],
-    ...options,
-  });
-}
-
-async function getVideoByExternalId(videoId, options = {}) {
-  return YouTubeVideo.findOne({
-    where: { videoId },
-    include: [
-      {
-        model: YouTubeChannel,
-        as: 'channel',
-        include: [{ model: Team, as: 'team', attributes: ['id', 'name'] }],
-      },
-    ],
-    ...options,
-  });
-}
-
-async function listVideos(filters = {}, options = {}) {
-  const where = {};
-  if (filters.channelId) {
-    where.channelId = filters.channelId;
-  }
-  if (filters.status) {
-    where.status = filters.status;
-  }
-
-  const channelWhere = {};
-  if (filters.teamId) {
-    channelWhere.teamId = filters.teamId;
-  }
-
-  return YouTubeVideo.findAll({
-    where,
-    include: [
-      {
-        model: YouTubeChannel,
-        as: 'channel',
-        where: Object.keys(channelWhere).length > 0 ? channelWhere : undefined,
-        include: [{ model: Team, as: 'team', attributes: ['id', 'name'] }],
-      },
-    ],
-    order: [['publishedAt', 'DESC']],
-    limit: filters.limit ? Number(filters.limit) : 50,
-    offset: filters.offset ? Number(filters.offset) : 0,
-    ...options,
   });
 }
 
@@ -357,7 +241,6 @@ async function recordChannelMetricSnapshot(params, options = {}) {
     channelId,
     views = 0,
     subscribers = 0,
-    videosCount = 0,
     watchTimeHours = 0,
     engagementRate = 0,
     capturedAt = new Date(),
@@ -370,7 +253,6 @@ async function recordChannelMetricSnapshot(params, options = {}) {
   const snapshotTime = new Date(capturedAt);
   const safeViews = Math.max(0, Number(views) || 0);
   const safeSubscribers = Math.max(0, Number(subscribers) || 0);
-  const safeVideosCount = Math.max(0, Number(videosCount) || 0);
   const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
   const safeEngagement = Number(Math.min(999.9999, Math.max(0, Number(engagementRate) || 0)).toFixed(4));
 
@@ -393,7 +275,6 @@ async function recordChannelMetricSnapshot(params, options = {}) {
       {
         views: safeViews,
         subscribers: safeSubscribers,
-        videosCount: safeVideosCount,
         watchTimeHours: safeWatchTime,
         engagementRate: safeEngagement,
         capturedAt: snapshotTime,
@@ -408,162 +289,11 @@ async function recordChannelMetricSnapshot(params, options = {}) {
       capturedAt: snapshotTime,
       views: safeViews,
       subscribers: safeSubscribers,
-      videosCount: safeVideosCount,
       watchTimeHours: safeWatchTime,
       engagementRate: safeEngagement,
     },
     options,
   );
-}
-
-async function recordVideoMetricSnapshot(params, options = {}) {
-  const {
-    videoId,
-    views = 0,
-    likes = 0,
-    comments = 0,
-    watchTimeHours = 0,
-    engagementRate = 0,
-    capturedAt = new Date(),
-  } = params;
-
-  if (!videoId) {
-    throw new Error('videoId is required to record video metric snapshot');
-  }
-
-  const snapshotTime = new Date(capturedAt);
-  const safeViews = Math.max(0, Number(views) || 0);
-  const safeLikes = Math.max(0, Number(likes) || 0);
-  const safeComments = Math.max(0, Number(comments) || 0);
-  const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
-  const safeEngagement = Number(Math.min(999.9999, Math.max(0, Number(engagementRate) || 0)).toFixed(4));
-
-  const windowStart = new Date(snapshotTime.getTime() - 2.5 * 60 * 1000);
-  const windowEnd = new Date(snapshotTime.getTime() + 2.5 * 60 * 1000);
-
-  const existing = await YouTubeVideoMetric.findOne({
-    where: {
-      videoId,
-      capturedAt: {
-        [Op.between]: [windowStart, windowEnd],
-      },
-    },
-    transaction: options.transaction,
-  });
-
-  if (existing) {
-    return existing.update(
-      {
-        views: safeViews,
-        likes: safeLikes,
-        comments: safeComments,
-        watchTimeHours: safeWatchTime,
-        engagementRate: safeEngagement,
-        capturedAt: snapshotTime,
-      },
-      options,
-    );
-  }
-
-  return YouTubeVideoMetric.create(
-    {
-      videoId,
-      capturedAt: snapshotTime,
-      views: safeViews,
-      likes: safeLikes,
-      comments: safeComments,
-      watchTimeHours: safeWatchTime,
-      engagementRate: safeEngagement,
-    },
-    options,
-  );
-}
-
-/**
- * Fetch top videos across the company or for a specific team/channel
- */
-async function getTopVideos(params = {}, options = {}) {
-  const {
-    teamId = null,
-    channelId = null,
-    timeframe = 'all', // '7d', '30d', 'season', 'year', 'all'
-    limit = 20,
-    page = 1,
-  } = params;
-
-  const where = { status: 'ACTIVE' };
-  const channelWhere = { status: 'ACTIVE' };
-
-  if (channelId) {
-    channelWhere.id = channelId;
-  }
-  if (teamId) {
-    channelWhere.teamId = teamId;
-  }
-
-  const now = new Date();
-  if (timeframe === '7d') {
-    where.publishedAt = { [Op.gte]: new Date(now.getTime() - 7 * 86400000) };
-  } else if (timeframe === '30d') {
-    where.publishedAt = { [Op.gte]: new Date(now.getTime() - 30 * 86400000) };
-  } else if (timeframe === 'year') {
-    where.publishedAt = { [Op.gte]: new Date(now.getFullYear(), 0, 1) };
-  }
-
-  const offset = (Number(page) - 1) * Number(limit);
-
-  // Subquery to get latest views for each video
-  const videos = await YouTubeVideo.findAll({
-    where,
-    include: [
-      {
-        model: YouTubeChannel,
-        as: 'channel',
-        where: Object.keys(channelWhere).length > 0 ? channelWhere : undefined,
-        include: [{ model: Team, as: 'team', attributes: ['id', 'name'] }],
-      },
-      {
-        model: YouTubeVideoMetric,
-        as: 'metrics',
-        limit: 1,
-        order: [['capturedAt', 'DESC']],
-      },
-    ],
-    limit: Number(limit),
-    offset,
-    ...options,
-  });
-
-  // Sort by latest views descending
-  const sorted = videos.map((v) => {
-    const latestMetric = v.metrics && v.metrics.length > 0 ? v.metrics[0] : null;
-    return {
-      id: v.id,
-      videoId: v.videoId,
-      title: v.title,
-      description: v.description,
-      publishedAt: v.publishedAt,
-      thumbnailUrl: v.thumbnailUrl,
-      durationSeconds: v.durationSeconds,
-      channel: v.channel
-        ? {
-            id: v.channel.id,
-            channelId: v.channel.channelId,
-            title: v.channel.title,
-            team: v.channel.team ? { id: v.channel.team.id, name: v.channel.team.name } : null,
-          }
-        : null,
-      views: latestMetric ? Number(latestMetric.views) : 0,
-      likes: latestMetric ? Number(latestMetric.likes) : 0,
-      comments: latestMetric ? Number(latestMetric.comments) : 0,
-      engagementRate: latestMetric ? Number(latestMetric.engagementRate) : 0,
-      lastCapturedAt: latestMetric ? latestMetric.capturedAt : v.updatedAt,
-    };
-  });
-
-  sorted.sort((a, b) => b.views - a.views);
-
-  return sorted;
 }
 
 module.exports = {
@@ -574,11 +304,5 @@ module.exports = {
   getChannelById,
   getChannelByExternalId,
   listChannels,
-  upsertVideo,
-  getVideoById,
-  getVideoByExternalId,
-  listVideos,
   recordChannelMetricSnapshot,
-  recordVideoMetricSnapshot,
-  getTopVideos,
 };

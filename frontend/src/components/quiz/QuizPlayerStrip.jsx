@@ -1,58 +1,108 @@
-import React from 'react';
-import { Crown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Crown, Zap, CheckCircle2 } from 'lucide-react';
 import QuizAvatar from './QuizAvatar';
+import quizSound from './quizSound';
 
+/**
+ * AnimatedScore - Smooth rolling number counter for score increases
+ */
+function AnimatedScore({ targetScore = 0 }) {
+  const [displayScore, setDisplayScore] = useState(targetScore);
+  const prevScoreRef = useRef(targetScore);
+
+  useEffect(() => {
+    if (targetScore === prevScoreRef.current) return;
+
+    const start = prevScoreRef.current;
+    const end = targetScore;
+    const diff = end - start;
+    const duration = 600; // ms
+    const startTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const progress = Math.min(1, (now - startTime) / duration);
+      // easeOutExpo curve
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(start + diff * eased);
+
+      setDisplayScore(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        prevScoreRef.current = end;
+      }
+    };
+
+    requestAnimationFrame(animate);
+    prevScoreRef.current = targetScore;
+  }, [targetScore]);
+
+  return <span>{displayScore.toLocaleString()}</span>;
+}
+
+/**
+ * QuizPlayerStrip - Bottom Dock containing:
+ * 1. Answered Strip (avatars of users who answered this round)
+ * 2. Activity Feed
+ * 3. Player Standings with live rolling scores
+ */
 export default function QuizPlayerStrip({
   players = [],
   currentUserId = null,
+  answeredUserIds = [],
   recentActivity = [],
+  roundResult = null,
 }) {
   const sortedPlayers = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  // Determine answered player objects
+  const answeredSet = new Set((answeredUserIds || []).map((id) => Number(id)));
 
   return (
     <div
       style={{
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        padding: '8px 24px 14px',
+        padding: '10px 24px 14px',
         gap: 16,
         zIndex: 40,
         flexShrink: 0,
         userSelect: 'none',
         boxSizing: 'border-box',
+        background: '#ffffff',
+        borderTop: '1px solid rgba(0, 0, 0, 0.08)',
       }}
     >
-      {/* Left Side: Live Activity / Chat Feed */}
+      {/* ── LEFT: Activity Feed or Status ── */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           gap: 3,
-          maxWidth: 280,
-          minWidth: 160,
-          maxHeight: 90,
+          maxWidth: 240,
+          minWidth: 140,
+          maxHeight: 60,
           overflowY: 'hidden',
+          flexShrink: 0,
         }}
       >
-        {recentActivity.slice(-3).map((act, idx) => (
+        {recentActivity.slice(-2).map((act, idx) => (
           <div
             key={idx}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 5,
               fontSize: 11,
               fontWeight: 500,
               color: '#141414',
-              animation: 'fadeIn 0.2s ease',
             }}
           >
-            {act.avatar && (
-              <QuizAvatar user={{ avatarUrl: act.avatar, name: act.name }} size="xs" />
-            )}
-            <span style={{ fontWeight: 700, color: act.color === '#f59e0b' ? '#b45309' : act.color === '#34d399' ? '#15803d' : '#141414' }}>
+            <span style={{ fontWeight: 700, color: act.color || '#b45309' }}>
               {act.name}:
             </span>
             <span style={{ color: '#666666' }}>{act.text}</span>
@@ -66,14 +116,81 @@ export default function QuizPlayerStrip({
         )}
       </div>
 
-      {/* Right / Center: Player Avatar Tokens Dock */}
+      {/* ── CENTER: ANSWERED STRIP (Who answered this question) ── */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '4px 12px',
+          background: '#f8f7f4',
+          borderRadius: 8,
+          border: '1px solid rgba(0, 0, 0, 0.06)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '0.2px' }}>
+          Đã trả lời ({answeredSet.size}/{players.length}):
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 28 }}>
+          {players.map((p) => {
+            const hasAnswered = answeredSet.has(Number(p.userId));
+            if (!hasAnswered) return null;
+
+            return (
+              <div
+                key={p.userId}
+                title={`${p.user?.name || `User ${p.userId}`} đã trả lời`}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  animation: 'fadeIn 0.2s ease',
+                }}
+              >
+                <QuizAvatar
+                  user={p.user || { id: p.userId }}
+                  userId={p.userId}
+                  size="xs"
+                  border="1.5px solid #16a34a"
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: -2,
+                    right: -2,
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: '#16a34a',
+                    border: '1px solid #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <CheckCircle2 size={8} color="#ffffff" />
+                </div>
+              </div>
+            );
+          })}
+
+          {answeredSet.size === 0 && (
+            <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+              Chưa ai chọn...
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── RIGHT: PLAYERS STANDINGS DOCK ── */}
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-end',
           gap: 10,
           overflowX: 'auto',
-          paddingBottom: 2,
           scrollbarWidth: 'none',
         }}
       >
@@ -156,7 +273,7 @@ export default function QuizPlayerStrip({
                 )}
               </div>
 
-              {/* Score Underneath Avatar */}
+              {/* Score Underneath Avatar with Rolling Counter */}
               <div
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
@@ -165,9 +282,12 @@ export default function QuizPlayerStrip({
                   color: isMe ? '#b45309' : '#141414',
                   marginTop: 2,
                   letterSpacing: '-0.2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
                 }}
               >
-                {Number(player.score || 0).toLocaleString()}
+                <AnimatedScore targetScore={player.score || 0} />
               </div>
             </div>
           );

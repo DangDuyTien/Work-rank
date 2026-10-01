@@ -50,7 +50,7 @@ export const NAVIGATION_CONFIG = [
         shortLabel: 'YouTube',
         icon: Tv,
         tourTarget: 'nav-youtube',
-        description: 'Thành tích kênh, BXH lượt xem, đăng ký và top video các đội',
+        description: 'Thành tích kênh, BXH lượt xem và người đăng ký các đội',
       },
       {
         to: '/leaderboard',
@@ -132,10 +132,9 @@ export const NAVIGATION_CONFIG = [
         label: 'Đoán Hình & Đoán Nhạc',
         shortLabel: 'Đoán Hình & Nhạc',
         icon: Sparkles,
-        badge: 'Coming Soon',
-        comingSoon: true,
+        badge: 'Live',
         tourTarget: 'nav-guess-quiz',
-        description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao (Coming Soon)',
+        description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao',
       },
     ],
   },
@@ -147,6 +146,14 @@ export const NAVIGATION_CONFIG = [
     collapsible: true,
     badge: 'Quản Trị',
     items: [
+      {
+        to: '/admin/quiz',
+        label: 'Quản Lý Quiz Game',
+        shortLabel: 'Quiz Game',
+        icon: Sparkles,
+        adminOnly: true,
+        description: 'Tạo câu hỏi, upload hình ảnh, quản lý bộ câu hỏi Đoán Hình & Đoán Nhạc',
+      },
       {
         to: '/admin/privileges',
         label: 'Quản Lý Nhân Sự & Đặc Quyền',

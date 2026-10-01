@@ -11,8 +11,9 @@ QuizRoom.init(
     code: { type: DataTypes.STRING(20), allowNull: false, unique: true },
     title: { type: DataTypes.STRING(120), allowNull: false, defaultValue: 'Phòng Quiz Thử Thách' },
     hostUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, field: 'host_user_id' },
+    quizSetId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'quiz_set_id' },
     mode: {
-      type: DataTypes.ENUM('ALL', 'IMAGE', 'MUSIC'),
+      type: DataTypes.ENUM('ALL', 'IMAGE', 'MUSIC', 'TEXT'),
       allowNull: false,
       defaultValue: 'ALL',
     },

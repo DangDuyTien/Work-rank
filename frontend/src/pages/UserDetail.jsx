@@ -1135,9 +1135,9 @@ export default function UserDetail() {
                   </div>
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>Quy Mô Kênh</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Kênh Quản Lý</div>
                   <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginTop: 2 }}>
-                    {youtubeSummary.channelsCount} kênh · {youtubeSummary.videosCount} video
+                    {youtubeSummary.channelsCount} kênh
                   </div>
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>

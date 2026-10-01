@@ -14,7 +14,6 @@ router.get('/my-team', auth, youtubeController.getMyTeam);
 router.get('/teams/:teamId', auth, youtubeController.getTeamDetails);
 router.get('/channels', auth, youtubeController.listChannels);
 router.get('/channels/:id', auth, youtubeController.getChannelDetails);
-router.get('/top-videos', auth, youtubeController.getTopVideos);
 router.get('/compare', auth, youtubeController.compareTeams);
 
 // Admin Endpoints (Auth + Admin Role)

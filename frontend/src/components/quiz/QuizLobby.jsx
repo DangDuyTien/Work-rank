@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Users,
@@ -13,7 +13,9 @@ import {
   Gamepad2,
   X,
   RefreshCw,
+  Folder,
 } from 'lucide-react';
+import { quizGame } from '../../services/api';
 import QuizAvatar from './QuizAvatar';
 
 export default function QuizLobby({
@@ -31,9 +33,17 @@ export default function QuizLobby({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [title, setTitle] = useState('Phòng Quiz Đoán Hình & Đoán Nhạc');
   const [mode, setMode] = useState('ALL');
+  const [selectedSetId, setSelectedSetId] = useState('');
+  const [availableSets, setAvailableSets] = useState([]);
   const [maxPlayers, setMaxPlayers] = useState(20);
   const [totalQuestions, setTotalQuestions] = useState(10);
   const [activeTab, setActiveTab] = useState('ROOMS'); // 'ROOMS' or 'LEADERBOARD'
+
+  useEffect(() => {
+    quizGame.listSets().then((res) => {
+      setAvailableSets(res || []);
+    }).catch(() => {});
+  }, []);
 
   const filteredRooms = rooms.filter((r) => {
     if (modeFilter === 'ALL') return true;
@@ -46,6 +56,7 @@ export default function QuizLobby({
     onCreateRoom({
       title: title.trim(),
       mode,
+      quizSetId: selectedSetId ? Number(selectedSetId) : null,
       maxPlayers: Number(maxPlayers),
       totalQuestions: Number(totalQuestions),
     });
@@ -804,6 +815,36 @@ export default function QuizLobby({
                   </select>
                 </div>
               </div>
+
+              {availableSets.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#141414', marginBottom: 5 }}>
+                    Bộ câu hỏi (Tùy chọn)
+                  </label>
+                  <select
+                    value={selectedSetId}
+                    onChange={(e) => setSelectedSetId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      border: '1px solid rgba(0, 0, 0, 0.15)',
+                      background: '#ffffff',
+                      color: '#141414',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="">Tất cả câu hỏi (Ngẫu nhiên)</option>
+                    {availableSets.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title} ({s.category || 'Chung'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
                 <button

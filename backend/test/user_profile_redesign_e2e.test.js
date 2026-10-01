@@ -115,13 +115,10 @@ describe('Corporate User Profile & Job Position Redesign Test Suite', () => {
       teamId: teamPhoenix.id,
       teamName: teamPhoenix.name,
       channelsCount: 3,
-      videosCount: 45,
       totalViews: 1850000,
       totalSubscribers: 92000,
       viewsGrowth30dPct: 15.4,
       rankByViews: 1,
-      topVideoTitle: 'WorkRank Launch Video',
-      topVideoViews: 350000,
       lastSyncedAt: new Date(),
     });
   });

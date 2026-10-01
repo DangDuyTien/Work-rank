@@ -596,8 +596,7 @@ export default function GrandHub() {
                               )}
                             </div>
                             <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
-                              {team.channelsCount} kênh • {team.videosCount} video
-                              {team.topVideoTitle ? ` • Top: ${team.topVideoTitle}` : ''}
+                              {team.channelsCount} kênh
                             </div>
                           </div>
                         </div>

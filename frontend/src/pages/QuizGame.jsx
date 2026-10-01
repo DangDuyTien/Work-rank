@@ -11,6 +11,7 @@ import QuizAnswerPills from '../components/quiz/QuizAnswerPills';
 import QuizTimerBar from '../components/quiz/QuizTimerBar';
 import QuizMediaBox from '../components/quiz/QuizMediaBox';
 import QuizPlayerStrip from '../components/quiz/QuizPlayerStrip';
+import QuizAnswererSpotlight from '../components/quiz/QuizAnswererSpotlight';
 import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
@@ -34,9 +35,19 @@ export default function QuizGame() {
   const [totalQuestions, setTotalQuestions] = useState(10);
   const [myAnswer, setMyAnswer] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [lockedPoints, setLockedPoints] = useState(null);
+  const [answeredUserIds, setAnsweredUserIds] = useState([]);
   const [roundResult, setRoundResult] = useState(null);
   const [finalResults, setFinalResults] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
+
+  // Live spotlight event state
+  const [incomingSpotlightEvent, setIncomingSpotlightEvent] = useState(null);
+
+  // Server-authoritative timing state
+  const [startTimeMs, setStartTimeMs] = useState(Date.now());
+  const [durationMs, setDurationMs] = useState(10000);
+  const [maxPoints, setMaxPoints] = useState(1000);
 
   // Lobby state
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -49,12 +60,6 @@ export default function QuizGame() {
   const [soundMuted, setSoundMuted] = useState(quizSound.isMuted());
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false);
 
-  // Server-authoritative timer
-  const [timeRemaining, setTimeRemaining] = useState(10);
-  const [timeTotal, setTimeTotal] = useState(10);
-  const timerIntervalRef = useRef(null);
-  const lastTickSecRef = useRef(null);
-
   // Toggle sound
   const toggleSound = () => {
     const isNowMuted = quizSound.toggleMute();
@@ -64,57 +69,10 @@ export default function QuizGame() {
   // Push activity feed message
   const pushActivity = (name, text, color = '#b45309', avatar = null) => {
     setRecentActivity((prev) => [
-      ...prev.slice(-8),
+      ...prev.slice(-6),
       { name, text, color, avatar, time: Date.now() },
     ]);
   };
-
-  /**
-   * Server-authoritative timer synchronizer:
-   * Uses server questionStartTime + questionDurationMs to calculate exact deadline
-   * Updates display countdown and locks answer when remaining <= 0
-   */
-  const syncServerTimer = useCallback((startTimeMs, durationMs, timeLimitSeconds = 10) => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-
-    const totalDurationMs = Number(durationMs) || (Number(timeLimitSeconds) * 1000) || 10000;
-    const startMs = Number(startTimeMs) || Date.now();
-    const deadlineMs = startMs + totalDurationMs;
-    const totalSec = Math.max(1, Math.round(totalDurationMs / 1000));
-    setTimeTotal(totalSec);
-
-    const calcRemaining = () => {
-      const now = Date.now();
-      const diffMs = deadlineMs - now;
-      return Math.max(0, Math.ceil(diffMs / 1000));
-    };
-
-    const initialSec = calcRemaining();
-    setTimeRemaining(initialSec);
-    lastTickSecRef.current = initialSec;
-
-    if (initialSec <= 0) return;
-
-    timerIntervalRef.current = setInterval(() => {
-      const remainingSec = calcRemaining();
-      setTimeRemaining(remainingSec);
-
-      if (remainingSec <= 3 && remainingSec > 0 && remainingSec !== lastTickSecRef.current) {
-        quizSound.playTick(true);
-      }
-      lastTickSecRef.current = remainingSec;
-
-      if (remainingSec <= 0) {
-        if (timerIntervalRef.current) {
-          clearInterval(timerIntervalRef.current);
-          timerIntervalRef.current = null;
-        }
-      }
-    }, 100);
-  }, []);
 
   // Fetch lobby rooms & stats
   const fetchLobbyData = useCallback(async () => {
@@ -155,7 +113,7 @@ export default function QuizGame() {
     }
   }, []);
 
-  // Fetch full room detail
+  // Fetch full room detail & restore exact active state on reconnect / refresh
   const fetchRoomDetail = useCallback(async (roomIdToFetch) => {
     try {
       setActionLoading(true);
@@ -168,20 +126,31 @@ export default function QuizGame() {
         setCurrentQuestion(data.currentQuestion || null);
         setQuestionIndex(data.room.currentQuestionIndex || 0);
         setTotalQuestions(data.room.totalQuestions || 10);
+        setAnsweredUserIds(data.answeredUserIds || []);
+
         if (data.myAnswer) {
           setMyAnswer(data.myAnswer);
           setSelectedOption(data.myAnswer.selectedOption);
+          setLockedPoints(data.myAnswer.score || null);
         } else {
           setMyAnswer(null);
           setSelectedOption(null);
+          setLockedPoints(null);
         }
 
         if (data.room.status === 'PLAYING' && data.currentQuestion) {
-          syncServerTimer(
-            data.room.questionStartTime,
-            data.room.questionDurationMs,
-            data.currentQuestion.timeLimit || 10
-          );
+          setStartTimeMs(Number(data.room.questionStartTime) || Date.now());
+          setDurationMs(Number(data.room.questionDurationMs) || (data.currentQuestion.timeLimit * 1000) || 10000);
+          setMaxPoints(data.currentQuestion.points || 1000);
+        }
+
+        if (data.room.status === 'SHOWING_RESULT' && data.roundResults) {
+          setRoundResult({
+            correctOption: data.currentQuestion?.correctOption,
+            explanation: data.currentQuestion?.explanation,
+            answers: data.roundResults,
+            leaderboard: data.players,
+          });
         }
 
         if (data.room.status === 'FINISHED') {
@@ -194,7 +163,7 @@ export default function QuizGame() {
     } finally {
       setActionLoading(false);
     }
-  }, [syncServerTimer]);
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -223,7 +192,7 @@ export default function QuizGame() {
     const onPlayerJoined = (data) => {
       if (data.players) setPlayers(data.players);
       if (data.room) setRoom(data.room);
-      const joinedUser = data.joinedUser || data.user;
+      const joinedUser = data.joinedUser || data.user || data.player?.user;
       if (joinedUser) {
         pushActivity(joinedUser.name || 'Người chơi', 'đã tham gia phòng!', '#15803d');
       }
@@ -243,9 +212,13 @@ export default function QuizGame() {
         setTotalQuestions(data.totalQuestions || 10);
         setSelectedOption(null);
         setMyAnswer(null);
+        setLockedPoints(null);
+        setAnsweredUserIds([]);
         setRoundResult(null);
         setFinalResults(null);
-        syncServerTimer(data.questionStartTime, data.questionDurationMs, data.question.timeLimit || 10);
+        setStartTimeMs(Number(data.questionStartTime) || Date.now());
+        setDurationMs(Number(data.questionDurationMs) || (data.question.timeLimit * 1000) || 10000);
+        setMaxPoints(data.maxPoints || data.question.points || 1000);
         pushActivity('Hệ thống', 'Trận đấu bắt đầu! Câu hỏi số 1', '#b45309');
       }
     };
@@ -254,27 +227,42 @@ export default function QuizGame() {
       setRoundResult(null);
       setSelectedOption(null);
       setMyAnswer(null);
+      setLockedPoints(null);
+      setAnsweredUserIds([]);
       if (data.question) {
         setCurrentQuestion(data.question);
         setQuestionIndex(data.questionIndex || 0);
         setTotalQuestions(data.totalQuestions || 10);
-        syncServerTimer(data.questionStartTime, data.questionDurationMs, data.question.timeLimit || 10);
+        setStartTimeMs(Number(data.questionStartTime) || Date.now());
+        setDurationMs(Number(data.questionDurationMs) || (data.question.timeLimit * 1000) || 10000);
+        setMaxPoints(data.maxPoints || data.question.points || 1000);
         pushActivity('Hệ thống', `Chuyển sang Câu ${Number(data.questionIndex || 0) + 1}`, '#b45309');
       }
     };
 
-    const onAnswerSubmitted = (data) => {
-      const p = players.find((pl) => Number(pl.userId) === Number(data.userId));
-      if (p) {
-        pushActivity(p.user?.name || 'Người chơi', 'đã chọn đáp án', '#64748b');
-      }
+    // Trigger CENTER SPOTLIGHT on player answer!
+    const onPlayerAnswered = (data) => {
+      const uId = Number(data.userId);
+      setAnsweredUserIds((prev) => (prev.includes(uId) ? prev : [...prev, uId]));
+
+      const p = players.find((pl) => Number(pl.userId) === uId);
+      const displayName = data.user?.name || data.userName || p?.user?.name || `Người chơi ${data.userId}`;
+      const avatarUrl = data.user?.avatarUrl || data.userAvatar || p?.user?.avatarUrl;
+
+      // Trigger center spotlight animation
+      setIncomingSpotlightEvent({
+        userId: uId,
+        userName: displayName,
+        userAvatar: avatarUrl,
+        user: data.user || p?.user || { id: uId, name: displayName, avatarUrl },
+        answeredAt: data.answeredAt || Date.now(),
+        responseTimeMs: data.responseTimeMs,
+      });
+
+      pushActivity(displayName, 'đã khóa đáp án!', '#b45309');
     };
 
     const onQuestionResult = (data) => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
       setRoundResult(data);
       if (data.leaderboard) setPlayers(data.leaderboard);
 
@@ -288,10 +276,6 @@ export default function QuizGame() {
     };
 
     const onGameFinished = (data) => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
       quizSound.playVictory();
       if (data.room) setRoom(data.room);
       if (data.players) setPlayers(data.players);
@@ -304,26 +288,28 @@ export default function QuizGame() {
     socket.on('quiz:playerLeft', onPlayerLeft);
     socket.on('quiz:started', onGameStarted);
     socket.on('quiz:question', onQuestion);
-    socket.on('quiz:answerSubmitted', onAnswerSubmitted);
+    socket.on('quiz:player_answered', onPlayerAnswered);
+    socket.on('quiz:playerAnswered', onPlayerAnswered);
+    socket.on('quiz:answerSubmitted', onPlayerAnswered);
     socket.on('quiz:questionResult', onQuestionResult);
+    socket.on('quiz:question_reveal', onQuestionResult);
     socket.on('quiz:finished', onGameFinished);
 
     return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
       socket.emit('quiz:leaveRoom', { roomId: room.id });
       socket.off('quiz:roomUpdated', onRoomUpdated);
       socket.off('quiz:playerJoined', onPlayerJoined);
       socket.off('quiz:playerLeft', onPlayerLeft);
       socket.off('quiz:started', onGameStarted);
       socket.off('quiz:question', onQuestion);
-      socket.off('quiz:answerSubmitted', onAnswerSubmitted);
+      socket.off('quiz:player_answered', onPlayerAnswered);
+      socket.off('quiz:playerAnswered', onPlayerAnswered);
+      socket.off('quiz:answerSubmitted', onPlayerAnswered);
       socket.off('quiz:questionResult', onQuestionResult);
+      socket.off('quiz:question_reveal', onQuestionResult);
       socket.off('quiz:finished', onGameFinished);
     };
-  }, [socket, room?.id, user?.id, syncServerTimer, players]);
+  }, [socket, room?.id, user?.id, players]);
 
   // Actions
   const handleCreateRoom = async (formData) => {
@@ -412,10 +398,23 @@ export default function QuizGame() {
   };
 
   const handleSelectOption = async (optionKey) => {
-    if (!room?.id || !currentQuestion?.id || selectedOption || timeRemaining <= 0) return;
+    if (!room?.id || !currentQuestion?.id || selectedOption || roundResult) return;
 
+    // Instantly lock answer on UI
     setSelectedOption(optionKey);
     quizSound.playSelect();
+
+    // Compute optimistic locked points based on local elapsed time
+    const now = Date.now();
+    const elapsed = Math.max(0, now - startTimeMs);
+    const ratio = Math.max(0, 1 - elapsed / durationMs);
+    const estPoints = Math.round(maxPoints * ratio);
+    setLockedPoints(estPoints);
+
+    // Optimistically mark current user as answered
+    if (user?.id) {
+      setAnsweredUserIds((prev) => (prev.includes(Number(user.id)) ? prev : [...prev, Number(user.id)]));
+    }
 
     try {
       const res = await quizGame.submitAnswer(room.id, {
@@ -530,8 +529,14 @@ export default function QuizGame() {
         {/* 4. ACTIVE GAMEPLAY VIEW */}
         {room && isPlayingOrShowing && !isFinished && currentQuestion && (
           <>
-            <div className="quiz-game-main-stage">
-              {/* Left Column — Question Text, 4 Large Answer Pills, Real Countdown Bar */}
+            {/* Center-Stage Answerer Spotlight Overlay */}
+            <QuizAnswererSpotlight
+              incomingEvent={incomingSpotlightEvent}
+              currentUserId={user?.id}
+            />
+
+            <div className="quiz-game-main-stage" style={{ position: 'relative' }}>
+              {/* Left Column — Question Text, 4 Large Answer Pills, Continuous Point Pot & Timer Bar */}
               <div className="quiz-game-left-col">
                 <QuizQuestionCard question={currentQuestion} />
 
@@ -539,13 +544,16 @@ export default function QuizGame() {
                   question={currentQuestion}
                   selectedOption={selectedOption}
                   revealedCorrectOption={roundResult?.correctOption}
-                  disabled={Boolean(roundResult) || timeRemaining <= 0}
+                  disabled={Boolean(roundResult)}
                   onSelectOption={handleSelectOption}
                 />
 
                 <QuizTimerBar
-                  timeRemaining={timeRemaining}
-                  timeTotal={timeTotal}
+                  startTimeMs={startTimeMs}
+                  durationMs={durationMs}
+                  maxPoints={maxPoints}
+                  isLocked={Boolean(selectedOption)}
+                  lockedPoints={lockedPoints}
                 />
 
                 {roundResult && (
@@ -554,7 +562,11 @@ export default function QuizGame() {
                     explanation={roundResult.explanation}
                     myAnswer={myAnswer}
                     answers={roundResult.answers || []}
+                    leaderboard={players}
+                    fastestCorrectUserId={roundResult.fastestCorrectUserId}
+                    fastestResponseTimeMs={roundResult.fastestResponseTimeMs}
                     isLastQuestion={roundResult.isLastQuestion}
+                    currentUserId={user?.id}
                   />
                 )}
               </div>
@@ -563,16 +575,18 @@ export default function QuizGame() {
               <div className="quiz-game-right-col">
                 <QuizMediaBox
                   question={currentQuestion}
-                  isLocked={Boolean(roundResult) || timeRemaining <= 0}
+                  isLocked={Boolean(roundResult)}
                 />
               </div>
             </div>
 
-            {/* Bottom Dock — Live Activity + Player Tokens */}
+            {/* Bottom Dock — Live Activity + Answered Strip + Player Standings */}
             <QuizPlayerStrip
               players={players}
               currentUserId={user?.id}
+              answeredUserIds={answeredUserIds}
               recentActivity={recentActivity}
+              roundResult={roundResult}
             />
           </>
         )}

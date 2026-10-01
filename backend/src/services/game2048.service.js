@@ -64,20 +64,39 @@ function validateScorePlausibility(score, maxTile, moves) {
 }
 
 /**
- * Starts a new 2048 game session
+ * Starts a new 2048 game session and persists ACTIVE session record
  */
-async function startSession(userId) {
+async function startSession(userId, initialData = {}) {
+  if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
+
   const gameSessionId = 'g2048_' + crypto.randomBytes(16).toString('hex');
+  const now = new Date();
+
+  // Create persistent ACTIVE session in database
+  const sessionRecord = await Game2048Score.create({
+    userId,
+    score: 0,
+    maxTile: 2,
+    moves: 0,
+    status: 'ACTIVE',
+    gameSessionId,
+    boardState: initialData.boardState ? JSON.stringify(initialData.boardState) : null,
+    startedAt: now,
+    lastActivityAt: now,
+    playedAt: now,
+  });
+
   return {
     gameSessionId,
-    startedAt: Date.now(),
+    startedAt: sessionRecord.startedAt.getTime(),
+    status: 'ACTIVE',
   };
 }
 
 /**
- * Submits a completed 2048 game result
+ * Checkpoints current session score & board state during active gameplay
  */
-async function submitScore({ userId, score, maxTile, moves, gameSessionId, playedAt }) {
+async function checkpointSession({ userId, score, maxTile, moves, gameSessionId, boardState }) {
   if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
 
   const cleanSessionId = String(gameSessionId || '').trim();
@@ -85,46 +104,55 @@ async function submitScore({ userId, score, maxTile, moves, gameSessionId, playe
     throw new Error('Thiếu mã phiên chơi game (gameSessionId)');
   }
 
-  const numScore = Math.max(0, Math.floor(Number(score) || 0));
-  const numMaxTile = Math.max(2, Math.floor(Number(maxTile) || 2));
-  const numMoves = Math.max(0, Math.floor(Number(moves) || 0));
+  const numScore = Math.floor(Number(score) || 0);
+  const numMaxTile = Math.floor(Number(maxTile) || 2);
+  const numMoves = Math.floor(Number(moves) || 0);
 
-  // Anti-tamper validation
-  validateScorePlausibility(numScore, numMaxTile, numMoves);
+  validateScorePlausibility(score, maxTile, moves);
 
-  // IDEMPOTENCY: Check if this session was already processed
-  const existingScore = await Game2048Score.findOne({
-    where: { gameSessionId: cleanSessionId },
-  });
-
-  if (existingScore) {
-    const userStat = await Game2048UserStat.findOne({ where: { userId } });
-    return {
-      success: true,
-      score: existingScore.score,
-      bestScore: userStat?.bestScore || existingScore.score,
-      maxTile: existingScore.maxTile,
-      isNewBest: false,
-      alreadyProcessed: true,
-    };
-  }
-
-  // Atomic database transaction
   const result = await sequelize.transaction(async (t) => {
-    // 1. Record individual game session
-    const scoreRecord = await Game2048Score.create(
-      {
-        userId,
-        score: numScore,
-        maxTile: numMaxTile,
-        moves: numMoves,
-        gameSessionId: cleanSessionId,
-        playedAt: playedAt ? new Date(playedAt) : new Date(),
-      },
-      { transaction: t }
-    );
+    let sessionRecord = await Game2048Score.findOne({
+      where: { gameSessionId: cleanSessionId },
+      transaction: t,
+    });
 
-    // 2. Update user career best stats
+    const now = new Date();
+    const boardStateStr = boardState ? (typeof boardState === 'string' ? boardState : JSON.stringify(boardState)) : null;
+
+    if (sessionRecord) {
+      if (numScore > sessionRecord.score) {
+        sessionRecord.score = numScore;
+      }
+      if (numMaxTile > sessionRecord.maxTile) {
+        sessionRecord.maxTile = numMaxTile;
+      }
+      if (numMoves > sessionRecord.moves) {
+        sessionRecord.moves = numMoves;
+      }
+      if (boardStateStr) {
+        sessionRecord.boardState = boardStateStr;
+      }
+      sessionRecord.lastActivityAt = now;
+      await sessionRecord.save({ transaction: t });
+    } else {
+      sessionRecord = await Game2048Score.create(
+        {
+          userId,
+          score: numScore,
+          maxTile: numMaxTile,
+          moves: numMoves,
+          status: 'ACTIVE',
+          gameSessionId: cleanSessionId,
+          boardState: boardStateStr,
+          startedAt: now,
+          lastActivityAt: now,
+          playedAt: now,
+        },
+        { transaction: t }
+      );
+    }
+
+    // Update career best if current score exceeds user's personal best
     const [stat, created] = await Game2048UserStat.findOrCreate({
       where: { userId },
       defaults: {
@@ -132,7 +160,7 @@ async function submitScore({ userId, score, maxTile, moves, gameSessionId, playe
         highestTile: numMaxTile,
         totalGames: 1,
         totalMoves: numMoves,
-        firstAchievedAt: new Date(),
+        firstAchievedAt: now,
       },
       transaction: t,
     });
@@ -140,12 +168,136 @@ async function submitScore({ userId, score, maxTile, moves, gameSessionId, playe
     let isNewBest = false;
 
     if (!created) {
-      stat.totalGames = (stat.totalGames || 0) + 1;
-      stat.totalMoves = BigInt(stat.totalMoves || 0) + BigInt(numMoves);
+      if (numScore > (stat.bestScore || 0)) {
+        stat.bestScore = numScore;
+        stat.firstAchievedAt = now;
+        isNewBest = true;
+      }
+      if (numMaxTile > (stat.highestTile || 0)) {
+        stat.highestTile = numMaxTile;
+      }
+      await stat.save({ transaction: t });
+    } else {
+      isNewBest = numScore > 0;
+    }
+
+    return {
+      sessionRecord,
+      stat,
+      isNewBest,
+    };
+  });
+
+  return {
+    success: true,
+    score: numScore,
+    bestScore: result.stat.bestScore,
+    highestTile: result.stat.highestTile,
+    isNewBest: result.isNewBest,
+    status: result.sessionRecord.status,
+  };
+}
+
+/**
+ * Submits a completed or exited 2048 game result (GAME OVER, EXIT, or ABANDONED)
+ */
+async function submitScore({ userId, score, maxTile, moves, gameSessionId, playedAt, status, boardState }) {
+  if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
+
+  const cleanSessionId = String(gameSessionId || '').trim();
+  if (!cleanSessionId) {
+    throw new Error('Thiếu mã phiên chơi game (gameSessionId)');
+  }
+
+  const numScore = Math.floor(Number(score) || 0);
+  const numMaxTile = Math.floor(Number(maxTile) || 2);
+  const numMoves = Math.floor(Number(moves) || 0);
+  const finalStatus = status === 'ABANDONED' ? 'ABANDONED' : 'COMPLETED';
+
+  // Anti-tamper validation
+  validateScorePlausibility(score, maxTile, moves);
+
+  // Atomic database transaction with idempotency and update support
+  const result = await sequelize.transaction(async (t) => {
+    const existingScore = await Game2048Score.findOne({
+      where: { gameSessionId: cleanSessionId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    const now = new Date();
+    const boardStateStr = boardState ? (typeof boardState === 'string' ? boardState : JSON.stringify(boardState)) : null;
+    let scoreRecord;
+    let isAlreadyFinalized = false;
+
+    if (existingScore) {
+      isAlreadyFinalized = existingScore.status === 'COMPLETED' || existingScore.status === 'ABANDONED';
+
+      // Check if identical submission already processed
+      if (isAlreadyFinalized && existingScore.score === numScore && existingScore.moves === numMoves) {
+        const userStat = await Game2048UserStat.findOne({ where: { userId }, transaction: t });
+        return {
+          scoreRecord: existingScore,
+          stat: userStat,
+          isNewBest: false,
+          alreadyProcessed: true,
+        };
+      }
+
+      // Update session with latest final score and status
+      existingScore.score = Math.max(existingScore.score, numScore);
+      existingScore.maxTile = Math.max(existingScore.maxTile, numMaxTile);
+      existingScore.moves = Math.max(existingScore.moves, numMoves);
+      existingScore.status = finalStatus;
+      existingScore.endedAt = now;
+      existingScore.lastActivityAt = now;
+      if (boardStateStr) existingScore.boardState = boardStateStr;
+      if (playedAt) existingScore.playedAt = new Date(playedAt);
+
+      scoreRecord = await existingScore.save({ transaction: t });
+    } else {
+      scoreRecord = await Game2048Score.create(
+        {
+          userId,
+          score: numScore,
+          maxTile: numMaxTile,
+          moves: numMoves,
+          status: finalStatus,
+          gameSessionId: cleanSessionId,
+          boardState: boardStateStr,
+          startedAt: now,
+          endedAt: now,
+          lastActivityAt: now,
+          playedAt: playedAt ? new Date(playedAt) : now,
+        },
+        { transaction: t }
+      );
+    }
+
+    // Update career best stats for leaderboard
+    const [stat, created] = await Game2048UserStat.findOrCreate({
+      where: { userId },
+      defaults: {
+        bestScore: numScore,
+        highestTile: numMaxTile,
+        totalGames: 1,
+        totalMoves: numMoves,
+        firstAchievedAt: now,
+      },
+      transaction: t,
+    });
+
+    let isNewBest = false;
+
+    if (!created) {
+      if (!isAlreadyFinalized) {
+        stat.totalGames = (stat.totalGames || 0) + 1;
+        stat.totalMoves = BigInt(stat.totalMoves || 0) + BigInt(numMoves);
+      }
 
       if (numScore > (stat.bestScore || 0)) {
         stat.bestScore = numScore;
-        stat.firstAchievedAt = new Date();
+        stat.firstAchievedAt = now;
         isNewBest = true;
       }
 
@@ -162,16 +314,55 @@ async function submitScore({ userId, score, maxTile, moves, gameSessionId, playe
       scoreRecord,
       stat,
       isNewBest,
+      alreadyProcessed: false,
     };
   });
 
   return {
     success: true,
     score: numScore,
-    bestScore: result.stat.bestScore,
-    highestTile: result.stat.highestTile,
+    bestScore: result.stat?.bestScore ?? numScore,
+    highestTile: result.stat?.highestTile ?? numMaxTile,
     isNewBest: result.isNewBest,
-    alreadyProcessed: false,
+    alreadyProcessed: result.alreadyProcessed,
+    status: result.scoreRecord.status,
+  };
+}
+
+/**
+ * Gets active session for user to restore gameplay on refresh / reconnect
+ */
+async function getActiveSession(userId) {
+  if (!userId) return null;
+
+  const session = await Game2048Score.findOne({
+    where: {
+      userId,
+      status: 'ACTIVE',
+    },
+    order: [['lastActivityAt', 'DESC']],
+  });
+
+  if (!session) return null;
+
+  let boardState = null;
+  if (session.boardState) {
+    try {
+      boardState = JSON.parse(session.boardState);
+    } catch (e) {
+      boardState = null;
+    }
+  }
+
+  return {
+    gameSessionId: session.gameSessionId,
+    score: session.score,
+    maxTile: session.maxTile,
+    moves: session.moves,
+    boardState,
+    startedAt: session.startedAt,
+    lastActivityAt: session.lastActivityAt,
+    status: session.status,
   };
 }
 
@@ -303,7 +494,9 @@ async function getMyStats(userId) {
 module.exports = {
   validateScorePlausibility,
   startSession,
+  checkpointSession,
   submitScore,
+  getActiveSession,
   getLeaderboard,
   getMyStats,
 };

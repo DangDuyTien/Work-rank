@@ -45,11 +45,22 @@ async function getOverview(req, res, next) {
 }
 
 /**
- * Get Public Team Ranking / Leaderboard
+ * Get Public YouTube Ranking / Leaderboard (Supports both Teams and Channels)
  */
 async function getLeaderboard(req, res, next) {
   try {
-    const { sortBy = 'views', limit = 50, page = 1 } = req.query;
+    const { view = 'teams', sortBy = 'views', teamId, search, limit = 50, page = 1 } = req.query;
+    if (view === 'channels') {
+      const channelLeaderboard = await youtubeAggregationService.getYouTubeChannelLeaderboard({
+        teamId,
+        sortBy,
+        search,
+        limit: Number(limit),
+        page: Number(page),
+      });
+      return res.status(200).json(channelLeaderboard);
+    }
+
     const leaderboard = await youtubeAggregationService.getYouTubeTeamLeaderboard({
       sortBy,
       limit: Number(limit),
@@ -183,53 +194,6 @@ async function listChannels(req, res, next) {
       status: 'ACTIVE',
     });
     return res.status(200).json({ items: channels, channels });
-  } catch (err) {
-    return next(err);
-  }
-}
-
-/**
- * Get Top Videos (Scoped by Team/Channel for Members, Company-wide for Admin)
- */
-async function getTopVideos(req, res, next) {
-  try {
-    const { timeframe = '30d', teamId, channelId, limit = 20, page = 1 } = req.query;
-    const isAdmin = req.user && req.user.role === 'admin';
-    const userTeamId = req.user && req.user.teamId ? Number(req.user.teamId) : null;
-
-    let filterTeamId = teamId ? Number(teamId) : null;
-    let filterChannelId = channelId ? Number(channelId) : null;
-
-    if (!isAdmin) {
-      if (filterTeamId && filterTeamId !== userTeamId) {
-        return res.status(403).json({
-          message: 'Forbidden: You cannot view top videos of other teams',
-          code: 'CROSS_TEAM_FORBIDDEN',
-        });
-      }
-      if (filterChannelId) {
-        const channel = await youtubeDataService.getChannelById(filterChannelId);
-        if (!channel || !channel.teamId || Number(channel.teamId) !== userTeamId) {
-          return res.status(403).json({
-            message: 'Forbidden: You cannot view top videos of other teams\' channels',
-            code: 'CROSS_CHANNEL_FORBIDDEN',
-          });
-        }
-      }
-      // Non-admin default to own team if parameter omitted
-      if (!filterTeamId && userTeamId) {
-        filterTeamId = userTeamId;
-      }
-    }
-
-    const videos = await youtubeDataService.getTopVideos({
-      timeframe,
-      teamId: filterTeamId,
-      channelId: filterChannelId,
-      limit: Number(limit),
-      page: Number(page),
-    });
-    return res.status(200).json({ items: videos, videos, timeframe, limit: Number(limit) });
   } catch (err) {
     return next(err);
   }
@@ -484,7 +448,6 @@ module.exports = {
   getTeamDetails,
   getChannelDetails,
   listChannels,
-  getTopVideos,
   compareTeams,
   getAdminOverview,
   listAdminChannels,

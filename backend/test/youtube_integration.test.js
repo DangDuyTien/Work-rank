@@ -11,9 +11,7 @@ const {
   User,
   Team,
   YouTubeChannel,
-  YouTubeVideo,
   YouTubeChannelMetric,
-  YouTubeVideoMetric,
   TeamYouTubeSummary,
   ScoreLedger,
 } = require('../src/models');
@@ -120,20 +118,12 @@ describe('YouTube ↔ Team Integration & Analytics Test Suite', () => {
 
   describe('2. Metrics Snapshots & Historical Idempotency', () => {
     let channel;
-    let video;
 
     before(async () => {
       channel = await youtubeDataService.createChannel({
         channelId: `UC_METRICS_TEST_${Date.now()}`,
         title: 'Metrics Test Channel',
         teamId: teamPhoenix.id,
-      });
-
-      video = await youtubeDataService.upsertVideo({
-        channelId: channel.id,
-        videoId: `yt_vid_${Date.now()}`,
-        title: 'Epic Production Video #1',
-        publishedAt: new Date(Date.now() - 5 * 86400000),
       });
     });
 
@@ -142,7 +132,6 @@ describe('YouTube ↔ Team Integration & Analytics Test Suite', () => {
         channelId: channel.id,
         views: 500000,
         subscribers: 25000,
-        videosCount: 15,
         watchTimeHours: 12500.5,
         engagementRate: 8.5,
         capturedAt: new Date(),
@@ -161,26 +150,11 @@ describe('YouTube ↔ Team Integration & Analytics Test Suite', () => {
         channelId: channel.id,
         views: 505000,
         subscribers: 25100,
-        videosCount: 15,
         capturedAt: new Date(),
       });
 
       const afterCount = await YouTubeChannelMetric.count({ where: { channelId: channel.id } });
       assert.equal(afterCount, beforeCount, 'Should update existing snapshot in time window rather than duplicating');
-    });
-
-    test('Records video metric snapshot and associates with video', async () => {
-      const vSnapshot = await youtubeDataService.recordVideoMetricSnapshot({
-        videoId: video.id,
-        views: 180000,
-        likes: 15000,
-        comments: 2100,
-        watchTimeHours: 4500,
-      });
-
-      assert.ok(vSnapshot.id);
-      assert.equal(Number(vSnapshot.views), 180000);
-      assert.equal(Number(vSnapshot.likes), 15000);
     });
   });
 

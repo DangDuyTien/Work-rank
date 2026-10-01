@@ -1,13 +1,13 @@
 'use strict';
 
-const { YouTubeChannel, YouTubeVideo, sequelize } = require('../../models');
+const { YouTubeChannel, sequelize } = require('../../models');
 const youtubeDataService = require('./youtubeData.service');
 const youtubeAggregationService = require('./youtubeAggregation.service');
 const youtubeIntegrationService = require('../competition/youtubeIntegration.service');
 
 /**
  * YouTube Sync Service
- * Orchestrates periodic and on-demand synchronization of YouTube channels and videos.
+ * Orchestrates periodic and on-demand synchronization of YouTube channels.
  */
 
 // Simple fetch-based YouTube Data API v3 client (if API key provided)
@@ -54,7 +54,6 @@ async function syncChannel(channelIdentifier, options = {}) {
 
   try {
     let channelStats = null;
-    let videosData = [];
 
     // 1. Try Live API if configured (bypassed in test environment)
     if (process.env.YOUTUBE_API_KEY && process.env.NODE_ENV !== 'test') {
@@ -91,7 +90,6 @@ async function syncChannel(channelIdentifier, options = {}) {
             thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
             views: Number(item.statistics.viewCount || 0),
             subscribers: Number(item.statistics.subscriberCount || 0),
-            videosCount: Number(item.statistics.videoCount || 0),
           };
         } else if (apiRes && (!apiRes.items || apiRes.items.length === 0)) {
           throw new Error(`Không tìm thấy kênh trên YouTube với Channel ID/Handle "${rawChannelId}". Vui lòng kiểm tra lại Channel ID (bắt đầu bằng UC...) hoặc Handle (@ten_kenh).`);
@@ -110,19 +108,7 @@ async function syncChannel(channelIdentifier, options = {}) {
         thumbnailUrl: channel.thumbnailUrl,
         views: 1000,
         subscribers: 100,
-        videosCount: 5,
       };
-      videosData = [
-        {
-          videoId: `test_vid_${channel.channelId}_01`,
-          title: `${channel.title} - Test Video`,
-          description: 'Test environment synthetic video.',
-          publishedAt: new Date(),
-          views: 500,
-          likes: 50,
-          comments: 5,
-        },
-      ];
     }
 
     if (!channelStats) {
@@ -140,21 +126,8 @@ async function syncChannel(channelIdentifier, options = {}) {
       channel.lastSyncError = null;
       await channel.save({ transaction });
 
-      // Calculate channel engagement rate safely from recent videos if available, or estimated
-      let totalVideoInteractions = 0;
-      let totalVideoViews = 0;
-      if (Array.isArray(videosData) && videosData.length > 0) {
-        for (const v of videosData) {
-          totalVideoInteractions += (Number(v.likes) || 0) + (Number(v.comments) || 0);
-          totalVideoViews += (Number(v.views) || 0);
-        }
-      }
-
       let channelEngagementRate = 0;
-      if (totalVideoViews > 0) {
-        channelEngagementRate = (totalVideoInteractions / totalVideoViews) * 100;
-      } else if (channelStats.subscribers > 0 && channelStats.views > 0) {
-        // Estimated engagement rate within reasonable 0-100% bound
+      if (channelStats.subscribers > 0 && channelStats.views > 0) {
         channelEngagementRate = Math.min(10.0, (channelStats.views / (channelStats.subscribers * 100)) * 100);
       }
       const safeChannelEngagementRate = Number(Math.min(999.9999, Math.max(0, channelEngagementRate)).toFixed(4));
@@ -164,42 +137,12 @@ async function syncChannel(channelIdentifier, options = {}) {
         channelId: channel.id,
         views: channelStats.views,
         subscribers: channelStats.subscribers,
-        videosCount: channelStats.videosCount,
         watchTimeHours: safeChannelWatchTime,
         engagementRate: safeChannelEngagementRate,
         capturedAt: new Date(),
       }, { transaction });
 
-      // 4. Upsert Videos & Record Video Metric Snapshots
-      for (const v of videosData) {
-        const savedVideo = await youtubeDataService.upsertVideo({
-          channelId: channel.id,
-          videoId: v.videoId,
-          title: v.title,
-          description: v.description,
-          publishedAt: v.publishedAt,
-          thumbnailUrl: v.thumbnailUrl,
-        }, { transaction });
-
-        const vViews = Number(v.views) || 0;
-        const vLikes = Number(v.likes) || 0;
-        const vComments = Number(v.comments) || 0;
-        const vEngagement = vViews > 0 ? ((vLikes + vComments) / vViews) * 100 : 0;
-        const safeVideoEngagementRate = Number(Math.min(999.9999, Math.max(0, vEngagement)).toFixed(4));
-        const safeVideoWatchTime = Number(Math.min(9999999999.99, Math.max(0, vViews * 0.05)).toFixed(2));
-
-        await youtubeDataService.recordVideoMetricSnapshot({
-          videoId: savedVideo.id,
-          views: vViews,
-          likes: vLikes,
-          comments: vComments,
-          watchTimeHours: safeVideoWatchTime,
-          engagementRate: safeVideoEngagementRate,
-          capturedAt: new Date(),
-        }, { transaction });
-      }
-
-      // 5. Update Team Summary if channel is assigned
+      // 4. Update Team Summary if channel is assigned
       if (channel.teamId) {
         await youtubeAggregationService.aggregateTeamYouTubeSummary(channel.teamId, { transaction });
       }
@@ -211,7 +154,6 @@ async function syncChannel(channelIdentifier, options = {}) {
       status: 'SUCCESS',
       views: channelStats.views,
       subscribers: channelStats.subscribers,
-      videosCount: channelStats.videosCount,
     };
   } catch (error) {
     console.error('[YouTubeSync Error caught in syncChannel]:', error);

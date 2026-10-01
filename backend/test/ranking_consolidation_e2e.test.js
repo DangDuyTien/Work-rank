@@ -194,7 +194,6 @@ describe('Unified Ranking & Leaderboard Consolidation Test Suite', () => {
     await TeamYouTubeSummary.create({
       teamId: teamDragon.id,
       channelsCount: 2,
-      videosCount: 15,
       totalViews: 450000,
       totalSubscribers: 12500,
       viewsGrowth30dPct: 18.5,

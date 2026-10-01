@@ -721,9 +721,14 @@ async function getAvailableGrands() {
 }
 
 /**
- * 6. GET YOUTUBE RANKINGS
+ * 6. GET YOUTUBE RANKINGS (Supports both channel-level and team-level leaderboards)
  */
 async function getYouTubeRankings(params = {}) {
+  const { view } = params;
+  if (view === 'channels') {
+    return await youtubeAggregationService.getYouTubeChannelLeaderboard(params);
+  }
+  // Default or view === 'teams': returns team leaderboard
   return await youtubeAggregationService.getYouTubeTeamLeaderboard(params);
 }
 

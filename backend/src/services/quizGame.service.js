@@ -11,30 +11,10 @@ const {
   QuizAnswer,
   QuizUserStat,
 } = require('../models');
-const { DEFAULT_QUIZ_QUESTIONS } = require('../config/quizQuestionsTemplate');
 const quizRealtime = require('./quizRealtime.service');
 
 // Store active in-memory question timers to auto-reveal when time expires
 const activeQuestionTimers = new Map();
-
-/**
- * Auto-seeds default quiz questions if table is empty
- */
-async function ensureSeedQuestions() {
-  try {
-    const count = await QuizQuestion.count();
-    if (count === 0) {
-      console.log('[QuizGame] Seeding default quiz questions...');
-      await QuizQuestion.bulkCreate(DEFAULT_QUIZ_QUESTIONS);
-      console.log(`[QuizGame] Seeded ${DEFAULT_QUIZ_QUESTIONS.length} quiz questions.`);
-    }
-  } catch (err) {
-    console.error('[QuizGame] Error ensuring seed questions:', err.message);
-  }
-}
-
-// Run seed check on module load
-ensureSeedQuestions();
 
 /**
  * Generate a random 6-character room code
@@ -163,6 +143,9 @@ async function getRoomState(roomId, userId = null) {
     }
   }
 
+  // Sanitize answers during PLAYING phase: only expose answered user IDs (no options or correctness)
+  const answeredUserIds = currentAnswers.map((a) => Number(a.userId));
+
   // If showing result or finished, include all answers summary
   let roundResults = null;
   if (room.status === 'SHOWING_RESULT' || room.status === 'FINISHED') {
@@ -174,21 +157,22 @@ async function getRoomState(roomId, userId = null) {
     players: (roomJson.players || []).map((p, idx) => ({ ...p, rank: idx + 1 })),
     currentQuestion,
     currentAnswersCount: currentAnswers.length,
+    answeredUserIds,
     myAnswer,
     roundResults,
+    maxPoints: 1000,
   };
 }
 
 /**
  * Creates a new quiz game room
  */
-async function createRoom({ hostUserId, title, mode = 'ALL', maxPlayers = 20, totalQuestions = 10 }) {
-  await ensureSeedQuestions();
-
+async function createRoom({ hostUserId, title, mode = 'ALL', maxPlayers = 20, totalQuestions = 10, quizSetId = null }) {
   const cleanTitle = (title || 'Phòng Quiz Thử Thách').trim().slice(0, 100);
   const cleanMode = ['ALL', 'IMAGE', 'MUSIC'].includes(mode) ? mode : 'ALL';
   const cleanMax = Math.min(20, Math.max(2, Number(maxPlayers) || 20));
   const cleanTotal = Math.min(20, Math.max(3, Number(totalQuestions) || 10));
+  const cleanQuizSetId = quizSetId ? Number(quizSetId) : null;
 
   const room = await sequelize.transaction(async (t) => {
     // Generate unique code
@@ -204,6 +188,7 @@ async function createRoom({ hostUserId, title, mode = 'ALL', maxPlayers = 20, to
         code,
         title: cleanTitle,
         hostUserId,
+        quizSetId: cleanQuizSetId,
         mode: cleanMode,
         status: 'WAITING',
         maxPlayers: cleanMax,
@@ -332,34 +317,38 @@ async function startGame(roomId, hostUserId) {
     throw new Error('Cần ít nhất 1 người chơi để bắt đầu');
   }
 
-  // Ensure questions exist in DB
-  await ensureSeedQuestions();
-
-  // Query pool of questions based on mode
+  // Query pool of questions based on mode and optional quizSetId
   const questionWhere = { isActive: true };
+  if (room.quizSetId) questionWhere.quizSetId = room.quizSetId;
   if (room.mode === 'IMAGE') questionWhere.type = 'IMAGE';
   if (room.mode === 'MUSIC') questionWhere.type = 'MUSIC';
+
+  const orderClause = [['orderIndex', 'ASC'], ['id', 'ASC']];
 
   const availableQuestions = await QuizQuestion.findAll({
     where: questionWhere,
     attributes: ['id'],
+    order: orderClause,
   });
 
   if (availableQuestions.length === 0) {
-    throw new Error('Không có đủ câu hỏi trong hệ thống cho chế độ này');
+    throw new Error('Chưa có câu hỏi nào phù hợp trong hệ thống để bắt đầu trò chơi. Vui lòng thêm câu hỏi trong Quản trị.');
   }
 
-  // Shuffle and pick totalQuestions
-  const shuffledIds = availableQuestions
-    .map((q) => q.id)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, room.totalQuestions);
+  // If quizSetId is chosen, respect canonical order up to totalQuestions, else pick
+  const shuffledIds = room.quizSetId
+    ? availableQuestions.slice(0, room.totalQuestions).map((q) => q.id)
+    : availableQuestions
+        .map((q) => q.id)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, room.totalQuestions);
 
   const firstQuestionId = shuffledIds[0];
   const firstQuestion = await QuizQuestion.findByPk(firstQuestionId);
 
   const durationMs = (firstQuestion?.timeLimit || 10) * 1000;
   const startTime = Date.now();
+  const maxPoints = firstQuestion?.points || 1000;
 
   room.selectedQuestionIds = shuffledIds;
   room.totalQuestions = shuffledIds.length;
@@ -383,8 +372,7 @@ async function startGame(roomId, hostUserId) {
   const sanitizedQ = sanitizeQuestionForClient(firstQuestion);
   const fullState = await getRoomState(roomId, hostUserId);
 
-  // Emit game started & first question
-  quizRealtime.emitToRoom(roomId, 'quiz:started', {
+  const questionPayload = {
     room: fullState.room,
     players: fullState.players,
     question: sanitizedQ,
@@ -392,15 +380,13 @@ async function startGame(roomId, hostUserId) {
     totalQuestions: shuffledIds.length,
     questionStartTime: startTime,
     questionDurationMs: durationMs,
-  });
+    maxPoints,
+    deadline: startTime + durationMs,
+  };
 
-  quizRealtime.emitToRoom(roomId, 'quiz:question', {
-    question: sanitizedQ,
-    questionIndex: 0,
-    totalQuestions: shuffledIds.length,
-    questionStartTime: startTime,
-    questionDurationMs: durationMs,
-  });
+  // Emit game started & first question
+  quizRealtime.emitToRoom(roomId, 'quiz:started', questionPayload);
+  quizRealtime.emitToRoom(roomId, 'quiz:question', questionPayload);
 
   // Schedule auto timeout reveal
   scheduleQuestionTimeout(roomId, firstQuestionId, durationMs);
@@ -418,7 +404,7 @@ function scheduleQuestionTimeout(roomId, questionId, durationMs) {
     activeQuestionTimers.delete(roomId);
   }
 
-  // Grace buffer: 1.5s past time limit to allow network in-flight submissions
+  // Grace buffer: 800ms past time limit to allow network in-flight submissions
   const timer = setTimeout(async () => {
     try {
       const room = await QuizRoom.findByPk(roomId);
@@ -430,7 +416,7 @@ function scheduleQuestionTimeout(roomId, questionId, durationMs) {
     } finally {
       activeQuestionTimers.delete(roomId);
     }
-  }, durationMs + 1500);
+  }, durationMs + 800);
 
   activeQuestionTimers.set(roomId, timer);
 }
@@ -454,7 +440,10 @@ async function submitAnswer(roomId, questionId, userId, selectedOption) {
     throw new Error('Đáp án không hợp lệ (phải là A, B, C hoặc D)');
   }
 
-  const player = await QuizPlayer.findOne({ where: { roomId, userId } });
+  const player = await QuizPlayer.findOne({
+    where: { roomId, userId },
+    include: [{ model: User, as: 'user', attributes: USER_ATTRIBUTES }],
+  });
   if (!player) throw new Error('Người chơi không thuộc phòng đấu này');
 
   // Check IDEMPOTENCY — already answered?
@@ -476,16 +465,25 @@ async function submitAnswer(roomId, questionId, userId, selectedOption) {
   const startTime = Number(room.questionStartTime) || now;
   const elapsedMs = Math.max(0, now - startTime);
   const timeLimitMs = (question.timeLimit || 10) * 1000;
+  const MAX_POINTS = question.points || 1000;
 
   let isCorrect = false;
   let score = 0;
 
-  // Check correctness and compute time-based score
+  // SPEED-BASED SCORING FORMULA:
+  // remainingRatio = max(0, 1 - elapsed / duration)
+  // availablePoints = round(MAX_POINTS * remainingRatio)
   if (cleanOption === question.correctOption) {
     isCorrect = true;
-    // Base score = 1000, scaled by remaining time with min 100
-    const remainingTimeRatio = Math.max(0, (timeLimitMs - elapsedMs) / timeLimitMs);
-    score = Math.max(100, Math.round(1000 * remainingTimeRatio));
+    if (elapsedMs <= timeLimitMs + 500) {
+      const remainingRatio = Math.max(0, 1 - (elapsedMs / timeLimitMs));
+      score = Math.round(MAX_POINTS * remainingRatio);
+    } else {
+      score = 0; // timeout
+    }
+  } else {
+    isCorrect = false;
+    score = 0;
   }
 
   // Atomically create answer & update player score
@@ -529,12 +527,26 @@ async function submitAnswer(roomId, questionId, userId, selectedOption) {
   const answeredCount = await QuizAnswer.count({ where: { roomId, questionId } });
   const totalPlayersCount = allPlayers.length;
 
-  // Emit answer submission update (without leaking correct option)
-  quizRealtime.emitToRoom(roomId, 'quiz:answerSubmitted', {
+  const playerAnswerPayload = {
     userId,
+    user: player.user ? {
+      id: player.user.id,
+      name: player.user.name,
+      avatarUrl: player.user.avatarUrl,
+      role: player.user.role,
+      jobTitle: player.user.jobTitle,
+      department: player.user.department,
+    } : { id: userId, name: `User ${userId}` },
+    answeredAt: now,
+    responseTimeMs: elapsedMs,
     answeredCount,
     totalPlayersCount,
-  });
+  };
+
+  // Emit answer submission update (without leaking correct option or user's chosen option)
+  quizRealtime.emitToRoom(roomId, 'quiz:player_answered', playerAnswerPayload);
+  quizRealtime.emitToRoom(roomId, 'quiz:playerAnswered', playerAnswerPayload);
+  quizRealtime.emitToRoom(roomId, 'quiz:answerSubmitted', playerAnswerPayload);
 
   // If ALL players have answered, immediately reveal results early!
   if (answeredCount >= totalPlayersCount && totalPlayersCount > 0) {
@@ -542,10 +554,10 @@ async function submitAnswer(roomId, questionId, userId, selectedOption) {
       clearTimeout(activeQuestionTimers.get(roomId));
       activeQuestionTimers.delete(roomId);
     }
-    // Small 300ms breather before reveal
+    // Small 400ms breather before reveal so last answerer's spotlight starts
     setTimeout(() => {
       revealQuestionResult(roomId).catch((err) => console.error('[QuizGame] Early reveal error:', err));
-    }, 300);
+    }, 400);
   }
 
   return {
@@ -575,6 +587,16 @@ async function revealQuestionResult(roomId) {
     order: [['score', 'DESC'], ['responseTimeMs', 'ASC']],
   });
 
+  // Determine fastest correct player
+  const correctAnswers = answers.filter((a) => a.isCorrect);
+  let fastestCorrectUserId = null;
+  let fastestResponseTimeMs = null;
+  if (correctAnswers.length > 0) {
+    correctAnswers.sort((a, b) => (a.responseTimeMs || 0) - (b.responseTimeMs || 0));
+    fastestCorrectUserId = correctAnswers[0].userId;
+    fastestResponseTimeMs = correctAnswers[0].responseTimeMs;
+  }
+
   // Fetch current live leaderboard
   const players = await QuizPlayer.findAll({
     where: { roomId },
@@ -582,20 +604,36 @@ async function revealQuestionResult(roomId) {
     order: [['score', 'DESC'], ['correctAnswers', 'DESC'], ['totalResponseTimeMs', 'ASC']],
   });
 
-  const rankedPlayers = players.map((p, idx) => ({ ...p.toJSON(), rank: idx + 1 }));
+  const rankedPlayers = players.map((p, idx) => {
+    const pJson = p.toJSON();
+    const ans = answers.find((a) => Number(a.userId) === Number(p.userId));
+    return {
+      ...pJson,
+      rank: idx + 1,
+      roundScore: ans ? ans.score : 0,
+      roundIsCorrect: ans ? ans.isCorrect : false,
+      roundResponseTimeMs: ans ? ans.responseTimeMs : null,
+      isFastestCorrect: Number(p.userId) === Number(fastestCorrectUserId),
+    };
+  });
 
-  // Emit question result
-  quizRealtime.emitToRoom(roomId, 'quiz:questionResult', {
+  const resultPayload = {
     correctOption: question.correctOption,
     explanation: question.explanation,
-    answers: answers.map((a) => a.toJSON()),
+    answers: answers.map((a) => (a.toJSON ? a.toJSON() : a)),
+    fastestCorrectUserId,
+    fastestResponseTimeMs,
     leaderboard: rankedPlayers,
     questionIndex: room.currentQuestionIndex,
     totalQuestions: room.totalQuestions,
     isLastQuestion: room.currentQuestionIndex + 1 >= room.totalQuestions,
-  });
+  };
 
-  // Auto-advance after 3.5 seconds
+  // Emit question result
+  quizRealtime.emitToRoom(roomId, 'quiz:questionResult', resultPayload);
+  quizRealtime.emitToRoom(roomId, 'quiz:question_reveal', resultPayload);
+
+  // Auto-advance after 4.2 seconds (giving 2s for answer reveal + 2.2s for score count-up and mini leaderboard)
   setTimeout(async () => {
     try {
       const currentRoom = await QuizRoom.findByPk(roomId);
@@ -609,7 +647,7 @@ async function revealQuestionResult(roomId) {
     } catch (err) {
       console.error('[QuizGame] Error advancing after reveal:', err);
     }
-  }, 3500);
+  }, 4200);
 }
 
 /**
@@ -643,12 +681,15 @@ async function advanceToNextQuestion(roomId) {
 
   const sanitizedQ = sanitizeQuestionForClient(nextQuestion);
 
+  const maxPoints = nextQuestion.points || 1000;
   quizRealtime.emitToRoom(roomId, 'quiz:question', {
     question: sanitizedQ,
     questionIndex: nextIndex,
     totalQuestions: room.totalQuestions,
     questionStartTime: startTime,
     questionDurationMs: durationMs,
+    maxPoints,
+    deadline: startTime + durationMs,
   });
 
   // Schedule auto timeout
@@ -763,7 +804,6 @@ async function getMyStats(userId) {
 }
 
 module.exports = {
-  ensureSeedQuestions,
   listRooms,
   getActiveRoomForUser,
   getRoomState,

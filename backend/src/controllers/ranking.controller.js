@@ -50,8 +50,8 @@ async function getGrands(req, res) {
 }
 
 async function getYouTube(req, res) {
-  const { sortBy, limit, page } = req.query;
-  const result = await rankingService.getYouTubeRankings({ sortBy, limit, page });
+  const { view, teamId, search, sortBy, limit, page } = req.query;
+  const result = await rankingService.getYouTubeRankings({ view, teamId, search, sortBy, limit, page });
   return res.json({ success: true, ...result });
 }
 
