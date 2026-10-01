@@ -1,29 +1,6 @@
 import React, { useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 
-const PILL_COLORS = {
-  A: {
-    bg: '#a7f3d0', // Mint cyan
-    hoverBg: '#6ee7b7',
-    text: '#064e3b',
-  },
-  B: {
-    bg: '#c8be9f', // Sage olive
-    hoverBg: '#b8ab87',
-    text: '#363124',
-  },
-  C: {
-    bg: '#d8a87b', // Camel tan
-    hoverBg: '#ca925f',
-    text: '#451a03',
-  },
-  D: {
-    bg: '#cfa396', // Terracotta rose
-    hoverBg: '#bd8b7c',
-    text: '#4c1d18',
-  },
-};
-
 export default function QuizAnswerPills({
   question,
   selectedOption = null,
@@ -40,7 +17,7 @@ export default function QuizAnswerPills({
     { key: 'D', text: question.optionD || question.option_d },
   ];
 
-  // Keyboard shortcut listener
+  // Keyboard shortcut listener (1/A, 2/B, 3/C, 4/D)
   useEffect(() => {
     if (disabled || selectedOption) return;
 
@@ -62,43 +39,50 @@ export default function QuizAnswerPills({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 8,
         width: '100%',
       }}
     >
       {options.map(({ key, text }) => {
-        const config = PILL_COLORS[key] || PILL_COLORS.A;
         const isSelected = selectedOption === key;
         const isCorrect = revealedCorrectOption === key;
         const isWrong = revealedCorrectOption && isSelected && !isCorrect;
 
-        let background = config.bg;
-        let textColor = config.text;
-        let borderColor = '#000000';
-        let boxShadow = '0 4px 0 #000000, 0 6px 14px rgba(0,0,0,0.15)';
+        let background = '#ffffff';
+        let textColor = '#141414';
+        let borderColor = 'rgba(0, 0, 0, 0.12)';
+        let badgeBg = '#f4f3ef';
+        let badgeColor = '#666666';
+        let boxShadow = '0 1px 2px rgba(0, 0, 0, 0.03)';
         let opacity = 1;
         let transform = 'translateY(0)';
 
         if (revealedCorrectOption) {
           if (isCorrect) {
-            background = '#10b981';
-            textColor = '#ffffff';
-            borderColor = '#047857';
-            boxShadow = '0 0 24px rgba(16,185,129,0.7), 0 4px 0 #047857';
-            transform = 'scale(1.02)';
+            background = '#f0fdf4';
+            textColor = '#15803d';
+            borderColor = '#16a34a';
+            badgeBg = '#16a34a';
+            badgeColor = '#ffffff';
+            boxShadow = '0 2px 8px rgba(22, 163, 74, 0.15)';
           } else if (isWrong) {
-            background = '#ef4444';
-            textColor = '#ffffff';
-            borderColor = '#991b1b';
-            boxShadow = '0 2px 0 #991b1b';
-            opacity = 0.8;
+            background = '#fef2f2';
+            textColor = '#991b1b';
+            borderColor = '#dc2626';
+            badgeBg = '#dc2626';
+            badgeColor = '#ffffff';
+            boxShadow = '0 1px 4px rgba(220, 38, 38, 0.1)';
           } else {
-            opacity = 0.35;
+            opacity = 0.45;
             boxShadow = 'none';
           }
         } else if (isSelected) {
-          boxShadow = '0 0 0 3px #38bdf8, 0 4px 0 #000000, 0 8px 20px rgba(56,189,248,0.5)';
-          transform = 'scale(0.99)';
+          background = '#fffbeb';
+          textColor = '#92400e';
+          borderColor = '#b45309';
+          badgeBg = '#b45309';
+          badgeColor = '#ffffff';
+          boxShadow = '0 1px 4px rgba(180, 83, 9, 0.15)';
         } else if (disabled) {
           opacity = 0.6;
         }
@@ -112,108 +96,125 @@ export default function QuizAnswerPills({
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
               width: '100%',
-              minHeight: 62,
-              padding: '12px 24px',
+              minHeight: 52,
+              padding: '10px 14px',
               background,
               color: textColor,
-              border: `2px solid ${borderColor}`,
-              borderRadius: 40,
+              border: `1.5px solid ${borderColor}`,
+              borderRadius: 6,
               boxShadow,
               opacity,
               transform,
               cursor: disabled || selectedOption ? 'default' : 'pointer',
-              transition: 'transform 0.12s ease, box-shadow 0.15s ease, background 0.15s ease',
-              textAlign: 'center',
+              transition: 'all 0.15s ease',
+              textAlign: 'left',
               position: 'relative',
               userSelect: 'none',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
             onMouseEnter={(e) => {
               if (!disabled && !selectedOption && !revealedCorrectOption) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 0 #000000, 0 10px 20px rgba(0,0,0,0.2)';
+                e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.28)';
+                e.currentTarget.style.background = '#f8f7f4';
+                e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseLeave={(e) => {
               if (!disabled && !selectedOption && !revealedCorrectOption) {
+                e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.background = '#ffffff';
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 0 #000000, 0 6px 14px rgba(0,0,0,0.15)';
               }
             }}
           >
-            {/* Answer Text */}
-            <span
-              style={{
-                fontSize: 17,
-                fontWeight: 900,
-                letterSpacing: '-0.2px',
-                lineHeight: 1.3,
-                wordBreak: 'break-word',
-                textShadow: revealedCorrectOption || isSelected ? 'none' : '0 1px 0 rgba(255,255,255,0.4)',
-              }}
-            >
-              {text}
-            </span>
-
-            {/* Status Icons */}
-            {revealedCorrectOption && isCorrect && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+              {/* Option Letter Badge (A, B, C, D) */}
               <div
                 style={{
-                  position: 'absolute',
-                  right: 18,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   width: 28,
                   height: 28,
-                  borderRadius: '50%',
-                  background: '#ffffff',
-                  color: '#10b981',
-                }}
-              >
-                <Check size={18} strokeWidth={3.5} />
-              </div>
-            )}
-
-            {revealedCorrectOption && isWrong && (
-              <div
-                style={{
-                  position: 'absolute',
-                  right: 18,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.3)',
-                  color: '#ffffff',
-                }}
-              >
-                <X size={18} strokeWidth={3.5} />
-              </div>
-            )}
-
-            {isSelected && !revealedCorrectOption && (
-              <div
-                style={{
-                  position: 'absolute',
-                  right: 18,
-                  fontSize: 10,
-                  fontWeight: 900,
+                  borderRadius: 4,
+                  background: badgeBg,
+                  color: badgeColor,
                   fontFamily: 'JetBrains Mono, monospace',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  padding: '3px 8px',
-                  borderRadius: 20,
-                  border: '1px solid #38bdf8',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease',
                 }}
               >
-                ĐÃ CHỌN
+                {key}
               </div>
-            )}
+
+              {/* Answer Text */}
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: isSelected || isCorrect ? 700 : 500,
+                  lineHeight: 1.4,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {text}
+              </span>
+            </div>
+
+            {/* Status Icons / Indicator */}
+            <div style={{ marginLeft: 10, flexShrink: 0 }}>
+              {revealedCorrectOption ? (
+                isCorrect ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      background: '#16a34a',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Check size={15} strokeWidth={3} />
+                  </div>
+                ) : isWrong ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      background: '#dc2626',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <X size={15} strokeWidth={3} />
+                  </div>
+                ) : null
+              ) : isSelected ? (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    fontFamily: 'JetBrains Mono, monospace',
+                    background: 'rgba(180, 83, 9, 0.12)',
+                    color: '#b45309',
+                    padding: '2px 7px',
+                    borderRadius: 4,
+                  }}
+                >
+                  ĐÃ CHỌN
+                </span>
+              ) : null}
+            </div>
           </button>
         );
       })}

@@ -211,7 +211,7 @@ export default function AdminGrand() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Award size={22} color="#eab308" />
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>Quản Lý Grand Championship</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Grand Championship</h1>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
             Hệ thống giải vô địch toàn năm, phân phối Grand Points từ các Seasons và bảng xếp hạng tổng kết.
@@ -230,7 +230,7 @@ export default function AdminGrand() {
               border: '1px solid #cbd5e1',
               background: '#fff',
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
               color: '#475569',
             }}
@@ -250,7 +250,7 @@ export default function AdminGrand() {
               background: '#eab308',
               color: '#000',
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
             }}
           >
@@ -306,18 +306,18 @@ export default function AdminGrand() {
                         padding: '2px 8px',
                         background: '#fef08a',
                         color: '#854d0e',
-                        fontWeight: 900,
+                        fontWeight: 700,
                         fontSize: 12,
                       }}>
                         NĂM {g.year}
                       </span>
-                      <h2 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                         {g.name}
                       </h2>
                       <span style={{
                         padding: '2px 8px',
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         background: g.status === 'ACTIVE' ? 'rgba(34,197,94,0.1)' : g.status === 'FINISHED' ? '#f1f5f9' : '#fffbeb',
                         color: g.status === 'ACTIVE' ? '#16a34a' : g.status === 'FINISHED' ? '#475569' : '#d97706',
                         border: '1px solid currentColor',
@@ -344,7 +344,7 @@ export default function AdminGrand() {
                           background: '#fff',
                           padding: '6px 10px',
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
                           opacity: statusChangingId === g.id ? 0.6 : 1,
                         }}
@@ -363,7 +363,7 @@ export default function AdminGrand() {
                           color: '#fff',
                           padding: '6px 10px',
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
                           opacity: statusChangingId === g.id ? 0.6 : 1,
                         }}
@@ -382,7 +382,7 @@ export default function AdminGrand() {
                           color: '#000',
                           padding: '6px 10px',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
                           opacity: statusChangingId === g.id ? 0.6 : 1,
                         }}
@@ -400,7 +400,7 @@ export default function AdminGrand() {
                           background: '#fff',
                           padding: '6px 10px',
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           cursor: statusChangingId === g.id ? 'not-allowed' : 'pointer',
                           opacity: statusChangingId === g.id ? 0.6 : 1,
                         }}
@@ -411,14 +411,14 @@ export default function AdminGrand() {
                     <button
                       type="button"
                       onClick={() => setSelectedGrandForSeason(g)}
-                      style={{ border: '1px solid #b45309', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      style={{ border: '1px solid #b45309', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '6px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                     >
                       + Ghép Season
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedGrandForReconcile(g)}
-                      style={{ border: '1px solid #ea580c', background: 'rgba(234,88,12,0.06)', color: '#ea580c', padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      style={{ border: '1px solid #ea580c', background: 'rgba(234,88,12,0.06)', color: '#ea580c', padding: '6px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                     >
                       Điều chỉnh Điểm
                     </button>
@@ -427,12 +427,12 @@ export default function AdminGrand() {
 
                 {/* Linked Seasons List */}
                 <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Layers size={14} color="#b45309" />
                     Các Mùa Giải Đã Ghép ({linkedSeasons.length}):
                   </div>
                   {linkedSeasons.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic' }}>
                       Chưa có Season nào được liên kết vào Grand Championship này.
                     </div>
                   ) : (
@@ -440,8 +440,8 @@ export default function AdminGrand() {
                       {linkedSeasons.map((s) => (
                         <div key={s.id} style={{ border: '1px solid #e2e8f0', padding: 10, background: '#f8fafc', fontSize: 12 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontWeight: 800, color: '#0f172a' }}>{s.name}</span>
-                            <span style={{ fontWeight: 700, color: s.status === 'FINISHED' ? '#16a34a' : '#64748b' }}>{s.status}</span>
+                            <span style={{ fontWeight: 600, color: '#0f172a' }}>{s.name}</span>
+                            <span style={{ fontWeight: 600, color: s.status === 'FINISHED' ? '#16a34a' : '#64748b' }}>{s.status}</span>
                           </div>
                           <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8 }}>
                             {new Date(s.startAt).toLocaleDateString('vi-VN')} - {new Date(s.endAt).toLocaleDateString('vi-VN')}
@@ -457,7 +457,7 @@ export default function AdminGrand() {
                                 background: '#fff',
                                 padding: '4px 8px',
                                 fontSize: 11,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 cursor: settlingSeasonId === s.id ? 'not-allowed' : 'pointer',
                                 color: '#b45309',
                                 opacity: settlingSeasonId === s.id ? 0.6 : 1,
@@ -490,12 +490,12 @@ export default function AdminGrand() {
           padding: 16,
         }}>
           <div style={{ background: '#fff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 16px', color: '#0f172a' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px', color: '#0f172a' }}>
               Tạo Grand Championship Mới
             </h3>
             <form onSubmit={handleCreateGrand} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Tên Giải Vô Địch</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Tên Giải Vô Địch</label>
                 <input
                   type="text"
                   required
@@ -512,7 +512,7 @@ export default function AdminGrand() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Slug</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Slug</label>
                   <input
                     type="text"
                     required
@@ -522,7 +522,7 @@ export default function AdminGrand() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Năm Thi Đấu</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Năm Thi Đấu</label>
                   <input
                     type="number"
                     required
@@ -535,7 +535,7 @@ export default function AdminGrand() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Ngày Bắt Đầu</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Ngày Bắt Đầu</label>
                   <input
                     type="date"
                     required
@@ -545,7 +545,7 @@ export default function AdminGrand() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Ngày Kết Thúc</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Ngày Kết Thúc</label>
                   <input
                     type="date"
                     required
@@ -557,7 +557,7 @@ export default function AdminGrand() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Mô tả</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Mô tả</label>
                 <textarea
                   rows={2}
                   value={formData.description}
@@ -567,7 +567,7 @@ export default function AdminGrand() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Thứ Tự Tie-Break</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Thứ Tự Tie-Break</label>
                 <input
                   type="text"
                   value={formData.tieBreakOrder}
@@ -581,14 +581,14 @@ export default function AdminGrand() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  style={{ border: 'none', background: '#eab308', color: '#000', padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ border: 'none', background: '#eab308', color: '#000', padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   {submitting ? 'Đang tạo...' : 'Tạo Giải'}
                 </button>
@@ -611,12 +611,12 @@ export default function AdminGrand() {
           padding: 16,
         }}>
           <div style={{ background: '#fff', width: '100%', maxWidth: 450, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 12px', color: '#0f172a' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px', color: '#0f172a' }}>
               Ghép Mùa Giải Vào: {selectedGrandForSeason.name}
             </h3>
             <form onSubmit={handleLinkSeason} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Chọn Mùa Giải</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Chọn Mùa Giải</label>
                 <select
                   required
                   value={selectedSeasonId}
@@ -635,7 +635,7 @@ export default function AdminGrand() {
                 <button
                   type="button"
                   onClick={() => setSelectedGrandForSeason(null)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -648,7 +648,7 @@ export default function AdminGrand() {
                     color: '#fff',
                     padding: '8px 16px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: submittingLink ? 'not-allowed' : 'pointer',
                     opacity: submittingLink ? 0.6 : 1,
                   }}
@@ -674,7 +674,7 @@ export default function AdminGrand() {
           padding: 16,
         }}>
           <div style={{ background: '#fff', width: '100%', maxWidth: 480, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 8px', color: '#0f172a' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>
               Điều Chỉnh Điểm Grand Points (Immutable Reconciliation)
             </h3>
             <p style={{ fontSize: 11, color: '#dc2626', margin: '0 0 12px', lineHeight: 1.4 }}>
@@ -682,7 +682,7 @@ export default function AdminGrand() {
             </p>
             <form onSubmit={handleReconcilePoints} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Chọn Team</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Chọn Team</label>
                 <select
                   required
                   value={reconcileData.teamId}
@@ -697,7 +697,7 @@ export default function AdminGrand() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Số Điểm Điều Chỉnh (Có thể âm hoặc dương)</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Số Điểm Điều Chỉnh (Có thể âm hoặc dương)</label>
                 <input
                   type="number"
                   required
@@ -709,7 +709,7 @@ export default function AdminGrand() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Lý Do Điều Chỉnh (Bắt buộc để kiểm toán)</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Lý Do Điều Chỉnh (Bắt buộc để kiểm toán)</label>
                 <textarea
                   rows={2}
                   required
@@ -724,7 +724,7 @@ export default function AdminGrand() {
                 <button
                   type="button"
                   onClick={() => setSelectedGrandForReconcile(null)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -737,7 +737,7 @@ export default function AdminGrand() {
                     color: '#fff',
                     padding: '8px 16px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: submittingReconcile ? 'not-allowed' : 'pointer',
                     opacity: submittingReconcile ? 0.6 : 1,
                   }}

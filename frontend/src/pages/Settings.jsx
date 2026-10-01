@@ -518,17 +518,17 @@ export default function Settings() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>
                     {initialsFromName(profile.name || user?.name || 'U')}
                   </span>
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>
                   Ảnh Đại Diện (Avatar)
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <label style={{ cursor: 'pointer', padding: '5px 12px', background: '#0f172a', color: '#ffffff', fontSize: 12, fontWeight: 700, borderRadius: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <label style={{ cursor: 'pointer', padding: '5px 12px', background: '#0f172a', color: '#ffffff', fontSize: 12, fontWeight: 600, borderRadius: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <input
                       type="file"
                       accept="image/*"
@@ -544,7 +544,7 @@ export default function Settings() {
                       style={{
                         padding: '4px 10px',
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: '#dc2626',
                         background: '#fee2e2',
                         border: '1px solid #fecaca',
@@ -610,7 +610,8 @@ export default function Settings() {
                   width: '100%',
                   padding: '8px 11px',
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 400,
+                  lineHeight: 1.55,
                   border: '1px solid rgba(15,23,42,0.1)',
                   borderRadius: 0,
                   outline: 'none',
@@ -640,29 +641,29 @@ export default function Settings() {
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 14 }}>
             <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Huy hiệu chức danh</span>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Huy hiệu chức danh</span>
               <div style={{ marginTop: 6 }}>
                 <JobTitleBadge jobTitle={user?.jobTitle} size="md" />
               </div>
             </div>
 
             <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Phòng ban trực thuộc</span>
-              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Phòng ban trực thuộc</span>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
                 {user?.department || 'Media & Content'}
               </strong>
             </div>
 
             <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Quyền hệ thống (RBAC)</span>
-              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 900, color: user?.role === 'admin' ? '#dc2626' : '#0f172a' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Quyền hệ thống (RBAC)</span>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: user?.role === 'admin' ? '#dc2626' : '#0f172a' }}>
                 {roleLabel(user?.role)}
               </strong>
             </div>
 
             <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Trạng thái tài khoản</span>
-              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 900, color: '#16a34a' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Trạng thái tài khoản</span>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: '#16a34a' }}>
                 {statusLabel(user?.status)}
               </strong>
             </div>
@@ -671,10 +672,10 @@ export default function Settings() {
           {isAdmin ? (
             <form onSubmit={saveAdminJobProfile} style={{ padding: 16, background: 'rgba(180,83,9,0.04)', border: '1px solid rgba(180,83,9,0.25)', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Edit3 size={15} /> Điều chỉnh Chức danh & Huy hiệu (Dành cho Quản trị viên)
                 </div>
-                <span style={{ fontSize: 11, color: '#64748b' }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>
                   Chọn nhân viên từ danh sách để phân bổ chức vụ & huy hiệu
                 </span>
               </div>
@@ -682,7 +683,7 @@ export default function Settings() {
               {/* 1. DROP DOWN CHỌN NHÂN VIÊN */}
               <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                 <label style={{ display: 'block', marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Users size={13} color="#b45309" /> Trỏ xuống chọn nhân viên cần gán chức vụ:
                   </span>
                 </label>
@@ -693,7 +694,7 @@ export default function Settings() {
                     width: '100%',
                     padding: '8px 12px',
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     color: '#0f172a',
                     background: '#f8fafc',
                     border: '1px solid #cbd5e1',
@@ -715,7 +716,7 @@ export default function Settings() {
                 {/* Dropdown Chức danh */}
                 <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                   <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Award size={13} color="#f59e0b" /> Chức danh & Bậc huy hiệu:
                     </span>
                   </label>
@@ -726,7 +727,7 @@ export default function Settings() {
                       width: '100%',
                       padding: '8px 10px',
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background: '#f8fafc',
                       border: '1px solid #cbd5e1',
                       outline: 'none',
@@ -744,7 +745,7 @@ export default function Settings() {
 
                   {/* Live Badge Preview */}
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Huy hiệu hiển thị:</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>Huy hiệu hiển thị:</span>
                     <JobTitleBadge
                       jobTitle={adminJobForm.jobTitle}
                       size="sm"
@@ -755,7 +756,7 @@ export default function Settings() {
                 {/* Dropdown Phòng ban */}
                 <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                   <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Building2 size={13} color="#b45309" /> Phòng ban công tác:
                     </span>
                   </label>
@@ -772,7 +773,7 @@ export default function Settings() {
                       width: '100%',
                       padding: '8px 10px',
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background: '#f8fafc',
                       border: '1px solid #cbd5e1',
                       outline: 'none',
@@ -800,14 +801,14 @@ export default function Settings() {
 
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Building2 size={13} color="#b45309" />
-                    <span>Phòng ban: <strong style={{ color: '#0f172a' }}>{adminJobForm.isCustomDept ? (adminJobForm.customDept || 'Chưa đặt') : adminJobForm.department}</strong></span>
+                    <span>Phòng ban: <strong style={{ color: '#0f172a', fontWeight: 600 }}>{adminJobForm.isCustomDept ? (adminJobForm.customDept || 'Chưa đặt') : adminJobForm.department}</strong></span>
                   </div>
                 </div>
 
                 {/* Dropdown Quyền hệ thống */}
                 <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
                   <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <KeyRound size={13} color="#dc2626" /> Quyền hệ thống (RBAC):
                     </span>
                   </label>
@@ -818,7 +819,7 @@ export default function Settings() {
                       width: '100%',
                       padding: '8px 10px',
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background: '#f8fafc',
                       border: '1px solid #cbd5e1',
                       outline: 'none',
@@ -832,7 +833,7 @@ export default function Settings() {
 
                   <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Shield size={13} color="#dc2626" />
-                    <span>Phân quyền: <strong style={{ color: adminJobForm.role === 'admin' ? '#dc2626' : '#b45309' }}>{roleLabel(adminJobForm.role)}</strong></span>
+                    <span>Phân quyền: <strong style={{ color: adminJobForm.role === 'admin' ? '#dc2626' : '#b45309', fontWeight: 600 }}>{roleLabel(adminJobForm.role)}</strong></span>
                   </div>
                 </div>
               </div>
@@ -887,10 +888,10 @@ export default function Settings() {
                 <BadgeCheck size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isVerifiedBadge ? '#b45309' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isVerifiedBadge ? '#b45309' : '#0f172a' }}>
                   Đã Xác Minh (Verified)
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
                   {isVerifiedBadge ? 'Tài khoản đã xác thực tích xanh chính thức' : 'Chưa cấp tích xanh'}
                 </div>
               </div>
@@ -911,10 +912,10 @@ export default function Settings() {
                 <Code size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isDevBadge ? '#0891b2' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isDevBadge ? '#0891b2' : '#0f172a' }}>
                   Developer (Kỹ Thuật)
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
                   {isDevBadge ? 'Đội ngũ phát triển hệ thống WorkRank' : 'Không thuộc Dev team'}
                 </div>
               </div>
@@ -935,10 +936,10 @@ export default function Settings() {
                 <Trophy size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isChampionBadge ? '#d97706' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isChampionBadge ? '#d97706' : '#0f172a' }}>
                   Vô Địch Giải Đấu {championCount > 1 && `(x${championCount})`}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
                   {isChampionBadge ? `Đạt ${championCount} cúp vô địch mùa giải` : 'Chưa có cúp vô địch'}
                 </div>
               </div>
@@ -959,10 +960,10 @@ export default function Settings() {
                 <Star size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: isMvpBadge ? '#b45309' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isMvpBadge ? '#b45309' : '#0f172a' }}>
                   Nhân Viên Xuất Sắc {mvpCount > 1 && `(x${mvpCount})`}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
                   {isMvpBadge ? `Đã nhận ${mvpCount} danh hiệu MVP xuất sắc` : 'Chưa có danh hiệu MVP'}
                 </div>
               </div>
@@ -972,19 +973,19 @@ export default function Settings() {
           {/* Lịch sử giải thưởng & Vinh danh */}
           <div style={{ borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <strong style={{ fontSize: 13, color: '#0f172a' }}>Lịch sử vinh danh & Giải thưởng đạt được</strong>
+              <strong style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Lịch sử vinh danh & Giải thưởng đạt được</strong>
               <button
                 type="button"
                 onClick={loadRecognitions}
                 disabled={loadingRecognitions}
-                style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
                 <RefreshCw size={12} className={loadingRecognitions ? 'spin' : ''} /> Làm mới
               </button>
             </div>
 
             {awardsList.length === 0 ? (
-              <div style={{ padding: '18px 14px', background: 'rgba(15,23,42,0.02)', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+              <div style={{ padding: '18px 14px', background: 'rgba(15,23,42,0.02)', textAlign: 'center', color: '#94a3b8', fontSize: 12, fontWeight: 400 }}>
                 Chưa ghi nhận giải thưởng vinh danh nào trong hồ sơ.
               </div>
             ) : (
@@ -1006,20 +1007,20 @@ export default function Settings() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {a.awardType === 'champion' ? <Trophy size={14} color="#d97706" /> : <Star size={14} color="#7c3aed" />}
-                        <strong style={{ fontSize: 12, color: a.awardType === 'champion' ? '#b45309' : '#6d28d9' }}>
+                        <strong style={{ fontSize: 12, fontWeight: 600, color: a.awardType === 'champion' ? '#b45309' : '#6d28d9' }}>
                           {a.title}
                         </strong>
                         {a.seasonName && (
-                          <span style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 800 }}>
+                          <span style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 600 }}>
                             {a.seasonName}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: '#475569', marginTop: 2, fontWeight: 400 }}>
                         {a.reason}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right', fontWeight: 400 }}>
                       {a.awardedAt ? new Date(a.awardedAt).toLocaleDateString('vi-VN') : ''}
                     </div>
                   </div>
@@ -1196,7 +1197,7 @@ export default function Settings() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Award size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.35, color: '#0f172a' }}>
                   Trao Thưởng Danh Hiệu Chính Thức
                 </h3>
               </div>
@@ -1211,7 +1212,7 @@ export default function Settings() {
 
             <form onSubmit={handleAdminAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Loại Danh Hiệu / Giải Thưởng *
                 </label>
                 <select
@@ -1225,7 +1226,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Nhân Viên Nhận Giải *
                 </label>
                 <select
@@ -1243,7 +1244,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Mã Mùa Giải (Season ID - Tùy chọn)
                 </label>
                 <input
@@ -1256,7 +1257,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Tiêu Đề Vinh Danh (Tùy chọn)
                 </label>
                 <input
@@ -1269,7 +1270,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Lý Do & Căn Cứ Vinh Danh *
                 </label>
                 <textarea
@@ -1286,7 +1287,7 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={() => setShowAwardModal(false)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>

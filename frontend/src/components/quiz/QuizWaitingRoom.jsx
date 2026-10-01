@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Copy, Check, LogOut, Crown, Users, Sparkles, Image, Music, Clock, ShieldCheck } from 'lucide-react';
+import { Play, Copy, Check, LogOut, Crown, Users, Sparkles, Image, Music, Clock } from 'lucide-react';
 import QuizAvatar from './QuizAvatar';
 
 export default function QuizWaitingRoom({
@@ -24,9 +24,9 @@ export default function QuizWaitingRoom({
   };
 
   const modeLabels = {
-    ALL: { label: 'ĐOÁN HÌNH & NHẠC', icon: Sparkles, color: '#38bdf8' },
-    IMAGE: { label: 'ĐOÁN HÌNH ẢNH', icon: Image, color: '#34d399' },
-    MUSIC: { label: 'ĐOÁN BÀI HÁT', icon: Music, color: '#c084fc' },
+    ALL: { label: 'Đoán Hình & Nhạc', icon: Sparkles, color: '#b45309', bg: 'rgba(180,83,9,0.08)', border: 'rgba(180,83,9,0.2)' },
+    IMAGE: { label: 'Đoán Hình Ảnh', icon: Image, color: '#0369a1', bg: 'rgba(2,132,199,0.08)', border: 'rgba(2,132,199,0.2)' },
+    MUSIC: { label: 'Đoán Bài Hát', icon: Music, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', border: 'rgba(124,58,237,0.2)' },
   };
 
   const currentMode = modeLabels[room.mode] || modeLabels.ALL;
@@ -36,18 +36,17 @@ export default function QuizWaitingRoom({
     <div
       style={{
         width: '100%',
-        maxWidth: 920,
+        maxWidth: 880,
         margin: '0 auto',
-        background: 'rgba(15, 23, 42, 0.85)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        borderRadius: 16,
-        padding: '28px 32px',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
-        color: '#ffffff',
+        background: '#ffffff',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        borderRadius: 8,
+        padding: '24px 28px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+        color: '#141414',
       }}
     >
-      {/* Top Room Banner */}
+      {/* ── TOP ROOM BANNER ── */}
       <div
         style={{
           display: 'flex',
@@ -55,50 +54,50 @@ export default function QuizWaitingRoom({
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 16,
-          paddingBottom: 22,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          paddingBottom: 20,
+          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 5,
-                padding: '4px 10px',
-                borderRadius: 20,
-                background: `${currentMode.color}20`,
-                border: `1px solid ${currentMode.color}50`,
+                gap: 4,
+                padding: '2px 8px',
+                borderRadius: 9999,
+                background: currentMode.bg,
+                border: `1px solid ${currentMode.border}`,
                 color: currentMode.color,
                 fontSize: 11,
-                fontWeight: 900,
-                letterSpacing: '0.4px',
+                fontWeight: 700,
+                letterSpacing: '0.2px',
               }}
             >
               <ModeIcon size={12} />
               <span>{currentMode.label}</span>
             </span>
 
-            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 700 }}>
+            <span style={{ fontSize: 12, color: '#666666', fontWeight: 500 }}>
               • {room.totalQuestions || 10} câu hỏi
             </span>
           </div>
 
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.3px' }}>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#141414', letterSpacing: '-0.3px', lineHeight: 1.3 }}>
             {room.title || 'Phòng Quiz Thử Thách'}
           </h1>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 13, color: '#94a3b8' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: 12, color: '#666666' }}>
             <span>Chủ phòng:</span>
-            <strong style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Crown size={13} /> {room.host?.name || 'Host'}
+            <strong style={{ color: '#b45309', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+              <Crown size={12} /> {room.host?.name || 'Host'}
             </strong>
           </div>
         </div>
 
         {/* Room Code Badge & Leave Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             type="button"
             onClick={handleCopyCode}
@@ -106,30 +105,30 @@ export default function QuizWaitingRoom({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
-              padding: '8px 14px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px dashed rgba(56, 189, 248, 0.6)',
-              borderRadius: 8,
+              gap: 8,
+              padding: '6px 12px',
+              background: '#f8f7f4',
+              border: '1px dashed rgba(180, 83, 9, 0.4)',
+              borderRadius: 6,
               cursor: 'pointer',
-              color: '#ffffff',
+              color: '#141414',
               transition: 'background 0.15s ease',
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>
-                MÃ PHÒNG (CODE)
+              <span style={{ fontSize: 9, color: '#666666', fontWeight: 700, textTransform: 'uppercase' }}>
+                MÃ PHÒNG
               </span>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, fontWeight: 900, color: '#38bdf8' }}>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: '#b45309' }}>
                 #{room.code}
               </span>
             </div>
             {copied ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#34d399', fontSize: 12, fontWeight: 800 }}>
-                <Check size={16} /> Đã chép
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#15803d', fontSize: 11, fontWeight: 600 }}>
+                <Check size={14} /> Đã chép
               </span>
             ) : (
-              <Copy size={16} color="#94a3b8" />
+              <Copy size={14} color="#666666" />
             )}
           </button>
 
@@ -139,43 +138,45 @@ export default function QuizWaitingRoom({
             disabled={actionLoading}
             title="Rời khỏi phòng"
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '10px 14px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              color: '#f87171',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 800,
+              gap: 5,
+              padding: '8px 12px',
+              background: '#ffffff',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
+              color: '#dc2626',
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 600,
               cursor: actionLoading ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s ease',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
           >
-            <LogOut size={15} />
+            <LogOut size={13} />
             <span>Rời phòng</span>
           </button>
         </div>
       </div>
 
-      {/* Players Lobby Grid */}
-      <div style={{ marginTop: 24 }}>
+      {/* ── PLAYERS LOBBY GRID ── */}
+      <div style={{ marginTop: 20 }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: 14,
+            marginBottom: 12,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 900, color: '#ffffff' }}>
-            <Users size={18} color="#38bdf8" />
-            <span>DANH SÁCH NGƯỜI CHƠI ({players.length} / {room.maxPlayers || 20})</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#141414' }}>
+            <Users size={15} color="#b45309" />
+            <span>Danh Sách Người Chơi ({players.length} / {room.maxPlayers || 20})</span>
           </div>
 
-          <span style={{ fontSize: 12, color: '#34d399', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} />
+          <span style={{ fontSize: 11, color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#15803d' }} />
             Đồng bộ thời gian thực
           </span>
         </div>
@@ -183,11 +184,11 @@ export default function QuizWaitingRoom({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-            gap: 12,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 10,
             maxHeight: 340,
             overflowY: 'auto',
-            paddingRight: 4,
+            paddingRight: 2,
           }}
         >
           {players.map((p) => {
@@ -200,40 +201,38 @@ export default function QuizWaitingRoom({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  background: isMe ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255, 255, 255, 0.05)',
-                  border: isMe ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: isMe ? '0 0 16px rgba(56, 189, 248, 0.15)' : 'none',
+                  gap: 10,
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  background: isMe ? '#fffbeb' : '#f8f7f4',
+                  border: isMe ? '1px solid rgba(180, 83, 9, 0.3)' : '1px solid rgba(0, 0, 0, 0.06)',
                 }}
               >
                 <div style={{ position: 'relative' }}>
                   <QuizAvatar
                     user={p.user || { id: p.userId }}
                     userId={p.userId}
-                    size="md"
-                    border={isPlayerHost ? '2px solid #f59e0b' : isMe ? '2px solid #38bdf8' : '2px solid rgba(255,255,255,0.2)'}
+                    size="sm"
+                    border={isPlayerHost ? '2px solid #b45309' : isMe ? '2px solid #b45309' : '1px solid rgba(0,0,0,0.1)'}
                   />
                   {isPlayerHost && (
                     <div
                       title="Chủ phòng"
                       style={{
                         position: 'absolute',
-                        top: -5,
-                        right: -5,
-                        background: '#f59e0b',
+                        top: -4,
+                        right: -4,
+                        background: '#b45309',
                         borderRadius: '50%',
-                        padding: 3,
+                        padding: 2,
                         color: '#ffffff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '1px solid #000000',
                         zIndex: 2,
                       }}
                     >
-                      <Crown size={10} strokeWidth={3} />
+                      <Crown size={9} strokeWidth={3} />
                     </div>
                   )}
                 </div>
@@ -242,8 +241,8 @@ export default function QuizWaitingRoom({
                   <div
                     style={{
                       fontSize: 13,
-                      fontWeight: 800,
-                      color: isMe ? '#38bdf8' : '#ffffff',
+                      fontWeight: 600,
+                      color: '#141414',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -251,7 +250,7 @@ export default function QuizWaitingRoom({
                   >
                     {p.user?.name || `Người chơi ${p.userId}`}
                   </div>
-                  <div style={{ fontSize: 11, color: isPlayerHost ? '#f59e0b' : isMe ? '#38bdf8' : '#94a3b8', fontWeight: 700, marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: isPlayerHost ? '#b45309' : isMe ? '#b45309' : '#15803d', fontWeight: 500, marginTop: 1 }}>
                     {isPlayerHost ? '👑 Chủ phòng' : isMe ? '✨ Bạn' : '✓ Sẵn sàng'}
                   </div>
                 </div>
@@ -261,36 +260,36 @@ export default function QuizWaitingRoom({
         </div>
       </div>
 
-      {/* Host Controls / Participant Waiting Card */}
+      {/* ── HOST CONTROLS / PARTICIPANT WAITING FOOTER ── */}
       <div
         style={{
-          marginTop: 26,
-          padding: '18px 22px',
-          borderRadius: 12,
-          background: isHost ? 'rgba(56, 189, 248, 0.08)' : 'rgba(255, 255, 255, 0.04)',
-          border: isHost ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+          marginTop: 22,
+          padding: '16px 20px',
+          borderRadius: 6,
+          background: isHost ? '#fffbeb' : '#f8f7f4',
+          border: isHost ? '1px solid rgba(180, 83, 9, 0.25)' : '1px solid rgba(0, 0, 0, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: 16,
+          gap: 14,
         }}
       >
         <div>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#141414', display: 'flex', alignItems: 'center', gap: 6 }}>
             {isHost ? (
               <>
-                <Crown size={16} color="#f59e0b" />
+                <Crown size={15} color="#b45309" />
                 <span>Bạn Là Chủ Phòng (Host)</span>
               </>
             ) : (
               <>
-                <Clock size={16} color="#38bdf8" />
+                <Clock size={15} color="#b45309" />
                 <span>Đang Chờ Chủ Phòng Bắt Đầu...</span>
               </>
             )}
           </div>
-          <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 3 }}>
+          <div style={{ fontSize: 12, color: '#666666', marginTop: 2, fontWeight: 400 }}>
             {isHost
               ? 'Nhấn nút để phát câu hỏi đầu tiên cho tất cả người chơi trong phòng.'
               : 'Trận đấu sẽ tự động bắt đầu ngay khi chủ phòng bấm nút.'}
@@ -303,40 +302,42 @@ export default function QuizWaitingRoom({
             onClick={onStartGame}
             disabled={actionLoading || players.length < 1}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '12px 28px',
-              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              gap: 6,
+              padding: '10px 22px',
+              background: '#141414',
               color: '#ffffff',
               border: 'none',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 900,
+              borderRadius: 6,
+              fontSize: 13,
+              fontWeight: 600,
               cursor: actionLoading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+              transition: 'background 0.15s ease',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#262626'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#141414'; }}
           >
-            <Play size={16} fill="currentColor" />
-            <span>{actionLoading ? 'Đang Bắt Đầu...' : 'BẮT ĐẦU TRẬN ĐẤU'}</span>
+            <Play size={14} fill="currentColor" />
+            <span>{actionLoading ? 'Đang bắt đầu...' : 'BẮT ĐẦU TRẬN ĐẤU'}</span>
           </button>
         ) : (
           <div
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '10px 18px',
-              borderRadius: 8,
-              background: 'rgba(56, 189, 248, 0.12)',
-              border: '1px solid rgba(56, 189, 248, 0.25)',
-              fontSize: 13,
-              color: '#38bdf8',
-              fontWeight: 800,
+              gap: 6,
+              padding: '8px 14px',
+              borderRadius: 6,
+              background: '#fffbeb',
+              border: '1px solid rgba(180, 83, 9, 0.25)',
+              fontSize: 12,
+              color: '#b45309',
+              fontWeight: 600,
             }}
           >
-            <Clock size={15} />
+            <Clock size={14} />
             <span>Chờ hiệu lệnh...</span>
           </div>
         )}

@@ -145,7 +145,7 @@ export default function QuizAnswerButtons({
                   color: badgeColor,
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 14,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   flexShrink: 0,
                   transition: 'all 0.15s ease',
                 }}
@@ -157,8 +157,8 @@ export default function QuizAnswerButtons({
               <span
                 style={{
                   fontSize: 14,
-                  fontWeight: isSelected || isCorrect ? 800 : 600,
-                  lineHeight: 1.4,
+                  fontWeight: isSelected || isCorrect ? 600 : 500,
+                  lineHeight: 1.55,
                   wordBreak: 'break-word',
                 }}
               >
@@ -204,7 +204,7 @@ export default function QuizAnswerButtons({
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     background: 'rgba(2,132,199,0.15)',
                     color: '#0284c7',
                     padding: '3px 8px',
@@ -218,7 +218,7 @@ export default function QuizAnswerButtons({
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: '#94a3b8',
                     fontFamily: 'JetBrains Mono, monospace',
                     background: 'rgba(15,23,42,0.04)',

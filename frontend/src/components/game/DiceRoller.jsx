@@ -105,7 +105,7 @@ export default function DiceRoller({ dice = [1, 1], isRolling = false, lastSum =
             padding: '4px 10px',
             borderRadius: 6,
             fontSize: 13,
-            fontWeight: 800,
+            fontWeight: 700,
             fontFamily: 'JetBrains Mono, monospace',
             letterSpacing: '0.02em',
           }}

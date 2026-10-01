@@ -412,14 +412,14 @@ export default function YouTubeOverview() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>
+                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   {isAdmin ? 'YouTube Studio Hub — Toàn Công Ty' : `YouTube của Đội: ${myTeamData?.team?.name || 'My Team'}`}
                 </h1>
                 <span
                   style={{
                     padding: '2px 8px',
                     fontSize: 11,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     background: isAdmin ? '#e0e7ff' : '#ecfdf5',
                     color: isAdmin ? '#4338ca' : '#047857',
@@ -429,7 +429,7 @@ export default function YouTubeOverview() {
                   {isAdmin ? 'Admin Scope (Toàn công ty)' : 'Team Scope (Nội bộ đội)'}
                 </span>
               </div>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b', lineHeight: 1.55, fontWeight: 400 }}>
                 {isAdmin
                   ? 'Theo dõi thành tích thực tế, bảng xếp hạng views/subs của các Team và kho nội dung video toàn công ty.'
                   : `Theo dõi số liệu lượt xem, người đăng ký, kênh và video thuộc quyền sở hữu của ${myTeamData?.team?.name || 'đội bạn'}.`}
@@ -500,12 +500,12 @@ export default function YouTubeOverview() {
             <span>{isAdmin ? 'Tổng Lượt Xem (Công ty)' : 'Lượt Xem Của Đội'}</span>
             <Eye size={18} color="#3b82f6" />
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 8 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
             {isAdmin
               ? formatNumber(overview?.kpis?.totalViews || 0)
               : formatNumber(myTeamData?.summary?.totalViews || 0)}
           </div>
-          <div style={{ fontSize: 12, color: '#10b981', fontWeight: 600, marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#10b981', fontWeight: 500, marginTop: 4 }}>
             {isAdmin
               ? 'Toàn bộ các kênh công ty'
               : `+${formatNumber(myTeamData?.summary?.views30d || 0)} views trong 30 ngày`}
@@ -517,12 +517,12 @@ export default function YouTubeOverview() {
             <span>{isAdmin ? 'Tổng Người Đăng Ký' : 'Subscribers Của Đội'}</span>
             <Users size={18} color="#8b5cf6" />
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 8 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
             {isAdmin
               ? formatNumber(overview?.kpis?.totalSubscribers || 0)
               : formatNumber(myTeamData?.summary?.totalSubscribers || 0)}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, fontWeight: 400 }}>
             {isAdmin ? 'Người theo dõi toàn hệ thống' : `${myTeamData?.summary?.channelsCount || 0} kênh thuộc đội`}
           </div>
         </div>
@@ -532,12 +532,12 @@ export default function YouTubeOverview() {
             <span>{isAdmin ? 'Tổng Số Video' : 'Video Đã Xuất Bản'}</span>
             <Video size={18} color="#ec4899" />
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 8 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
             {isAdmin
               ? overview?.kpis?.totalVideos || 0
               : myTeamData?.summary?.videosCount || 0}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, fontWeight: 400 }}>
             Nội dung đã xuất bản
           </div>
         </div>
@@ -547,11 +547,11 @@ export default function YouTubeOverview() {
             <span>{isAdmin ? 'Số Kênh Hoạt Động' : 'Tăng Trưởng 30 Ngày'}</span>
             <TrendingUp size={18} color="#f59e0b" />
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 8 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
             {isAdmin ? (
               <>
                 {overview?.kpis?.totalChannels || 0}{' '}
-                <span style={{ fontSize: 14, fontWeight: 500, color: '#64748b' }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: '#64748b', fontFamily: 'inherit' }}>
                   kênh / {overview?.kpis?.totalTeams || 0} teams
                 </span>
               </>
@@ -559,7 +559,7 @@ export default function YouTubeOverview() {
               `${Number(myTeamData?.summary?.viewsGrowth30dPct || 0) >= 0 ? '+' : ''}${myTeamData?.summary?.viewsGrowth30dPct || 0}%`
             )}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, fontWeight: 400 }}>
             {isAdmin ? 'Được phân quyền quản lý' : `Hạng #${myTeamData?.summary?.rankByViews || '—'} Views toàn công ty`}
           </div>
         </div>
@@ -742,7 +742,7 @@ export default function YouTubeOverview() {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 15, color: '#3b82f6' }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: '#3b82f6' }}>
                         {formatNumber(team.totalViews)}
                       </div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>views</div>
@@ -782,7 +782,7 @@ export default function YouTubeOverview() {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 15, color: '#10b981' }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: '#10b981' }}>
                         +{team.viewsGrowth30dPct}%
                       </div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>tốc độ tăng</div>
@@ -879,7 +879,7 @@ export default function YouTubeOverview() {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  fontWeight: 800,
+                                  fontWeight: 700,
                                   fontSize: 16,
                                   flexShrink: 0,
                                 }}
@@ -902,15 +902,15 @@ export default function YouTubeOverview() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center', background: '#ffffff', padding: '10px 6px', border: '1px solid #e2e8f0' }}>
                               <div>
-                                <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{formatNumber(ch.views)}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{formatNumber(ch.views)}</div>
                                 <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Views</div>
                               </div>
                               <div>
-                                <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{formatNumber(ch.subscribers)}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{formatNumber(ch.subscribers)}</div>
                                 <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Subs</div>
                               </div>
                               <div>
-                                <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{ch.videosCount || 0}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{ch.videosCount || 0}</div>
                                 <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Videos</div>
                               </div>
                             </div>
@@ -955,7 +955,7 @@ export default function YouTubeOverview() {
                                 <td style={{ padding: '12px 8px', fontWeight: 700, color: '#64748b' }}>#{idx + 1}</td>
                                 <td style={{ padding: '12px 8px', fontWeight: 600, color: '#0f172a' }}>{v.title}</td>
                                 <td style={{ padding: '12px 8px', color: '#64748b' }}>{v.channelTitle}</td>
-                                <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 800, color: '#3b82f6' }}>{formatNumber(v.views)}</td>
+                                <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 700, color: '#3b82f6' }}>{formatNumber(v.views)}</td>
                                 <td style={{ padding: '12px 8px', textAlign: 'right', color: '#64748b' }}>{formatNumber(v.likes)}</td>
                               </tr>
                             ))}
@@ -976,7 +976,7 @@ export default function YouTubeOverview() {
                         {history.slice(-7).map((pt, idx) => (
                           <div key={pt.date || idx} style={{ background: '#f8fafc', padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
                             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{pt.date}</div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>{formatNumber(pt.views)}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{formatNumber(pt.views)}</div>
                             <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>{formatNumber(pt.subscribers)} subs</div>
                           </div>
                         ))}
@@ -1097,7 +1097,7 @@ export default function YouTubeOverview() {
                         background: isMyTeam ? '#f0fdf4' : '#ffffff',
                       }}
                     >
-                      <td style={{ padding: '14px 16px', fontWeight: 800 }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 700 }}>
                         {item.rank === 1 && (
                           <span style={{ color: '#eab308', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                             <Trophy size={14} color="#eab308" /> #1
@@ -1133,14 +1133,14 @@ export default function YouTubeOverview() {
                       <td style={{ padding: '14px 16px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
                         {item.channelsCount || 0}
                       </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 800, color: '#0f172a' }}>
+                      <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
                         {formatNumber(item.totalViews)}
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 700, color: '#64748b' }}>
                         {formatNumber(item.totalSubscribers)}
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                        <span style={{ fontWeight: 800, color: Number(item.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
+                        <span style={{ fontWeight: 700, color: Number(item.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
                           {Number(item.viewsGrowth30dPct) >= 0 ? '+' : ''}{item.viewsGrowth30dPct}%
                         </span>
                       </td>
@@ -1327,7 +1327,7 @@ export default function YouTubeOverview() {
               </select>
             </div>
 
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#ef4444' }}>VS</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#ef4444' }}>VS</div>
 
             <div style={{ flex: 1, minWidth: 200 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>TEAM B</label>
@@ -1347,52 +1347,52 @@ export default function YouTubeOverview() {
           {comparison && (
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center', marginBottom: 24, textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{comparison.teamA?.name}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{comparison.teamA?.name}</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>CHỈ SỐ ĐỐI ĐẦU</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{comparison.teamB?.name}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{comparison.teamB?.name}</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* Total Views Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 1fr', gap: 16, alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 800, color: '#3b82f6' }}>
+                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, color: '#3b82f6' }}>
                     {formatNumber(comparison.teamA?.totalViews)}
                   </div>
                   <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tổng Lượt Xem</div>
-                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 800, color: '#3b82f6' }}>
+                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, color: '#3b82f6' }}>
                     {formatNumber(comparison.teamB?.totalViews)}
                   </div>
                 </div>
 
                 {/* Subscribers Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 1fr', gap: 16, alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 800, color: '#8b5cf6' }}>
+                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, color: '#8b5cf6' }}>
                     {formatNumber(comparison.teamA?.totalSubscribers)}
                   </div>
                   <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#64748b' }}>Subscribers</div>
-                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 800, color: '#8b5cf6' }}>
+                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, color: '#8b5cf6' }}>
                     {formatNumber(comparison.teamB?.totalSubscribers)}
                   </div>
                 </div>
 
                 {/* 30D Growth Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 1fr', gap: 16, alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 800, color: '#10b981' }}>
+                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, color: '#10b981' }}>
                     +{comparison.teamA?.viewsGrowth30dPct}%
                   </div>
                   <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tăng Trưởng (30D)</div>
-                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 800, color: '#10b981' }}>
+                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, color: '#10b981' }}>
                     +{comparison.teamB?.viewsGrowth30dPct}%
                   </div>
                 </div>
 
                 {/* Channels Count Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 1fr', gap: 16, alignItems: 'center', padding: '12px 0' }}>
-                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                  <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
                     {comparison.teamA?.channelsCount} kênh
                   </div>
                   <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#64748b' }}>Số Kênh Sở Hữu</div>
-                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                  <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
                     {comparison.teamB?.channelsCount} kênh
                   </div>
                 </div>

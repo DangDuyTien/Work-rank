@@ -2,12 +2,7 @@ import React from 'react';
 import { Clock } from 'lucide-react';
 
 /**
- * QuizTimerBar - Server Authoritative Real Countdown Bar
- * 
- * Displays:
- * - Real seconds remaining (10 → 9 → ... → 0) in bold prominent typography
- * - Smooth progress bar reflecting fraction of timeRemaining / timeTotal
- * - Urgent state styling when timeRemaining <= 3
+ * QuizTimerBar - Server Authoritative Real Countdown Bar (WorkRank Warm Editorial)
  */
 export default function QuizTimerBar({
   timeRemaining = 10,
@@ -24,22 +19,20 @@ export default function QuizTimerBar({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
+        gap: 12,
         width: '100%',
-        marginTop: 8,
+        marginTop: 10,
+        boxSizing: 'border-box',
       }}
     >
       {/* Progress Bar Container */}
       <div
         style={{
           flex: 1,
-          height: 18,
-          borderRadius: 10,
-          background: 'rgba(0,0,0,0.5)',
-          border: '2px solid rgba(0,0,0,0.8)',
+          height: 8,
+          borderRadius: 4,
+          background: '#dedad0',
           overflow: 'hidden',
-          padding: 2,
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4)',
           position: 'relative',
         }}
       >
@@ -47,46 +40,35 @@ export default function QuizTimerBar({
           style={{
             height: '100%',
             width: `${percent}%`,
-            borderRadius: 6,
+            borderRadius: 4,
             background: isExpired
-              ? '#64748b'
+              ? '#94a3b8'
               : isUrgent
-              ? '#ef4444'
-              : 'linear-gradient(90deg, #ec4899 0%, #8b5cf6 25%, #3b82f6 50%, #10b981 75%, #f59e0b 100%)',
-            transition: 'width 0.2s linear, background 0.3s ease',
-            boxShadow: isUrgent
-              ? '0 0 14px rgba(239,68,68,0.8)'
-              : '0 0 10px rgba(56,189,248,0.4)',
+              ? '#dc2626'
+              : '#b45309',
+            transition: 'width 0.15s linear, background-color 0.2s ease',
           }}
         />
       </div>
 
-      {/* Large Bold Countdown Number (e.g. 10s, 9s, 8s... 0s) */}
+      {/* Countdown Number (e.g. 10s, 9s... 0s) */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 4,
           fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 28,
-          fontWeight: 900,
-          color: isExpired ? '#94a3b8' : isUrgent ? '#ef4444' : '#ffffff',
-          letterSpacing: '-1px',
-          textShadow: `
-            -2px -2px 0 #000,
-             2px -2px 0 #000,
-            -2px  2px 0 #000,
-             2px  2px 0 #000,
-             0 3px 8px rgba(0,0,0,0.9)
-          `,
-          minWidth: 58,
+          fontSize: 16,
+          fontWeight: 700,
+          color: isExpired ? '#94a3b8' : isUrgent ? '#dc2626' : '#141414',
+          minWidth: 48,
           textAlign: 'right',
           justifyContent: 'flex-end',
           flexShrink: 0,
         }}
         title={`Thời gian còn lại: ${clampedRemaining}s`}
       >
-        <Clock size={16} strokeWidth={2.5} style={{ opacity: 0.8, marginRight: 2 }} />
+        <Clock size={13} style={{ opacity: 0.7 }} />
         <span>{clampedRemaining}s</span>
       </div>
     </div>

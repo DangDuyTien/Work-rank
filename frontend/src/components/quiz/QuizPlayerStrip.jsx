@@ -16,11 +16,12 @@ export default function QuizPlayerStrip({
         alignItems: 'flex-end',
         justifyContent: 'space-between',
         width: '100%',
-        padding: '8px 24px 16px',
-        gap: 20,
+        padding: '8px 24px 14px',
+        gap: 16,
         zIndex: 40,
         flexShrink: 0,
         userSelect: 'none',
+        boxSizing: 'border-box',
       }}
     >
       {/* Left Side: Live Activity / Chat Feed */}
@@ -28,10 +29,10 @@ export default function QuizPlayerStrip({
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 4,
+          gap: 3,
           maxWidth: 280,
-          minWidth: 180,
-          maxHeight: 110,
+          minWidth: 160,
+          maxHeight: 90,
           overflowY: 'hidden',
         }}
       >
@@ -42,23 +43,24 @@ export default function QuizPlayerStrip({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#ffffff',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              fontSize: 11,
+              fontWeight: 500,
+              color: '#141414',
               animation: 'fadeIn 0.2s ease',
             }}
           >
             {act.avatar && (
               <QuizAvatar user={{ avatarUrl: act.avatar, name: act.name }} size="xs" />
             )}
-            <span style={{ color: act.color || '#38bdf8' }}>{act.name}:</span>
-            <span style={{ opacity: 0.9 }}>{act.text}</span>
+            <span style={{ fontWeight: 700, color: act.color === '#f59e0b' ? '#b45309' : act.color === '#34d399' ? '#15803d' : '#141414' }}>
+              {act.name}:
+            </span>
+            <span style={{ color: '#666666' }}>{act.text}</span>
           </div>
         ))}
 
         {recentActivity.length === 0 && (
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+          <div style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
             Trận đấu đang diễn ra...
           </div>
         )}
@@ -69,9 +71,9 @@ export default function QuizPlayerStrip({
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          gap: 14,
+          gap: 10,
           overflowX: 'auto',
-          paddingBottom: 4,
+          paddingBottom: 2,
           scrollbarWidth: 'none',
         }}
       >
@@ -82,10 +84,10 @@ export default function QuizPlayerStrip({
           const shortName = name.split(' ').slice(-2).join(' ');
 
           const borderColor = isMe
-            ? '#38bdf8'
+            ? '#b45309'
             : rank === 1
-            ? '#f59e0b'
-            : 'rgba(255,255,255,0.4)';
+            ? '#b45309'
+            : 'rgba(0, 0, 0, 0.12)';
 
           return (
             <div
@@ -94,45 +96,42 @@ export default function QuizPlayerStrip({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                minWidth: 64,
+                minWidth: 54,
                 position: 'relative',
               }}
             >
-              {/* Player Name Pill */}
+              {/* Player Name Tag */}
               <div
                 style={{
                   fontSize: 10,
-                  fontWeight: 900,
-                  color: isMe ? '#38bdf8' : '#ffffff',
-                  background: 'rgba(0,0,0,0.75)',
-                  padding: '1px 6px',
-                  borderRadius: 10,
-                  border: isMe ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.2)',
-                  marginBottom: 4,
+                  fontWeight: 600,
+                  color: isMe ? '#b45309' : '#141414',
+                  background: isMe ? '#fffbeb' : '#ffffff',
+                  padding: '1px 5px',
+                  borderRadius: 4,
+                  border: isMe ? '1px solid rgba(180, 83, 9, 0.3)' : '1px solid rgba(0, 0, 0, 0.08)',
+                  marginBottom: 3,
                   whiteSpace: 'nowrap',
-                  maxWidth: 72,
+                  maxWidth: 68,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   textAlign: 'center',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                 }}
               >
                 {shortName}
               </div>
 
-              {/* Avatar Token with Thick Border */}
+              {/* Avatar Token */}
               <div style={{ position: 'relative' }}>
                 <QuizAvatar
                   user={player.user || { id: player.userId }}
                   userId={player.userId}
-                  size="lg"
-                  border={`3.5px solid ${borderColor}`}
+                  size="md"
+                  border={`2px solid ${borderColor}`}
                   style={{
-                    boxShadow: isMe
-                      ? '0 0 14px rgba(56,189,248,0.7), 0 4px 10px rgba(0,0,0,0.4)'
-                      : rank === 1
-                      ? '0 0 14px rgba(245,158,11,0.7), 0 4px 10px rgba(0,0,0,0.4)'
-                      : '0 4px 10px rgba(0,0,0,0.35)',
+                    boxShadow: isMe || rank === 1
+                      ? '0 1px 4px rgba(180, 83, 9, 0.2)'
+                      : '0 1px 3px rgba(0, 0, 0, 0.06)',
                   }}
                 />
 
@@ -140,38 +139,32 @@ export default function QuizPlayerStrip({
                   <div
                     style={{
                       position: 'absolute',
-                      top: -8,
-                      right: -4,
-                      background: '#f59e0b',
+                      top: -6,
+                      right: -3,
+                      background: '#b45309',
                       color: '#ffffff',
                       borderRadius: '50%',
-                      padding: 3,
-                      border: '1.5px solid #000000',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                      padding: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       zIndex: 2,
                     }}
                   >
-                    <Crown size={11} strokeWidth={3} />
+                    <Crown size={9} strokeWidth={3} />
                   </div>
                 )}
               </div>
 
-              {/* Big Bold Score Underneath Avatar */}
+              {/* Score Underneath Avatar */}
               <div
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 13,
-                  fontWeight: 900,
-                  color: '#ffffff',
-                  marginTop: 3,
-                  letterSpacing: '-0.3px',
-                  textShadow: `
-                    -1.5px -1.5px 0 #000,
-                     1.5px -1.5px 0 #000,
-                    -1.5px  1.5px 0 #000,
-                     1.5px  1.5px 0 #000,
-                     0 2px 4px rgba(0,0,0,0.8)
-                  `,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isMe ? '#b45309' : '#141414',
+                  marginTop: 2,
+                  letterSpacing: '-0.2px',
                 }}
               >
                 {Number(player.score || 0).toLocaleString()}

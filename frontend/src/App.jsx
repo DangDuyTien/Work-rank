@@ -92,8 +92,8 @@ class AppErrorBoundary extends React.Component {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#f8fafc' }}>
         <div style={{ width: 'min(460px, 100%)', background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, boxShadow: 'none', padding: 24 }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: 22, color: '#0f172a' }}>Không tải được giao diện</h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 14, lineHeight: 1.6 }}>
+          <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, lineHeight: 1.25, color: '#0f172a' }}>Không tải được giao diện</h1>
+          <p style={{ margin: 0, color: '#64748b', fontSize: 14, lineHeight: 1.55 }}>
             Trình duyệt có thể đang giữ bản build cũ. Tải lại trang sẽ lấy bundle mới nhất.
           </p>
           <div style={{ marginTop: 14, padding: 10, borderRadius: 0, background: 'rgba(15,23,42,0.04)', color: '#475569', fontSize: 12, wordBreak: 'break-word' }}>
@@ -103,7 +103,7 @@ class AppErrorBoundary extends React.Component {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              style={{ border: 'none', borderRadius: 0, background: '#38bdf8', color: '#ffffff', padding: '10px 14px', fontSize: 13, fontWeight: 900, cursor: 'pointer' }}
+              style={{ border: 'none', borderRadius: 0, background: '#38bdf8', color: '#ffffff', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               Tải lại trang
             </button>
@@ -114,7 +114,7 @@ class AppErrorBoundary extends React.Component {
                 localStorage.removeItem('refreshToken');
                 window.location.href = '/login';
               }}
-              style={{ border: '1px solid rgba(15,23,42,0.12)', borderRadius: 0, background: '#ffffff', color: '#0f172a', padding: '10px 14px', fontSize: 13, fontWeight: 900, cursor: 'pointer' }}
+              style={{ border: '1px solid rgba(15,23,42,0.12)', borderRadius: 0, background: '#ffffff', color: '#0f172a', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               Đăng nhập lại
             </button>

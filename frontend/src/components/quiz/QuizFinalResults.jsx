@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Crown, Sparkles, Home, RotateCcw } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Home, ArrowLeft } from 'lucide-react';
 import QuizAvatar from './QuizAvatar';
 
 export default function QuizFinalResults({
@@ -25,78 +25,80 @@ export default function QuizFinalResults({
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        maxWidth: 900,
+        maxWidth: 800,
         margin: '0 auto',
-        padding: '24px 20px',
-        color: '#ffffff',
-        gap: 20,
-        overflowY: 'auto',
-        maxHeight: 'calc(100vh - 60px)',
+        padding: '16px 20px',
+        color: '#141414',
+        gap: 16,
         boxSizing: 'border-box',
         userSelect: 'none',
       }}
     >
-      {/* Top Banner */}
+      {/* ── TOP BANNER ── */}
       <div
         style={{
           textAlign: 'center',
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(12px)',
-          padding: '18px 36px',
-          borderRadius: 20,
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
+          background: '#ffffff',
+          padding: '16px 28px',
+          borderRadius: 8,
+          border: '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+          width: '100%',
+          maxWidth: 580,
+          boxSizing: 'border-box',
         }}
       >
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 6,
-            background: 'rgba(245, 158, 11, 0.2)',
-            border: '1px solid rgba(245, 158, 11, 0.4)',
-            color: '#f59e0b',
-            padding: '4px 14px',
-            borderRadius: 20,
+            gap: 5,
+            background: 'rgba(180, 83, 9, 0.08)',
+            border: '1px solid rgba(180, 83, 9, 0.2)',
+            color: '#b45309',
+            padding: '3px 10px',
+            borderRadius: 9999,
             fontSize: 11,
-            fontWeight: 900,
-            marginBottom: 8,
-            letterSpacing: '0.4px',
+            fontWeight: 700,
+            marginBottom: 6,
+            letterSpacing: '0.3px',
+            textTransform: 'uppercase',
           }}
         >
-          <Trophy size={13} />
-          <span>KẾT QUẢ CHUNG CUỘC</span>
+          <Trophy size={12} />
+          <span>Kết Quả Chung Cuộc</span>
         </div>
 
         <h1
           style={{
             margin: 0,
-            fontSize: 26,
-            fontWeight: 900,
-            color: '#ffffff',
+            fontSize: 20,
+            fontWeight: 700,
+            color: '#141414',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 10,
+            gap: 8,
             letterSpacing: '-0.3px',
+            lineHeight: 1.3,
           }}
         >
           <span>{winner ? `Chúc mừng ${winner.user?.name || 'Quán Quân'}!` : 'Trận Đấu Hoàn Tất!'}</span>
-          <Sparkles size={24} color="#f59e0b" />
+          <Sparkles size={18} color="#b45309" />
         </h1>
       </div>
 
-      {/* Podium Top 3 */}
+      {/* ── PODIUM TOP 3 ── */}
       {sortedPlayers.length > 0 && (
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',
-            gap: 16,
+            gap: 12,
             width: '100%',
-            maxWidth: 620,
-            padding: '12px 0',
+            maxWidth: 580,
+            padding: '8px 0',
           }}
         >
           {/* 2nd Place */}
@@ -107,28 +109,27 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1,
-                background: 'rgba(15, 23, 42, 0.75)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 16,
-                border: '2px solid #94a3b8',
-                padding: '16px 12px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                background: '#ffffff',
+                borderRadius: 8,
+                border: '1px solid #94a3b8',
+                padding: '14px 10px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
               }}
             >
               <QuizAvatar
                 user={secondPlace.user || { id: secondPlace.userId }}
                 userId={secondPlace.userId}
-                size="lg"
-                border="3px solid #94a3b8"
-                style={{ marginBottom: 8 }}
+                size="md"
+                border="2px solid #94a3b8"
+                style={{ marginBottom: 6 }}
               />
               <div
                 style={{
-                  fontSize: 13,
-                  fontWeight: 900,
+                  fontSize: 12,
+                  fontWeight: 600,
                   textAlign: 'center',
-                  color: '#ffffff',
-                  maxWidth: 130,
+                  color: '#141414',
+                  maxWidth: 120,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -136,19 +137,19 @@ export default function QuizFinalResults({
               >
                 {secondPlace.user?.name || 'Hạng 2'}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                 {Number(secondPlace.score || 0).toLocaleString()} pts
               </div>
               <div
                 style={{
-                  marginTop: 8,
+                  marginTop: 6,
                   fontSize: 10,
-                  fontWeight: 900,
-                  background: 'rgba(148, 163, 184, 0.25)',
-                  border: '1px solid rgba(148, 163, 184, 0.4)',
-                  padding: '2px 10px',
-                  borderRadius: 20,
-                  color: '#e2e8f0',
+                  fontWeight: 700,
+                  background: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  padding: '1px 8px',
+                  borderRadius: 4,
+                  color: '#475569',
                 }}
               >
                 HẠNG 2
@@ -164,46 +165,46 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1.15,
-                background: 'rgba(15, 23, 42, 0.9)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: 18,
-                border: '3px solid #f59e0b',
-                padding: '20px 14px',
-                boxShadow: '0 0 30px rgba(245, 158, 11, 0.35), 0 12px 32px rgba(0, 0, 0, 0.5)',
+                background: '#ffffff',
+                borderRadius: 8,
+                border: '2px solid #b45309',
+                padding: '18px 12px',
+                boxShadow: '0 2px 8px rgba(180, 83, 9, 0.15)',
                 position: 'relative',
               }}
             >
-              <div style={{ position: 'relative', marginBottom: 8 }}>
+              <div style={{ position: 'relative', marginBottom: 6 }}>
                 <QuizAvatar
                   user={firstPlace.user || { id: firstPlace.userId }}
                   userId={firstPlace.userId}
-                  size="xl"
-                  border="3.5px solid #f59e0b"
+                  size="lg"
+                  border="2px solid #b45309"
                 />
                 <div
                   style={{
                     position: 'absolute',
-                    top: -10,
-                    right: -6,
-                    background: '#f59e0b',
+                    top: -8,
+                    right: -4,
+                    background: '#b45309',
                     color: '#ffffff',
                     borderRadius: '50%',
-                    padding: 4,
-                    border: '2px solid #000000',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                    padding: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <Crown size={14} strokeWidth={3} />
+                  <Crown size={11} strokeWidth={3} />
                 </div>
               </div>
 
               <div
                 style={{
-                  fontSize: 15,
-                  fontWeight: 900,
+                  fontSize: 13,
+                  fontWeight: 700,
                   textAlign: 'center',
-                  color: '#ffffff',
-                  maxWidth: 150,
+                  color: '#141414',
+                  maxWidth: 140,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -211,19 +212,18 @@ export default function QuizFinalResults({
               >
                 {firstPlace.user?.name || 'Quán Quân'}
               </div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#f59e0b', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#b45309', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                 {Number(firstPlace.score || 0).toLocaleString()} pts
               </div>
               <div
                 style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  fontWeight: 900,
-                  background: '#f59e0b',
-                  color: '#0f172a',
-                  padding: '3px 12px',
-                  borderRadius: 20,
-                  boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+                  marginTop: 6,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  background: '#b45309',
+                  color: '#ffffff',
+                  padding: '2px 10px',
+                  borderRadius: 4,
                 }}
               >
                 QUÁN QUÂN
@@ -239,28 +239,27 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1,
-                background: 'rgba(15, 23, 42, 0.75)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 16,
-                border: '2px solid #d97706',
-                padding: '16px 12px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                background: '#ffffff',
+                borderRadius: 8,
+                border: '1px solid #d97706',
+                padding: '14px 10px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
               }}
             >
               <QuizAvatar
                 user={thirdPlace.user || { id: thirdPlace.userId }}
                 userId={thirdPlace.userId}
-                size="lg"
-                border="3px solid #d97706"
-                style={{ marginBottom: 8 }}
+                size="md"
+                border="2px solid #d97706"
+                style={{ marginBottom: 6 }}
               />
               <div
                 style={{
-                  fontSize: 13,
-                  fontWeight: 900,
+                  fontSize: 12,
+                  fontWeight: 600,
                   textAlign: 'center',
-                  color: '#ffffff',
-                  maxWidth: 130,
+                  color: '#141414',
+                  maxWidth: 120,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -268,19 +267,19 @@ export default function QuizFinalResults({
               >
                 {thirdPlace.user?.name || 'Hạng 3'}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                 {Number(thirdPlace.score || 0).toLocaleString()} pts
               </div>
               <div
                 style={{
-                  marginTop: 8,
+                  marginTop: 6,
                   fontSize: 10,
-                  fontWeight: 900,
-                  background: 'rgba(217, 119, 6, 0.25)',
-                  border: '1px solid rgba(217, 119, 6, 0.4)',
-                  padding: '2px 10px',
-                  borderRadius: 20,
-                  color: '#fde68a',
+                  fontWeight: 700,
+                  background: '#fef3c7',
+                  border: '1px solid #fde68a',
+                  padding: '1px 8px',
+                  borderRadius: 4,
+                  color: '#92400e',
                 }}
               >
                 HẠNG 3
@@ -290,71 +289,75 @@ export default function QuizFinalResults({
         </div>
       )}
 
-      {/* Personal Match Stats Card */}
+      {/* ── PERSONAL MATCH STATS CARD ── */}
       {myPlayer && (
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.85)',
-            border: '1px solid rgba(56, 189, 248, 0.35)',
-            borderRadius: 16,
-            padding: '16px 24px',
+            background: '#ffffff',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            borderRadius: 8,
+            padding: '14px 20px',
             width: '100%',
-            maxWidth: 620,
+            maxWidth: 580,
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 12,
+            gap: 10,
             textAlign: 'center',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+            boxSizing: 'border-box',
           }}
         >
           <div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800 }}>THỨ HẠNG</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#38bdf8', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>THỨ HẠNG</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#b45309', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
               #{sortedPlayers.findIndex((p) => Number(p.userId) === Number(currentUserId)) + 1}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800 }}>TỔNG ĐIỂM</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#ffffff', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>TỔNG ĐIỂM</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#141414', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {Number(myPlayer.score || 0).toLocaleString()}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800 }}>SỐ CÂU ĐÚNG</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#34d399', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>SỐ CÂU ĐÚNG</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
               {myPlayer.correctAnswers || 0}/{room?.totalQuestions || 10}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 800 }}>TỐC ĐỘ TB</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#c084fc', fontFamily: 'JetBrains Mono, monospace', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>TỐC ĐỘ TB</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {myPlayer.avgResponseTimeMs ? `${(myPlayer.avgResponseTimeMs / 1000).toFixed(1)}s` : 'N/A'}
             </div>
           </div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 8 }}>
+      {/* ── ACTION BUTTONS ── */}
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 4 }}>
         <button
           type="button"
           onClick={onBackToLobby}
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '11px 26px',
-            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            gap: 6,
+            padding: '9px 20px',
+            background: '#141414',
             color: '#ffffff',
             border: 'none',
-            borderRadius: 30,
-            fontSize: 14,
-            fontWeight: 900,
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            transition: 'background 0.15s ease',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#262626'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#141414'; }}
         >
-          <Home size={16} />
+          <Home size={14} />
           <span>Về Sảnh Chờ</span>
         </button>
       </div>

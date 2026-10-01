@@ -687,7 +687,7 @@ export default function CapitalBoardGame() {
                   borderRadius: 6,
                   padding: '12px 20px',
                   fontSize: 14,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   cursor: 'pointer',
                   boxShadow: '0 4px 14px rgba(56,189,248,0.35)',
                 }}
@@ -710,7 +710,7 @@ export default function CapitalBoardGame() {
                   borderRadius: 6,
                   padding: '12px 18px',
                   fontSize: 14,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
@@ -744,7 +744,7 @@ export default function CapitalBoardGame() {
             >
               <Gamepad2 size={20} color="#b45309" />
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
               Bản Đồ 28 Ô Độc Quyền
             </h3>
             <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
@@ -774,7 +774,7 @@ export default function CapitalBoardGame() {
             >
               <Sparkles size={20} color="#d97706" />
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
               Đổ Xúc Xắc & Sự Kiện Realtime
             </h3>
             <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
@@ -804,7 +804,7 @@ export default function CapitalBoardGame() {
             >
               <Trophy size={20} color="#9333ea" />
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
               Bảng Vàng Tỷ Phú Doanh Nghiệp
             </h3>
             <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
@@ -966,7 +966,7 @@ export default function CapitalBoardGame() {
                 borderRadius: 6,
                 padding: '8px 14px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
               }}
@@ -991,7 +991,7 @@ export default function CapitalBoardGame() {
                 borderRadius: 6,
                 padding: '8px 12px',
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
@@ -1079,7 +1079,7 @@ export default function CapitalBoardGame() {
               borderRadius: 6,
               padding: '8px 16px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -1128,7 +1128,7 @@ export default function CapitalBoardGame() {
                     background: isActive ? '#0f172a' : 'transparent',
                     color: isActive ? '#ffffff' : '#64748b',
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
@@ -1161,7 +1161,7 @@ export default function CapitalBoardGame() {
                     borderRadius: 6,
                     padding: '6px 12px',
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: '#0f172a',
                     cursor: lobbyLoading ? 'not-allowed' : 'pointer',
                   }}
@@ -1200,7 +1200,7 @@ export default function CapitalBoardGame() {
                     <Gamepad2 size={24} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', margin: '0 0 4px' }}>
                       Chưa có phòng nào đang chờ
                     </h3>
                     <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
@@ -1217,7 +1217,7 @@ export default function CapitalBoardGame() {
                       borderRadius: 6,
                       padding: '8px 16px',
                       fontSize: 13,
-                      fontWeight: 800,
+                      fontWeight: 600,
                       cursor: 'pointer',
                     }}
                   >
@@ -1257,7 +1257,7 @@ export default function CapitalBoardGame() {
                             <span
                               style={{
                                 fontSize: 10,
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 background: 'rgba(34,197,94,0.12)',
                                 color: '#16a34a',
                                 padding: '2px 6px',
@@ -1271,7 +1271,7 @@ export default function CapitalBoardGame() {
                             </span>
                           </div>
 
-                          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>
+                          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 4px' }}>
                             {r.name}
                           </h3>
 
@@ -1308,7 +1308,7 @@ export default function CapitalBoardGame() {
                               borderRadius: 6,
                               padding: '6px 14px',
                               fontSize: 12,
-                              fontWeight: 800,
+                              fontWeight: 600,
                               cursor: isFull ? 'not-allowed' : 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -1352,7 +1352,7 @@ export default function CapitalBoardGame() {
             <span
               style={{
                 fontSize: 11,
-                fontWeight: 800,
+                fontWeight: 600,
                 background: 'rgba(180,83,9,0.08)',
                 color: "#b45309",
                 padding: '3px 8px',
@@ -1402,20 +1402,20 @@ export default function CapitalBoardGame() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 14,
-                      fontWeight: 900,
+                      fontWeight: 700,
                     }}
                   >
                     {p ? (p.user?.name || `P${idx + 1}`).charAt(0).toUpperCase() : idx + 1}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: sColor, textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: sColor, textTransform: 'uppercase' }}>
                       Vị trí {idx + 1}
                     </div>
                     <div
                       style={{
                         fontSize: 14,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: p ? '#0f172a' : '#94a3b8',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -1425,7 +1425,7 @@ export default function CapitalBoardGame() {
                       {p ? p.user?.name || p.user?.username || `Người chơi ${idx + 1}` : 'Đang chờ người vào...'}
                     </div>
                     {p?.userId === room.hostId && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#f59e0b', fontWeight: 800 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#f59e0b', fontWeight: 600 }}>
                         <Crown size={11} />
                         <span>CHỦ PHÒNG</span>
                       </span>
@@ -1450,7 +1450,7 @@ export default function CapitalBoardGame() {
                 borderRadius: 6,
                 padding: '12px 16px',
                 fontSize: 14,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
@@ -1470,7 +1470,7 @@ export default function CapitalBoardGame() {
                   borderRadius: 6,
                   padding: '12px 16px',
                   fontSize: 14,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   cursor: players.length >= 2 ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
@@ -1511,7 +1511,7 @@ export default function CapitalBoardGame() {
         <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr 280px', gap: 16, alignItems: 'start' }}>
           {/* Left Column: Player Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>
               Người chơi ({players.length})
             </div>
             {players.map((p) => {
@@ -1620,7 +1620,7 @@ export default function CapitalBoardGame() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
                   Số lượng người chơi
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1636,7 +1636,7 @@ export default function CapitalBoardGame() {
                         border: newMaxPlayers === num ? '2px solid #0f172a' : '1px solid rgba(15,23,42,0.15)',
                         background: newMaxPlayers === num ? '#0f172a' : '#ffffff',
                         color: newMaxPlayers === num ? '#ffffff' : '#0f172a',
-                        fontWeight: 800,
+                        fontWeight: 600,
                         fontSize: 13,
                         cursor: 'pointer',
                       }}
@@ -1658,7 +1658,7 @@ export default function CapitalBoardGame() {
                     border: '1px solid rgba(15,23,42,0.2)',
                     background: '#ffffff',
                     color: '#64748b',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     fontSize: 13,
                     cursor: 'pointer',
                   }}
@@ -1675,7 +1675,7 @@ export default function CapitalBoardGame() {
                     border: 'none',
                     background: '#0f172a',
                     color: '#ffffff',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     fontSize: 13,
                     cursor: creatingRoom ? 'not-allowed' : 'pointer',
                   }}

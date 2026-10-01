@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, LogOut, Users, Sparkles, Maximize, Minimize, ArrowLeft } from 'lucide-react';
+import { Volume2, VolumeX, Users, Sparkles, Maximize, Minimize, ArrowLeft } from 'lucide-react';
 import QuizAvatar from './QuizAvatar';
 
 export default function QuizTopBar({
@@ -40,62 +40,65 @@ export default function QuizTopBar({
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        height: 56,
+        height: 52,
         padding: '0 20px',
-        color: '#ffffff',
+        color: '#141414',
         fontSize: 13,
-        fontWeight: 700,
+        fontWeight: 600,
         zIndex: 50,
         flexShrink: 0,
-        background: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(8px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        background: '#ffffff',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
         userSelect: 'none',
+        boxSizing: 'border-box',
       }}
     >
       {/* Left: Brand + Category + Room Meta */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         {onLeaveRoom && (
           <button
             type="button"
             onClick={onLeaveRoom}
             title={isLobby ? "Quay về WorkRank" : "Rời phòng chơi"}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: 5,
-              padding: '6px 12px',
+              padding: '5px 10px',
               borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: '#f4f3ef',
+              color: '#141414',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
               transition: 'background 0.15s ease',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#eceae4'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#f4f3ef'; }}
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={13} />
             <span>{isLobby ? 'Bảng Điều Khiển' : 'Rời Phòng'}</span>
           </button>
         )}
 
         <div
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: 6,
-            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-            color: '#ffffff',
-            padding: '4px 10px',
-            borderRadius: 6,
-            fontSize: 12,
-            fontWeight: 900,
-            letterSpacing: '0.5px',
-            boxShadow: '0 2px 6px rgba(2,132,199,0.3)',
+            gap: 5,
+            background: 'rgba(180, 83, 9, 0.08)',
+            border: '1px solid rgba(180, 83, 9, 0.2)',
+            color: '#b45309',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.3px',
+            textTransform: 'uppercase',
           }}
         >
-          <Sparkles size={13} />
+          <Sparkles size={12} />
           <span>QUIZ LIVE</span>
         </div>
 
@@ -103,8 +106,8 @@ export default function QuizTopBar({
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
             <span
               style={{
-                fontWeight: 800,
-                textShadow: '0 1px 3px rgba(0,0,0,0.6)',
+                fontWeight: 700,
+                color: '#141414',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -118,19 +121,19 @@ export default function QuizTopBar({
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
-                  fontWeight: 900,
-                  background: 'rgba(255,255,255,0.1)',
-                  padding: '2px 8px',
+                  fontWeight: 700,
+                  background: '#f8f7f4',
+                  padding: '2px 6px',
                   borderRadius: 4,
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#38bdf8',
+                  border: '1px solid rgba(0, 0, 0, 0.08)',
+                  color: '#b45309',
                 }}
               >
                 #{room.code}
               </span>
             )}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.85, fontSize: 12 }}>
-              <Users size={13} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#666666', fontSize: 12 }}>
+              <Users size={12} />
               <span>{playerCount}</span>
             </span>
           </div>
@@ -138,19 +141,18 @@ export default function QuizTopBar({
       </div>
 
       {/* Right: Question Slide Progress + Sound + Fullscreen + User */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {!isLobby && room && (
           <div
             style={{
               fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 12,
-              fontWeight: 900,
-              color: '#ffffff',
-              background: 'rgba(0,0,0,0.4)',
-              padding: '4px 12px',
-              borderRadius: 6,
-              border: '1px solid rgba(255,255,255,0.15)',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#141414',
+              background: '#f4f3ef',
+              padding: '3px 10px',
+              borderRadius: 4,
+              border: '1px solid rgba(0, 0, 0, 0.08)',
             }}
           >
             Câu {questionIndex + 1} / {totalQuestions}
@@ -163,19 +165,22 @@ export default function QuizTopBar({
           onClick={toggleNativeFullscreen}
           title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình'}
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 34,
-            height: 34,
+            width: 32,
+            height: 32,
             borderRadius: 6,
-            background: isFullscreen ? 'rgba(56,189,248,0.25)' : 'rgba(255,255,255,0.08)',
-            color: '#ffffff',
-            border: isFullscreen ? '1px solid rgba(56,189,248,0.5)' : '1px solid rgba(255,255,255,0.15)',
+            background: isFullscreen ? '#f4f3ef' : '#ffffff',
+            color: '#141414',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
+            transition: 'background 0.15s ease',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#f4f3ef'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = isFullscreen ? '#f4f3ef' : '#ffffff'; }}
         >
-          {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+          {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
         </button>
 
         {/* Sound Toggle */}
@@ -184,19 +189,26 @@ export default function QuizTopBar({
           onClick={onToggleSound}
           title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 34,
-            height: 34,
+            width: 32,
+            height: 32,
             borderRadius: 6,
-            background: soundMuted ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)',
-            color: '#ffffff',
-            border: soundMuted ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.15)',
+            background: soundMuted ? '#fef2f2' : '#ffffff',
+            color: soundMuted ? '#dc2626' : '#141414',
+            border: soundMuted ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = soundMuted ? '#fee2e2' : '#f4f3ef';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = soundMuted ? '#fef2f2' : '#ffffff';
           }}
         >
-          {soundMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
         </button>
 
         {/* Current User Pill */}
@@ -205,15 +217,15 @@ export default function QuizTopBar({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '3px 8px 3px 4px',
-              borderRadius: 20,
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              gap: 6,
+              padding: '2px 8px 2px 3px',
+              borderRadius: 9999,
+              background: '#f8f7f4',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
             }}
           >
             <QuizAvatar user={currentUser} size="xs" />
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#ffffff', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#141414', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {currentUser.name || 'Thành viên'}
             </span>
           </div>

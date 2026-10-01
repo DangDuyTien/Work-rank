@@ -146,7 +146,7 @@ export default function AdminSeasons() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy size={22} color="#f97316" />
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>Quản Lý Mùa Giải (Seasons)</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Mùa Giải (Seasons)</h1>
           </div>
           <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0 0' }}>
             Thiết lập lịch trình, đội tham gia, kích hoạt, tạm dừng, và đóng băng kết quả giải đấu.
@@ -200,7 +200,7 @@ export default function AdminSeasons() {
                         padding: '3px 8px',
                         borderRadius: 4,
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         background: s.status === 'ACTIVE' ? 'rgba(34,197,94,0.15)' : s.status === 'PAUSED' ? 'rgba(234,179,8,0.15)' : 'rgba(15,23,42,0.08)',
                         color: s.status === 'ACTIVE' ? '#16a34a' : s.status === 'PAUSED' ? '#ca8a04' : '#475569',
                       }}
@@ -211,7 +211,7 @@ export default function AdminSeasons() {
                     <span style={{ fontSize: 12, color: '#64748b' }}>• Slug: <code>{s.slug}</code></span>
                   </div>
 
-                  <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 6px 0' }}>{s.name}</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>{s.name}</h3>
                   <p style={{ fontSize: 13, color: '#475569', margin: '0 0 10px 0' }}>{s.description || 'Chưa có mô tả'}</p>
 
                   <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#64748b', flexWrap: 'wrap' }}>
@@ -333,10 +333,10 @@ export default function AdminSeasons() {
       {showCreateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <div style={{ width: 'min(520px, 100%)', background: '#ffffff', borderRadius: 10, padding: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, margin: '0 0 16px 0' }}>Tạo Mùa Giải Mới</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px 0' }}>Tạo Mùa Giải Mới</h2>
             <form onSubmit={handleCreateSeason} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Tên mùa giải</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tên mùa giải</label>
                 <input
                   type="text"
                   required
@@ -348,7 +348,7 @@ export default function AdminSeasons() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Slug định danh</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Slug định danh</label>
                 <input
                   type="text"
                   required
@@ -360,7 +360,7 @@ export default function AdminSeasons() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Bắt đầu</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Bắt đầu</label>
                   <input
                     type="datetime-local"
                     required
@@ -370,7 +370,7 @@ export default function AdminSeasons() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Kết thúc</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Kết thúc</label>
                   <input
                     type="datetime-local"
                     required
@@ -382,7 +382,7 @@ export default function AdminSeasons() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Mô tả ngắn</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Mô tả ngắn</label>
                 <textarea
                   rows={3}
                   value={formData.description}
@@ -407,12 +407,12 @@ export default function AdminSeasons() {
       {selectedSeasonForTeam && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <div style={{ width: 'min(440px, 100%)', background: '#ffffff', borderRadius: 10, padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 12px 0' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0' }}>
               Thêm Đội vào Season: {selectedSeasonForTeam.name}
             </h2>
             <form onSubmit={handleAddTeam} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Chọn Team</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Chọn Team</label>
                 <select
                   required
                   value={selectedTeamId}
@@ -427,7 +427,7 @@ export default function AdminSeasons() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Màu đại diện đội (Hex)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Màu đại diện đội (Hex)</label>
                 <input
                   type="color"
                   value={teamColor}

@@ -75,12 +75,12 @@ export default function GameResultModal({
             <Trophy size={28} />
           </div>
 
-          <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, margin: '0 0 4px', letterSpacing: '-0.02em' }}>
             KẾT QUẢ TRẬN ĐẤU
           </h2>
-          <p style={{ margin: 0, fontSize: 13, color: '#94a3b8' }}>
+          <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.55 }}>
             Chúc mừng Quán quân{' '}
-            <strong style={{ color: '#38bdf8' }}>
+            <strong style={{ color: '#38bdf8', fontWeight: 600 }}>
               {winner?.user?.name || winner?.user?.username || 'Người chơi 1'}
             </strong>
             !
@@ -120,7 +120,7 @@ export default function GameResultModal({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       fontSize: 13,
                     }}
                   >
@@ -128,13 +128,13 @@ export default function GameResultModal({
                   </div>
 
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{displayName}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{displayName}</div>
                     <div style={{ fontSize: 11, color: '#64748b' }}>
                       {res.status === 'BANKRUPT' ? (
                         <span style={{ color: '#ef4444', fontWeight: 600 }}>Phá sản</span>
                       ) : (
                         <span>
-                          Tiền: <strong>${res.finalCash}</strong> | Tài sản: <strong>${res.finalPropertyValue}</strong>
+                          Tiền: <strong style={{ fontWeight: 600 }}>${res.finalCash}</strong> | Tài sản: <strong style={{ fontWeight: 600 }}>${res.finalPropertyValue}</strong>
                         </span>
                       )}
                     </div>
@@ -146,7 +146,7 @@ export default function GameResultModal({
                   <div
                     style={{
                       fontSize: 14,
-                      fontWeight: 900,
+                      fontWeight: 700,
                       color: '#0f172a',
                       fontFamily: 'JetBrains Mono, monospace',
                     }}
@@ -157,7 +157,7 @@ export default function GameResultModal({
                     <div
                       style={{
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: '#16a34a',
                         fontFamily: 'JetBrains Mono, monospace',
                       }}
@@ -192,7 +192,7 @@ export default function GameResultModal({
               borderRadius: 6,
               padding: '10px 16px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -215,7 +215,7 @@ export default function GameResultModal({
               borderRadius: 6,
               padding: '10px 16px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',

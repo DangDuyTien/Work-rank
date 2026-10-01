@@ -79,7 +79,7 @@ export default function BrandMark({
           <span
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 900,
+              fontWeight: 700,
               fontSize: Math.round(size * 0.45),
               color: '#facc15',
               lineHeight: 1,
@@ -97,7 +97,7 @@ export default function BrandMark({
             display: 'inline-flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            lineHeight: 1.1,
+            lineHeight: 1.25,
             minWidth: 0,
           }}
         >
@@ -105,7 +105,7 @@ export default function BrandMark({
             style={{
               color: '#0f172a',
               fontSize: Math.max(14, Math.round(size * 0.48)),
-              fontWeight: 900,
+              fontWeight: 700,
               letterSpacing: '-0.3px',
               whiteSpace: 'nowrap',
               fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -118,7 +118,7 @@ export default function BrandMark({
             <span
               style={{
                 fontSize: Math.max(9, Math.round(size * 0.28)),
-                fontWeight: 700,
+                fontWeight: 600,
                 color: '#94a3b8',
                 letterSpacing: '0.4px',
                 textTransform: 'uppercase',

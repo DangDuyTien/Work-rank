@@ -138,7 +138,7 @@ function PlayingCard({
     >
       {/* Top Left Rank & Suit */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-        <span style={{ fontSize: small ? 11 : 14, fontWeight: 900, color }}>{rank}</span>
+        <span style={{ fontSize: small ? 11 : 14, fontWeight: 700, color }}>{rank}</span>
         <Icon size={small ? 10 : 13} color={color} style={{ marginTop: 1 }} />
       </div>
 
@@ -157,7 +157,7 @@ function PlayingCard({
           transform: 'rotate(180deg)',
         }}
       >
-        <span style={{ fontSize: small ? 11 : 14, fontWeight: 900, color }}>{rank}</span>
+        <span style={{ fontSize: small ? 11 : 14, fontWeight: 700, color }}>{rank}</span>
         <Icon size={small ? 10 : 13} color={color} style={{ marginTop: 1 }} />
       </div>
     </div>
@@ -205,7 +205,7 @@ function SamRulesModal({ isOpen, onClose }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Club size={20} color="#b45309" />
-            <h2 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: '#111827' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: '#111827' }}>
               Luật Chơi Sâm Lốc WorkRank
             </h2>
           </div>
@@ -225,7 +225,7 @@ function SamRulesModal({ isOpen, onClose }) {
         </div>
 
         <div style={{ padding: '18px 24px', overflowY: 'auto', fontSize: 14, lineHeight: 1.6, color: '#374151' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
             1. Bộ bài và Thứ tự quân
           </h3>
           <p style={{ margin: '0 0 12px' }}>
@@ -236,7 +236,7 @@ function SamRulesModal({ isOpen, onClose }) {
             Trong Sâm Lốc, <strong>không phân biệt chất bài</strong> (♠, ♣, ♦, ♥ có giá trị ngang nhau). Muốn chặn phải có quân cùng loại mang rank lớn hơn.
           </p>
 
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
             2. Các bộ bài hợp lệ
           </h3>
           <ul style={{ margin: '0 0 12px', paddingLeft: 20 }}>
@@ -247,14 +247,14 @@ function SamRulesModal({ isOpen, onClose }) {
             <li><strong>Sảnh (từ 3 lá trở lên):</strong> Các lá bài có rank liên tiếp. Sảnh nhỏ nhất là <strong>A-2-3</strong>. Sảnh lớn nhất kết thúc bằng A (ví dụ J-Q-K-A).</li>
           </ul>
 
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
             3. Luật Báo Sâm (Xin Sâm)
           </h3>
           <p style={{ margin: '0 0 12px' }}>
             Sau khi chia bài, người chơi có 10 giây để quyết định <strong>Báo Sâm</strong>. Nếu bạn báo Sâm và đánh hết 10 lá mà không ai chặn được, bạn <strong>Thắng Sâm</strong> (+20 điểm từ mỗi người chơi). Nếu bị ai chặn dù chỉ 1 lượt, bạn <strong>Đền Sâm</strong> (phạt 20 điểm x số đối thủ).
           </p>
 
-          <h3 style={{ fontSize: 15, fontWeight: 800, color: '#111827', margin: '0 0 6px' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
             4. Luật Báo 1 & Thối 2
           </h3>
           <ul style={{ margin: '0 0 12px', paddingLeft: 20 }}>
@@ -326,14 +326,14 @@ function CreateRoomModal({ isOpen, onClose, onSubmit, loading }) {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: '#111827' }}>Tạo Phòng Đánh Sâm Mới</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#111827' }}>Tạo Phòng Đánh Sâm Mới</h2>
           <button type="button" onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
             <X size={20} />
           </button>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
             Tên phòng chơi
           </label>
           <input
@@ -353,7 +353,7 @@ function CreateRoomModal({ isOpen, onClose, onSubmit, loading }) {
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
             Số người chơi tối đa
           </label>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -369,7 +369,7 @@ function CreateRoomModal({ isOpen, onClose, onSubmit, loading }) {
                   border: maxPlayers === num ? '2px solid #b45309' : '1px solid rgba(0,0,0,0.12)',
                   background: maxPlayers === num ? 'rgba(180,83,9,0.08)' : '#ffffff',
                   color: maxPlayers === num ? '#b45309' : '#374151',
-                  fontWeight: 800,
+                  fontWeight: 600,
                   fontSize: 14,
                   cursor: 'pointer',
                 }}
@@ -443,7 +443,7 @@ function GameResultModal({ isOpen, result, isSamWin, isThoi2, onPlayAgain, onLea
           <Trophy size={32} color="#b45309" />
         </div>
 
-        <h2 style={{ fontSize: 20, fontWeight: 900, color: '#111827', margin: '0 0 4px' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>
           {isSamWin ? '🏆 THẮNG SÂM HOÀN TOÀN!' : isThoi2 ? '⚠️ ĐỐI THỦ THỐI 2!' : '🏆 KẾT QUẢ VÁN ĐẤU'}
         </h2>
         <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 18px' }}>
@@ -462,10 +462,10 @@ function GameResultModal({ isOpen, result, isSamWin, isThoi2, onPlayAgain, onLea
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 800 }}>Hạng</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 800 }}>Người chơi</th>
-                <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 800 }}>Còn lại</th>
-                <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800 }}>Điểm</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Hạng</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Người chơi</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600 }}>Còn lại</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>Điểm</th>
               </tr>
             </thead>
             <tbody>
@@ -477,10 +477,10 @@ function GameResultModal({ isOpen, result, isSamWin, isThoi2, onPlayAgain, onLea
                     background: row.rank === 1 ? 'rgba(180,83,9,0.04)' : '#ffffff',
                   }}
                 >
-                  <td style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 800 }}>
+                  <td style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600 }}>
                     {row.rank === 1 ? '🥇 1' : `🥈 ${row.rank || idx + 1}`}
                   </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#111827' }}>
+                  <td style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#111827' }}>
                     {row.name}
                   </td>
                   <td style={{ padding: '10px 12px', textAlign: 'center', color: '#6b7280' }}>
@@ -490,7 +490,7 @@ function GameResultModal({ isOpen, result, isSamWin, isThoi2, onPlayAgain, onLea
                     style={{
                       padding: '10px 12px',
                       textAlign: 'right',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       color: row.scoreDelta > 0 ? '#15803d' : row.scoreDelta < 0 ? '#b91c1c' : '#4b5563',
                     }}
                   >
@@ -1106,7 +1106,7 @@ export default function SamGame() {
                   alignItems: 'center',
                   gap: 6,
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: timeLeft <= 5 ? '#ef4444' : '#38bdf8',
                   background: 'rgba(0,0,0,0.4)',
                   padding: '4px 10px',
@@ -1132,7 +1132,7 @@ export default function SamGame() {
               ) : (
                 <div style={{ textAlign: 'center', color: '#64748b' }}>
                   <Club size={32} opacity={0.3} style={{ marginBottom: 6 }} />
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#94a3b8' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8' }}>
                     {room.samPhase === 'SAM_DECLARING' ? 'Đang trong thời gian báo Sâm (10s)' : 'Vòng mới — Đánh bài tự do'}
                   </div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>
@@ -1175,7 +1175,7 @@ export default function SamGame() {
                     style={{
                       background: '#b45309',
                       borderColor: '#b45309',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       boxShadow: '0 4px 14px rgba(180,83,9,0.4)',
                     }}
                   >
@@ -1197,7 +1197,7 @@ export default function SamGame() {
                       padding: '8px 14px',
                       borderRadius: 6,
                       fontSize: 13,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       cursor: 'pointer',
                     }}
                   >
@@ -1210,7 +1210,7 @@ export default function SamGame() {
                     style={{
                       background: isMyTurn && selectedCards.length > 0 ? '#b45309' : '#334155',
                       borderColor: isMyTurn && selectedCards.length > 0 ? '#b45309' : '#475569',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       minWidth: 120,
                     }}
                   >
@@ -1282,7 +1282,7 @@ export default function SamGame() {
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: '#10b981',
                     background: 'rgba(16,185,129,0.15)',
                     padding: '2px 8px',
@@ -1336,7 +1336,7 @@ export default function SamGame() {
               borderRadius: 6,
               padding: '6px 12px',
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 600,
               color: '#111111',
               cursor: 'pointer',
             }}
@@ -1372,11 +1372,11 @@ export default function SamGame() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <Club size={20} color="#b45309" />
-                <h1 style={{ fontSize: 20, fontWeight: 900, color: '#111827', margin: 0 }}>
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0 }}>
                   {room.title}
                 </h1>
               </div>
-              <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
                 Đang chờ đủ người chơi để bắt đầu (Tối đa {room.maxPlayers} người)
               </p>
             </div>
@@ -1388,7 +1388,7 @@ export default function SamGame() {
                   padding: '4px 10px',
                   borderRadius: 4,
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   fontFamily: 'monospace',
                   color: '#111827',
                 }}
@@ -1432,7 +1432,7 @@ export default function SamGame() {
                           top: 8,
                           right: 8,
                           fontSize: 10,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           background: 'rgba(180,83,9,0.12)',
                           color: '#b45309',
                           padding: '2px 6px',
@@ -1535,7 +1535,7 @@ export default function SamGame() {
             borderRadius: 6,
             padding: '6px 14px',
             fontSize: 12,
-            fontWeight: 800,
+            fontWeight: 600,
             color: '#ffffff',
             cursor: 'pointer',
           }}
@@ -1573,7 +1573,7 @@ export default function SamGame() {
               alignItems: 'center',
               gap: 6,
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 600,
               color: '#b45309',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
@@ -1582,7 +1582,7 @@ export default function SamGame() {
           >
             <Club size={14} /> Trò Chơi Nội Bộ
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#111827', margin: 0 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>
             Đánh Sâm Lốc
           </h1>
           <p style={{ fontSize: 14, color: '#6b7280', margin: '4px 0 0' }}>
@@ -1759,7 +1759,7 @@ export default function SamGame() {
                         <span
                           style={{
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 600,
                             padding: '2px 6px',
                             borderRadius: 4,
                             background: 'rgba(21,128,61,0.1)',
@@ -1812,12 +1812,12 @@ export default function SamGame() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 800, width: 70 }}>Hạng</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 800 }}>Người chơi</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800 }}>Trận</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800 }}>Thắng</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800 }}>Tỉ lệ</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800 }}>Tổng Điểm</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, width: 70 }}>Hạng</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600 }}>Người chơi</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>Trận</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>Thắng</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>Tỉ lệ</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>Tổng Điểm</th>
                 </tr>
               </thead>
               <tbody>
@@ -1836,7 +1836,7 @@ export default function SamGame() {
                         background: Number(item.userId) === Number(user?.id) ? 'rgba(180,83,9,0.04)' : '#ffffff',
                       }}
                     >
-                      <td style={{ padding: '12px 16px', fontWeight: 900 }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 700 }}>
                         {item.rank === 1 ? '🥇 1' : item.rank === 2 ? '🥈 2' : item.rank === 3 ? '🥉 3' : item.rank}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
@@ -1853,13 +1853,13 @@ export default function SamGame() {
                       <td style={{ padding: '12px 16px', textAlign: 'center', color: '#4b5563' }}>
                         {item.gamesPlayed}
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#15803d' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#15803d' }}>
                         {item.gamesWon}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center', color: '#4b5563' }}>
                         {item.winRate}%
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 900, color: '#b45309' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#b45309' }}>
                         {item.totalPoints}
                       </td>
                     </tr>
@@ -1873,12 +1873,12 @@ export default function SamGame() {
         {/* TAB 3: RULES */}
         {activeTab === 'RULES' && (
           <Card style={{ padding: 24, background: '#ffffff', lineHeight: 1.7 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111827', marginBottom: 14 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 14 }}>
               Quy chuẩn luật chơi Sâm Lốc WorkRank
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#b45309', margin: '0 0 6px' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#b45309', margin: '0 0 6px' }}>
                   Thứ tự quân bài
                 </h3>
                 <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>
@@ -1886,7 +1886,7 @@ export default function SamGame() {
                 </p>
               </div>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#b45309', margin: '0 0 6px' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#b45309', margin: '0 0 6px' }}>
                   Luật Sảnh & Tứ Quý
                 </h3>
                 <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>
@@ -1894,7 +1894,7 @@ export default function SamGame() {
                 </p>
               </div>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#b45309', margin: '0 0 6px' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#b45309', margin: '0 0 6px' }}>
                   Báo Sâm (Xin Sâm)
                 </h3>
                 <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>
@@ -1902,7 +1902,7 @@ export default function SamGame() {
                 </p>
               </div>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#b45309', margin: '0 0 6px' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#b45309', margin: '0 0 6px' }}>
                   Báo 1 & Thối 2
                 </h3>
                 <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>
@@ -1964,7 +1964,7 @@ function OpponentBox({ player, isTurn = false, timeLeft }) {
               background: '#b45309',
               color: '#ffffff',
               fontSize: 10,
-              fontWeight: 900,
+              fontWeight: 700,
               padding: '1px 4px',
               borderRadius: 6,
             }}
@@ -1981,7 +1981,7 @@ function OpponentBox({ player, isTurn = false, timeLeft }) {
       {/* Card Backs Fan indicator */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
         <PlayingCard isBack small />
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>
           {player.remainingCardsCount} lá
         </span>
       </div>
@@ -1992,7 +1992,7 @@ function OpponentBox({ player, isTurn = false, timeLeft }) {
           style={{
             marginTop: 4,
             fontSize: 10,
-            fontWeight: 900,
+            fontWeight: 700,
             background: '#b91c1c',
             color: '#ffffff',
             padding: '2px 6px',

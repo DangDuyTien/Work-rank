@@ -1,36 +1,66 @@
 import React from 'react';
+import { HelpCircle, Image, Music } from 'lucide-react';
 
 export default function QuizQuestionCard({
   question,
 }) {
   if (!question) return null;
 
+  const isMusic = question.type === 'MUSIC';
+  const isImage = question.type === 'IMAGE';
+
   return (
     <div
       style={{
         width: '100%',
-        marginBottom: 16,
+        marginBottom: 14,
+        background: '#ffffff',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        borderRadius: 8,
+        padding: '16px 20px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+        boxSizing: 'border-box',
       }}
     >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '2px 8px',
+            borderRadius: 9999,
+            background: isMusic ? 'rgba(124,58,237,0.08)' : isImage ? 'rgba(2,132,199,0.08)' : 'rgba(180,83,9,0.08)',
+            border: `1px solid ${isMusic ? 'rgba(124,58,237,0.2)' : isImage ? 'rgba(2,132,199,0.2)' : 'rgba(180,83,9,0.2)'}`,
+            color: isMusic ? '#7c3aed' : isImage ? '#0284c7' : '#b45309',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.2px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {isMusic ? <Music size={11} /> : isImage ? <Image size={11} /> : <HelpCircle size={11} />}
+          <span>{question.category || (isMusic ? 'Đoán Bài Hát' : isImage ? 'Đoán Hình Ảnh' : 'Câu Hỏi')}</span>
+        </span>
+
+        {question.points && (
+          <span style={{ fontSize: 11, color: '#666666', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>
+            +{question.points} điểm
+          </span>
+        )}
+      </div>
+
       <h2
         style={{
           margin: 0,
-          fontSize: 22,
-          fontWeight: 900,
-          color: '#ffffff',
+          fontSize: 'clamp(16px, 2vw, 20px)',
+          fontWeight: 700,
+          color: '#141414',
           lineHeight: 1.4,
-          textAlign: 'center',
           letterSpacing: '-0.2px',
-          textShadow: `
-            -1.5px -1.5px 0 #000,
-             1.5px -1.5px 0 #000,
-            -1.5px  1.5px 0 #000,
-             1.5px  1.5px 0 #000,
-             0 3px 6px rgba(0,0,0,0.8)
-          `,
         }}
       >
-        "{question.question}"
+        {question.question}
       </h2>
     </div>
   );

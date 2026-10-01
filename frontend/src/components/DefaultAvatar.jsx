@@ -63,7 +63,7 @@ export default function DefaultAvatar({
         <span
           style={{
             fontFamily: "'Space Grotesk', -apple-system, sans-serif",
-            fontWeight: 800,
+            fontWeight: 700,
             fontSize: Math.max(10, Math.round(size * 0.38)),
             lineHeight: 1,
             letterSpacing: '-0.5px',

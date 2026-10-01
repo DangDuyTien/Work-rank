@@ -42,10 +42,10 @@ export default function GameHistory() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 2px' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', margin: '0 0 2px' }}>
             Lịch Sử Đấu Cờ Tỷ Phú
           </h2>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.55 }}>
             Xem lại kết quả các ván cờ đã tham gia và phần thưởng tích lũy.
           </p>
         </div>
@@ -63,7 +63,7 @@ export default function GameHistory() {
             borderRadius: 6,
             padding: '6px 12px',
             fontSize: 12,
-            fontWeight: 700,
+            fontWeight: 600,
             color: '#0f172a',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
@@ -86,12 +86,12 @@ export default function GameHistory() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'rgba(15,23,42,0.03)', borderBottom: '1px solid rgba(15,23,42,0.08)', color: '#64748b' }}>
-              <th style={{ padding: '10px 14px' }}>THỜI GIAN</th>
-              <th style={{ padding: '10px 14px' }}>PHÒNG</th>
-              <th style={{ padding: '10px 14px', textAlign: 'center' }}>HẠNG</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right' }}>TỔNG TÀI SẢN</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right' }}>TIỀN MẶT / ĐẤT</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right' }}>THƯỞNG CAREER</th>
+              <th style={{ padding: '10px 14px', fontWeight: 600 }}>THỜI GIAN</th>
+              <th style={{ padding: '10px 14px', fontWeight: 600 }}>PHÒNG</th>
+              <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600 }}>HẠNG</th>
+              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>TỔNG TÀI SẢN</th>
+              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>TIỀN MẶT / ĐẤT</th>
+              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>THƯỞNG CAREER</th>
             </tr>
           </thead>
           <tbody>
@@ -123,7 +123,7 @@ export default function GameHistory() {
                       {formatDateTime(item.createdAt)}
                     </td>
 
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
+                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>
                       {item.room?.name || `Phòng #${item.room?.code || item.roomId}`}
                     </td>
 
@@ -138,7 +138,7 @@ export default function GameHistory() {
                             color: '#ca8a04',
                             padding: '3px 8px',
                             borderRadius: 4,
-                            fontWeight: 800,
+                            fontWeight: 600,
                             fontSize: 11,
                           }}
                         >
@@ -154,7 +154,7 @@ export default function GameHistory() {
                             color: '#ef4444',
                             padding: '3px 8px',
                             borderRadius: 4,
-                            fontWeight: 800,
+                            fontWeight: 600,
                             fontSize: 11,
                           }}
                         >
@@ -167,7 +167,7 @@ export default function GameHistory() {
                             color: '#475569',
                             padding: '3px 8px',
                             borderRadius: 4,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             fontSize: 11,
                           }}
                         >
@@ -180,7 +180,7 @@ export default function GameHistory() {
                       style={{
                         padding: '10px 14px',
                         textAlign: 'right',
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: '#0f172a',
                         fontFamily: 'JetBrains Mono, monospace',
                       }}
@@ -204,7 +204,7 @@ export default function GameHistory() {
                       style={{
                         padding: '10px 14px',
                         textAlign: 'right',
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: item.careerReward > 0 ? '#16a34a' : '#94a3b8',
                         fontFamily: 'JetBrains Mono, monospace',
                       }}

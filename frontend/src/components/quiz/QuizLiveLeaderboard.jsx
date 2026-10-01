@@ -35,7 +35,7 @@ export default function QuizLiveLeaderboard({
           borderBottom: isExpanded ? '1px solid rgba(15,23,42,0.08)' : 'none',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#0f172a' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
           <Trophy size={14} color="#d97706" />
           <span>Điểm Số Trực Tiếp ({players.length})</span>
         </div>
@@ -53,7 +53,7 @@ export default function QuizLiveLeaderboard({
             border: '1px solid rgba(15,23,42,0.1)',
             color: '#475569',
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: 'pointer',
           }}
         >
@@ -137,7 +137,7 @@ export default function QuizLiveLeaderboard({
               <span
                 style={{
                   fontSize: 11,
-                  fontWeight: isMe ? 800 : 600,
+                  fontWeight: isMe ? 600 : 500,
                   color: isMe ? '#0284c7' : '#0f172a',
                   maxWidth: 64,
                   whiteSpace: 'nowrap',
@@ -155,7 +155,7 @@ export default function QuizLiveLeaderboard({
                 style={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: rank === 1 ? '#d97706' : '#475569',
                   background: rank === 1 ? 'rgba(245,158,11,0.1)' : 'rgba(15,23,42,0.05)',
                   padding: '1px 6px',
@@ -202,7 +202,7 @@ export default function QuizLiveLeaderboard({
                     <span
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: rank <= 3 ? '#d97706' : '#64748b',
                         width: 20,
                       }}
@@ -210,13 +210,13 @@ export default function QuizLiveLeaderboard({
                       #{rank}
                     </span>
                     <img src={avatarUrl} alt="" style={{ width: 20, height: 20, borderRadius: '50%' }} />
-                    <span style={{ fontWeight: isMe ? 800 : 600, color: '#0f172a' }}>
+                    <span style={{ fontWeight: isMe ? 600 : 500, color: '#0f172a' }}>
                       {player.user?.name || `Người chơi ${player.userId}`}
                       {isMe && ' (Bạn)'}
                     </span>
                   </div>
 
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: '#0284c7' }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#0284c7' }}>
                     {Number(player.score || 0).toLocaleString()} pts
                   </span>
                 </div>

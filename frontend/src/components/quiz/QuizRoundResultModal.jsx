@@ -18,68 +18,69 @@ export default function QuizRoundResultModal({
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: 'rgba(15,23,42,0.92)',
-        backdropFilter: 'blur(12px)',
-        border: '3px solid #000000',
-        borderRadius: 16,
-        padding: '20px 24px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-        color: '#ffffff',
+        background: '#ffffff',
+        border: '1px solid rgba(0, 0, 0, 0.12)',
+        borderRadius: 8,
+        padding: '18px 22px',
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)',
+        color: '#141414',
         width: '90%',
-        maxWidth: 460,
+        maxWidth: 420,
         zIndex: 100,
         textAlign: 'center',
         animation: 'fadeIn 0.2s ease',
+        boxSizing: 'border-box',
       }}
     >
       {/* Result Status Icon */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
         {isMyCorrect ? (
           <div
             style={{
-              width: 54,
-              height: 54,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
-              background: '#10b981',
-              color: '#ffffff',
+              background: '#f0fdf4',
+              color: '#16a34a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(16,185,129,0.5)',
+              border: '1px solid rgba(22, 163, 74, 0.25)',
             }}
           >
-            <CheckCircle2 size={32} />
+            <CheckCircle2 size={26} />
           </div>
         ) : myAnswer ? (
           <div
             style={{
-              width: 54,
-              height: 54,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
-              background: '#ef4444',
-              color: '#ffffff',
+              background: '#fef2f2',
+              color: '#dc2626',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(239,68,68,0.5)',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
             }}
           >
-            <XCircle size={32} />
+            <XCircle size={26} />
           </div>
         ) : (
           <div
             style={{
-              width: 54,
-              height: 54,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
-              background: '#64748b',
-              color: '#ffffff',
+              background: '#f8f7f4',
+              color: '#64748b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
             }}
           >
-            <Clock size={32} />
+            <Clock size={24} />
           </div>
         )}
       </div>
@@ -87,10 +88,10 @@ export default function QuizRoundResultModal({
       {/* Outcome Title & Score */}
       <div
         style={{
-          fontSize: 20,
-          fontWeight: 900,
-          color: isMyCorrect ? '#34d399' : myAnswer ? '#f87171' : '#cbd5e1',
-          marginBottom: 4,
+          fontSize: 16,
+          fontWeight: 700,
+          color: isMyCorrect ? '#15803d' : myAnswer ? '#dc2626' : '#64748b',
+          marginBottom: 2,
         }}
       >
         {isMyCorrect ? 'CHÍNH XÁC!' : myAnswer ? 'CHƯA CHÍNH XÁC' : 'HẾT THỜI GIAN'}
@@ -99,17 +100,17 @@ export default function QuizRoundResultModal({
       <div
         style={{
           fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 24,
-          fontWeight: 900,
-          color: isMyCorrect ? '#34d399' : '#94a3b8',
-          marginBottom: 12,
+          fontSize: 18,
+          fontWeight: 700,
+          color: isMyCorrect ? '#15803d' : '#64748b',
+          marginBottom: 10,
         }}
       >
-        {isMyCorrect ? `+${myScore} pts` : '+0 pts'}
+        {isMyCorrect ? `+${myScore} điểm` : '+0 điểm'}
       </div>
 
-      <div style={{ fontSize: 13, color: '#e2e8f0', marginBottom: 12 }}>
-        Đáp án đúng là: <strong style={{ color: '#38bdf8', fontSize: 14 }}>[{correctOption}]</strong>
+      <div style={{ fontSize: 13, color: '#141414', marginBottom: 10 }}>
+        Đáp án đúng là: <strong style={{ color: '#b45309', fontSize: 14 }}>[{correctOption}]</strong>
       </div>
 
       {/* Explanation snippet */}
@@ -118,17 +119,18 @@ export default function QuizRoundResultModal({
           style={{
             display: 'flex',
             alignItems: 'flex-start',
-            gap: 8,
-            background: 'rgba(255,255,255,0.06)',
-            padding: '8px 12px',
-            borderRadius: 8,
+            gap: 6,
+            background: '#f8f7f4',
+            border: '1px solid rgba(0, 0, 0, 0.06)',
+            padding: '8px 10px',
+            borderRadius: 6,
             fontSize: 12,
-            color: '#cbd5e1',
+            color: '#666666',
             textAlign: 'left',
-            marginBottom: 12,
+            marginBottom: 10,
           }}
         >
-          <Lightbulb size={14} color="#38bdf8" style={{ marginTop: 2, flexShrink: 0 }} />
+          <Lightbulb size={13} color="#b45309" style={{ marginTop: 2, flexShrink: 0 }} />
           <span>{explanation}</span>
         </div>
       )}
@@ -139,15 +141,15 @@ export default function QuizRoundResultModal({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
-          fontSize: 12,
-          fontWeight: 700,
-          color: '#38bdf8',
+          gap: 5,
+          fontSize: 11,
+          fontWeight: 600,
+          color: '#b45309',
           paddingTop: 8,
-          borderTop: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <Sparkles size={14} />
+        <Sparkles size={12} />
         <span>{isLastQuestion ? 'Chuyển sang Bảng Tổng Kết...' : 'Chuẩn bị câu tiếp theo...'}</span>
       </div>
     </div>

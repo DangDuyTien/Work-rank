@@ -58,20 +58,20 @@ function MvpVisualAward({ mvp, championTeam, season }) {
               style={{
                 fontFamily: "'Space Grotesk', -apple-system, sans-serif",
                 fontSize: 15,
-                fontWeight: 900,
+                fontWeight: 700,
                 letterSpacing: '-0.4px',
                 color: '#111111',
                 textTransform: 'uppercase',
               }}
             >
-              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>3WIN MEDIA</span>
+              WORKRANK <span style={{ color: '#b45309', fontWeight: 700 }}>3WIN MEDIA</span>
             </span>
           </Link>
 
           <span
             style={{
               fontSize: 10,
-              fontWeight: 900,
+              fontWeight: 600,
               padding: '4px 10px',
               background: 'rgba(0,0,0,0.06)',
               color: '#111111',
@@ -99,9 +99,9 @@ function MvpVisualAward({ mvp, championTeam, season }) {
         {/* Big Editorial Headline */}
         <h2
           style={{
-            fontSize: 'clamp(28px, 3.2vw, 42px)',
-            fontWeight: 800,
-            lineHeight: 0.95,
+            fontSize: 'clamp(26px, 3vw, 38px)',
+            fontWeight: 700,
+            lineHeight: 1.15,
             letterSpacing: '-0.035em',
             textTransform: 'uppercase',
             color: '#111111',
@@ -122,7 +122,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
             lineHeight: 1.55,
             color: '#555555',
             margin: '0 0 24px 0',
-            fontWeight: 500,
+            fontWeight: 400,
             maxWidth: 420,
           }}
         >
@@ -149,7 +149,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
               MVP RECOGNITION
             </span>
             <Sparkles size={14} color="#f59e0b" />
@@ -183,7 +183,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 20,
-                    fontWeight: 900,
+                    fontWeight: 700,
                     color: '#facc15',
                   }}
                 >
@@ -201,12 +201,12 @@ function MvpVisualAward({ mvp, championTeam, season }) {
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 900, color: '#111111', lineHeight: 1.2 }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#111111', lineHeight: 1.25 }}>
                   {mvp ? mvp.name : 'Nhân Tố Xuất Sắc'}
                 </span>
                 {mvp?.isVerified && <VerifiedBadge size={13} />}
               </div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#777777', textTransform: 'uppercase', marginTop: 3 }}>
+              <div style={{ fontSize: 10, fontWeight: 500, color: '#777777', textTransform: 'uppercase', marginTop: 3 }}>
                 {mvp ? `${mvp.jobTitle || 'Chuyên viên'} • ${mvp.department || 'Media'}` : 'Chờ vinh danh'}
               </div>
             </div>
@@ -214,7 +214,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
 
           <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666666' }}>
             <span>Danh hiệu</span>
-            <span style={{ fontWeight: 800, color: '#b45309' }}>
+            <span style={{ fontWeight: 600, color: '#b45309' }}>
               {mvp ? 'MVP Mùa Giải' : 'Chờ xác định'}
             </span>
           </div>
@@ -235,7 +235,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
               EXCELLENCE RECOGNITION
             </span>
             <Medal size={14} color="#111111" />
@@ -245,7 +245,7 @@ function MvpVisualAward({ mvp, championTeam, season }) {
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Award size={36} color="#f59e0b" strokeWidth={1.75} />
             </div>
-            <span style={{ fontSize: 10, fontWeight: 900, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               {mvp ? 'DANH HIỆU MVP' : 'CHỜ XÁC ĐỊNH'}
             </span>
           </div>
@@ -260,14 +260,14 @@ function MvpVisualAward({ mvp, championTeam, season }) {
             }}
           >
             <div>
-              <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#111111', marginTop: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#111111', marginTop: 1 }}>
                 {mvp ? `${mvp.score.toLocaleString()} XP` : '--- XP'}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#0284c7', marginTop: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0284c7', marginTop: 1 }}>
                 {mvp?.isVerified ? 'Đã Xác Thực' : 'Hệ Thống'}
               </div>
             </div>
@@ -459,13 +459,13 @@ export default function Login() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                 <CheckCircle2 size={18} color="#b45309" />
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#111111' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#111111' }}>
                   Bạn đang đăng nhập
                 </span>
               </div>
 
               <div style={{ fontSize: 12, color: '#555555', marginBottom: 12 }}>
-                Tài khoản: <strong style={{ color: '#111111' }}>{user.name}</strong> ({user.email})
+                Tài khoản: <strong style={{ color: '#111111', fontWeight: 600 }}>{user.name}</strong> ({user.email})
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -484,7 +484,7 @@ export default function Login() {
                     border: 'none',
                     borderRadius: 8,
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: 'pointer',
                     transition: 'background 0.15s ease',
                   }}
@@ -508,7 +508,7 @@ export default function Login() {
                     border: '1px solid rgba(185,28,28,0.25)',
                     borderRadius: 8,
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: 'pointer',
                     transition: 'background 0.15s ease',
                   }}
@@ -548,7 +548,7 @@ export default function Login() {
                 border: !isRegister ? '1px solid rgba(0,0,0,0.08)' : 'none',
                 borderRadius: 6,
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: !isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
                 transition: 'all 0.15s ease',
@@ -572,7 +572,7 @@ export default function Login() {
                 border: isRegister ? '1px solid rgba(0,0,0,0.08)' : 'none',
                 borderRadius: 6,
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
                 transition: 'all 0.15s ease',
@@ -585,10 +585,10 @@ export default function Login() {
 
           {/* Form Header */}
           <div style={{ marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111111' }}>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, lineHeight: 1.3, color: '#111111' }}>
               {isRegister ? 'Tạo Tài Khoản Thành Viên' : 'Đăng Nhập Workspace'}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#666666' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#666666', lineHeight: 1.55, fontWeight: 400 }}>
               {isRegister
                 ? 'Nhập thông tin cá nhân để bắt đầu làm việc và thi đấu trên WorkRank'
                 : 'Sử dụng email công việc và mật khẩu để truy cập vào hệ thống'}
@@ -608,7 +608,7 @@ export default function Login() {
                 color: '#15803d',
                 borderRadius: 8,
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 500,
                 marginBottom: 16,
               }}
             >
@@ -630,8 +630,8 @@ export default function Login() {
                 color: '#b91c1c',
                 borderRadius: 8,
                 fontSize: 13,
-                fontWeight: 700,
-                lineHeight: 1.45,
+                fontWeight: 500,
+                lineHeight: 1.5,
                 marginBottom: 16,
               }}
             >
@@ -645,7 +645,7 @@ export default function Login() {
             {/* Name Field (Register only) */}
             {isRegister && (
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Họ và tên *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -674,7 +674,7 @@ export default function Login() {
 
             {/* Email / Identifier Field */}
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                 Email hoặc Tên đăng nhập *
               </label>
               <div style={{ position: 'relative' }}>
@@ -704,7 +704,7 @@ export default function Login() {
             {/* Password Field */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 800, color: '#111111' }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#111111' }}>
                   Mật khẩu *
                 </label>
 
@@ -717,7 +717,7 @@ export default function Login() {
                       border: 'none',
                       color: '#b45309',
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       cursor: 'pointer',
                       padding: 0,
                     }}
@@ -771,7 +771,7 @@ export default function Login() {
             {/* Confirm Password Field (Register only) */}
             {isRegister && (
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Xác nhận mật khẩu *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -831,7 +831,7 @@ export default function Login() {
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 14,
-                fontWeight: 900,
+                fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
                 marginTop: 8,
@@ -869,7 +869,7 @@ export default function Login() {
                 background: 'none',
                 border: 'none',
                 color: '#b45309',
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
                 padding: 0,
                 textDecoration: 'underline',
@@ -909,7 +909,7 @@ export default function Login() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 900, color: '#111111' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: '#111111' }}>
                 <HelpCircle size={20} color="#b45309" />
                 <span>Hướng Dẫn Cấp Lại Mật Khẩu</span>
               </div>
@@ -927,7 +927,7 @@ export default function Login() {
                 Nhằm đảm bảo an toàn dữ liệu và tuân thủ chính sách bảo mật nội bộ của <strong>WorkRank</strong>, mật khẩu tài khoản được quản lý tập trung.
               </p>
               <div style={{ background: '#f4f3ef', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
-                <div style={{ fontWeight: 800, color: '#111111', marginBottom: 4 }}>Quy trình hỗ trợ:</div>
+                <div style={{ fontWeight: 600, color: '#111111', marginBottom: 4 }}>Quy trình hỗ trợ:</div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#666666' }}>
                   <li>Liên hệ trực tiếp Quản Trị Viên (Admin) của tổ chức.</li>
                   <li>Hoặc gửi yêu cầu qua kênh Kỹ thuật / Nhân sự nội bộ.</li>
@@ -947,7 +947,7 @@ export default function Login() {
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'background 0.15s ease',
               }}

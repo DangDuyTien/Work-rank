@@ -405,7 +405,7 @@ export default function Groups() {
     <div className="groups-page" style={{ maxWidth: 1000, margin: '0 auto', fontFamily: "'JetBrains Mono', monospace" }}>
       <div className="groups-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.8px' }}>
+          <h1 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.8px', lineHeight: 1.25 }}>
             Nhóm <span style={{ color: '#38bdf8', fontStyle: 'italic' }}>Của Tôi</span>
           </h1>
         </div>
@@ -434,17 +434,17 @@ export default function Groups() {
       <section style={{ ...CARD, padding: 20, marginBottom: 22 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', marginBottom: 8 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 8 }}>
               <Swords size={14} />
               Cuộc thi nhóm · Beta cục bộ
             </div>
-            <h2 style={{ margin: 0, color: '#0f172a', fontSize: 20, fontWeight: 900 }}>Đấu 2v2 hoặc 3v3</h2>
-            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+            <h2 style={{ margin: 0, color: '#0f172a', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>Đấu 2v2 hoặc 3v3</h2>
+            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 12, fontWeight: 500, lineHeight: 1.5 }}>
               Dữ liệu cuộc thi hiện lưu trên trình duyệt này; bản đồng bộ backend sẽ được tách riêng ở phase sau.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(217,119,6,0.22)', borderRadius: 0, background: 'rgba(217,119,6,0.08)', padding: '8px 10px', color: '#92400e', fontSize: 12, fontWeight: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(217,119,6,0.22)', borderRadius: 0, background: 'rgba(217,119,6,0.08)', padding: '8px 10px', color: '#92400e', fontSize: 12, fontWeight: 600 }}>
               Mã của bạn: <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>{myMemberCode}</span>
               <button
                 type="button"
@@ -477,7 +477,7 @@ export default function Groups() {
         </div>
 
         {visibleContests.length === 0 ? (
-          <div style={{ border: '1px dashed rgba(15,23,42,0.14)', borderRadius: 0, padding: 18, color: '#64748b', fontSize: 13, fontWeight: 700 }}>
+          <div style={{ border: '1px dashed rgba(15,23,42,0.14)', borderRadius: 0, padding: 18, color: '#64748b', fontSize: 13, fontWeight: 500 }}>
             Chưa có cuộc thi nào. Hãy nhập mã thành viên để tạo trận 2v2 hoặc 3v3.
           </div>
         ) : (
@@ -491,11 +491,11 @@ export default function Groups() {
                 <div key={contest.id} style={{ border: '1px solid rgba(15,23,42,0.08)', borderRadius: 0, background: '#f8fafc', padding: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
                     <div>
-                      <div style={{ color: ended ? '#16a34a' : '#d97706', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', marginBottom: 4 }}>
+                      <div style={{ color: ended ? '#16a34a' : '#d97706', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
                         {ended ? 'Đã chốt kết quả' : timeLeftLabel(contest.endAt, now)}
                       </div>
-                      <h3 style={{ margin: 0, color: '#0f172a', fontSize: 15, fontWeight: 900 }}>{contest.name}</h3>
-                      <div style={{ marginTop: 4, color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+                      <h3 style={{ margin: 0, color: '#0f172a', fontSize: 15, fontWeight: 600 }}>{contest.name}</h3>
+                      <div style={{ marginTop: 4, color: '#64748b', fontSize: 12, fontWeight: 500 }}>
                         {contest.mode.toUpperCase()} · Kết thúc {new Date(contest.endAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                       </div>
                     </div>
@@ -516,12 +516,12 @@ export default function Groups() {
                     ].map(([label, members, score, color]) => (
                       <div key={label} style={{ border: `1px solid ${color}33`, borderRadius: 0, background: '#ffffff', padding: 12 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                          <span style={{ color, fontSize: 12, fontWeight: 900 }}>{label}</span>
-                          <strong style={{ color: '#0f172a', fontSize: 20, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace" }}>{Number(score).toLocaleString()}</strong>
+                          <span style={{ color, fontSize: 12, fontWeight: 600 }}>{label}</span>
+                          <strong style={{ color: '#0f172a', fontSize: 20, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{Number(score).toLocaleString()}</strong>
                         </div>
                         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {members.map((member) => (
-                            <span key={member.id} style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>{member.name}</span>
+                            <span key={member.id} style={{ color: '#64748b', fontSize: 12, fontWeight: 500 }}>{member.name}</span>
                           ))}
                         </div>
                       </div>
@@ -529,7 +529,7 @@ export default function Groups() {
                   </div>
 
                   {ended && (
-                    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 7, color: winner === 'Hòa' ? '#64748b' : '#16a34a', fontSize: 13, fontWeight: 900 }}>
+                    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 7, color: winner === 'Hòa' ? '#64748b' : '#16a34a', fontSize: 13, fontWeight: 700 }}>
                       <Trophy size={15} />
                       {winner}
                     </div>
@@ -558,29 +558,29 @@ export default function Groups() {
                   width: 48, height: 48, borderRadius: 0,
                   background: '#38bdf8',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, fontWeight: 900, color: '#fff'
+                  fontSize: 18, fontWeight: 700, color: '#fff'
                 }}>
                   {g.name.substring(0, 2).toUpperCase()}
                 </div>
                 <div style={{
                   padding: '4px 8px', borderRadius: 0, background: 'rgba(59,130,246,0.1)',
-                  border: '1px solid rgba(59,130,246,0.2)', fontSize: 10, fontWeight: 700, color: '#38bdf8'
+                  border: '1px solid rgba(59,130,246,0.2)', fontSize: 10, fontWeight: 600, color: '#38bdf8'
                 }}>
                   {g.role === 'owner' ? 'CHỦ NHÓM' : 'THÀNH VIÊN'}
                 </div>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '0 0 4px' }}>{g.name}</h3>
-              <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.5, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: '#0f172a', margin: '0 0 4px' }}>{g.name}</h3>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.55, height: 40, overflow: 'hidden' }}>{g.description || 'Không có mô tả'}</p>
               
               <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 16 }}>
                 <div>
                   <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Thành viên</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{g.member_count}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>{g.member_count}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Mã mời</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace' }}>{g.invite_code}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', fontFamily: 'monospace' }}>{g.invite_code}</div>
                     <button
                       type="button"
                       aria-label="Copy mã mời"
@@ -595,15 +595,15 @@ export default function Groups() {
 
               {Array.isArray(g.members) && g.members.length > 0 && (
                 <div style={{ borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 14, marginBottom: 18 }}>
-                  <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 800, textTransform: 'uppercase', marginBottom: 8 }}>Thành viên</div>
+                  <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', marginBottom: 8 }}>Thành viên</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {g.members.slice(0, 6).map((member) => {
                       const isOwnerMember = String(member.id) === String(g.ownerId || g.owner_id);
                       return (
                         <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#f8fafc', padding: '8px 10px' }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ color: '#0f172a', fontSize: 12, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name || `User #${member.id}`}</div>
-                            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700 }}>{isOwnerMember ? 'Chủ nhóm' : 'Thành viên'}</div>
+                            <div style={{ color: '#0f172a', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name || `User #${member.id}`}</div>
+                            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 500 }}>{isOwnerMember ? 'Chủ nhóm' : 'Thành viên'}</div>
                           </div>
                           {g.role === 'owner' && !isOwnerMember && (
                             <button
@@ -619,7 +619,7 @@ export default function Groups() {
                       );
                     })}
                     {g.member_count > g.members.length && (
-                      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700 }}>+{g.member_count - g.members.length} thành viên khác</div>
+                      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>+{g.member_count - g.members.length} thành viên khác</div>
                     )}
                   </div>
                 </div>
@@ -672,7 +672,7 @@ export default function Groups() {
       {editingGroup && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
           <div role="dialog" aria-modal="true" aria-labelledby="edit-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
-            <h2 id="edit-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#0f172a' }}>Sửa nhóm</h2>
+            <h2 id="edit-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Sửa nhóm</h2>
             <form onSubmit={handleUpdateGroup}>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Tên nhóm *</label>
@@ -707,8 +707,8 @@ export default function Groups() {
           <div role="dialog" aria-modal="true" aria-labelledby="create-contest-title" style={{ ...CARD, width: '100%', maxWidth: 760, maxHeight: '90vh', overflow: 'auto', background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
               <div>
-                <h2 id="create-contest-title" style={{ fontSize: 20, fontWeight: 900, margin: 0, color: '#0f172a' }}>Tạo cuộc thi nhóm</h2>
-                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 600 }}>Chọn đội, đặt giờ kết thúc, đội có số thao tác tăng thêm cao hơn sẽ thắng.</p>
+                <h2 id="create-contest-title" style={{ fontSize: 20, fontWeight: 700, margin: 0, color: '#0f172a' }}>Tạo cuộc thi nhóm</h2>
+                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 500 }}>Chọn đội, đặt giờ kết thúc, đội có số thao tác tăng thêm cao hơn sẽ thắng.</p>
               </div>
               <button type="button" aria-label="Đóng" onClick={() => setShowContest(false)} style={{ border: 0, background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
                 <X size={18} />
@@ -718,7 +718,7 @@ export default function Groups() {
             <form onSubmit={createContest}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#64748b', marginBottom: 7 }}>Tên cuộc thi</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 7 }}>Tên cuộc thi</label>
                   <input
                     value={contestName}
                     onChange={(event) => setContestName(event.target.value)}
@@ -727,7 +727,7 @@ export default function Groups() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#64748b', marginBottom: 7 }}>Chế độ</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 7 }}>Chế độ</label>
                   <select
                     value={contestMode}
                     onChange={(event) => setContestMode(event.target.value)}
@@ -738,7 +738,7 @@ export default function Groups() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#64748b', marginBottom: 7 }}>Kết thúc</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 7 }}>Kết thúc</label>
                   <input
                     type="datetime-local"
                     value={contestEndAt}
@@ -749,13 +749,13 @@ export default function Groups() {
               </div>
 
               <div style={{ border: '1px solid rgba(217,119,6,0.22)', borderRadius: 0, background: 'rgba(217,119,6,0.06)', padding: 12, marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#92400e', marginBottom: 7 }}>Nhập mã thành viên</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#92400e', marginBottom: 7 }}>Nhập mã thành viên</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: 8 }}>
                   <input
                     value={memberCode}
                     onChange={(event) => setMemberCode(event.target.value.toUpperCase())}
                     placeholder="Ví dụ: WRU-0001"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontFamily: "'JetBrains Mono',monospace", fontWeight: 800 }}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}
                   />
                   <button
                     type="button"
@@ -774,7 +774,7 @@ export default function Groups() {
                     {addingMember === 'B' ? 'Đang thêm...' : 'Thêm B'}
                   </button>
                 </div>
-                <div style={{ marginTop: 8, color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+                <div style={{ marginTop: 8, color: '#64748b', fontSize: 12, fontWeight: 500 }}>
                   Người chơi gửi mã cá nhân của họ. Mã của bạn: <span style={{ color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>{myMemberCode}</span>.
                 </div>
               </div>
@@ -786,18 +786,18 @@ export default function Groups() {
                 ].map(([side, members, color]) => (
                   <div key={side} style={{ border: `1px solid ${color}33`, borderRadius: 0, padding: 12, background: '#f8fafc' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <strong style={{ color, fontSize: 13 }}>Đội {side}</strong>
-                      <span style={{ color: '#64748b', fontSize: 12, fontWeight: 800 }}>{members.length}/{contestSize}</span>
+                      <strong style={{ color, fontSize: 13, fontWeight: 600 }}>Đội {side}</strong>
+                      <span style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>{members.length}/{contestSize}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: 74 }}>
                       {members.length === 0 ? (
-                        <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>Chưa chọn thành viên</span>
+                        <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>Chưa chọn thành viên</span>
                       ) : members.map((member) => (
                         <button
                           key={member.id}
                           type="button"
                           onClick={() => removeContestMember(side, member.id)}
-                          style={{ display: 'flex', justifyContent: 'space-between', gap: 8, border: '1px solid rgba(15,23,42,0.08)', borderRadius: 0, background: '#ffffff', color: '#0f172a', padding: '8px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 800 }}
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 8, border: '1px solid rgba(15,23,42,0.08)', borderRadius: 0, background: '#ffffff', color: '#0f172a', padding: '8px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
                         >
                           {member.name}
                           <X size={13} />
@@ -808,7 +808,7 @@ export default function Groups() {
                 ))}
               </div>
 
-              {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, fontWeight: 700 }}>{error}</div>}
+              {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <button type="button" onClick={() => setShowContest(false)} style={{ ...BUTTON, flex: 1, background: 'rgba(15,23,42,0.06)', color: '#64748b', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
@@ -826,7 +826,7 @@ export default function Groups() {
       {showCreate && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
           <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
-            <h2 id="create-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#0f172a' }}>Tạo Nhóm Mới</h2>
+            <h2 id="create-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Tạo Nhóm Mới</h2>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Tên nhóm *</label>
@@ -863,7 +863,7 @@ export default function Groups() {
       {showJoin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
           <div role="dialog" aria-modal="true" aria-labelledby="join-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
-            <h2 id="join-group-title" style={{ fontSize: 20, fontWeight: 800, margin: '0 0 20px', color: '#0f172a' }}>Tham Gia Nhóm</h2>
+            <h2 id="join-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Tham Gia Nhóm</h2>
             <form onSubmit={handleJoin}>
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Mã mời (Invite Code)</label>
@@ -874,7 +874,7 @@ export default function Groups() {
                   onChange={e => setInviteCode(e.target.value.toUpperCase())}
                   onFocus={e => e.target.style.borderColor = 'rgba(56,189,248,0.6)'}
                   onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                  style={{ width: '100%', padding: '12px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 600, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}

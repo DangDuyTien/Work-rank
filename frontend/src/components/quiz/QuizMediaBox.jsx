@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Music, Play, Pause, Volume2, Disc3 } from 'lucide-react';
+import { Image as ImageIcon, Music, Play, Pause, Disc3 } from 'lucide-react';
 
 export default function QuizMediaBox({
   question,
@@ -103,19 +103,20 @@ export default function QuizMediaBox({
       style={{
         width: '100%',
         height: '100%',
-        minHeight: 320,
-        background: '#0f172a',
-        border: '3px solid #000000',
-        borderRadius: 20,
+        minHeight: 300,
+        background: '#ffffff',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        borderRadius: 8,
         overflow: 'hidden',
-        boxShadow: '0 12px 36px rgba(0,0,0,0.45)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        boxSizing: 'border-box',
       }}
     >
-      {/* 1. MUSIC VISUALIZER STAGE */}
+      {/* ── 1. MUSIC VISUALIZER STAGE ── */}
       {isMusic ? (
         <div
           style={{
@@ -125,38 +126,38 @@ export default function QuizMediaBox({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '28px 32px',
-            background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)',
+            padding: '24px 28px',
+            background: '#f8f7f4',
             position: 'relative',
-            color: '#ffffff',
+            color: '#141414',
+            boxSizing: 'border-box',
           }}
         >
-          {/* Vinyl Record / Speaker Icon with Rotation */}
+          {/* Vinyl Record Icon with Rotation */}
           <div
             style={{
               position: 'relative',
-              width: 100,
-              height: 100,
+              width: 80,
+              height: 80,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, #334155 30%, #0f172a 70%, #0284c7 100%)',
-              border: '4px solid #000000',
+              background: '#141414',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: isPlaying ? '0 0 30px rgba(56,189,248,0.5)' : '0 4px 16px rgba(0,0,0,0.5)',
-              marginBottom: 20,
+              boxShadow: isPlaying ? '0 0 16px rgba(180, 83, 9, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+              marginBottom: 16,
               animation: isPlaying ? 'spin 6s linear infinite' : 'none',
             }}
           >
-            <Disc3 size={48} color="#38bdf8" />
+            <Disc3 size={40} color="#b45309" />
             <div
               style={{
                 position: 'absolute',
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: '50%',
-                background: '#ffffff',
-                border: '3px solid #000000',
+                background: '#f4f3ef',
+                border: '2px solid #141414',
               }}
             />
           </div>
@@ -164,18 +165,18 @@ export default function QuizMediaBox({
           {/* Song hint title */}
           <div
             style={{
-              fontSize: 16,
-              fontWeight: 900,
-              color: '#ffffff',
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#141414',
               textAlign: 'center',
-              marginBottom: 4,
-              letterSpacing: '0.3px',
-              textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+              marginBottom: 2,
+              letterSpacing: '0.2px',
+              textTransform: 'uppercase',
             }}
           >
-            GIAI ĐIỆU BÀI HÁT
+            Giai Điệu Bài Hát
           </div>
-          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: '#666666', marginBottom: 16 }}>
             Lắng nghe và chọn đáp án chính xác
           </div>
 
@@ -186,10 +187,10 @@ export default function QuizMediaBox({
               alignItems: 'center',
               justifyContent: 'center',
               gap: 4,
-              height: 48,
+              height: 38,
               width: '100%',
-              maxWidth: 360,
-              marginBottom: 20,
+              maxWidth: 320,
+              marginBottom: 16,
             }}
           >
             {[0.3, 0.7, 1, 0.5, 0.85, 0.4, 0.95, 0.6, 0.8, 0.5, 0.9, 0.35, 0.75, 0.6, 0.4].map((h, idx) => {
@@ -199,11 +200,11 @@ export default function QuizMediaBox({
                   key={idx}
                   style={{
                     flex: 1,
-                    maxWidth: 7,
-                    height: isPlaying ? `${Math.max(10, h * 44)}px` : '8px',
-                    borderRadius: 4,
-                    background: isPlaying ? (active ? '#38bdf8' : 'rgba(255,255,255,0.4)') : 'rgba(255,255,255,0.2)',
-                    transition: isPlaying ? 'height 0.12s ease' : 'height 0.3s ease',
+                    maxWidth: 6,
+                    height: isPlaying ? `${Math.max(8, h * 34)}px` : '6px',
+                    borderRadius: 3,
+                    background: isPlaying ? (active ? '#b45309' : '#d1d5db') : '#dedad0',
+                    transition: isPlaying ? 'height 0.12s ease' : 'height 0.25s ease',
                   }}
                 />
               );
@@ -211,46 +212,47 @@ export default function QuizMediaBox({
           </div>
 
           {/* Play/Pause Control & Track Bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', maxWidth: 360 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', maxWidth: 320 }}>
             <button
               type="button"
               onClick={toggleAudio}
               disabled={isLocked}
               title={isPlaying ? 'Tạm dừng' : 'Phát lại'}
               style={{
-                width: 42,
-                height: 42,
+                width: 36,
+                height: 36,
                 borderRadius: '50%',
-                background: isPlaying ? '#ef4444' : '#0284c7',
+                background: '#141414',
                 color: '#ffffff',
-                border: '2px solid #000000',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: isLocked ? 'not-allowed' : 'pointer',
                 flexShrink: 0,
-                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                transition: 'background 0.15s ease',
               }}
             >
-              {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
+              {isPlaying ? <Pause size={15} /> : <Play size={15} style={{ marginLeft: 2 }} />}
             </button>
 
             <div style={{ flex: 1 }}>
               <div
                 style={{
                   width: '100%',
-                  height: 6,
-                  background: 'rgba(255,255,255,0.2)',
+                  height: 5,
+                  background: '#dedad0',
                   borderRadius: 3,
                   overflow: 'hidden',
-                  marginBottom: 6,
+                  marginBottom: 5,
                 }}
               >
                 <div
                   style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: '#38bdf8',
+                    background: '#b45309',
                     transition: 'width 0.1s linear',
                   }}
                 />
@@ -262,7 +264,7 @@ export default function QuizMediaBox({
                   justifyContent: 'space-between',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
-                  color: '#94a3b8',
+                  color: '#666666',
                 }}
               >
                 <span>{formatTime(currentTime)}</span>
@@ -272,7 +274,7 @@ export default function QuizMediaBox({
           </div>
         </div>
       ) : isVideo && videoUrl ? (
-        /* 2. VIDEO STAGE */
+        /* ── 2. VIDEO STAGE ── */
         <div style={{ width: '100%', height: '100%' }}>
           {videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? (
             <iframe
@@ -287,13 +289,13 @@ export default function QuizMediaBox({
               src={videoUrl}
               autoPlay
               controls
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
           )}
         </div>
       ) : (
-        /* 3. IMAGE STAGE */
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        /* ── 3. IMAGE STAGE ── */
+        <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f7f4' }}>
           {mediaUrl ? (
             <img
               src={mediaUrl}
@@ -301,7 +303,8 @@ export default function QuizMediaBox({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                maxHeight: 420,
+                objectFit: 'contain',
                 display: 'block',
               }}
               loading="eager"
@@ -309,18 +312,17 @@ export default function QuizMediaBox({
           ) : (
             <div
               style={{
-                width: '100%',
-                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#64748b',
+                color: '#94a3b8',
                 gap: 8,
+                padding: 24,
               }}
             >
-              <ImageIcon size={48} />
-              <span style={{ fontSize: 14, fontWeight: 700 }}>Hình ảnh câu hỏi</span>
+              <ImageIcon size={40} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#666666' }}>Hình ảnh câu hỏi</span>
             </div>
           )}
         </div>

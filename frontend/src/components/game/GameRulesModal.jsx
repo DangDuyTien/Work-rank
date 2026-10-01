@@ -62,8 +62,8 @@ export default function GameRulesModal({ onClose }) {
               <BookOpen size={16} />
             </div>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>Luật Chơi Cờ Tỷ Phú 3winmedia</h3>
-              <p style={{ margin: 0, fontSize: 12, color: '#94a3b8' }}>Phiên bản Capital Board V1</p>
+              <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.25, margin: 0 }}>Luật Chơi Cờ Tỷ Phú 3winmedia</h3>
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>Phiên bản Capital Board V1</p>
             </div>
           </div>
 
@@ -251,7 +251,7 @@ export default function GameRulesModal({ onClose }) {
               borderRadius: 6,
               padding: '8px 16px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               cursor: 'pointer',
             }}
           >
