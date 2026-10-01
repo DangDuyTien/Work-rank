@@ -103,14 +103,14 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
           size={28}
           showLabel
           label="3WIN MEDIA"
-          labelStyle={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.3px', color: '#111111' }}
+          labelStyle={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: '#111111' }}
         />
         {isAdmin && (
           <span
             style={{
               marginLeft: 'auto',
               fontSize: 10,
-              fontWeight: 800,
+              fontWeight: 600,
               padding: '2px 6px',
               borderRadius: 4,
               background: 'rgba(180,83,9,0.08)',
@@ -165,7 +165,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     cursor: 'pointer',
                     color: hasActiveChild ? '#111111' : '#555555',
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     letterSpacing: '0.2px',
                     textAlign: 'left',
                     transition: 'background 0.15s ease, color 0.15s ease',
@@ -183,8 +183,8 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     {group.badge && (
                       <span
                         style={{
-                          fontSize: 9,
-                          fontWeight: 800,
+                          fontSize: 10,
+                          fontWeight: 600,
                           padding: '1px 5px',
                           borderRadius: 3,
                           background: group.adminOnly ? 'rgba(185,28,28,0.08)' : 'rgba(180,83,9,0.08)',
@@ -212,7 +212,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                   style={{
                     padding: '4px 9px 6px',
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: '#888888',
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
@@ -261,7 +261,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           padding: '7px 9px',
                           borderRadius: 6,
                           fontSize: 13,
-                          fontWeight: isActive ? 750 : 500,
+                          fontWeight: isActive ? 600 : 500,
                           color: isActive ? '#111111' : '#555555',
                           background: isActive ? 'rgba(0,0,0,0.06)' : 'transparent',
                           textDecoration: 'none',
@@ -291,8 +291,8 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           <span
                             style={{
                               marginLeft: 'auto',
-                              fontSize: 9,
-                              fontWeight: 800,
+                              fontSize: 10,
+                              fontWeight: 600,
                               padding: '1.5px 5px',
                               borderRadius: 4,
                               background: item.comingSoon ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.06)',
@@ -363,7 +363,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               justifyContent: 'center',
               color: '#ffffff',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               flexShrink: 0,
               position: 'relative',
               overflow: 'hidden',
@@ -383,7 +383,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
             <div
               style={{
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 600,
                 color: '#111111',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

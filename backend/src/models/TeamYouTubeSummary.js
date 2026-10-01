@@ -62,7 +62,7 @@ TeamYouTubeSummary.init(
       field: 'views_30d',
     },
     subscribersToday: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
       field: 'subscribers_today',

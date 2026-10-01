@@ -131,8 +131,10 @@ function AnimatedAppRoutes() {
   const [transitionStage, setTransitionStage] = useState('none'); // 'none' | 'fadeIn' | 'fadeOut'
 
   useEffect(() => {
-    // Only apply cinematic exit/enter transition when navigating to or from Homepage ('/')
+    // Cinematic exit/enter transitions
     const isToOrFromHome = location.pathname === '/' || displayLocation.pathname === '/';
+    const isEnteringGame = !displayLocation.pathname.startsWith('/games') && location.pathname.startsWith('/games');
+    const isExitingGame = displayLocation.pathname.startsWith('/games') && !location.pathname.startsWith('/games');
 
     if (location.pathname !== displayLocation.pathname) {
       if (isToOrFromHome) {
@@ -142,6 +144,23 @@ function AnimatedAppRoutes() {
           setTransitionStage('fadeIn');
           window.scrollTo(0, 0);
         }, 180);
+        return () => clearTimeout(timer);
+      } else if (isEnteringGame) {
+        // App contents & navigation slide/fade out into full viewport game surface
+        setTransitionStage('appToGameExit');
+        const timer = setTimeout(() => {
+          setDisplayLocation(location);
+          setTransitionStage('none');
+          window.scrollTo(0, 0);
+        }, 280);
+        return () => clearTimeout(timer);
+      } else if (isExitingGame) {
+        // Navigation slides back in and app content expands smoothly
+        setDisplayLocation(location);
+        setTransitionStage('appFromGameEnter');
+        const timer = setTimeout(() => {
+          setTransitionStage('none');
+        }, 360);
         return () => clearTimeout(timer);
       } else {
         // Internal page navigation (inside dashboard / authenticated app): instant switch with NO flicker
@@ -158,6 +177,10 @@ function AnimatedAppRoutes() {
       ? 'wr-page-exit'
       : transitionStage === 'fadeIn'
       ? 'wr-page-enter'
+      : transitionStage === 'appToGameExit'
+      ? 'wr-app-to-game-exit'
+      : transitionStage === 'appFromGameEnter'
+      ? 'wr-app-from-game-enter'
       : '';
 
   return (
@@ -185,8 +208,6 @@ function AnimatedAppRoutes() {
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/games/capital-board" element={<CapitalBoardGame />} />
-            <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
             <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
             <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
@@ -207,6 +228,22 @@ function AnimatedAppRoutes() {
             element={
               <ProtectedRoute>
                 <Game2048 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/capital-board"
+            element={
+              <ProtectedRoute>
+                <CapitalBoardGame />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/capital-board/room/:roomId"
+            element={
+              <ProtectedRoute>
+                <CapitalBoardGame />
               </ProtectedRoute>
             }
           />

@@ -33,6 +33,7 @@ import { samGame } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
+import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import {
   Card,
   Button,
@@ -914,19 +915,20 @@ export default function SamGame() {
   // ─────────────────────────────────────────────────────────────
   if (room && room.status === 'PLAYING') {
     return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: '#090d16',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          color: '#f8fafc',
-          fontFamily: "'Space Grotesk', -apple-system, sans-serif",
-        }}
-      >
+      <GameFullscreenShell topBar={false} className="wr-sam-match-fullscreen">
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#090d16',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            color: '#f8fafc',
+            fontFamily: "'Space Grotesk', -apple-system, sans-serif",
+          }}
+        >
         {/* Game Top Bar */}
         <div
           style={{
@@ -1306,7 +1308,8 @@ export default function SamGame() {
         {/* Rules Modal */}
         <SamRulesModal isOpen={showRulesModal} onClose={() => setShowRulesModal(false)} />
       </div>
-    );
+    </GameFullscreenShell>
+  );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1314,17 +1317,47 @@ export default function SamGame() {
   // ─────────────────────────────────────────────────────────────
   if (room && room.status === 'WAITING') {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: 'var(--background, #f4f3ef)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-        }}
+      <GameFullscreenShell
+        title="Đánh Sâm"
+        icon={Club}
+        badge={`Phòng #${room.code || room.id}`}
+        exitLabel="Rời phòng"
+        onExit={handleLeaveRoom}
+        actions={
+          <button
+            type="button"
+            onClick={() => setShowRulesModal(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: '#f4f3ef',
+              border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: 6,
+              padding: '6px 12px',
+              fontSize: 12,
+              fontWeight: 800,
+              color: '#111111',
+              cursor: 'pointer',
+            }}
+          >
+            <HelpCircle size={14} />
+            <span>Luật chơi</span>
+          </button>
+        }
       >
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
         <Card style={{ maxWidth: 640, width: '100%', padding: 28, background: '#ffffff' }}>
           <div
             style={{
@@ -1473,7 +1506,8 @@ export default function SamGame() {
         </Card>
 
         <SamRulesModal isOpen={showRulesModal} onClose={() => setShowRulesModal(false)} />
-      </div>
+        </div>
+      </GameFullscreenShell>
     );
   }
 
@@ -1481,15 +1515,47 @@ export default function SamGame() {
   // RENDER PHASE 3: MAIN LOBBY & LEADERBOARD (WORKRANK DESIGN SYSTEM)
   // ─────────────────────────────────────────────────────────────
   return (
-    <div
-      style={{
-        maxWidth: 1080,
-        margin: '0 auto',
-        padding: '24px 16px 40px',
-        fontFamily: "'Space Grotesk', -apple-system, sans-serif",
-      }}
+    <GameFullscreenShell
+      title="Đánh Sâm"
+      icon={Club}
+      badge="Bài dân gian"
+      exitLabel="Thoát"
+      exitTo="/arena"
+      onExit={() => navigate('/arena')}
+      actions={
+        <button
+          type="button"
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: '#141414',
+            border: 'none',
+            borderRadius: 6,
+            padding: '6px 14px',
+            fontSize: 12,
+            fontWeight: 800,
+            color: '#ffffff',
+            cursor: 'pointer',
+          }}
+        >
+          <Plus size={14} />
+          <span>Tạo phòng</span>
+        </button>
+      }
     >
-      {/* Header */}
+      <div
+        style={{
+          maxWidth: 1080,
+          margin: '0 auto',
+          padding: '24px 16px 40px',
+          fontFamily: "var(--font-sans, 'Space Grotesk', -apple-system, sans-serif)",
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -1856,7 +1922,8 @@ export default function SamGame() {
         loading={actionLoading}
       />
       <SamRulesModal isOpen={showRulesModal} onClose={() => setShowRulesModal(false)} />
-    </div>
+      </div>
+    </GameFullscreenShell>
   );
 }
 

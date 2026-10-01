@@ -409,11 +409,11 @@ export default function Dashboard() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#111111' }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#111111' }}>
                   {teamYouTube.team?.name ? `Thành Tích YouTube: ${teamYouTube.team.name}` : 'YouTube Studio Toàn Công Ty'}
                 </span>
                 {teamYouTube.summary?.rankByViews && (
-                  <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(185,28,28,0.08)', color: '#b91c1c', fontSize: 11, fontWeight: 800 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(185,28,28,0.08)', color: '#b91c1c', fontSize: 11, fontWeight: 600 }}>
                     Hạng #{teamYouTube.summary.rankByViews}
                   </span>
                 )}
@@ -428,21 +428,21 @@ export default function Dashboard() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
+              <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#111111' }}>
                 {formatNum(teamYouTube.summary?.totalViews ?? teamYouTube.kpis?.totalViews ?? 0)}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>SUBSCRIBERS</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
+              <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>SUBSCRIBERS</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#111111' }}>
                 {formatNum(teamYouTube.summary?.totalSubscribers ?? teamYouTube.kpis?.totalSubscribers ?? 0)}
               </div>
             </div>
             {teamYouTube.summary && (
               <div>
-                <div style={{ fontSize: 11, color: '#777777', fontWeight: 700, textTransform: 'uppercase' }}>TĂNG TRƯỞNG 30D</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#15803d' }}>
+                <div style={{ fontSize: 11, color: '#777777', fontWeight: 500, letterSpacing: '0.03em', textTransform: 'uppercase' }}>TĂNG TRƯỞNG 30D</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: '#15803d' }}>
                   +{teamYouTube.summary.viewsGrowth30dPct || 0}%
                 </div>
               </div>
@@ -460,7 +460,7 @@ export default function Dashboard() {
                 borderRadius: 6,
                 color: '#111111',
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'background 0.15s ease',
               }}

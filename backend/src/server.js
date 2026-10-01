@@ -6,9 +6,11 @@ const socketOptions = require('./config/socket');
 const registerSockets = require('./sockets');
 const { sequelize } = require('./models');
 const competitionRealtime = require('./services/competition/competitionRealtime.service');
+const { ensureYouTubeSchema } = require('./services/youtube/youtubeSchemaCheck');
 
 async function start() {
   await sequelize.authenticate();
+  await ensureYouTubeSchema(sequelize);
   const server = http.createServer(app);
   const io = new Server(server, socketOptions);
   app.set('io', io);

@@ -326,9 +326,9 @@ export default function Layout() {
               className="app-header-title"
               style={{
                 fontSize: 14,
-                fontWeight: 750,
+                fontWeight: 600,
                 color: '#111111',
-                letterSpacing: '-0.2px',
+                letterSpacing: 0,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -379,7 +379,7 @@ export default function Layout() {
                     color: '#ffffff',
                     border: '2px solid #ffffff',
                     fontSize: 9,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     lineHeight: '11px',
                     textAlign: 'center',
                   }}>
@@ -411,8 +411,8 @@ export default function Layout() {
                     borderBottom: '1px solid rgba(0,0,0,0.08)',
                   }}>
                     <div>
-                      <div style={{ color: '#111111', fontSize: 13, fontWeight: 900 }}>Thông báo</div>
-                      <div style={{ color: '#777777', fontSize: 11, fontWeight: 700 }}>
+                      <div style={{ color: '#111111', fontSize: 13, fontWeight: 600 }}>Thông báo</div>
+                      <div style={{ color: '#777777', fontSize: 11, fontWeight: 400 }}>
                         {notifications.length ? `${notifications.length} mục gần nhất` : 'Chưa có thông báo'}
                       </div>
                     </div>
@@ -428,7 +428,7 @@ export default function Layout() {
                           padding: '5px 8px',
                           cursor: 'pointer',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 600,
                         }}
                       >
                         Xóa hết
@@ -438,7 +438,7 @@ export default function Layout() {
 
                   <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: 18, color: '#666666', fontSize: 13, lineHeight: 1.5, fontWeight: 600 }}>
+                      <div style={{ padding: 18, color: '#666666', fontSize: 13, lineHeight: 1.5, fontWeight: 400 }}>
                         Các thông báo thi đấu, kết quả mùa giải và tin nhắn sẽ xuất hiện ở đây.
                       </div>
                     ) : notifications.map((notification) => {
@@ -480,18 +480,18 @@ export default function Layout() {
                           </span>
                           <span style={{ minWidth: 0, flex: 1 }}>
                             <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                              <strong style={{ color: '#111111', fontSize: 12, fontWeight: 900, lineHeight: 1.25 }}>
+                              <strong style={{ color: '#111111', fontSize: 12, fontWeight: 600, lineHeight: 1.25 }}>
                                 {notification.title}
                               </strong>
-                              <span style={{ color: '#888888', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              <span style={{ color: '#888888', fontSize: 11, fontWeight: 400, whiteSpace: 'nowrap' }}>
                                 {formatNotificationTime(notification.createdAt)}
                               </span>
                             </span>
-                            <span style={{ display: 'block', marginTop: 3, color: '#555555', fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
+                            <span style={{ display: 'block', marginTop: 3, color: '#555555', fontSize: 12, fontWeight: 400, lineHeight: 1.4 }}>
                               {notification.message}
                             </span>
                             {notification.actionTo && (
-                              <span style={{ display: 'block', marginTop: 6, color: '#b45309', fontSize: 11, fontWeight: 800 }}>
+                              <span style={{ display: 'block', marginTop: 6, color: '#b45309', fontSize: 11, fontWeight: 600 }}>
                                 {notification.actionLabel || 'Mở'}
                               </span>
                             )}
@@ -543,7 +543,7 @@ export default function Layout() {
                   cursor: 'pointer',
                   color: '#ffffff',
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 600,
                 }}
               >
                 {accountAvatarUrl ? (
@@ -593,7 +593,7 @@ export default function Layout() {
                       cursor: 'pointer',
                       color: '#555555',
                       fontSize: 13,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
                       textAlign: 'left',
                       transition: 'background 0.15s ease, color 0.15s ease',

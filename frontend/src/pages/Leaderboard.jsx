@@ -115,7 +115,7 @@ function LevelText({ user, compact = false }) {
       flexShrink: 0,
       color: theme.color,
       fontSize: compact ? 9 : 10,
-      fontWeight: 900,
+      fontWeight: 600,
       fontFamily: "'JetBrains Mono',monospace",
       whiteSpace: 'nowrap',
       borderRadius: 4,
@@ -133,7 +133,7 @@ function AvatarBox({ user, userId, name, size = 36, idx = 0 }) {
         width: size, height: size, borderRadius: '50%', flexShrink: 0,
         background: AVATAR_GRADS[idx % AVATAR_GRADS.length],
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: Math.max(10, Math.floor(size * 0.35)), fontWeight: 900, color: '#fff',
+        fontSize: Math.max(10, Math.floor(size * 0.35)), fontWeight: 600, color: '#fff',
         letterSpacing: 0, overflow: 'hidden',
       }}>
         {avatarUrl ? (
@@ -147,24 +147,24 @@ function AvatarBox({ user, userId, name, size = 36, idx = 0 }) {
 function TrendIndicator({ trend, delta }) {
   if (trend === 'UP') {
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', color: '#16a34a', fontSize: 11, fontWeight: 900 }} title="Tăng hạng">
-        <ArrowUp size={12} strokeWidth={3} />
+      <span style={{ display: 'inline-flex', alignItems: 'center', color: '#16a34a', fontSize: 11, fontWeight: 600 }} title="Tăng hạng">
+        <ArrowUp size={12} strokeWidth={2.5} />
       </span>
     );
   }
   if (trend === 'DOWN') {
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', color: '#dc2626', fontSize: 11, fontWeight: 900 }} title="Giảm hạng">
-        <ArrowDown size={12} strokeWidth={3} />
+      <span style={{ display: 'inline-flex', alignItems: 'center', color: '#dc2626', fontSize: 11, fontWeight: 600 }} title="Giảm hạng">
+        <ArrowDown size={12} strokeWidth={2.5} />
       </span>
     );
   }
   const d = Number(delta);
   if (Number.isFinite(d) && d !== 0) {
-    if (d > 0) return <span style={{ color: '#16a34a', fontSize: 11, fontWeight: 800 }}>+{d}</span>;
-    return <span style={{ color: '#dc2626', fontSize: 11, fontWeight: 800 }}>{d}</span>;
+    if (d > 0) return <span style={{ color: '#16a34a', fontSize: 11, fontWeight: 600 }}>+{d}</span>;
+    return <span style={{ color: '#dc2626', fontSize: 11, fontWeight: 600 }}>{d}</span>;
   }
-  return <span style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 700 }}>—</span>;
+  return <span style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 500 }}>—</span>;
 }
 
 const TABS = [
@@ -220,15 +220,15 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
                 borderRadius: '50%', background: '#64748b', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 900, color: '#f8fafc', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: '#f8fafc', border: '1.5px solid #ffffff',
               }}>
                 2
               </div>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#64748b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
               {(top2[nameKey] || '').split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
               {fmtNum(top2[scoreKey] ?? top2.totalScore ?? top2.grandPoints ?? 0)}
             </div>
             <div style={{
@@ -238,7 +238,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <span style={{ fontSize: 18, fontWeight: 900, color: '#64748b' }}>2</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#64748b' }}>2</span>
             </div>
           </div>
         )}
@@ -260,15 +260,15 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                 position: 'absolute', bottom: -6, left: -6, width: 22, height: 22,
                 borderRadius: '50%', background: '#f59e0b', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 11,
-                fontWeight: 900, color: '#000', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: '#000', border: '1.5px solid #ffffff',
               }}>
                 1
               </div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: '#f59e0b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>
               {(top1[nameKey] || '').split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
               {fmtNum(top1[scoreKey] ?? top1.totalScore ?? top1.grandPoints ?? 0)}
             </div>
             <div style={{
@@ -278,7 +278,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b' }}>1</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b' }}>1</span>
             </div>
           </div>
         )}
@@ -299,15 +299,15 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
                 borderRadius: '50%', background: '#b45309', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 900, color: '#fff', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: '#fff', border: '1.5px solid #ffffff',
               }}>
                 3
               </div>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#d97706', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#d97706', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
               {(top3[nameKey] || '').split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>
               {fmtNum(top3[scoreKey] ?? top3.totalScore ?? top3.grandPoints ?? 0)}
             </div>
             <div style={{
@@ -317,7 +317,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
               borderRadius: '4px 4px 0 0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>3</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>3</span>
             </div>
           </div>
         )}
@@ -326,7 +326,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
       {/* CỘT PHẢI: TOP 4 - TOP 8 RUNNER-UPS */}
       {runnerUps.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
             Nhóm Bám Đuổi (Top 4 — Top 8)
           </div>
           {runnerUps.map((u, i) => {
@@ -350,18 +350,18 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                   width: 22, height: 22, borderRadius: 4,
                   background: 'rgba(15,23,42,0.06)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 900, color: '#64748b', flexShrink: 0,
+                  fontSize: 11, fontWeight: 700, color: '#64748b', flexShrink: 0,
                 }}>
                   {rank}
                 </div>
                 <AvatarBox user={u} name={u[nameKey]} userId={u.userId || u.id} size={28} idx={rank - 1} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u[nameKey]}</span>
                     {u.userLevel && <LevelText user={u} compact />}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
                   {fmtNum(scoreVal)} <span style={{ fontSize: 10, color: '#94a3b8' }}>{scoreSuffix}</span>
                 </div>
               </div>
@@ -386,7 +386,7 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
 
   if (!myEntry) {
     return (
-      <div style={{ ...CARD, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, color: '#64748b', fontSize: 13, fontWeight: 700 }}>
+      <div style={{ ...CARD, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, color: '#64748b', fontSize: 13, fontWeight: 500 }}>
         <Trophy size={16} color="#94a3b8" />
         Bạn chưa có điểm trong danh sách xếp hạng này.
       </div>
@@ -420,7 +420,7 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
           width: 44, height: 44, borderRadius: 0,
           background: '#b45309', color: '#ffffff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, fontWeight: 900, flexShrink: 0,
+          fontSize: 16, fontWeight: 700, flexShrink: 0,
           fontFamily: "'JetBrains Mono',monospace",
         }}>
           #{myRank}
@@ -428,12 +428,12 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
         <AvatarBox user={myEntry || currentUser} name={myEntry[nameKey] || currentUser.name} userId={currentUser.id} size={38} idx={myRank - 1} />
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Vị trí của bạn · {myEntry[nameKey] || currentUser.name}
             </span>
             {!isTeam && <LevelText user={currentUser} compact />}
           </div>
-          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: '#64748b', fontSize: 11, fontWeight: 800 }}>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: '#64748b', fontSize: 11, fontWeight: 500 }}>
             <span>{fmtNum(myScore)} điểm tích lũy</span>
             {gap > 0 && <span style={{ color: '#dc2626' }}>(-{fmtNum(gap)} điểm để vào Top 1)</span>}
             {gap === 0 && (
@@ -454,7 +454,7 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
             border: '1px solid rgba(180,83,9,0.25)',
             background: '#ffffff', color: '#b45309',
             borderRadius: 0, padding: '8px 14px',
-            fontSize: 12, fontWeight: 900, cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
             flexShrink: 0,
           }}
         >
@@ -707,18 +707,18 @@ export default function Leaderboard() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <Trophy size={22} color="#b45309" />
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', color: '#ffffff' }}>
+            <h1 style={{ margin: 0, fontSize: 'var(--text-h1, 24px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#ffffff', lineHeight: 1.25 }}>
               Bảng Xếp Hạng Toàn Hệ Thống
             </h1>
             <span style={{
               background: 'rgba(180,83,9,0.2)', color: '#b45309',
-              fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 0,
+              fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 0,
               textTransform: 'uppercase',
             }}>
               Canonical Hub V3.3
             </span>
           </div>
-          <p style={{ margin: 0, fontSize: 12, color: '#94a3b8' }}>
+          <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.55 }}>
             Tổng hợp thành tích thi đấu: Đội nhóm · Cá nhân XP · Grand Championship · Kênh YouTube
           </p>
         </div>
@@ -731,7 +731,7 @@ export default function Leaderboard() {
             background: 'rgba(255,255,255,0.1)', color: '#f8fafc',
             border: '1px solid rgba(255,255,255,0.18)',
             padding: '7px 14px', borderRadius: 0,
-            fontSize: 11, fontWeight: 700, cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: 12, fontWeight: 600, cursor: refreshing ? 'not-allowed' : 'pointer',
           }}
         >
           <RefreshCw size={13} style={{ animation: refreshing ? 'pulse-dot 1s infinite' : 'none' }} />
@@ -762,7 +762,7 @@ export default function Leaderboard() {
                 padding: '8px 14px', borderRadius: 0, border: 'none',
                 background: isActive ? '#b45309' : 'transparent',
                 color: isActive ? '#ffffff' : '#64748b',
-                fontSize: 12, fontWeight: 700,
+                fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'all 0.15s ease',
               }}

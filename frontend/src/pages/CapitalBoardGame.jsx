@@ -27,6 +27,7 @@ import GameLeaderboard from '../components/game/GameLeaderboard';
 import GameHistory from '../components/game/GameHistory';
 import GameRulesModal from '../components/game/GameRulesModal';
 import gameSound from '../components/game/gameSound';
+import GameFullscreenShell from '../components/game/GameFullscreenShell';
 
 export default function CapitalBoardGame() {
   const { roomId: urlRoomId } = useParams();
@@ -533,10 +534,18 @@ export default function CapitalBoardGame() {
 
   if (isComingSoon && !urlRoomId) {
     return (
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px', minHeight: '80vh' }}>
-        {/* Header Meta */}
-        <div
-          style={{
+      <GameFullscreenShell
+        title="Cờ Tỷ Phú"
+        icon={Gamepad2}
+        badge="Coming Soon"
+        exitLabel="Thoát"
+        exitTo="/arena"
+        onExit={() => navigate('/arena')}
+      >
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px', width: '100%', boxSizing: 'border-box' }}>
+          {/* Header Meta */}
+          <div
+            style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -563,13 +572,13 @@ export default function CapitalBoardGame() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                <h1 style={{ fontSize: 'var(--text-h1, 24px)', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.25 }}>
                   CỜ TỶ PHÚ & CÁ NGỰA
                 </h1>
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     background: 'rgba(245,158,11,0.15)',
                     color: '#d97706',
                     padding: '2px 8px',
@@ -599,7 +608,7 @@ export default function CapitalBoardGame() {
               borderRadius: 6,
               padding: '8px 14px',
               fontSize: 13,
-              fontWeight: 700,
+              fontWeight: 600,
               color: '#0f172a',
               cursor: 'pointer',
             }}
@@ -646,8 +655,8 @@ export default function CapitalBoardGame() {
                 border: '1px solid rgba(180,83,9,0.25)',
                 padding: '4px 10px',
                 borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 800,
+                fontSize: 11,
+                fontWeight: 600,
                 color: "#b45309",
                 marginBottom: 16,
               }}
@@ -656,7 +665,7 @@ export default function CapitalBoardGame() {
               <span>TẠM THỜI ẨN ĐỂ BẢO TRÌ & NÂNG CẤP TÍNH NĂNG</span>
             </div>
 
-            <h2 style={{ fontSize: 26, fontWeight: 900, margin: '0 0 12px', lineHeight: 1.25, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: 'var(--text-h2, 20px)', fontWeight: 700, margin: '0 0 12px', lineHeight: 1.25 }}>
               Chế Độ Cờ Đang Được Hoàn Thiện (Coming Soon)
             </h2>
 
@@ -826,13 +835,50 @@ export default function CapitalBoardGame() {
         {/* Rules Modal */}
         {showRulesModal && <GameRulesModal onClose={() => setShowRulesModal(false)} />}
       </div>
-    );
+    </GameFullscreenShell>
+  );
   }
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '16px 20px', minHeight: '80vh' }}>
-      {/* Top Header */}
-      <div
+    <GameFullscreenShell
+      title="Cờ Tỷ Phú"
+      icon={Gamepad2}
+      badge={room ? `Phòng #${room.code || room.id}` : 'Bàn cờ'}
+      exitLabel="Thoát"
+      exitTo="/arena"
+      onExit={() => {
+        if (room?.id) {
+          handleLeaveRoom();
+        } else {
+          navigate('/arena');
+        }
+      }}
+      actions={
+        <button
+          type="button"
+          onClick={() => setShowRulesModal(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.12)',
+            borderRadius: 6,
+            padding: '6px 12px',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#111111',
+            cursor: 'pointer',
+          }}
+        >
+          <BookOpen size={14} />
+          <span>Luật chơi</span>
+        </button>
+      }
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '16px 20px', width: '100%', boxSizing: 'border-box' }}>
+        {/* Top Header */}
+        <div
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -861,13 +907,13 @@ export default function CapitalBoardGame() {
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+              <h1 style={{ fontSize: 'var(--text-h1, 24px)', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.25 }}>
                 CỜ TỶ PHÚ WORKRANK
               </h1>
               <span
                 style={{
                   fontSize: 10,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   background: 'rgba(180,83,9,0.08)',
                   color: "#b45309",
                   padding: '2px 6px',
@@ -1016,7 +1062,7 @@ export default function CapitalBoardGame() {
               <Clock size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 900 }}>BẠN ĐANG CÓ MỘT TRẬN ĐẤU DỞ DANG!</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>BẠN ĐANG CÓ MỘT TRẬN ĐẤU DỞ DANG!</div>
               <div style={{ fontSize: 12, opacity: 0.9 }}>
                 Phòng <strong>{activeRejoinRoom.name}</strong> (#{activeRejoinRoom.code}) đang diễn ra.
               </div>
@@ -1316,7 +1362,7 @@ export default function CapitalBoardGame() {
             >
               Phòng Chờ Trận Đấu
             </span>
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: '8px 0 4px' }}>
+            <h2 style={{ fontSize: 'var(--text-h2, 20px)', fontWeight: 700, color: '#0f172a', margin: '8px 0 4px', lineHeight: 1.25 }}>
               {room.title || room.name}
             </h2>
             <div style={{ fontSize: 13, color: '#64748b' }}>
@@ -1546,13 +1592,13 @@ export default function CapitalBoardGame() {
               boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
             }}
           >
-            <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 14px' }}>
+            <h3 style={{ fontSize: 'var(--text-h3, 16px)', fontWeight: 600, color: '#0f172a', margin: '0 0 14px', lineHeight: 1.3 }}>
               Tạo Phòng Cờ Tỷ Phú
             </h3>
 
             <form onSubmit={handleCreateRoom} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
                   Tên phòng chơi
                 </label>
                 <input
@@ -1669,6 +1715,7 @@ export default function CapitalBoardGame() {
           }}
         />
       )}
-    </div>
+      </div>
+    </GameFullscreenShell>
   );
 }

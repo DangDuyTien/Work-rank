@@ -1,6 +1,6 @@
 'use strict';
 
-const { YouTubeChannel, YouTubeVideo } = require('../../models');
+const { YouTubeChannel, YouTubeVideo, sequelize } = require('../../models');
 const youtubeDataService = require('./youtubeData.service');
 const youtubeAggregationService = require('./youtubeAggregation.service');
 const youtubeIntegrationService = require('../competition/youtubeIntegration.service');
@@ -129,79 +129,81 @@ async function syncChannel(channelIdentifier, options = {}) {
       throw new Error('Chưa cấu hình biến môi trường YOUTUBE_API_KEY trên Render. Vui lòng vào Render Dashboard > Environment và thêm YOUTUBE_API_KEY.');
     }
 
-    // 3. Persist Channel Details & Metric Snapshot
-    channel.title = channelStats.title || channel.title;
-    if (channelStats.customUrl) channel.customUrl = channelStats.customUrl;
-    if (channelStats.thumbnailUrl) channel.thumbnailUrl = channelStats.thumbnailUrl;
-    channel.status = 'ACTIVE';
-    channel.syncStatus = 'SUCCESS';
-    channel.lastSyncedAt = new Date();
-    channel.lastSyncError = null;
-    await channel.save();
+    // 3. Persist Channel Details & Metric Snapshot inside managed transaction
+    await sequelize.transaction(async (transaction) => {
+      channel.title = channelStats.title || channel.title;
+      if (channelStats.customUrl) channel.customUrl = channelStats.customUrl;
+      if (channelStats.thumbnailUrl) channel.thumbnailUrl = channelStats.thumbnailUrl;
+      channel.status = 'ACTIVE';
+      channel.syncStatus = 'SUCCESS';
+      channel.lastSyncedAt = new Date();
+      channel.lastSyncError = null;
+      await channel.save({ transaction });
 
-    // Calculate channel engagement rate safely from recent videos if available, or estimated
-    let totalVideoInteractions = 0;
-    let totalVideoViews = 0;
-    if (Array.isArray(videosData) && videosData.length > 0) {
-      for (const v of videosData) {
-        totalVideoInteractions += (Number(v.likes) || 0) + (Number(v.comments) || 0);
-        totalVideoViews += (Number(v.views) || 0);
+      // Calculate channel engagement rate safely from recent videos if available, or estimated
+      let totalVideoInteractions = 0;
+      let totalVideoViews = 0;
+      if (Array.isArray(videosData) && videosData.length > 0) {
+        for (const v of videosData) {
+          totalVideoInteractions += (Number(v.likes) || 0) + (Number(v.comments) || 0);
+          totalVideoViews += (Number(v.views) || 0);
+        }
       }
-    }
 
-    let channelEngagementRate = 0;
-    if (totalVideoViews > 0) {
-      channelEngagementRate = (totalVideoInteractions / totalVideoViews) * 100;
-    } else if (channelStats.subscribers > 0 && channelStats.views > 0) {
-      // Estimated engagement rate within reasonable 0-100% bound
-      channelEngagementRate = Math.min(10.0, (channelStats.views / (channelStats.subscribers * 100)) * 100);
-    }
-    const safeChannelEngagementRate = Number(Math.min(999.9999, Math.max(0, channelEngagementRate)).toFixed(4));
-    const safeChannelWatchTime = Number(Math.min(9999999999.99, Math.max(0, channelStats.views * 0.05)).toFixed(2));
+      let channelEngagementRate = 0;
+      if (totalVideoViews > 0) {
+        channelEngagementRate = (totalVideoInteractions / totalVideoViews) * 100;
+      } else if (channelStats.subscribers > 0 && channelStats.views > 0) {
+        // Estimated engagement rate within reasonable 0-100% bound
+        channelEngagementRate = Math.min(10.0, (channelStats.views / (channelStats.subscribers * 100)) * 100);
+      }
+      const safeChannelEngagementRate = Number(Math.min(999.9999, Math.max(0, channelEngagementRate)).toFixed(4));
+      const safeChannelWatchTime = Number(Math.min(9999999999.99, Math.max(0, channelStats.views * 0.05)).toFixed(2));
 
-    await youtubeDataService.recordChannelMetricSnapshot({
-      channelId: channel.id,
-      views: channelStats.views,
-      subscribers: channelStats.subscribers,
-      videosCount: channelStats.videosCount,
-      watchTimeHours: safeChannelWatchTime,
-      engagementRate: safeChannelEngagementRate,
-      capturedAt: new Date(),
-    });
-
-    // 4. Upsert Videos & Record Video Metric Snapshots
-    for (const v of videosData) {
-      const savedVideo = await youtubeDataService.upsertVideo({
+      await youtubeDataService.recordChannelMetricSnapshot({
         channelId: channel.id,
-        videoId: v.videoId,
-        title: v.title,
-        description: v.description,
-        publishedAt: v.publishedAt,
-        thumbnailUrl: v.thumbnailUrl,
-      });
-
-      const vViews = Number(v.views) || 0;
-      const vLikes = Number(v.likes) || 0;
-      const vComments = Number(v.comments) || 0;
-      const vEngagement = vViews > 0 ? ((vLikes + vComments) / vViews) * 100 : 0;
-      const safeVideoEngagementRate = Number(Math.min(999.9999, Math.max(0, vEngagement)).toFixed(4));
-      const safeVideoWatchTime = Number(Math.min(9999999999.99, Math.max(0, vViews * 0.05)).toFixed(2));
-
-      await youtubeDataService.recordVideoMetricSnapshot({
-        videoId: savedVideo.id,
-        views: vViews,
-        likes: vLikes,
-        comments: vComments,
-        watchTimeHours: safeVideoWatchTime,
-        engagementRate: safeVideoEngagementRate,
+        views: channelStats.views,
+        subscribers: channelStats.subscribers,
+        videosCount: channelStats.videosCount,
+        watchTimeHours: safeChannelWatchTime,
+        engagementRate: safeChannelEngagementRate,
         capturedAt: new Date(),
-      });
-    }
+      }, { transaction });
 
-    // 5. Update Team Summary if channel is assigned
-    if (channel.teamId) {
-      await youtubeAggregationService.aggregateTeamYouTubeSummary(channel.teamId);
-    }
+      // 4. Upsert Videos & Record Video Metric Snapshots
+      for (const v of videosData) {
+        const savedVideo = await youtubeDataService.upsertVideo({
+          channelId: channel.id,
+          videoId: v.videoId,
+          title: v.title,
+          description: v.description,
+          publishedAt: v.publishedAt,
+          thumbnailUrl: v.thumbnailUrl,
+        }, { transaction });
+
+        const vViews = Number(v.views) || 0;
+        const vLikes = Number(v.likes) || 0;
+        const vComments = Number(v.comments) || 0;
+        const vEngagement = vViews > 0 ? ((vLikes + vComments) / vViews) * 100 : 0;
+        const safeVideoEngagementRate = Number(Math.min(999.9999, Math.max(0, vEngagement)).toFixed(4));
+        const safeVideoWatchTime = Number(Math.min(9999999999.99, Math.max(0, vViews * 0.05)).toFixed(2));
+
+        await youtubeDataService.recordVideoMetricSnapshot({
+          videoId: savedVideo.id,
+          views: vViews,
+          likes: vLikes,
+          comments: vComments,
+          watchTimeHours: safeVideoWatchTime,
+          engagementRate: safeVideoEngagementRate,
+          capturedAt: new Date(),
+        }, { transaction });
+      }
+
+      // 5. Update Team Summary if channel is assigned
+      if (channel.teamId) {
+        await youtubeAggregationService.aggregateTeamYouTubeSummary(channel.teamId, { transaction });
+      }
+    });
 
     return {
       channelId: channel.id,

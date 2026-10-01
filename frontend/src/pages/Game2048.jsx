@@ -11,6 +11,7 @@ import {
 } from '../utils/game2048Engine';
 import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
+import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import {
   Trophy,
   RotateCcw,
@@ -21,21 +22,22 @@ import {
   HelpCircle,
   RefreshCw,
   Sparkles,
+  LayoutGrid,
 } from 'lucide-react';
 
 const TILE_STYLES = {
-  2: { bg: '#334155', text: '#f8fafc', border: '1px solid rgba(255,255,255,0.08)' },
-  4: { bg: '#475569', text: '#f8fafc', border: '1px solid rgba(255,255,255,0.12)' },
-  8: { bg: '#0284c7', text: '#ffffff', border: '1px solid rgba(56,189,248,0.3)' },
-  16: { bg: '#0369a1', text: '#ffffff', border: '1px solid rgba(56,189,248,0.4)' },
-  32: { bg: '#0f766e', text: '#ffffff', border: '1px solid rgba(45,212,191,0.3)' },
-  64: { bg: '#0d9488', text: '#ffffff', border: '1px solid rgba(45,212,191,0.4)' },
-  128: { bg: '#d97706', text: '#ffffff', shadow: '0 4px 14px rgba(217,119,6,0.3)', border: '1px solid rgba(251,191,36,0.4)' },
-  256: { bg: '#b45309', text: '#ffffff', shadow: '0 4px 16px rgba(180,83,9,0.35)', border: '1px solid rgba(251,191,36,0.5)' },
-  512: { bg: '#7c3aed', text: '#ffffff', shadow: '0 4px 18px rgba(124,58,237,0.35)', border: '1px solid rgba(192,132,252,0.4)' },
-  1024: { bg: '#6d28d9', text: '#ffffff', shadow: '0 4px 20px rgba(109,40,217,0.4)', border: '1px solid rgba(192,132,252,0.5)' },
-  2048: { bg: '#f59e0b', text: '#0f172a', shadow: '0 4px 24px rgba(245,158,11,0.6)', border: '2px solid #ffffff' },
-  4096: { bg: '#9f1239', text: '#ffffff', shadow: '0 4px 28px rgba(159,18,57,0.6)', border: '2px solid #fecdd3' },
+  2: { bg: '#ffffff', text: '#141414', border: '1px solid rgba(0,0,0,0.08)', shadow: '0 1px 3px rgba(0,0,0,0.04)' },
+  4: { bg: '#fbf9f5', text: '#141414', border: '1px solid rgba(0,0,0,0.1)', shadow: '0 1px 3px rgba(0,0,0,0.05)' },
+  8: { bg: '#fef3c7', text: '#92400e', border: '1px solid #fde68a', shadow: '0 2px 4px rgba(180,83,9,0.08)' },
+  16: { bg: '#fed7aa', text: '#9a3412', border: '1px solid #fdba74', shadow: '0 2px 6px rgba(234,88,12,0.1)' },
+  32: { bg: '#fb923c', text: '#ffffff', border: '1px solid #f97316', shadow: '0 2px 8px rgba(234,88,12,0.15)' },
+  64: { bg: '#ea580c', text: '#ffffff', border: '1px solid #c2410c', shadow: '0 2px 10px rgba(194,65,12,0.2)' },
+  128: { bg: '#d97706', text: '#ffffff', border: '1px solid #b45309', shadow: '0 3px 12px rgba(180,83,9,0.25)' },
+  256: { bg: '#b45309', text: '#ffffff', border: '1px solid #92400e', shadow: '0 4px 14px rgba(180,83,9,0.3)' },
+  512: { bg: '#78350f', text: '#fef3c7', border: '1px solid #92400e', shadow: '0 4px 16px rgba(120,53,15,0.35)' },
+  1024: { bg: '#292524', text: '#fbbf24', border: '1.5px solid #b45309', shadow: '0 4px 18px rgba(0,0,0,0.25)' },
+  2048: { bg: '#141414', text: '#f59e0b', border: '2px solid #b45309', shadow: '0 4px 20px rgba(180,83,9,0.3)' },
+  4096: { bg: '#0a0a0a', text: '#fde047', border: '2px solid #ffffff', shadow: '0 4px 24px rgba(0,0,0,0.45)' },
 };
 
 function getTileFontSize(value) {
@@ -249,92 +251,39 @@ export default function Game2048() {
   const currentMaxTile = getMaxTileFromTiles(tiles);
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        minHeight: '100dvh',
-        background: '#0b0f17',
-        color: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column',
-        boxSizing: 'border-box',
-        userSelect: 'none',
-        overflowX: 'hidden',
-      }}
+    <GameFullscreenShell
+      title="2048"
+      icon={LayoutGrid}
+      badge="Ghép số"
+      exitLabel="Thoát"
+      exitTo="/arena"
+      onExit={() => navigate('/arena')}
+      actions={
+        <button
+          type="button"
+          onClick={handleRestart}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 12px',
+            background: '#141414',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 800,
+            cursor: 'pointer',
+            transition: 'opacity 0.15s ease',
+          }}
+          title="Chơi lại ván mới"
+        >
+          <RotateCcw size={13} />
+          <span>Ván mới</span>
+        </button>
+      }
     >
-      {/* 1. TOP BAR */}
-      <header
-        style={{
-          height: 58,
-          background: 'rgba(15, 23, 42, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 clamp(16px, 4vw, 32px)',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 8,
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 800,
-              transition: 'background 0.15s ease',
-            }}
-            title="Thoát game về Trang chủ"
-          >
-            <ArrowLeft size={15} />
-            <span>Thoát</span>
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                background: '#0284c7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-              }}
-            >
-              <Gamepad2 size={16} />
-            </div>
-            <div>
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', letterSpacing: '0.5px' }}>
-                2048 WORKRANK
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <DefaultAvatar src={user.avatarUrl || user.avatarData} name={user.name || user.email} userId={user.id} size={30} shape="circle" />
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#e2e8f0', display: 'none', mdDisplay: 'inline' }}>
-              {user.name || user.email}
-            </span>
-          </div>
-        )}
-      </header>
-
-      {/* 2. MAIN WORKSPACE */}
+      {/* MAIN WORKSPACE */}
       <main
         style={{
           flex: 1,
@@ -375,20 +324,20 @@ export default function Game2048() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span
                   style={{
-                    fontFamily: "'Space Grotesk', -apple-system, sans-serif",
+                    fontFamily: "var(--font-sans, 'Space Grotesk', -apple-system, sans-serif)",
                     fontSize: 'clamp(34px, 6vw, 44px)',
                     fontWeight: 900,
                     lineHeight: 1,
                     letterSpacing: '-1.5px',
-                    color: '#ffffff',
+                    color: '#111111',
                   }}
                 >
                   2048
                 </span>
-                <Sparkles size={20} color="#f59e0b" style={{ marginBottom: 10 }} />
+                <Sparkles size={20} color="#b45309" style={{ marginBottom: 10 }} />
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.3px', marginTop: 2 }}>
-                Merge. Think. Reach 2048.
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#777777', letterSpacing: '0.3px', marginTop: 2 }}>
+                Ghép số. Tư duy. Chinh phục ô 2048.
               </div>
             </div>
 
@@ -398,18 +347,19 @@ export default function Game2048() {
               <div
                 style={{
                   position: 'relative',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  background: '#ffffff',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                   borderRadius: 6,
                   padding: '6px 14px',
                   textAlign: 'center',
                   minWidth: 70,
                 }}
               >
-                <div style={{ fontSize: 9, fontWeight: 900, color: '#94a3b8', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-                  SCORE
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#777777', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                  ĐIỂM
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#38bdf8', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#141414', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
                   {score.toLocaleString()}
                 </div>
                 {lastScoreGain && (
@@ -422,18 +372,19 @@ export default function Game2048() {
               {/* Best Score Panel */}
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  background: '#ffffff',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                   borderRadius: 6,
                   padding: '6px 14px',
                   textAlign: 'center',
                   minWidth: 70,
                 }}
               >
-                <div style={{ fontSize: 9, fontWeight: 900, color: '#94a3b8', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-                  BEST
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#777777', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                  KỶ LỤC
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
                   {bestScore.toLocaleString()}
                 </div>
               </div>
@@ -441,18 +392,18 @@ export default function Game2048() {
               {/* Company Rank Panel */}
               <div
                 style={{
-                  background: 'rgba(245, 158, 11, 0.08)',
-                  border: '1px solid rgba(245, 158, 11, 0.25)',
+                  background: 'rgba(180, 83, 9, 0.08)',
+                  border: '1px solid rgba(180, 83, 9, 0.25)',
                   borderRadius: 6,
                   padding: '6px 12px',
                   textAlign: 'center',
                   minWidth: 50,
                 }}
               >
-                <div style={{ fontSize: 9, fontWeight: 900, color: '#f59e0b', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#b45309', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
                   HẠNG
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
                   {myRank ? `#${myRank}` : '-'}
                 </div>
               </div>
@@ -468,10 +419,10 @@ export default function Game2048() {
               padding: '2px 0',
             }}
           >
-            <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>Nước đi: <strong style={{ color: '#ffffff' }}>{moves}</strong></span>
-              <span style={{ color: '#475569' }}>•</span>
-              <span>Ô cao nhất: <strong style={{ color: '#f59e0b' }}>{currentMaxTile}</strong></span>
+            <div style={{ fontSize: 12, color: '#555555', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>Nước đi: <strong style={{ color: '#111111' }}>{moves}</strong></span>
+              <span style={{ color: 'rgba(0,0,0,0.2)' }}>•</span>
+              <span>Ô cao nhất: <strong style={{ color: '#b45309' }}>{currentMaxTile}</strong></span>
             </div>
 
             <button
@@ -482,14 +433,14 @@ export default function Game2048() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '7px 14px',
-                background: '#0284c7',
+                background: '#141414',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: 8,
+                borderRadius: 6,
                 fontSize: 12,
-                fontWeight: 900,
+                fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(2,132,199,0.3)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
                 transition: 'transform 0.1s ease, background 0.15s ease',
               }}
               onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
@@ -519,9 +470,9 @@ export default function Game2048() {
             <div className="wr-2048-tile-layer">
               {tiles.map((t) => {
                 const styleConfig = TILE_STYLES[t.value] || {
-                  bg: t.value > 2048 ? '#9f1239' : '#334155',
-                  text: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  bg: t.value > 2048 ? '#0a0a0a' : '#eceae4',
+                  text: '#111111',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
                 };
 
                 const transformStr = `translate3d(calc(${t.col} * (100% + var(--wr-2048-gap, 10px))), calc(${t.row} * (100% + var(--wr-2048-gap, 10px))), 0)`;
@@ -551,13 +502,13 @@ export default function Game2048() {
               })}
             </div>
 
-            {/* GAME OVER OVERLAY (Structural & Clean) */}
+            {/* GAME OVER OVERLAY (Clean Warm Editorial) */}
             {gameOver && (
               <div
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(15, 23, 42, 0.92)',
+                  background: 'rgba(244, 243, 239, 0.94)',
                   backdropFilter: 'blur(8px)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -569,17 +520,18 @@ export default function Game2048() {
                   animation: 'fadeIn 0.2s ease',
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 900, color: '#f87171', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  GAME OVER
+                <div style={{ fontSize: 12, fontWeight: 900, color: '#b91c1c', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  HẾT NƯỚC ĐI
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', margin: '4px 0 14px' }}>
-                  Hết Nước Đi!
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', margin: '4px 0 14px' }}>
+                  Ván Đấu Kết Thúc
                 </div>
 
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#ffffff',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
                     borderRadius: 6,
                     padding: '12px 24px',
                     marginBottom: 18,
@@ -588,15 +540,15 @@ export default function Game2048() {
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800 }}>ĐIỂM ĐẠT ĐƯỢC</div>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: '#38bdf8', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: '#777777', fontWeight: 800 }}>ĐIỂM ĐẠT ĐƯỢC</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: '#141414', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
                       {score.toLocaleString()}
                     </div>
                   </div>
-                  <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
+                  <div style={{ width: 1, background: 'rgba(0, 0, 0, 0.08)' }} />
                   <div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800 }}>KỶ LỤC CỦA BẠN</div>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: '#f59e0b', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: '#777777', fontWeight: 800 }}>KỶ LỤC CỦA BẠN</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
                       {bestScore.toLocaleString()}
                     </div>
                   </div>
@@ -610,14 +562,14 @@ export default function Game2048() {
                     alignItems: 'center',
                     gap: 8,
                     padding: '10px 22px',
-                    background: '#0284c7',
+                    background: '#141414',
                     color: '#ffffff',
                     border: 'none',
-                    borderRadius: 8,
+                    borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 900,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
                     transition: 'transform 0.1s ease',
                   }}
                 >
@@ -633,8 +585,8 @@ export default function Game2048() {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(15, 23, 42, 0.94)',
-                  backdropFilter: 'blur(10px)',
+                  background: 'rgba(244, 243, 239, 0.94)',
+                  backdropFilter: 'blur(8px)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -644,14 +596,14 @@ export default function Game2048() {
                   textAlign: 'center',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f59e0b', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#b45309', marginBottom: 4 }}>
                   <Crown size={20} />
                   <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.5px' }}>CHIẾN THẮNG!</span>
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#ffffff', marginBottom: 6 }}>
+                <div style={{ fontSize: 26, fontWeight: 900, color: '#111111', marginBottom: 6 }}>
                   Đạt Được Ô 2048!
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 16px', maxWidth: 280, lineHeight: 1.4 }}>
+                <p style={{ fontSize: 12, color: '#555555', margin: '0 0 16px', maxWidth: 280, lineHeight: 1.4 }}>
                   Bạn đã xuất sắc tạo được ô 2048. Bạn có thể tiếp tục chơi để đạt điểm số cao hơn!
                 </p>
 
@@ -661,14 +613,14 @@ export default function Game2048() {
                     onClick={() => setKeepPlaying(true)}
                     style={{
                       padding: '9px 18px',
-                      background: '#0284c7',
+                      background: '#141414',
                       color: '#ffffff',
                       border: 'none',
-                      borderRadius: 8,
+                      borderRadius: 6,
                       fontSize: 12,
                       fontWeight: 900,
                       cursor: 'pointer',
-                      boxShadow: '0 2px 10px rgba(2,132,199,0.4)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                     }}
                   >
                     Tiếp Tục Chơi
@@ -678,10 +630,10 @@ export default function Game2048() {
                     onClick={handleRestart}
                     style={{
                       padding: '9px 16px',
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#ffffff',
-                      borderRadius: 8,
+                      background: '#ffffff',
+                      border: '1px solid rgba(0, 0, 0, 0.15)',
+                      color: '#111111',
+                      borderRadius: 6,
                       fontSize: 12,
                       fontWeight: 800,
                       cursor: 'pointer',
@@ -697,21 +649,21 @@ export default function Game2048() {
           {/* How to play hint (Structural rectangular card) */}
           <div
             style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#ffffff',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
               borderRadius: 6,
               padding: '12px 14px',
               fontSize: 12,
-              color: '#94a3b8',
+              color: '#555555',
               lineHeight: 1.5,
               display: 'flex',
               alignItems: 'flex-start',
               gap: 8,
             }}
           >
-            <HelpCircle size={15} color="#38bdf8" style={{ marginTop: 2, flexShrink: 0 }} />
+            <HelpCircle size={15} color="#b45309" style={{ marginTop: 2, flexShrink: 0 }} />
             <div>
-              <strong style={{ color: '#ffffff' }}>Cách chơi: </strong>
+              <strong style={{ color: '#111111' }}>Cách chơi: </strong>
               Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Hai ô có cùng số khi chạm vào nhau sẽ trượt và hợp nhất thành một ô có giá trị gấp đôi!
             </div>
           </div>
@@ -722,11 +674,11 @@ export default function Game2048() {
           style={{
             flex: '1 1 380px',
             maxWidth: 500,
-            background: 'rgba(15, 23, 42, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: '#ffffff',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
             borderRadius: 6,
             padding: '18px 20px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
             boxSizing: 'border-box',
           }}
         >
@@ -737,12 +689,12 @@ export default function Game2048() {
               justifyContent: 'space-between',
               marginBottom: 14,
               paddingBottom: 12,
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Trophy size={17} color="#f59e0b" />
-              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#ffffff', letterSpacing: '0.4px' }}>
+              <Trophy size={17} color="#b45309" />
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#111111', letterSpacing: '0.4px' }}>
                 BXH 2048 TOÀN CÔNG TY
               </h2>
             </div>
@@ -755,7 +707,7 @@ export default function Game2048() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#94a3b8',
+                color: '#777777',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -775,22 +727,22 @@ export default function Game2048() {
                 justifyContent: 'space-between',
                 padding: '10px 12px',
                 borderRadius: 6,
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
+                background: 'rgba(180, 83, 9, 0.06)',
+                border: '1px solid rgba(180, 83, 9, 0.2)',
                 marginBottom: 12,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <DefaultAvatar src={user.avatarUrl || user.avatarData} name={user.name || user.email} userId={user.id} size={26} shape="circle" />
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#ffffff' }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#111111' }}>
                   Vị trí của bạn:
                 </span>
-                <strong style={{ color: '#38bdf8', fontSize: 12 }}>
+                <strong style={{ color: '#b45309', fontSize: 12 }}>
                   {myRank ? `Hạng #${myRank}` : 'Chưa xếp hạng'}
                 </strong>
               </div>
 
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#38bdf8', fontFamily: "'JetBrains Mono', monospace" }}>
+              <div style={{ fontSize: 13, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono', monospace" }}>
                 {bestScore.toLocaleString()} pts
               </div>
             </div>
@@ -799,7 +751,7 @@ export default function Game2048() {
           {/* Leaderboard Table */}
           <div style={{ maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
             {leaderboard.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: '32px 16px', color: '#777777', fontSize: 13 }}>
                 Chưa có kỷ lục nào được ghi nhận. Hãy là người đầu tiên ghi điểm!
               </div>
             ) : (
@@ -820,15 +772,15 @@ export default function Game2048() {
                         padding: '8px 10px',
                         borderRadius: 6,
                         background: isMe
-                          ? 'rgba(56, 189, 248, 0.12)'
+                          ? 'rgba(180, 83, 9, 0.08)'
                           : isTop1
-                          ? 'rgba(245, 158, 11, 0.08)'
-                          : 'rgba(255, 255, 255, 0.025)',
+                          ? 'rgba(180, 83, 9, 0.04)'
+                          : '#faf9f6',
                         border: isMe
-                          ? '1px solid #0284c7'
+                          ? '1.5px solid rgba(180, 83, 9, 0.35)'
                           : isTop1
-                          ? '1px solid rgba(245, 158, 11, 0.25)'
-                          : '1px solid rgba(255, 255, 255, 0.05)',
+                          ? '1px solid rgba(180, 83, 9, 0.2)'
+                          : '1px solid rgba(0, 0, 0, 0.05)',
                       }}
                     >
                       {/* Left: Rank + Avatar + Name + JobTitle */}
@@ -840,7 +792,7 @@ export default function Game2048() {
                             fontWeight: 900,
                             fontFamily: "'JetBrains Mono', monospace",
                             fontSize: 12,
-                            color: isTop1 ? '#f59e0b' : isTop2 ? '#94a3b8' : isTop3 ? '#d97706' : '#64748b',
+                            color: isTop1 ? '#b45309' : isTop2 ? '#78716c' : isTop3 ? '#a8a29e' : '#777777',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -848,11 +800,11 @@ export default function Game2048() {
                           }}
                         >
                           {isTop1 ? (
-                            <Crown size={14} color="#f59e0b" />
+                            <Crown size={14} color="#b45309" />
                           ) : isTop2 ? (
-                            <Medal size={14} color="#94a3b8" />
+                            <Medal size={14} color="#78716c" />
                           ) : isTop3 ? (
-                            <Medal size={14} color="#d97706" />
+                            <Medal size={14} color="#a8a29e" />
                           ) : (
                             `#${player.rank}`
                           )}
@@ -872,7 +824,7 @@ export default function Game2048() {
                               style={{
                                 fontSize: 12,
                                 fontWeight: 800,
-                                color: isMe ? '#38bdf8' : '#ffffff',
+                                color: isMe ? '#b45309' : '#111111',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -886,8 +838,8 @@ export default function Game2048() {
                             )}
                           </div>
                           {player.highestTile > 2 && (
-                            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>
-                              Max: <strong style={{ color: '#f59e0b' }}>{player.highestTile}</strong>
+                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 700 }}>
+                              Max: <strong style={{ color: '#b45309' }}>{player.highestTile}</strong>
                             </div>
                           )}
                         </div>
@@ -899,7 +851,7 @@ export default function Game2048() {
                           fontFamily: "'JetBrains Mono', monospace",
                           fontSize: 13,
                           fontWeight: 900,
-                          color: isTop1 ? '#f59e0b' : '#38bdf8',
+                          color: isTop1 ? '#b45309' : '#141414',
                           textAlign: 'right',
                           flexShrink: 0,
                           marginLeft: 8,
@@ -915,6 +867,6 @@ export default function Game2048() {
           </div>
         </div>
       </main>
-    </div>
+    </GameFullscreenShell>
   );
 }
