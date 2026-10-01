@@ -45,9 +45,9 @@ YouTubeVideoMetric.init(
       field: 'watch_time_hours',
     },
     engagementRate: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.DECIMAL(7, 4),
       allowNull: false,
-      defaultValue: 0.00,
+      defaultValue: 0.0000,
       field: 'engagement_rate',
     },
   },

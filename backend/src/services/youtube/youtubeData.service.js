@@ -280,7 +280,7 @@ async function recordChannelMetricSnapshot(params, options = {}) {
   const safeSubscribers = Math.max(0, Number(subscribers) || 0);
   const safeVideosCount = Math.max(0, Number(videosCount) || 0);
   const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
-  const safeEngagement = Number(Math.min(999.99, Math.max(0, Number(engagementRate) || 0)).toFixed(2));
+  const safeEngagement = Number(Math.min(999.9999, Math.max(0, Number(engagementRate) || 0)).toFixed(4));
 
   // Check if snapshot already exists in the same 5-minute window for idempotency
   const windowStart = new Date(snapshotTime.getTime() - 2.5 * 60 * 1000);
@@ -344,7 +344,7 @@ async function recordVideoMetricSnapshot(params, options = {}) {
   const safeLikes = Math.max(0, Number(likes) || 0);
   const safeComments = Math.max(0, Number(comments) || 0);
   const safeWatchTime = Number(Math.min(9999999999.99, Math.max(0, Number(watchTimeHours) || 0)).toFixed(2));
-  const safeEngagement = Number(Math.min(999.99, Math.max(0, Number(engagementRate) || 0)).toFixed(2));
+  const safeEngagement = Number(Math.min(999.9999, Math.max(0, Number(engagementRate) || 0)).toFixed(4));
 
   const windowStart = new Date(snapshotTime.getTime() - 2.5 * 60 * 1000);
   const windowEnd = new Date(snapshotTime.getTime() + 2.5 * 60 * 1000);

@@ -156,7 +156,7 @@ async function syncChannel(channelIdentifier, options = {}) {
       // Estimated engagement rate within reasonable 0-100% bound
       channelEngagementRate = Math.min(10.0, (channelStats.views / (channelStats.subscribers * 100)) * 100);
     }
-    const safeChannelEngagementRate = Number(Math.min(999.99, Math.max(0, channelEngagementRate)).toFixed(2));
+    const safeChannelEngagementRate = Number(Math.min(999.9999, Math.max(0, channelEngagementRate)).toFixed(4));
     const safeChannelWatchTime = Number(Math.min(9999999999.99, Math.max(0, channelStats.views * 0.05)).toFixed(2));
 
     await youtubeDataService.recordChannelMetricSnapshot({
@@ -184,7 +184,7 @@ async function syncChannel(channelIdentifier, options = {}) {
       const vLikes = Number(v.likes) || 0;
       const vComments = Number(v.comments) || 0;
       const vEngagement = vViews > 0 ? ((vLikes + vComments) / vViews) * 100 : 0;
-      const safeVideoEngagementRate = Number(Math.min(999.99, Math.max(0, vEngagement)).toFixed(2));
+      const safeVideoEngagementRate = Number(Math.min(999.9999, Math.max(0, vEngagement)).toFixed(4));
       const safeVideoWatchTime = Number(Math.min(9999999999.99, Math.max(0, vViews * 0.05)).toFixed(2));
 
       await youtubeDataService.recordVideoMetricSnapshot({
