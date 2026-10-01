@@ -811,6 +811,8 @@ module.exports = {
   triggerYouTubeMilestone,
   triggerCommunityKudos,
   getPublicSpotlight,
+  getPublicSeasons,
+  getPublicSeasonDetail,
 };
 
 async function getPublicSpotlight(req, res) {
@@ -818,4 +820,17 @@ async function getPublicSpotlight(req, res) {
   const spotlight = await publicSpotlightService.getPublicSpotlight();
   return res.json(spotlight);
 }
+
+async function getPublicSeasons(req, res) {
+  const publicSpotlightService = require('../services/competition/publicSpotlight.service');
+  const data = await publicSpotlightService.getPublicSeasons();
+  return res.json(data);
+}
+
+async function getPublicSeasonDetail(req, res) {
+  const publicSpotlightService = require('../services/competition/publicSpotlight.service');
+  const data = await publicSpotlightService.getPublicSeasonDetail(req.params.id);
+  return res.json(data);
+}
+
 

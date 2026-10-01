@@ -50,10 +50,10 @@ export default function GameLeaderboard() {
       {/* Header & Controls */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 2px' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', margin: '0 0 2px' }}>
             Bảng Xếp Hạng Cờ Tỷ Phú
           </h2>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.55 }}>
             Tích lũy Career Money từ các trận thắng cờ tỷ phú để leo top danh vọng 3winmedia.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function GameLeaderboard() {
             borderRadius: 6,
             padding: '6px 12px',
             fontSize: 12,
-            fontWeight: 700,
+            fontWeight: 600,
             color: '#0f172a',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
@@ -107,7 +107,7 @@ export default function GameLeaderboard() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#38bdf8',
-                fontWeight: 900,
+                fontWeight: 700,
                 fontSize: 16,
               }}
             >
@@ -115,24 +115,24 @@ export default function GameLeaderboard() {
             </div>
 
             <div>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>{user?.name || user?.username} (Bạn)</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{user?.name || user?.username} (Bạn)</div>
               <div style={{ fontSize: 12, color: '#94a3b8' }}>
-                Hạng hiện tại: <strong style={{ color: '#38bdf8' }}>{myProfile.rank ? `#${myProfile.rank}` : 'Chưa xếp hạng'}</strong>
+                Hạng hiện tại: <strong style={{ color: '#38bdf8', fontWeight: 600 }}>{myProfile.rank ? `#${myProfile.rank}` : 'Chưa xếp hạng'}</strong>
               </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 20, textAlign: 'right' }}>
             <div>
-              <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Career Money</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace' }}>
+              <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Career Money</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace' }}>
                 ${myProfile.careerMoney?.toLocaleString() || 0}
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Thắng / Số trận</div>
-              <div style={{ fontSize: 14, fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>
+              <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Thắng / Số trận</div>
+              <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>
                 {myProfile.totalWins || 0} / {myProfile.totalGames || 0} ({myProfile.winRate || 0}%)
               </div>
             </div>
@@ -153,12 +153,12 @@ export default function GameLeaderboard() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'rgba(15,23,42,0.03)', borderBottom: '1px solid rgba(15,23,42,0.08)', color: '#64748b' }}>
-              <th style={{ padding: '10px 14px', width: 60, textAlign: 'center' }}>HẠNG</th>
-              <th style={{ padding: '10px 14px' }}>THÀNH VIÊN</th>
-              <th style={{ padding: '10px 14px', textAlign: 'right' }}>CAREER MONEY</th>
-              <th style={{ padding: '10px 14px', textAlign: 'center' }}>SỐ TRẬN</th>
-              <th style={{ padding: '10px 14px', textAlign: 'center' }}>THẮNG</th>
-              <th style={{ padding: '10px 14px', textAlign: 'center' }}>TỈ LỆ</th>
+              <th style={{ padding: '10px 14px', width: 60, textAlign: 'center', fontWeight: 600 }}>HẠNG</th>
+              <th style={{ padding: '10px 14px', fontWeight: 600 }}>THÀNH VIÊN</th>
+              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600 }}>CAREER MONEY</th>
+              <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600 }}>SỐ TRẬN</th>
+              <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600 }}>THẮNG</th>
+              <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600 }}>TỈ LỆ</th>
             </tr>
           </thead>
           <tbody>
@@ -188,7 +188,7 @@ export default function GameLeaderboard() {
                       background: isMe ? 'rgba(56,189,248,0.06)' : 'transparent',
                     }}
                   >
-                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 800 }}>
+                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>
                       {rank === 1 ? (
                         <span style={{ color: '#eab308', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                           <Trophy size={15} /> 1
@@ -219,7 +219,7 @@ export default function GameLeaderboard() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           {item.user?.avatarUrl ? (
@@ -229,7 +229,7 @@ export default function GameLeaderboard() {
                           )}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>
                             {displayName} {isMe && <span style={{ fontSize: 10, color: '#0284c7' }}>(Bạn)</span>}
                           </div>
                           {item.user?.department && (
@@ -243,7 +243,7 @@ export default function GameLeaderboard() {
                       style={{
                         padding: '10px 14px',
                         textAlign: 'right',
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: '#16a34a',
                         fontFamily: 'JetBrains Mono, monospace',
                       }}

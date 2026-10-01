@@ -262,7 +262,7 @@ export default function CapitalBoard({
                 <div
                   style={{
                     fontSize: 8,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     textAlign: 'center',
                     padding: '1px 0',
                     background:
@@ -296,10 +296,10 @@ export default function CapitalBoard({
               <div
                 style={{
                   fontSize: 9,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: '#0f172a',
                   textAlign: 'center',
-                  lineHeight: 1.1,
+                  lineHeight: 1.15,
                   padding: '1px 1px',
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
@@ -314,7 +314,7 @@ export default function CapitalBoard({
               <div
                 style={{
                   fontSize: 8,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   textAlign: 'center',
                   color: tile.type === 'PROPERTY' ? '#0284c7' : '#64748b',
                   fontFamily: 'JetBrains Mono, monospace',
@@ -360,7 +360,7 @@ export default function CapitalBoard({
                         justifyContent: 'center',
                         color: '#ffffff',
                         fontSize: 8,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         animation: currentTurnPlayer?.id === p.id ? 'bounce 1s infinite' : 'none',
                       }}
                     >
@@ -413,7 +413,7 @@ export default function CapitalBoard({
                 }}
               />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                   {isMyTurn ? (
                     <span style={{ color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Gamepad2 size={14} /> LƯỢT CỦA BẠN!
@@ -435,7 +435,7 @@ export default function CapitalBoard({
               style={{
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: 16,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: turnTimeRemaining <= 5 ? '#ef4444' : '#0f172a',
                 background: turnTimeRemaining <= 5 ? 'rgba(239,68,68,0.15)' : '#ffffff',
                 border: '1px solid rgba(15,23,42,0.1)',
@@ -524,7 +524,7 @@ export default function CapitalBoard({
                       borderRadius: 6,
                       padding: '10px 14px',
                       fontSize: 14,
-                      fontWeight: 800,
+                      fontWeight: 600,
                       cursor: actionLoading || isRolling ? 'not-allowed' : 'pointer',
                       boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
                       display: 'flex',
@@ -553,7 +553,7 @@ export default function CapitalBoard({
                           borderRadius: 6,
                           padding: '10px 14px',
                           fontSize: 13,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           cursor: actionLoading ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -579,7 +579,7 @@ export default function CapitalBoard({
                         borderRadius: 6,
                         padding: '10px 14px',
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         cursor: actionLoading ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -643,7 +643,7 @@ export default function CapitalBoard({
               }}
             />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                 Ô #{selectedTile.index}: {selectedTile.name}
               </div>
               <div style={{ fontSize: 11, color: '#64748b' }}>
@@ -672,7 +672,7 @@ export default function CapitalBoard({
                       color: selectedOwner.color || selectedOwner.seatColor || '#38bdf8',
                       padding: '3px 8px',
                       borderRadius: 4,
-                      fontWeight: 800,
+                      fontWeight: 600,
                     }}
                   >
                     Chủ: {selectedOwner.user?.name || 'Người chơi'}
@@ -684,7 +684,7 @@ export default function CapitalBoard({
                       color: '#16a34a',
                       padding: '3px 8px',
                       borderRadius: 4,
-                      fontWeight: 800,
+                      fontWeight: 600,
                     }}
                   >
                     Đất trống (${selectedProperty.price || selectedProperty.purchasePrice})

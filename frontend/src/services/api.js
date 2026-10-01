@@ -527,6 +527,14 @@ export const competition = {
     const res = await api.get('/api/competition/public/spotlight');
     return res.data || { hasSpotlight: false, season: null, championTeam: null, mvp: null };
   },
+  getPublicSeasons: async () => {
+    const res = await api.get('/api/competition/public/seasons');
+    return res.data?.seasons || [];
+  },
+  getPublicSeasonDetail: async (id) => {
+    const res = await api.get(`/api/competition/public/seasons/${id}`);
+    return res.data || { season: null, teamRankings: [], individualRankings: [] };
+  },
   getMyState: async (params = {}) => {
     const res = await api.get('/api/competition/my-state', { params });
     return { ...res, data: res.data?.states || [] };

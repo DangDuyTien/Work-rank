@@ -90,7 +90,7 @@ export default function PlayerCard({
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: 13,
               border: '2px solid #ffffff',
               boxShadow: '0 2px 4px rgba(15,23,42,0.15)',
@@ -110,7 +110,7 @@ export default function PlayerCard({
               <span
                 style={{
                   fontSize: 13,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: isBankrupt ? '#94a3b8' : '#0f172a',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -125,7 +125,7 @@ export default function PlayerCard({
                 <span
                   style={{
                     fontSize: 9,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     background: '#0f172a',
                     color: '#ffffff',
                     padding: '1px 4px',
@@ -141,7 +141,7 @@ export default function PlayerCard({
               <span
                 style={{
                   fontSize: 10,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: seatColor,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
@@ -170,7 +170,7 @@ export default function PlayerCard({
               padding: '2px 6px',
               borderRadius: 4,
               fontSize: 10,
-              fontWeight: 800,
+              fontWeight: 600,
             }}
           >
             <Skull size={11} /> PHÁ SẢN
@@ -186,7 +186,7 @@ export default function PlayerCard({
               padding: '2px 6px',
               borderRadius: 4,
               fontSize: 10,
-              fontWeight: 800,
+              fontWeight: 600,
             }}
           >
             <Trophy size={11} /> VÔ ĐỊCH
@@ -202,7 +202,7 @@ export default function PlayerCard({
               padding: '2px 6px',
               borderRadius: 4,
               fontSize: 10,
-              fontWeight: 800,
+              fontWeight: 600,
               animation: 'pulse 1.5s infinite',
             }}
           >
@@ -228,7 +228,7 @@ export default function PlayerCard({
           <div
             style={{
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 700,
               color: isBankrupt ? '#94a3b8' : '#16a34a',
               fontFamily: 'JetBrains Mono, monospace',
             }}
@@ -242,7 +242,7 @@ export default function PlayerCard({
           <div
             style={{
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 700,
               color: isBankrupt ? '#94a3b8' : '#0284c7',
               fontFamily: 'JetBrains Mono, monospace',
             }}
@@ -256,7 +256,7 @@ export default function PlayerCard({
           <div
             style={{
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 700,
               color: isBankrupt ? '#94a3b8' : '#7c3aed',
               fontFamily: 'JetBrains Mono, monospace',
             }}

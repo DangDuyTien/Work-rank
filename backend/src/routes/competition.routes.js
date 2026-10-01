@@ -9,6 +9,8 @@ const router = express.Router();
 
 // ─── Public routes (unauthenticated) ───────────────────────────────────────
 router.get('/public/spotlight', asyncHandler(ctrl.getPublicSpotlight));
+router.get('/public/seasons', asyncHandler(ctrl.getPublicSeasons));
+router.get('/public/seasons/:id', asyncHandler(ctrl.getPublicSeasonDetail));
 
 // ─── User routes (authenticated) ─────────────────────────────────────────────
 router.get('/my-state', auth, asyncHandler(ctrl.getMyState));

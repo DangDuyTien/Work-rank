@@ -155,7 +155,7 @@ export default function GameFullscreenShell({
                 borderRadius: 6,
                 color: '#111111',
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: transitionState === 'EXITING' ? 'default' : 'pointer',
                 transition: 'background 0.15s ease, border-color 0.15s ease',
               }}
@@ -196,7 +196,7 @@ export default function GameFullscreenShell({
                 <span
                   style={{
                     fontSize: 14,
-                    fontWeight: 900,
+                    fontWeight: 700,
                     color: '#111111',
                     letterSpacing: '-0.2px',
                     whiteSpace: 'nowrap',
@@ -211,7 +211,7 @@ export default function GameFullscreenShell({
                   <span
                     style={{
                       fontSize: 10,
-                      fontWeight: 800,
+                      fontWeight: 600,
                       padding: '2px 8px',
                       borderRadius: 9999,
                       background: 'rgba(180, 83, 9, 0.1)',
@@ -249,7 +249,7 @@ export default function GameFullscreenShell({
                 <span
                   style={{
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: '#111111',
                     maxWidth: 140,
                     overflow: 'hidden',

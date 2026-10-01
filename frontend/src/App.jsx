@@ -30,6 +30,8 @@ function lazyWithReload(importer) {
 }
 
 const Login = lazyWithReload(() => import('./pages/Login'));
+const Register = lazyWithReload(() => import('./pages/Register'));
+const Award = lazyWithReload(() => import('./pages/Award'));
 const Home = lazyWithReload(() => import('./pages/Home'));
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const Leaderboard = lazyWithReload(() => import('./pages/Leaderboard'));
@@ -190,7 +192,9 @@ function AnimatedAppRoutes() {
       <Suspense fallback={<PageFallback />}>
         <Routes location={displayLocation}>
           <Route path="/" element={<Home />} />
+          <Route path="/award" element={<Award />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route
             element={
               <ProtectedRoute>
