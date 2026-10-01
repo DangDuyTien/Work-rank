@@ -21,6 +21,7 @@ const {
   RuleSetVersion,
   Team,
   User,
+  UserProfilePreference,
   ScoreLedger,
   CompetitionAuditLog,
 } = require('../../models');
@@ -360,7 +361,14 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   const seasonMembers = await SeasonTeamMember.findAll({
     where: { seasonId },
     include: [
-      { model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'createdAt'] },
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
+        include: [
+          { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+        ],
+      },
       { model: Season, as: 'season' },
     ],
     transaction,
@@ -422,8 +430,11 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   if (allUserIds.size === 0) {
     const fallbackUsers = await User.findAll({
       where: { status: { [Op.ne]: 'inactive' } },
-      attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'],
-      include: [{ model: Team, attributes: ['id', 'name'] }],
+      attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
+      include: [
+        { model: Team, attributes: ['id', 'name'] },
+        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+      ],
       transaction,
     });
     for (const u of fallbackUsers) {
@@ -439,19 +450,32 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
     const scoreData = scoreMap.get(uid) || { points: 0, eventsCount: 0, lastScoredAt: null };
     let userObj = userMap.get(uid);
     if (!userObj) {
-      userObj = await User.findByPk(uid, { attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'], include: [{ model: Team, attributes: ['id', 'name'] }], transaction });
+      userObj = await User.findByPk(uid, {
+        attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
+        include: [
+          { model: Team, attributes: ['id', 'name'] },
+          { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+        ],
+        transaction,
+      });
       if (userObj) userMap.set(uid, userObj);
     }
 
     const tid = memberTeamMap.get(uid) || userObj?.teamId || null;
     const teamInfo = tid ? teamInfoMap.get(tid) || (userObj?.Team ? { name: userObj.Team.name, avatar: null, color: '#0284c7' } : null) : null;
+    const pref = userObj?.UserProfilePreference || userObj?.userProfilePreference;
 
     rawList.push({
       userId: uid,
       userName: userObj?.name || `User #${uid}`,
       userEmail: userObj?.email || null,
-      jobTitle: userObj?.jobTitle || null,
-      userAvatar: null,
+      jobTitle: userObj?.jobTitle || 'Nhân viên',
+      department: userObj?.department || 'Media & Content',
+      isVerified: Boolean(userObj?.isVerified),
+      isDev: Boolean(userObj?.isDev),
+      userAvatar: pref?.avatarData || null,
+      avatarData: pref?.avatarData || null,
+      featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
       teamId: tid,
       teamName: teamInfo?.name || null,
       teamColor: teamInfo?.color || '#0284c7',

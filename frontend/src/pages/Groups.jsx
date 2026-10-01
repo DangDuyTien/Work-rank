@@ -120,6 +120,18 @@ export default function Groups() {
   }, []);
 
   useEffect(() => {
+    const handleUpdate = () => {
+      fetchGroups();
+    };
+    window.addEventListener('workrank:team-updated', handleUpdate);
+    window.addEventListener('workrank:user-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('workrank:team-updated', handleUpdate);
+      window.removeEventListener('workrank:user-updated', handleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     saveContests(contests);
   }, [contests]);
 

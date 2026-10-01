@@ -24,7 +24,7 @@ test('Comprehensive Admin Panel E2E Test Suite', async (t) => {
   let createdEmployeeId;
 
   before(async () => {
-    const timestamp = Date.now();
+    const timestamp = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     adminUser = await User.create({
       name: `Admin Commander ${timestamp}`,
       email: `admin_${timestamp}@workrank.io`,

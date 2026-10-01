@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { Team, User } = require('../models');
+const { Team, User, UserProfilePreference } = require('../models');
 
 function makeInviteCode() {
   return `WR-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
@@ -27,15 +27,24 @@ async function toGroupPayload(team, userId) {
     User.count({ where: memberWhere }),
     User.findAll({
       where: memberWhere,
-      attributes: ['id', 'name', 'email', 'role', 'jobTitle', 'department', 'isVerified', 'status', 'lastSeenAt'],
+      attributes: ['id', 'name', 'email', 'role', 'jobTitle', 'department', 'isVerified', 'isDev', 'status', 'lastSeenAt'],
+      include: [
+        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+      ],
       order: [
         ['name', 'ASC'],
         ['id', 'ASC'],
       ],
       limit: 100,
     }),
-    team.ownerId ? User.findByPk(team.ownerId, { attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified'] }) : null,
+    team.ownerId ? User.findByPk(team.ownerId, {
+      attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev'],
+      include: [
+        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+      ],
+    }) : null,
   ]);
+  const ownerPref = owner?.UserProfilePreference || owner?.userProfilePreference;
   return {
     id: team.id,
     name: team.name,
@@ -48,25 +57,35 @@ async function toGroupPayload(team, userId) {
       id: owner.id,
       name: owner.name,
       email: owner.email,
-      jobTitle: owner.jobTitle,
-      department: owner.department,
-      isVerified: owner.isVerified,
+      jobTitle: owner.jobTitle || 'Nhân viên',
+      department: owner.department || 'Media & Content',
+      isVerified: Boolean(owner.isVerified),
+      isDev: Boolean(owner.isDev),
+      avatarData: ownerPref?.avatarData || null,
+      userAvatar: ownerPref?.avatarData || null,
     } : null,
     member_count: memberCount,
     memberCount,
-    members: members.map((member) => ({
-      id: member.id,
-      name: member.name,
-      email: member.email,
-      role: member.role,
-      jobTitle: member.jobTitle,
-      department: member.department,
-      isVerified: member.isVerified,
-      status: member.status,
-      lastSeenAt: member.lastSeenAt,
-      groupRole: String(team.ownerId || '') === String(member.id) ? 'owner' : 'member',
-      isLeader: String(team.ownerId || '') === String(member.id),
-    })),
+    members: members.map((member) => {
+      const pref = member.UserProfilePreference || member.userProfilePreference;
+      return {
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        jobTitle: member.jobTitle || 'Nhân viên',
+        department: member.department || 'Media & Content',
+        isVerified: Boolean(member.isVerified),
+        isDev: Boolean(member.isDev),
+        status: member.status,
+        lastSeenAt: member.lastSeenAt,
+        avatarData: pref?.avatarData || null,
+        userAvatar: pref?.avatarData || null,
+        featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
+        groupRole: String(team.ownerId || '') === String(member.id) ? 'owner' : 'member',
+        isLeader: String(team.ownerId || '') === String(member.id),
+      };
+    }),
     role: String(team.ownerId || '') === String(userId) ? 'owner' : 'member',
     isLeader: String(team.ownerId || '') === String(userId),
   };

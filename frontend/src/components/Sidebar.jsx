@@ -73,7 +73,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
     }
   };
 
-  const avatarUrl = user?.avatarUrl || getUserAvatar(user?.id);
+  const avatarUrl = getUserAvatar(user, user?.id);
   const initials = initialsFromName(user?.name || user?.email || 'U');
 
   return (

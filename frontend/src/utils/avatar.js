@@ -12,6 +12,22 @@ if (typeof window !== 'undefined') {
       detail: { userId, avatarUrl: event.newValue || '' },
     }));
   });
+
+  window.addEventListener('workrank:user-updated', (event) => {
+    const payload = event.detail;
+    const uid = String(payload?.userId || payload?.user?.id || payload?.id || '');
+    const newAvatar = payload?.user?.avatarData !== undefined
+      ? payload.user.avatarData
+      : (payload?.avatarData !== undefined ? payload.avatarData : payload?.userAvatar);
+
+    if (uid) {
+      if (newAvatar) {
+        setStoredAvatar(uid, newAvatar);
+      } else if (newAvatar === null || newAvatar === '') {
+        removeStoredAvatar(uid);
+      }
+    }
+  });
 }
 
 export function avatarStorageKey(userId) {
@@ -58,10 +74,32 @@ export function removeStoredAvatar(userId) {
 }
 
 export function getUserAvatar(user = {}, fallbackUserId = '') {
-  const userId = user?.id || user?.user_id || user?.userId || fallbackUserId;
-  const stored = getStoredAvatar(userId);
-  if (stored) return stored;
-  return user?.avatarData || user?.avatarUrl || user?.photoUrl || user?.imageUrl || '';
+  const isId = typeof user === 'string' || typeof user === 'number';
+  const userObj = isId ? {} : (user || {});
+  const userId = isId ? user : (userObj.id || userObj.user_id || userObj.userId || fallbackUserId);
+
+  // 1. Fresh server data takes precedence if explicitly present
+  const liveAvatar = userObj.avatarData || userObj.avatarUrl || userObj.userAvatar || userObj.photoUrl || userObj.imageUrl;
+  if (liveAvatar) {
+    if (userId) avatarCache.set(String(userId), liveAvatar);
+    return liveAvatar;
+  }
+
+  // 2. If user explicitly specifies avatarData as null or empty, treat as no avatar
+  if (userObj.avatarData === null || userObj.avatarData === '' || userObj.userAvatar === null) {
+    if (userId && avatarCache.has(String(userId))) {
+      avatarCache.delete(String(userId));
+    }
+    return '';
+  }
+
+  // 3. Fallback to cached/stored avatar
+  if (userId) {
+    const stored = getStoredAvatar(userId);
+    if (stored) return stored;
+  }
+
+  return '';
 }
 
 export function initialsFromName(name) {

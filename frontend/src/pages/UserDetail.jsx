@@ -289,6 +289,18 @@ export default function UserDetail() {
     }
   }, [targetUserId, pageVisible]);
 
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      const payload = event.detail;
+      const uid = String(payload?.userId || payload?.user?.id || '');
+      if (uid && String(targetUserId) === uid) {
+        loadProfile(true);
+      }
+    };
+    window.addEventListener('workrank:user-updated', handleUserUpdate);
+    return () => window.removeEventListener('workrank:user-updated', handleUserUpdate);
+  }, [targetUserId]);
+
   // Handle Profile Like
   const handleToggleLike = async () => {
     if (liking || !targetUserId) return;

@@ -146,6 +146,18 @@ export default function AdminTeamsYouTube() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    const handleUpdate = () => {
+      loadData(true);
+    };
+    window.addEventListener('workrank:team-updated', handleUpdate);
+    window.addEventListener('workrank:user-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('workrank:team-updated', handleUpdate);
+      window.removeEventListener('workrank:user-updated', handleUpdate);
+    };
+  }, [loadData]);
+
   // Load Top Videos for Insights Tab
   const loadTopVideos = useCallback(async () => {
     setLoadingVideos(true);

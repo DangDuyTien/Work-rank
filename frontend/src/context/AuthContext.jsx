@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
 import { connectSocket, disconnectSocket } from '../services/socket';
 
+import { setStoredAvatar, removeStoredAvatar } from '../utils/avatar';
+
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -79,6 +81,60 @@ export function AuthProvider({ children }) {
       disconnectSocket();
     }
   }, [user]);
+
+  // Real-time synchronization for user data & team propagation
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUserUpdated = (payload) => {
+      const targetId = String(payload?.userId || payload?.user?.id || '');
+      const updatedData = payload?.user || {};
+
+      // If current logged-in user was modified
+      if (user && targetId === String(user.id)) {
+        setUser((prev) => ({
+          ...prev,
+          ...updatedData,
+          avatarData: updatedData.avatarData !== undefined ? updatedData.avatarData : prev.avatarData,
+          jobTitle: updatedData.jobTitle !== undefined ? updatedData.jobTitle : prev.jobTitle,
+          department: updatedData.department !== undefined ? updatedData.department : prev.department,
+          isVerified: updatedData.isVerified !== undefined ? updatedData.isVerified : prev.isVerified,
+          isDev: updatedData.isDev !== undefined ? updatedData.isDev : prev.isDev,
+          teamId: updatedData.teamId !== undefined ? updatedData.teamId : prev.teamId,
+          teamName: updatedData.teamName !== undefined ? updatedData.teamName : prev.teamName,
+        }));
+
+        if (updatedData.avatarData) {
+          setStoredAvatar(user.id, updatedData.avatarData);
+        } else if (updatedData.avatarData === null) {
+          removeStoredAvatar(user.id);
+        }
+      }
+
+      // Propagate globally for components, tables, sidebars, leaderboards
+      window.dispatchEvent(new CustomEvent('workrank:user-updated', { detail: payload }));
+    };
+
+    const handleTeamMembershipUpdated = (payload) => {
+      const targetId = String(payload?.userId || '');
+      if (user && targetId === String(user.id)) {
+        setUser((prev) => ({
+          ...prev,
+          teamId: payload.newTeamId,
+          teamName: payload.teamName || null,
+        }));
+      }
+      window.dispatchEvent(new CustomEvent('workrank:team-updated', { detail: payload }));
+    };
+
+    socket.on('user:updated', handleUserUpdated);
+    socket.on('team:membership:updated', handleTeamMembershipUpdated);
+
+    return () => {
+      socket.off('user:updated', handleUserUpdated);
+      socket.off('team:membership:updated', handleTeamMembershipUpdated);
+    };
+  }, [socket, user]);
 
   const logout = async () => {
     try {

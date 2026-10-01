@@ -75,7 +75,7 @@ export default function QuizLiveLeaderboard({
       >
         {sortedPlayers.map((player, idx) => {
           const isMe = Number(player.userId) === Number(currentUserId);
-          const avatarUrl = player.user?.avatarUrl || getUserAvatar(player.userId);
+          const avatarUrl = getUserAvatar(player.user, player.userId);
           const rank = idx + 1;
 
           return (
@@ -182,7 +182,7 @@ export default function QuizLiveLeaderboard({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {sortedPlayers.map((player, idx) => {
               const isMe = Number(player.userId) === Number(currentUserId);
-              const avatarUrl = player.user?.avatarUrl || getUserAvatar(player.userId);
+              const avatarUrl = getUserAvatar(player.user, player.userId);
               const rank = idx + 1;
 
               return (

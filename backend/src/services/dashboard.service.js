@@ -103,20 +103,26 @@ async function acceptedFriendUserIds(currentUserId) {
 function mapLeaderboardUser(user, index) {
   const plain = user.toJSON ? user.toJSON() : user;
   const summary = plain.competitionSummary || {};
-  const pref = plain.UserProfilePreference || {};
+  const pref = plain.UserProfilePreference || plain.userProfilePreference || {};
   const score = Number(summary.currentSeasonScore || summary.grandPoints || 0);
   const userPresence = resolveUserPresence(plain.id);
-  const featuredBadges = normalizeFeaturedBadges(pref.featuredBadgesJson || pref.featured_badges_json);
+  const featuredBadges = normalizeFeaturedBadges(pref.featuredBadges || pref.featuredBadgesJson || pref.featured_badges_json);
 
   return {
     id: plain.id,
     user_id: plain.id,
+    userId: plain.id,
     name: plain.name,
     email: plain.email,
     role: plain.role,
+    jobTitle: plain.jobTitle || 'Nhân viên',
+    department: plain.department || 'Media & Content',
     teamId: plain.teamId,
     isVerified: Boolean(plain.isVerified),
     verified: Boolean(plain.isVerified),
+    isDev: Boolean(plain.isDev),
+    avatarData: pref.avatarData || null,
+    userAvatar: pref.avatarData || null,
     featuredBadges,
     accountStatus: plain.status || 'active',
     score,

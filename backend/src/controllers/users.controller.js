@@ -8,7 +8,9 @@ const {
   UserProfilePreference,
   CompetitionUserSummary,
   SeasonIndividualLeaderboardProjection,
+  GrandIndividualLeaderboardProjection,
   Season,
+  SeasonTeamMember,
   TeamYouTubeSummary,
   CompetitionAuditLog,
 } = require('../models');
@@ -16,6 +18,7 @@ const sanitizeUser = require('../utils/sanitizeUser');
 const { decorateUserPresence } = require('../services/userPresence.service');
 const profileLikeService = require('../services/profileLike.service');
 const recognitionService = require('../services/recognition.service');
+const competitionRealtime = require('../services/competition/competitionRealtime.service');
 
 const GALLERY_SLOT_COUNT = 6;
 const FEATURED_BADGE_LIMIT = 12;
@@ -119,6 +122,9 @@ function serializeUserListItem(user) {
   delete plain.team;
   return decorateUserPresence({
     ...plain,
+    avatarData: preference?.avatarData || null,
+    jobTitle: plain.jobTitle || 'Nhân viên',
+    department: plain.department || 'Media & Content',
     team: team ? { id: team.id, name: team.name, ownerId: team.ownerId } : null,
     teamId: plain.teamId || team?.id || null,
     teamName: team?.name || null,
@@ -148,7 +154,6 @@ async function list(req, res) {
   const department = String(req.query.department || '').trim();
   const hasTeam = req.query.hasTeam;
   const withCount = req.query.withCount !== '0' && req.query.withCount !== 'false';
-  const withProfile = req.query.withProfile !== '0' && req.query.withProfile !== 'false';
   const where = {};
   if (search) {
     const idMatch = search.match(/^WR-?0*(\d+)$/i) || search.match(/^#?0*(\d+)$/);
@@ -176,7 +181,7 @@ async function list(req, res) {
     limit,
     offset,
     include: [
-      ...(withProfile ? [{ model: UserProfilePreference, attributes: ['featuredBadges'], required: false }] : []),
+      { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
       { model: Team, attributes: ['id', 'name', 'ownerId'], required: false },
     ],
   };
@@ -286,12 +291,134 @@ async function create(req, res) {
   res.status(201).json({ user: sanitizeUser(user) });
 }
 
+async function syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId) {
+  if (!user?.id) return null;
+  try {
+    const refreshed = await User.findByPk(user.id, {
+      include: [
+        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+        { model: Team, attributes: ['id', 'name', 'ownerId'], required: false },
+        { model: CompetitionUserSummary, as: 'competitionSummary', required: false },
+      ],
+    });
+    if (!refreshed) return null;
+
+    const teamChanged = oldTeamId !== undefined && (
+      (oldTeamId === null && refreshed.teamId !== null) ||
+      (oldTeamId !== null && refreshed.teamId === null) ||
+      (Number(oldTeamId) !== Number(refreshed.teamId))
+    );
+
+    // 1. If team membership changed, sync SeasonTeamMember and projection records for active seasons
+    if (teamChanged) {
+      try {
+        const activeSeasons = await Season.findAll({
+          where: { status: { [Op.in]: ['ACTIVE', 'PAUSED'] } },
+        });
+
+        for (const season of activeSeasons) {
+          if (refreshed.teamId) {
+            const existingMember = await SeasonTeamMember.findOne({
+              where: { seasonId: season.id, userId: refreshed.id },
+            });
+            if (existingMember) {
+              await existingMember.update({
+                teamId: refreshed.teamId,
+                roleSnapshot: refreshed.Team && String(refreshed.Team.ownerId) === String(refreshed.id) ? 'leader' : 'member',
+                leftAt: null,
+              });
+            } else {
+              await SeasonTeamMember.create({
+                seasonId: season.id,
+                teamId: refreshed.teamId,
+                userId: refreshed.id,
+                roleSnapshot: refreshed.Team && String(refreshed.Team.ownerId) === String(refreshed.id) ? 'leader' : 'member',
+              });
+            }
+          } else {
+            await SeasonTeamMember.update(
+              { leftAt: new Date() },
+              { where: { seasonId: season.id, userId: refreshed.id } }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('[syncUserAcrossReadModelsAndRealtime] Error updating SeasonTeamMember:', err);
+      }
+    }
+
+    // 2. Sync Projections (Preserve historical team snapshots, update display name)
+    try {
+      await SeasonIndividualLeaderboardProjection.update(
+        { userName: refreshed.name },
+        { where: { userId: refreshed.id } }
+      );
+      await GrandIndividualLeaderboardProjection.update(
+        { userName: refreshed.name },
+        { where: { userId: refreshed.id } }
+      );
+    } catch (err) {
+      console.error('[syncUserAcrossReadModelsAndRealtime] Error updating projections:', err);
+    }
+
+    // 3. Serialize user for broadcast
+    const serialized = serializeUserWithProfile(refreshed);
+    const pref = refreshed.UserProfilePreference;
+
+    const broadcastPayload = {
+      userId: refreshed.id,
+      user: {
+        ...serialized,
+        avatarData: pref?.avatarData || null,
+        userAvatar: pref?.avatarData || null,
+        jobTitle: refreshed.jobTitle || 'Nhân viên',
+        department: refreshed.department || 'Media & Content',
+        teamId: refreshed.teamId || null,
+        teamName: refreshed.Team?.name || null,
+        isVerified: Boolean(refreshed.isVerified),
+        isDev: Boolean(refreshed.isDev),
+      },
+    };
+
+    // 4. Broadcast via Socket.IO
+    const io = req?.app?.get('io') || competitionRealtime.getIo();
+    if (io) {
+      io.emit('user:updated', broadcastPayload);
+      io.to(`user:${refreshed.id}`).emit('user:updated', broadcastPayload);
+
+      if (teamChanged) {
+        const teamPayload = {
+          userId: refreshed.id,
+          oldTeamId: oldTeamId || null,
+          newTeamId: refreshed.teamId || null,
+          teamName: refreshed.Team?.name || null,
+        };
+        io.emit('team:membership:updated', teamPayload);
+        if (oldTeamId) io.to(`team:${oldTeamId}`).emit('team:membership:updated', teamPayload);
+        if (refreshed.teamId) io.to(`team:${refreshed.teamId}`).emit('team:membership:updated', teamPayload);
+      }
+
+      io.emit('competition:leaderboard_updated', {
+        userId: refreshed.id,
+        teamId: refreshed.teamId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return refreshed;
+  } catch (err) {
+    console.error('[syncUserAcrossReadModelsAndRealtime] Failed:', err);
+    return null;
+  }
+}
+
 async function update(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
 
   const isAdmin = req.user?.role === 'admin';
   const isSelf = String(req.user?.id || '') === String(user.id);
+  const oldTeamId = user.teamId;
 
   if (!isAdmin && !isSelf) {
     return res.status(403).json({ message: 'Forbidden' });
@@ -331,9 +458,7 @@ async function update(req, res) {
       }
     }
 
-    const reloaded = await User.findByPk(user.id, {
-      include: [{ model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false }],
-    });
+    const reloaded = await syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId);
     return res.json({ user: serializeUserWithProfile(reloaded || user) });
   }
 
@@ -399,16 +524,16 @@ async function update(req, res) {
     }
   }
 
-  const reloaded = await User.findByPk(user.id, {
-    include: [{ model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false }],
-  });
+  const reloaded = await syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId);
   return res.json({ user: serializeUserWithProfile(reloaded || user) });
 }
 
 async function remove(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
+  const oldTeamId = user.teamId;
   await user.update({ status: 'inactive' });
+  await syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId);
   return res.status(204).send();
 }
 
@@ -430,6 +555,8 @@ async function adminAwardMVP(req, res) {
       reason,
       actorId: req.user?.id,
     });
+    const updatedUser = await User.findByPk(userId);
+    if (updatedUser) await syncUserAcrossReadModelsAndRealtime(req, updatedUser);
     return res.status(201).json({ recognition });
   } catch (err) {
     return res.status(400).json({ message: err.message });
@@ -445,6 +572,10 @@ async function adminRevokeMVP(req, res) {
       actorId: req.user?.id,
       reason,
     });
+    if (result?.recognition?.userId) {
+      const updatedUser = await User.findByPk(result.recognition.userId);
+      if (updatedUser) await syncUserAcrossReadModelsAndRealtime(req, updatedUser);
+    }
     return res.json(result);
   } catch (err) {
     return res.status(400).json({ message: err.message });
@@ -463,6 +594,8 @@ async function adminAwardChampion(req, res) {
       reason,
       actorId: req.user?.id,
     });
+    const updatedUser = await User.findByPk(userId);
+    if (updatedUser) await syncUserAcrossReadModelsAndRealtime(req, updatedUser);
     return res.status(201).json({ recognition });
   } catch (err) {
     return res.status(400).json({ message: err.message });
@@ -476,6 +609,7 @@ async function adminUpdateJobProfile(req, res) {
 
   let user = await User.findByPk(id);
   if (!user) return res.status(404).json({ message: 'User not found' });
+  const oldTeamId = user.teamId;
 
   if (jobTitle !== undefined || department !== undefined || teamId !== undefined) {
     user = await recognitionService.setJobTitle({
@@ -506,7 +640,8 @@ async function adminUpdateJobProfile(req, res) {
     });
   }
 
-  return res.json({ user: sanitizeUser(user) });
+  const reloaded = await syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId);
+  return res.json({ user: serializeUserWithProfile(reloaded || user) });
 }
 
 async function adminGetAuditLogs(req, res) {
@@ -562,6 +697,8 @@ async function updateProfilePreferences(req, res) {
   } else {
     preference = await UserProfilePreference.create({ userId: user.id, ...values });
   }
+
+  await syncUserAcrossReadModelsAndRealtime(req, user);
 
   return res.json({ data: serializeProfilePreference(preference) });
 }

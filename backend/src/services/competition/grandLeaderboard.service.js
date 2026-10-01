@@ -18,6 +18,7 @@ const {
   SeasonTeamMember,
   Team,
   User,
+  UserProfilePreference,
 } = require('../../models');
 
 /**
@@ -316,8 +317,11 @@ async function getGrandIndividualStandings(grandId, options = {}) {
   const userIdsArray = Array.from(targetUserIds);
   const users = await User.findAll({
     where: { id: { [Op.in]: userIdsArray.length > 0 ? userIdsArray : [0] } },
-    attributes: ['id', 'name', 'email', 'jobTitle', 'teamId', 'createdAt'],
-    include: [{ model: Team, attributes: ['id', 'name'] }],
+    attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
+    include: [
+      { model: Team, attributes: ['id', 'name'] },
+      { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+    ],
     transaction,
   });
 
@@ -325,12 +329,18 @@ async function getGrandIndividualStandings(grandId, options = {}) {
     const uid = Number(u.id);
     const agg = scoreMap.get(uid) || { totalGrandPoints: 0, eventsCount: 0, lastScoredAt: null };
     const grandPoints = Number(agg.totalGrandPoints || 0);
+    const pref = u.UserProfilePreference || u.userProfilePreference;
     return {
       userId: uid,
       userName: u.name || `User #${uid}`,
       userEmail: u.email || null,
-      jobTitle: u.jobTitle || null,
-      userAvatar: null,
+      jobTitle: u.jobTitle || 'Nhân viên',
+      department: u.department || 'Media & Content',
+      isVerified: Boolean(u.isVerified),
+      isDev: Boolean(u.isDev),
+      userAvatar: pref?.avatarData || null,
+      avatarData: pref?.avatarData || null,
+      featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
       teamId: u.teamId || null,
       teamName: u.Team?.name || null,
       teamColor: u.Team?.color || '#0284c7',

@@ -8,7 +8,7 @@ import Sidebar from './Sidebar';
 import VerifiedBadge from './VerifiedBadge';
 import FriendsDock from './FriendsDock';
 import { isVerifiedAccount } from '../utils/account';
-import { getStoredAvatar, removeStoredAvatar, initialsFromName } from '../utils/avatar';
+import { getStoredAvatar, removeStoredAvatar, initialsFromName, getUserAvatar, AVATAR_UPDATED_EVENT } from '../utils/avatar';
 import { PageTransition, PageTransitionSkeleton } from './ui';
 import { sendBrowserNotification } from '../utils/notifications';
 
@@ -81,8 +81,18 @@ export default function Layout() {
 
   // Sync avatar
   useEffect(() => {
-    setAccountAvatarUrl(user?.avatarUrl || getStoredAvatar(user?.id) || '');
+    setAccountAvatarUrl(getUserAvatar(user, user?.id));
   }, [user]);
+
+  useEffect(() => {
+    const handleAvatarUpdate = (e) => {
+      if (String(e.detail?.userId) === String(user?.id)) {
+        setAccountAvatarUrl(e.detail?.avatarUrl || '');
+      }
+    };
+    window.addEventListener(AVATAR_UPDATED_EVENT, handleAvatarUpdate);
+    return () => window.removeEventListener(AVATAR_UPDATED_EVENT, handleAvatarUpdate);
+  }, [user?.id]);
 
   // Load and apply theme appearance settings
   useEffect(() => {

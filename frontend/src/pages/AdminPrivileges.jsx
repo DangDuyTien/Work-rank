@@ -161,6 +161,38 @@ export default function AdminPrivileges() {
     loadData('', 1);
   }, []);
 
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      const payload = event.detail;
+      const updatedUser = payload?.user || payload;
+      const targetId = String(payload?.userId || updatedUser?.id || '');
+      if (!targetId) return;
+
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (String(u.id) === targetId) {
+            return {
+              ...u,
+              ...updatedUser,
+              name: updatedUser.name || u.name,
+              jobTitle: updatedUser.jobTitle !== undefined ? updatedUser.jobTitle : u.jobTitle,
+              department: updatedUser.department !== undefined ? updatedUser.department : u.department,
+              teamId: updatedUser.teamId !== undefined ? updatedUser.teamId : u.teamId,
+              teamName: updatedUser.teamName !== undefined ? updatedUser.teamName : u.teamName,
+              isVerified: updatedUser.isVerified !== undefined ? updatedUser.isVerified : u.isVerified,
+              isDev: updatedUser.isDev !== undefined ? updatedUser.isDev : u.isDev,
+              avatarData: updatedUser.avatarData !== undefined ? updatedUser.avatarData : u.avatarData,
+            };
+          }
+          return u;
+        })
+      );
+    };
+
+    window.addEventListener('workrank:user-updated', handleUserUpdate);
+    return () => window.removeEventListener('workrank:user-updated', handleUserUpdate);
+  }, []);
+
   const onSearchChange = (event) => {
     const value = event.target.value;
     setQuery(value);

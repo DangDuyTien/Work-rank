@@ -12,6 +12,7 @@ const { Op } = require('sequelize');
 const sequelize = require('../../config/database');
 const {
   User,
+  UserProfilePreference,
   Team,
   Season,
   SeasonTeam,
@@ -437,6 +438,17 @@ async function getIndividualRankings(params = {}) {
 
     let { rows, count } = await GrandIndividualLeaderboardProjection.findAndCountAll({
       where,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+          include: [
+            { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+          ],
+          required: false,
+        },
+      ],
       order: [['rank', 'ASC']],
       limit: numLimit,
       offset,
@@ -446,6 +458,17 @@ async function getIndividualRankings(params = {}) {
       await projector.projectGrandIndividualLeaderboard(targetGrandId);
       const refreshed = await GrandIndividualLeaderboardProjection.findAndCountAll({
         where,
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+            include: [
+              { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+            ],
+            required: false,
+          },
+        ],
         order: [['rank', 'ASC']],
         limit: numLimit,
         offset,
@@ -462,19 +485,30 @@ async function getIndividualRankings(params = {}) {
       scope: 'grand',
       grand,
       grandId: Number(targetGrandId),
-      items: rows.map((r) => ({
-        rank: r.rank,
-        userId: r.userId,
-        userName: r.userName,
-        userEmail: r.userEmail,
-        teamId: r.teamId,
-        teamName: r.teamName,
-        grandPoints: Number(r.grandPoints || 0),
-        score: Number(r.grandPoints || 0),
-        totalScore: Number(r.grandPoints || 0),
-        trend: r.trend || 'SAME',
-        gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(r.grandPoints || 0)),
-      })),
+      items: rows.map((r) => {
+        const u = r.user;
+        const pref = u?.UserProfilePreference || u?.userProfilePreference;
+        return {
+          rank: r.rank,
+          userId: r.userId,
+          userName: u?.name || r.userName,
+          userEmail: r.userEmail,
+          jobTitle: u?.jobTitle || 'Nhân viên',
+          department: u?.department || 'Media & Content',
+          isVerified: Boolean(u?.isVerified),
+          isDev: Boolean(u?.isDev),
+          userAvatar: pref?.avatarData || r.userAvatar || null,
+          avatarData: pref?.avatarData || null,
+          featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
+          teamId: r.teamId,
+          teamName: r.teamName,
+          grandPoints: Number(r.grandPoints || 0),
+          score: Number(r.grandPoints || 0),
+          totalScore: Number(r.grandPoints || 0),
+          trend: r.trend || 'SAME',
+          gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(r.grandPoints || 0)),
+        };
+      }),
       total: count,
       page: numPage,
       limit: numLimit,
@@ -494,10 +528,11 @@ async function getIndividualRankings(params = {}) {
 
     const allUsers = await User.findAll({
       where: userWhere,
-      attributes: ['id', 'name', 'email', 'role', 'teamId', 'jobTitle', 'createdAt'],
+      attributes: ['id', 'name', 'email', 'role', 'teamId', 'jobTitle', 'department', 'isVerified', 'isDev', 'createdAt'],
       include: [
         { model: Team, attributes: ['id', 'name'] },
         { model: CompetitionUserSummary, as: 'competitionSummary', required: false },
+        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
       ],
     });
 
@@ -523,6 +558,7 @@ async function getIndividualRankings(params = {}) {
 
     const items = paginated.map((u, idx) => {
       const summary = u.competitionSummary;
+      const pref = u.UserProfilePreference || u.userProfilePreference;
       const score = Number(summary?.currentSeasonScore || 0);
       const rank = offset + idx + 1;
       return {
@@ -530,7 +566,13 @@ async function getIndividualRankings(params = {}) {
         userId: u.id,
         userName: u.name,
         userEmail: u.email,
-        jobTitle: u.jobTitle,
+        jobTitle: u.jobTitle || 'Nhân viên',
+        department: u.department || 'Media & Content',
+        isVerified: Boolean(u.isVerified),
+        isDev: Boolean(u.isDev),
+        userAvatar: pref?.avatarData || null,
+        avatarData: pref?.avatarData || null,
+        featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
         teamId: u.teamId,
         teamName: u.Team ? u.Team.name : '—',
         score,
@@ -580,6 +622,17 @@ async function getIndividualRankings(params = {}) {
 
   let { rows, count } = await SeasonIndividualLeaderboardProjection.findAndCountAll({
     where,
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+        include: [
+          { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+        ],
+        required: false,
+      },
+    ],
     order: [['rank', 'ASC']],
     limit: numLimit,
     offset,
@@ -589,6 +642,17 @@ async function getIndividualRankings(params = {}) {
     await projector.projectSeasonIndividualLeaderboard(targetSeasonId);
     const refreshed = await SeasonIndividualLeaderboardProjection.findAndCountAll({
       where,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+          include: [
+            { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+          ],
+          required: false,
+        },
+      ],
       order: [['rank', 'ASC']],
       limit: numLimit,
       offset,
@@ -605,19 +669,30 @@ async function getIndividualRankings(params = {}) {
     scope: 'season',
     season,
     seasonId: Number(targetSeasonId),
-    items: rows.map((r) => ({
-      rank: r.rank,
-      userId: r.userId,
-      userName: r.userName,
-      teamId: r.teamId,
-      teamName: r.teamName,
-      score: Number(r.points || 0),
-      points: Number(r.points || 0),
-      totalScore: Number(r.points || 0),
-      userLevel: Number(r.metadata?.userLevel || 1),
-      trend: r.trend || 'SAME',
-      gap: Math.max(0, Number(rows[0]?.points || 0) - Number(r.points || 0)),
-    })),
+    items: rows.map((r) => {
+      const u = r.user;
+      const pref = u?.UserProfilePreference || u?.userProfilePreference;
+      return {
+        rank: r.rank,
+        userId: r.userId,
+        userName: u?.name || r.userName,
+        jobTitle: u?.jobTitle || 'Nhân viên',
+        department: u?.department || 'Media & Content',
+        isVerified: Boolean(u?.isVerified),
+        isDev: Boolean(u?.isDev),
+        userAvatar: pref?.avatarData || r.userAvatar || null,
+        avatarData: pref?.avatarData || null,
+        featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
+        teamId: r.teamId,
+        teamName: r.teamName,
+        score: Number(r.points || 0),
+        points: Number(r.points || 0),
+        totalScore: Number(r.points || 0),
+        userLevel: Number(r.metadata?.userLevel || 1),
+        trend: r.trend || 'SAME',
+        gap: Math.max(0, Number(rows[0]?.points || 0) - Number(r.points || 0)),
+      };
+    }),
     total: count,
     page: numPage,
     limit: numLimit,

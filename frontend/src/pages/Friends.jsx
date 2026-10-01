@@ -261,6 +261,64 @@ export default function Friends() {
     return () => socket.off('user:status:update', handleStatusUpdate);
   }, [socket, pageVisible]);
 
+  // Real-time user & team modification listener
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      const payload = event.detail;
+      const updatedUser = payload?.user || payload;
+      const targetId = String(payload?.userId || updatedUser?.id || '');
+      if (!targetId) return;
+
+      setMemberList((prev) =>
+        prev.map((m) => {
+          if (userIdOf(m) === targetId) {
+            return {
+              ...m,
+              ...updatedUser,
+              name: updatedUser.name || m.name,
+              jobTitle: updatedUser.jobTitle !== undefined ? updatedUser.jobTitle : m.jobTitle,
+              department: updatedUser.department !== undefined ? updatedUser.department : m.department,
+              teamId: updatedUser.teamId !== undefined ? updatedUser.teamId : m.teamId,
+              teamName: updatedUser.teamName !== undefined ? updatedUser.teamName : m.teamName,
+              isVerified: updatedUser.isVerified !== undefined ? updatedUser.isVerified : m.isVerified,
+              isDev: updatedUser.isDev !== undefined ? updatedUser.isDev : m.isDev,
+              avatarData: updatedUser.avatarData !== undefined ? updatedUser.avatarData : m.avatarData,
+            };
+          }
+          return m;
+        })
+      );
+
+      setRankingRows((prev) =>
+        prev.map((r) => {
+          if (String(r.userId || r.id) === targetId) {
+            return {
+              ...r,
+              userName: updatedUser.name || r.userName,
+              userAvatar: updatedUser.avatarData !== undefined ? updatedUser.avatarData : r.userAvatar,
+              avatarData: updatedUser.avatarData !== undefined ? updatedUser.avatarData : r.avatarData,
+              teamId: updatedUser.teamId !== undefined ? updatedUser.teamId : r.teamId,
+              teamName: updatedUser.teamName !== undefined ? updatedUser.teamName : r.teamName,
+              jobTitle: updatedUser.jobTitle !== undefined ? updatedUser.jobTitle : r.jobTitle,
+            };
+          }
+          return r;
+        })
+      );
+    };
+
+    const handleTeamUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener('workrank:user-updated', handleUserUpdate);
+    window.addEventListener('workrank:team-updated', handleTeamUpdate);
+    return () => {
+      window.removeEventListener('workrank:user-updated', handleUserUpdate);
+      window.removeEventListener('workrank:team-updated', handleTeamUpdate);
+    };
+  }, [loadData]);
+
   // Handle Team Actions
   const handleCreateTeam = async (e) => {
     e?.preventDefault?.();

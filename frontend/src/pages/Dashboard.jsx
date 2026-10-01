@@ -216,6 +216,39 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    const handleUserUpdated = (event) => {
+      const payload = event.detail;
+      const updatedUser = payload?.user || payload;
+      const updatedId = String(payload?.userId || updatedUser?.id || '');
+      if (!updatedId) return;
+
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (String(dashboardUserId(u)) === updatedId) {
+            return {
+              ...u,
+              ...updatedUser,
+              name: updatedUser.name || u.name,
+              avatarData: updatedUser.avatarData !== undefined ? updatedUser.avatarData : u.avatarData,
+              userAvatar: updatedUser.avatarData !== undefined ? updatedUser.avatarData : u.userAvatar,
+              jobTitle: updatedUser.jobTitle !== undefined ? updatedUser.jobTitle : u.jobTitle,
+              department: updatedUser.department !== undefined ? updatedUser.department : u.department,
+              isVerified: updatedUser.isVerified !== undefined ? updatedUser.isVerified : u.isVerified,
+              isDev: updatedUser.isDev !== undefined ? updatedUser.isDev : u.isDev,
+              teamId: updatedUser.teamId !== undefined ? updatedUser.teamId : u.teamId,
+            };
+          }
+          return u;
+        })
+      );
+      setAvatarRefreshKey((k) => k + 1);
+    };
+
+    window.addEventListener('workrank:user-updated', handleUserUpdated);
+    return () => window.removeEventListener('workrank:user-updated', handleUserUpdated);
+  }, []);
+
+  useEffect(() => {
     if (!socket || !pageVisible) return undefined;
 
     const handleOverview = (overview = {}) => {

@@ -215,7 +215,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
             }}
           >
             <div style={{ position: 'relative' }}>
-              <AvatarBox name={top2[nameKey]} userId={top2.userId || top2.id} size={44} idx={1} />
+              <AvatarBox user={top2} name={top2[nameKey]} userId={top2.userId || top2.id} size={44} idx={1} />
               <div style={{
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
                 borderRadius: '50%', background: '#64748b', display: 'flex',
@@ -255,7 +255,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
           >
             <Crown size={24} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 2 }} />
             <div style={{ position: 'relative' }}>
-              <AvatarBox name={top1[nameKey]} userId={top1.userId || top1.id} size={54} idx={0} />
+              <AvatarBox user={top1} name={top1[nameKey]} userId={top1.userId || top1.id} size={54} idx={0} />
               <div style={{
                 position: 'absolute', bottom: -6, left: -6, width: 22, height: 22,
                 borderRadius: '50%', background: '#f59e0b', display: 'flex',
@@ -294,7 +294,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
             }}
           >
             <div style={{ position: 'relative' }}>
-              <AvatarBox name={top3[nameKey]} userId={top3.userId || top3.id} size={42} idx={2} />
+              <AvatarBox user={top3} name={top3[nameKey]} userId={top3.userId || top3.id} size={42} idx={2} />
               <div style={{
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
                 borderRadius: '50%', background: '#b45309', display: 'flex',
@@ -354,7 +354,7 @@ function PodiumTwoColumns({ items = [], nameKey = 'name', scoreKey = 'score', sc
                 }}>
                   {rank}
                 </div>
-                <AvatarBox name={u[nameKey]} userId={u.userId || u.id} size={28} idx={rank - 1} />
+                <AvatarBox user={u} name={u[nameKey]} userId={u.userId || u.id} size={28} idx={rank - 1} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u[nameKey]}</span>
@@ -425,7 +425,7 @@ function MyRankBanner({ currentUser, items = [], nameKey = 'name', scoreKey = 's
         }}>
           #{myRank}
         </div>
-        <AvatarBox name={myEntry[nameKey] || currentUser.name} userId={currentUser.id} size={38} idx={myRank - 1} />
+        <AvatarBox user={myEntry || currentUser} name={myEntry[nameKey] || currentUser.name} userId={currentUser.id} size={38} idx={myRank - 1} />
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
             <span style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -661,6 +661,18 @@ export default function Leaderboard() {
 
   useEffect(() => {
     fetchDataForTab();
+  }, [fetchDataForTab]);
+
+  useEffect(() => {
+    const handleRealtimeUpdate = () => {
+      fetchDataForTab(false);
+    };
+    window.addEventListener('workrank:user-updated', handleRealtimeUpdate);
+    window.addEventListener('workrank:team-updated', handleRealtimeUpdate);
+    return () => {
+      window.removeEventListener('workrank:user-updated', handleRealtimeUpdate);
+      window.removeEventListener('workrank:team-updated', handleRealtimeUpdate);
+    };
   }, [fetchDataForTab]);
 
   return (
@@ -1350,7 +1362,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <AvatarBox name={u.userName} userId={u.userId} size={30} idx={rank - 1} />
+                        <AvatarBox user={u} name={u.userName} userId={u.userId} size={30} idx={rank - 1} />
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{u.userName}</span>
