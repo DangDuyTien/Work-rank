@@ -107,8 +107,8 @@ export function UiProvider({ children }) {
             >
               <Icon size={18} color={color} style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                {item.title && <div style={{ color: '#111111', fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
-                <div style={{ color: '#555555', fontSize: 12, lineHeight: 1.55 }}>{item.message}</div>
+                {item.title && <div style={{ color: '#111111', fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
+                <div style={{ color: '#555555', fontSize: 12, lineHeight: 1.45 }}>{item.message}</div>
               </div>
               <button
                 type="button"
@@ -178,7 +178,7 @@ export function UiProvider({ children }) {
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: '#111111', fontSize: 17, fontWeight: 700, lineHeight: 1.25 }}>
+                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: '#111111', fontSize: 17, fontWeight: 800 }}>
                   {confirmState.title}
                 </h2>
                 <div style={{ color: '#555555', fontSize: 13, lineHeight: 1.55 }}>
@@ -199,7 +199,7 @@ export function UiProvider({ children }) {
                   padding: '9px 16px',
                   cursor: 'pointer',
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   transition: 'background 0.15s ease',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
@@ -218,7 +218,7 @@ export function UiProvider({ children }) {
                   padding: '9px 18px',
                   cursor: 'pointer',
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 800,
                   transition: 'background 0.15s ease',
                 }}
                 onMouseEnter={(e) => {

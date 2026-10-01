@@ -8,9 +8,7 @@ const fs = require('fs');
 
 const routes = [
   { name: 'Home', path: '../src/pages/Home.jsx' },
-  { name: 'Award', path: '../src/pages/Award.jsx' },
   { name: 'Login', path: '../src/pages/Login.jsx' },
-  { name: 'Register', path: '../src/pages/Register.jsx' },
   { name: 'Dashboard', path: '../src/pages/Dashboard.jsx' },
   { name: 'YouTubeOverview', path: '../src/pages/YouTubeOverview.jsx' },
   { name: 'Arena', path: '../src/pages/Arena.jsx' },
@@ -25,7 +23,6 @@ const routes = [
   { name: 'AdminGrand', path: '../src/pages/AdminGrand.jsx' },
   { name: 'AdminOperations', path: '../src/pages/AdminOperations.jsx' },
   { name: 'CapitalBoardGame', path: '../src/pages/CapitalBoardGame.jsx' },
-  { name: 'PublicHeader', path: '../src/components/PublicHeader.jsx' },
   { name: 'Layout', path: '../src/components/Layout.jsx' },
   { name: 'Sidebar', path: '../src/components/Sidebar.jsx' },
   { name: 'VerifiedBadge', path: '../src/components/VerifiedBadge.jsx' },
