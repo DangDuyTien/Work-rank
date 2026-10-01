@@ -124,12 +124,13 @@ export default function Login() {
       {/* ── TOP MINIMAL BRAND BAR ── */}
       <header className="h-16 sm:h-20 border-b border-black/10 px-6 sm:px-10 lg:px-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 text-decoration-none group">
-          <BrandMark size={28} showLabel={false} />
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg sm:text-xl font-bold tracking-tight text-[#111111] uppercase">
+          <BrandMark size={32} showLabel={false} />
+          <div className="flex items-center gap-2.5">
+            <span className="font-['Space_Grotesk'] text-xl sm:text-2xl font-black tracking-tight text-[#111111] uppercase leading-none">
               WORKRANK
             </span>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 bg-black/5 text-[#b45309] rounded-[4px]">
+            <span className="text-black/30 font-light text-base select-none">/</span>
+            <span className="font-['Space_Grotesk'] text-xs font-bold uppercase tracking-[0.14em] text-[#666666] leading-none">
               3WIN MEDIA
             </span>
           </div>
