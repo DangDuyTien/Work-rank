@@ -588,11 +588,11 @@ export default function CompetitionAdmin() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Shield size={22} color="#0284c7" />
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', margin: 0 }}>
               Quản Trị Thi Đấu & Visual Rule Builder
             </h1>
           </div>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: 13, lineHeight: 1.55, color: '#64748b', margin: '4px 0 0 0' }}>
             Visual Rule Builder, Trình mô phỏng tính điểm, Versioning, Read Models & Score Drill-down.
           </p>
         </div>
@@ -624,10 +624,10 @@ export default function CompetitionAdmin() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
                 <Card style={{ padding: 18, background: 'linear-gradient(135deg, rgba(2,132,199,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(2,132,199,0.2)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
                     Mùa Giải Đang Diễn Ra
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', marginBottom: 8 }}>
                     {adminDash?.seasonStats?.name || 'Không có mùa giải Active'}
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -643,10 +643,10 @@ export default function CompetitionAdmin() {
                 </Card>
 
                 <Card style={{ padding: 18, background: 'linear-gradient(135deg, rgba(249,115,22,0.06), rgba(234,88,12,0.03))', border: '1px solid rgba(249,115,22,0.2)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#ea580c', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#ea580c', textTransform: 'uppercase', marginBottom: 6 }}>
                     Grand Championship {adminDash?.grandStats?.year || '2026'}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', marginBottom: 8 }}>
                     {adminDash?.grandStats?.name || 'Grand Championship 2026'}
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -661,13 +661,13 @@ export default function CompetitionAdmin() {
                 </Card>
 
                 <Card style={{ padding: 18, background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
                     Vận Tốc Sự Kiện (Event Throughput)
                   </div>
-                  <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginBottom: 6 }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginBottom: 6, fontFamily: "'JetBrains Mono',monospace" }}>
                     {adminDash?.eventsToday || 0} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>events/24h</span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
                     Hàng đợi Outbox: {adminDash?.outboxQueueSize || 0} pending (Hoạt động ổn định)
                   </div>
                 </Card>
@@ -681,7 +681,7 @@ export default function CompetitionAdmin() {
       {activeTab === 'rules' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
               Danh Sách Bộ Quy Tắc (Rule Sets)
             </h2>
             <Button variant="primary" onClick={() => setCreateRuleSetModalOpen(true)}>
@@ -701,16 +701,16 @@ export default function CompetitionAdmin() {
                 <Card key={rs.id} style={{ padding: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>{rs.name}</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{rs.name}</span>
                       <span style={{ fontSize: 11, fontFamily: 'monospace', padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569' }}>
                         {rs.code}
                       </span>
                       {rs.publishedVersion ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
                           v{rs.publishedVersion.versionNumber} (Đang áp dụng)
                         </span>
                       ) : (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(234,179,8,0.15)', color: '#ca8a04' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(234,179,8,0.15)', color: '#ca8a04' }}>
                           Chưa có bản Publish
                         </span>
                       )}
@@ -756,7 +756,7 @@ export default function CompetitionAdmin() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Radio size={18} color="#0284c7" />
-                <h2 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
                   Giám Sát Tích Hợp & Truy Vết Sự Kiện (Integration Monitor & Event Trace)
                 </h2>
               </div>
@@ -779,10 +779,10 @@ export default function CompetitionAdmin() {
           {integrationHealth && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               <Card style={{ padding: 16, border: `1px solid ${integrationHealth.status === 'HEALTHY' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, background: integrationHealth.status === 'HEALTHY' ? 'rgba(34,197,94,0.04)' : 'rgba(239,68,68,0.04)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: integrationHealth.status === 'HEALTHY' ? '#16a34a' : '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: integrationHealth.status === 'HEALTHY' ? '#16a34a' : '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>
                   TRẠNG THÁI HỆ THỐNG
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a' }}>
                   {integrationHealth.status === 'HEALTHY' ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a' }}>
                       <CheckCircle2 size={18} color="#16a34a" /> HEALTHY
@@ -799,10 +799,10 @@ export default function CompetitionAdmin() {
               </Card>
 
               <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   TỔNG SỐ SỰ KIỆN
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
                   {integrationHealth.summary?.totalEvents || 0}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -811,10 +811,10 @@ export default function CompetitionAdmin() {
               </Card>
 
               <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   ĐÃ XỬ LÝ (PROCESSED)
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#16a34a' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>
                   {integrationHealth.summary?.processedCount || 0}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -823,10 +823,10 @@ export default function CompetitionAdmin() {
               </Card>
 
               <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   SỰ KIỆN THẤT BẠI (FAILED)
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: integrationHealth.summary?.failedCount > 0 ? '#ef4444' : '#64748b' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: integrationHealth.summary?.failedCount > 0 ? '#ef4444' : '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
                   {integrationHealth.summary?.failedCount || 0}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -839,15 +839,15 @@ export default function CompetitionAdmin() {
           {/* Module Breakdown Badges */}
           {integrationHealth?.bySourceModule && (
             <Card style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: '#f8fafc' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Phân Bổ Nguồn:</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Phân Bổ Nguồn:</div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(2,132,199,0.1)', color: '#0284c7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(2,132,199,0.1)', color: '#0284c7', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Video size={13} /> Production: {integrationHealth.bySourceModule.production || 0}
                 </span>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Tv size={13} /> YouTube: {integrationHealth.bySourceModule.youtube || 0}
                 </span>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(168,85,247,0.1)', color: '#a855f7', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(168,85,247,0.1)', color: '#a855f7', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Share2 size={13} /> Community: {integrationHealth.bySourceModule.community || 0}
                 </span>
               </div>
@@ -870,7 +870,7 @@ export default function CompetitionAdmin() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Filter size={15} color="#64748b" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Nguồn:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Nguồn:</span>
                 <select
                   value={integrationSourceFilter}
                   onChange={(e) => setIntegrationSourceFilter(e.target.value)}
@@ -884,7 +884,7 @@ export default function CompetitionAdmin() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Trạng thái:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Trạng thái:</span>
                 <select
                   value={integrationStatusFilter}
                   onChange={(e) => setIntegrationStatusFilter(e.target.value)}
@@ -908,7 +908,7 @@ export default function CompetitionAdmin() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b', fontWeight: 800 }}>
+                    <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>
                       <th style={{ padding: '10px 8px' }}>Event ID</th>
                       <th style={{ padding: '10px 8px' }}>Loại Sự Kiện</th>
                       <th style={{ padding: '10px 8px' }}>Nguồn</th>
@@ -935,7 +935,7 @@ export default function CompetitionAdmin() {
                           <td style={{ padding: '10px 8px', fontFamily: 'monospace', color: '#64748b' }}>
                             {ev.eventId?.slice(0, 8)}...
                           </td>
-                          <td style={{ padding: '10px 8px', fontWeight: 800, color: '#0f172a' }}>
+                          <td style={{ padding: '10px 8px', fontWeight: 600, color: '#0f172a' }}>
                             {ev.eventType}
                           </td>
                           <td style={{ padding: '10px 8px' }}>
@@ -944,7 +944,7 @@ export default function CompetitionAdmin() {
                                 padding: '2px 8px',
                                 borderRadius: 4,
                                 fontSize: 11,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 background:
                                   ev.sourceModule === 'production'
                                     ? 'rgba(2,132,199,0.1)'
@@ -974,7 +974,7 @@ export default function CompetitionAdmin() {
                                 padding: '3px 8px',
                                 borderRadius: 4,
                                 fontSize: 11,
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 background:
                                   ev.status === 'PROCESSED'
                                     ? 'rgba(34,197,94,0.12)'
@@ -1025,14 +1025,14 @@ export default function CompetitionAdmin() {
       {activeTab === 'projections' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {rebuildSuccessMsg && (
-            <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 13, fontWeight: 700 }}>
+            <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 13, fontWeight: 600 }}>
               {rebuildSuccessMsg}
             </div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
                 Giám Sát & Rebuild Read Model Projections
               </h2>
               <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0 0' }}>
@@ -1045,14 +1045,14 @@ export default function CompetitionAdmin() {
           </div>
 
           <Card style={{ padding: 18 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', marginBottom: 12 }}>
               Trạng Thái Drift Detection & Consistency
             </h3>
             {consistencyReport ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <div style={{ padding: 12, borderRadius: 8, background: consistencyReport.overallConsistent ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${consistencyReport.overallConsistent ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: consistencyReport.overallConsistent ? '#16a34a' : '#ef4444' }}>TỔNG THỂ</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, marginTop: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: consistencyReport.overallConsistent ? '#16a34a' : '#ef4444' }}>TỔNG THỂ</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>
                     {consistencyReport.overallConsistent ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a' }}>
                         <CheckCircle2 size={16} color="#16a34a" /> 100% ĐỒNG BỘ
@@ -1065,14 +1065,14 @@ export default function CompetitionAdmin() {
                   </div>
                 </div>
                 <div style={{ padding: 12, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>SEASON LEADERBOARD</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>SEASON LEADERBOARD</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginTop: 4 }}>
                     {consistencyReport.seasonLeaderboardDrift ? `Lệch: ${consistencyReport.seasonLeaderboardDrift.driftCount} mục` : 'Khớp 100%'}
                   </div>
                 </div>
                 <div style={{ padding: 12, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>GRAND CHAMPIONSHIP</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>GRAND CHAMPIONSHIP</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginTop: 4 }}>
                     {consistencyReport.grandLeaderboardDrift ? `Lệch: ${consistencyReport.grandLeaderboardDrift.driftCount} mục` : 'Khớp 100%'}
                   </div>
                 </div>
@@ -1089,7 +1089,7 @@ export default function CompetitionAdmin() {
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
                 Giám Sát Trạng Thái Thi Đấu (State Monitor)
               </h2>
               <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0 0' }}>
@@ -1115,12 +1115,12 @@ export default function CompetitionAdmin() {
               {states.map((st) => (
                 <div key={st.id} style={{ padding: 12, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{st.stateKey}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>{st.stateKey}</span>
                     <span style={{ fontSize: 11, color: '#64748b', marginLeft: 10 }}>
                       Entity: {st.entityType} #{st.entityId}
                     </span>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0284c7' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>
                     Count: {st.stateValue?.count ?? 0}
                   </div>
                 </div>
@@ -1134,7 +1134,7 @@ export default function CompetitionAdmin() {
       {activeTab === 'inspector' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card style={{ padding: 20 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: '0 0 8px 0' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 8px 0' }}>
               Tra Cứu Giao Dịch Điểm (Score Inspector)
             </h2>
             <form onSubmit={handleInspect} style={{ display: 'flex', gap: 10, maxWidth: 400 }}>
@@ -1154,7 +1154,7 @@ export default function CompetitionAdmin() {
           {inspectResult && (
             <Card style={{ padding: 20 }}>
               <div style={{ marginBottom: 14 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
                   Kết Quả Tra Cứu Cho User #{inspectResult.userId}
                 </h3>
                 <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
@@ -1165,10 +1165,10 @@ export default function CompetitionAdmin() {
                 {inspectResult.entries.map((ent) => (
                   <div key={ent.id} style={{ padding: 10, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
                     <div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{ent.reason || 'Event Scoring'}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>{ent.reason || 'Event Scoring'}</span>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{new Date(ent.createdAt).toLocaleString()}</div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 900, color: ent.pointsDelta >= 0 ? '#16a34a' : '#ef4444' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: ent.pointsDelta >= 0 ? '#16a34a' : '#ef4444', fontFamily: "'JetBrains Mono',monospace" }}>
                       {ent.pointsDelta >= 0 ? `+${ent.pointsDelta}` : ent.pointsDelta} XP
                     </div>
                   </div>
@@ -1184,12 +1184,12 @@ export default function CompetitionAdmin() {
       {createRuleSetModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 14px 0' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 14px 0' }}>
               Tạo Rule Set Mới
             </h2>
             <form onSubmit={handleCreateRuleSet} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Tên Rule Set</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Tên Rule Set</label>
                 <input
                   type="text"
                   required
@@ -1201,7 +1201,7 @@ export default function CompetitionAdmin() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Mã Code (Unique)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Mã Code (Unique)</label>
                 <input
                   type="text"
                   required
@@ -1213,7 +1213,7 @@ export default function CompetitionAdmin() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Mô Tả</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Mô Tả</label>
                 <textarea
                   rows={3}
                   placeholder="Mô tả mục đích và phạm vi của bộ quy tắc..."
@@ -1245,15 +1245,15 @@ export default function CompetitionAdmin() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Sliders size={20} color="#0284c7" />
-                  <h2 style={{ fontSize: 17, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                  <h2 style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
                     Visual Rule Builder — {selectedRuleSet.name}
                   </h2>
                   {selectedVersion ? (
-                    <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: selectedVersion.status === 'PUBLISHED' ? '#dcfce7' : '#fef9c3', color: selectedVersion.status === 'PUBLISHED' ? '#15803d' : '#854d0e' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: selectedVersion.status === 'PUBLISHED' ? '#dcfce7' : '#fef9c3', color: selectedVersion.status === 'PUBLISHED' ? '#15803d' : '#854d0e' }}>
                       Version #{selectedVersion.versionNumber} ({selectedVersion.status})
                     </span>
                   ) : (
-                    <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569' }}>
                       Bản Nháp Mới
                     </span>
                   )}
@@ -1279,7 +1279,7 @@ export default function CompetitionAdmin() {
               {/* Version & Window Meta */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18, padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC TỪ (EFFECTIVE FROM)</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC TỪ (EFFECTIVE FROM)</label>
                   <input
                     type="datetime-local"
                     value={builderEffectiveFrom}
@@ -1289,7 +1289,7 @@ export default function CompetitionAdmin() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC ĐẾN (EFFECTIVE TO - TÙY CHỌN)</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC ĐẾN (EFFECTIVE TO - TÙY CHỌN)</label>
                   <input
                     type="datetime-local"
                     value={builderEffectiveTo}
@@ -1318,7 +1318,7 @@ export default function CompetitionAdmin() {
                         <div key={rIdx} style={{ padding: 18, borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>
+                              <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>
                                 {rIdx + 1}
                               </span>
                               <input
@@ -1330,7 +1330,7 @@ export default function CompetitionAdmin() {
                                   updated[rIdx].name = e.target.value;
                                   setBuilderRules(updated);
                                 }}
-                                style={{ fontWeight: 800, fontSize: 14, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 6, padding: '4px 8px' }}
+                                style={{ fontWeight: 600, fontSize: 14, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 6, padding: '4px 8px' }}
                               />
                             </div>
 
@@ -1343,13 +1343,13 @@ export default function CompetitionAdmin() {
 
                           {/* WHEN: Conditions Builder */}
                           <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', marginBottom: 12 }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', marginBottom: 8 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 8 }}>
                               1. ĐIỀU KIỆN KÍCH HOẠT (WHEN)
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                               {conditions.map((c, cIdx) => (
                                 <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Trường:</span>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Trường:</span>
                                   <input
                                     type="text"
                                     value={c.field || ''}
@@ -1413,7 +1413,7 @@ export default function CompetitionAdmin() {
 
                           {/* THEN: Actions Builder */}
                           <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', marginBottom: 12 }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', marginBottom: 8 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#16a34a', textTransform: 'uppercase', marginBottom: 8 }}>
                               2. HÀNH ĐỘNG CỘNG / TRỪ ĐIỂM (THEN)
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -1506,12 +1506,12 @@ export default function CompetitionAdmin() {
               {validationResult && (
                 <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: validationResult.valid ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', color: validationResult.valid ? '#16a34a' : '#ef4444', fontSize: 13 }}>
                   {validationResult.valid ? (
-                    <div style={{ fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <CheckCircle2 size={16} color="#16a34a" /> Cấu trúc Safe AST hợp lệ 100%! Sẵn sàng để Lưu hoặc Xuất Bản.
                     </div>
                   ) : (
                     <div>
-                      <div style={{ fontWeight: 800, marginBottom: 4, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                         <XCircle size={16} color="#ef4444" /> Phát hiện lỗi trong cấu trúc Rule:
                       </div>
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -1571,7 +1571,7 @@ export default function CompetitionAdmin() {
       {simulatorModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 700, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Play size={20} color="#0284c7" /> Trình Mô Phỏng Điểm (Rule Simulator)
             </h2>
             <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>

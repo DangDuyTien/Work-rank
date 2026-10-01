@@ -100,7 +100,7 @@ describe('Phase 6 E2E — Read Models & Company Competition Dashboard Flow', () 
   before(async () => {
     await sequelize.authenticate();
 
-    // Clean tables
+    // Clean tables in reverse dependency order
     await CompetitionActivityProjection.destroy({ where: {} });
     await GrandLeaderboardProjection.destroy({ where: {} });
     await SeasonLeaderboardProjection.destroy({ where: {} });
@@ -112,12 +112,12 @@ describe('Phase 6 E2E — Read Models & Company Competition Dashboard Flow', () 
     await SeasonFrozenResult.destroy({ where: {} });
     await SeasonTeamMember.destroy({ where: {} });
     await SeasonTeam.destroy({ where: {} });
-    await Season.destroy({ where: {} });
-    await GrandChampionship.destroy({ where: {} });
-    await CompetitionState.destroy({ where: {} });
     await ScoreLedger.destroy({ where: {} });
     await CompetitionEvent.destroy({ where: {} });
     await CompetitionAuditLog.destroy({ where: {} });
+    await CompetitionState.destroy({ where: {} });
+    await Season.destroy({ where: {} });
+    await GrandChampionship.destroy({ where: {} });
 
     // Seed Teams
     [teamPhoenix] = await Team.findOrCreate({

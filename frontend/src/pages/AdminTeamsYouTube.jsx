@@ -29,6 +29,9 @@ import {
   HelpCircle,
   ThumbsUp,
   MessageSquare,
+  BarChart2,
+  Clock,
+  Info,
 } from 'lucide-react';
 import { youtube, groups as groupsApi, users as usersApi } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
@@ -72,12 +75,23 @@ function fmtNum(n) {
   return n.toLocaleString('vi-VN');
 }
 
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return 'Chưa đồng bộ';
+  const ms = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'Vừa xong';
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return `${Math.floor(hours / 24)} ngày trước`;
+}
+
 export default function AdminTeamsYouTube() {
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
 
-  const [activeTab, setActiveTab] = useState('teams'); // 'teams' | 'channels' | 'insights'
+  const [activeTab, setActiveTab] = useState('channels'); // 'channels' | 'teams' | 'insights'
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -103,7 +117,8 @@ export default function AdminTeamsYouTube() {
   const [channels, setChannels] = useState([]);
   const [overview, setOverview] = useState(null);
   const [channelSearch, setChannelSearch] = useState('');
-  const [channelStatusFilter, setChannelStatusFilter] = useState('all');
+  const [channelTeamFilter, setChannelTeamFilter] = useState('all'); // 'all' | 'unassigned' | teamId
+  const [channelStatusFilter, setChannelStatusFilter] = useState('all'); // 'all' | 'synced' | 'stale' | 'error'
   const [createChannelModalOpen, setCreateChannelModalOpen] = useState(false);
   const [newChannelForm, setNewChannelForm] = useState({ channelId: '', title: '', customUrl: '', teamId: '' });
   const [savingChannel, setSavingChannel] = useState(false);
@@ -111,6 +126,9 @@ export default function AdminTeamsYouTube() {
   const [syncingAll, setSyncingAll] = useState(false);
   const [linkingChannelId, setLinkingChannelId] = useState(null);
   const [deletingChannelId, setDeletingChannelId] = useState(null);
+
+  // Channel Detail Modal State
+  const [selectedChannelDetail, setSelectedChannelDetail] = useState(null);
 
   // Insights State
   const [topVideos, setTopVideos] = useState([]);
@@ -125,13 +143,14 @@ export default function AdminTeamsYouTube() {
     try {
       const [groupsRes, channelsRes, overviewRes, usersRes] = await Promise.all([
         groupsApi.list().catch(() => ({ data: [] })),
-        youtube.adminGetChannels().catch(() => ({ channels: [] })),
+        youtube.adminGetChannels().catch(() => ({ items: [], channels: [] })),
         youtube.adminGetOverview().catch(() => null),
         usersApi.list({ limit: 300 }).catch(() => ({ data: [] })),
       ]);
 
       setTeams(groupsRes.data || []);
-      setChannels(channelsRes.channels || []);
+      const channelItems = channelsRes.items || channelsRes.channels || (Array.isArray(channelsRes) ? channelsRes : []);
+      setChannels(channelItems);
       setOverview(overviewRes);
       setAllUsers(usersRes.data || []);
     } catch (err) {
@@ -163,7 +182,7 @@ export default function AdminTeamsYouTube() {
     setLoadingVideos(true);
     try {
       const res = await youtube.getTopVideos({ timeframe: videoTimeframe, limit: 30 });
-      setTopVideos(res.videos || []);
+      setTopVideos(res.items || res.videos || []);
     } catch (err) {
       console.error('Failed to load top videos:', err);
     } finally {
@@ -357,6 +376,9 @@ export default function AdminTeamsYouTube() {
         toast.success('Đã hủy gán kênh.');
       }
       await loadData(true);
+      if (selectedChannelDetail && selectedChannelDetail.id === channelId) {
+        setSelectedChannelDetail((prev) => prev ? { ...prev, teamId: teamId ? Number(teamId) : null } : null);
+      }
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể cập nhật liên kết kênh.'));
     } finally {
@@ -367,9 +389,17 @@ export default function AdminTeamsYouTube() {
   const handleSyncChannel = async (channelId, title) => {
     setSyncingChannelId(channelId);
     try {
-      await youtube.adminSyncChannel(channelId);
-      toast.success(`Đã đồng bộ dữ liệu mới nhất cho kênh "${title}"!`);
+      const res = await youtube.adminSyncChannel(channelId);
+      if (res.status === 'ERROR') {
+        toast.error(`Đồng bộ thất bại: ${res.error || 'Lỗi không xác định'}`);
+      } else {
+        toast.success(`Đã đồng bộ dữ liệu mới nhất cho kênh "${title}"!`);
+      }
       await loadData(true);
+      if (selectedChannelDetail && selectedChannelDetail.id === channelId) {
+        const updated = await youtube.getChannelDetails(channelId).catch(() => null);
+        if (updated) setSelectedChannelDetail(updated);
+      }
     } catch (err) {
       toast.error(parseApiError(err, 'Lỗi khi đồng bộ kênh từ YouTube.'));
     } finally {
@@ -404,6 +434,9 @@ export default function AdminTeamsYouTube() {
     try {
       await youtube.adminDeleteChannel(channel.id);
       toast.success(`Đã xóa kênh "${channel.title || channel.channelId}".`);
+      if (selectedChannelDetail && selectedChannelDetail.id === channel.id) {
+        setSelectedChannelDetail(null);
+      }
       await loadData(true);
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể xóa kênh YouTube.'));
@@ -427,12 +460,21 @@ export default function AdminTeamsYouTube() {
     const q = channelSearch.trim().toLowerCase();
     return channels.filter((c) => {
       if (q && !((c.title || '').toLowerCase().includes(q) || (c.channelId || '').toLowerCase().includes(q) || (c.customUrl || '').toLowerCase().includes(q))) return false;
-      if (channelStatusFilter === 'linked' && !c.teamId) return false;
-      if (channelStatusFilter === 'unlinked' && c.teamId) return false;
+      
+      // Team filter
+      if (channelTeamFilter === 'unassigned' && c.teamId) return false;
+      if (channelTeamFilter !== 'all' && channelTeamFilter !== 'unassigned' && Number(c.teamId) !== Number(channelTeamFilter)) return false;
+
+      // Status filter
       if (channelStatusFilter === 'error' && c.syncStatus !== 'ERROR') return false;
+      if (channelStatusFilter === 'synced' && c.syncStatus !== 'SUCCESS') return false;
+      if (channelStatusFilter === 'stale') {
+        const isStale = !c.lastSyncedAt || (Date.now() - new Date(c.lastSyncedAt).getTime() > 2 * 3600000);
+        if (!isStale || c.syncStatus === 'ERROR') return false;
+      }
       return true;
     });
-  }, [channels, channelSearch, channelStatusFilter]);
+  }, [channels, channelSearch, channelTeamFilter, channelStatusFilter]);
 
   const teamMembersList = useMemo(() => {
     if (!membersDrawerTeam) return [];
@@ -443,6 +485,25 @@ export default function AdminTeamsYouTube() {
     if (!membersDrawerTeam) return [];
     return allUsers.filter((u) => Number(u.teamId) !== Number(membersDrawerTeam.id));
   }, [allUsers, membersDrawerTeam]);
+
+  // Unassigned summary calculations
+  const unassignedSummary = useMemo(() => {
+    const unassigned = channels.filter((c) => !c.teamId);
+    let views = 0;
+    let subs = 0;
+    unassigned.forEach((c) => {
+      views += Number(c.views || 0);
+      subs += Number(c.subscribers || 0);
+    });
+    return {
+      count: unassigned.length,
+      views,
+      subs,
+    };
+  }, [channels]);
+
+  const freshness = overview?.kpis?.freshnessStatus || 'FRESH';
+  const lastSyncTime = overview?.kpis?.lastSyncedAt;
 
   if (loading) {
     return (
@@ -455,46 +516,124 @@ export default function AdminTeamsYouTube() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
-      {/* ── HEADER / CONTROL CENTER HERO ── */}
+      {/* ── 1. COMPANY OVERVIEW KPI BAR (TIER 1) ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
-            <Building2 size={14} />
-            Quản trị tổ chức & Kênh xuất bản
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <Tv size={14} />
+            Hệ Thống YouTube Toàn Công Ty
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.15, color: '#0f172a', fontWeight: 900 }}>
-            Quản Lý Đội Nhóm & Kênh YouTube
+          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: '#0f172a', fontWeight: 800 }}>
+            Quản Lý & Phân Tầng Dữ Liệu YouTube
           </h1>
-          <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
-            Phân bổ phòng ban, cơ cấu đội ngũ sản xuất video và kết nối dữ liệu lượt xem YouTube theo thời gian thực.
+          <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
+            Mô hình phân cấp: <strong>Công ty (Company Total)</strong> &rarr; <strong>Đội nhóm (Team Total)</strong> &rarr; <strong>Kênh (Channel Total)</strong>.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Đội Nhóm (Teams)</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>{teams.length}</strong>
+        {/* Freshness & Top Action Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              background: freshness === 'FRESH' ? '#ecfdf5' : (freshness === 'STALE' ? '#fffbeb' : '#fef2f2'),
+              color: freshness === 'FRESH' ? '#059669' : (freshness === 'STALE' ? '#d97706' : '#dc2626'),
+              border: `1px solid ${freshness === 'FRESH' ? '#a7f3d0' : (freshness === 'STALE' ? '#fde68a' : '#fecaca')}`,
+            }}
+          >
+            {freshness === 'FRESH' && <CheckCircle2 size={14} />}
+            {freshness === 'STALE' && <AlertTriangle size={14} />}
+            {freshness === 'FAILED' && <XCircle size={14} />}
+            <span>
+              {freshness === 'FRESH' && `Cập nhật: ${formatRelativeTime(lastSyncTime)}`}
+              {freshness === 'STALE' && `Cần sync: ${formatRelativeTime(lastSyncTime)}`}
+              {freshness === 'FAILED' && 'Lỗi sync gần nhất'}
+            </span>
           </div>
-          <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Kênh YouTube</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#ef4444', fontWeight: 900 }}>{channels.length}</strong>
-          </div>
-          <div style={{ ...CARD, padding: '10px 14px', minWidth: 130 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Tổng Lượt Xem</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#16a34a', fontWeight: 900 }}>
-              {fmtNum(overview?.kpis?.totalViews || 0)}
-            </strong>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => loadData(true)}
+            disabled={refreshing}
+            style={{
+              padding: '8px 12px', background: '#ffffff', color: '#64748b', border: '1px solid rgba(15,23,42,0.15)',
+              fontSize: 12, fontWeight: 600, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            }}
+            title="Làm mới dữ liệu"
+          >
+            <RefreshCw size={13} className={refreshing ? 'spin' : ''} />
+            <span>Làm mới</span>
+          </button>
         </div>
       </section>
+
+      {/* KPI METRIC TILES */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+        <div style={{ ...CARD, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+            <span>Tổng Lượt Xem</span>
+            <Eye size={16} color="#3b82f6" />
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+            {fmtNum(overview?.kpis?.totalViews || 0)}
+          </div>
+          <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 4 }}>
+            +{overview?.kpis?.viewsGrowth30dPct || 0}% tăng trưởng 30D
+          </div>
+        </div>
+
+        <div style={{ ...CARD, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+            <span>Tổng Subscribers</span>
+            <Users size={16} color="#8b5cf6" />
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+            {fmtNum(overview?.kpis?.totalSubscribers || 0)}
+          </div>
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+            Người theo dõi toàn hệ thống
+          </div>
+        </div>
+
+        <div style={{ ...CARD, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+            <span>Tổng Kênh YouTube</span>
+            <Tv size={16} color="#ef4444" />
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+            {channels.length}
+          </div>
+          <div style={{ fontSize: 11, color: unassignedSummary.count > 0 ? '#d97706' : '#64748b', marginTop: 4 }}>
+            {unassignedSummary.count > 0 ? `${unassignedSummary.count} kênh chưa gán đội` : '100% kênh đã gán đội'}
+          </div>
+        </div>
+
+        <div style={{ ...CARD, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+            <span>Đội Nhóm Phụ Trách</span>
+            <Building2 size={16} color="#b45309" />
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+            {teams.length}
+          </div>
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+            Phòng ban & Production Teams
+          </div>
+        </div>
+      </div>
 
       {/* ── TABS NAVIGATION & ACTIONS ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <SegmentedControl
           ariaLabel="Admin Teams & YouTube Tabs"
           options={[
-            { key: 'teams', label: `Đội Nhóm & Phòng Ban (${teams.length})` },
             { key: 'channels', label: `Kênh YouTube & Đồng Bộ (${channels.length})` },
+            { key: 'teams', label: `Đội Nhóm & Phòng Ban (${teams.length})` },
             { key: 'insights', label: 'Top Video & Hiệu Suất' },
           ]}
           value={activeTab}
@@ -502,19 +641,6 @@ export default function AdminTeamsYouTube() {
         />
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {activeTab === 'teams' && (
-            <button
-              type="button"
-              onClick={() => setCreateTeamModalOpen(true)}
-              style={{
-                padding: '8px 16px', background: '#b45309', color: '#ffffff', border: 'none',
-                fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              <Plus size={14} /> Thêm Đội Mới
-            </button>
-          )}
-
           {activeTab === 'channels' && (
             <>
               <button
@@ -523,7 +649,7 @@ export default function AdminTeamsYouTube() {
                 disabled={syncingAll}
                 style={{
                   padding: '8px 14px', background: '#ffffff', color: '#0f172a', border: '1px solid rgba(15,23,42,0.15)',
-                  fontSize: 12, fontWeight: 800, cursor: syncingAll ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 700, cursor: syncingAll ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 }}
               >
                 <RefreshCw size={13} className={syncingAll ? 'spin' : ''} />
@@ -534,7 +660,7 @@ export default function AdminTeamsYouTube() {
                 onClick={() => setCreateChannelModalOpen(true)}
                 style={{
                   padding: '8px 16px', background: '#ef4444', color: '#ffffff', border: 'none',
-                  fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 }}
               >
                 <Plus size={14} /> Thêm Kênh YouTube
@@ -542,24 +668,358 @@ export default function AdminTeamsYouTube() {
             </>
           )}
 
-          <button
-            type="button"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
-            style={{
-              padding: '8px 12px', background: '#ffffff', color: '#64748b', border: '1px solid rgba(15,23,42,0.15)',
-              fontSize: 12, fontWeight: 800, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-            }}
-            title="Làm mới dữ liệu"
-          >
-            <RefreshCw size={13} className={refreshing ? 'spin' : ''} />
-          </button>
+          {activeTab === 'teams' && (
+            <button
+              type="button"
+              onClick={() => setCreateTeamModalOpen(true)}
+              style={{
+                padding: '8px 16px', background: '#b45309', color: '#ffffff', border: 'none',
+                fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <Plus size={14} /> Thêm Đội Mới
+            </button>
+          )}
         </div>
       </div>
 
       <TabTransition key={activeTab} minHeight={450}>
         {/* ══════════════════════════════════════════════════════════════════════
-            TAB 1: TEAMS & DEPARTMENTS MANAGEMENT
+            TAB 1: YOUTUBE CHANNELS & LIVE SYNC MANAGEMENT (TIER 2 & 3)
+           ══════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'channels' && (
+          <div style={{ display: 'grid', gap: 16 }}>
+            {/* ── TIER 2: TEAM SUMMARY BREAKDOWN CARDS ── */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Phân Bổ Kênh Theo Đội Nhóm
+                </span>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                  Bấm vào thẻ đội để lọc danh sách kênh bên dưới
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                {/* "All Teams" Card */}
+                <div
+                  onClick={() => setChannelTeamFilter('all')}
+                  style={{
+                    ...CARD,
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    borderLeft: channelTeamFilter === 'all' ? '4px solid #0f172a' : '4px solid #cbd5e1',
+                    background: channelTeamFilter === 'all' ? '#f8fafc' : '#ffffff',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Tất Cả Kênh</span>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: '#e2e8f0', color: '#334155', fontWeight: 800 }}>
+                      {channels.length}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                    {fmtNum(overview?.kpis?.totalViews || 0)} views
+                  </div>
+                </div>
+
+                {/* Team Cards */}
+                {teams.map((t) => {
+                  const teamChannels = channels.filter((c) => Number(c.teamId) === Number(t.id));
+                  let tViews = 0;
+                  teamChannels.forEach((c) => { tViews += Number(c.views || 0); });
+                  const isSelected = String(channelTeamFilter) === String(t.id);
+
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => setChannelTeamFilter(isSelected ? 'all' : String(t.id))}
+                      style={{
+                        ...CARD,
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                        borderLeft: `4px solid ${t.color || '#3b82f6'}`,
+                        background: isSelected ? 'rgba(59,130,246,0.06)' : '#ffffff',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {t.name}
+                        </span>
+                        <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 800 }}>
+                          {teamChannels.length}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                        {fmtNum(tViews)} views · {t.department}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Unassigned Pool Card */}
+                <div
+                  onClick={() => setChannelTeamFilter(channelTeamFilter === 'unassigned' ? 'all' : 'unassigned')}
+                  style={{
+                    ...CARD,
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    borderLeft: '4px solid #f59e0b',
+                    background: channelTeamFilter === 'unassigned' ? 'rgba(245,158,11,0.08)' : '#ffffff',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#d97706' }}>Chưa Gán Đội</span>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(245,158,11,0.15)', color: '#b45309', fontWeight: 800 }}>
+                      {unassignedSummary.count}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                    {fmtNum(unassignedSummary.views)} views (Tính vào Cty)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── TIER 3: CHANNELS SEARCH, FILTER & TABLE ── */}
+            <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input
+                  value={channelSearch}
+                  onChange={(e) => setChannelSearch(e.target.value)}
+                  placeholder="Tìm theo tên kênh, Channel ID hoặc Custom URL..."
+                  style={{ width: '100%', padding: '7px 12px 7px 32px', fontSize: 12, border: '1px solid rgba(15,23,42,0.1)', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Team Filter Dropdown */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Đội:</span>
+                  <select
+                    value={channelTeamFilter}
+                    onChange={(e) => setChannelTeamFilter(e.target.value)}
+                    style={{ padding: '5px 8px', fontSize: 11, border: '1px solid rgba(15,23,42,0.12)', background: '#fff' }}
+                  >
+                    <option value="all">Tất cả đội ({channels.length})</option>
+                    {teams.map((t) => {
+                      const count = channels.filter((c) => Number(c.teamId) === Number(t.id)).length;
+                      return <option key={t.id} value={String(t.id)}>{t.name} ({count})</option>;
+                    })}
+                    <option value="unassigned">Chưa gán đội ({unassignedSummary.count})</option>
+                  </select>
+                </div>
+
+                {/* Status Filter Buttons */}
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[
+                    ['all', 'Tất cả trạng thái'],
+                    ['synced', 'Đã sync'],
+                    ['stale', 'Cần sync'],
+                    ['error', 'Lỗi sync'],
+                  ].map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setChannelStatusFilter(val)}
+                      style={{
+                        padding: '5px 8px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        border: channelStatusFilter === val ? '1px solid #0f172a' : '1px solid rgba(15,23,42,0.1)',
+                        background: channelStatusFilter === val ? '#0f172a' : '#ffffff',
+                        color: channelStatusFilter === val ? '#ffffff' : '#64748b',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Channels Table */}
+            <div style={{ ...CARD, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Kênh YouTube</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Đội Phụ Trách</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Lượt Xem (Views)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Đăng Ký (Subs)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Trạng Thái Sync</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredChannels.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                        Chưa có kênh YouTube nào khớp với điều kiện lọc hiện tại.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredChannels.map((ch) => {
+                      const isSyncing = syncingChannelId === ch.id;
+                      const hasError = ch.syncStatus === 'ERROR';
+                      const assignedTeam = teams.find((t) => Number(t.id) === Number(ch.teamId));
+                      const isNeverSynced = !ch.lastSyncedAt;
+                      const isStale = ch.lastSyncedAt && (Date.now() - new Date(ch.lastSyncedAt).getTime() > 2 * 3600000);
+
+                      return (
+                        <tr key={ch.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+                          {/* 1. Channel Info */}
+                          <td style={{ padding: '12px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
+                                <Tv size={18} />
+                              </div>
+                              <div>
+                                <div
+                                  onClick={() => setSelectedChannelDetail(ch)}
+                                  style={{ fontWeight: 800, color: '#0f172a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                                  title="Xem chi tiết kênh"
+                                >
+                                  <span>{ch.title || ch.channelId}</span>
+                                  {ch.customUrl && (
+                                    <span style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>
+                                      ({ch.customUrl})
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <span>ID: {ch.channelId}</span>
+                                  {ch.customUrl && (
+                                    <a
+                                      href={`https://youtube.com/${ch.customUrl.startsWith('@') ? ch.customUrl : `@${ch.customUrl}`}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ color: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: 2, textDecoration: 'none' }}
+                                    >
+                                      YouTube <ExternalLink size={9} />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 2. Team Mapping */}
+                          <td style={{ padding: '12px 14px' }}>
+                            <select
+                              value={ch.teamId || ''}
+                              onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
+                              disabled={linkingChannelId === ch.id}
+                              style={{
+                                padding: '5px 8px', fontSize: 11, fontWeight: 700,
+                                border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(180,83,9,0.06)' : '#fffbeb',
+                                color: assignedTeam ? '#b45309' : '#d97706',
+                                opacity: linkingChannelId === ch.id ? 0.6 : 1,
+                                cursor: linkingChannelId === ch.id ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              <option value="">-- Chưa gán đội --</option>
+                              {teams.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
+                              ))}
+                            </select>
+                          </td>
+
+                          {/* 3. Views */}
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a', fontSize: 13 }}>
+                            {fmtNum(ch.views || 0)}
+                          </td>
+
+                          {/* 4. Subs */}
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#16a34a', fontSize: 13 }}>
+                            {fmtNum(ch.subscribers || 0)}
+                          </td>
+
+                          {/* 5. Sync Status */}
+                          <td style={{ padding: '12px 14px' }}>
+                            {hasError ? (
+                              <span
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 800, cursor: 'help' }}
+                                title={ch.lastSyncError || 'Lỗi đồng bộ từ YouTube API'}
+                              >
+                                <XCircle size={12} /> Lỗi Sync
+                              </span>
+                            ) : isNeverSynced ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#f1f5f9', color: '#64748b', fontSize: 10, fontWeight: 800 }}>
+                                <Clock size={12} /> Chưa Sync
+                              </span>
+                            ) : isStale ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fffbeb', color: '#d97706', fontSize: 10, fontWeight: 800 }}>
+                                <AlertTriangle size={12} /> Cần Sync lại
+                              </span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontSize: 10, fontWeight: 800 }}>
+                                <CheckCircle2 size={12} /> Hoạt Động
+                              </span>
+                            )}
+                            <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                              {ch.lastSyncedAt ? formatRelativeTime(ch.lastSyncedAt) : 'Chưa sync'}
+                            </div>
+                          </td>
+
+                          {/* 6. Actions */}
+                          <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: 6 }}>
+                              <button
+                                type="button"
+                                onClick={() => handleSyncChannel(ch.id, ch.title || ch.channelId)}
+                                disabled={isSyncing}
+                                style={{
+                                  padding: '5px 8px', background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
+                                  fontSize: 11, fontWeight: 700, color: '#b45309', cursor: isSyncing ? 'not-allowed' : 'pointer',
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                }}
+                                title="Đồng bộ lại từ YouTube API"
+                              >
+                                <RefreshCw size={11} className={isSyncing ? 'spin' : ''} />
+                                {isSyncing ? 'Sync...' : 'Sync'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedChannelDetail(ch)}
+                                style={{
+                                  padding: '5px 8px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.12)',
+                                  fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer',
+                                }}
+                                title="Xem chi tiết kênh"
+                              >
+                                Chi tiết
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteChannel(ch)}
+                                disabled={deletingChannelId === ch.id}
+                                style={{
+                                  padding: '5px 8px', background: '#fee2e2', border: 'none',
+                                  fontSize: 11, fontWeight: 700, color: '#dc2626',
+                                  cursor: deletingChannelId === ch.id ? 'not-allowed' : 'pointer',
+                                  opacity: deletingChannelId === ch.id ? 0.5 : 1,
+                                }}
+                                title="Xóa kênh"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════════
+            TAB 2: TEAMS & DEPARTMENTS MANAGEMENT
            ══════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'teams' && (
           <div style={{ display: 'grid', gap: 14 }}>
@@ -575,7 +1035,7 @@ export default function AdminTeamsYouTube() {
                 />
               </div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b' }}>Phòng ban:</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Phòng ban:</span>
                 <select
                   value={teamDeptFilter}
                   onChange={(e) => setTeamDeptFilter(e.target.value)}
@@ -597,6 +1057,12 @@ export default function AdminTeamsYouTube() {
                 {filteredTeams.map((team) => {
                   const teamChannels = channels.filter((c) => Number(c.teamId) === Number(team.id));
                   const membersCount = allUsers.filter((u) => Number(u.teamId) === Number(team.id)).length;
+                  let tViews = 0;
+                  let tSubs = 0;
+                  teamChannels.forEach((c) => {
+                    tViews += Number(c.views || 0);
+                    tSubs += Number(c.subscribers || 0);
+                  });
 
                   return (
                     <div
@@ -613,10 +1079,10 @@ export default function AdminTeamsYouTube() {
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                           <div>
-                            <span style={{ fontSize: 10, fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                               {team.department || 'Media & Content'}
                             </span>
-                            <h3 style={{ margin: '2px 0 0', fontSize: 17, fontWeight: 900, color: '#0f172a' }}>
+                            <h3 style={{ margin: '2px 0 0', fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
                               {team.name}
                             </h3>
                           </div>
@@ -652,33 +1118,37 @@ export default function AdminTeamsYouTube() {
                           </div>
                         </div>
 
-                        <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.4 }}>
+                        <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
                           {team.description || 'Chưa có mô tả chi tiết nhiệm vụ của đội nhóm.'}
                         </p>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '10px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', marginBottom: 14 }}>
                           <div>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Nhân sự</span>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Nhân sự</span>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                               <Users size={14} color="#b45309" /> {membersCount} thành viên
                             </div>
                           </div>
                           <div>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Kênh YouTube</span>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Tv size={14} color="#ef4444" /> {teamChannels.length} kênh
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Kênh YouTube</span>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <Tv size={14} color="#ef4444" /> {teamChannels.length} kênh ({fmtNum(tViews)} views)
                             </div>
                           </div>
                         </div>
 
                         {teamChannels.length > 0 && (
                           <div style={{ marginBottom: 12 }}>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
                               Kênh xuất bản trực thuộc:
                             </span>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                               {teamChannels.map((tc) => (
-                                <span key={tc.id} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <span
+                                  key={tc.id}
+                                  onClick={() => setSelectedChannelDetail(tc)}
+                                  style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                                >
                                   <Tv size={11} /> {tc.title || tc.channelId}
                                 </span>
                               ))}
@@ -691,7 +1161,7 @@ export default function AdminTeamsYouTube() {
                         <button
                           type="button"
                           onClick={() => openMembersDrawer(team)}
-                          style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                         >
                           <Users size={13} /> Quản lý thành viên ({membersCount}) <ChevronRight size={13} />
                         </button>
@@ -706,190 +1176,6 @@ export default function AdminTeamsYouTube() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════════════
-            TAB 2: YOUTUBE CHANNELS & LIVE SYNC MANAGEMENT
-           ══════════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'channels' && (
-          <div style={{ display: 'grid', gap: 14 }}>
-            {/* Search & Filter Bar */}
-            <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: '1 1 260px' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input
-                  value={channelSearch}
-                  onChange={(e) => setChannelSearch(e.target.value)}
-                  placeholder="Tìm theo tên kênh, Channel ID hoặc Custom URL..."
-                  style={{ width: '100%', padding: '7px 12px 7px 32px', fontSize: 12, border: '1px solid rgba(15,23,42,0.1)', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                {[
-                  ['all', 'Tất cả'],
-                  ['linked', 'Đã gán đội'],
-                  ['unlinked', 'Chưa gán đội'],
-                  ['error', 'Lỗi đồng bộ'],
-                ].map(([val, label]) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setChannelStatusFilter(val)}
-                    style={{
-                      padding: '5px 10px',
-                      fontSize: 11,
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      border: channelStatusFilter === val ? '1px solid #0f172a' : '1px solid rgba(15,23,42,0.1)',
-                      background: channelStatusFilter === val ? '#0f172a' : '#ffffff',
-                      color: channelStatusFilter === val ? '#ffffff' : '#64748b',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Channels Table */}
-            <div style={{ ...CARD, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Kênh YouTube</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đội Phụ Trách</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Lượt Xem (Views)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Đăng Ký (Subs)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Trạng Thái Sync</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredChannels.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
-                        Chưa có kênh YouTube nào khớp với điều kiện tìm kiếm.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredChannels.map((ch) => {
-                      const isSyncing = syncingChannelId === ch.id;
-                      const hasError = ch.syncStatus === 'ERROR';
-                      const assignedTeam = teams.find((t) => Number(t.id) === Number(ch.teamId));
-
-                      return (
-                        <tr key={ch.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                          {/* 1. Channel Info */}
-                          <td style={{ padding: '12px 14px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>
-                                <Tv size={18} />
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 900, color: '#0f172a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                  <span>{ch.title || ch.channelId}</span>
-                                  {ch.customUrl && (
-                                    <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>
-                                      ({ch.customUrl})
-                                    </span>
-                                  )}
-                                </div>
-                                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
-                                  ID: {ch.channelId}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* 2. Team Mapping */}
-                          <td style={{ padding: '12px 14px' }}>
-                            <select
-                              value={ch.teamId || ''}
-                              onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
-                              disabled={linkingChannelId === ch.id}
-                              style={{
-                                padding: '5px 8px', fontSize: 11, fontWeight: 800,
-                                border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(180,83,9,0.06)' : '#fff',
-                                color: assignedTeam ? '#b45309' : '#64748b',
-                                opacity: linkingChannelId === ch.id ? 0.6 : 1,
-                                cursor: linkingChannelId === ch.id ? 'not-allowed' : 'pointer',
-                              }}
-                            >
-                              <option value="">-- Chưa gán đội --</option>
-                              {teams.map((t) => (
-                                <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
-                              ))}
-                            </select>
-                          </td>
-
-                          {/* 3. Views */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a', fontSize: 13 }}>
-                            {fmtNum(ch.views || 0)}
-                          </td>
-
-                          {/* 4. Subs */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#16a34a', fontSize: 13 }}>
-                            {fmtNum(ch.subscribers || 0)}
-                          </td>
-
-                          {/* 5. Sync Status */}
-                          <td style={{ padding: '12px 14px' }}>
-                            {hasError ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 900 }} title={ch.lastSyncError || 'Lỗi đồng bộ'}>
-                                <XCircle size={12} /> Lỗi Sync
-                              </span>
-                            ) : (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontSize: 10, fontWeight: 900 }}>
-                                <CheckCircle2 size={12} /> Hoạt động
-                              </span>
-                            )}
-                            <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
-                              {ch.lastSyncedAt ? new Date(ch.lastSyncedAt).toLocaleDateString('vi-VN') : 'Chưa sync'}
-                            </div>
-                          </td>
-
-                          {/* 6. Actions */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                            <div style={{ display: 'inline-flex', gap: 6 }}>
-                              <button
-                                type="button"
-                                onClick={() => handleSyncChannel(ch.id, ch.title || ch.channelId)}
-                                disabled={isSyncing}
-                                style={{
-                                  padding: '5px 8px', background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)',
-                                  fontSize: 11, fontWeight: 800, color: '#b45309', cursor: isSyncing ? 'not-allowed' : 'pointer',
-                                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                                }}
-                                title="Đồng bộ lại từ YouTube API"
-                              >
-                                <RefreshCw size={11} className={isSyncing ? 'spin' : ''} />
-                                {isSyncing ? 'Sync...' : 'Sync'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteChannel(ch)}
-                                disabled={deletingChannelId === ch.id}
-                                style={{
-                                  padding: '5px 8px', background: '#fee2e2', border: 'none',
-                                  fontSize: 11, fontWeight: 800, color: '#dc2626',
-                                  cursor: deletingChannelId === ch.id ? 'not-allowed' : 'pointer',
-                                  opacity: deletingChannelId === ch.id ? 0.5 : 1,
-                                }}
-                                title="Xóa kênh"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════
             TAB 3: TOP VIDEOS & PRODUCTION INSIGHTS
            ══════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'insights' && (
@@ -898,7 +1184,7 @@ export default function AdminTeamsYouTube() {
             <div style={{ ...CARD, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Flame size={18} color="#ef4444" />
-                <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>Top Video Xuất Sắc Toàn Công Ty</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>Top Video Xuất Sắc Toàn Công Ty</span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[
@@ -911,7 +1197,7 @@ export default function AdminTeamsYouTube() {
                     type="button"
                     onClick={() => setVideoTimeframe(tf)}
                     style={{
-                      padding: '5px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                      padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                       border: videoTimeframe === tf ? '1px solid #ef4444' : '1px solid rgba(15,23,42,0.1)',
                       background: videoTimeframe === tf ? '#ef4444' : '#ffffff',
                       color: videoTimeframe === tf ? '#ffffff' : '#64748b',
@@ -942,11 +1228,11 @@ export default function AdminTeamsYouTube() {
                       #{idx + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 900, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {vid.title}
                       </h4>
                       <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
-                        Kênh: <strong>{vid.channelTitle || 'YouTube'}</strong> {vid.teamName && `· Đội: ${vid.teamName}`}
+                        Kênh: <strong>{vid.channel?.title || vid.channelTitle || 'YouTube'}</strong> {vid.channel?.team?.name && `· Đội: ${vid.channel.team.name}`}
                       </div>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 12 }}>
                         <span style={{ fontWeight: 900, color: '#ef4444' }}>
@@ -979,6 +1265,128 @@ export default function AdminTeamsYouTube() {
           </div>
         )}
       </TabTransition>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          DRAWER / MODAL: CHI TIẾT KÊNH YOUTUBE
+         ══════════════════════════════════════════════════════════════════════ */}
+      {selectedChannelDetail && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#ffffff', width: '100%', maxWidth: 540, border: '1px solid rgba(15,23,42,0.15)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Tv size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                    {selectedChannelDetail.title || selectedChannelDetail.channelId}
+                  </h3>
+                  <span style={{ fontSize: 11, color: '#64748b' }}>ID: {selectedChannelDetail.channelId}</span>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedChannelDetail(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: 20, overflowY: 'auto', display: 'grid', gap: 16 }}>
+              {/* Snapshot Tiles */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Views</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>
+                    {fmtNum(selectedChannelDetail.views || 0)}
+                  </div>
+                </div>
+                <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#16a34a', marginTop: 4 }}>
+                    {fmtNum(selectedChannelDetail.subscribers || 0)}
+                  </div>
+                </div>
+                <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Videos</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#8b5cf6', marginTop: 4 }}>
+                    {selectedChannelDetail.videosCount || 0}
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Assignment Field */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                  Đội Nhóm Phụ Trách
+                </label>
+                <select
+                  value={selectedChannelDetail.teamId || ''}
+                  onChange={(e) => handleLinkChannel(selectedChannelDetail.id, e.target.value)}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#fff' }}
+                >
+                  <option value="">-- Chưa gán đội (Kênh tự do) --</option>
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sync Status Info */}
+              <div style={{ padding: 12, background: selectedChannelDetail.syncStatus === 'ERROR' ? '#fee2e2' : '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: selectedChannelDetail.syncStatus === 'ERROR' ? '#dc2626' : '#475569' }}>
+                  Trạng Thái Đồng Bộ: {selectedChannelDetail.syncStatus || 'IDLE'}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                  Lần sync gần nhất: {selectedChannelDetail.lastSyncedAt ? new Date(selectedChannelDetail.lastSyncedAt).toLocaleString('vi-VN') : 'Chưa có'}
+                </div>
+                {selectedChannelDetail.lastSyncError && (
+                  <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4, fontWeight: 600 }}>
+                    Lỗi: {selectedChannelDetail.lastSyncError}
+                  </div>
+                )}
+              </div>
+
+              {/* Links */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {selectedChannelDetail.customUrl && (
+                  <a
+                    href={`https://youtube.com/${selectedChannelDetail.customUrl.startsWith('@') ? selectedChannelDetail.customUrl : `@${selectedChannelDetail.customUrl}`}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: '8px 14px', background: '#fee2e2', color: '#ef4444', textDecoration: 'none',
+                      fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6,
+                    }}
+                  >
+                    Mở YouTube <ExternalLink size={13} />
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleSyncChannel(selectedChannelDetail.id, selectedChannelDetail.title || selectedChannelDetail.channelId)}
+                  disabled={syncingChannelId === selectedChannelDetail.id}
+                  style={{
+                    padding: '8px 14px', background: '#b45309', color: '#ffffff', border: 'none',
+                    fontSize: 12, fontWeight: 700, cursor: syncingChannelId === selectedChannelDetail.id ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                  }}
+                >
+                  <RefreshCw size={13} className={syncingChannelId === selectedChannelDetail.id ? 'spin' : ''} />
+                  {syncingChannelId === selectedChannelDetail.id ? 'Đang sync...' : 'Đồng bộ ngay'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setSelectedChannelDetail(null)}
+                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════════
           MODAL: TẠO ĐỘI NHÓM MỚI
@@ -1263,14 +1671,14 @@ export default function AdminTeamsYouTube() {
             <form onSubmit={handleCreateChannel} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
-                  Mã Kênh YouTube (Channel ID) *
+                  Mã Kênh YouTube (Channel ID hoặc Handle) *
                 </label>
                 <input
                   type="text"
                   required
                   value={newChannelForm.channelId}
                   onChange={(e) => setNewChannelForm({ ...newChannelForm, channelId: e.target.value })}
-                  placeholder="Ví dụ: UCxxxxxxxxxxxx hoặc channel_id_01"
+                  placeholder="Ví dụ: UCxxxxxxxxxxxx hoặc @ten_kenh"
                   style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
                 />
               </div>

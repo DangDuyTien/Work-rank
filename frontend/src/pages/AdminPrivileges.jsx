@@ -84,7 +84,7 @@ function Avatar({ user, size = 40 }) {
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: size * 0.35,
-      fontWeight: 900,
+      fontWeight: 600,
       flexShrink: 0,
     }}>
       {avatar ? <img src={avatar} alt={`Ảnh ${user?.name}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsFromName(user?.name || user?.email || 'U')}
@@ -419,39 +419,39 @@ export default function AdminPrivileges() {
       {/* ── HEADER & STATS ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <BadgeCheck size={14} />
             Quản trị nhân sự & Đặc quyền vận hành
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.15, color: '#0f172a', fontWeight: 900 }}>
+          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: '#0f172a', fontWeight: 700 }}>
             Nhân sự, Chức danh & Danh hiệu Vinh danh
           </h1>
-          <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+          <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
             Quản lý hồ sơ nhân viên, phân quyền RBAC, cấp tích xanh (Verified), Dev badge, chức danh công tác và trao giải thưởng MVP / Champion.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Tổng nhân sự</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#0f172a', fontWeight: 900 }}>{pagination?.total ?? users.length}</strong>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tổng nhân sự</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#0f172a', fontWeight: 700 }}>{pagination?.total ?? users.length}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Tích xanh</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>{verifiedCount}</strong>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tích xanh</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#b45309', fontWeight: 700 }}>{verifiedCount}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Dev Team</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#0891b2', fontWeight: 900 }}>{devCount}</strong>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Dev Team</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#0891b2', fontWeight: 700 }}>{devCount}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Quản trị viên</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#dc2626', fontWeight: 900 }}>{adminCount}</strong>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Quản trị viên</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#dc2626', fontWeight: 700 }}>{adminCount}</strong>
           </div>
           <button
             type="button"
             onClick={() => setCreateModalOpen(true)}
             style={{
-              minHeight: 44,
+              minHeight: 40,
               padding: '0 16px',
               background: '#b45309',
               color: '#ffffff',
@@ -459,12 +459,12 @@ export default function AdminPrivileges() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              fontSize: 13,
-              fontWeight: 900,
+              fontSize: 12,
+              fontWeight: 600,
               cursor: 'pointer',
             }}
           >
-            <UserPlus size={16} /> Thêm Nhân Sự Mới
+            <UserPlus size={15} /> Thêm Nhân Sự Mới
           </button>
         </div>
       </section>
@@ -477,7 +477,7 @@ export default function AdminPrivileges() {
             value={query}
             onChange={onSearchChange}
             placeholder="Tìm theo tên, email hoặc WR-0001..."
-            style={{ width: '100%', minHeight: 38, border: '1px solid rgba(15,23,42,0.1)', padding: '0 12px 0 34px', outline: 'none', fontSize: 13, fontWeight: 700 }}
+            style={{ width: '100%', minHeight: 38, border: '1px solid rgba(15,23,42,0.1)', padding: '0 12px 0 34px', outline: 'none', fontSize: 12, fontWeight: 500 }}
           />
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -499,7 +499,7 @@ export default function AdminPrivileges() {
                 color: filter === key ? '#ffffff' : '#64748b',
                 padding: '0 12px',
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
@@ -510,7 +510,7 @@ export default function AdminPrivileges() {
             type="button"
             onClick={() => loadData(query, page)}
             disabled={loading}
-            style={{ minHeight: 34, border: '1px solid rgba(180,83,9,0.2)', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, cursor: loading ? 'wait' : 'pointer' }}
+            style={{ minHeight: 34, border: '1px solid rgba(180,83,9,0.2)', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}
           >
             <RefreshCw size={13} className={loading ? 'spin' : ''} />
             Làm mới
@@ -521,9 +521,9 @@ export default function AdminPrivileges() {
       {/* ── USER LIST ── */}
       <section style={{ display: 'grid', gap: 10 }}>
         {loading ? (
-          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 800 }}>Đang tải danh sách nhân sự...</div>
+          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 600 }}>Đang tải danh sách nhân sự...</div>
         ) : filteredUsers.length === 0 ? (
-          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 800 }}>Không tìm thấy nhân viên phù hợp.</div>
+          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 600 }}>Không tìm thấy nhân viên phù hợp.</div>
         ) : filteredUsers.map((u) => {
           const userId = String(u.id);
           const pending = Boolean(saving[userId]);
@@ -537,21 +537,21 @@ export default function AdminPrivileges() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <Avatar user={u} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#0f172a', fontSize: 13, fontWeight: 900 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#0f172a', fontSize: 13, fontWeight: 600 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || `User #${u.id}`}</span>
                     {userHasVerified && <VerifiedBadge size={14} />}
                     {userHasDev && (
-                      <span style={{ fontSize: 9, padding: '1px 5px', background: '#ecfeff', color: '#0891b2', border: '1px solid rgba(8,145,178,0.2)', fontWeight: 900 }}>
+                      <span style={{ fontSize: 10, padding: '1px 5px', background: '#ecfeff', color: '#0891b2', border: '1px solid rgba(8,145,178,0.2)', fontWeight: 700 }}>
                         DEV
                       </span>
                     )}
                     {isAdmin && (
-                      <span style={{ fontSize: 9, padding: '1px 5px', background: '#fef2f2', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', fontWeight: 900 }}>
+                      <span style={{ fontSize: 10, padding: '1px 5px', background: '#fef2f2', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', fontWeight: 700 }}>
                         ADMIN
                       </span>
                     )}
                   </div>
-                  <div style={{ marginTop: 2, color: '#64748b', fontSize: 11, fontWeight: 700 }}>
+                  <div style={{ marginTop: 2, color: '#64748b', fontSize: 11, fontWeight: 500 }}>
                     WR-{String(u.id).padStart(4, '0')} · {u.email || 'Chưa có email'}
                   </div>
                 </div>
@@ -571,7 +571,7 @@ export default function AdminPrivileges() {
                   type="button"
                   onClick={() => openEditModal(u)}
                   title="Chỉnh sửa toàn bộ hồ sơ nhân sự"
-                  style={{ padding: '4px 8px', background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', fontSize: 11, fontWeight: 800, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ padding: '4px 8px', background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <Edit3 size={11} /> Sửa
                 </button>
@@ -591,7 +591,7 @@ export default function AdminPrivileges() {
                     color: userHasVerified ? '#b45309' : '#64748b',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    fontSize: 11, fontWeight: 900, cursor: pending ? 'wait' : 'pointer',
+                    fontSize: 11, fontWeight: 600, cursor: pending ? 'wait' : 'pointer',
                   }}
                 >
                   <BadgeCheck size={13} />
@@ -610,7 +610,7 @@ export default function AdminPrivileges() {
                     color: userHasDev ? '#0891b2' : '#64748b',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    fontSize: 11, fontWeight: 900, cursor: pending ? 'wait' : 'pointer',
+                    fontSize: 11, fontWeight: 600, cursor: pending ? 'wait' : 'pointer',
                   }}
                 >
                   <Code size={13} strokeWidth={2.5} />
@@ -629,7 +629,7 @@ export default function AdminPrivileges() {
                     color: '#7c3aed',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    fontSize: 11, fontWeight: 900, cursor: 'pointer',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
                   }}
                 >
                   <Star size={13} />
@@ -648,7 +648,7 @@ export default function AdminPrivileges() {
                     color: '#d97706',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    fontSize: 11, fontWeight: 900, cursor: 'pointer',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
                   }}
                 >
                   <Trophy size={13} />
@@ -699,18 +699,18 @@ export default function AdminPrivileges() {
             type="button"
             disabled={page <= 1}
             onClick={() => { const p = page - 1; setPage(p); loadData(query, p); }}
-            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page <= 1 ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 800, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page <= 1 ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
           >
             « Trước
           </button>
-          <span style={{ fontSize: 12, color: '#64748b', fontWeight: 800, padding: '0 8px' }}>
+          <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600, padding: '0 8px' }}>
             Trang {page} / {pagination.totalPages} ({pagination.total} nhân sự)
           </span>
           <button
             type="button"
             disabled={page >= pagination.totalPages}
             onClick={() => { const p = page + 1; setPage(p); loadData(query, p); }}
-            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page >= pagination.totalPages ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 800, cursor: page >= pagination.totalPages ? 'not-allowed' : 'pointer' }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page >= pagination.totalPages ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page >= pagination.totalPages ? 'not-allowed' : 'pointer' }}
           >
             Sau »
           </button>
@@ -728,7 +728,7 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <UserPlus size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Thêm Nhân Sự Mới Vào Hệ Thống
                 </h3>
               </div>
@@ -743,7 +743,7 @@ export default function AdminPrivileges() {
 
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Họ và Tên Nhân Viên *
                 </label>
                 <input
@@ -758,7 +758,7 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Email Đăng Nhập *
                   </label>
                   <input
@@ -771,7 +771,7 @@ export default function AdminPrivileges() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Mật Khẩu Khởi Tạo *
                   </label>
                   <input
@@ -787,7 +787,7 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Chức Danh & Bậc Huy Hiệu
                   </label>
                   <select
@@ -808,7 +808,7 @@ export default function AdminPrivileges() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Phòng Ban Trực Thuộc
                   </label>
                   <select
@@ -827,7 +827,7 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Vai Trò Quyền Hạn (RBAC)
                   </label>
                   <select
@@ -840,7 +840,7 @@ export default function AdminPrivileges() {
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={createForm.isVerified}
@@ -848,7 +848,7 @@ export default function AdminPrivileges() {
                     />
                     <span>Cấp Tích Xanh (Verified)</span>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={createForm.isDev}
@@ -863,7 +863,7 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -872,7 +872,7 @@ export default function AdminPrivileges() {
                   disabled={creating}
                   style={{
                     padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
-                    fontSize: 12, fontWeight: 900, cursor: creating ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -895,7 +895,7 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Chỉnh Sửa Hồ Sơ Nhân Sự #{editModalUser.id}
                 </h3>
               </div>
@@ -911,7 +911,7 @@ export default function AdminPrivileges() {
             <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Họ và Tên *
                   </label>
                   <input
@@ -923,7 +923,7 @@ export default function AdminPrivileges() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Email Liên Hệ *
                   </label>
                   <input
@@ -938,7 +938,7 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Chức Danh & Bậc Huy Hiệu
                   </label>
                   <select
@@ -959,7 +959,7 @@ export default function AdminPrivileges() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Phòng Ban Trực Thuộc
                   </label>
                   <select
@@ -978,7 +978,7 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Phân Quyền Hệ Thống
                   </label>
                   <select
@@ -991,7 +991,7 @@ export default function AdminPrivileges() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Trạng Thái Tài Khoản
                   </label>
                   <select
@@ -1006,7 +1006,7 @@ export default function AdminPrivileges() {
               </div>
 
               <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={editForm.isVerified}
@@ -1014,7 +1014,7 @@ export default function AdminPrivileges() {
                   />
                   <span>Tích Xanh (Verified)</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={editForm.isDev}
@@ -1028,7 +1028,7 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={() => setEditModalUser(null)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1037,7 +1037,7 @@ export default function AdminPrivileges() {
                   disabled={savingEdit}
                   style={{
                     padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
-                    fontSize: 12, fontWeight: 900, cursor: savingEdit ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 600, cursor: savingEdit ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -1060,7 +1060,7 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {awardType === 'MVP' ? <Star size={18} color="#7c3aed" /> : <Trophy size={18} color="#d97706" />}
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   {awardType === 'MVP' ? 'Trao Thưởng Danh Hiệu MVP' : 'Trao Cúp Vô Địch (Champion)'}
                 </h3>
               </div>
@@ -1079,7 +1079,7 @@ export default function AdminPrivileges() {
 
             <form onSubmit={submitAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Mã Mùa Giải (Season ID - Tùy chọn)
                 </label>
                 <input
@@ -1092,7 +1092,7 @@ export default function AdminPrivileges() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Tiêu Đề Vinh Danh (Tùy chọn)
                 </label>
                 <input
@@ -1105,7 +1105,7 @@ export default function AdminPrivileges() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Lý Do & Căn Cứ Vinh Danh *
                 </label>
                 <textarea
@@ -1122,7 +1122,7 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={() => setAwardModalUser(null)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1133,7 +1133,7 @@ export default function AdminPrivileges() {
                     padding: '8px 18px',
                     background: awardType === 'MVP' ? '#7c3aed' : '#d97706',
                     color: '#ffffff', border: 'none',
-                    fontSize: 12, fontWeight: 900, cursor: awarding ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 600, cursor: awarding ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -1158,7 +1158,7 @@ export default function AdminPrivileges() {
             boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 14 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                 Hồ Sơ Nhân Sự Chi Tiết
               </h3>
               <button
@@ -1173,7 +1173,7 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <Avatar user={detailDrawerUser} size={56} />
               <div>
-                <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   {detailDrawerUser.name}
                 </h2>
                 <div style={{ color: '#64748b', fontSize: 12 }}>
@@ -1184,26 +1184,26 @@ export default function AdminPrivileges() {
 
             <div style={{ display: 'grid', gap: 12, padding: 14, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>CHỨC DANH CÔNG TÁC:</span>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>CHỨC DANH CÔNG TÁC:</span>
                 <div style={{ marginTop: 4 }}>
                   <JobTitleBadge jobTitle={detailDrawerUser.jobTitle} size="sm" />
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>PHÒNG BAN:</span>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>PHÒNG BAN:</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
                   {detailDrawerUser.department || 'Media & Content'}
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>VAI TRÒ / PHÂN QUYỀN:</span>
-                <div style={{ fontSize: 13, fontWeight: 900, color: detailDrawerUser.role === 'admin' ? '#dc2626' : '#b45309', marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>VAI TRÒ / PHÂN QUYỀN:</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: detailDrawerUser.role === 'admin' ? '#dc2626' : '#b45309', marginTop: 2 }}>
                   {detailDrawerUser.role === 'admin' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (User)'}
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 800 }}>TRẠNG THÁI:</span>
-                <div style={{ fontSize: 13, fontWeight: 900, color: detailDrawerUser.status === 'suspended' ? '#dc2626' : '#16a34a', marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TRẠNG THÁI:</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: detailDrawerUser.status === 'suspended' ? '#dc2626' : '#16a34a', marginTop: 2 }}>
                   {detailDrawerUser.status === 'suspended' ? 'Tạm khóa (Suspended)' : 'Hoạt động (Active)'}
                 </div>
               </div>
@@ -1218,7 +1218,7 @@ export default function AdminPrivileges() {
                 }}
                 style={{
                   width: '100%', padding: '10px', background: '#b45309', color: '#ffffff',
-                  border: 'none', fontSize: 13, fontWeight: 900, cursor: 'pointer',
+                  border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
               >
@@ -1232,7 +1232,7 @@ export default function AdminPrivileges() {
                 }}
                 style={{
                   width: '100%', padding: '10px', background: '#ffffff', color: '#0f172a',
-                  border: '1px solid rgba(15,23,42,0.15)', fontSize: 13, fontWeight: 900, cursor: 'pointer',
+                  border: '1px solid rgba(15,23,42,0.15)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
               >
@@ -1253,16 +1253,16 @@ export default function AdminPrivileges() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 420, padding: 24, border: '1px solid rgba(220,38,38,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', marginBottom: 12 }}>
               <Trash2 size={20} />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>Xác Nhận Xóa Nhân Sự</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>Xác Nhận Xóa Nhân Sự</h3>
             </div>
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.55 }}>
               Bạn có chắc chắn muốn xóa vĩnh viễn nhân sự <strong>{deleteConfirmUser.name}</strong> (WR-{String(deleteConfirmUser.id).padStart(4, '0')}) khỏi hệ thống không? Hành động này sẽ không thể khôi phục!
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setDeleteConfirmUser(null)}
-                style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
               >
                 Hủy
               </button>
@@ -1272,7 +1272,7 @@ export default function AdminPrivileges() {
                 onClick={handleDeleteUser}
                 style={{
                   padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none',
-                  fontSize: 12, fontWeight: 900, cursor: deleting ? 'not-allowed' : 'pointer',
+                  fontSize: 12, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer',
                 }}
               >
                 {deleting ? 'Đang xóa...' : 'Xác Nhận Xóa Vĩnh Viễn'}

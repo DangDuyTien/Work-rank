@@ -150,9 +150,6 @@ async function getChannelDetails(req, res, next) {
   }
 }
 
-/**
- * List Channels (Member sees only own team channels, Admin sees all)
- */
 async function listChannels(req, res, next) {
   try {
     const { teamId, search } = req.query;
@@ -162,7 +159,11 @@ async function listChannels(req, res, next) {
     let targetTeamId;
 
     if (isAdmin) {
-      targetTeamId = teamId ? Number(teamId) : undefined;
+      if (teamId === 'unassigned' || teamId === 'null') {
+        targetTeamId = 'unassigned';
+      } else if (teamId && teamId !== 'all') {
+        targetTeamId = Number(teamId);
+      }
     } else {
       if (teamId && Number(teamId) !== userTeamId) {
         return res.status(403).json({
@@ -171,7 +172,7 @@ async function listChannels(req, res, next) {
         });
       }
       if (!userTeamId) {
-        return res.status(200).json({ items: [] });
+        return res.status(200).json({ items: [], channels: [] });
       }
       targetTeamId = userTeamId;
     }
@@ -181,7 +182,7 @@ async function listChannels(req, res, next) {
       search,
       status: 'ACTIVE',
     });
-    return res.status(200).json({ items: channels });
+    return res.status(200).json({ items: channels, channels });
   } catch (err) {
     return next(err);
   }
@@ -228,7 +229,7 @@ async function getTopVideos(req, res, next) {
       limit: Number(limit),
       page: Number(page),
     });
-    return res.status(200).json({ items: videos, timeframe, limit: Number(limit) });
+    return res.status(200).json({ items: videos, videos, timeframe, limit: Number(limit) });
   } catch (err) {
     return next(err);
   }
@@ -297,13 +298,19 @@ async function getAdminOverview(req, res, next) {
 async function listAdminChannels(req, res, next) {
   try {
     const { teamId, status, syncStatus, search } = req.query;
+    let targetTeamId;
+    if (teamId === 'unassigned' || teamId === 'null') {
+      targetTeamId = 'unassigned';
+    } else if (teamId && teamId !== 'all') {
+      targetTeamId = Number(teamId);
+    }
     const channels = await youtubeDataService.listChannels({
-      teamId: teamId ? Number(teamId) : undefined,
+      teamId: targetTeamId,
       status,
       syncStatus,
       search,
     });
-    return res.status(200).json({ items: channels });
+    return res.status(200).json({ items: channels, channels });
   } catch (err) {
     return next(err);
   }
@@ -363,7 +370,8 @@ async function linkAdminChannel(req, res, next) {
 async function unlinkAdminChannel(req, res, next) {
   try {
     const { id } = req.params;
-    const channel = await youtubeDataService.getChannelById(Number(id));
+    const { YouTubeChannel } = require('../models');
+    const channel = await YouTubeChannel.findByPk(Number(id));
     if (!channel) {
       return res.status(404).json({ error: 'Channel not found' });
     }
@@ -427,7 +435,8 @@ async function syncAllAdminChannels(req, res, next) {
 async function deleteAdminChannel(req, res, next) {
   try {
     const { id } = req.params;
-    const channel = await youtubeDataService.getChannelById(Number(id));
+    const { YouTubeChannel } = require('../models');
+    const channel = await YouTubeChannel.findByPk(Number(id));
     if (!channel) {
       return res.status(404).json({ error: 'Channel not found' });
     }

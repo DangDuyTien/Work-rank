@@ -63,12 +63,12 @@ async function cleanPhase6Tables() {
   await SeasonFrozenResult.destroy({ where: {} });
   await SeasonTeamMember.destroy({ where: {} });
   await SeasonTeam.destroy({ where: {} });
-  await Season.destroy({ where: {} });
-  await GrandChampionship.destroy({ where: {} });
-  await CompetitionState.destroy({ where: {} });
   await ScoreLedger.destroy({ where: {} });
   await CompetitionEvent.destroy({ where: {} });
   await CompetitionAuditLog.destroy({ where: {} });
+  await CompetitionState.destroy({ where: {} });
+  await Season.destroy({ where: {} });
+  await GrandChampionship.destroy({ where: {} });
 }
 
 describe('Phase 6 — Read Models & Competition Projections', () => {

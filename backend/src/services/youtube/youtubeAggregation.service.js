@@ -323,41 +323,110 @@ async function recalculateAllTeamYouTubeSummaries(options = {}) {
 
 /**
  * Get Company-wide YouTube Overview & Metrics
+ * Aggregates across ALL active channels in the system (both team-assigned and unassigned).
  */
 async function getCompanyYouTubeOverview() {
   const summaries = await TeamYouTubeSummary.findAll({
     include: [{ model: Team, as: 'team', attributes: ['id', 'name', 'description'] }],
   });
 
+  const allChannels = await YouTubeChannel.findAll({
+    where: { status: 'ACTIVE' },
+    include: [
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
+    ],
+  });
+
+  const now = new Date();
+  const t30d = new Date(now.getTime() - 30 * 86400000);
+
   let totalViews = 0;
   let totalSubscribers = 0;
   let totalVideos = 0;
-  let totalChannels = 0;
+  let totalChannels = allChannels.length;
+  let unassignedChannelsCount = 0;
+  let unassignedViews = 0;
+  let unassignedSubscribers = 0;
+  let unassignedVideos = 0;
+  let companyViews30d = 0;
   let latestSync = null;
   let hasStale = false;
   let hasFailed = false;
 
-  for (const s of summaries) {
-    totalViews += Number(s.totalViews || 0);
-    totalSubscribers += Number(s.totalSubscribers || 0);
-    totalVideos += Number(s.videosCount || 0);
-    totalChannels += Number(s.channelsCount || 0);
+  for (const channel of allChannels) {
+    const isUnassigned = !channel.teamId;
+    if (isUnassigned) unassignedChannelsCount++;
 
-    if (s.lastSyncedAt && (!latestSync || new Date(s.lastSyncedAt) > new Date(latestSync))) {
-      latestSync = s.lastSyncedAt;
+    if (channel.lastSyncedAt && (!latestSync || new Date(channel.lastSyncedAt) > new Date(latestSync))) {
+      latestSync = channel.lastSyncedAt;
     }
-    if (s.freshnessStatus === 'STALE') hasStale = true;
-    if (s.freshnessStatus === 'FAILED') hasFailed = true;
+    if (channel.syncStatus === 'ERROR' || channel.lastSyncError) {
+      hasFailed = true;
+    } else if (!channel.lastSyncedAt || (now.getTime() - new Date(channel.lastSyncedAt).getTime() > 2 * 3600000)) {
+      hasStale = true;
+    }
+
+    const latestMetric = channel.metrics && channel.metrics.length > 0 ? channel.metrics[0] : null;
+    if (latestMetric) {
+      const cViews = Number(latestMetric.views || 0);
+      const cSubs = Number(latestMetric.subscribers || 0);
+      const cVideos = Number(latestMetric.videosCount || 0);
+
+      totalViews += cViews;
+      totalSubscribers += cSubs;
+      totalVideos += cVideos;
+
+      if (isUnassigned) {
+        unassignedViews += cViews;
+        unassignedSubscribers += cSubs;
+        unassignedVideos += cVideos;
+      }
+
+      // Calculate 30d views delta for this channel
+      const metric30d = await YouTubeChannelMetric.findOne({
+        where: {
+          channelId: channel.id,
+          capturedAt: { [Op.lte]: t30d },
+        },
+        order: [['capturedAt', 'DESC']],
+      });
+      if (metric30d) {
+        companyViews30d += Math.max(0, cViews - Number(metric30d.views));
+      } else {
+        companyViews30d += cViews;
+      }
+    }
   }
 
-  // Company freshness status
+  // Count active videos across all channels if metric videosCount is 0
+  const actualVideosCount = await YouTubeVideo.count({
+    where: { status: 'ACTIVE' },
+  });
+  if (actualVideosCount > totalVideos) {
+    totalVideos = actualVideosCount;
+  }
+
+  // Company 30D views growth percentage
+  const baselineViews30d = Math.max(0, totalViews - companyViews30d);
+  const rawViewsGrowth = baselineViews30d > 0
+    ? (companyViews30d / baselineViews30d) * 100
+    : (totalViews > 0 ? 100.0 : 0.0);
+  const viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawViewsGrowth)).toFixed(2));
+
+  // Company freshness status: FRESH if any channel synced within last 2h, STALE if no recent sync
   let freshnessStatus = 'FRESH';
-  if (hasFailed) freshnessStatus = 'FAILED';
-  else if (hasStale || !latestSync || (Date.now() - new Date(latestSync).getTime() > 2 * 3600000)) {
+  if (hasFailed && !latestSync) {
+    freshnessStatus = 'FAILED';
+  } else if (!latestSync || (Date.now() - new Date(latestSync).getTime() > 2 * 3600000)) {
     freshnessStatus = 'STALE';
   }
 
-  // Top Teams
+  // Top Teams by Views
   const topTeamsByViews = [...summaries]
     .sort((a, b) => b.totalViews - a.totalViews)
     .slice(0, 5)
@@ -370,6 +439,7 @@ async function getCompanyYouTubeOverview() {
       rank: s.rankByViews,
     }));
 
+  // Top Teams by Growth
   const topTeamsByGrowth = [...summaries]
     .sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct)
     .slice(0, 5)
@@ -389,11 +459,22 @@ async function getCompanyYouTubeOverview() {
       totalVideos,
       totalChannels,
       totalTeams: summaries.length,
+      unassignedChannelsCount,
+      unassignedViews,
+      unassignedSubscribers,
+      unassignedVideos,
+      viewsGrowth30dPct,
       freshnessStatus,
       lastSyncedAt: latestSync,
     },
     topTeamsByViews,
     topTeamsByGrowth,
+    unassignedSummary: {
+      totalChannels: unassignedChannelsCount,
+      totalViews: unassignedViews,
+      totalSubscribers: unassignedSubscribers,
+      totalVideos: unassignedVideos,
+    },
   };
 }
 

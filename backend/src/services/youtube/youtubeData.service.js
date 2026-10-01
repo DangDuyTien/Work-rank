@@ -100,28 +100,90 @@ async function unlinkChannel(channelIdentifier, options = {}) {
 }
 
 async function getChannelById(id, options = {}) {
-  return YouTubeChannel.findByPk(id, {
+  const channel = await YouTubeChannel.findByPk(id, {
     include: [
       { model: Team, as: 'team', attributes: ['id', 'name', 'description'] },
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
     ],
     ...options,
   });
+
+  if (!channel) return null;
+
+  const m = channel.metrics && channel.metrics.length > 0 ? channel.metrics[0] : null;
+  return {
+    id: channel.id,
+    channelId: channel.channelId,
+    title: channel.title,
+    customUrl: channel.customUrl,
+    thumbnailUrl: channel.thumbnailUrl,
+    description: channel.description,
+    teamId: channel.teamId,
+    team: channel.team ? { id: channel.team.id, name: channel.team.name, description: channel.team.description } : null,
+    status: channel.status,
+    syncStatus: channel.syncStatus,
+    lastSyncedAt: channel.lastSyncedAt,
+    lastSyncError: channel.lastSyncError,
+    createdAt: channel.createdAt,
+    updatedAt: channel.updatedAt,
+    views: m ? Number(m.views) : 0,
+    subscribers: m ? Number(m.subscribers) : 0,
+    videosCount: m ? Number(m.videosCount) : 0,
+    engagementRate: m ? Number(m.engagementRate) : 0,
+  };
 }
 
 async function getChannelByExternalId(channelId, options = {}) {
-  return YouTubeChannel.findOne({
+  const channel = await YouTubeChannel.findOne({
     where: { channelId },
     include: [
       { model: Team, as: 'team', attributes: ['id', 'name', 'description'] },
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
     ],
     ...options,
   });
+
+  if (!channel) return null;
+
+  const m = channel.metrics && channel.metrics.length > 0 ? channel.metrics[0] : null;
+  return {
+    id: channel.id,
+    channelId: channel.channelId,
+    title: channel.title,
+    customUrl: channel.customUrl,
+    thumbnailUrl: channel.thumbnailUrl,
+    description: channel.description,
+    teamId: channel.teamId,
+    team: channel.team ? { id: channel.team.id, name: channel.team.name, description: channel.team.description } : null,
+    status: channel.status,
+    syncStatus: channel.syncStatus,
+    lastSyncedAt: channel.lastSyncedAt,
+    lastSyncError: channel.lastSyncError,
+    createdAt: channel.createdAt,
+    updatedAt: channel.updatedAt,
+    views: m ? Number(m.views) : 0,
+    subscribers: m ? Number(m.subscribers) : 0,
+    videosCount: m ? Number(m.videosCount) : 0,
+    engagementRate: m ? Number(m.engagementRate) : 0,
+  };
 }
 
 async function listChannels(filters = {}, options = {}) {
   const where = {};
-  if (filters.teamId) {
-    where.teamId = filters.teamId;
+  if (filters.teamId === 'unassigned' || filters.unassigned === true || filters.teamId === null) {
+    where.teamId = null;
+  } else if (filters.teamId !== undefined && filters.teamId !== 'all') {
+    where.teamId = Number(filters.teamId);
   }
   if (filters.status) {
     where.status = filters.status;
@@ -137,13 +199,43 @@ async function listChannels(filters = {}, options = {}) {
     ];
   }
 
-  return YouTubeChannel.findAll({
+  const channels = await YouTubeChannel.findAll({
     where,
     include: [
       { model: Team, as: 'team', attributes: ['id', 'name', 'description'] },
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
     ],
     order: [['createdAt', 'DESC']],
     ...options,
+  });
+
+  return channels.map((c) => {
+    const m = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
+    return {
+      id: c.id,
+      channelId: c.channelId,
+      title: c.title,
+      customUrl: c.customUrl,
+      thumbnailUrl: c.thumbnailUrl,
+      description: c.description,
+      teamId: c.teamId,
+      team: c.team ? { id: c.team.id, name: c.team.name, description: c.team.description } : null,
+      status: c.status,
+      syncStatus: c.syncStatus,
+      lastSyncedAt: c.lastSyncedAt,
+      lastSyncError: c.lastSyncError,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      views: m ? Number(m.views) : 0,
+      subscribers: m ? Number(m.subscribers) : 0,
+      videosCount: m ? Number(m.videosCount) : 0,
+      engagementRate: m ? Number(m.engagementRate) : 0,
+    };
   });
 }
 

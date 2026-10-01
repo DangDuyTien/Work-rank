@@ -491,7 +491,7 @@ function RealtimeTrendBar({ label = 'XU HƯỚNG HOẠT ĐỘNG', statText = '',
           background: '#22c55e',
           animation: 'pulse-dot 2s ease infinite',
         }} />
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {label}
         </span>
         {statText && (
@@ -771,7 +771,7 @@ export default function Leaderboard() {
               <span>{tab.label}</span>
               {tab.badge && (
                 <span style={{
-                  fontSize: 9, fontWeight: 900, padding: '1px 5px',
+                  fontSize: 10, fontWeight: 700, padding: '1px 5px',
                   borderRadius: 0,
                   background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.06)',
                   color: isActive ? '#ffffff' : '#64748b',
@@ -806,12 +806,12 @@ export default function Leaderboard() {
       ) : error ? (
         <div style={{ ...CARD, padding: '40px 20px', textAlign: 'center' }}>
           <AlertCircle size={32} color="#dc2626" style={{ marginBottom: 10 }} />
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{error}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{error}</div>
           <button
             onClick={() => fetchDataForTab()}
             style={{
               marginTop: 12, background: '#0f172a', color: '#fff', border: 'none',
-              padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
             }}
           >
             Thử lại
@@ -916,19 +916,19 @@ function OverviewSection({ data, onSelectTab, navigate }) {
         {/* ĐỘI DẪN ĐẦU */}
         <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6, letterSpacing: '0.04em' }}>
               <Users size={14} color="#b45309" /> Đội Dẫn Đầu Mùa Giải
             </span>
-            <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', fontSize: 10, fontWeight: 900 }}>
+            <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
               #1 TOP TEAM
             </span>
           </div>
           {topTeam ? (
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>{topTeam.teamName}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#b45309', marginTop: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{topTeam.teamName}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#b45309', marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>
                 {fmtNum(topTeam.totalScore ?? topTeam.score ?? 0)}{' '}
-                <span style={{ fontSize: 12, color: '#64748b' }}>pts ({data.activeSeason?.name || 'Mùa giải'})</span>
+                <span style={{ fontSize: 12, fontWeight: 400, color: '#64748b', fontFamily: 'inherit' }}>pts ({data.activeSeason?.name || 'Mùa giải'})</span>
               </div>
             </div>
           ) : (
@@ -939,7 +939,7 @@ function OverviewSection({ data, onSelectTab, navigate }) {
             style={{
               marginTop: 14, width: '100%', background: 'rgba(180,83,9,0.06)',
               border: '1px solid rgba(180,83,9,0.2)', color: '#b45309',
-              padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+              padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
             }}
           >
@@ -950,19 +950,19 @@ function OverviewSection({ data, onSelectTab, navigate }) {
         {/* CÁ NHÂN MVP */}
         <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #f59e0b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6, letterSpacing: '0.04em' }}>
               <Crown size={14} color="#f59e0b" /> Cá Nhân Xuất Sắc (MVP)
             </span>
-            <span style={{ background: '#fef3c7', color: '#b45309', padding: '1px 6px', fontSize: 10, fontWeight: 900 }}>
+            <span style={{ background: '#fef3c7', color: '#b45309', padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
               #1 TOP MVP
             </span>
           </div>
           {topIndividual ? (
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>{topIndividual.userName}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b', marginTop: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{topIndividual.userName}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#f59e0b', marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>
                 {fmtNum(topIndividual.score ?? topIndividual.points ?? 0)}{' '}
-                <span style={{ fontSize: 12, color: '#64748b' }}>XP ({topIndividual.teamName || 'Thành viên'})</span>
+                <span style={{ fontSize: 12, fontWeight: 400, color: '#64748b', fontFamily: 'inherit' }}>XP ({topIndividual.teamName || 'Thành viên'})</span>
               </div>
             </div>
           ) : (
@@ -973,7 +973,7 @@ function OverviewSection({ data, onSelectTab, navigate }) {
             style={{
               marginTop: 14, width: '100%', background: 'rgba(245,158,11,0.06)',
               border: '1px solid rgba(245,158,11,0.2)', color: '#b45309',
-              padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+              padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
             }}
           >
@@ -984,19 +984,19 @@ function OverviewSection({ data, onSelectTab, navigate }) {
         {/* KÊNH YOUTUBE */}
         <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #dc2626' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#dc2626', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6, letterSpacing: '0.04em' }}>
               <Tv size={14} color="#dc2626" /> Kênh YouTube Số 1
             </span>
-            <span style={{ background: '#fee2e2', color: '#dc2626', padding: '1px 6px', fontSize: 10, fontWeight: 900 }}>
+            <span style={{ background: '#fee2e2', color: '#dc2626', padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
               #1 VIEWS
             </span>
           </div>
           {topYt ? (
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>{topYt.teamName}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', marginTop: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{topYt.teamName}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#dc2626', marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>
                 {fmtNum(topYt.totalViews)}{' '}
-                <span style={{ fontSize: 12, color: '#64748b' }}>views ({fmtNum(topYt.totalSubscribers)} subs)</span>
+                <span style={{ fontSize: 12, fontWeight: 400, color: '#64748b', fontFamily: 'inherit' }}>views ({fmtNum(topYt.totalSubscribers)} subs)</span>
               </div>
             </div>
           ) : (
@@ -1007,7 +1007,7 @@ function OverviewSection({ data, onSelectTab, navigate }) {
             style={{
               marginTop: 14, width: '100%', background: 'rgba(220,38,38,0.06)',
               border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626',
-              padding: '6px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+              padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
             }}
           >
@@ -1023,13 +1023,13 @@ function OverviewSection({ data, onSelectTab, navigate }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Swords size={18} color="#b45309" />
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
                 Mùa Giải: {data.activeSeason?.name || 'Hiện tại'}
               </span>
             </div>
             <button
               onClick={() => onSelectTab('season')}
-              style={{ border: 'none', background: 'transparent', color: '#b45309', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              style={{ border: 'none', background: 'transparent', color: '#b45309', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
               Chi tiết <ArrowRight size={13} />
             </button>
@@ -1054,13 +1054,13 @@ function OverviewSection({ data, onSelectTab, navigate }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Crown size={18} color="#f59e0b" />
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
                 Đua Vô Địch: {data.currentGrand?.name || 'Grand Championship'}
               </span>
             </div>
             <button
               onClick={() => onSelectTab('grand')}
-              style={{ border: 'none', background: 'transparent', color: '#f59e0b', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              style={{ border: 'none', background: 'transparent', color: '#f59e0b', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
               Chi tiết <ArrowRight size={13} />
             </button>
@@ -1098,10 +1098,10 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
       {/* SCOPE SELECTOR */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Bảng Xếp Hạng Đội Nhóm
           </h2>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
             Xếp hạng theo tổng điểm thi đấu của tập thể các phòng ban / đội nhóm
           </span>
         </div>
@@ -1118,7 +1118,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                 border: 'none',
                 background: currentScope === s.id ? '#b45309' : 'transparent',
                 color: currentScope === s.id ? '#ffffff' : '#64748b',
-                padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
             >
               {s.label}
@@ -1149,7 +1149,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
       {/* TABLE CARD */}
       <div className="leaderboard-table-card" style={{ ...CARD, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Danh Sách Thứ Hạng Đội ({items.length} đội)
           </span>
         </div>
@@ -1158,7 +1158,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
                 {['Hạng', 'Tên Đội', 'Điểm Số', 'Thành Viên', 'Mùa Vô Địch'].map((h) => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Điểm Số' ? 'right' : h === 'Thành Viên' || h === 'Mùa Vô Địch' ? 'center' : 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Điểm Số' ? 'right' : h === 'Thành Viên' || h === 'Mùa Vô Địch' ? 'center' : 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {h}
                   </th>
                 ))}
@@ -1186,7 +1186,7 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)',
-                          color: rank <= 3 ? '#fff' : '#64748b', fontSize: 11, fontWeight: 900,
+                          color: rank <= 3 ? '#fff' : '#64748b', fontSize: 11, fontWeight: 700,
                         }}>
                           {rank}
                         </span>
@@ -1194,10 +1194,10 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                       </div>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                         {row.teamName}
                         {isMyTeam && (
-                          <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>
+                          <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '2px 5px', background: '#b45309', color: '#fff' }}>
                             ĐỘI BẠN
                           </span>
                         )}
@@ -1205,16 +1205,16 @@ function TeamSection({ data, searchParams, setParam, currentUser, navigate }) {
                       {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} pts so với #1</div>}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: currentScope === 'grand' ? '#d97706' : '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: currentScope === 'grand' ? '#d97706' : '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
                         {fmtNum(scoreVal)}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontWeight: 700 }}>
+                    <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontWeight: 500 }}>
                       {row.activeMembersCount || '—'}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       {(row.seasonsWon || 0) > 0 ? (
-                        <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 6px', fontSize: 11, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 6px', fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <Trophy size={11} color="#b45309" /> {row.seasonsWon}
                         </span>
                       ) : (
@@ -1246,10 +1246,10 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
       {/* HEADER & SEARCH BAR */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Bảng Xếp Hạng Cá Nhân
           </h2>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
             Điểm XP cá nhân · cấp độ thành viên · danh hiệu cống hiến
           </span>
         </div>
@@ -1267,7 +1267,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                   border: 'none',
                   background: currentScope === s.id ? '#b45309' : 'transparent',
                   color: currentScope === s.id ? '#ffffff' : '#64748b',
-                  padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 }}
               >
                 {s.label}
@@ -1314,7 +1314,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
       {/* TABLE CARD */}
       <div className="leaderboard-table-card" style={{ ...CARD, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Danh Sách Thứ Hạng Cá Nhân ({items.length} người)
           </span>
         </div>
@@ -1323,7 +1323,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
                 {['Hạng', 'Người Dùng', 'Đội Nhóm', 'Cấp Độ', 'Điểm XP'].map((h) => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Điểm XP' ? 'right' : h === 'Cấp Độ' ? 'center' : 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: h === 'Điểm XP' ? 'right' : h === 'Cấp Độ' ? 'center' : 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {h}
                   </th>
                 ))}
@@ -1353,7 +1353,7 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)',
-                          color: rank <= 3 ? '#fff' : '#64748b', fontSize: 11, fontWeight: 900,
+                          color: rank <= 3 ? '#fff' : '#64748b', fontSize: 11, fontWeight: 700,
                         }}>
                           {rank}
                         </span>
@@ -1365,23 +1365,23 @@ function IndividualSection({ data, searchKeyword, setSearchKeyword, onSearchSubm
                         <AvatarBox user={u} name={u.userName} userId={u.userId} size={30} idx={rank - 1} />
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{u.userName}</span>
+                            <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{u.userName}</span>
                             {u.jobTitle && <JobTitleBadge jobTitle={u.jobTitle} size="xs" />}
-                            {isMe && <span style={{ fontSize: 9, fontWeight: 900, padding: '1px 4px', background: '#b45309', color: '#fff' }}>BẠN</span>}
+                            {isMe && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 4px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                           </div>
                           <div style={{ fontSize: 10, color: '#94a3b8' }}>{u.userEmail}</div>
                           {gap > 0 && <div style={{ fontSize: 10, color: '#dc2626' }}>-{fmtNum(gap)} XP so với #1</div>}
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#64748b', fontWeight: 700 }}>
+                    <td style={{ padding: '12px 16px', color: '#64748b', fontWeight: 500 }}>
                       {u.teamName || '—'}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <LevelText user={u} />
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
                         {fmtNum(scoreVal)}
                       </span>
                       <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 3 }}>XP</span>
@@ -1410,10 +1410,10 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Xếp Hạng Mùa Giải (Season Standings)
           </h2>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
             Điểm số các đội và cá nhân trong mùa thi đấu Arena
           </span>
         </div>
@@ -1423,7 +1423,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
             onChange={(e) => setSelectedSeasonId(e.target.value)}
             style={{
               padding: '6px 12px', border: '1px solid rgba(15,23,42,0.15)',
-              fontSize: 12, fontWeight: 700, background: '#fff', color: '#0f172a',
+              fontSize: 12, fontWeight: 600, background: '#fff', color: '#0f172a',
             }}
           >
             {seasons.map((s) => (
@@ -1436,7 +1436,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
               style={{
                 border: 'none', background: rankingType === 'team' ? '#b45309' : 'transparent',
                 color: rankingType === 'team' ? '#fff' : '#64748b', padding: '6px 12px',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -1447,7 +1447,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
               style={{
                 border: 'none', background: rankingType === 'individual' ? '#b45309' : 'transparent',
                 color: rankingType === 'individual' ? '#fff' : '#64748b', padding: '6px 12px',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -1459,7 +1459,7 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               border: '1px solid rgba(180,83,9,0.25)', background: 'rgba(180,83,9,0.06)',
-              color: '#b45309', padding: '6px 12px', fontSize: 11, fontWeight: 800, textDecoration: 'none',
+              color: '#b45309', padding: '6px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none',
             }}
           >
             Đấu Trường Arena <ExternalLink size={12} />
@@ -1489,17 +1489,17 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
       {/* TABLE */}
       <div className="leaderboard-table-card" style={{ ...CARD, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Bảng Tổng Sắp Mùa Giải ({currentSeason?.name || 'Mùa'})
           </span>
         </div>
         <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>{rankingType === 'individual' ? 'Thành Viên' : 'Đội Thi Đấu'}</th>
-              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Điểm Mùa Giải</th>
-              <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Trạng Thái</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hạng</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{rankingType === 'individual' ? 'Thành Viên' : 'Đội Thi Đấu'}</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Điểm Mùa Giải</th>
+              <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Trạng Thái</th>
             </tr>
           </thead>
           <tbody>
@@ -1516,24 +1516,24 @@ function SeasonSection({ data, seasons, selectedSeasonId, setSelectedSeasonId, r
                 <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+                      <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
                         {rank}
                       </span>
                       <TrendIndicator trend={r.trend} />
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                       {rankingType === 'individual' ? r.userName : r.teamName}
-                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
+                      {isMine && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                     </div>
                     {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} pts so với #1</div>}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#16a34a' }}>Realtime</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#16a34a' }}>Realtime</span>
                   </td>
                 </tr>
               );
@@ -1558,10 +1558,10 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Bảng Xếp Hạng Vô Địch Năm (Grand)
           </h2>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
             Cuộc đua danh giá nhất năm — tích lũy điểm Grand Points từ tất cả các mùa giải
           </span>
         </div>
@@ -1571,7 +1571,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
             onChange={(e) => setSelectedGrandId(e.target.value)}
             style={{
               padding: '6px 12px', border: '1px solid rgba(15,23,42,0.15)',
-              fontSize: 12, fontWeight: 700, background: '#fff', color: '#0f172a',
+              fontSize: 12, fontWeight: 600, background: '#fff', color: '#0f172a',
             }}
           >
             {grands.map((g) => (
@@ -1584,7 +1584,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
               style={{
                 border: 'none', background: rankingType === 'team' ? '#b45309' : 'transparent',
                 color: rankingType === 'team' ? '#fff' : '#64748b', padding: '6px 12px',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -1595,7 +1595,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
               style={{
                 border: 'none', background: rankingType === 'individual' ? '#b45309' : 'transparent',
                 color: rankingType === 'individual' ? '#fff' : '#64748b', padding: '6px 12px',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -1607,7 +1607,7 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)',
-              color: '#b45309', padding: '6px 12px', fontSize: 11, fontWeight: 800, textDecoration: 'none',
+              color: '#b45309', padding: '6px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none',
             }}
           >
             Tổng Kết Năm <ExternalLink size={12} />
@@ -1637,17 +1637,17 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
       {/* TABLE */}
       <div className="leaderboard-table-card" style={{ ...CARD, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Tổng Sắp Vô Địch ({currentGrand?.year || 'Năm'})
           </span>
         </div>
         <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>{rankingType === 'individual' ? 'Thành Viên' : 'Đội Tuyển'}</th>
-              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Điểm Năm (GP)</th>
-              <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Vị Thế</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hạng</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{rankingType === 'individual' ? 'Thành Viên' : 'Đội Tuyển'}</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Điểm Năm (GP)</th>
+              <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Vị Thế</th>
             </tr>
           </thead>
           <tbody>
@@ -1664,25 +1664,25 @@ function GrandSection({ data, grands, selectedGrandId, setSelectedGrandId, ranki
                 <tr key={r.teamId || r.userId || i} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMine ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+                      <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
                         {rank}
                       </span>
                       <TrendIndicator trend={r.trend} />
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                       {rankingType === 'individual' ? r.userName : r.teamName}
-                      {isMine && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
+                      {isMine && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '2px 5px', background: '#b45309', color: '#fff' }}>BẠN</span>}
                     </div>
                     {gap > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>-{fmtNum(gap)} GP so với #1</div>}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                     {rank === 1 ? (
-                      <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 6px', fontSize: 10, fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 6px', fontSize: 10, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <Crown size={12} color="#b45309" /> QUÁN QUÂN
                       </span>
                     ) : (
@@ -1716,10 +1716,10 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Bảng Xếp Hạng YouTube Studio
           </h2>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
             Sản lượng truyền thông video: Views · Subscribers · Tăng trưởng 30 ngày
           </span>
         </div>
@@ -1732,7 +1732,7 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
                 style={{
                   border: 'none', background: metric === m.id ? '#b45309' : 'transparent',
                   color: metric === m.id ? '#fff' : '#64748b', padding: '6px 12px',
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                 }}
               >
@@ -1745,7 +1745,7 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)',
-              color: '#dc2626', padding: '6px 12px', fontSize: 11, fontWeight: 800, textDecoration: 'none',
+              color: '#dc2626', padding: '6px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none',
             }}
           >
             Studio Chi Tiết <ExternalLink size={12} />
@@ -1779,11 +1779,11 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
         <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Đội & Kênh</th>
-              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Tổng Lượt Xem</th>
-              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</th>
-              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Tăng Trưởng</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hạng</th>
+              <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Đội & Kênh</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tổng Lượt Xem</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Subscribers</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tăng Trưởng</th>
             </tr>
           </thead>
           <tbody>
@@ -1795,26 +1795,26 @@ function YouTubeSection({ data, metric, setMetric, currentUser, navigate }) {
               return (
                 <tr key={row.teamId || idx} className="leaderboard-row" style={{ borderBottom: '1px solid rgba(15,23,42,0.04)', background: isMyTeam ? 'rgba(180,83,9,0.06)' : 'transparent' }}>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
                       {rank}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                       {row.teamName}
-                      {isMyTeam && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, padding: '2px 5px', background: '#b45309', color: '#fff' }}>ĐỘI BẠN</span>}
+                      {isMyTeam && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '2px 5px', background: '#b45309', color: '#fff' }}>ĐỘI BẠN</span>}
                     </div>
                     <div style={{ fontSize: 10, color: '#94a3b8' }}>{row.channelsCount} kênh · {row.videosCount} video</div>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(row.totalViews)}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(row.totalViews)}</span>
                   </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#0f172a' }}>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
                     {fmtNum(row.totalSubscribers)}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                     <span style={{
-                      padding: '2px 6px', fontSize: 11, fontWeight: 800,
+                      padding: '2px 6px', fontSize: 11, fontWeight: 600,
                       background: Number(row.viewsGrowth30dPct || 0) >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(220,38,38,0.12)',
                       color: Number(row.viewsGrowth30dPct || 0) >= 0 ? '#16a34a' : '#dc2626',
                     }}>
@@ -1842,7 +1842,7 @@ function HallOfFameSection({ data, navigate }) {
       <div style={{ ...CARD, padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <Sparkles size={18} color="#f59e0b" />
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: 0, fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Ngôi Đền Danh Vọng — MVPs
           </h2>
         </div>
@@ -1863,11 +1863,11 @@ function HallOfFameSection({ data, navigate }) {
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{mvp.userName}</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{mvp.userName}</div>
                     <JobTitleBadge jobTitle={mvp.jobTitle} size="xs" />
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>{mvp.teamName || 'Thành viên'}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Sparkles size={12} color="#b45309" /> {mvp.mvpCount} Lần MVP · {fmtNum(mvp.lifetimeScore)} XP
                   </div>
                 </div>
@@ -1883,7 +1883,7 @@ function HallOfFameSection({ data, navigate }) {
       <div style={{ ...CARD, padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <Trophy size={18} color="#b45309" />
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+          <h2 style={{ margin: 0, fontSize: 'var(--text-h2, 18px)', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
             Đội Vô Địch Mùa Giải
           </h2>
         </div>
@@ -1901,8 +1901,8 @@ function HallOfFameSection({ data, navigate }) {
                   <Trophy size={18} color="#fff" />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{t.teamName}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', marginTop: 2 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{t.teamName}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', marginTop: 2 }}>
                     {t.seasonsWon} Mùa Vô Địch · {fmtNum(t.grandPoints)} GP
                   </div>
                 </div>

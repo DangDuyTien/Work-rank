@@ -398,15 +398,15 @@ export default function UserDetail() {
     return (
       <div style={{ maxWidth: 1080, margin: '0 auto', padding: '40px 16px', fontFamily: "'JetBrains Mono', monospace" }}>
         <div style={{ ...CARD, padding: 32, textAlign: 'center' }}>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', marginBottom: 8 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: '#dc2626', marginBottom: 8 }}>
             Không tìm thấy nhân viên
           </div>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 16px' }}>{error || 'Nhân viên không tồn tại hoặc đã bị xóa.'}</p>
+          <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.55, margin: '0 0 16px' }}>{error || 'Nhân viên không tồn tại hoặc đã bị xóa.'}</p>
           <button
             onClick={() => navigate(-1)}
             style={{
               padding: '8px 16px', background: '#0f172a', color: '#fff', border: 'none',
-              fontSize: 12, fontWeight: 800, cursor: 'pointer',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 6,
             }}
           >
@@ -452,7 +452,7 @@ export default function UserDetail() {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             background: 'transparent', border: 'none', color: '#64748b',
-            fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0,
+            fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0,
           }}
         >
           <ChevronLeft size={16} /> Quay lại
@@ -506,7 +506,7 @@ export default function UserDetail() {
                       background: '#b45309',
                       color: '#ffffff',
                       fontSize: 42,
-                      fontWeight: 900,
+                      fontWeight: 700,
                     }}
                   >
                     {initialsFromName(user.name)}
@@ -533,7 +533,7 @@ export default function UserDetail() {
 
           <div className="profile-identity-copy">
             <div className="profile-name-line" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
                 {user.name || `User #${targetUserId}`}
               </h1>
               {isVerified && <VerifiedBadge size={22} />}
@@ -541,7 +541,7 @@ export default function UserDetail() {
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
                     borderRadius: 4,
@@ -561,7 +561,7 @@ export default function UserDetail() {
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
                     borderRadius: 4,
@@ -581,7 +581,7 @@ export default function UserDetail() {
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     padding: '3px 8px',
                     borderRadius: 4,
@@ -606,11 +606,11 @@ export default function UserDetail() {
 
             {/* Phòng ban & Đội nhóm */}
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13 }}>
-              <span style={{ fontWeight: 800, color: '#475569' }}>
+              <span style={{ fontWeight: 600, color: '#475569' }}>
                 {department}
               </span>
               <span style={{ color: '#cbd5e1' }}>•</span>
-              <span style={{ fontWeight: 800, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontWeight: 600, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Users size={14} color="#64748b" /> {team?.name || 'Chưa vào Team'}
               </span>
               <span style={{ color: '#cbd5e1' }}>•</span>
@@ -632,7 +632,7 @@ export default function UserDetail() {
                   border: `1px solid ${statusTheme.border}`,
                   color: statusTheme.color,
                   fontSize: 11,
-                  fontWeight: 800,
+                  fontWeight: 600,
                 }}
               >
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusTheme.dot }} />
@@ -655,7 +655,7 @@ export default function UserDetail() {
                     border: hasLiked ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(15,23,42,0.1)',
                     color: hasLiked ? '#dc2626' : '#64748b',
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
@@ -679,7 +679,7 @@ export default function UserDetail() {
                     color: '#ffffff',
                     border: 'none',
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
@@ -821,7 +821,7 @@ export default function UserDetail() {
                 padding: '8px 14px', borderRadius: 4, border: 'none',
                 background: isActive ? '#b45309' : 'transparent',
                 color: isActive ? '#ffffff' : '#64748b',
-                fontSize: 12, fontWeight: 700,
+                fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'all 0.15s ease',
               }}
@@ -830,7 +830,7 @@ export default function UserDetail() {
               <span>{tab.label}</span>
               {tab.badge && (
                 <span style={{
-                  fontSize: 9, fontWeight: 900, padding: '1px 5px',
+                  fontSize: 9, fontWeight: 600, padding: '1px 5px',
                   borderRadius: 4,
                   background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.06)',
                   color: isActive ? '#ffffff' : '#64748b',
@@ -853,7 +853,7 @@ export default function UserDetail() {
             <div style={{ ...CARD, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Shield size={16} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Thông Tin Nhân Sự & Chức Danh
                 </h3>
               </div>
@@ -864,19 +864,19 @@ export default function UserDetail() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <span style={{ color: '#64748b' }}>Phòng ban:</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{department}</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{department}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <span style={{ color: '#64748b' }}>Đội nhóm:</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a' }}>{team?.name || 'Chưa tham gia'}</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{team?.name || 'Chưa tham gia'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <span style={{ color: '#64748b' }}>Quyền hệ thống (RBAC):</span>
-                  <span style={{ fontWeight: 800, color: user.role === 'admin' ? '#dc2626' : '#64748b', textTransform: 'uppercase' }}>{user.role}</span>
+                  <span style={{ fontWeight: 600, color: user.role === 'admin' ? '#dc2626' : '#64748b', textTransform: 'uppercase' }}>{user.role}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
                   <span style={{ color: '#64748b' }}>Mã nhân viên (ID):</span>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 800 }}>#{user.id}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>#{user.id}</span>
                 </div>
               </div>
             </div>
@@ -885,7 +885,7 @@ export default function UserDetail() {
             <div style={{ ...CARD, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Mail size={16} color="#16a34a" />
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Liên Hệ & Tiểu Sử
                 </h3>
               </div>
@@ -893,18 +893,18 @@ export default function UserDetail() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <Mail size={14} color="#64748b" />
                   <span style={{ color: '#64748b' }}>Email:</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a', marginLeft: 'auto' }}>{user.email || '—'}</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a', marginLeft: 'auto' }}>{user.email || '—'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(15,23,42,0.04)', paddingBottom: 8 }}>
                   <Phone size={14} color="#64748b" />
                   <span style={{ color: '#64748b' }}>Điện thoại:</span>
-                  <span style={{ fontWeight: 800, color: '#0f172a', marginLeft: 'auto' }}>{user.phone || 'Chưa cập nhật'}</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a', marginLeft: 'auto' }}>{user.phone || 'Chưa cập nhật'}</span>
                 </div>
                 <div style={{ marginTop: 4 }}>
                   <span style={{ color: '#64748b', display: 'block', marginBottom: 4 }}>Giới thiệu / Trách nhiệm công việc:</span>
                   <div style={{
                     padding: '8px 12px', background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.06)',
-                    fontSize: 12, color: '#334155', lineHeight: 1.5, minHeight: 48,
+                    fontSize: 12, color: '#334155', lineHeight: 1.55, minHeight: 48,
                   }}>
                     {user.bio || 'Chưa có thông tin giới thiệu công việc.'}
                   </div>
@@ -917,7 +917,7 @@ export default function UserDetail() {
           <div style={{ ...CARD, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Award size={18} color="#b45309" />
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                 Huy Hiệu & Vinh Danh Chính Thức (Official Recognitions)
               </h3>
             </div>
@@ -931,7 +931,7 @@ export default function UserDetail() {
               }}>
                 <VerifiedBadge size={22} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isVerified ? '#b45309' : '#64748b' }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: isVerified ? '#b45309' : '#64748b' }}>
                     {isVerified ? 'Tài Khoản Đã Xác Thực' : 'Chưa Cấp Tích Xanh'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Được Ban Quản Trị cấp tích xanh định danh</div>
@@ -947,7 +947,7 @@ export default function UserDetail() {
               }}>
                 <Code size={20} color={isDev ? '#0891b2' : '#94a3b8'} strokeWidth={2.5} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isDev ? '#0891b2' : '#64748b' }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: isDev ? '#0891b2' : '#64748b' }}>
                     {isDev ? 'Kỹ Sư Phát Triển (Dev)' : 'Không Thuộc Dev Team'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Đội ngũ phát triển và kỹ thuật 3winmedia</div>
@@ -963,7 +963,7 @@ export default function UserDetail() {
               }}>
                 <Trophy size={20} color={isChampion ? '#d97706' : '#94a3b8'} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isChampion ? '#d97706' : '#64748b' }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: isChampion ? '#d97706' : '#64748b' }}>
                     {isChampion ? `Vô Địch Giải Đấu (${championCount} Cúp)` : 'Chưa Có Cúp Vô Địch'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Quán quân mùa giải / Grand Championship</div>
@@ -979,7 +979,7 @@ export default function UserDetail() {
               }}>
                 <Sparkles size={20} color={isMvp ? '#b45309' : '#94a3b8'} />
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 12, color: isMvp ? '#b45309' : '#64748b' }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: isMvp ? '#b45309' : '#64748b' }}>
                     {isMvp ? `Nhân Viên Xuất Sắc (${mvpCount} MVP)` : 'Chưa Có Danh Hiệu MVP'}
                   </div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Vinh danh thành tích đóng góp nổi bật</div>
@@ -990,7 +990,7 @@ export default function UserDetail() {
             {/* Chi tiết danh sách giải thưởng nếu có */}
             {awards.length > 0 && (
               <div style={{ marginTop: 14, borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Danh Sách Các Giải Thưởng Đã Vinh Danh:</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>Danh Sách Các Giải Thưởng Đã Vinh Danh:</div>
                 {awards.map((a) => (
                   <div key={a.id} style={{ padding: '8px 12px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11 }}>
                     <div>
@@ -1018,14 +1018,14 @@ export default function UserDetail() {
             {/* MÙA GIẢI HIỆN TẠI */}
             <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#b45309', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Swords size={13} color="#b45309" /> Đấu Trường Mùa Giải
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#b45309' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309' }}>
                   {competition?.currentSeasonRank ? `HẠNG #${competition.currentSeasonRank}` : 'Chưa xếp hạng'}
                 </span>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
                 {fmtNum(competition?.currentSeasonScore || 0)} <span style={{ fontSize: 12, color: '#64748b' }}>pts</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -1036,14 +1036,14 @@ export default function UserDetail() {
             {/* GRAND CHAMPIONSHIP 2026 */}
             <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #d97706' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#d97706', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Crown size={13} color="#d97706" /> Grand Championship
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#d97706' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>
                   {competition?.grandRank ? `HẠNG #${competition.grandRank}` : 'Chưa xếp hạng'}
                 </span>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>
                 {fmtNum(competition?.grandPoints || 0)} <span style={{ fontSize: 12, color: '#64748b' }}>GP</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -1053,10 +1053,10 @@ export default function UserDetail() {
 
             {/* SỐ MÙA VÔ ĐỊCH */}
             <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #16a34a' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#16a34a', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <Trophy size={13} color="#16a34a" /> Mùa Vô Địch & Top 3
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
                 {competition?.seasonWins || 0} <span style={{ fontSize: 12, color: '#64748b' }}>vô địch / {competition?.podiumCount || 0} top 3</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -1066,10 +1066,10 @@ export default function UserDetail() {
 
             {/* MVP & PHONG ĐỘ */}
             <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <Sparkles size={13} color="#b45309" /> Danh Hiệu MVP Mùa
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
+              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
                 {competition?.mvpCount || 0} <span style={{ fontSize: 12, color: '#64748b' }}>lần MVP</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -1087,7 +1087,7 @@ export default function UserDetail() {
           {/* Nút Chuyển Đến Bảng Xếp Hạng */}
           <div style={{ ...CARD, padding: 18, background: 'rgba(180,83,9,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>Xem đối chiếu thứ hạng toàn diện trên Bảng Xếp Hạng</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Xem đối chiếu thứ hạng toàn diện trên Bảng Xếp Hạng</div>
               <div style={{ fontSize: 11, color: '#64748b' }}>So sánh điểm số cùng đồng đội trong Đội và toàn thể công ty</div>
             </div>
             <Link
@@ -1095,7 +1095,7 @@ export default function UserDetail() {
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '8px 16px', background: '#0f172a', color: '#fff',
-                fontSize: 12, fontWeight: 800, textDecoration: 'none',
+                fontSize: 12, fontWeight: 600, textDecoration: 'none',
               }}
             >
               Xem Bảng Xếp Hạng <ExternalLink size={13} />
@@ -1113,36 +1113,36 @@ export default function UserDetail() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Tv size={18} color="#dc2626" />
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                     Sản Lượng Truyền Thông YouTube ({youtubeSummary.teamName})
                   </h3>
                 </div>
-                <Link to="/youtube" style={{ fontSize: 12, fontWeight: 800, color: '#dc2626', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Link to="/youtube" style={{ fontSize: 12, fontWeight: 600, color: '#dc2626', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                   YouTube Studio <ExternalLink size={12} />
                 </Link>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <div style={{ padding: 12, background: 'rgba(220,38,38,0.04)', border: '1px solid rgba(220,38,38,0.1)' }}>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Tổng Lượt Xem Kênh</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#dc2626', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
                     {fmtNum(youtubeSummary.totalViews)}
                   </div>
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Người Đăng Ký</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
                     {fmtNum(youtubeSummary.totalSubscribers)}
                   </div>
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Quy Mô Kênh</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginTop: 2 }}>
                     {youtubeSummary.channelsCount} kênh · {youtubeSummary.videosCount} video
                   </div>
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Tăng Trưởng 30 Ngày</div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: '#16a34a', marginTop: 2 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#16a34a', marginTop: 2 }}>
                     +{youtubeSummary.viewsGrowth30dPct || 0}%
                   </div>
                 </div>
@@ -1155,11 +1155,11 @@ export default function UserDetail() {
             <div style={{ ...CARD, padding: 20, borderLeft: '4px solid #b45309' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Video size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Nhiệm Vụ Sản Xuất Video & Biên Tập (Editor Workspace)
                 </h3>
               </div>
-              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
                 Thành viên đảm nhiệm vai trò <strong>{jobTitle}</strong> tại phòng ban <strong>{department}</strong>.
                 Thực hiện các quy trình: Duyệt kịch bản (Script Approved) $\rightarrow$ Biên tập video (Edit Approved) $\rightarrow$ Kiểm soát chất lượng (QC Passed) $\rightarrow$ Xuất bản nội dung.
               </div>
@@ -1171,11 +1171,11 @@ export default function UserDetail() {
             <div style={{ ...CARD, padding: 20, borderLeft: '4px solid #f59e0b' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Users size={18} color="#f59e0b" />
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   Quản Trị Đội Nhóm: {team.name}
                 </h3>
               </div>
-              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
                 Chịu trách nhiệm quản lý trực tiếp đội ngũ và chỉ đạo sản lượng thi đấu của <strong>{team.name}</strong>.
               </div>
             </div>
@@ -1188,7 +1188,7 @@ export default function UserDetail() {
         <div style={{ ...CARD, overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                 Hồ Sơ Thi Đấu Qua Các Mùa Giải (Season Participation History)
               </h3>
               <span style={{ fontSize: 11, color: '#64748b' }}>
@@ -1200,10 +1200,10 @@ export default function UserDetail() {
             <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                  <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Mùa Giải</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Đội Thuộc Về (Lúc Thi Đấu)</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Thứ Hạng</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Điểm Tích Lũy</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Mùa Giải</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Thuộc Về (Lúc Thi Đấu)</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thứ Hạng</th>
+                  <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Tích Lũy</th>
                 </tr>
               </thead>
               <tbody>
@@ -1216,22 +1216,22 @@ export default function UserDetail() {
                 ) : (
                   historicalSeasons.map((h, i) => (
                     <tr key={h.seasonId || i} style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
-                      <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0f172a' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#0f172a' }}>
                         Season #{h.seasonId}
                       </td>
-                      <td style={{ padding: '12px 16px', fontWeight: 800, color: '#b45309' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#b45309' }}>
                         {h.teamName || 'Đội độc lập'}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{
-                          padding: '2px 8px', fontSize: 11, fontWeight: 900,
+                          padding: '2px 8px', fontSize: 11, fontWeight: 600,
                           background: h.rank === 1 ? '#fef3c7' : 'rgba(15,23,42,0.06)',
                           color: h.rank === 1 ? '#b45309' : '#0f172a',
                         }}>
                           #{h.rank}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", color: '#0f172a' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: '#0f172a' }}>
                         {fmtNum(h.points)} pts
                       </td>
                     </tr>
@@ -1268,7 +1268,7 @@ export default function UserDetail() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#b45309" />
-                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   {isAdmin ? 'Quản Trị Hồ Sơ Nhân Sự (Admin)' : 'Cập Nhật Thông Tin Cá Nhân'}
                 </h2>
               </div>
@@ -1282,12 +1282,12 @@ export default function UserDetail() {
             </div>
 
             {saveSuccess && (
-              <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a', fontSize: 12, fontWeight: 800, marginBottom: 14 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
                 {saveSuccess}
               </div>
             )}
             {saveError && (
-              <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626', fontSize: 12, fontWeight: 800, marginBottom: 14 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
                 {saveError}
               </div>
             )}
@@ -1295,7 +1295,7 @@ export default function UserDetail() {
             <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Tên hiển thị */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
                   Họ và Tên Nhân Viên *
                 </label>
                 <input
@@ -1309,7 +1309,7 @@ export default function UserDetail() {
 
               {/* Vị trí công tác (Job Title) */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
                   Vị Trí Công Tác / Chức Danh {!isAdmin && <span style={{ color: '#94a3b8' }}>(Admin quản lý)</span>}
                 </label>
                 {isAdmin ? (
@@ -1342,7 +1342,7 @@ export default function UserDetail() {
 
               {/* Phòng ban (Department) */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
                   Phòng Ban {!isAdmin && <span style={{ color: '#94a3b8' }}>(Admin quản lý)</span>}
                 </label>
                 {isAdmin ? (
@@ -1369,7 +1369,7 @@ export default function UserDetail() {
 
               {/* Số điện thoại */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
                   Số Điện Thoại Liên Hệ
                 </label>
                 <input
@@ -1383,7 +1383,7 @@ export default function UserDetail() {
 
               {/* Bio */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
                   Tiểu Sử & Trách Nhiệm Công Việc
                 </label>
                 <textarea
@@ -1397,7 +1397,7 @@ export default function UserDetail() {
 
               {/* Ảnh đại diện Avatar */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
                   Ảnh Đại Diện
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -1422,7 +1422,7 @@ export default function UserDetail() {
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <span style={{ fontSize: 18, fontWeight: 900, color: '#b45309' }}>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>
                         {initialsFromName(editForm.name || user.name)}
                       </span>
                     )}
@@ -1442,7 +1442,7 @@ export default function UserDetail() {
                           alignSelf: 'flex-start',
                           padding: '2px 8px',
                           fontSize: 10,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           color: '#dc2626',
                           background: '#fee2e2',
                           border: '1px solid #fecaca',
@@ -1459,12 +1459,12 @@ export default function UserDetail() {
               {/* Các trường quản trị chỉ Admin mới có */}
               {isAdmin && (
                 <div style={{ marginTop: 8, padding: 12, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.1)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 900, color: '#dc2626', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase' }}>
                     Quyền Quản Trị Hệ Thống (Admin Only)
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 10, fontWeight: 800, color: '#64748b', marginBottom: 2 }}>Phân Quyền (Role)</label>
+                      <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 2 }}>Phân Quyền (Role)</label>
                       <select
                         value={editForm.role}
                         onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
@@ -1476,7 +1476,7 @@ export default function UserDetail() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 10, fontWeight: 800, color: '#64748b', marginBottom: 2 }}>Trạng Thái</label>
+                      <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 2 }}>Trạng Thái</label>
                       <select
                         value={editForm.status}
                         onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
@@ -1495,7 +1495,7 @@ export default function UserDetail() {
                         checked={editForm.isVerified}
                         onChange={(e) => setEditForm({ ...editForm, isVerified: e.target.checked })}
                       />
-                      <label htmlFor="isVerifiedCheck" style={{ fontSize: 12, fontWeight: 800, color: '#b45309', cursor: 'pointer' }}>
+                      <label htmlFor="isVerifiedCheck" style={{ fontSize: 12, fontWeight: 600, color: '#b45309', cursor: 'pointer' }}>
                         Cấp Tích Xanh Chính Thức (Verified Badge)
                       </label>
                     </div>
@@ -1507,7 +1507,7 @@ export default function UserDetail() {
                         checked={editForm.isDev}
                         onChange={(e) => setEditForm({ ...editForm, isDev: e.target.checked })}
                       />
-                      <label htmlFor="isDevCheck" style={{ fontSize: 12, fontWeight: 800, color: '#0891b2', cursor: 'pointer' }}>
+                      <label htmlFor="isDevCheck" style={{ fontSize: 12, fontWeight: 600, color: '#0891b2', cursor: 'pointer' }}>
                         Cấp Huy Hiệu Kỹ Thuật (Developer Badge)
                       </label>
                     </div>
@@ -1520,7 +1520,7 @@ export default function UserDetail() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  style={{ padding: '8px 16px', background: 'transparent', border: '1px solid rgba(15,23,42,0.15)', color: '#64748b', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ padding: '8px 16px', background: 'transparent', border: '1px solid rgba(15,23,42,0.15)', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1529,7 +1529,7 @@ export default function UserDetail() {
                   disabled={saving}
                   style={{
                     padding: '8px 20px', background: '#b45309', color: '#fff', border: 'none',
-                    fontSize: 12, fontWeight: 900, cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -1617,7 +1617,7 @@ export default function UserDetail() {
                 background: '#0f172a',
                 color: '#ffffff',
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 600,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -1635,7 +1635,7 @@ export default function UserDetail() {
                   color: '#94a3b8',
                   border: 'none',
                   fontSize: 11,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
