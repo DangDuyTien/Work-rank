@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, LogIn, UserPlus, Trophy, Sparkles, LayoutDashboard } from 'lucide-react';
+import { ArrowRight, LogIn, UserPlus, Trophy, Sparkles, LayoutDashboard, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import BrandMark from './BrandMark';
 
@@ -8,6 +8,7 @@ export default function PublicHeader({ activeNav = '' }) {
   const { user } = useAuth();
   const location = useLocation();
   const isSignedIn = Boolean(user);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { label: 'Trang Chủ', href: '/' },
@@ -68,7 +69,7 @@ export default function PublicHeader({ activeNav = '' }) {
           {isSignedIn ? (
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[6px] transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[4px] transition-all shadow-sm"
             >
               <LayoutDashboard size={14} />
               <span>Vào Workspace ({user?.name || 'Thành viên'})</span>
@@ -85,15 +86,59 @@ export default function PublicHeader({ activeNav = '' }) {
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[6px] transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[4px] transition-all shadow-sm"
               >
                 <LogIn size={14} />
                 <span>Đăng nhập</span>
               </Link>
             </>
           )}
+
+          {/* Mobile hamburger button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-[#111111] hover:bg-black/5 rounded-[4px] transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile dropdown menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-[#f7f5f0] border-b border-black/10 px-6 py-4 space-y-3">
+          {navLinks.map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-semibold uppercase tracking-[0.06em] text-[#333333] hover:text-[#b45309] py-1.5"
+            >
+              {item.label}
+            </Link>
+          ))}
+          {!isSignedIn && (
+            <div className="pt-3 border-t border-black/10 flex items-center gap-3">
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 py-2 text-center text-xs font-semibold text-[#111111] border border-black/20 rounded-[4px]"
+              >
+                Đăng ký
+              </Link>
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 py-2 text-center text-xs font-semibold text-white bg-[#111111] rounded-[4px]"
+              >
+                Đăng nhập
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
