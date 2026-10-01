@@ -219,49 +219,70 @@ async function getPublicSeasons() {
 
   const list = [];
   for (const s of seasons) {
-    // Find frozen result or projection
     const frozen = await SeasonFrozenResult.findOne({
       where: { seasonId: s.id },
       order: [['id', 'DESC']],
     });
 
-    let championTeamName = 'Đang thi đấu';
-    let mvpName = 'Đang xác định';
-
+    let teamsList = [];
     if (frozen?.finalRankings) {
-      const champ = Array.isArray(frozen.finalRankings)
-        ? frozen.finalRankings.find((r) => r.rank === 1)
-        : frozen.finalRankings?.rankings?.find((r) => r.rank === 1) || frozen.finalRankings?.teams?.find((r) => r.rank === 1);
-      if (champ?.teamName) championTeamName = champ.teamName;
+      const raw = Array.isArray(frozen.finalRankings)
+        ? frozen.finalRankings
+        : frozen.finalRankings?.rankings || frozen.finalRankings?.teams || [];
+      teamsList = raw.map((t, idx) => ({
+        teamId: t.teamId,
+        teamName: t.teamName || t.nameSnapshot || 'Đội tuyển',
+        rank: t.rank || idx + 1,
+        role: (t.rank === 1 || idx === 0) ? 'CHAMPION TEAM' : `FINALIST #${t.rank || idx + 1}`,
+        color: t.color || '#0284c7',
+        avatarUrl: t.teamAvatar || t.avatarUrl || null,
+      }));
     } else {
-      const topProj = await SeasonLeaderboardProjection.findOne({ where: { seasonId: s.id, rank: 1 } });
-      if (topProj?.teamName) championTeamName = topProj.teamName;
-    }
-
-    const mvpRec = await UserRecognition.findOne({
-      where: { seasonId: s.id, awardType: { [Op.in]: ['mvp', 'champion'] } },
-      include: [{ model: User, as: 'user', attributes: ['name'] }],
-    });
-
-    if (mvpRec?.user?.name) {
-      mvpName = mvpRec.user.name;
-    } else {
-      const topInd = await SeasonIndividualLeaderboardProjection.findOne({
-        where: { seasonId: s.id, rank: 1 },
+      const projs = await SeasonLeaderboardProjection.findAll({
+        where: { seasonId: s.id },
+        order: [['rank', 'ASC']],
+        limit: 8,
       });
-      if (topInd?.userName) mvpName = topInd.userName;
+      if (projs && projs.length > 0) {
+        teamsList = projs.map((p) => ({
+          teamId: p.teamId,
+          teamName: p.teamName,
+          rank: p.rank,
+          role: p.rank === 1 ? 'CHAMPION TEAM' : `RANK #${p.rank}`,
+          color: '#0284c7',
+          avatarUrl: p.teamAvatar || null,
+        }));
+      } else {
+        const seasonTeams = await SeasonTeam.findAll({
+          where: { seasonId: s.id },
+          limit: 8,
+        });
+        teamsList = seasonTeams.map((st, idx) => ({
+          teamId: st.teamId,
+          teamName: st.teamNameSnapshot || 'Đội tuyển',
+          rank: idx + 1,
+          role: idx === 0 ? 'PARTICIPATING TEAM' : `TEAM #${idx + 1}`,
+          color: st.teamColorSnapshot || '#0284c7',
+          avatarUrl: st.teamAvatarSnapshot || null,
+        }));
+      }
     }
+
+    const championTeam = teamsList.find((t) => t.rank === 1) || teamsList[0] || null;
+    const year = s.startAt ? new Date(s.startAt).getFullYear() : 2026;
 
     list.push({
       id: s.id,
       name: s.name,
       slug: s.slug,
+      year,
       seasonType: s.seasonType,
       status: s.status,
       startAt: s.startAt,
       endAt: s.endAt,
-      championTeamName,
-      mvpName,
+      championTeam,
+      championTeamName: championTeam?.teamName || 'Đang thi đấu',
+      teams: teamsList,
     });
   }
 

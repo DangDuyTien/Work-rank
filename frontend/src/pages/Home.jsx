@@ -1,29 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  Trophy,
-  Star,
-  Crown,
-  Medal,
-  Award,
-  Sparkles,
-  Users,
-  UserRound,
-  CheckCircle2,
-  Tv,
-  Swords,
-  Gamepad2,
-  ShieldCheck,
-  Flame,
-  ChevronRight,
-  Play,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, Trophy, Sparkles, X, LayoutDashboard, ChevronRight } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import BrandMark from '../components/BrandMark';
-import VerifiedBadge from '../components/VerifiedBadge';
-import { initialsFromName } from '../utils/avatar';
 import { useAuth } from '../context/AuthContext';
 import { competition } from '../services/api';
 
@@ -31,579 +10,311 @@ export default function Home() {
   const { user } = useAuth();
   const isSignedIn = Boolean(user);
 
-  const [spotlight, setSpotlight] = useState({
-    hasSpotlight: false,
-    season: null,
-    championTeam: null,
-    mvp: null,
-  });
-  const [seasonsArchive, setSeasonsArchive] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSeasonDetail, setSelectedSeasonDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      competition.getPublicSpotlight().catch(() => null),
-      competition.getPublicSeasons().catch(() => []),
-    ]).then(([spotData, archiveList]) => {
-      if (!isMounted) return;
-      if (spotData) setSpotlight(spotData);
-      if (archiveList) setSeasonsArchive(archiveList);
-      setLoading(false);
-    });
+    competition
+      .getPublicSeasons()
+      .then((data) => {
+        if (isMounted) {
+          setSeasons(data || []);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const { season, championTeam, mvp } = spotlight;
+  const handleOpenSeasonDetail = async (seasonId) => {
+    setDetailLoading(true);
+    try {
+      const data = await competition.getPublicSeasonDetail(seasonId);
+      setSelectedSeasonDetail(data);
+    } catch (err) {
+      console.warn('Cannot load season detail:', err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // Group seasons by year if available, or list sequentially
+  const latestSeason = seasons[0] || null;
 
   return (
-    <div className="min-h-screen bg-[#f7f5f0] text-[#111111] font-['Space_Grotesk'] antialiased selection:bg-[#b45309]/20">
+    <div className="min-h-screen bg-[#f7f5f0] text-[#111111] font-['Space_Grotesk'] antialiased selection:bg-[#b45309]/20 flex flex-col">
       <PublicHeader activeNav="Trang Chủ" />
 
-      {/* ── 1. HERO SECTION: MASSIVE OVERSIZED EDITORIAL TYPOGRAPHY ── */}
-      <section className="pt-14 pb-16 sm:pt-20 sm:pb-24 border-b border-black/10">
+      {/* ── 1. HERO SECTION: ULTRA-MINIMAL EDITORIAL ── */}
+      <section className="pt-16 pb-14 sm:pt-24 sm:pb-20 border-b border-black/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          {/* Eyebrow */}
-          <div className="flex items-center gap-3 mb-6">
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-[#b45309]">
-              WORKRANK PLATFORM
+          <div className="max-w-3xl">
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[#b45309] block mb-4">
+              WORKRANK • 3WIN MEDIA
             </span>
-            <span className="text-black/30">•</span>
-            <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#666666]">
-              3WIN MEDIA ENTERPRISE
-            </span>
-          </div>
 
-          {/* Giant Display Headline */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
-            <div className="lg:col-span-8">
-              <h1 className="text-[clamp(46px,7.5vw,104px)] font-bold tracking-tight uppercase leading-[0.92] text-[#111111]">
-                MỘT NƠI <br />
-                ĐỂ GHI DẤU <br />
-                <span className="text-[#b45309]">THÀNH TÍCH.</span>
-              </h1>
-            </div>
+            <h1 className="text-[clamp(52px,8.5vw,110px)] font-black tracking-tight uppercase leading-[0.9] text-[#111111] mb-6">
+              MỘT NƠI <br />
+              ĐỂ GHI DẤU <br />
+              <span className="text-[#b45309]">THÀNH TÍCH.</span>
+            </h1>
 
-            <div className="lg:col-span-4 flex flex-col justify-end pb-2">
-              <p className="text-sm sm:text-base text-[#555555] leading-relaxed mb-6">
-                Nền tảng ghi nhận nỗ lực làm việc thời gian thực, đồng bộ chỉ số YouTube
-                minh bạch, tổ chức thi đua mùa giải và vinh danh những cá nhân, đội nhóm
-                xuất sắc nhất tại 3WIN Media.
-              </p>
+            <p className="text-base sm:text-lg text-[#555555] leading-relaxed max-w-xl mb-8">
+              Nền tảng nội bộ ghi nhận thành tích, đội nhóm và hành trình thi đua của WorkRank 3WIN Media.
+            </p>
 
-              <div className="flex items-center gap-3 flex-wrap">
-                {isSignedIn ? (
-                  <Link
-                    to="/dashboard"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[4px] transition-all shadow-sm"
-                  >
-                    <span>Vào Không Gian Làm Việc</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#111111] hover:bg-[#262626] text-white text-xs sm:text-sm font-semibold rounded-[4px] transition-all shadow-sm"
-                    >
-                      <span>Đăng Nhập Ngay</span>
-                      <ArrowRight size={14} />
-                    </Link>
-                    <a
-                      href="#showcase"
-                      className="inline-flex items-center gap-2 px-5 py-3 bg-transparent hover:bg-black/5 text-[#111111] border border-black/20 text-xs sm:text-sm font-semibold rounded-[4px] transition-all"
-                    >
-                      <span>Xem Vinh Danh</span>
-                    </a>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 2. SECTION 01: WHAT IS WORKRANK (3-COLUMN EDITORIAL GRID) ── */}
-      <section className="py-14 sm:py-20 border-b border-black/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="mb-10">
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#b45309]">
-              01 / TỔNG QUAN HỆ THỐNG
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight uppercase text-[#111111] mt-1">
-              NGUYÊN LÝ HOẠT ĐỘNG
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 divide-y md:divide-y-0 md:divide-x divide-black/10">
-            {/* Column 1 */}
-            <div className="pt-6 md:pt-0 md:pr-8">
-              <span className="font-mono text-2xl font-bold text-[#111111] block mb-3">
-                01.
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-2">
-                GHI NHẬN TỰ ĐỘNG
-              </h3>
-              <p className="text-sm text-[#555555] leading-relaxed">
-                Mọi đóng góp sản xuất video, duyệt nội dung và hỗ trợ đồng nghiệp đều được
-                ingest tự động qua Outbox pattern vào Event Store bất biến, loại bỏ hoàn
-                toàn thao tác chấm điểm thủ công.
-              </p>
-            </div>
-
-            {/* Column 2 */}
-            <div className="pt-6 md:pt-0 md:px-8">
-              <span className="font-mono text-2xl font-bold text-[#111111] block mb-3">
-                02.
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-2">
-                THI ĐUA MÙA GIẢI
-              </h3>
-              <p className="text-sm text-[#555555] leading-relaxed">
-                Các đội tuyển tranh tài theo từng Season định kỳ. Điểm số cá nhân và đội
-                nhóm được tính toán theo bộ luật AST chuẩn hóa, đóng băng kết quả và trao
-                Grand Points minh bạch.
-              </p>
-            </div>
-
-            {/* Column 3 */}
-            <div className="pt-6 md:pt-0 md:pl-8">
-              <span className="font-mono text-2xl font-bold text-[#111111] block mb-3">
-                03.
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-2">
-                DỮ LIỆU YOUTUBE THẬT
-              </h3>
-              <p className="text-sm text-[#555555] leading-relaxed">
-                Tích hợp trực tiếp YouTube Data API v3 đo lường lượt xem, số lượng đăng ký
-                và tốc độ tăng trưởng của từng kênh, tổng hợp chính xác theo từng đội và
-                toàn công ty.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3. SECTION 02: SEASON / CHAMPIONSHIP AWARD SHOWCASE (HERO VISUAL) ── */}
-      <section id="showcase" className="py-14 sm:py-20 border-b border-black/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-4 border-b border-black/10">
             <div>
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#b45309]">
-                02 / VINH DANH MÙA GIẢI
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight uppercase text-[#111111] mt-1">
-                {season?.name || 'SEASON SPOTLIGHT 2026'}
-              </h2>
-            </div>
-
-            <Link
-              to="/award"
-              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#b45309] hover:underline"
-            >
-              <span>Xem Toàn Bộ Bảng Vinh Danh</span>
-              <ChevronRight size={14} />
-            </Link>
-          </div>
-
-          {/* Windham-Campbell Style Split Editorial Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-            {/* Left Column (5 Cols): Large Framed MVP Portrait */}
-            <div className="lg:col-span-5">
-              <div className="bg-white border border-black/12 p-5 sm:p-6 shadow-sm rounded-[4px]">
-                {/* Large Framed Image */}
-                <div className="relative aspect-[4/4.8] w-full bg-[#edeae3] border border-black/10 overflow-hidden flex items-center justify-center">
-                  {mvp?.avatarData ? (
-                    <img
-                      src={mvp.avatarData}
-                      alt={mvp.name}
-                      className="w-full h-full object-cover object-top filter grayscale contrast-105"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-8 text-center">
-                      <div className="w-20 h-20 rounded-full bg-[#111111] text-white flex items-center justify-center text-2xl font-bold font-mono mb-4">
-                        {mvp ? initialsFromName(mvp.name) : 'MVP'}
-                      </div>
-                      <span className="text-sm font-semibold text-[#555555]">
-                        {mvp?.name || 'Đang cập nhật danh hiệu'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Top Badge */}
-                  <div className="absolute top-3 left-3 bg-[#111111] text-white px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.15em] flex items-center gap-1.5 shadow-sm">
-                    <Star size={11} className="text-[#b45309]" />
-                    <span>MOST VALUABLE PLAYER</span>
-                  </div>
-
-                  {/* Score Tag */}
-                  {mvp && (
-                    <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm border border-black/10 px-3 py-1.5 shadow-sm">
-                      <span className="font-mono text-xs font-bold text-[#111111]">
-                        +{mvp.score?.toLocaleString() || 0} XP
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Info block */}
-                <div className="mt-5">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-[#111111]">
-                      {mvp?.name || 'Thành viên xuất sắc'}
-                    </h3>
-                    {mvp?.isVerified && <VerifiedBadge size={16} />}
-                  </div>
-
-                  <p className="font-mono text-xs font-semibold text-[#666666] uppercase tracking-[0.08em] mt-1">
-                    {mvp?.jobTitle || 'Chuyên viên'} • {mvp?.department || 'Media Production'}
-                  </p>
-
-                  <div className="mt-4 pt-4 border-t border-black/10 text-sm text-[#444444] leading-relaxed italic">
-                    "{mvp?.reason || 'Cá nhân có đóng góp nổi bật nhất trong mùa giải, dẫn đầu bảng xếp hạng cá nhân.'}"
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column (7 Cols): Category Stack & Team Winner */}
-            <div className="lg:col-span-7 flex flex-col justify-between">
-              {/* Champion Team Box */}
-              <div className="bg-white border border-black/12 p-6 sm:p-8 rounded-[4px] shadow-sm mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-black/10">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-14 h-14 rounded-[4px] flex items-center justify-center text-white text-xl font-bold shadow-sm"
-                      style={{ backgroundColor: championTeam?.color || '#0284c7' }}
-                    >
-                      <Trophy size={28} />
-                    </div>
-                    <div>
-                      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#b45309]">
-                        ĐỘI VÔ ĐỊCH MÙA GIẢI
-                      </span>
-                      <h3 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-[#111111]">
-                        {championTeam?.teamName || 'Đội tuyển Vô Địch'}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="text-left sm:text-right">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#777777] block">
-                      TỔNG ĐIỂM
-                    </span>
-                    <span className="text-2xl sm:text-3xl font-bold font-mono text-[#111111]">
-                      {championTeam?.seasonScore?.toLocaleString() || 0} XP
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6">
-                  <div>
-                    <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#777777] block">
-                      GRAND POINTS
-                    </span>
-                    <span className="text-lg font-bold font-mono text-[#b45309] mt-0.5 block">
-                      +{championTeam?.grandPoints || 10} PTS
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#777777] block">
-                      QUY MÔ ĐỘI
-                    </span>
-                    <span className="text-lg font-bold font-mono text-[#111111] mt-0.5 block">
-                      {championTeam?.membersCount || 8} Nhân sự
-                    </span>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#777777] block">
-                      TRẠNG THÁI
-                    </span>
-                    <span className="text-sm font-bold text-[#111111] mt-0.5 block">
-                      Đã Quyết Toán Kết Quả
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Editorial Breakdown Rows */}
-              <div className="border-t border-black/10 divide-y divide-black/10">
-                <div className="py-4 flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-[#111111]">
-                    LOẠI MÙA GIẢI
-                  </span>
-                  <span className="font-mono text-xs text-[#555555] uppercase">
-                    {season?.seasonType || 'MONTHLY TOURNAMENT'}
-                  </span>
-                </div>
-
-                <div className="py-4 flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-[#111111]">
-                    THỜI ĐIỂM ĐÓNG BĂNG KẾT QUẢ
-                  </span>
-                  <span className="text-xs text-[#555555]">
-                    {season?.frozenAt
-                      ? new Date(season.frozenAt).toLocaleDateString('vi-VN')
-                      : 'Đang diễn ra'}
-                  </span>
-                </div>
-
-                <div className="py-4 flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-[#111111]">
-                    SỔ CÁI BẤT BIẾN
-                  </span>
-                  <span className="font-mono text-xs font-bold text-emerald-700">
-                    ZERO DRIFT VERIFIED
-                  </span>
-                </div>
-              </div>
+              {isSignedIn ? (
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#111111] hover:bg-[#262626] text-white text-sm font-bold uppercase tracking-[0.05em] rounded-[2px] transition-all shadow-sm"
+                >
+                  <LayoutDashboard size={16} />
+                  <span>Vào Không Gian Làm Việc</span>
+                  <ArrowRight size={15} />
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#111111] hover:bg-[#262626] text-white text-sm font-bold uppercase tracking-[0.05em] rounded-[2px] transition-all shadow-sm"
+                >
+                  <span>Vào Workspace Ngay</span>
+                  <ArrowRight size={15} />
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 4. SECTION 03: SEASON ARCHIVE (EDITORIAL LIST) ── */}
-      <section id="archive" className="py-14 sm:py-20 border-b border-black/10">
+      {/* ── 2. EDITORIAL AWARD ARCHIVE (WINDHAM-CAMPBELL COMPOSITION) ── */}
+      <section className="py-16 sm:py-24 flex-1">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="mb-10">
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#b45309]">
-              03 / KHO LƯU TRỮ MÙA GIẢI
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight uppercase text-[#111111] mt-1">
-              DANH SÁCH CÁC MÙA THI ĐẤU
+          {/* Giant Section Display Header */}
+          <div className="mb-14 sm:mb-20">
+            <h2 className="text-[clamp(64px,11vw,150px)] font-black tracking-tight uppercase leading-[0.88] text-[#c25e40]">
+              Vinh danh
             </h2>
           </div>
 
-          <div className="border-t border-black/15 divide-y divide-black/10">
-            {seasonsArchive.length > 0 ? (
-              seasonsArchive.map((s, idx) => (
-                <div
-                  key={s.id}
-                  className="py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-black/[0.02] px-2 rounded-[2px] transition-colors"
-                >
-                  <div className="flex items-start md:items-center gap-4">
-                    <span className="font-mono text-xs font-bold text-[#888888] w-6 pt-0.5 md:pt-0">
-                      {(idx + 1).toString().padStart(2, '0')}
-                    </span>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold uppercase tracking-tight text-[#111111]">
-                        {s.name}
+          {/* Seasons Stream */}
+          {seasons.length > 0 ? (
+            <div className="space-y-24 sm:space-y-36">
+              {seasons.map((seasonItem, sIdx) => {
+                const year = seasonItem.year || (seasonItem.startAt ? new Date(seasonItem.startAt).getFullYear() : 2026);
+                const featuredTeam = seasonItem.championTeam || seasonItem.teams?.[0] || null;
+                const teamsList = seasonItem.teams || [];
+
+                return (
+                  <div key={seasonItem.id || sIdx} className="space-y-8">
+                    {/* Big Year / Season Title */}
+                    <div className="flex items-baseline justify-between border-b-2 border-black pb-2">
+                      <h3 className="text-[clamp(42px,6vw,84px)] font-black tracking-tight text-[#111111] leading-none">
+                        {year}
                       </h3>
-                      <span className="font-mono text-[11px] text-[#777777]">
-                        {s.startAt ? new Date(s.startAt).getFullYear() : 2026} • {s.seasonType || 'MONTHLY'}
+                      <span className="font-mono text-xs sm:text-sm font-bold uppercase tracking-[0.14em] text-[#777777]">
+                        {seasonItem.name}
                       </span>
+                    </div>
+
+                    {/* 3-Column Editorial Grid matching Reference */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                      {/* Column 1 (Left): Graphic Frame + Large Featured Team Image */}
+                      <div className="lg:col-span-4 flex items-center justify-center">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          {/* Giant Left Quote Glyph */}
+                          <span className="font-['Space_Grotesk'] text-6xl sm:text-8xl lg:text-9xl font-black text-black select-none leading-none -mr-1">
+                            “
+                          </span>
+
+                          {/* Large Team Image Rectangular Frame */}
+                          <div className="relative aspect-[3/4] w-48 sm:w-56 lg:w-60 bg-[#edeae3] border border-black overflow-hidden shadow-sm flex items-center justify-center">
+                            {featuredTeam?.avatarUrl ? (
+                              <img
+                                src={featuredTeam.avatarUrl}
+                                alt={featuredTeam.teamName}
+                                className="w-full h-full object-cover filter grayscale contrast-105"
+                              />
+                            ) : (
+                              <div
+                                className="w-full h-full flex flex-col items-center justify-center text-white p-4 text-center"
+                                style={{ backgroundColor: featuredTeam?.color || '#1a1a1a' }}
+                              >
+                                <Trophy size={48} className="text-[#facc15] mb-3" />
+                                <span className="font-bold text-base sm:text-lg uppercase tracking-tight">
+                                  {featuredTeam?.teamName || 'VÔ ĐỊCH'}
+                                </span>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/70 mt-1">
+                                  CHAMPION TEAM
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Caption Badge */}
+                            <div className="absolute bottom-2 left-2 right-2 bg-black/85 backdrop-blur-sm text-white px-2.5 py-1 text-center font-mono text-[10px] font-bold uppercase tracking-[0.12em]">
+                              {featuredTeam?.teamName || 'CHAMPION'}
+                            </div>
+                          </div>
+
+                          {/* Giant Right Quote Glyph */}
+                          <span className="font-['Space_Grotesk'] text-6xl sm:text-8xl lg:text-9xl font-black text-black select-none leading-none -ml-1">
+                            ”
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Column 2 (Center): Major Category / Championship Stacks */}
+                      <div className="lg:col-span-3 flex flex-col justify-center space-y-2">
+                        <span className="text-[clamp(26px,3.4vw,44px)] font-black tracking-tight uppercase leading-[1.02] text-[#111111] block">
+                          CHAMPION
+                        </span>
+                        <span className="text-[clamp(26px,3.4vw,44px)] font-black tracking-tight uppercase leading-[1.02] text-[#111111] block">
+                          FINALIST
+                        </span>
+                        <span className="text-[clamp(26px,3.4vw,44px)] font-black tracking-tight uppercase leading-[1.02] text-[#111111] block">
+                          DIVISION
+                        </span>
+                        <span className="text-[clamp(26px,3.4vw,44px)] font-black tracking-tight uppercase leading-[1.02] text-[#111111] block">
+                          ALL-STAR
+                        </span>
+                      </div>
+
+                      {/* Column 3 (Right): Team List with Thin Dividers */}
+                      <div className="lg:col-span-5 flex flex-col justify-center divide-y divide-black/15 border-t border-black/15">
+                        {teamsList.length > 0 ? (
+                          teamsList.slice(0, 6).map((team, tIdx) => (
+                            <div
+                              key={team.teamId || tIdx}
+                              className="py-3.5 flex items-center justify-between gap-4 group cursor-pointer hover:bg-black/[0.03] px-2 transition-colors"
+                              onClick={() => handleOpenSeasonDetail(seasonItem.id)}
+                            >
+                              <span className="font-bold text-sm sm:text-base text-[#111111] tracking-tight group-hover:text-[#b45309] transition-colors">
+                                {team.teamName}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs text-[#666666] uppercase">
+                                  {team.role || `RANK #${team.rank || tIdx + 1}`}
+                                </span>
+                                <ChevronRight size={14} className="text-black/30 group-hover:text-[#b45309] transition-colors" />
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-6 text-sm text-[#777777] italic">
+                            Chưa có dữ liệu đội tuyển hoàn tất cho mùa giải này.
+                          </div>
+                        )}
+
+                        {/* View Full Season Link */}
+                        <div className="pt-3">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenSeasonDetail(seasonItem.id)}
+                            className="text-xs font-bold uppercase tracking-[0.1em] text-[#b45309] hover:underline flex items-center gap-1 mt-1"
+                          >
+                            <span>Xem chi tiết xếp hạng & thông số {seasonItem.name}</span>
+                            <ArrowRight size={13} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-20 text-center text-[#777777] font-mono text-sm">
+              Đang tải danh mục vinh danh mùa giải...
+            </div>
+          )}
+        </div>
+      </section>
 
-                  <div className="flex items-center gap-6 text-sm flex-wrap pl-10 md:pl-0">
-                    <div>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#777777] block">
-                        ĐỘI VÔ ĐỊCH
-                      </span>
-                      <span className="font-bold text-[#111111]">
-                        {s.championTeamName || 'Đang thi đấu'}
-                      </span>
+      {/* ── 3. SEASON DETAIL DRAWER / MODAL ── */}
+      {selectedSeasonDetail && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="bg-[#f7f5f0] border border-black w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2px] p-6 sm:p-8 shadow-2xl relative">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setSelectedSeasonDetail(null)}
+              className="absolute top-6 right-6 p-2 text-[#111111] hover:bg-black/10 rounded-[2px] transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="border-b border-black/15 pb-4 mb-6">
+              <span className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#b45309]">
+                CHI TIẾT MÙA GIẢI
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#111111] mt-1">
+                {selectedSeasonDetail.season?.name}
+              </h3>
+              <p className="text-xs text-[#666666] font-mono mt-1">
+                {selectedSeasonDetail.season?.startAt ? new Date(selectedSeasonDetail.season.startAt).toLocaleDateString('vi-VN') : ''} —{' '}
+                {selectedSeasonDetail.season?.endAt ? new Date(selectedSeasonDetail.season.endAt).toLocaleDateString('vi-VN') : ''}
+              </p>
+            </div>
+
+            {/* Team Rankings Table */}
+            <div className="mb-8">
+              <h4 className="font-bold uppercase tracking-tight text-sm text-[#111111] mb-3 pb-2 border-b border-black/10 flex justify-between">
+                <span>BẢNG XẾP HẠNG ĐỘI TUYỂN</span>
+                <span className="font-mono text-xs text-[#777777]">FINAL TEAMS</span>
+              </h4>
+              <div className="divide-y divide-black/10">
+                {selectedSeasonDetail.teamRankings?.map((team, idx) => (
+                  <div key={idx} className="py-2.5 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold text-xs w-5 text-[#888888]">#{idx + 1}</span>
+                      <span className="font-semibold text-[#111111]">{team.teamName}</span>
                     </div>
-
-                    <div>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#777777] block">
-                        MVP
-                      </span>
-                      <span className="font-bold text-[#b45309]">
-                        {s.mvpName || 'Đang xác định'}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-xs text-[#b45309] font-bold">+{team.grandPoints || 0} GP</span>
+                      <span className="font-mono font-bold text-xs">{team.score?.toLocaleString() || 0} XP</span>
                     </div>
-
-                    <Link
-                      to={`/award?season=${s.id}`}
-                      className="px-3.5 py-1.5 bg-black/5 hover:bg-black/10 text-xs font-semibold uppercase tracking-[0.06em] text-[#111111] rounded-[2px] transition-all ml-auto md:ml-4"
-                    >
-                      Chi tiết
-                    </Link>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Individual Rankings Table */}
+            {selectedSeasonDetail.individualRankings?.length > 0 && (
+              <div>
+                <h4 className="font-bold uppercase tracking-tight text-sm text-[#111111] mb-3 pb-2 border-b border-black/10 flex justify-between">
+                  <span>CÁ NHÂN XUẤT SẮC (TOP INDIVIDUALS)</span>
+                  <span className="font-mono text-xs text-[#777777]">TOP PERFORMERS</span>
+                </h4>
+                <div className="divide-y divide-black/10">
+                  {selectedSeasonDetail.individualRankings.slice(0, 5).map((ind, idx) => (
+                    <div key={idx} className="py-2.5 flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono font-bold text-xs w-5 text-[#888888]">#{idx + 1}</span>
+                        <div>
+                          <span className="font-semibold text-[#111111] block">{ind.name}</span>
+                          <span className="font-mono text-[10px] text-[#777777]">{ind.jobTitle || 'Chuyên viên'}</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs">{ind.score?.toLocaleString() || 0} XP</span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            ) : (
-              <div className="py-10 text-center text-sm text-[#777777]">
-                Đang nạp dữ liệu các mùa giải...
               </div>
             )}
           </div>
         </div>
-      </section>
+      )}
 
-      {/* ── 5. SECTION 04: CAPABILITIES & SYSTEM ARCHITECTURE ── */}
-      <section id="capabilities" className="py-14 sm:py-20 border-b border-black/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="mb-10">
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#b45309]">
-              04 / CƠ CHẾ VẬN HÀNH
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight uppercase text-[#111111] mt-1">
-              KIẾN TRÚC HIỆU SUẤT DOANH NGHIỆP
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white border border-black/10 p-6 rounded-[4px]">
-              <span className="font-mono text-xs font-bold text-[#b45309] block mb-2">
-                04.01
-              </span>
-              <h3 className="text-base font-bold uppercase tracking-tight text-[#111111] mb-2">
-                EVENT STORE
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed">
-                Ghi nhận mọi sự kiện công việc qua cơ chế Outbox, đảm bảo tính toàn vẹn
-                và cho phép khôi phục toàn bộ bảng xếp hạng từ lịch sử.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px]">
-              <span className="font-mono text-xs font-bold text-[#b45309] block mb-2">
-                04.02
-              </span>
-              <h3 className="text-base font-bold uppercase tracking-tight text-[#111111] mb-2">
-                AST RULE ENGINE
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed">
-                Định nghĩa công thức cộng điểm minh bạch, hỗ trợ cơ chế Streak Bonus và
-                Team Boost công khai trước khi mùa giải khởi tranh.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px]">
-              <span className="font-mono text-xs font-bold text-[#b45309] block mb-2">
-                04.03
-              </span>
-              <h3 className="text-base font-bold uppercase tracking-tight text-[#111111] mb-2">
-                YOUTUBE REALTIME
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed">
-                Hệ thống 3 cấp (Công Ty → Đội Tuyển → Kênh) đồng bộ tự động số liệu
-                views, subscribers và đo lường độ tăng trưởng 30 ngày.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px]">
-              <span className="font-mono text-xs font-bold text-[#b45309] block mb-2">
-                04.04
-              </span>
-              <h3 className="text-base font-bold uppercase tracking-tight text-[#111111] mb-2">
-                GRAND ANNUAL CUP
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed">
-                Tích lũy Grand Points qua từng mùa giải để tìm ra Nhà vô địch toàn niên
-                Grand Championship với cúp vàng danh giá.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. SECTION 05: ARENA & GAMES ── */}
-      <section id="arena" className="py-14 sm:py-20 border-b border-black/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="mb-10">
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#b45309]">
-              05 / ĐẤU TRƯỜNG & MINIGAMES
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight uppercase text-[#111111] mt-1">
-              GẮN KẾT & THỬ THÁCH NỘI BỘ
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white border border-black/10 p-6 rounded-[4px] hover:border-black/30 transition-colors">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#b45309] block mb-2">
-                BOARD GAME
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-1">
-                CỜ THỦ PHỦ
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed mb-4">
-                Trò chơi chiến thuật kinh tế thời gian thực, đầu tư bất động sản và so tài
-                cùng đồng nghiệp.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px] hover:border-black/30 transition-colors">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#b45309] block mb-2">
-                LOGIC PUZZLE
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-1">
-                GAME 2048
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed mb-4">
-                Đấu trí ghép số cổ điển, thi đua kỷ lục điểm số và phản xạ nhạy bén.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px] hover:border-black/30 transition-colors">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#b45309] block mb-2">
-                TRADITIONAL
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-1">
-                SÂM LỐC
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed mb-4">
-                Sân chơi giải trí tốc độ cao, kết nối trực tiếp phòng chơi nhiều thành viên.
-              </p>
-            </div>
-
-            <div className="bg-white border border-black/10 p-6 rounded-[4px] hover:border-black/30 transition-colors">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#b45309] block mb-2">
-                TRIVIA & KNOWLEDGE
-              </span>
-              <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] mb-1">
-                QUIZ BATTLE
-              </h3>
-              <p className="text-xs text-[#555555] leading-relaxed mb-4">
-                Thử tài hiểu biết về sản phẩm, quy trình và văn hóa công ty 3WIN Media.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 7. CALL TO ACTION ── */}
-      <section className="py-16 sm:py-24 bg-[#111111] text-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div>
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-[#b45309] block mb-2">
-              06 / THAM GIA WORKRANK
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold uppercase tracking-tight leading-tight">
-              BẮT ĐẦU CHẶNG ĐUA <br className="hidden sm:inline" />
-              HIỆU SUẤT CÙNG ĐỘI NHÓM.
-            </h2>
-            <p className="text-sm sm:text-base text-neutral-400 mt-3 max-w-xl">
-              Đăng nhập bằng tài khoản nội bộ để cập nhật nhiệm vụ, theo dõi bảng xếp hạng
-              và cùng đồng đội chinh phục cúp vô địch.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link
-              to="/login"
-              className="px-6 py-3.5 bg-[#b45309] hover:bg-[#92400e] text-white text-sm font-bold uppercase tracking-[0.05em] rounded-[4px] transition-all shadow-sm inline-flex items-center gap-2"
-            >
-              <span>Đăng Nhập Vào Hệ Thống</span>
-              <ArrowRight size={16} />
-            </Link>
-            <Link
-              to="/register"
-              className="px-5 py-3.5 bg-transparent hover:bg-white/10 text-white border border-white/20 text-sm font-semibold rounded-[4px] transition-all"
-            >
-              <span>Đăng Ký Thành Viên</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8. FOOTER ── */}
+      {/* ── 4. MINIMAL FOOTER ── */}
       <footer className="py-10 border-t border-black/10 bg-[#f0eee9] text-[#666666] text-xs">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -612,9 +323,9 @@ export default function Home() {
               WORKRANK 3WIN MEDIA
             </span>
             <span>•</span>
-            <span>Nền Tảng Quản Trị Hiệu Suất & Vinh Danh</span>
+            <span>Niên Giám Vinh Danh & Thành Tích Doanh Nghiệp</span>
           </div>
-          <div>© 2026 3WIN Media Company Limited. Tất cả quyền được bảo lưu.</div>
+          <div>© 2026 3WIN Media Co., Ltd. Tất cả quyền được bảo lưu.</div>
         </div>
       </footer>
     </div>
