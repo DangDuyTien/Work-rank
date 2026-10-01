@@ -15,6 +15,7 @@ import {
   Gamepad2,
   Sparkles,
   LayoutGrid,
+  Club,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -116,6 +117,15 @@ export const NAVIGATION_CONFIG = [
         icon: LayoutGrid,
         tourTarget: 'nav-game-2048',
         description: 'Trò chơi ghép số 2048 trí tuệ & bảng xếp hạng công ty',
+      },
+      {
+        to: '/games/sam',
+        label: 'Đánh Sâm',
+        shortLabel: 'Đánh Sâm',
+        icon: Club,
+        badge: 'Mới',
+        tourTarget: 'nav-sam-game',
+        description: 'Trò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực',
       },
       {
         to: '/games/quiz',
@@ -240,6 +250,7 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
   if (pathname.startsWith('/games/2048')) return 'Game 2048';
   if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú';
+  if (pathname.startsWith('/games/sam')) return 'Đánh Sâm';
   if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';

@@ -1002,6 +1002,57 @@ export const game2048 = {
   },
 };
 
+export const samGame = {
+  listRooms: async (params = {}) => {
+    const res = await api.get('/api/games/sam/rooms', { params });
+    return res.data;
+  },
+  getActiveRoom: async () => {
+    const res = await api.get('/api/games/sam/rooms/active');
+    return res.data;
+  },
+  getRoom: async (id) => {
+    const res = await api.get(`/api/games/sam/rooms/${id}`);
+    return res.data;
+  },
+  createRoom: async (data) => {
+    const res = await api.post('/api/games/sam/rooms', data);
+    return res.data;
+  },
+  joinRoom: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/join`);
+    return res.data;
+  },
+  leaveRoom: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/leave`);
+    return res.data;
+  },
+  startMatch: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/start`);
+    return res.data;
+  },
+  declareSam: async (id, declare = true) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/declare-sam`, { declare });
+    return res.data;
+  },
+  playCards: async (id, cardIds) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/play-cards`, { cardIds });
+    return res.data;
+  },
+  passTurn: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/pass`);
+    return res.data;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/games/sam/leaderboard', { params });
+    return res.data;
+  },
+  getMyStats: async () => {
+    const res = await api.get('/api/games/sam/my-stats');
+    return res.data;
+  },
+};
+
 export { storeAuth };
 export default api;
 

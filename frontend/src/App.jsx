@@ -48,6 +48,7 @@ const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const CapitalBoardGame = lazyWithReload(() => import('./pages/CapitalBoardGame'));
 const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
+const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 
 
 const ProtectedRoute = ({ children }) => {
@@ -222,6 +223,22 @@ function AnimatedAppRoutes() {
             element={
               <ProtectedRoute>
                 <QuizGame />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/sam"
+            element={
+              <ProtectedRoute>
+                <SamGame />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/sam/room/:roomId"
+            element={
+              <ProtectedRoute>
+                <SamGame />
               </ProtectedRoute>
             }
           />

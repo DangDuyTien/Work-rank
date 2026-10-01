@@ -17,6 +17,8 @@ async function start() {
   gameRealtime.setIo(io);
   const quizRealtime = require('./services/quizRealtime.service');
   quizRealtime.setIo(io);
+  const samRealtime = require('./services/samRealtime.service');
+  samRealtime.setIo(io);
   registerSockets(io);
   server.listen(env.port, () => {
     console.log(`WorkRank backend listening on ${env.port}`);

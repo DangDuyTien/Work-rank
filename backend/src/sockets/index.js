@@ -140,6 +140,21 @@ function registerSockets(io) {
       }
     });
 
+    // ── Sam Lốc Game Socket Rooms ──
+    socket.on('sam:joinRoom', (payload = {}) => {
+      const roomId = Number(payload.roomId);
+      if (roomId) {
+        socket.join(`sam:${roomId}`);
+      }
+    });
+
+    socket.on('sam:leaveRoom', (payload = {}) => {
+      const roomId = Number(payload.roomId);
+      if (roomId) {
+        socket.leave(`sam:${roomId}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
         emitPresence(io, offlineUser, 'offline');

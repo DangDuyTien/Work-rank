@@ -54,6 +54,12 @@ const QuizUserStat = require('./QuizUserStat');
 // Game 2048 V1 Models
 const Game2048Score = require('./Game2048Score');
 const Game2048UserStat = require('./Game2048UserStat');
+// Sam Game Models
+const SamRoom = require('./SamRoom');
+const SamPlayer = require('./SamPlayer');
+const SamAction = require('./SamAction');
+const SamResult = require('./SamResult');
+const SamUserStat = require('./SamUserStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -217,6 +223,25 @@ Game2048Score.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 User.hasOne(Game2048UserStat, { as: 'game2048Stats', foreignKey: 'userId' });
 Game2048UserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
+// Sam Game Associations
+SamRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
+SamRoom.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
+SamRoom.belongsTo(User, { as: 'currentTurnPlayer', foreignKey: 'currentTurnUserId' });
+SamRoom.hasMany(SamPlayer, { as: 'players', foreignKey: 'roomId' });
+SamPlayer.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
+SamPlayer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+SamRoom.hasMany(SamAction, { as: 'actions', foreignKey: 'roomId' });
+SamAction.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
+SamAction.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+SamRoom.hasOne(SamResult, { as: 'result', foreignKey: 'roomId' });
+SamResult.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
+SamResult.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
+
+User.hasOne(SamUserStat, { as: 'samStats', foreignKey: 'userId' });
+SamUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -281,6 +306,12 @@ module.exports = {
   // Game 2048 V1
   Game2048Score,
   Game2048UserStat,
+  // Sam Game V1
+  SamRoom,
+  SamPlayer,
+  SamAction,
+  SamResult,
+  SamUserStat,
 };
 
 
