@@ -178,7 +178,7 @@ export default function Arena() {
                 style={{
                   padding: '3px 10px',
                   fontSize: 10,
-                  fontWeight: 900,
+                  fontWeight: 600,
                   background: 'rgba(255,255,255,0.12)',
                   color: '#ffffff',
                   border: '1px solid rgba(255,255,255,0.2)',
@@ -188,21 +188,21 @@ export default function Arena() {
               >
                 {badge.label}
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
                 <Clock size={12} /> {formatCountdown(season.endAt)}
               </span>
             </div>
 
-            <h1 style={{ fontSize: 26, fontWeight: 900, margin: '0 0 6px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 6px 0', lineHeight: 1.3, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Flame size={24} color="var(--accent, #b45309)" /> {season.name}
             </h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.5, fontWeight: 650 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.55, fontWeight: 400 }}>
               {season.description || 'Giải đấu YouTube Production & Quality Battle giữa các Content Creators và Video Editors.'}
             </p>
 
             {/* Progress bar */}
             <div style={{ maxWidth: 400, marginTop: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.6)', marginBottom: 5, textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 5, textTransform: 'uppercase' }}>
                 <span>Tiến độ mùa giải</span>
                 <span>{progress}%</span>
               </div>
@@ -236,21 +236,21 @@ export default function Arena() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: 16,
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 {myTeam.teamNameSnapshot?.slice(0, 2).toUpperCase() || 'TM'}
               </div>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 800, textTransform: 'uppercase' }}>Đội của bạn</div>
-                <div style={{ fontSize: 15, fontWeight: 900 }}>{myTeam.teamNameSnapshot}</div>
-                <div style={{ fontSize: 12, color: 'var(--accent, #b45309)', fontWeight: 800, marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textTransform: 'uppercase' }}>Đội của bạn</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{myTeam.teamNameSnapshot}</div>
+                <div style={{ fontSize: 12, color: 'var(--accent, #b45309)', fontWeight: 600, marginTop: 2 }}>
                   Hạng #{myRankObj?.rank || '-'} • {(myRankObj?.score || 0).toLocaleString()} XP
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.04)', fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.04)', fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
               Bạn chưa thuộc Team nào tham gia mùa giải này.
             </div>
           )}
@@ -303,7 +303,7 @@ export default function Arena() {
                     background: '#141414',
                     color: '#ffffff',
                     fontSize: 12,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textDecoration: 'none',
                   }}
                 >
@@ -344,7 +344,7 @@ export default function Arena() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 13,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             flexShrink: 0,
                           }}
                         >
@@ -360,7 +360,7 @@ export default function Arena() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: 13,
                             flexShrink: 0,
                           }}
@@ -369,25 +369,25 @@ export default function Arena() {
                         </div>
 
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                             {isMyTeam && (
-                              <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
                                 Đội của bạn
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                             {team.isEligible ? 'Đủ điều kiện tranh giải' : 'Tạm dừng xếp hạng'}
                           </div>
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 17, fontWeight: 900, color: '#111111', fontFamily: "'JetBrains Mono', monospace" }}>
-                          {(team.score || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontFamily: 'inherit' }}>XP</span>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: '#111111', fontFamily: "'JetBrains Mono', monospace" }}>
+                          {(team.score || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontFamily: 'inherit', fontWeight: 400 }}>XP</span>
                         </div>
-                        <div style={{ fontSize: 11, color: isTop1 ? '#15803d' : '#777777', fontWeight: 700, marginTop: 2 }}>
+                        <div style={{ fontSize: 11, color: isTop1 ? '#15803d' : '#777777', fontWeight: 500, marginTop: 2 }}>
                           {isTop1 ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#15803d' }}>
                               <Crown size={11} color="#15803d" /> Dẫn đầu
@@ -422,7 +422,7 @@ export default function Arena() {
                     background: '#141414',
                     color: '#ffffff',
                     fontSize: 12,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textDecoration: 'none',
                   }}
                 >
@@ -445,7 +445,7 @@ export default function Arena() {
                     padding: '8px 12px 8px 32px',
                     border: '1px solid var(--border)',
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 400,
                     outline: 'none',
                     background: '#ffffff',
                   }}
@@ -458,7 +458,7 @@ export default function Arena() {
                   padding: '8px 12px',
                   border: '1px solid var(--border)',
                   fontSize: 13,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   background: '#fff',
                 }}
               >
@@ -515,7 +515,7 @@ export default function Arena() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 13,
-                              fontWeight: 900,
+                              fontWeight: 700,
                               flexShrink: 0,
                             }}
                           >
@@ -523,26 +523,26 @@ export default function Arena() {
                           </div>
 
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.userName || emp.name}</span>
                               {isMe && (
-                                <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
                                   Bạn
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                               Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> {emp.eventsCount ? `• ${emp.eventsCount} sự kiện` : ''}
                             </div>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(emp.points ?? emp.score ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>XP</span>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
+                            {(emp.points ?? emp.score ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>XP</span>
                           </div>
                           {emp.trend && (
-                            <div style={{ fontSize: 11, color: emp.trend === 'UP' ? '#15803d' : emp.trend === 'DOWN' ? '#b91c1c' : '#777777', fontWeight: 700, marginTop: 2 }}>
+                            <div style={{ fontSize: 11, color: emp.trend === 'UP' ? '#15803d' : emp.trend === 'DOWN' ? '#b91c1c' : '#777777', fontWeight: 500, marginTop: 2 }}>
                               {emp.trend === 'UP' ? (
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                   <ArrowUp size={11} strokeWidth={2.5} /> Tăng
@@ -584,7 +584,7 @@ export default function Arena() {
                   background: '#141414',
                   color: '#ffffff',
                   fontSize: 12,
-                  fontWeight: 900,
+                  fontWeight: 600,
                   textDecoration: 'none',
                 }}
               >
@@ -628,7 +628,7 @@ export default function Arena() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontWeight: 900,
+                              fontWeight: 700,
                               fontSize: 13,
                               flexShrink: 0,
                             }}
@@ -637,14 +637,14 @@ export default function Arena() {
                           </div>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 14, fontWeight: 900, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                               {isMyTeam && (
-                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }}>
+                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 600, textTransform: 'uppercase' }}>
                                   Đội của bạn
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 400 }}>
                               {team.channelsCount} kênh • {team.videosCount} video
                               {team.topVideoTitle ? ` • Top: ${team.topVideoTitle}` : ''}
                             </div>
@@ -652,10 +652,10 @@ export default function Arena() {
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 900, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>views</span>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
+                            {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>views</span>
                           </div>
-                          <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700, marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: '#15803d', fontWeight: 500, marginTop: 2 }}>
                             {(team.totalSubscribers || 0).toLocaleString()} subs • +{team.viewsGrowth30dPct || 0}% 30D
                           </div>
                         </div>
@@ -692,7 +692,7 @@ export default function Arena() {
                         <span
                           style={{
                             fontSize: 10,
-                            fontWeight: 900,
+                            fontWeight: 600,
                             padding: '3px 8px',
                             background: isCompleted ? 'rgba(21, 128, 61, 0.1)' : 'rgba(180, 83, 9, 0.1)',
                             color: isCompleted ? '#15803d' : '#b45309',
@@ -701,17 +701,17 @@ export default function Arena() {
                         >
                           {ch.type} • {ch.status}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 900, color: '#b45309' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309' }}>
                           Mục tiêu: {ch.targetValue}
                         </span>
                       </div>
 
-                      <h3 style={{ fontSize: 15, fontWeight: 900, color: '#111111', margin: '0 0 6px 0' }}>{ch.title}</h3>
-                      <p style={{ fontSize: 12, color: '#777777', margin: '0 0 14px 0', lineHeight: 1.5, fontWeight: 650 }}>{ch.description}</p>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.35, color: '#111111', margin: '0 0 6px 0' }}>{ch.title}</h3>
+                      <p style={{ fontSize: 12, color: '#777777', margin: '0 0 14px 0', lineHeight: 1.55, fontWeight: 400 }}>{ch.description}</p>
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#555555', fontWeight: 700 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#555555', fontWeight: 500 }}>
                         <span>Trạng thái</span>
-                        <span style={{ fontWeight: 900, color: isCompleted ? '#15803d' : '#111111' }}>
+                        <span style={{ fontWeight: 600, color: isCompleted ? '#15803d' : '#111111' }}>
                           {isCompleted ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <CheckCircle2 size={13} color="#15803d" /> Hoàn thành
@@ -735,10 +735,10 @@ export default function Arena() {
             title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BookOpen size={18} color="var(--accent, #b45309)" /> Luật Mùa Giải Đang Áp Dụng</span>}
           >
             <div style={{ marginBottom: 16, padding: 14, background: '#ffffff', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 13, fontWeight: 900, color: '#111111' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#111111' }}>
                 Bộ luật: {seasonRules?.ruleSetName || season.ruleSet?.name || 'YouTube Production Championship Rules'}
               </div>
-              <div style={{ fontSize: 12, color: '#777777', marginTop: 4, fontWeight: 700 }}>
+              <div style={{ fontSize: 12, color: '#777777', marginTop: 4, fontWeight: 500 }}>
                 Phiên bản: <strong style={{ color: '#555555' }}>#{seasonRules?.versionNumber || season.activeRuleVersion?.versionNumber || '1.0'}</strong> — Bất biến trong suốt thời gian diễn ra giải đấu
               </div>
             </div>
@@ -757,12 +757,12 @@ export default function Arena() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <strong style={{ color: '#111111' }}>{idx + 1}. {r.name}</strong>
-                      <span style={{ fontSize: 10, fontWeight: 900, padding: '2px 8px', background: r.effectType === 'TEAM_SCORE' ? 'rgba(180, 83, 9, 0.1)' : 'rgba(21, 128, 61, 0.1)', color: r.effectType === 'TEAM_SCORE' ? '#b45309' : '#15803d' }}>
+                      <strong style={{ color: '#111111', fontWeight: 600 }}>{idx + 1}. {r.name}</strong>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', background: r.effectType === 'TEAM_SCORE' ? 'rgba(180, 83, 9, 0.1)' : 'rgba(21, 128, 61, 0.1)', color: r.effectType === 'TEAM_SCORE' ? '#b45309' : '#15803d' }}>
                         {r.effectType === 'TEAM_SCORE' ? 'Điểm Đội' : 'Điểm Cá Nhân'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#555555', fontWeight: 650 }}>
+                    <div style={{ fontSize: 13, color: '#555555', fontWeight: 400, lineHeight: 1.55 }}>
                       {r.humanSummary}
                     </div>
                   </div>

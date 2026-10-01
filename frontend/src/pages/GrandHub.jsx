@@ -167,7 +167,7 @@ export default function GrandHub() {
                 style={{
                   padding: '3px 12px',
                   fontSize: 10,
-                  fontWeight: 900,
+                  fontWeight: 600,
                   background: 'var(--accent, #b45309)',
                   color: '#ffffff',
                   textTransform: 'uppercase',
@@ -179,21 +179,21 @@ export default function GrandHub() {
               >
                 <Crown size={12} /> NĂM {grand.year}
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
                 <Clock size={12} /> {formatDaysRemaining(grand.endAt)}
               </span>
             </div>
 
-            <h1 style={{ fontSize: 26, fontWeight: 900, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
               <Trophy size={26} color="var(--accent, #b45309)" /> {grand.name}
             </h1>
-            <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontWeight: 650, maxWidth: 600 }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontWeight: 400, maxWidth: 600 }}>
               {grand.description || 'Giải đấu lớn nhất toàn công ty tích lũy điểm Grand Points từ tất cả các Mùa Giải trong năm.'}
             </p>
 
             {/* Year Progress Bar */}
             <div style={{ maxWidth: 400 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.6)', marginBottom: 5, textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 5, textTransform: 'uppercase' }}>
                 <span>Đường đua năm {grand.year}</span>
                 <span>{yearProgress}%</span>
               </div>
@@ -227,24 +227,24 @@ export default function GrandHub() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: 20,
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 #{myTeamStandings.rank}
               </div>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 800, textTransform: 'uppercase' }}>Đội của bạn</div>
-                <div style={{ fontSize: 16, fontWeight: 900 }}>{myTeamStandings.teamName}</div>
-                <div style={{ fontSize: 13, color: 'var(--accent, #b45309)', fontWeight: 900, marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textTransform: 'uppercase' }}>Đội của bạn</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{myTeamStandings.teamName}</div>
+                <div style={{ fontSize: 13, color: 'var(--accent, #b45309)', fontWeight: 700, marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
                   {myTeamStandings.grandPoints} GP
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2, fontWeight: 700 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2, fontWeight: 500 }}>
                   {myTeamStandings.seasonWins} Vô địch • {myTeamStandings.podiumCount} Top 3
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ padding: '14px 18px', background: 'rgba(255,255,255,0.04)', fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
+            <div style={{ padding: '14px 18px', background: 'rgba(255,255,255,0.04)', fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
               Đội của bạn chưa có điểm Grand Points nào trong năm {grand.year}.
             </div>
           )}
@@ -298,7 +298,7 @@ export default function GrandHub() {
                     background: '#141414',
                     color: '#ffffff',
                     fontSize: 12,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textDecoration: 'none',
                   }}
                 >
@@ -339,37 +339,37 @@ export default function GrandHub() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 13,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             flexShrink: 0,
                           }}
                         >
                           #{team.rank}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                             {isMyTeam && (
-                              <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
                                 Đội của bạn
                               </span>
                             )}
                             {isTop1 && (
-                              <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: 'rgba(180, 83, 9, 0.12)', color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'rgba(180, 83, 9, 0.12)', color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                 <Crown size={10} /> Dẫn đầu năm
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                             {team.seasonWins} Vô địch • {team.podiumCount} Top 3 • {team.completedSeasons} giải
                           </div>
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: '#b45309', fontFamily: "'JetBrains Mono', monospace" }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono', monospace" }}>
                           {team.grandPoints} <span style={{ fontSize: 12, color: '#777777' }}>GP</span>
                         </div>
-                        <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                        <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                           {isTop1 ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#b45309' }}>
                               <Crown size={11} color="#b45309" /> Vị trí số 1
@@ -404,7 +404,7 @@ export default function GrandHub() {
                     background: '#141414',
                     color: '#ffffff',
                     fontSize: 12,
-                    fontWeight: 900,
+                    fontWeight: 600,
                     textDecoration: 'none',
                   }}
                 >
@@ -427,7 +427,7 @@ export default function GrandHub() {
                     padding: '8px 12px 8px 32px',
                     border: '1px solid var(--border)',
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     outline: 'none',
                     background: '#ffffff',
                   }}
@@ -436,7 +436,7 @@ export default function GrandHub() {
               <select
                 value={selectedTeamFilter}
                 onChange={(e) => setSelectedTeamFilter(e.target.value)}
-                style={{ padding: '8px 12px', border: '1px solid var(--border)', fontSize: 13, fontWeight: 700, background: '#fff' }}
+                style={{ padding: '8px 12px', border: '1px solid var(--border)', fontSize: 13, fontWeight: 500, background: '#fff' }}
               >
                 <option value="all">Tất cả đội</option>
                 {standings.map((t) => (
@@ -489,32 +489,32 @@ export default function GrandHub() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 13,
-                              fontWeight: 900,
+                              fontWeight: 700,
                               flexShrink: 0,
                             }}
                           >
                             #{emp.rank}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name}</span>
                               {isMe && (
-                                <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
                                   Bạn
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                               Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 1} mùa giải • {emp.seasonWins || 0} MVP
                             </div>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
                             {(emp.grandPoints ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>GP</span>
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                             {isTop1 ? (
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#b45309' }}>
                                 <Crown size={11} color="#b45309" /> Top 1
@@ -579,7 +579,7 @@ export default function GrandHub() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontWeight: 900,
+                              fontWeight: 700,
                               fontSize: 13,
                               flexShrink: 0,
                             }}
@@ -588,14 +588,14 @@ export default function GrandHub() {
                           </div>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 14, fontWeight: 900, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                               {isMyTeam && (
-                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }}>
+                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 600, textTransform: 'uppercase' }}>
                                   Đội của bạn
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                               {team.channelsCount} kênh • {team.videosCount} video
                               {team.topVideoTitle ? ` • Top: ${team.topVideoTitle}` : ''}
                             </div>
@@ -603,10 +603,10 @@ export default function GrandHub() {
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 900, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
                             {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>views</span>
                           </div>
-                          <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700, marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: '#15803d', fontWeight: 600, marginTop: 2 }}>
                             {(team.totalSubscribers || 0).toLocaleString()} subs • +{team.viewsGrowth30dPct || 0}% 30D
                           </div>
                         </div>
@@ -656,7 +656,7 @@ export default function GrandHub() {
                           <span
                             style={{
                               fontSize: 9,
-                              fontWeight: 900,
+                              fontWeight: 600,
                               padding: '2px 6px',
                               background: isActive ? '#15803d' : isFinished ? '#78716c' : '#141414',
                               color: '#fff',
@@ -674,10 +674,10 @@ export default function GrandHub() {
                               <><Clock size={9} color="#fff" /> Sắp diễn ra</>
                             )}
                           </span>
-                          <span style={{ fontSize: 11, color: '#777777', fontWeight: 700 }}>{s.seasonType}</span>
+                          <span style={{ fontSize: 11, color: '#777777', fontWeight: 500 }}>{s.seasonType}</span>
                         </div>
-                        <h3 style={{ fontSize: 15, fontWeight: 900, color: '#111111', margin: '0 0 4px 0' }}>{s.name}</h3>
-                        <div style={{ fontSize: 11, color: '#777777', fontWeight: 700 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111111', margin: '0 0 4px 0' }}>{s.name}</h3>
+                        <div style={{ fontSize: 11, color: '#777777', fontWeight: 500 }}>
                           {new Date(s.startAt).toLocaleDateString('vi-VN')} — {new Date(s.endAt).toLocaleDateString('vi-VN')}
                         </div>
                       </div>
@@ -685,15 +685,15 @@ export default function GrandHub() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
                         {s.winner ? (
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 800, textTransform: 'uppercase' }}>Đội chiến thắng</div>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: '#15803d', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 600, textTransform: 'uppercase' }}>Đội chiến thắng</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#15803d', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <Trophy size={13} color="#15803d" /> {s.winner.teamName}
                             </div>
                           </div>
                         ) : (
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 800, textTransform: 'uppercase' }}>Giải thưởng Top 1</div>
-                            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 600, textTransform: 'uppercase' }}>Giải thưởng Top 1</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
                               +{(s.grandPointsDistribution?.distribution?.[0]?.points) || 10} GP
                             </div>
                           </div>
@@ -736,12 +736,12 @@ export default function GrandHub() {
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: '#111111' }}>{h.seasonName}</div>
-                      <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 700 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#111111' }}>{h.seasonName}</div>
+                      <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                         Hạng #{h.rankPosition} • {h.reason}
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#15803d', fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d', fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
                       +{h.grandPointsAwarded} GP
                     </div>
                   </div>
@@ -789,7 +789,7 @@ export default function GrandHub() {
                     <span
                       style={{
                         fontSize: 10,
-                        fontWeight: 900,
+                        fontWeight: 600,
                         padding: '2px 8px',
                         background: isUnlocked ? 'rgba(21, 128, 61, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                         color: isUnlocked ? '#15803d' : '#777777',
@@ -800,8 +800,8 @@ export default function GrandHub() {
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: 15, fontWeight: 900, color: '#111111', margin: '0 0 4px 0' }}>{m.title}</h3>
-                  <p style={{ fontSize: 12, color: '#777777', margin: '0 0 12px 0', lineHeight: 1.4, fontWeight: 650 }}>{m.desc}</p>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111111', margin: '0 0 4px 0' }}>{m.title}</h3>
+                  <p style={{ fontSize: 12, color: '#777777', margin: '0 0 12px 0', lineHeight: 1.4, fontWeight: 400 }}>{m.desc}</p>
 
                   {/* Progress bar */}
                   <div style={{ height: 4, width: '100%', background: 'rgba(0, 0, 0, 0.06)' }}>

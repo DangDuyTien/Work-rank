@@ -218,6 +218,9 @@ describe('Phase 6 E2E — Read Models & Company Competition Dashboard Flow', () 
       },
     ]);
 
+    // Clear any previous events
+    await CompetitionEvent.destroy({ where: {} });
+
     // Send 3 events for memberUser (Phoenix)
     for (let i = 1; i <= 3; i++) {
       const eventId = crypto.randomUUID();
@@ -283,6 +286,9 @@ describe('Phase 6 E2E — Read Models & Company Competition Dashboard Flow', () 
 
     // 9. Consistency Check after Rebuild
     const consistencyRes = await request(server, 'GET', '/api/competition/admin/projections/consistency', adminHeaders);
+    if (consistencyRes.body.status !== 'PASS') {
+      console.log('[DEBUG DIFFS]', JSON.stringify(consistencyRes.body.diffs, null, 2));
+    }
     assert.equal(consistencyRes.status, 200);
     assert.equal(consistencyRes.body.status, 'PASS');
     assert.equal(consistencyRes.body.driftCount, 0);

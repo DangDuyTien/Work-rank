@@ -228,11 +228,11 @@ export default function AdminOperations() {
       {/* ── HEADER / OPERATIONS HERO ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <Activity size={14} />
             Trung tâm kiểm toán & Giám sát vận hành
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.15, color: '#0f172a', fontWeight: 900 }}>
+          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.25, color: '#0f172a', fontWeight: 700 }}>
             Giám Sát Vận Hành & Nhật Ký Kiểm Toán
           </h1>
           <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
@@ -242,21 +242,21 @@ export default function AdminOperations() {
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 130 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Trạng Thái Vận Hành</div>
-            <strong style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, fontSize: 16, color: isHealthy ? '#16a34a' : '#ea580c', fontWeight: 900 }}>
+            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Trạng Thái Vận Hành</div>
+            <strong style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, fontSize: 16, color: isHealthy ? '#16a34a' : '#ea580c', fontWeight: 700 }}>
               {isHealthy ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
               {isHealthy ? 'Ổn Định' : 'Cần Chú Ý'}
             </strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Sự Kiện Xử Lý</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 900 }}>
+            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Sự Kiện Xử Lý</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 700 }}>
               {fmtNum(integrationHealth?.events?.totalProcessed || events.length)}
             </strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase' }}>Nhật Ký Audit</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#7c3aed', fontWeight: 900 }}>
+            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Nhật Ký Audit</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#7c3aed', fontWeight: 700 }}>
               {fmtNum(auditLogs.length)}
             </strong>
           </div>
@@ -284,7 +284,7 @@ export default function AdminOperations() {
               onClick={() => setRebuildModalOpen(true)}
               style={{
                 padding: '8px 16px', background: '#dc2626', color: '#ffffff', border: 'none',
-                fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
               <RotateCcw size={13} /> Rebuild Bảng Xếp Hạng
@@ -297,7 +297,7 @@ export default function AdminOperations() {
             disabled={refreshing}
             style={{
               padding: '8px 12px', background: '#ffffff', color: '#64748b', border: '1px solid rgba(15,23,42,0.15)',
-              fontSize: 12, fontWeight: 800, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 12, fontWeight: 600, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
             }}
             title="Làm mới dữ liệu"
           >
@@ -320,7 +320,7 @@ export default function AdminOperations() {
                     <Activity size={18} color="#b45309" />
                     <strong style={{ fontSize: 14, color: '#0f172a' }}>API & Competition Engine</strong>
                   </div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 900 }}>
+                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>
                     HOẠT ĐỘNG
                   </span>
                 </div>
@@ -351,7 +351,7 @@ export default function AdminOperations() {
                     fontSize: 10, padding: '2px 8px',
                     background: integrationHealth?.outbox?.pendingCount > 10 ? '#fef3c7' : '#dcfce7',
                     color: integrationHealth?.outbox?.pendingCount > 10 ? '#b45309' : '#16a34a',
-                    fontWeight: 900,
+                    fontWeight: 600,
                   }}>
                     {integrationHealth?.outbox?.pendingCount > 10 ? 'CÓ HÀNG ĐỢI' : 'TỐT'}
                   </span>
@@ -381,7 +381,7 @@ export default function AdminOperations() {
                     <Tv size={18} color="#ef4444" />
                     <strong style={{ fontSize: 14, color: '#0f172a' }}>YouTube Data API v3</strong>
                   </div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 900 }}>
+                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>
                     KẾT NỐI
                   </span>
                 </div>
@@ -408,7 +408,7 @@ export default function AdminOperations() {
             <div style={{ ...CARD, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <h3 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                  <h3 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
                     Trạng Thái Bản Sao Bảng Xếp Hạng (Read Model Projections)
                   </h3>
                   <span style={{ fontSize: 12, color: '#64748b' }}>
@@ -420,7 +420,7 @@ export default function AdminOperations() {
                   onClick={handleCheckConsistency}
                   style={{
                     padding: '6px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.15)',
-                    fontSize: 11, fontWeight: 800, color: '#b45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: 11, fontWeight: 600, color: '#b45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
                   <RefreshCw size={12} /> Kiểm tra độ lệch (Drift Check)
@@ -429,7 +429,7 @@ export default function AdminOperations() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                 <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Độ Lệch Dữ Liệu (Lag / Drift)</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Độ Lệch Dữ Liệu (Lag / Drift)</span>
                   <strong style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, fontSize: 16, color: consistencyResult?.isConsistent === false ? '#dc2626' : '#16a34a' }}>
                     {consistencyResult?.isConsistent === false ? (
                       <>
@@ -445,19 +445,19 @@ export default function AdminOperations() {
                   </strong>
                 </div>
                 <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Đội (Season Projection)</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Đội (Season Projection)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#0f172a' }}>
                     {fmtNum(projectionsStatus?.seasonTeamsCount || 0)}
                   </strong>
                 </div>
                 <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Cá Nhân (Individual Projection)</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Cá Nhân (Individual Projection)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#0f172a' }}>
                     {fmtNum(projectionsStatus?.seasonIndividualsCount || 0)}
                   </strong>
                 </div>
                 <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Sổ Cái Điểm Số (Score Ledger)</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Sổ Cái Điểm Số (Score Ledger)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#7c3aed' }}>
                     {fmtNum(projectionsStatus?.scoreLedgerCount || 0)} bản ghi
                   </strong>
@@ -485,7 +485,7 @@ export default function AdminOperations() {
               </div>
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b' }}>Hành động:</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Hành động:</span>
                 <select
                   value={auditActionFilter}
                   onChange={(e) => setAuditActionFilter(e.target.value)}
@@ -502,12 +502,12 @@ export default function AdminOperations() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Gian</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Hành Động (Action)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Người Thực Hiện</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng (Target)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Lý Do & Ghi Chú</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Chi Tiết</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Gian</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Hành Động (Action)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Người Thực Hiện</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng (Target)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Lý Do & Ghi Chú</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Chi Tiết</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -525,14 +525,14 @@ export default function AdminOperations() {
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{
-                            fontSize: 10, fontWeight: 900, padding: '2px 8px',
+                            fontSize: 10, fontWeight: 600, padding: '2px 8px',
                             background: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? 'rgba(124,58,237,0.1)' : 'rgba(180,83,9,0.12)',
                             color: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? '#7c3aed' : '#b45309',
                           }}>
                             {log.action}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
+                        <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>
                           {log.actorName || `Admin #${log.actorId || '1'}`}
                         </td>
                         <td style={{ padding: '10px 14px', color: '#334155' }}>
@@ -547,7 +547,7 @@ export default function AdminOperations() {
                             onClick={() => setSelectedAuditLog(log)}
                             style={{
                               padding: '4px 8px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.1)',
-                              fontSize: 11, fontWeight: 800, color: '#b45309', cursor: 'pointer',
+                              fontSize: 11, fontWeight: 600, color: '#b45309', cursor: 'pointer',
                             }}
                           >
                             Xem
@@ -591,7 +591,7 @@ export default function AdminOperations() {
                     type="button"
                     onClick={() => setEventStatusFilter(val)}
                     style={{
-                      padding: '5px 10px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                      padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       border: eventStatusFilter === val ? '1px solid #0f172a' : '1px solid rgba(15,23,42,0.1)',
                       background: eventStatusFilter === val ? '#0f172a' : '#ffffff',
                       color: eventStatusFilter === val ? '#ffffff' : '#64748b',
@@ -608,11 +608,11 @@ export default function AdminOperations() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Điểm</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Sự Kiện (Contract Key)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng / Actor</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Trạng Thái</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Thao Tác</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Điểm</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Sự Kiện (Contract Key)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng / Actor</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Trạng Thái</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -639,7 +639,7 @@ export default function AdminOperations() {
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{
-                            fontSize: 10, fontWeight: 900, padding: '2px 8px',
+                            fontSize: 10, fontWeight: 600, padding: '2px 8px',
                             background: ev.status === 'PROCESSED' ? '#dcfce7' : ev.status === 'FAILED' ? '#fee2e2' : '#fef3c7',
                             color: ev.status === 'PROCESSED' ? '#16a34a' : ev.status === 'FAILED' ? '#dc2626' : '#b45309',
                           }}>
@@ -653,7 +653,7 @@ export default function AdminOperations() {
                               onClick={() => { setRetryModalEvent(ev); setRetryReason(''); }}
                               style={{
                                 padding: '4px 8px', background: '#fee2e2', color: '#dc2626', border: 'none',
-                                fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                                fontSize: 11, fontWeight: 600, cursor: 'pointer',
                               }}
                             >
                               Thử lại (Retry)
@@ -679,7 +679,7 @@ export default function AdminOperations() {
             <div style={{ ...CARD, padding: 22 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <RotateCcw size={20} color="#dc2626" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Tính Toán Lại Bảng Xếp Hạng (Read Model Rebuild)
                 </h3>
               </div>
@@ -701,7 +701,7 @@ export default function AdminOperations() {
                   onClick={() => setRebuildModalOpen(true)}
                   style={{
                     padding: '10px 20px', background: '#dc2626', color: '#ffffff', border: 'none',
-                    fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
                   <RotateCcw size={14} /> Bắt Đầu Rebuild Projections
@@ -712,7 +712,7 @@ export default function AdminOperations() {
                   disabled={checkingConsistency}
                   style={{
                     padding: '10px 16px', background: '#ffffff', color: '#0f172a', border: '1px solid rgba(15,23,42,0.15)',
-                    fontSize: 13, fontWeight: 800, cursor: checkingConsistency ? 'not-allowed' : 'pointer',
+                    fontSize: 13, fontWeight: 600, cursor: checkingConsistency ? 'not-allowed' : 'pointer',
                     opacity: checkingConsistency ? 0.6 : 1,
                   }}
                 >
@@ -731,7 +731,7 @@ export default function AdminOperations() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FileText size={18} color="#b45309" /> Chi Tiết Nhật Ký Kiểm Toán
               </h3>
               <button type="button" onClick={() => setSelectedAuditLog(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -770,7 +770,7 @@ export default function AdminOperations() {
               <button
                 type="button"
                 onClick={() => setSelectedAuditLog(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
               >
                 Đóng
               </button>
@@ -786,7 +786,7 @@ export default function AdminOperations() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} color="#b45309" /> Thử Lại Sự Kiện
               </h3>
               <button type="button" onClick={() => setRetryModalEvent(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -800,7 +800,7 @@ export default function AdminOperations() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Lý do thử lại sự kiện *
                 </label>
                 <textarea
@@ -814,10 +814,10 @@ export default function AdminOperations() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setRetryModalEvent(null)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setRetryModalEvent(null)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
                   {submittingRetry ? 'Đang gửi...' : 'Xác Nhận Thử Lại'}
                 </button>
               </div>
@@ -833,7 +833,7 @@ export default function AdminOperations() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} /> Xác Nhận Rebuild Bảng Xếp Hạng
               </h3>
               <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -847,7 +847,7 @@ export default function AdminOperations() {
               </p>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Lý do Rebuild (Bắt buộc) *
                 </label>
                 <textarea
@@ -861,10 +861,10 @@ export default function AdminOperations() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={rebuildLoading} style={{ padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: rebuildLoading ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={rebuildLoading} style={{ padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: rebuildLoading ? 'not-allowed' : 'pointer' }}>
                   {rebuildLoading ? 'Đang Rebuild...' : 'Xác Nhận Rebuild'}
                 </button>
               </div>

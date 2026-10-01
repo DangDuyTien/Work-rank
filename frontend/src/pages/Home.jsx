@@ -60,13 +60,13 @@ export default function Home() {
               style={{
                 fontFamily: "'Space Grotesk', -apple-system, sans-serif",
                 fontSize: 16,
-                fontWeight: 900,
+                fontWeight: 700,
                 letterSpacing: '-0.4px',
                 color: '#111111',
                 textTransform: 'uppercase',
               }}
             >
-              WORKRANK <span style={{ color: '#b45309', fontWeight: 800 }}>3WIN MEDIA</span>
+              WORKRANK <span style={{ color: '#b45309', fontWeight: 700 }}>3WIN MEDIA</span>
             </span>
           </Link>
         </div>
@@ -87,7 +87,7 @@ export default function Home() {
                 to="/login?mode=register"
                 style={{
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: '#111111',
                   textDecoration: 'none',
                   padding: '8px 16px',
@@ -163,7 +163,7 @@ export default function Home() {
                   padding: '10px 18px',
                   borderRadius: 8,
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: '#111111',
                   background: 'rgba(0,0,0,0.05)',
                   border: '1px solid rgba(0,0,0,0.15)',
@@ -195,7 +195,7 @@ export default function Home() {
             {/* Visual Box 1: Team Crest & Identity */}
             <div className="wr-award-visual-box wr-anim-box1-left" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
                   CHAMPIONSHIP EMBLEM
                 </span>
                 <Crown size={15} color="#eab308" />
@@ -228,7 +228,7 @@ export default function Home() {
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 24,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: '#facc15',
                       }}
                     >
@@ -240,10 +240,10 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#111111', lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#111111', lineHeight: 1.25 }}>
                     {championTeam ? championTeam.teamName : 'Đội Tuyển Mùa Mới'}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#777777', textTransform: 'uppercase', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: '#777777', textTransform: 'uppercase', marginTop: 4 }}>
                     Hạng #1 Chung Cuộc
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function Home() {
 
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666666' }}>
                 <span>Trạng thái</span>
-                <span style={{ fontWeight: 800, color: '#111111' }}>
+                <span style={{ fontWeight: 600, color: '#111111' }}>
                   {championTeam ? 'Đã khóa kết quả' : 'Đang thi đấu'}
                 </span>
               </div>
@@ -260,7 +260,7 @@ export default function Home() {
             {/* Visual Box 2: Stats & Trophy Presentation */}
             <div className="wr-award-visual-box wr-anim-box2-left" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
                   SEASON PERFORMANCE
                 </span>
                 <Award size={15} color="#111111" />
@@ -270,7 +270,7 @@ export default function Home() {
                 <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trophy size={48} color="#d97706" strokeWidth={1.75} />
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#92400e', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#92400e', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                   {championTeam ? 'QUÁN QUÂN GIẢI ĐẤU' : 'CHỜ VINH DANH'}
                 </span>
               </div>
@@ -285,14 +285,14 @@ export default function Home() {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Điểm Mùa Giải</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Điểm Mùa Giải</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#111111', marginTop: 2 }}>
                     {championTeam ? `${championTeam.seasonScore.toLocaleString()} XP` : '--- XP'}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Grand Points</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#b45309', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Grand Points</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#b45309', marginTop: 2 }}>
                     {championTeam ? `+${championTeam.grandPoints} GP` : '--- GP'}
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default function Home() {
                   padding: '10px 18px',
                   borderRadius: 8,
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: '#b45309',
                   background: 'rgba(234,179,8,0.1)',
                   border: '1px solid rgba(234,179,8,0.35)',
@@ -381,7 +381,7 @@ export default function Home() {
             {/* Visual Box 1: MVP Portrait & Profile */}
             <div className="wr-award-visual-box wr-anim-box1-right" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
                   MVP RECOGNITION
                 </span>
                 <Sparkles size={15} color="#f59e0b" />
@@ -415,7 +415,7 @@ export default function Home() {
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 24,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: '#facc15',
                       }}
                     >
@@ -433,12 +433,12 @@ export default function Home() {
 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: '#111111', lineHeight: 1.2 }}>
+                    <span style={{ fontSize: 18, fontWeight: 600, color: '#111111', lineHeight: 1.25 }}>
                       {mvp ? mvp.name : 'Nhân Tố Xuất Sắc'}
                     </span>
                     {mvp?.isVerified && <VerifiedBadge size={14} />}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#777777', textTransform: 'uppercase', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: '#777777', textTransform: 'uppercase', marginTop: 4 }}>
                     {mvp ? `${mvp.jobTitle || 'Chuyên viên'} • ${mvp.department || 'Media'}` : 'Chờ vinh danh'}
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export default function Home() {
 
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666666' }}>
                 <span>Danh hiệu</span>
-                <span style={{ fontWeight: 800, color: '#b45309' }}>
+                <span style={{ fontWeight: 600, color: '#b45309' }}>
                   {mvp ? 'MVP Mùa Giải' : 'Chờ xác định'}
                 </span>
               </div>
@@ -455,7 +455,7 @@ export default function Home() {
             {/* Visual Box 2: Excellence Award & Score */}
             <div className="wr-award-visual-box wr-anim-box2-right" style={{ minHeight: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
                   EXCELLENCE RECOGNITION
                 </span>
                 <Medal size={15} color="#111111" />
@@ -465,7 +465,7 @@ export default function Home() {
                 <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Award size={48} color="#f59e0b" strokeWidth={1.75} />
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                   {mvp ? 'DANH HIỆU MVP' : 'CHỜ XÁC ĐỊNH'}
                 </span>
               </div>
@@ -480,14 +480,14 @@ export default function Home() {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#111111', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#111111', marginTop: 2 }}>
                     {mvp ? `${mvp.score.toLocaleString()} XP` : '--- XP'}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 9, fontWeight: 800, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0284c7', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0284c7', marginTop: 2 }}>
                     {mvp?.isVerified ? 'Đã Xác Thực' : 'Hệ Thống'}
                   </div>
                 </div>
@@ -501,28 +501,28 @@ export default function Home() {
       <footer className="wr-award-footer wr-anim-footer">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <BrandMark size={20} showLabel={false} />
-          <span style={{ fontWeight: 800, color: '#333333' }}>
+          <span style={{ fontWeight: 500, color: '#333333' }}>
             © {new Date().getFullYear()} 3WIN MEDIA — WORKRANK ENTERPRISE
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-          <Link to="/leaderboard" style={{ color: '#666666', textDecoration: 'none', fontWeight: 700 }}>
+          <Link to="/leaderboard" style={{ color: '#666666', textDecoration: 'none', fontWeight: 500 }}>
             Bảng xếp hạng
           </Link>
-          <Link to="/arena" style={{ color: '#666666', textDecoration: 'none', fontWeight: 700 }}>
+          <Link to="/arena" style={{ color: '#666666', textDecoration: 'none', fontWeight: 500 }}>
             Đấu trường Arena
           </Link>
-          <Link to="/youtube" style={{ color: '#666666', textDecoration: 'none', fontWeight: 700 }}>
+          <Link to="/youtube" style={{ color: '#666666', textDecoration: 'none', fontWeight: 500 }}>
             Kênh YouTube
           </Link>
-          <Link to="/games/capital-board" style={{ color: '#666666', textDecoration: 'none', fontWeight: 700 }}>
+          <Link to="/games/capital-board" style={{ color: '#666666', textDecoration: 'none', fontWeight: 500 }}>
             Trò chơi
           </Link>
-          <Link to="/login" style={{ color: '#111111', textDecoration: 'none', fontWeight: 900 }}>
+          <Link to="/login" style={{ color: '#111111', textDecoration: 'none', fontWeight: 600 }}>
             Đăng nhập
           </Link>
-          <Link to="/login?mode=register" style={{ color: '#b45309', textDecoration: 'none', fontWeight: 900 }}>
+          <Link to="/login?mode=register" style={{ color: '#b45309', textDecoration: 'none', fontWeight: 600 }}>
             Đăng ký
           </Link>
         </div>

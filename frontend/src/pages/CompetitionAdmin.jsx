@@ -1596,37 +1596,37 @@ export default function CompetitionAdmin() {
 
             {simResult && (
               <div style={{ marginTop: 16, padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 8px 0' }}>
                   Kết Quả Đánh Giá Mô Phỏng
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
                   <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>QUY TẮC KHỚP</div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#0284c7' }}>
+                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>QUY TẮC KHỚP</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>
                       {simResult.matchedRulesCount} / {simResult.rulesEvaluated}
                     </div>
                   </div>
                   <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>ĐIỂM CÁ NHÂN (USER XP)</div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#16a34a' }}>
+                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>ĐIỂM CÁ NHÂN (USER XP)</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>
                       +{simResult.totalUserPoints} XP
                     </div>
                   </div>
                   <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>ĐIỂM ĐỘI (TEAM SCORE)</div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#ea580c' }}>
+                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>ĐIỂM ĐỘI (TEAM SCORE)</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#ea580c', fontFamily: "'JetBrains Mono',monospace" }}>
                       +{simResult.totalTeamScore} XP
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>Trace Thực Thi:</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Trace Thực Thi:</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {simResult.executionTrace.map((tr, idx) => (
                     <div key={idx} style={{ padding: 8, borderRadius: 6, background: tr.matched ? 'rgba(34,197,94,0.06)' : '#fff', border: `1px solid ${tr.matched ? '#86efac' : '#e2e8f0'}`, fontSize: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <strong>{tr.ruleName}</strong>
-                        <span style={{ fontWeight: 800, color: tr.matched ? '#16a34a' : '#94a3b8' }}>
+                        <span style={{ fontWeight: 600, color: tr.matched ? '#16a34a' : '#94a3b8' }}>
                           {tr.matched ? 'KHỚP (MATCHED)' : 'KHÔNG KHỚP'}
                         </span>
                       </div>
@@ -1649,13 +1649,13 @@ export default function CompetitionAdmin() {
       {diffModalOpen && selectedRuleSet && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <GitCompare size={20} color="#0284c7" /> So Sánh Phiên Bản (Version Diff)
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản cũ (A)</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản cũ (A)</label>
                 <select
                   value={diffVersionA}
                   onChange={(e) => setDiffVersionA(e.target.value)}
@@ -1668,7 +1668,7 @@ export default function CompetitionAdmin() {
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản mới (B)</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản mới (B)</label>
                 <select
                   value={diffVersionB}
                   onChange={(e) => setDiffVersionB(e.target.value)}
@@ -1705,7 +1705,7 @@ export default function CompetitionAdmin() {
                         fontSize: 12,
                       }}
                     >
-                      <div style={{ fontWeight: 800, color: '#0f172a' }}>{ch.description}</div>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{ch.description}</div>
                     </div>
                   ))}
                 </div>
@@ -1724,7 +1724,7 @@ export default function CompetitionAdmin() {
       {publishModalOpen && selectedVersion && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0' }}>
               Xác Nhận Xuất Bản Version #{selectedVersion.versionNumber}
             </h2>
             <div style={{ padding: 12, borderRadius: 8, background: 'rgba(234,179,8,0.1)', color: '#854d0e', fontSize: 12, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1733,7 +1733,7 @@ export default function CompetitionAdmin() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
                 Lý Do Audit Bắt Buộc (Audit Reason)
               </label>
               <textarea
@@ -1761,7 +1761,7 @@ export default function CompetitionAdmin() {
       {rebuildModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0' }}>
               Rebuild Toàn Bộ Read Models
             </h2>
             <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>
@@ -1769,7 +1769,7 @@ export default function CompetitionAdmin() {
             </p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
                 Lý do Audit bắt buộc (Audit Reason)
               </label>
               <textarea
@@ -1798,7 +1798,7 @@ export default function CompetitionAdmin() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Eye size={20} color="#0284c7" /> Truy Vết Toàn Bộ Sự Kiện (Event Trace)
               </h2>
               <Button variant="ghost" size="sm" onClick={() => setTraceModalOpen(false)} aria-label="Đóng"><X size={15} /></Button>
@@ -1810,13 +1810,13 @@ export default function CompetitionAdmin() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* 1. Ingestion Overview */}
                 <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
                     1. THÔNG TIN TIẾP NHẬN (INGESTION)
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, fontSize: 12 }}>
                     <div><strong>Event ID:</strong> <span style={{ fontFamily: 'monospace' }}>{traceData.eventId}</span></div>
-                    <div><strong>Loại Sự Kiện:</strong> <span style={{ fontWeight: 800, color: '#0284c7' }}>{traceData.eventType}</span></div>
-                    <div><strong>Nguồn:</strong> <span style={{ fontWeight: 700 }}>{traceData.sourceModule}</span></div>
+                    <div><strong>Loại Sự Kiện:</strong> <span style={{ fontWeight: 600, color: '#0284c7' }}>{traceData.eventType}</span></div>
+                    <div><strong>Nguồn:</strong> <span style={{ fontWeight: 600 }}>{traceData.sourceModule}</span></div>
                     <div><strong>Đối Tượng:</strong> {traceData.aggregateType} #{traceData.aggregateId || '—'}</div>
                     <div><strong>Actor:</strong> {traceData.actor ? `${traceData.actor.name} (#${traceData.actor.id})` : '—'}</div>
                     <div><strong>Team:</strong> {traceData.team ? `${traceData.team.name} (#${traceData.team.id})` : '—'}</div>
@@ -1827,13 +1827,13 @@ export default function CompetitionAdmin() {
 
                 {/* 2. Payload */}
                 <div style={{ padding: 14, borderRadius: 8, background: '#0f172a', color: '#38bdf8', fontFamily: 'monospace', fontSize: 12, overflowX: 'auto' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>2. BUSINESS PAYLOAD (IMMUTABLE)</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>2. BUSINESS PAYLOAD (IMMUTABLE)</div>
                   <pre style={{ margin: 0 }}>{JSON.stringify(traceData.payload, null, 2)}</pre>
                 </div>
 
                 {/* 3. Rule Evaluation */}
                 <div style={{ padding: 14, borderRadius: 8, background: 'rgba(2,132,199,0.05)', border: '1px solid rgba(2,132,199,0.2)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
                     3. ĐÁNH GIÁ QUY TẮC (RULE EVALUATION)
                   </div>
                   <div style={{ fontSize: 13 }}>
@@ -1858,7 +1858,7 @@ export default function CompetitionAdmin() {
 
                 {/* 4. Score Ledger Entries */}
                 <div style={{ padding: 14, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
                     4. BẢN GHI SỔ CÁI ĐIỂM (SCORE LEDGER ENTRIES)
                   </div>
                   {traceData.ledgerEntries?.length === 0 ? (
@@ -1878,8 +1878,8 @@ export default function CompetitionAdmin() {
                         {traceData.ledgerEntries.map((l) => (
                           <tr key={l.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ padding: '6px 4px' }}>{l.targetType} #{l.targetId}</td>
-                            <td style={{ padding: '6px 4px', fontWeight: 700 }}>{l.effectType}</td>
-                            <td style={{ padding: '6px 4px', fontWeight: 800, color: '#16a34a' }}>+{l.delta}</td>
+                            <td style={{ padding: '6px 4px', fontWeight: 600 }}>{l.effectType}</td>
+                            <td style={{ padding: '6px 4px', fontWeight: 700, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>+{l.delta}</td>
                             <td style={{ padding: '6px 4px' }}>{l.balanceAfter}</td>
                             <td style={{ padding: '6px 4px', color: '#64748b' }}>{l.reason}</td>
                           </tr>
@@ -1891,7 +1891,7 @@ export default function CompetitionAdmin() {
 
                 {/* 5. Processing Status */}
                 <div style={{ padding: 14, borderRadius: 8, background: traceData.processing?.status === 'FAILED' ? 'rgba(239,68,68,0.06)' : '#f8fafc', border: `1px solid ${traceData.processing?.status === 'FAILED' ? 'rgba(239,68,68,0.2)' : '#e2e8f0'}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                     5. TRẠNG THÁI XỬ LÝ
                   </div>
                   <div style={{ fontSize: 12 }}>
@@ -1919,15 +1919,15 @@ export default function CompetitionAdmin() {
       {retryModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <RotateCcw size={20} color="#dc2626" /> Thử Lại Sự Kiện Thất Bại
             </h2>
             <div style={{ padding: 12, borderRadius: 8, background: 'rgba(239,68,68,0.06)', color: '#991b1b', fontSize: 12, marginBottom: 14 }}>
-              Hành động này sẽ đặt lại trạng thái <strong>PENDING</strong> cho sự kiện <code style={{ fontWeight: 800 }}>{retryEventId?.slice(0, 8)}...</code>. Worker sẽ tự động đánh giá lại trong lượt quét kế tiếp.
+              Hành động này sẽ đặt lại trạng thái <strong>PENDING</strong> cho sự kiện <code style={{ fontWeight: 600 }}>{retryEventId?.slice(0, 8)}...</code>. Worker sẽ tự động đánh giá lại trong lượt quét kế tiếp.
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
                 Lý Do Audit Bắt Buộc (Audit Reason)
               </label>
               <textarea
@@ -1955,7 +1955,7 @@ export default function CompetitionAdmin() {
       {simEventModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 520, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Zap size={20} color="#0284c7" /> Bắn Sự Kiện Thử Nghiệm (Product Simulation)
             </h2>
             <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>
@@ -1963,14 +1963,14 @@ export default function CompetitionAdmin() {
             </p>
 
             {simActionSuccess && (
-              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 12, fontWeight: 700, marginBottom: 14 }}>
+              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
                 {simActionSuccess}
               </div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
                   Chọn Nguồn Sự Kiện (Source Module)
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -2001,7 +2001,7 @@ export default function CompetitionAdmin() {
               {simModuleType === 'production' && (
                 <>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Loại Hành Động</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Loại Hành Động</label>
                     <select
                       value={simActionType}
                       onChange={(e) => setSimActionType(e.target.value)}
@@ -2015,7 +2015,7 @@ export default function CompetitionAdmin() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Video ID & Tiêu Đề</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Video ID & Tiêu Đề</label>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <input
                         type="number"
@@ -2039,7 +2039,7 @@ export default function CompetitionAdmin() {
               {simModuleType === 'youtube' && (
                 <>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Cột Mốc (Milestone)</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Cột Mốc (Milestone)</label>
                     <select
                       value={simActionType}
                       onChange={(e) => setSimActionType(e.target.value)}
@@ -2051,7 +2051,7 @@ export default function CompetitionAdmin() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Lượt xem (Views)</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Lượt xem (Views)</label>
                     <input
                       type="number"
                       value={simViews}
@@ -2065,7 +2065,7 @@ export default function CompetitionAdmin() {
               {simModuleType === 'community' && (
                 <>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Người Nhận Kudos (Recipient User ID)</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Người Nhận Kudos (Recipient User ID)</label>
                     <input
                       type="number"
                       value={simKudosRecipientId}
@@ -2074,7 +2074,7 @@ export default function CompetitionAdmin() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>Lý Do Tặng Kudos</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Lý Do Tặng Kudos</label>
                     <input
                       type="text"
                       value={simKudosReason}

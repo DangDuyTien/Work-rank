@@ -523,7 +523,7 @@ export default function AdminTeamsYouTube() {
             <Tv size={14} />
             Hệ Thống YouTube Toàn Công Ty
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: '#0f172a', fontWeight: 800 }}>
+          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: '#0f172a', fontWeight: 700 }}>
             Quản Lý & Phân Tầng Dữ Liệu YouTube
           </h1>
           <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
@@ -575,11 +575,11 @@ export default function AdminTeamsYouTube() {
       {/* KPI METRIC TILES */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         <div style={{ ...CARD, padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <span>Tổng Lượt Xem</span>
             <Eye size={16} color="#3b82f6" />
           </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
             {fmtNum(overview?.kpis?.totalViews || 0)}
           </div>
           <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 4 }}>
@@ -588,11 +588,11 @@ export default function AdminTeamsYouTube() {
         </div>
 
         <div style={{ ...CARD, padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <span>Tổng Subscribers</span>
             <Users size={16} color="#8b5cf6" />
           </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
             {fmtNum(overview?.kpis?.totalSubscribers || 0)}
           </div>
           <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -601,11 +601,11 @@ export default function AdminTeamsYouTube() {
         </div>
 
         <div style={{ ...CARD, padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <span>Tổng Kênh YouTube</span>
             <Tv size={16} color="#ef4444" />
           </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
             {channels.length}
           </div>
           <div style={{ fontSize: 11, color: unassignedSummary.count > 0 ? '#d97706' : '#64748b', marginTop: 4 }}>
@@ -614,11 +614,11 @@ export default function AdminTeamsYouTube() {
         </div>
 
         <div style={{ ...CARD, padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <span>Đội Nhóm Phụ Trách</span>
             <Building2 size={16} color="#b45309" />
           </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', marginTop: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
             {teams.length}
           </div>
           <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -649,7 +649,7 @@ export default function AdminTeamsYouTube() {
                 disabled={syncingAll}
                 style={{
                   padding: '8px 14px', background: '#ffffff', color: '#0f172a', border: '1px solid rgba(15,23,42,0.15)',
-                  fontSize: 12, fontWeight: 700, cursor: syncingAll ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 600, cursor: syncingAll ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 }}
               >
                 <RefreshCw size={13} className={syncingAll ? 'spin' : ''} />
@@ -660,7 +660,7 @@ export default function AdminTeamsYouTube() {
                 onClick={() => setCreateChannelModalOpen(true)}
                 style={{
                   padding: '8px 16px', background: '#ef4444', color: '#ffffff', border: 'none',
-                  fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 }}
               >
                 <Plus size={14} /> Thêm Kênh YouTube
@@ -674,7 +674,7 @@ export default function AdminTeamsYouTube() {
               onClick={() => setCreateTeamModalOpen(true)}
               style={{
                 padding: '8px 16px', background: '#b45309', color: '#ffffff', border: 'none',
-                fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
               <Plus size={14} /> Thêm Đội Mới
@@ -692,7 +692,7 @@ export default function AdminTeamsYouTube() {
             {/* ── TIER 2: TEAM SUMMARY BREAKDOWN CARDS ── */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Phân Bổ Kênh Theo Đội Nhóm
                 </span>
                 <span style={{ fontSize: 11, color: '#94a3b8' }}>
@@ -713,8 +713,8 @@ export default function AdminTeamsYouTube() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Tất Cả Kênh</span>
-                    <span style={{ fontSize: 10, padding: '2px 6px', background: '#e2e8f0', color: '#334155', fontWeight: 800 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>Tất Cả Kênh</span>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: '#e2e8f0', color: '#334155', fontWeight: 600 }}>
                       {channels.length}
                     </span>
                   </div>
@@ -743,10 +743,10 @@ export default function AdminTeamsYouTube() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {t.name}
                         </span>
-                        <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 800 }}>
+                        <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 600 }}>
                           {teamChannels.length}
                         </span>
                       </div>
@@ -769,8 +769,8 @@ export default function AdminTeamsYouTube() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#d97706' }}>Chưa Gán Đội</span>
-                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(245,158,11,0.15)', color: '#b45309', fontWeight: 800 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#d97706' }}>Chưa Gán Đội</span>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(245,158,11,0.15)', color: '#b45309', fontWeight: 600 }}>
                       {unassignedSummary.count}
                     </span>
                   </div>
@@ -796,7 +796,7 @@ export default function AdminTeamsYouTube() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 {/* Team Filter Dropdown */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Đội:</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Đội:</span>
                   <select
                     value={channelTeamFilter}
                     onChange={(e) => setChannelTeamFilter(e.target.value)}
@@ -826,7 +826,7 @@ export default function AdminTeamsYouTube() {
                       style={{
                         padding: '5px 8px',
                         fontSize: 11,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         cursor: 'pointer',
                         border: channelStatusFilter === val ? '1px solid #0f172a' : '1px solid rgba(15,23,42,0.1)',
                         background: channelStatusFilter === val ? '#0f172a' : '#ffffff',
@@ -845,12 +845,12 @@ export default function AdminTeamsYouTube() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Kênh YouTube</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Đội Phụ Trách</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Lượt Xem (Views)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Đăng Ký (Subs)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Trạng Thái Sync</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Thao Tác</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Kênh YouTube</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Đội Phụ Trách</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Lượt Xem (Views)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Đăng Ký (Subs)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Trạng Thái Sync</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right', letterSpacing: '0.04em' }}>Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -873,18 +873,18 @@ export default function AdminTeamsYouTube() {
                           {/* 1. Channel Info */}
                           <td style={{ padding: '12px 14px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
+                              <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
                                 <Tv size={18} />
                               </div>
                               <div>
                                 <div
                                   onClick={() => setSelectedChannelDetail(ch)}
-                                  style={{ fontWeight: 800, color: '#0f172a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                                  style={{ fontWeight: 600, color: '#0f172a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
                                   title="Xem chi tiết kênh"
                                 >
                                   <span>{ch.title || ch.channelId}</span>
                                   {ch.customUrl && (
-                                    <span style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>
+                                    <span style={{ fontSize: 10, color: '#64748b', fontWeight: 500 }}>
                                       ({ch.customUrl})
                                     </span>
                                   )}
@@ -913,7 +913,7 @@ export default function AdminTeamsYouTube() {
                               onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
                               disabled={linkingChannelId === ch.id}
                               style={{
-                                padding: '5px 8px', fontSize: 11, fontWeight: 700,
+                                padding: '5px 8px', fontSize: 11, fontWeight: 600,
                                 border: '1px solid rgba(15,23,42,0.12)', background: assignedTeam ? 'rgba(180,83,9,0.06)' : '#fffbeb',
                                 color: assignedTeam ? '#b45309' : '#d97706',
                                 opacity: linkingChannelId === ch.id ? 0.6 : 1,
@@ -928,12 +928,12 @@ export default function AdminTeamsYouTube() {
                           </td>
 
                           {/* 3. Views */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#0f172a', fontSize: 13 }}>
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
                             {fmtNum(ch.views || 0)}
                           </td>
 
                           {/* 4. Subs */}
-                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, color: '#16a34a', fontSize: 13 }}>
+                          <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#16a34a', fontSize: 13 }}>
                             {fmtNum(ch.subscribers || 0)}
                           </td>
 
@@ -941,21 +941,21 @@ export default function AdminTeamsYouTube() {
                           <td style={{ padding: '12px 14px' }}>
                             {hasError ? (
                               <span
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 800, cursor: 'help' }}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fee2e2', color: '#dc2626', fontSize: 10, fontWeight: 600, cursor: 'help' }}
                                 title={ch.lastSyncError || 'Lỗi đồng bộ từ YouTube API'}
                               >
                                 <XCircle size={12} /> Lỗi Sync
                               </span>
                             ) : isNeverSynced ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#f1f5f9', color: '#64748b', fontSize: 10, fontWeight: 800 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#f1f5f9', color: '#64748b', fontSize: 10, fontWeight: 600 }}>
                                 <Clock size={12} /> Chưa Sync
                               </span>
                             ) : isStale ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fffbeb', color: '#d97706', fontSize: 10, fontWeight: 800 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#fffbeb', color: '#d97706', fontSize: 10, fontWeight: 600 }}>
                                 <AlertTriangle size={12} /> Cần Sync lại
                               </span>
                             ) : (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontSize: 10, fontWeight: 800 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontSize: 10, fontWeight: 600 }}>
                                 <CheckCircle2 size={12} /> Hoạt Động
                               </span>
                             )}
@@ -1184,7 +1184,7 @@ export default function AdminTeamsYouTube() {
             <div style={{ ...CARD, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Flame size={18} color="#ef4444" />
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>Top Video Xuất Sắc Toàn Công Ty</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Top Video Xuất Sắc Toàn Công Ty</span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[
@@ -1197,7 +1197,7 @@ export default function AdminTeamsYouTube() {
                     type="button"
                     onClick={() => setVideoTimeframe(tf)}
                     style={{
-                      padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                      padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       border: videoTimeframe === tf ? '1px solid #ef4444' : '1px solid rgba(15,23,42,0.1)',
                       background: videoTimeframe === tf ? '#ef4444' : '#ffffff',
                       color: videoTimeframe === tf ? '#ffffff' : '#64748b',
@@ -1223,19 +1223,19 @@ export default function AdminTeamsYouTube() {
                     <div style={{
                       width: 32, height: 32, flexShrink: 0, background: idx < 3 ? '#ef4444' : '#f1f5f9',
                       color: idx < 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 900, fontSize: 13,
+                      fontWeight: 700, fontSize: 13,
                     }}>
                       #{idx + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {vid.title}
                       </h4>
                       <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>
                         Kênh: <strong>{vid.channel?.title || vid.channelTitle || 'YouTube'}</strong> {vid.channel?.team?.name && `· Đội: ${vid.channel.team.name}`}
                       </div>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 12 }}>
-                        <span style={{ fontWeight: 900, color: '#ef4444' }}>
+                        <span style={{ fontWeight: 700, color: '#ef4444' }}>
                           {fmtNum(vid.views || 0)} views
                         </span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#64748b' }}>
@@ -1251,7 +1251,7 @@ export default function AdminTeamsYouTube() {
                             href={`https://www.youtube.com/watch?v=${vid.videoId}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ marginLeft: 'auto', color: '#b45309', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, textDecoration: 'none', fontWeight: 800 }}
+                            style={{ marginLeft: 'auto', color: '#b45309', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, textDecoration: 'none', fontWeight: 600 }}
                           >
                             Xem <ExternalLink size={11} />
                           </a>
@@ -1278,7 +1278,7 @@ export default function AdminTeamsYouTube() {
                   <Tv size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                     {selectedChannelDetail.title || selectedChannelDetail.channelId}
                   </h3>
                   <span style={{ fontSize: 11, color: '#64748b' }}>ID: {selectedChannelDetail.channelId}</span>
@@ -1293,20 +1293,20 @@ export default function AdminTeamsYouTube() {
               {/* Snapshot Tiles */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Views</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Views</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>
                     {fmtNum(selectedChannelDetail.views || 0)}
                   </div>
                 </div>
                 <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#16a34a', marginTop: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#16a34a', marginTop: 4 }}>
                     {fmtNum(selectedChannelDetail.subscribers || 0)}
                   </div>
                 </div>
                 <div style={{ ...CARD, padding: 12, textAlign: 'center', background: '#f8fafc' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Videos</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#8b5cf6', marginTop: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Videos</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#8b5cf6', marginTop: 4 }}>
                     {selectedChannelDetail.videosCount || 0}
                   </div>
                 </div>
@@ -1314,7 +1314,7 @@ export default function AdminTeamsYouTube() {
 
               {/* Team Assignment Field */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Đội Nhóm Phụ Trách
                 </label>
                 <select
@@ -1331,7 +1331,7 @@ export default function AdminTeamsYouTube() {
 
               {/* Sync Status Info */}
               <div style={{ padding: 12, background: selectedChannelDetail.syncStatus === 'ERROR' ? '#fee2e2' : '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: selectedChannelDetail.syncStatus === 'ERROR' ? '#dc2626' : '#475569' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: selectedChannelDetail.syncStatus === 'ERROR' ? '#dc2626' : '#475569' }}>
                   Trạng Thái Đồng Bộ: {selectedChannelDetail.syncStatus || 'IDLE'}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -1353,7 +1353,7 @@ export default function AdminTeamsYouTube() {
                     rel="noreferrer"
                     style={{
                       padding: '8px 14px', background: '#fee2e2', color: '#ef4444', textDecoration: 'none',
-                      fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6,
+                      fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6,
                     }}
                   >
                     Mở YouTube <ExternalLink size={13} />
@@ -1365,7 +1365,7 @@ export default function AdminTeamsYouTube() {
                   disabled={syncingChannelId === selectedChannelDetail.id}
                   style={{
                     padding: '8px 14px', background: '#b45309', color: '#ffffff', border: 'none',
-                    fontSize: 12, fontWeight: 700, cursor: syncingChannelId === selectedChannelDetail.id ? 'not-allowed' : 'pointer',
+                    fontSize: 12, fontWeight: 600, cursor: syncingChannelId === selectedChannelDetail.id ? 'not-allowed' : 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -1379,7 +1379,7 @@ export default function AdminTeamsYouTube() {
               <button
                 type="button"
                 onClick={() => setSelectedChannelDetail(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
               >
                 Đóng
               </button>
@@ -1395,7 +1395,7 @@ export default function AdminTeamsYouTube() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Building2 size={18} color="#b45309" /> Thêm Đội Nhóm Mới
               </h3>
               <button type="button" onClick={() => setCreateTeamModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -1405,7 +1405,7 @@ export default function AdminTeamsYouTube() {
 
             <form onSubmit={handleCreateTeam} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Tên Đội Nhóm *</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Tên Đội Nhóm *</label>
                 <input
                   type="text"
                   required
@@ -1417,7 +1417,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Phòng Ban Trực Thuộc</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Phòng Ban Trực Thuộc</label>
                 <select
                   value={teamForm.department}
                   onChange={(e) => setTeamForm({ ...teamForm, department: e.target.value })}
@@ -1428,7 +1428,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Màu Đại Diện Đội</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Màu Đại Diện Đội</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {TEAM_COLORS.map((c) => (
                     <button
@@ -1447,7 +1447,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Mô Tả Nhiệm Vụ</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Mô Tả Nhiệm Vụ</label>
                 <textarea
                   rows={2}
                   value={teamForm.description}
@@ -1458,10 +1458,10 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setCreateTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setCreateTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
                   {savingTeam ? 'Đang tạo...' : 'Tạo Đội Nhóm'}
                 </button>
               </div>
@@ -1477,7 +1477,7 @@ export default function AdminTeamsYouTube() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#b45309" /> Cập Nhật Đội: {selectedTeam.name}
               </h3>
               <button type="button" onClick={() => setEditTeamModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -1487,7 +1487,7 @@ export default function AdminTeamsYouTube() {
 
             <form onSubmit={handleUpdateTeam} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Tên Đội Nhóm *</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Tên Đội Nhóm *</label>
                 <input
                   type="text"
                   required
@@ -1498,7 +1498,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Phòng Ban Trực Thuộc</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Phòng Ban Trực Thuộc</label>
                 <select
                   value={teamForm.department}
                   onChange={(e) => setTeamForm({ ...teamForm, department: e.target.value })}
@@ -1509,7 +1509,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Màu Đại Diện</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Màu Đại Diện</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {TEAM_COLORS.map((c) => (
                     <button
@@ -1528,7 +1528,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Mô Tả</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>Mô Tả</label>
                 <textarea
                   rows={2}
                   value={teamForm.description}
@@ -1538,10 +1538,10 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setEditTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setEditTeamModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={savingTeam} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: savingTeam ? 'not-allowed' : 'pointer' }}>
                   {savingTeam ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                 </button>
               </div>
@@ -1558,7 +1558,7 @@ export default function AdminTeamsYouTube() {
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, maxHeight: '85vh', display: 'flex', flexDirection: 'column', border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Users size={18} color="#b45309" /> Thành Viên Đội: {membersDrawerTeam.name}
                 </h3>
                 <span style={{ fontSize: 11, color: '#64748b' }}>Phòng ban: {membersDrawerTeam.department} · {teamMembersList.length} nhân sự</span>
@@ -1587,7 +1587,7 @@ export default function AdminTeamsYouTube() {
                 disabled={addingMember || !selectedUserIdToAdd}
                 style={{
                   padding: '7px 14px', background: '#b45309', color: '#ffffff', border: 'none',
-                  fontSize: 12, fontWeight: 900, cursor: addingMember || !selectedUserIdToAdd ? 'not-allowed' : 'pointer',
+                  fontSize: 12, fontWeight: 600, cursor: addingMember || !selectedUserIdToAdd ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                 }}
               >
@@ -1615,8 +1615,8 @@ export default function AdminTeamsYouTube() {
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 900, color: '#0f172a', fontSize: 13 }}>
-                        {m.name} <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>(#{m.id})</span>
+                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>
+                        {m.name} <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>(#{m.id})</span>
                       </div>
                       <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
                         Chức danh: <strong>{m.jobTitle || 'Nhân viên'}</strong> · Email: {m.email}
@@ -1628,7 +1628,7 @@ export default function AdminTeamsYouTube() {
                       disabled={removingMemberId === m.id}
                       style={{
                         padding: '4px 8px', background: '#fee2e2', color: '#dc2626', border: 'none',
-                        fontSize: 11, fontWeight: 800, cursor: removingMemberId === m.id ? 'not-allowed' : 'pointer',
+                        fontSize: 11, fontWeight: 600, cursor: removingMemberId === m.id ? 'not-allowed' : 'pointer',
                         opacity: removingMemberId === m.id ? 0.5 : 1,
                       }}
                       title="Gỡ khỏi đội"
@@ -1644,7 +1644,7 @@ export default function AdminTeamsYouTube() {
               <button
                 type="button"
                 onClick={() => setMembersDrawerTeam(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
               >
                 Đóng
               </button>
@@ -1660,7 +1660,7 @@ export default function AdminTeamsYouTube() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Tv size={18} color="#ef4444" /> Thêm Kênh YouTube Mới
               </h3>
               <button type="button" onClick={() => setCreateChannelModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
@@ -1670,7 +1670,7 @@ export default function AdminTeamsYouTube() {
 
             <form onSubmit={handleCreateChannel} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Mã Kênh YouTube (Channel ID hoặc Handle) *
                 </label>
                 <input
@@ -1684,7 +1684,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Tên Kênh YouTube (Tùy chọn)
                 </label>
                 <input
@@ -1697,7 +1697,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Custom URL / Handle (Tùy chọn)
                 </label>
                 <input
@@ -1710,7 +1710,7 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Gán Cho Đội Nhóm Phụ Trách
                 </label>
                 <select
@@ -1726,10 +1726,10 @@ export default function AdminTeamsYouTube() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setCreateChannelModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setCreateChannelModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={savingChannel} style={{ padding: '8px 18px', background: '#ef4444', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 900, cursor: savingChannel ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={savingChannel} style={{ padding: '8px 18px', background: '#ef4444', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: savingChannel ? 'not-allowed' : 'pointer' }}>
                   {savingChannel ? 'Đang thêm...' : 'Thêm Kênh'}
                 </button>
               </div>

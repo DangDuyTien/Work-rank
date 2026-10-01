@@ -84,7 +84,7 @@ function Avatar({ user, size = 42 }) {
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: Math.max(11, Math.round(size * 0.34)),
-      fontWeight: 900,
+      fontWeight: 700,
       flexShrink: 0,
       position: 'relative',
       borderRadius: '50%',
@@ -111,7 +111,7 @@ function PresencePill({ status }) {
       color: meta.color,
       padding: '0 8px',
       fontSize: 10,
-      fontWeight: 900,
+      fontWeight: 600,
       whiteSpace: 'nowrap',
       textTransform: 'uppercase',
       borderRadius: 9999,
@@ -593,11 +593,11 @@ export default function Friends() {
             <Users size={20} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Tổng nhân sự công ty
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginTop: 2 }}>
-              {memberPagination.total || memberList.length} <span style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>người</span>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+              {memberPagination.total || memberList.length} <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>người</span>
             </div>
           </div>
         </div>
@@ -623,11 +623,11 @@ export default function Friends() {
             <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Trực tuyến / Hoạt động
             </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#16a34a', marginTop: 2 }}>
-              {onlineCount} <span style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>đang online</span>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a', marginTop: 2 }}>
+              {onlineCount} <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>đang online</span>
             </div>
           </div>
         </div>
@@ -653,10 +653,10 @@ export default function Friends() {
             <Shield size={20} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Đội nhóm của bạn
             </div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {myTeam ? myTeam.name : 'Chưa tham gia đội'}
             </div>
           </div>
@@ -683,10 +683,10 @@ export default function Friends() {
             {isTeamLeader ? <Crown size={20} /> : <Award size={20} />}
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Vai trò trong đội
             </div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: isTeamLeader ? '#d97706' : '#0f172a', marginTop: 2 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: isTeamLeader ? '#d97706' : '#0f172a', marginTop: 2 }}>
               {isTeamLeader ? '👑 Trưởng nhóm' : myTeam ? 'Thành viên' : 'Chưa có đội'}
             </div>
           </div>
@@ -706,7 +706,7 @@ export default function Friends() {
           style={{
             padding: '12px 18px',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 600,
             border: 'none',
             borderBottom: activeTab === 'directory' ? '3px solid #0f172a' : '3px solid transparent',
             background: 'transparent',
@@ -723,7 +723,7 @@ export default function Friends() {
           Danh Bạ Đồng Nghiệp
           <span style={{
             fontSize: 11,
-            fontWeight: 800,
+            fontWeight: 600,
             padding: '2px 6px',
             background: activeTab === 'directory' ? '#0f172a' : 'rgba(100,116,139,0.15)',
             color: activeTab === 'directory' ? '#ffffff' : '#64748b',
@@ -738,7 +738,7 @@ export default function Friends() {
           style={{
             padding: '12px 18px',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 600,
             border: 'none',
             borderBottom: activeTab === 'team' ? '3px solid #0f172a' : '3px solid transparent',
             background: 'transparent',
@@ -756,7 +756,7 @@ export default function Friends() {
           {myTeam && (
             <span style={{
               fontSize: 11,
-              fontWeight: 800,
+              fontWeight: 600,
               padding: '2px 6px',
               background: '#0284c7',
               color: '#ffffff',
@@ -772,7 +772,7 @@ export default function Friends() {
           style={{
             padding: '12px 18px',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 600,
             border: 'none',
             borderBottom: activeTab === 'leaderboard' ? '3px solid #0f172a' : '3px solid transparent',
             background: 'transparent',
@@ -922,7 +922,7 @@ export default function Friends() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                                 <strong style={{
                                   fontSize: 14,
-                                  fontWeight: 900,
+                                  fontWeight: 600,
                                   color: '#0f172a',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -932,8 +932,8 @@ export default function Friends() {
                                 </strong>
                                 {isVerified(member) && <VerifiedBadge size={14} />}
                               </div>
-                              <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', marginTop: 2 }}>
-                                {formatMemberCode(member)} {isSelf && <span style={{ color: '#0284c7', fontWeight: 900 }}>· Bạn</span>}
+                              <div style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8', marginTop: 2 }}>
+                                {formatMemberCode(member)} {isSelf && <span style={{ color: '#0284c7', fontWeight: 600 }}>· Bạn</span>}
                               </div>
                             </div>
                           </div>
@@ -953,7 +953,7 @@ export default function Friends() {
                               background: '#f8fafc',
                               border: '1px solid rgba(15,23,42,0.1)',
                               fontSize: 11,
-                              fontWeight: 700,
+                              fontWeight: 600,
                               color: '#475569',
                             }}>
                               <Building2 size={12} />
@@ -971,7 +971,7 @@ export default function Friends() {
                                 alignItems: 'center',
                                 gap: 5,
                                 fontSize: 11,
-                                fontWeight: 900,
+                                fontWeight: 600,
                                 color: memberIsLeader ? '#d97706' : '#0284c7',
                                 background: memberIsLeader ? 'rgba(217,119,6,0.08)' : 'rgba(2,132,199,0.08)',
                                 border: memberIsLeader ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(2,132,199,0.2)',
@@ -982,7 +982,7 @@ export default function Friends() {
                               </span>
                             </div>
                           ) : (
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8' }}>
                               Chưa tham gia đội nhóm nào
                             </span>
                           )}
@@ -1002,7 +1002,7 @@ export default function Friends() {
                           type="button"
                           className="btn btn-secondary"
                           onClick={() => openProfile(member)}
-                          style={{ flex: 1, minHeight: 32, fontSize: 12, fontWeight: 800, padding: '0 10px' }}
+                          style={{ flex: 1, minHeight: 32, fontSize: 12, fontWeight: 600, padding: '0 10px' }}
                         >
                           <Eye size={13} />
                           Hồ sơ
@@ -1014,7 +1014,7 @@ export default function Friends() {
                             className="btn btn-primary"
                             disabled={busyAction === `add:${mId}`}
                             onClick={() => handleDirectAddMember(member)}
-                            style={{ minHeight: 32, fontSize: 12, fontWeight: 800, padding: '0 10px', background: '#0284c7' }}
+                            style={{ minHeight: 32, fontSize: 12, fontWeight: 600, padding: '0 10px', background: '#0284c7' }}
                           >
                             <UserPlus size={13} />
                             Thêm vào đội
@@ -1064,12 +1064,12 @@ export default function Friends() {
                       </div>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                             {myTeam.name}
                           </h2>
                           <span style={{
                             fontSize: 12,
-                            fontWeight: 900,
+                            fontWeight: 600,
                             padding: '3px 8px',
                             background: isTeamLeader ? '#d97706' : '#0284c7',
                             color: '#ffffff',
@@ -1082,7 +1082,7 @@ export default function Friends() {
                             {myTeam.description}
                           </p>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, fontWeight: 700, color: '#64748b' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, fontWeight: 500, color: '#64748b' }}>
                           <span>👥 {myTeam.memberCount || myTeam.members?.length || 0} thành viên</span>
                           {myTeam.owner && (
                             <span>👑 Trưởng nhóm: <strong style={{ color: '#0f172a' }}>{myTeam.owner.name || myTeam.owner.email}</strong></span>
@@ -1101,10 +1101,10 @@ export default function Friends() {
                         border: '1px solid rgba(15,23,42,0.12)',
                         padding: '6px 12px',
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                           Mã mời:
                         </span>
-                        <strong style={{ fontSize: 14, fontWeight: 900, color: '#0f172a', letterSpacing: '0.05em' }}>
+                        <strong style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', letterSpacing: '0.05em' }}>
                           {myTeam.inviteCode || myTeam.invite_code}
                         </strong>
                         <button
@@ -1174,7 +1174,7 @@ export default function Friends() {
                   padding: 20,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                       Danh Sách Thành Viên ({myTeam.members?.length || 0})
                     </h3>
                   </div>
@@ -1203,14 +1203,14 @@ export default function Friends() {
                             <Avatar user={m} size={40} />
                             <div style={{ minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <strong style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+                                <strong style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
                                   {m.name || m.email || `Thành viên #${memberId}`}
                                 </strong>
                                 {isVerified(m) && <VerifiedBadge size={14} />}
                                 {isMemberLeader && (
                                   <span style={{
                                     fontSize: 10,
-                                    fontWeight: 900,
+                                    fontWeight: 600,
                                     padding: '1px 6px',
                                     background: 'rgba(217,119,6,0.12)',
                                     color: '#b45309',
@@ -1289,7 +1289,7 @@ export default function Friends() {
                   }}>
                     <Shield size={32} />
                   </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
                     Bạn Chưa Thuộc Đội Nhóm Nào
                   </h2>
                   <p style={{ fontSize: 14, color: '#64748b', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
@@ -1300,7 +1300,7 @@ export default function Friends() {
                       type="button"
                       className="btn btn-primary"
                       onClick={() => setShowCreateTeamModal(true)}
-                      style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                      style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
                     >
                       <Plus size={16} />
                       Tạo đội mới (Trở thành Trưởng nhóm)
@@ -1309,7 +1309,7 @@ export default function Friends() {
                       type="button"
                       className="btn btn-secondary"
                       onClick={() => setShowJoinModal(true)}
-                      style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                      style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
                     >
                       <KeyRoundIcon size={16} />
                       Gia nhập bằng mã mời
@@ -1323,7 +1323,7 @@ export default function Friends() {
                   border: '1px solid rgba(15,23,42,0.1)',
                   padding: 24,
                 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>
                     Các Đội Nhóm Trong Công Ty ({allTeams.length})
                   </h3>
                   {allTeams.length === 0 ? (
@@ -1353,10 +1353,10 @@ export default function Friends() {
                         >
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                              <strong style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                              <strong style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
                                 {team.name}
                               </strong>
-                              <span style={{ fontSize: 11, fontWeight: 800, color: '#0284c7', background: 'rgba(2,132,199,0.08)', padding: '2px 8px' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', background: 'rgba(2,132,199,0.08)', padding: '2px 8px' }}>
                                 {team.memberCount || 0} thành viên
                               </span>
                             </div>
@@ -1366,12 +1366,12 @@ export default function Friends() {
                               </p>
                             )}
                             {team.owner && (
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', marginTop: 8 }}>
+                              <div style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8', marginTop: 8 }}>
                                 👑 Trưởng nhóm: <strong style={{ color: '#475569' }}>{team.owner.name || team.owner.email}</strong>
                               </div>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', borderTop: '1px dashed rgba(15,23,42,0.08)', paddingTop: 8 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', borderTop: '1px dashed rgba(15,23,42,0.08)', paddingTop: 8 }}>
                             Liên hệ Trưởng nhóm để nhận mã mời gia nhập
                           </div>
                         </div>
@@ -1391,7 +1391,7 @@ export default function Friends() {
           <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                   Bảng Xếp Hạng Cá Nhân Toàn Công Ty
                 </h3>
                 <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
@@ -1410,7 +1410,7 @@ export default function Friends() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #0f172a', fontSize: 12, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>
+                    <tr style={{ borderBottom: '2px solid #0f172a', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                       <th style={{ padding: '10px 12px', width: 60 }}>Hạng</th>
                       <th style={{ padding: '10px 12px' }}>Thành viên</th>
                       <th style={{ padding: '10px 12px' }}>Chức danh / Phòng ban</th>
@@ -1436,7 +1436,7 @@ export default function Friends() {
                             transition: 'background 0.15s ease',
                           }}
                         >
-                          <td style={{ padding: '12px 12px', fontWeight: 900, fontSize: 14 }}>
+                          <td style={{ padding: '12px 12px', fontWeight: 700, fontSize: 14 }}>
                             {rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : `#${rank}`}
                           </td>
                           <td style={{ padding: '12px 12px' }}>
@@ -1444,7 +1444,7 @@ export default function Friends() {
                               <Avatar user={rUser} size={36} />
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                  <strong style={{ fontSize: 13, fontWeight: 900, color: '#0f172a' }}>
+                                  <strong style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                                     {rUser.name || rUser.email || `User #${rId}`}
                                   </strong>
                                   {isVerified(rUser) && <VerifiedBadge size={13} />}
@@ -1459,7 +1459,7 @@ export default function Friends() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <JobTitleBadge title={rUser.jobTitle || row.jobTitle} size="sm" />
                               {(rUser.department || row.department) && (
-                                <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+                                <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>
                                   {rUser.department || row.department}
                                 </span>
                               )}
@@ -1467,7 +1467,7 @@ export default function Friends() {
                           </td>
                           <td style={{ padding: '12px 12px' }}>
                             {row.teamName || rUser.teamName || (rUser.Team && rUser.Team.name) ? (
-                              <span style={{ fontSize: 12, fontWeight: 800, color: '#0284c7' }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: '#0284c7' }}>
                                 🛡️ {row.teamName || rUser.teamName || rUser.Team?.name}
                               </span>
                             ) : (
@@ -1475,10 +1475,10 @@ export default function Friends() {
                             )}
                           </td>
                           <td style={{ padding: '12px 12px', textAlign: 'right' }}>
-                            <strong style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                            <strong style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
                               {fmtNum(row.points || row.score || row.seasonScore || 0)}
                             </strong>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', marginLeft: 4 }}>PTS</span>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8', marginLeft: 4 }}>PTS</span>
                           </td>
                           <td style={{ padding: '12px 12px', textAlign: 'center' }}>
                             <button
@@ -1510,7 +1510,7 @@ export default function Friends() {
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Shield size={18} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Tạo Đội Nhóm Mới
                 </h3>
               </div>
@@ -1593,7 +1593,7 @@ export default function Friends() {
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <KeyRoundIcon size={18} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Gia Nhập Đội Bằng Mã Mời
                 </h3>
               </div>
@@ -1617,7 +1617,7 @@ export default function Friends() {
                   value={joinInviteCode}
                   onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())}
                   placeholder="WR-ABC123"
-                  style={{ ...INPUT_STYLE, letterSpacing: '0.08em', fontWeight: 900 }}
+                  style={{ ...INPUT_STYLE, letterSpacing: '0.08em', fontWeight: 700 }}
                   maxLength={32}
                 />
                 <span style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginTop: 4 }}>
@@ -1656,7 +1656,7 @@ export default function Friends() {
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Chỉnh Sửa Thông Tin Đội
                 </h3>
               </div>
@@ -1726,7 +1726,7 @@ export default function Friends() {
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <UserPlus size={18} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Thêm Thành Viên Vào Đội "{myTeam.name}"
                 </h3>
               </div>
@@ -1751,7 +1751,7 @@ export default function Friends() {
                 />
               </div>
 
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 10 }}>
                 Đồng nghiệp sẵn sàng gia nhập ({unassignedColleagues.length})
               </div>
 
@@ -1780,7 +1780,7 @@ export default function Friends() {
                           <Avatar user={colleague} size={36} />
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <strong style={{ fontSize: 13, fontWeight: 900, color: '#0f172a' }}>
+                              <strong style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
                                 {colleague.name || colleague.email}
                               </strong>
                               {isVerified(colleague) && <VerifiedBadge size={13} />}
@@ -1788,7 +1788,7 @@ export default function Friends() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                               <JobTitleBadge title={colleague.jobTitle} size="sm" />
                               {colleague.department && (
-                                <span style={{ fontSize: 10, color: '#64748b', fontWeight: 700 }}>
+                                <span style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>
                                   · {colleague.department}
                                 </span>
                               )}
@@ -1801,7 +1801,7 @@ export default function Friends() {
                           className="btn btn-primary"
                           disabled={busyAction === `add:${cId}`}
                           onClick={() => handleDirectAddMember(colleague)}
-                          style={{ minHeight: 30, fontSize: 12, fontWeight: 800, padding: '0 12px' }}
+                          style={{ minHeight: 30, fontSize: 12, fontWeight: 600, padding: '0 12px' }}
                         >
                           {busyAction === `add:${cId}` ? 'Đang thêm...' : '+ Thêm vào đội'}
                         </button>
@@ -1868,7 +1868,7 @@ const MODAL_HEADER = {
 const LABEL_STYLE = {
   display: 'block',
   fontSize: 12,
-  fontWeight: 800,
+  fontWeight: 600,
   color: '#0f172a',
   marginBottom: 6,
   textTransform: 'uppercase',
