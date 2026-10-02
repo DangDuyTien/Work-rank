@@ -172,7 +172,7 @@ async function getRankingOverview() {
         teamName: topYt.team?.name || `Team ${topYt.teamId}`,
         totalViews: Number(topYt.totalViews || 0),
         totalSubscribers: Number(topYt.totalSubscribers || 0),
-        viewsGrowth30dPct: Number(topYt.viewsGrowth30dPct || 0),
+        viewsGrowth30dPct: topYt.viewsGrowth30dPct !== null && topYt.viewsGrowth30dPct !== undefined ? Number(topYt.viewsGrowth30dPct) : null,
       };
     }
   } catch {

@@ -1254,6 +1254,13 @@ export const activityApi = {
   },
 };
 
+export const computerActivityApi = {
+  recordBatch: async (payload) => activityApi.recordComputerBatch(payload),
+  getRankings: async (params) => activityApi.getComputerRankings(params),
+  getMySummary: async () => activityApi.getMySummary(),
+  getAdminOverview: async (params) => activityApi.getAdminOverview(params),
+};
+
 export const desktopAgentIpc = {
   checkStatus: async () => {
     try {
@@ -1262,7 +1269,7 @@ export const desktopAgentIpc = {
     } catch {
       // Companion not running or port unreachable
     }
-    return { running: false, paired: false };
+    return { running: false, paired: false, trackingActive: false };
   },
   pair: async ({ token, user, backendUrl }) => {
     try {
@@ -1277,6 +1284,47 @@ export const desktopAgentIpc = {
       // Silent fail if companion not running
     }
     return null;
+  },
+  startTracking: async ({ token, user, backendUrl } = {}) => {
+    try {
+      const res = await fetch('http://127.0.0.1:43124/tracking/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, user, backendUrl }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // Silent fail
+    }
+    return null;
+  },
+  sendHeartbeat: async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:43124/tracking/heartbeat', {
+        method: 'POST',
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // Silent fail
+    }
+    return null;
+  },
+  stopTracking: async () => {
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('http://127.0.0.1:43124/tracking/stop');
+      } else {
+        await fetch('http://127.0.0.1:43124/tracking/stop', {
+          method: 'POST',
+          keepalive: true,
+          signal: AbortSignal.timeout(2000),
+        });
+      }
+    } catch {
+      // Silent fail
+    }
   },
   logout: async () => {
     try {

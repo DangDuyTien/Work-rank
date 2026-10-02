@@ -97,6 +97,185 @@ async function unlinkChannel(channelIdentifier, options = {}) {
   return linkChannelToTeam(channelIdentifier, null, options);
 }
 
+/**
+ * Canonical helper to calculate percentage growth safely against a baseline.
+ * NEVER assumes previous = 0 means 100% growth!
+ */
+function calculateGrowth(current, baseline) {
+  if (baseline === null || baseline === undefined || Number(baseline) <= 0) {
+    return {
+      growthPercent: null,
+      growthStatus: 'INSUFFICIENT_DATA',
+      growthContext: 'NO_VALID_BASELINE',
+    };
+  }
+  const cur = Number(current || 0);
+  const base = Number(baseline);
+  const diff = cur - base;
+  const rawPercent = (diff / base) * 100;
+  // Clamped safe float rounded to 1 decimal place (e.g. 18.4, -2.5)
+  const growthPercent = Number(Math.min(999999.9, Math.max(-999999.9, rawPercent)).toFixed(1));
+  return {
+    growthPercent,
+    growthStatus: 'AVAILABLE',
+    growthContext: 'VALID',
+  };
+}
+
+/**
+ * Resolves the baseline metric and computes growth for a YouTube channel over a lookback date.
+ * Handles the 4 canonical cases:
+ * - Case 1: Channel added in current period, 1 snapshot -> INSUFFICIENT_DATA, null growth
+ * - Case 1 (later) / Case 3: Channel added in current period, 2+ snapshots -> Baseline is onboarding snapshot (SINCE_ONBOARDING)
+ * - Case 2: Channel existed prior to lookback date -> Baseline is snapshot on/before lookback date (e.g. 30D)
+ * - Case 4: No snapshots or baseline <= 0 -> INSUFFICIENT_DATA, null growth
+ */
+async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
+  // 1. Get latest metric (or use provided)
+  const latestMetric = options.latestMetric || await YouTubeChannelMetric.findOne({
+    where: { channelId },
+    order: [['capturedAt', 'DESC']],
+    transaction: options.transaction,
+  });
+
+  if (!latestMetric) {
+    return {
+      latestMetric: null,
+      baselineMetric: null,
+      currentViews: 0,
+      baselineViews: null,
+      baselineAt: null,
+      viewsDelta: 0,
+      viewsGrowthPct: null,
+      growthPercent: null,
+      growthStatus: 'INSUFFICIENT_DATA',
+      growthContext: 'NO_VALID_BASELINE',
+      currentSubscribers: 0,
+      baselineSubscribers: null,
+      baselineSubsAt: null,
+      subDelta: 0,
+      subGrowthPct: null,
+      subGrowthPercent: null,
+      subGrowthStatus: 'INSUFFICIENT_DATA',
+      hasValidBaseline: false,
+      hasElapsedMeasurement: false,
+    };
+  }
+
+  const currentViews = Number(latestMetric.views || 0);
+  const currentSubscribers = Number(latestMetric.subscribers || 0);
+
+  // 2. Query for snapshot <= lookbackDate
+  const priorMetric = await YouTubeChannelMetric.findOne({
+    where: {
+      channelId,
+      capturedAt: { [Op.lte]: lookbackDate },
+    },
+    order: [['capturedAt', 'DESC']],
+    transaction: options.transaction,
+  });
+
+  let baselineMetric = null;
+  let hasElapsedMeasurement = false;
+  let growthContext = options.period ? options.period.toUpperCase() : '30D';
+
+  if (priorMetric) {
+    // Case 2: Existed before / at lookback date
+    baselineMetric = priorMetric;
+    hasElapsedMeasurement = true;
+  } else {
+    // Channel onboarded after lookbackDate (Case 1 / Case 3)
+    // Find the earliest / onboarding snapshot
+    const earliestMetric = await YouTubeChannelMetric.findOne({
+      where: { channelId },
+      order: [['capturedAt', 'ASC']],
+      transaction: options.transaction,
+    });
+
+    if (earliestMetric) {
+      baselineMetric = earliestMetric;
+      growthContext = 'SINCE_ONBOARDING';
+
+      // Check if there is an elapsed measurement between onboarding and latest
+      const isSameSnapshot = earliestMetric.id === latestMetric.id ||
+        new Date(earliestMetric.capturedAt).getTime() === new Date(latestMetric.capturedAt).getTime();
+
+      if (!isSameSnapshot && new Date(earliestMetric.capturedAt).getTime() < new Date(latestMetric.capturedAt).getTime()) {
+        hasElapsedMeasurement = true;
+      } else {
+        // Only 1 snapshot exists (just onboarded)
+        hasElapsedMeasurement = false;
+      }
+    }
+  }
+
+  // 3. Compute Views Growth
+  let viewsGrowthPct = null;
+  let viewsGrowthStatus = 'INSUFFICIENT_DATA';
+  let viewsDelta = 0;
+  const baselineViews = baselineMetric ? Number(baselineMetric.views || 0) : null;
+
+  if (hasElapsedMeasurement && baselineViews !== null && baselineViews > 0) {
+    viewsDelta = Math.max(0, currentViews - baselineViews);
+    const growthRes = calculateGrowth(currentViews, baselineViews);
+    viewsGrowthPct = growthRes.growthPercent;
+    viewsGrowthStatus = growthRes.growthStatus;
+  } else if (!hasElapsedMeasurement) {
+    viewsDelta = 0;
+    viewsGrowthPct = null;
+    viewsGrowthStatus = 'INSUFFICIENT_DATA';
+  } else {
+    // baselineViews <= 0
+    viewsDelta = 0;
+    viewsGrowthPct = null;
+    viewsGrowthStatus = 'INSUFFICIENT_DATA';
+    growthContext = 'NO_VALID_BASELINE';
+  }
+
+  // 4. Compute Subscribers Growth
+  let subGrowthPct = null;
+  let subGrowthStatus = 'INSUFFICIENT_DATA';
+  let subDelta = 0;
+  const baselineSubscribers = baselineMetric ? Number(baselineMetric.subscribers || 0) : null;
+
+  if (hasElapsedMeasurement && baselineSubscribers !== null && baselineSubscribers > 0) {
+    subDelta = currentSubscribers - baselineSubscribers;
+    const subRes = calculateGrowth(currentSubscribers, baselineSubscribers);
+    subGrowthPct = subRes.growthPercent;
+    subGrowthStatus = subRes.growthStatus;
+  } else if (!hasElapsedMeasurement) {
+    subDelta = 0;
+    subGrowthPct = null;
+    subGrowthStatus = 'INSUFFICIENT_DATA';
+  } else {
+    subDelta = 0;
+    subGrowthPct = null;
+    subGrowthStatus = 'INSUFFICIENT_DATA';
+  }
+
+  return {
+    latestMetric,
+    baselineMetric,
+    currentViews,
+    baselineViews,
+    baselineAt: baselineMetric ? baselineMetric.capturedAt : null,
+    viewsDelta,
+    viewsGrowthPct,
+    growthPercent: viewsGrowthPct,
+    growthStatus: viewsGrowthStatus,
+    growthContext,
+    currentSubscribers,
+    baselineSubscribers,
+    baselineSubsAt: baselineMetric ? baselineMetric.capturedAt : null,
+    subDelta,
+    subGrowthPct,
+    subGrowthPercent: subGrowthPct,
+    subGrowthStatus,
+    hasValidBaseline: viewsGrowthStatus === 'AVAILABLE',
+    hasElapsedMeasurement,
+  };
+}
+
 async function getChannelById(id, options = {}) {
   const period = options.period || '30d';
   const channel = await YouTubeChannel.findByPk(id, {
@@ -142,25 +321,11 @@ async function getChannelById(id, options = {}) {
 
   const m = channel.metrics && channel.metrics.length > 0 ? channel.metrics[0] : null;
 
-  const priorMetric = await YouTubeChannelMetric.findOne({
-    where: {
-      channelId: channel.id,
-      capturedAt: { [Op.lte]: startDate },
-    },
-    order: [['capturedAt', 'DESC']],
+  const baselineInfo = await resolveChannelBaseline(channel.id, startDate, {
+    latestMetric: m,
+    period,
     transaction: options.transaction,
   });
-
-  let viewsGrowthPct = null;
-  let subGrowthPct = null;
-  if (priorMetric && Number(priorMetric.views) > 0 && m) {
-    const diff = Number(m.views) - Number(priorMetric.views);
-    viewsGrowthPct = Number(((diff / Number(priorMetric.views)) * 100).toFixed(2));
-  }
-  if (priorMetric && Number(priorMetric.subscribers) > 0 && m) {
-    const sDiff = Number(m.subscribers) - Number(priorMetric.subscribers);
-    subGrowthPct = Number(((sDiff / Number(priorMetric.subscribers)) * 100).toFixed(2));
-  }
 
   return {
     id: channel.id,
@@ -178,11 +343,19 @@ async function getChannelById(id, options = {}) {
     lastSyncError: channel.lastSyncError,
     createdAt: channel.createdAt,
     updatedAt: channel.updatedAt,
-    views: m ? Number(m.views) : 0,
-    subscribers: m ? Number(m.subscribers) : 0,
+    views: baselineInfo.currentViews,
+    subscribers: baselineInfo.currentSubscribers,
     engagementRate: m ? Number(m.engagementRate) : 0,
-    viewsGrowthPct,
-    subGrowthPct,
+    viewsGrowthPct: baselineInfo.viewsGrowthPct,
+    growthPercent: baselineInfo.growthPercent,
+    growthStatus: baselineInfo.growthStatus,
+    growthContext: baselineInfo.growthContext,
+    baselineViews: baselineInfo.baselineViews,
+    baselineAt: baselineInfo.baselineAt,
+    subGrowthPct: baselineInfo.subGrowthPct,
+    subGrowthPercent: baselineInfo.subGrowthPercent,
+    subGrowthStatus: baselineInfo.subGrowthStatus,
+    baselineSubscribers: baselineInfo.baselineSubscribers,
     history,
     period,
   };
@@ -358,4 +531,6 @@ module.exports = {
   getChannelByExternalId,
   listChannels,
   recordChannelMetricSnapshot,
+  calculateGrowth,
+  resolveChannelBaseline,
 };

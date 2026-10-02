@@ -14,6 +14,9 @@ class LocalIpcServer {
     this.getStatusData = options.getStatusData || (() => ({}));
     this.onPair = options.onPair || (() => {});
     this.onLogout = options.onLogout || (() => {});
+    this.onStartTracking = options.onStartTracking || (() => ({}));
+    this.onHeartbeat = options.onHeartbeat || (() => ({}));
+    this.onStopTracking = options.onStopTracking || (() => ({}));
     this.server = null;
 
     this._ensureWorkRankDir();
@@ -129,6 +132,46 @@ class LocalIpcServer {
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, message: 'Unpaired successfully' }));
+          return;
+        }
+
+        // Tracking session management from Web UI
+        if (req.method === 'POST' && (url.pathname === '/tracking/start' || url.pathname === '/session/start')) {
+          let body = '';
+          req.on('data', (chunk) => { body += chunk; });
+          req.on('end', () => {
+            try {
+              if (body) {
+                const data = JSON.parse(body);
+                if (data.token) {
+                  const existing = this.loadConfig();
+                  this.saveConfig({
+                    ...existing,
+                    token: data.token,
+                    user: data.user || existing.user,
+                    backendUrl: data.backendUrl || existing.backendUrl,
+                  });
+                }
+              }
+            } catch {}
+            const resData = this.onStartTracking() || {};
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, tracking: true, ...resData }));
+          });
+          return;
+        }
+
+        if (req.method === 'POST' && (url.pathname === '/tracking/heartbeat' || url.pathname === '/session/heartbeat')) {
+          const resData = this.onHeartbeat() || {};
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, tracking: true, ...resData }));
+          return;
+        }
+
+        if (req.method === 'POST' && (url.pathname === '/tracking/stop' || url.pathname === '/session/stop')) {
+          const resData = this.onStopTracking() || {};
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, tracking: false, ...resData }));
           return;
         }
 

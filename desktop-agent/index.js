@@ -22,13 +22,19 @@ function getProvider() {
 class DesktopAgent {
   constructor() {
     this.provider = getProvider();
+    this.trackingActive = false; // INACTIVE BY DEFAULT: Must be turned on via Web UI
+    this.lastHeartbeat = 0;
+    this.heartbeatTimeoutMs = 25000; // Auto-stop if web tab closed or crashed
+
     this.ipcServer = new LocalIpcServer({
       port: 43124,
       getStatusData: () => ({
-        currentState: this.provider.currentState,
-        currentApp: this.provider.lastApp,
-        currentCategory: this.provider.lastCategory,
+        trackingActive: this.trackingActive,
+        currentState: this.trackingActive ? this.provider.currentState : 'PAUSED',
+        currentApp: this.trackingActive ? this.provider.lastApp : null,
+        currentCategory: this.trackingActive ? this.provider.lastCategory : null,
         lastIdleSeconds: this.provider.lastIdleCheck,
+        lastHeartbeat: this.lastHeartbeat,
       }),
       onPair: (cfg) => {
         console.log(`[DesktopAgent] Paired with user: ${cfg.user?.username || cfg.user?.id}`);
@@ -36,6 +42,16 @@ class DesktopAgent {
       },
       onLogout: () => {
         console.log('[DesktopAgent] Unpaired / logged out');
+        this.stopTracking();
+      },
+      onStartTracking: () => {
+        return this.startTracking();
+      },
+      onHeartbeat: () => {
+        return this.renewHeartbeat();
+      },
+      onStopTracking: () => {
+        return this.stopTracking();
       },
     });
 
@@ -53,6 +69,30 @@ class DesktopAgent {
     this.isRunning = false;
   }
 
+  startTracking() {
+    console.log('[DesktopAgent] Web requested START tracking. Beginning activity capture...');
+    this.trackingActive = true;
+    this.lastHeartbeat = Date.now();
+    return { trackingActive: true };
+  }
+
+  renewHeartbeat() {
+    this.trackingActive = true;
+    this.lastHeartbeat = Date.now();
+    return { trackingActive: true };
+  }
+
+  stopTracking() {
+    if (this.trackingActive) {
+      console.log('[DesktopAgent] Web requested STOP tracking or web closed. Pausing activity capture...');
+    }
+    this.trackingActive = false;
+    this.lastHeartbeat = 0;
+    // Flush buffered events collected so far before stopping
+    this.buffer.flush().catch(() => {});
+    return { trackingActive: false };
+  }
+
   async start() {
     console.log(`[DesktopAgent] Starting WorkRank Computer Activity Companion on ${process.platform}...`);
 
@@ -66,8 +106,19 @@ class DesktopAgent {
 
     this.isRunning = true;
 
-    // 1. Sample OS idle & frontmost app every 1000ms
+    // 1. Sample OS idle & frontmost app every 1000ms ONLY WHEN TRACKING IS ACTIVE
     this.sampleTimer = setInterval(async () => {
+      if (!this.trackingActive) {
+        return; // Standby: 0 CPU, 0 sampling
+      }
+
+      // Watchdog: If Web tab was closed without sending stop, heartbeat expires in 25s
+      if (Date.now() - this.lastHeartbeat > this.heartbeatTimeoutMs) {
+        console.log('[DesktopAgent] Web heartbeat expired (Web tab/browser closed). Auto-stopping tracking.');
+        this.stopTracking();
+        return;
+      }
+
       try {
         const sample = await this.provider.sample();
         this.buffer.addSample(sample);
@@ -76,8 +127,11 @@ class DesktopAgent {
       }
     }, 1000);
 
-    // 2. Periodic flush to backend every 15s
+    // 2. Periodic flush to backend every 15s ONLY WHEN SAMPLES EXIST
     this.flushTimer = setInterval(async () => {
+      if (!this.trackingActive && this.buffer.currentWindow.samples.length === 0) {
+        return;
+      }
       try {
         await this.buffer.flush();
       } catch (err) {
@@ -85,11 +139,12 @@ class DesktopAgent {
       }
     }, 15000);
 
-    console.log('[DesktopAgent] Agent is active and running in background.');
+    console.log('[DesktopAgent] Agent is ready on http://127.0.0.1:43124 (Standby, waiting for Web toggle).');
   }
 
   async stop() {
     this.isRunning = false;
+    this.trackingActive = false;
     if (this.sampleTimer) clearInterval(this.sampleTimer);
     if (this.flushTimer) clearInterval(this.flushTimer);
     await this.provider.stop();

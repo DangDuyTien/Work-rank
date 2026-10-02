@@ -78,6 +78,9 @@ async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false
   const originalEmail = target.email;
   const originalRole = target.role;
 
+  const anonymizedEmail = `deleted_${target.id}_${Date.now()}@deleted.workrank.io`;
+  const anonymizedName = 'Tài khoản đã xóa';
+
   // Execute deletion inside atomic transaction
   await sequelize.transaction(async (transaction) => {
     // 1. YouTube Channels: Decouple user from company channels
@@ -148,9 +151,6 @@ async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false
     }
 
     // 6. User record soft delete & PII anonymization
-    const anonymizedEmail = `deleted_${target.id}_${Date.now()}@deleted.workrank.io`;
-    const anonymizedName = 'Tài khoản đã xóa';
-
     await target.update(
       {
         name: anonymizedName,
@@ -201,6 +201,11 @@ async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false
     originalName,
     originalEmail,
     success: true,
+    data: {
+      id: target.id,
+      email: anonymizedEmail,
+      status: 'inactive',
+    },
   };
 }
 

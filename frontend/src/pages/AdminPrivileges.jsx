@@ -96,6 +96,7 @@ function Avatar({ user, size = 40 }) {
 export default function AdminPrivileges() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
@@ -190,9 +191,23 @@ export default function AdminPrivileges() {
       );
     };
 
+    const handleUserDeleted = (event) => {
+      const payload = event.detail;
+      const targetId = String(payload?.userId || payload?.id || '');
+      if (!targetId) return;
+      setUsers((prev) => prev.filter((u) => String(u.id) !== targetId));
+      if (detailDrawerUser && String(detailDrawerUser.id) === targetId) {
+        setDetailDrawerUser(null);
+      }
+    };
+
     window.addEventListener('workrank:user-updated', handleUserUpdate);
-    return () => window.removeEventListener('workrank:user-updated', handleUserUpdate);
-  }, []);
+    window.addEventListener('workrank:user-deleted', handleUserDeleted);
+    return () => {
+      window.removeEventListener('workrank:user-updated', handleUserUpdate);
+      window.removeEventListener('workrank:user-deleted', handleUserDeleted);
+    };
+  }, [detailDrawerUser]);
 
   const onSearchChange = (event) => {
     const value = event.target.value;
@@ -354,6 +369,11 @@ export default function AdminPrivileges() {
 
   const handleDeleteUser = async () => {
     if (!deleteConfirmUser) return;
+    if (String(deleteConfirmUser.id) === String(currentUser?.id)) {
+      toast.error('Admin không thể tự xóa tài khoản của chính mình qua quản trị người dùng. Nếu muốn xóa tài khoản, vui lòng vào Cài đặt.');
+      setDeleteConfirmUser(null);
+      return;
+    }
     setDeleting(true);
     try {
       await usersApi.delete(deleteConfirmUser.id);
@@ -361,7 +381,7 @@ export default function AdminPrivileges() {
       if (detailDrawerUser?.id === deleteConfirmUser.id) {
         setDetailDrawerUser(null);
       }
-      toast.success(`Đã xóa nhân sự ${deleteConfirmUser.name}.`);
+      toast.success(`Đã xóa tài khoản nhân sự ${deleteConfirmUser.name}.`);
       setDeleteConfirmUser(null);
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể xóa nhân sự.'));
@@ -672,21 +692,38 @@ export default function AdminPrivileges() {
                   <Eye size={14} />
                 </button>
 
-                {/* Nút xóa nhân sự */}
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirmUser(u)}
-                  style={{
-                    width: 30, height: 30,
-                    border: '1px solid rgba(239,68,68,0.2)',
-                    background: 'rgba(239,68,68,0.04)', color: '#ef4444',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
-                  title="Xóa tài khoản nhân sự"
-                >
-                  <Trash2 size={13} />
-                </button>
+                {/* Nút xóa nhân sự (Có bảo vệ không xóa nhầm tài khoản đang đăng nhập) */}
+                {String(u.id) === String(currentUser?.id) ? (
+                  <button
+                    type="button"
+                    disabled
+                    style={{
+                      width: 30, height: 30,
+                      border: '1px solid rgba(148,163,184,0.25)',
+                      background: '#f8fafc', color: '#94a3b8',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'not-allowed',
+                    }}
+                    title="Bạn không thể xóa chính tài khoản đang đăng nhập tại đây (vui lòng sử dụng trang Cài đặt)"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmUser(u)}
+                    style={{
+                      width: 30, height: 30,
+                      border: '1px solid rgba(239,68,68,0.2)',
+                      background: 'rgba(239,68,68,0.04)', color: '#ef4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                    title="Xóa tài khoản nhân sự"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
               </div>
             </article>
           );
@@ -1251,19 +1288,29 @@ export default function AdminPrivileges() {
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 420, padding: 24, border: '1px solid rgba(220,38,38,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', marginBottom: 12 }}>
+          <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(220,38,38,0.3)', borderRadius: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', marginBottom: 14 }}>
               <Trash2 size={20} />
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>Xác Nhận Xóa Nhân Sự</h3>
             </div>
+            
+            <div style={{ background: '#fef2f2', border: '1px solid rgba(220,38,38,0.2)', padding: '12px 14px', borderRadius: 4, marginBottom: 14 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#991b1b', marginBottom: 2 }}>{deleteConfirmUser.name}</div>
+              <div style={{ fontSize: 12, color: '#b91c1c' }}>{deleteConfirmUser.email} · WR-{String(deleteConfirmUser.id).padStart(4, '0')}</div>
+              <div style={{ fontSize: 11, color: '#7f1d1d', marginTop: 4 }}>
+                {deleteConfirmUser.jobTitle || 'Nhân viên'} · {deleteConfirmUser.department || 'Media & Content'}
+                {deleteConfirmUser.teamName && ` · Đội: ${deleteConfirmUser.teamName}`}
+              </div>
+            </div>
+
             <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.55 }}>
-              Bạn có chắc chắn muốn xóa vĩnh viễn nhân sự <strong>{deleteConfirmUser.name}</strong> (WR-{String(deleteConfirmUser.id).padStart(4, '0')}) khỏi hệ thống không? Hành động này sẽ không thể khôi phục!
+              Hành động này sẽ xóa tài khoản nhân sự và thu hồi toàn bộ phiên đăng nhập của người này ngay lập tức. Dữ liệu lịch sử thi đấu và kênh YouTube của công ty vẫn được bảo toàn an toàn.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setDeleteConfirmUser(null)}
-                style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
               >
                 Hủy
               </button>
@@ -1273,7 +1320,7 @@ export default function AdminPrivileges() {
                 onClick={handleDeleteUser}
                 style={{
                   padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none',
-                  fontSize: 12, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer',
+                  fontSize: 12, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', borderRadius: 4,
                 }}
               >
                 {deleting ? 'Đang xóa...' : 'Xác Nhận Xóa Vĩnh Viễn'}

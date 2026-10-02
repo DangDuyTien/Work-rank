@@ -141,8 +141,12 @@ function ToggleRow({ icon: Icon, title, desc, checked, onChange }) {
 export default function Settings() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { user, setUser, isAdmin } = useAuth();
+  const { user, setUser, isAdmin, logout } = useAuth();
   const [settings, setSettings] = useState(getAppSettings);
+
+  // Self-delete account states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Profile Form state
   const [profile, setProfile] = useState({
@@ -483,6 +487,20 @@ export default function Settings() {
   const restoreDefaults = () => {
     setSettings(resetAppSettings());
     toast.success('Đã khôi phục tùy chọn mặc định.');
+  };
+
+  const handleSelfDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      await auth.deleteAccount();
+      toast.success('Tài khoản của bạn đã được xóa thành công.');
+      setShowDeleteModal(false);
+      await logout();
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể xóa tài khoản. Vui lòng thử lại.'));
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const badges = recognitions?.badges || {};
@@ -1309,7 +1327,179 @@ export default function Settings() {
             )}
           </SettingSection>
         )}
+
+        {/* KHỐI 10: VÙNG NGUY HIỂM - XÓA TÀI KHOẢN (SELF-DELETE) */}
+        <SettingSection
+          icon={Trash2}
+          title="Vùng Nguy Hiểm — Xóa Tài Khoản"
+          desc="Xóa vĩnh viễn quyền truy cập tài khoản của bạn khỏi hệ thống WorkRank."
+          className="settings-card-wide"
+        >
+          <div style={{
+            padding: '16px 18px',
+            background: 'rgba(239,68,68,0.04)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'rgba(239,68,68,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#dc2626',
+                flexShrink: 0,
+              }}>
+                <Trash2 size={18} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#991b1b', marginBottom: 4 }}>
+                  Hành động này không thể hoàn tác
+                </div>
+                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+                  Khi xóa tài khoản, tất cả phiên đăng nhập sẽ bị vô hiệu hóa ngay lập tức. Thông tin cá nhân (Email, Tên, Avatar) sẽ được ẩn danh. Bạn sẽ rời khỏi các đội nhóm đang tham gia và hủy quyền quản trị kênh YouTube liên kết (kênh YouTube và lịch sử điểm số/thứ hạng của các mùa giải trước vẫn được bảo toàn dữ liệu cho tập thể).
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid rgba(239,68,68,0.1)' }}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '9px 18px',
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.background = '#b91c1c'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = '#dc2626'; }}
+              >
+                <Trash2 size={15} />
+                Xóa tài khoản của tôi
+              </button>
+            </div>
+          </div>
+        </SettingSection>
       </div>
+
+      {/* ── MODAL XÁC NHẬN XÓA TÀI KHOẢN (SELF-DELETE) ── */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div style={{
+            background: '#ffffff', width: '100%', maxWidth: 480,
+            padding: 24, border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 6, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.2)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+                <Trash2 size={20} />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.35, color: '#991b1b' }}>
+                  Xác Nhận Xóa Tài Khoản Cá Nhân
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => !isDeletingAccount && setShowDeleteModal(false)}
+                disabled={isDeletingAccount}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ margin: '0 0 12px', fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
+                Bạn đang chuẩn bị xóa tài khoản <strong>{user?.name || user?.email}</strong> (WR ID: <code>{user?.id}</code>).
+              </p>
+
+              <div style={{
+                padding: '12px 14px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 4,
+                fontSize: 12,
+                color: '#991b1b',
+                lineHeight: 1.5,
+                marginBottom: 12,
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>Lưu ý an toàn quan trọng:</div>
+                <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
+                  <li>Tất cả phiên đăng nhập sẽ bị kết thúc và đăng xuất ngay lập tức.</li>
+                  <li>Email và thông tin định danh sẽ được ẩn danh.</li>
+                  <li>Nếu bạn là trưởng nhóm, quyền sở hữu nhóm sẽ được giải phóng.</li>
+                  <li>Kênh YouTube (nếu có) sẽ chuyển sang trạng thái chưa gán người phụ trách.</li>
+                  <li>Lịch sử thành tích mùa giải vẫn được bảo lưu cho tập thể.</li>
+                </ul>
+              </div>
+
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748b' }}>
+                Bạn có chắc chắn 100% muốn tiếp tục hành động này không?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+              <button
+                type="button"
+                disabled={isDeletingAccount}
+                onClick={() => setShowDeleteModal(false)}
+                style={{
+                  padding: '9px 16px',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingAccount}
+                onClick={handleSelfDeleteAccount}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '9px 18px',
+                  background: '#dc2626',
+                  border: 'none',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
+                  opacity: isDeletingAccount ? 0.7 : 1,
+                }}
+              >
+                <Trash2 size={15} />
+                {isDeletingAccount ? 'Đang xử lý xóa...' : 'Đồng ý xóa vĩnh viễn'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MODAL TRAO GIẢI THƯỞNG CHO ADMIN ── */}
       {showAwardModal && (

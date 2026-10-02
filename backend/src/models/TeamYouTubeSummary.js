@@ -75,14 +75,14 @@ TeamYouTubeSummary.init(
     },
     viewsGrowth30dPct: {
       type: DataTypes.DECIMAL(10, 4),
-      allowNull: false,
-      defaultValue: 0.0000,
+      allowNull: true,
+      defaultValue: null,
       field: 'views_growth_30d_pct',
     },
     subGrowth30dPct: {
       type: DataTypes.DECIMAL(10, 4),
-      allowNull: false,
-      defaultValue: 0.0000,
+      allowNull: true,
+      defaultValue: null,
       field: 'sub_growth_30d_pct',
     },
     rankByViews: {

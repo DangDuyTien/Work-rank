@@ -11,6 +11,7 @@ const {
   UserProfilePreference,
   sequelize,
 } = require('../../models');
+const { resolveChannelBaseline, calculateGrowth } = require('./youtubeData.service');
 
 let socketService = null;
 try {
@@ -55,8 +56,8 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         subscribersToday: 0,
         subscriberGrowth7d: 0,
         subscriberGrowth30d: 0,
-        viewsGrowth30dPct: 0.0,
-        subGrowth30dPct: 0.0,
+        viewsGrowth30dPct: null,
+        subGrowth30dPct: null,
         rankByViews: 0,
         rankBySubs: 0,
         rankByGrowth: 0,
@@ -77,8 +78,8 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         subscribersToday: 0,
         subscriberGrowth7d: 0,
         subscriberGrowth30d: 0,
-        viewsGrowth30dPct: 0.0,
-        subGrowth30dPct: 0.0,
+        viewsGrowth30dPct: null,
+        subGrowth30dPct: null,
       },
       options,
     );
@@ -101,6 +102,12 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
   let lastSyncedAt = null;
   let hasSyncError = false;
 
+  let teamBaselineViews = 0;
+  let teamBaselineSubs = 0;
+  let teamViewsDelta = 0;
+  let teamSubsDelta = 0;
+  let hasAnyElapsedMeasurement = false;
+
   for (const channel of channels) {
     if (channel.lastSyncedAt && (!lastSyncedAt || new Date(channel.lastSyncedAt) > new Date(lastSyncedAt))) {
       lastSyncedAt = channel.lastSyncedAt;
@@ -109,16 +116,10 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       hasSyncError = true;
     }
 
-    // Latest metric
-    const latest = await YouTubeChannelMetric.findOne({
-      where: { channelId: channel.id },
-      order: [['capturedAt', 'DESC']],
-      transaction: options.transaction,
-    });
-
-    if (latest) {
-      totalViews += Number(latest.views || 0);
-      totalSubscribers += Number(latest.subscribers || 0);
+    const baseRes = await resolveChannelBaseline(channel.id, t30d, { transaction: options.transaction });
+    if (baseRes.latestMetric) {
+      totalViews += baseRes.currentViews;
+      totalSubscribers += baseRes.currentSubscribers;
 
       // Start of today snapshot
       const todayMetric = await YouTubeChannelMetric.findOne({
@@ -130,8 +131,8 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         transaction: options.transaction,
       });
       if (todayMetric) {
-        viewsToday += Math.max(0, Number(latest.views) - Number(todayMetric.views));
-        subscribersToday += Number(latest.subscribers) - Number(todayMetric.subscribers);
+        viewsToday += Math.max(0, baseRes.currentViews - Number(todayMetric.views));
+        subscribersToday += (baseRes.currentSubscribers - Number(todayMetric.subscribers));
       }
 
       // 7 days ago metric
@@ -144,34 +145,50 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
         transaction: options.transaction,
       });
       if (metric7d) {
-        views7d += Math.max(0, Number(latest.views) - Number(metric7d.views));
-        subscriberGrowth7d += Number(latest.subscribers) - Number(metric7d.subscribers);
+        views7d += Math.max(0, baseRes.currentViews - Number(metric7d.views));
+        subscriberGrowth7d += (baseRes.currentSubscribers - Number(metric7d.subscribers));
+      } else if (baseRes.hasElapsedMeasurement && baseRes.baselineMetric) {
+        views7d += Math.max(0, baseRes.currentViews - Number(baseRes.baselineMetric.views || 0));
+        subscriberGrowth7d += (baseRes.currentSubscribers - Number(baseRes.baselineMetric.subscribers || 0));
       }
 
-      // 30 days ago metric
-      const metric30d = await YouTubeChannelMetric.findOne({
-        where: {
-          channelId: channel.id,
-          capturedAt: { [Op.lte]: t30d },
-        },
-        order: [['capturedAt', 'DESC']],
-        transaction: options.transaction,
-      });
-      if (metric30d) {
-        views30d += Math.max(0, Number(latest.views) - Number(metric30d.views));
-        subscriberGrowth30d += Number(latest.subscribers) - Number(metric30d.subscribers);
+      // 30 days / lookback baseline
+      if (baseRes.hasElapsedMeasurement && baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
+        hasAnyElapsedMeasurement = true;
+        teamBaselineViews += baseRes.baselineViews;
+        const cDelta = Math.max(0, baseRes.currentViews - baseRes.baselineViews);
+        teamViewsDelta += cDelta;
+        views30d += cDelta;
+      } else if (baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
+        // Channel onboarded recently with 1 snapshot:
+        // Its baseline for this period is its onboarding views, delta is 0!
+        teamBaselineViews += baseRes.baselineViews;
+      }
+
+      if (baseRes.hasElapsedMeasurement && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+        teamBaselineSubs += baseRes.baselineSubscribers;
+        const sDelta = (baseRes.currentSubscribers - baseRes.baselineSubscribers);
+        teamSubsDelta += sDelta;
+        subscriberGrowth30d += sDelta;
+      } else if (baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+        teamBaselineSubs += baseRes.baselineSubscribers;
       }
     }
   }
 
-  // Calculate percentage growths safely (clamped to DECIMAL(10,4) limit [-999999.9999, 999999.9999])
-  const baselineViews30d = Math.max(0, totalViews - views30d);
-  const rawViewsGrowth = (baselineViews30d > 0 && views30d >= 0) ? (views30d / baselineViews30d) * 100 : 0.0;
-  const viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawViewsGrowth)).toFixed(4));
+  // Calculate percentage growths safely:
+  // If no channels have had an elapsed measurement yet, or baseline <= 0 -> growth is strictly null
+  let viewsGrowth30dPct = null;
+  if (hasAnyElapsedMeasurement && teamBaselineViews > 0) {
+    const rawViewsGrowth = (teamViewsDelta / teamBaselineViews) * 100;
+    viewsGrowth30dPct = Number(Math.min(999999.9, Math.max(-999999.9, rawViewsGrowth)).toFixed(1));
+  }
 
-  const baselineSubs30d = Math.max(0, totalSubscribers - subscriberGrowth30d);
-  const rawSubGrowth = (baselineSubs30d > 0 && subscriberGrowth30d >= 0) ? (subscriberGrowth30d / baselineSubs30d) * 100 : 0.0;
-  const subGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawSubGrowth)).toFixed(4));
+  let subGrowth30dPct = null;
+  if (hasAnyElapsedMeasurement && teamBaselineSubs > 0) {
+    const rawSubGrowth = (teamSubsDelta / teamBaselineSubs) * 100;
+    subGrowth30dPct = Number(Math.min(999999.9, Math.max(-999999.9, rawSubGrowth)).toFixed(1));
+  }
 
   // Freshness status calculation
   let freshnessStatus = 'FRESH';
@@ -255,9 +272,18 @@ async function recalculateAllTeamYouTubeSummaries(options = {}) {
   }
 
   // Rank by 30D growth
-  const byGrowth = await TeamYouTubeSummary.findAll({
-    order: [['viewsGrowth30dPct', 'DESC'], ['totalViews', 'DESC'], ['id', 'ASC']],
+  const allSummaries = await TeamYouTubeSummary.findAll({
     transaction: options.transaction,
+  });
+  const byGrowth = [...allSummaries].sort((a, b) => {
+    const aG = a.viewsGrowth30dPct !== null && a.viewsGrowth30dPct !== undefined ? Number(a.viewsGrowth30dPct) : null;
+    const bG = b.viewsGrowth30dPct !== null && b.viewsGrowth30dPct !== undefined ? Number(b.viewsGrowth30dPct) : null;
+    if (aG !== null && bG !== null) {
+      return bG - aG || Number(b.totalViews) - Number(a.totalViews);
+    }
+    if (aG !== null && bG === null) return -1;
+    if (aG === null && bG !== null) return 1;
+    return Number(b.totalViews) - Number(a.totalViews) || Number(a.id) - Number(b.id);
   });
   for (let i = 0; i < byGrowth.length; i++) {
     byGrowth[i].rankByGrowth = i + 1;
@@ -432,23 +458,24 @@ async function getCompanyYouTubeOverview(options = {}) {
         unassignedSubscribers += cSubs;
       }
 
-      // Snapshot prior to period start for real baseline comparison
-      const metricPrior = await YouTubeChannelMetric.findOne({
-        where: {
-          channelId: channel.id,
-          capturedAt: { [Op.lte]: tPeriod },
-        },
-        order: [['capturedAt', 'DESC']],
+      const baseRes = await resolveChannelBaseline(channel.id, tPeriod, {
+        latestMetric,
+        period,
       });
 
-      if (metricPrior) {
+      if (baseRes.hasElapsedMeasurement && baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
         hasValidBaseline = true;
-        const bViews = Number(metricPrior.views || 0);
-        const bSubs = Number(metricPrior.subscribers || 0);
-        companyViewsPeriodDelta += Math.max(0, cViews - bViews);
-        companySubsPeriodDelta += (cSubs - bSubs);
-        totalBaselineViews += bViews;
-        totalBaselineSubs += bSubs;
+        totalBaselineViews += baseRes.baselineViews;
+        companyViewsPeriodDelta += Math.max(0, cViews - baseRes.baselineViews);
+      } else if (baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
+        totalBaselineViews += baseRes.baselineViews;
+      }
+
+      if (baseRes.hasElapsedMeasurement && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+        totalBaselineSubs += baseRes.baselineSubscribers;
+        companySubsPeriodDelta += (cSubs - baseRes.baselineSubscribers);
+      } else if (baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+        totalBaselineSubs += baseRes.baselineSubscribers;
       }
     }
   }
@@ -458,11 +485,11 @@ async function getCompanyYouTubeOverview(options = {}) {
   let subGrowthPct = null;
   if (hasValidBaseline && totalBaselineViews > 0) {
     const rawGrowth = (companyViewsPeriodDelta / totalBaselineViews) * 100;
-    viewsGrowthPct = Number(Math.min(999999.99, Math.max(-999999.99, rawGrowth)).toFixed(2));
+    viewsGrowthPct = Number(Math.min(999999.9, Math.max(-999999.9, rawGrowth)).toFixed(1));
   }
   if (hasValidBaseline && totalBaselineSubs > 0) {
     const rawSubGrowth = (companySubsPeriodDelta / totalBaselineSubs) * 100;
-    subGrowthPct = Number(Math.min(999999.99, Math.max(-999999.99, rawSubGrowth)).toFixed(2));
+    subGrowthPct = Number(Math.min(999999.9, Math.max(-999999.9, rawSubGrowth)).toFixed(1));
   }
 
   // Company freshness status
@@ -485,20 +512,27 @@ async function getCompanyYouTubeOverview(options = {}) {
       teamName: s.team ? s.team.name : `Team ${s.teamId}`,
       totalViews: Number(s.totalViews),
       totalSubscribers: Number(s.totalSubscribers),
-      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
+      viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
       rank: s.rankByViews,
     }));
 
-  // Top Teams by Growth
+  // Top Teams by Growth (teams with valid growth rank first)
   const topTeamsByGrowth = [...summaries]
-    .sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct)
+    .sort((a, b) => {
+      const aG = a.viewsGrowth30dPct !== null && a.viewsGrowth30dPct !== undefined ? Number(a.viewsGrowth30dPct) : null;
+      const bG = b.viewsGrowth30dPct !== null && b.viewsGrowth30dPct !== undefined ? Number(b.viewsGrowth30dPct) : null;
+      if (aG !== null && bG !== null) return bG - aG || Number(b.totalViews) - Number(a.totalViews);
+      if (aG !== null && bG === null) return -1;
+      if (aG === null && bG !== null) return 1;
+      return Number(b.totalViews) - Number(a.totalViews);
+    })
     .slice(0, 5)
     .map((s) => ({
       teamId: s.teamId,
       teamName: s.team ? s.team.name : `Team ${s.teamId}`,
       totalViews: Number(s.totalViews),
       totalSubscribers: Number(s.totalSubscribers),
-      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
+      viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
       rank: s.rankByGrowth,
     }));
 
@@ -511,8 +545,8 @@ async function getCompanyYouTubeOverview(options = {}) {
       totalViews: Number(s.totalViews || 0),
       totalSubscribers: Number(s.totalSubscribers || 0),
       views30d: Number(s.views30d || 0),
-      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
-      subGrowth30dPct: Number(s.subGrowth30dPct) > 0 ? Number(s.subGrowth30dPct) : null,
+      viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
+      subGrowth30dPct: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
       rankByViews: s.rankByViews,
       rankBySubs: s.rankBySubs,
       rankByGrowth: s.rankByGrowth,
@@ -583,15 +617,11 @@ async function getTeamYouTubeDetails(teamId, options = {}) {
   const channelIds = channels.map((c) => c.id);
   const history = await getChannelsHistory(channelIds, period);
 
-  return {
-    team: { id: team.id, name: team.name, description: team.description },
-    summary: summary ? {
-      ...summary.toJSON(),
-      viewsGrowth30dPct: Number(summary.viewsGrowth30dPct) > 0 ? Number(summary.viewsGrowth30dPct) : null,
-      subGrowth30dPct: Number(summary.subGrowth30dPct) > 0 ? Number(summary.subGrowth30dPct) : null,
-    } : null,
-    channels: channels.map((c) => {
+  const t30d = new Date(Date.now() - 30 * 86400000);
+  const channelsWithMetrics = await Promise.all(
+    channels.map(async (c) => {
       const m = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
+      const baseRes = await resolveChannelBaseline(c.id, t30d, { latestMetric: m });
       return {
         id: c.id,
         channelId: c.channelId,
@@ -602,10 +632,24 @@ async function getTeamYouTubeDetails(teamId, options = {}) {
         syncStatus: c.syncStatus,
         lastSyncedAt: c.lastSyncedAt,
         lastSyncError: c.lastSyncError,
-        views: m ? Number(m.views) : 0,
-        subscribers: m ? Number(m.subscribers) : 0,
+        views: baseRes.currentViews,
+        subscribers: baseRes.currentSubscribers,
+        viewsGrowth30dPct: baseRes.viewsGrowthPct,
+        growthPercent: baseRes.growthPercent,
+        growthStatus: baseRes.growthStatus,
+        growthContext: baseRes.growthContext,
       };
-    }),
+    })
+  );
+
+  return {
+    team: { id: team.id, name: team.name, description: team.description },
+    summary: summary ? {
+      ...summary.toJSON(),
+      viewsGrowth30dPct: summary.viewsGrowth30dPct !== null && summary.viewsGrowth30dPct !== undefined ? Number(Number(summary.viewsGrowth30dPct).toFixed(1)) : null,
+      subGrowth30dPct: summary.subGrowth30dPct !== null && summary.subGrowth30dPct !== undefined ? Number(Number(summary.subGrowth30dPct).toFixed(1)) : null,
+    } : null,
+    channels: channelsWithMetrics,
     history,
     period,
   };
@@ -780,9 +824,9 @@ async function compareTeams(teamIdA, teamIdB) {
       views7d: Number(dataA.summary.views7d),
       views30d: Number(dataA.summary.views30d),
       subscriberGrowth30d: Number(dataA.summary.subscriberGrowth30d),
-      viewsGrowth30dPct: Number(dataA.summary.viewsGrowth30dPct),
-      subGrowth30dPct: Number(dataA.summary.subGrowth30dPct),
-      rankByViews: dataA.summary.rankByViews,
+      viewsGrowth30dPct: dataA.summary?.viewsGrowth30dPct !== null && dataA.summary?.viewsGrowth30dPct !== undefined ? Number(dataA.summary.viewsGrowth30dPct) : null,
+      subGrowth30dPct: dataA.summary?.subGrowth30dPct !== null && dataA.summary?.subGrowth30dPct !== undefined ? Number(dataA.summary.subGrowth30dPct) : null,
+      rankByViews: dataA.summary?.rankByViews,
     },
     teamB: {
       id: dataB.team.id,
@@ -793,9 +837,9 @@ async function compareTeams(teamIdA, teamIdB) {
       views7d: Number(dataB.summary.views7d),
       views30d: Number(dataB.summary.views30d),
       subscriberGrowth30d: Number(dataB.summary.subscriberGrowth30d),
-      viewsGrowth30dPct: Number(dataB.summary.viewsGrowth30dPct),
-      subGrowth30dPct: Number(dataB.summary.subGrowth30dPct),
-      rankByViews: dataB.summary.rankByViews,
+      viewsGrowth30dPct: dataB.summary?.viewsGrowth30dPct !== null && dataB.summary?.viewsGrowth30dPct !== undefined ? Number(dataB.summary.viewsGrowth30dPct) : null,
+      subGrowth30dPct: dataB.summary?.subGrowth30dPct !== null && dataB.summary?.subGrowth30dPct !== undefined ? Number(dataB.summary.subGrowth30dPct) : null,
+      rankByViews: dataB.summary?.rankByViews,
     },
   };
 }
@@ -833,8 +877,11 @@ async function getYouTubeTeamLeaderboard(params = {}) {
     totalSubscribers: Number(s.totalSubscribers || 0),
     views30d: Number(s.views30d || 0),
     subscriberGrowth30d: Number(s.subscriberGrowth30d || 0),
-    viewsGrowth30dPct: Number(s.viewsGrowth30dPct || 0),
-    subGrowth30dPct: Number(s.subGrowth30dPct || 0),
+    viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
+    growthPercent: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
+    growthStatus: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? 'AVAILABLE' : 'INSUFFICIENT_DATA',
+    subGrowth30dPct: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
+    subGrowthPercent: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
     lastSyncedAt: s.lastSyncedAt,
   }));
 
@@ -846,7 +893,14 @@ async function getYouTubeTeamLeaderboard(params = {}) {
   if (sortBy === 'subscribers') {
     formatted.sort((a, b) => b.totalSubscribers - a.totalSubscribers || b.totalViews - a.totalViews);
   } else if (sortBy === 'growth') {
-    formatted.sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.totalViews - a.totalViews);
+    formatted.sort((a, b) => {
+      if (a.viewsGrowth30dPct !== null && b.viewsGrowth30dPct !== null) {
+        return b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.totalViews - a.totalViews;
+      }
+      if (a.viewsGrowth30dPct !== null && b.viewsGrowth30dPct === null) return -1;
+      if (a.viewsGrowth30dPct === null && b.viewsGrowth30dPct !== null) return 1;
+      return b.totalViews - a.totalViews;
+    });
   } else {
     formatted.sort((a, b) => b.totalViews - a.totalViews || b.totalSubscribers - a.totalSubscribers);
   }
@@ -912,38 +966,11 @@ async function getYouTubeChannelLeaderboard(params = {}) {
   const now = new Date();
   const t30d = new Date(now.getTime() - 30 * 86400000);
 
-  // Compute metrics and 30d deltas for all matching channels
+  // Compute metrics and 30d deltas for all matching channels using canonical baseline resolution
   const channelsWithMetrics = await Promise.all(
     allChannels.map(async (c) => {
       const latestMetric = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
-      const views = latestMetric ? Number(latestMetric.views || 0) : 0;
-      const subscribers = latestMetric ? Number(latestMetric.subscribers || 0) : 0;
-
-      // 30 days ago metric
-      let views30d = 0;
-      let viewsGrowth30dPct = null;
-
-      if (latestMetric) {
-        const metric30d = await YouTubeChannelMetric.findOne({
-          where: {
-            channelId: c.id,
-            capturedAt: { [Op.lte]: t30d },
-          },
-          order: [['capturedAt', 'DESC']],
-        });
-
-        if (metric30d) {
-          views30d = Math.max(0, views - Number(metric30d.views || 0));
-          const baseline = Number(metric30d.views || 0);
-          const rawGrowth = baseline > 0 ? (views30d / baseline) * 100 : null;
-          viewsGrowth30dPct = rawGrowth !== null
-            ? Number(Math.min(999999.99, Math.max(-999999.99, rawGrowth)).toFixed(2))
-            : null;
-        } else {
-          views30d = 0;
-          viewsGrowth30dPct = null;
-        }
-      }
+      const baseRes = await resolveChannelBaseline(c.id, t30d, { latestMetric });
 
       return {
         id: c.id,
@@ -956,12 +983,22 @@ async function getYouTubeChannelLeaderboard(params = {}) {
         team: c.team ? { id: c.team.id, name: c.team.name } : null,
         assignedUserId: c.assignedUserId,
         isUnassigned: !c.teamId,
-        views,
-        totalViews: views,
-        subscribers,
-        totalSubscribers: subscribers,
-        views30d,
-        viewsGrowth30dPct,
+        views: baseRes.currentViews,
+        totalViews: baseRes.currentViews,
+        subscribers: baseRes.currentSubscribers,
+        totalSubscribers: baseRes.currentSubscribers,
+        views30d: baseRes.viewsDelta,
+        viewsGrowth30dPct: baseRes.viewsGrowthPct,
+        growthPercent: baseRes.growthPercent,
+        growthStatus: baseRes.growthStatus,
+        growthContext: baseRes.growthContext,
+        baselineViews: baseRes.baselineViews,
+        baselineAt: baseRes.baselineAt,
+        subGrowth30dPct: baseRes.subGrowthPct,
+        subGrowthPercent: baseRes.subGrowthPercent,
+        subGrowthStatus: baseRes.subGrowthStatus,
+        baselineSubscribers: baseRes.baselineSubscribers,
+        baselineSubsAt: baseRes.baselineSubsAt,
         syncStatus: c.syncStatus,
         lastSyncedAt: c.lastSyncedAt,
         status: c.status,
@@ -969,11 +1006,18 @@ async function getYouTubeChannelLeaderboard(params = {}) {
     })
   );
 
-  // Sort channels according to sortBy
+  // Sort channels according to sortBy (null growth always pushed to the end)
   if (sortBy === 'subscribers') {
     channelsWithMetrics.sort((a, b) => b.subscribers - a.subscribers || b.views - a.views);
   } else if (sortBy === 'growth') {
-    channelsWithMetrics.sort((a, b) => (Number(b.viewsGrowth30dPct) || -Infinity) - (Number(a.viewsGrowth30dPct) || -Infinity) || b.views - a.views);
+    channelsWithMetrics.sort((a, b) => {
+      if (a.viewsGrowth30dPct !== null && b.viewsGrowth30dPct !== null) {
+        return b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.views - a.views;
+      }
+      if (a.viewsGrowth30dPct !== null && b.viewsGrowth30dPct === null) return -1;
+      if (a.viewsGrowth30dPct === null && b.viewsGrowth30dPct !== null) return 1;
+      return b.views - a.views;
+    });
   } else {
     // Default: views
     channelsWithMetrics.sort((a, b) => b.views - a.views || b.subscribers - a.subscribers);
