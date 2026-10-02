@@ -15,6 +15,8 @@ class AgentBuffer {
     this.batchIntervalSeconds = options.batchIntervalSeconds || 5;
     this.backendUrl = options.backendUrl || 'http://localhost:5001';
     this.getToken = options.getToken || (() => null);
+    this.getRefreshToken = options.getRefreshToken || (() => null);
+    this.onTokenRefreshed = options.onTokenRefreshed || (() => {});
     this.devicePlatform = options.devicePlatform || (process.platform === 'darwin' ? 'macos' : 'windows');
 
     this.pendingEvents = [];
@@ -29,6 +31,7 @@ class AgentBuffer {
     };
     this.lastSampleTime = Date.now();
     this.isFlushing = false;
+    this._refreshingToken = false;
 
     this._ensureWorkRankDir();
   }
@@ -69,6 +72,134 @@ class AgentBuffer {
       fs.writeFileSync(OFFLINE_QUEUE_FILE, JSON.stringify(trimmed, null, 2), 'utf8');
     } catch (err) {
       console.error('[AgentBuffer] Failed to save offline queue:', err.message);
+    }
+  }
+
+  /**
+   * Check if a JWT token is expired (with 60s buffer before actual expiry)
+   */
+  _isTokenExpired(token) {
+    if (!token) return true;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      const padded = parts[1] + '='.repeat((4 - (parts[1].length % 4)) % 4);
+      const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+      const exp = payload.exp || 0;
+      // Consider expired 60 seconds before actual expiry to avoid race conditions
+      return Math.floor(Date.now() / 1000) >= (exp - 60);
+    } catch {
+      return true;
+    }
+  }
+
+  /**
+   * Refresh access token using refresh token via backend
+   * Returns new access token or null on failure
+   */
+  async _refreshAccessToken() {
+    if (this._refreshingToken) return null; // Prevent concurrent refreshes
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      console.warn('[AgentBuffer] No refresh token available, cannot refresh access token');
+      return null;
+    }
+
+    this._refreshingToken = true;
+    try {
+      const result = await this._sendPostRaw(
+        `${this.backendUrl}/api/auth/refresh-token`,
+        null, // No auth header for refresh
+        { refreshToken }
+      );
+      const parsed = JSON.parse(result.body);
+      // Backend /api/auth/refresh-token returns { accessToken, refreshToken, user }
+      const newToken = parsed.accessToken || parsed.data?.token || parsed.token;
+      if (newToken) {
+        console.log('[AgentBuffer] Access token refreshed successfully');
+        this.onTokenRefreshed(newToken);
+        return newToken;
+      }
+      console.warn('[AgentBuffer] Refresh response missing token field');
+      return null;
+    } catch (err) {
+      console.warn('[AgentBuffer] Token refresh failed:', err.message);
+      return null;
+    } finally {
+      this._refreshingToken = false;
+    }
+  }
+
+  /**
+   * Send HTTP POST — raw version (no auth header required)
+   */
+  _sendPostRaw(urlStr, token, data) {
+    return new Promise((resolve, reject) => {
+      const url = new URL(urlStr);
+      const isHttps = url.protocol === 'https:';
+      const client = isHttps ? https : http;
+
+      const body = JSON.stringify(data);
+      const headers = {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const options = {
+        hostname: url.hostname,
+        port: url.port || (isHttps ? 443 : 80),
+        path: url.pathname + url.search,
+        method: 'POST',
+        headers,
+        timeout: 8000,
+      };
+
+      const req = client.request(options, (res) => {
+        let respData = '';
+        res.on('data', (chunk) => {
+          respData += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ statusCode: res.statusCode, body: respData });
+          } else {
+            const err = new Error(`Server returned HTTP ${res.statusCode}: ${respData}`);
+            err.statusCode = res.statusCode;
+            reject(err);
+          }
+        });
+      });
+
+      req.on('error', (err) => reject(err));
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Request timed out'));
+      });
+
+      req.write(body);
+      req.end();
+    });
+  }
+
+  /**
+   * Send HTTP POST to backend with automatic token refresh on 401
+   */
+  async _sendPost(urlStr, token, data) {
+    try {
+      return await this._sendPostRaw(urlStr, token, data);
+    } catch (err) {
+      // If 401, try to refresh token and retry once
+      if (err.statusCode === 401) {
+        console.warn('[AgentBuffer] Got 401, attempting token refresh...');
+        const newToken = await this._refreshAccessToken();
+        if (newToken) {
+          return await this._sendPostRaw(urlStr, newToken, data);
+        }
+      }
+      throw err;
     }
   }
 
@@ -150,54 +281,6 @@ class AgentBuffer {
   }
 
   /**
-   * Send HTTP POST to backend
-   */
-  _sendPost(urlStr, token, data) {
-    return new Promise((resolve, reject) => {
-      const url = new URL(urlStr);
-      const isHttps = url.protocol === 'https:';
-      const client = isHttps ? https : http;
-
-      const body = JSON.stringify(data);
-      const options = {
-        hostname: url.hostname,
-        port: url.port || (isHttps ? 443 : 80),
-        path: url.pathname + url.search,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-          Authorization: `Bearer ${token}`,
-        },
-        timeout: 8000,
-      };
-
-      const req = client.request(options, (res) => {
-        let respData = '';
-        res.on('data', (chunk) => {
-          respData += chunk;
-        });
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ statusCode: res.statusCode, body: respData });
-          } else {
-            reject(new Error(`Server returned HTTP ${res.statusCode}: ${respData}`));
-          }
-        });
-      });
-
-      req.on('error', (err) => reject(err));
-      req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Request timed out'));
-      });
-
-      req.write(body);
-      req.end();
-    });
-  }
-
-  /**
    * Flush pending events to backend
    */
   async flush() {
@@ -207,9 +290,29 @@ class AgentBuffer {
     try {
       this.commitCurrentBatch();
 
-      const token = this.getToken();
+      let token = this.getToken();
+
+      // Auto-refresh token if expired BEFORE attempting flush
+      if (this._isTokenExpired(token)) {
+        console.log('[AgentBuffer] Access token expired, refreshing before flush...');
+        const newToken = await this._refreshAccessToken();
+        if (newToken) {
+          token = newToken;
+        } else {
+          // Cannot refresh — save to offline, retry later
+          if (this.pendingEvents.length > 0) {
+            const offline = this._loadOfflineQueue();
+            offline.push(...this.pendingEvents);
+            this._saveOfflineQueue(offline);
+            this.pendingEvents = [];
+          }
+          console.warn('[AgentBuffer] Token refresh failed, events saved to offline queue');
+          return;
+        }
+      }
+
       if (!token) {
-        // Not paired/logged in yet: save to offline buffer if needed, wait for pairing
+        // Not paired/logged in yet
         if (this.pendingEvents.length > 0) {
           const offline = this._loadOfflineQueue();
           offline.push(...this.pendingEvents);
@@ -241,7 +344,15 @@ class AgentBuffer {
       };
 
       const targetUrl = `${this.backendUrl}/api/activity/computer/batch`;
-      await this._sendPost(targetUrl, token, payload);
+      const result = await this._sendPost(targetUrl, token, payload);
+
+      // Log success with event count for diagnostics
+      try {
+        const parsed = JSON.parse(result.body);
+        console.log(`[AgentBuffer] Flushed ${eventsToSend.length} events → PTS: ${parsed.activityScore ?? '?'} (clicks: ${parsed.mouseClicks ?? '?'}, keys: ${parsed.keyboardCount ?? '?'})`);
+      } catch {
+        console.log(`[AgentBuffer] Flushed ${eventsToSend.length} events OK`);
+      }
 
       // Successfully sent! Update remaining offline queue if any
       this._saveOfflineQueue(offline);

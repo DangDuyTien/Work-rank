@@ -77,8 +77,9 @@ export async function startTrackingGlobal(userData = {}) {
   try {
     // 1. Notify Desktop Agent if running locally
     const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
     const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
-    await desktopAgentIpc.startTracking({ token, user: userData, backendUrl });
+    await desktopAgentIpc.startTracking({ token, refreshToken, user: userData, backendUrl });
 
     // Update agent status
     const status = await desktopAgentIpc.checkStatus();

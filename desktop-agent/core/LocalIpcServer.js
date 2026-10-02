@@ -145,12 +145,17 @@ class LocalIpcServer {
                 const data = JSON.parse(body);
                 if (data.token) {
                   const existing = this.loadConfig();
-                  this.saveConfig({
+                  const updated = {
                     ...existing,
                     token: data.token,
                     user: data.user || existing.user,
                     backendUrl: data.backendUrl || existing.backendUrl,
-                  });
+                  };
+                  // Persist refreshToken if provided (needed for auto-refresh)
+                  if (data.refreshToken) {
+                    updated.refreshToken = data.refreshToken;
+                  }
+                  this.saveConfig(updated);
                 }
               }
             } catch {}

@@ -60,6 +60,17 @@ class DesktopAgent {
       batchIntervalSeconds: 5,
       backendUrl: initialConfig.backendUrl || 'http://localhost:5001',
       getToken: () => this.ipcServer.loadConfig().token,
+      getRefreshToken: () => this.ipcServer.loadConfig().refreshToken,
+      onTokenRefreshed: (newToken) => {
+        // Persist the refreshed access token back to config file
+        try {
+          const cfg = this.ipcServer.loadConfig();
+          this.ipcServer.saveConfig({ ...cfg, token: newToken });
+          console.log('[DesktopAgent] Persisted refreshed access token to config');
+        } catch (err) {
+          console.warn('[DesktopAgent] Failed to persist refreshed token:', err.message);
+        }
+      },
       devicePlatform: process.platform === 'darwin' ? 'macos' : 'windows',
     });
 
