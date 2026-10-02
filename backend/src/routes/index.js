@@ -17,11 +17,14 @@ router.use('/tradingview', require('./tradingview.routes'));
 router.use('/competition', require('./competition.routes'));
 router.use('/youtube', require('./youtube.routes'));
 router.use('/rankings', require('./ranking.routes'));
+router.use('/activity', require('./activity.routes'));
 router.use('/games/quiz', require('./quizGame.routes'));
 router.use('/admin/quiz', require('./quizAdmin.routes'));
 router.use('/games/2048', require('./game2048.routes'));
 router.use('/games/sam', require('./samGame.routes'));
 router.use('/admin/games/sam', require('./samGame.routes'));
+router.use('/admin/games', require('./gameCatalog.routes'));
+router.use('/games/catalog', require('./gameCatalog.routes'));
 router.use('/games', require('./capitalBoardGame.routes'));
 
 module.exports = router;

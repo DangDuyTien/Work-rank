@@ -61,6 +61,10 @@ const SamPlayer = require('./SamPlayer');
 const SamAction = require('./SamAction');
 const SamResult = require('./SamResult');
 const SamUserStat = require('./SamUserStat');
+// Activity Tracking & System Settings & Game Catalog
+const ActivityEvent = require('./ActivityEvent');
+const SystemSetting = require('./SystemSetting');
+const GameCatalog = require('./GameCatalog');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -86,6 +90,9 @@ User.hasMany(ChatMessage, { as: 'SentChatMessages', foreignKey: 'senderId' });
 User.hasMany(ChatMessage, { as: 'ReceivedChatMessages', foreignKey: 'receiverId' });
 ChatMessage.belongsTo(User, { as: 'Sender', foreignKey: 'senderId' });
 ChatMessage.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId' });
+
+User.hasMany(ActivityEvent, { as: 'activityEvents', foreignKey: 'userId' });
+ActivityEvent.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 // Phase 4 Associations
 RuleSet.hasMany(RuleSetVersion, { foreignKey: 'ruleSetId', as: 'versions' });
@@ -312,6 +319,10 @@ module.exports = {
   SamAction,
   SamResult,
   SamUserStat,
+  // Activity Tracking & System Settings & Game Catalog
+  ActivityEvent,
+  SystemSetting,
+  GameCatalog,
 };
 
 

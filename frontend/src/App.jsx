@@ -50,6 +50,8 @@ const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
 const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
+const GameHub = lazyWithReload(() => import('./pages/GameHub'));
+import { useActivityTracker } from './hooks/useActivityTracker';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -131,11 +133,15 @@ function AnimatedAppRoutes() {
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState('none'); // 'none' | 'fadeIn' | 'fadeOut'
 
+  // Global pure activity tracker telemetry
+  useActivityTracker();
+
   useEffect(() => {
     // Cinematic exit/enter transitions
+    const isFullscreenGame = (p) => ['/games/2048', '/games/capital-board', '/games/quiz', '/games/sam'].some((base) => p.startsWith(base));
     const isToOrFromHome = location.pathname === '/' || displayLocation.pathname === '/';
-    const isEnteringGame = !displayLocation.pathname.startsWith('/games') && location.pathname.startsWith('/games');
-    const isExitingGame = displayLocation.pathname.startsWith('/games') && !location.pathname.startsWith('/games');
+    const isEnteringGame = !isFullscreenGame(displayLocation.pathname) && isFullscreenGame(location.pathname);
+    const isExitingGame = isFullscreenGame(displayLocation.pathname) && !isFullscreenGame(location.pathname);
 
     if (location.pathname !== displayLocation.pathname) {
       if (isToOrFromHome) {
@@ -208,7 +214,7 @@ function AnimatedAppRoutes() {
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
-            <Route path="/games" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/games" element={<GameHub />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
             <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
             <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />

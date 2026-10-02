@@ -3,6 +3,7 @@
 const express = require('express');
 const controller = require('../controllers/game2048.controller');
 const { auth } = require('../middlewares/auth.middleware');
+const { requireGameAvailable } = require('../middlewares/gameAvailability.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
@@ -11,7 +12,7 @@ const router = express.Router();
 router.use(auth);
 
 // Game session, checkpoints & score submission
-router.post('/start', asyncHandler(controller.startSession));
+router.post('/start', requireGameAvailable('game_2048'), asyncHandler(controller.startSession));
 router.post('/checkpoint', asyncHandler(controller.checkpointSession));
 router.post('/submit', asyncHandler(controller.submitScore));
 router.get('/active-session', asyncHandler(controller.getActiveSession));

@@ -12,6 +12,8 @@ import {
 import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
+import GameComingSoon from '../components/GameComingSoon';
+import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   Trophy,
   RotateCcw,
@@ -24,6 +26,7 @@ import {
   AlertTriangle,
   Loader2,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 
 const ACTIVE_SESSION_STORAGE_KEY = 'wr_2048_active_session';
@@ -54,6 +57,14 @@ function getTileFontSize(value) {
 export default function Game2048() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const {
+    loading: availabilityLoading,
+    game: gameInfo,
+    isComingSoon,
+    rawStatus,
+    isAdmin,
+    proceedAsAdmin,
+  } = useGameAvailability('game_2048');
 
   // Animated Tile State
   const [tiles, setTiles] = useState(() => createInitialTileState());
@@ -532,13 +543,33 @@ export default function Game2048() {
 
   const currentMaxTile = getMaxTileFromTiles(tiles);
 
+  if (!availabilityLoading && isComingSoon && !isAdmin) {
+    return (
+      <GameFullscreenShell
+        title="2048"
+        icon={LayoutGrid}
+        badge="Ghép số"
+        exitLabel="Quay lại"
+        exitTo="/games"
+      >
+        <GameComingSoon
+          gameKey="game_2048"
+          name={gameInfo?.name || '2048'}
+          description={gameInfo?.description}
+          isAdmin={isAdmin}
+          onAdminProceed={proceedAsAdmin}
+        />
+      </GameFullscreenShell>
+    );
+  }
+
   return (
     <GameFullscreenShell
       title="2048"
       icon={LayoutGrid}
-      badge="Ghép số"
+      badge={rawStatus === 'COMING_SOON' ? 'Admin Preview' : 'Ghép số'}
       exitLabel="Thoát"
-      exitTo="/arena"
+      exitTo="/games"
       onExit={handleExitGame}
       actions={
         <button

@@ -28,18 +28,25 @@ import GameHistory from '../components/game/GameHistory';
 import GameRulesModal from '../components/game/GameRulesModal';
 import gameSound from '../components/game/gameSound';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
+import GameComingSoon from '../components/GameComingSoon';
+import { useGameAvailability } from '../hooks/useGameAvailability';
 
 export default function CapitalBoardGame() {
   const { roomId: urlRoomId } = useParams();
   const navigate = useNavigate();
-  const { user, socket } = useAuth();
+  const { user, socket, isAdmin } = useAuth();
+  const {
+    loading: availabilityLoading,
+    game: gameInfo,
+    isComingSoon,
+    rawStatus,
+    proceedAsAdmin,
+  } = useGameAvailability('capital_board');
 
   // Tab navigation in lobby
   const [activeTab, setActiveTab] = useState('LOBBY'); // 'LOBBY', 'LEADERBOARD', 'HISTORY'
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  // Coming soon state (temporarily hidden as requested by user)
-  const [isComingSoon, setIsComingSoon] = useState(true);
 
   // Active game state
   const [room, setRoom] = useState(null);
@@ -532,311 +539,24 @@ export default function CapitalBoardGame() {
   const isPlaying = room?.status === 'PLAYING';
   const isWaiting = room?.status === 'WAITING';
 
-  if (isComingSoon && !urlRoomId) {
+  if (!availabilityLoading && isComingSoon && !isAdmin) {
     return (
       <GameFullscreenShell
         title="Cờ Tỷ Phú"
         icon={Gamepad2}
-        badge="Coming Soon"
-        exitLabel="Thoát"
-        exitTo="/arena"
-        onExit={() => navigate('/arena')}
+        badge="Bàn cờ"
+        exitLabel="Quay lại"
+        exitTo="/games"
       >
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px', width: '100%', boxSizing: 'border-box' }}>
-          {/* Header Meta */}
-          <div
-            style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 24,
-            paddingBottom: 16,
-            borderBottom: '1px solid rgba(15,23,42,0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: '#0f172a',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
-              }}
-            >
-              <Gamepad2 size={24} color="#b45309" />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <h1 style={{ fontSize: 'var(--text-h1, 24px)', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.25 }}>
-                  CỜ TỶ PHÚ & CÁ NGỰA
-                </h1>
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    background: 'rgba(245,158,11,0.15)',
-                    color: '#d97706',
-                    padding: '2px 8px',
-                    borderRadius: 4,
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Sắp Ra Mắt • Coming Soon
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
-                Chế độ bàn cờ giải trí nội bộ dành cho thành viên 3winmedia
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowRulesModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.12)',
-              borderRadius: 6,
-              padding: '8px 14px',
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#0f172a',
-              cursor: 'pointer',
-            }}
-          >
-            <BookOpen size={15} />
-            <span>Xem Luật Chơi</span>
-          </button>
-        </div>
-
-        {/* Hero Card */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            borderRadius: 12,
-            padding: '36px 32px',
-            color: '#ffffff',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 12px 32px rgba(15,23,42,0.12)',
-            marginBottom: 24,
-          }}
-        >
-          {/* Background decorative circles */}
-          <div
-            style={{
-              position: 'absolute',
-              top: -40,
-              right: -40,
-              width: 220,
-              height: 220,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(180,83,9,0.08) 0%, rgba(56,189,248,0) 70%)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div style={{ maxWidth: 640, position: 'relative', zIndex: 1 }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: 'rgba(180,83,9,0.08)',
-                border: '1px solid rgba(180,83,9,0.25)',
-                padding: '4px 10px',
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 600,
-                color: "#b45309",
-                marginBottom: 16,
-              }}
-            >
-              <Clock size={13} />
-              <span>TẠM THỜI ẨN ĐỂ BẢO TRÌ & NÂNG CẤP TÍNH NĂNG</span>
-            </div>
-
-            <h2 style={{ fontSize: 'var(--text-h2, 20px)', fontWeight: 700, margin: '0 0 12px', lineHeight: 1.25 }}>
-              Chế Độ Cờ Đang Được Hoàn Thiện (Coming Soon)
-            </h2>
-
-            <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, margin: '0 0 24px' }}>
-              WorkRank đang tạm thời ẩn chế độ bàn cờ xúc xắc để tối ưu hóa hiệu năng đồng bộ realtime, nâng cấp đồ họa và mở rộng luật chơi. Trong thời gian này, anh em hãy cùng tham gia thi đấu tại mini game <strong style={{ color: '#ffffff' }}>Đoán Hình & Đoán Nhạc (Live Quiz)</strong> nhé!
-            </p>
-
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => navigate('/games/quiz')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  background: "#141414",
-                  color: '#0f172a',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '12px 20px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(56,189,248,0.35)',
-                }}
-              >
-                <Sparkles size={16} />
-                <span>Chơi Đoán Hình & Đoán Nhạc Ngay</span>
-                <ArrowRight size={16} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'rgba(255,255,255,0.08)',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 6,
-                  padding: '12px 18px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <span>Về Bảng Điều Khiển</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature Preview Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.08)',
-              borderRadius: 8,
-              padding: 20,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: 'rgba(180,83,9,0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <Gamepad2 size={20} color="#b45309" />
-            </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
-              Bản Đồ 28 Ô Độc Quyền
-            </h3>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-              Hệ thống bất động sản doanh nghiệp, mua bán đất, nâng cấp nhà và thu phí đối thủ khi dừng chân.
-            </p>
-          </div>
-
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.08)',
-              borderRadius: 8,
-              padding: 20,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: 'rgba(245,158,11,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <Sparkles size={20} color="#d97706" />
-            </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
-              Đổ Xúc Xắc & Sự Kiện Realtime
-            </h3>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-              Tương tác trực tiếp qua Socket.IO, hiệu ứng đổ xúc xắc sống động và các thẻ Cơ Hội / Vận Mệnh bất ngờ.
-            </p>
-          </div>
-
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.08)',
-              borderRadius: 8,
-              padding: 20,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: 'rgba(168,85,247,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <Trophy size={20} color="#9333ea" />
-            </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '0 0 6px' }}>
-              Bảng Vàng Tỷ Phú Doanh Nghiệp
-            </h3>
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-              Bảng xếp hạng tổng tài sản, thống kê số trận thắng - thua và lịch sử thi đấu minh bạch cho toàn công ty.
-            </p>
-          </div>
-        </div>
-
-        {/* Developer preview button */}
-        <div style={{ textAlign: 'center', padding: '12px 0' }}>
-          <button
-            type="button"
-            onClick={() => setIsComingSoon(false)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94a3b8',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-          >
-            Xem trước giao diện phòng đấu (Chế độ xem trước)
-          </button>
-        </div>
-
-        {/* Rules Modal */}
-        {showRulesModal && <GameRulesModal onClose={() => setShowRulesModal(false)} />}
-      </div>
-    </GameFullscreenShell>
-  );
+        <GameComingSoon
+          gameKey="capital_board"
+          name={gameInfo?.name || 'Cờ Tỷ Phú'}
+          description={gameInfo?.description}
+          isAdmin={isAdmin}
+          onAdminProceed={proceedAsAdmin}
+        />
+      </GameFullscreenShell>
+    );
   }
 
   return (

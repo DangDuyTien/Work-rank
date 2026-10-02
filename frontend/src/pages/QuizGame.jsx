@@ -15,6 +15,8 @@ import QuizAnswererSpotlight from '../components/quiz/QuizAnswererSpotlight';
 import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
+import GameComingSoon from '../components/GameComingSoon';
+import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   AlertCircle,
   AlertTriangle,
@@ -23,9 +25,16 @@ import {
 } from 'lucide-react';
 
 export default function QuizGame() {
-  const { user, socket } = useAuth();
+  const { user, socket, isAdmin } = useAuth();
   const { roomId: urlRoomId } = useParams();
   const navigate = useNavigate();
+  const {
+    loading: availabilityLoading,
+    game: gameInfo,
+    isComingSoon,
+    rawStatus,
+    proceedAsAdmin,
+  } = useGameAvailability('quiz');
 
   // Room & gameplay state
   const [room, setRoom] = useState(null);
@@ -435,6 +444,26 @@ export default function QuizGame() {
   const isWaiting = room?.status === 'WAITING';
   const isPlayingOrShowing = room?.status === 'PLAYING' || room?.status === 'SHOWING_RESULT';
   const isFinished = room?.status === 'FINISHED' || Boolean(finalResults);
+
+  if (!availabilityLoading && isComingSoon && !isAdmin) {
+    return (
+      <GameFullscreenShell
+        title="Đoán Hình & Đoán Nhạc"
+        icon={Sparkles}
+        badge="Live"
+        exitLabel="Quay lại"
+        exitTo="/games"
+      >
+        <GameComingSoon
+          gameKey="quiz"
+          name={gameInfo?.name || 'Đoán Hình & Đoán Nhạc'}
+          description={gameInfo?.description}
+          isAdmin={isAdmin}
+          onAdminProceed={proceedAsAdmin}
+        />
+      </GameFullscreenShell>
+    );
+  }
 
   return (
     <GameFullscreenShell

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -32,11 +32,18 @@ import {
   Lightbulb,
   Check,
   Wrench,
+  Gamepad2,
+  LayoutGrid,
+  Club,
+  Activity,
+  Clock,
+  MousePointerClick,
+  Keyboard,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { auth, users as usersApi, competition as compApi } from '../services/api';
+import { auth, users as usersApi, competition as compApi, activityApi, gameCatalogApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
 import {
@@ -225,6 +232,99 @@ export default function Settings() {
       }).catch((e) => console.error(e));
     }
   }, [isAdmin, userList.length]);
+
+  // ── Game Catalog Admin State ──
+  const [gameCatalog, setGameCatalog] = useState([]);
+  const [loadingGames, setLoadingGames] = useState(false);
+  const [updatingGameKey, setUpdatingGameKey] = useState(null);
+
+  // ── Activity Tracking Admin State ──
+  const [activitySettings, setActivitySettings] = useState({
+    mouseTrackingEnabled: true,
+    keyboardTrackingEnabled: true,
+  });
+  const [loadingActivitySettings, setLoadingActivitySettings] = useState(false);
+  const [savingActivityKey, setSavingActivityKey] = useState(null);
+  const [activityAnalytics, setActivityAnalytics] = useState(null);
+  const [activityRange, setActivityRange] = useState('today'); // 'today' | '7d' | '30d'
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  const loadGameCatalog = useCallback(async () => {
+    if (!isAdmin) return;
+    setLoadingGames(true);
+    try {
+      const res = await gameCatalogApi.getCatalog();
+      if (res?.games) setGameCatalog(res.games);
+    } catch (err) {
+      console.warn('Failed to load game catalog:', err);
+    } finally {
+      setLoadingGames(false);
+    }
+  }, [isAdmin]);
+
+  const loadActivitySettings = useCallback(async () => {
+    if (!isAdmin) return;
+    setLoadingActivitySettings(true);
+    try {
+      const res = await activityApi.getSettings();
+      if (res) setActivitySettings(res);
+    } catch (err) {
+      console.warn('Failed to load activity settings:', err);
+    } finally {
+      setLoadingActivitySettings(false);
+    }
+  }, [isAdmin]);
+
+  const loadActivityAnalytics = useCallback(async (range = activityRange) => {
+    if (!isAdmin) return;
+    setLoadingAnalytics(true);
+    try {
+      const res = await activityApi.getAnalytics({ range });
+      if (res) setActivityAnalytics(res);
+    } catch (err) {
+      console.warn('Failed to load activity analytics:', err);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, [isAdmin, activityRange]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadGameCatalog();
+      loadActivitySettings();
+      loadActivityAnalytics(activityRange);
+    }
+  }, [isAdmin, loadGameCatalog, loadActivitySettings, loadActivityAnalytics, activityRange]);
+
+  const handleToggleGameStatus = async (gameKey, currentStatus) => {
+    const nextStatus = currentStatus === 'AVAILABLE' ? 'COMING_SOON' : 'AVAILABLE';
+    setUpdatingGameKey(gameKey);
+    try {
+      const updated = await gameCatalogApi.updateGameStatus(gameKey, { status: nextStatus });
+      setGameCatalog((prev) =>
+        prev.map((g) => (g.gameKey === gameKey ? { ...g, status: updated.status } : g))
+      );
+      toast.success(`Đã cập nhật game ${updated.name || gameKey} thành: ${nextStatus === 'AVAILABLE' ? 'Đang hoạt động' : 'Sắp ra mắt'}`);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể cập nhật trạng thái game.'));
+    } finally {
+      setUpdatingGameKey(null);
+    }
+  };
+
+  const handleToggleActivitySetting = async (key) => {
+    setSavingActivityKey(key);
+    try {
+      const nextVal = !activitySettings[key];
+      const updated = await activityApi.updateSettings({ [key]: nextVal });
+      setActivitySettings(updated);
+      toast.success(`Đã ${nextVal ? 'bật' : 'tắt'} ${key === 'mouseTrackingEnabled' ? 'ghi nhận Click chuột' : 'ghi nhận Hoạt động bàn phím'}`);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể lưu cài đặt Activity Tracking.'));
+    } finally {
+      setSavingActivityKey(null);
+    }
+  };
 
   const handleSelectEmployee = (targetId) => {
     const tId = Number(targetId);
@@ -1181,6 +1281,233 @@ export default function Settings() {
             {isAdmin && <button type="button" onClick={() => navigate('/admin/privileges')}>Phân quyền & Tích xanh</button>}
           </div>
         </SettingSection>
+
+        {/* KHỐI 9: QUẢN LÝ TRẠNG THÁI TRÒ CHƠI (ADMIN ONLY) */}
+        {isAdmin && (
+          <SettingSection
+            icon={Gamepad2}
+            title="Quản Lý Trạng Thái Trò Chơi"
+            desc="Cấu hình chế độ phát hành toàn cục cho tất cả trò chơi (Đang hoạt động / Sắp ra mắt). Non-admin không thể vào chơi khi game ở trạng thái Sắp ra mắt."
+            className="settings-card-wide"
+          >
+            {loadingGames ? (
+              <div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Đang tải danh mục game...</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                {gameCatalog.map((game) => {
+                  const Icon = game.gameKey === 'capital_board' ? Gamepad2 : game.gameKey === 'game_2048' ? LayoutGrid : game.gameKey === 'sam' ? Club : Sparkles;
+                  const isAvail = game.status === 'AVAILABLE';
+                  const isUpdating = updatingGameKey === game.gameKey;
+                  return (
+                    <div
+                      key={game.gameKey}
+                      style={{
+                        padding: '16px 18px',
+                        background: '#f8fafc',
+                        border: '1px solid rgba(15,23,42,0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 36, height: 36, background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a' }}>
+                            <Icon size={18} />
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: 14, color: '#0f172a' }}>{game.name}</strong>
+                            <div style={{ fontSize: 11, color: '#64748b' }}>key: {game.gameKey}</div>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 8px',
+                            textTransform: 'uppercase',
+                            background: isAvail ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.15)',
+                            color: isAvail ? '#16a34a' : '#d97706',
+                            border: `1px solid ${isAvail ? 'rgba(34,197,94,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                          }}
+                        >
+                          {isAvail ? 'Đang hoạt động' : 'Sắp ra mắt'}
+                        </span>
+                      </div>
+
+                      <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                        {game.description}
+                      </p>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleToggleGameStatus(game.gameKey, game.status)}
+                          className={isAvail ? 'settings-secondary-button' : 'settings-primary-button'}
+                          style={{
+                            fontSize: 12,
+                            padding: '6px 14px',
+                            cursor: isUpdating ? 'not-allowed' : 'pointer',
+                            opacity: isUpdating ? 0.6 : 1,
+                          }}
+                        >
+                          {isUpdating ? 'Đang lưu...' : isAvail ? 'Chuyển thành: Sắp ra mắt' : 'Mở hoạt động (Available)'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </SettingSection>
+        )}
+
+        {/* KHỐI 10: CẤU HÌNH ACTIVITY TRACKING & TELEMETRY (ADMIN ONLY) */}
+        {isAdmin && (
+          <SettingSection
+            icon={Activity}
+            title="Cấu Hình Activity Tracking & Telemetry"
+            desc="Quản lý việc bật/tắt ghi nhận telemetry click chuột và bàn phím. Thuần túy đo lường tương tác — Tuyệt đối không lưu nội dung gõ phím, không anti-cheat, không cảnh báo hay giới hạn người dùng."
+            className="settings-card-wide"
+          >
+            {/* Toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, marginBottom: 24 }}>
+              <div style={{ padding: '16px 18px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <MousePointerClick size={16} color="#0284c7" />
+                    <strong style={{ fontSize: 13, color: '#0f172a' }}>Ghi nhận Click Chuột</strong>
+                  </div>
+                  <label className="settings-switch">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(activitySettings.mouseTrackingEnabled)}
+                      disabled={savingActivityKey === 'mouseTrackingEnabled'}
+                      onChange={() => handleToggleActivitySetting('mouseTrackingEnabled')}
+                    />
+                    <span className="settings-slider" />
+                  </label>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  Ghi nhận số lượt click và vị trí thẻ tương tác trên giao diện. Người dùng có thể click nhanh liên tục tùy ý mà không bị coi là bất thường.
+                </p>
+              </div>
+
+              <div style={{ padding: '16px 18px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Keyboard size={16} color="#0284c7" />
+                    <strong style={{ fontSize: 13, color: '#0f172a' }}>Ghi nhận Hoạt động Bàn phím</strong>
+                  </div>
+                  <label className="settings-switch">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(activitySettings.keyboardTrackingEnabled)}
+                      disabled={savingActivityKey === 'keyboardTrackingEnabled'}
+                      onChange={() => handleToggleActivitySetting('keyboardTrackingEnabled')}
+                    />
+                    <span className="settings-slider" />
+                  </label>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  Ghi nhận có thao tác phím (telemetry event). <strong>Tuyệt đối không lưu</strong> nội dung gõ, ký tự, form nhập, chat hay mật khẩu.
+                </p>
+              </div>
+            </div>
+
+            {/* Admin Telemetry View */}
+            <div style={{ borderTop: '1px solid rgba(15,23,42,0.08)', paddingTop: 18 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+                    Số Liệu Hoạt Động Tổng Hợp (Telemetry Analytics)
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
+                    Tổng quan lưu lượng tương tác thực tế toàn hệ thống
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['today', '7d', '30d'].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setActivityRange(r)}
+                      style={{
+                        padding: '5px 12px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        border: '1px solid',
+                        borderColor: activityRange === r ? '#0284c7' : 'rgba(15,23,42,0.12)',
+                        background: activityRange === r ? '#0284c7' : '#ffffff',
+                        color: activityRange === r ? '#ffffff' : '#475569',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {r === 'today' ? 'Hôm nay' : r === '7d' ? '7 ngày qua' : '30 ngày qua'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stat Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
+                <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Lượt Click</span>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+                    {(activityAnalytics?.summary?.totalClicks || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hoạt động Bàn phím</span>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 4 }}>
+                    {(activityAnalytics?.summary?.totalKeyboards || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Tổng Tương tác</span>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#0284c7', marginTop: 4 }}>
+                    {(activityAnalytics?.summary?.totalActivity || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Nhân sự Hoạt động</span>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#16a34a', marginTop: 4 }}>
+                    {(activityAnalytics?.summary?.activeUsersCount || 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Routes */}
+              {activityAnalytics?.topRoutes && activityAnalytics.topRoutes.length > 0 && (
+                <div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 8 }}>
+                    Trang có lượng tương tác cao nhất:
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {activityAnalytics.topRoutes.slice(0, 5).map((tr, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          padding: '6px 10px',
+                          background: '#f8fafc',
+                          fontSize: 12,
+                          border: '1px solid rgba(15,23,42,0.04)',
+                        }}
+                      >
+                        <span style={{ fontFamily: 'monospace', color: '#0f172a' }}>{tr.route || '/'}</span>
+                        <span style={{ fontWeight: 600, color: '#64748b' }}>{tr.count.toLocaleString()} sự kiện</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </SettingSection>
+        )}
       </div>
 
       {/* ── MODAL TRAO GIẢI THƯỞNG CHO ADMIN ── */}

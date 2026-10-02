@@ -47,6 +47,8 @@ import { getSocket } from '../services/socket';
 import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
+import GameComingSoon from '../components/GameComingSoon';
+import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   Card,
   Button,
@@ -915,6 +917,13 @@ export default function SamGame() {
   const { roomId: urlRoomId } = useParams();
   const navigate = useNavigate();
   const { user, socket: authSocket, isAdmin } = useAuth();
+  const {
+    loading: availabilityLoading,
+    game: gameInfo,
+    isComingSoon,
+    rawStatus,
+    proceedAsAdmin,
+  } = useGameAvailability('sam');
 
   // Navigation / Tabs
   const [activeTab, setActiveTab] = useState('LOBBY'); // 'LOBBY', 'LEADERBOARD', 'RULES'
@@ -1661,6 +1670,29 @@ export default function SamGame() {
       console.error(err);
     }
   };
+
+  // ─────────────────────────────────────────────────────────────
+  // COMING SOON GUARD (BLOCKS NON-ADMIN USERS IF GAME IS COMING_SOON)
+  // ─────────────────────────────────────────────────────────────
+  if (!availabilityLoading && isComingSoon && !isAdmin) {
+    return (
+      <GameFullscreenShell
+        title="Đánh Sâm"
+        icon={Club}
+        badge="Dân Gian"
+        exitLabel="Quay lại"
+        exitTo="/games"
+      >
+        <GameComingSoon
+          gameKey="sam"
+          name={gameInfo?.name || 'Đánh Sâm'}
+          description={gameInfo?.description}
+          isAdmin={isAdmin}
+          onAdminProceed={proceedAsAdmin}
+        />
+      </GameFullscreenShell>
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────
   // RENDER PHASE 1: FULLSCREEN GAME SHELL (WHEN IN ACTIVE MATCH)

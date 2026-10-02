@@ -103,6 +103,14 @@ export const NAVIGATION_CONFIG = [
     badge: 'Giải Trí',
     items: [
       {
+        to: '/games',
+        label: 'Tất Cả Trò Chơi',
+        shortLabel: 'Danh mục',
+        icon: Gamepad2,
+        tourTarget: 'nav-games-hub',
+        description: 'Trung tâm danh mục trò chơi đang mở và sắp ra mắt',
+      },
+      {
         to: '/games/capital-board',
         label: 'Cờ Tỷ Phú',
         shortLabel: 'Cờ Tỷ Phú',

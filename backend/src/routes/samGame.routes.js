@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, requireRole } = require('../middlewares/auth.middleware');
+const { requireGameAvailable } = require('../middlewares/gameAvailability.middleware');
 const samGameController = require('../controllers/samGame.controller');
 
 // All Sam game endpoints require authenticated user
@@ -10,15 +11,15 @@ router.use(auth);
 
 // ── LOBBY & ROOMS ──
 router.get('/rooms', samGameController.listRooms);
-router.post('/rooms', samGameController.createRoom);
+router.post('/rooms', requireGameAvailable('sam'), samGameController.createRoom);
 router.get('/rooms/active', samGameController.getActiveRoom);
 router.get('/rooms/:id', samGameController.getRoom);
-router.post('/rooms/:id/join', samGameController.joinRoom);
+router.post('/rooms/:id/join', requireGameAvailable('sam'), samGameController.joinRoom);
 router.post('/rooms/:id/leave', samGameController.leaveRoom);
 router.post('/rooms/:id/ready', samGameController.toggleReady);
 
 // ── GAMEPLAY ACTIONS ──
-router.post('/rooms/:id/start', samGameController.startMatch);
+router.post('/rooms/:id/start', requireGameAvailable('sam'), samGameController.startMatch);
 router.post('/rooms/:id/declare-sam', samGameController.declareSam);
 router.post('/rooms/:id/play-cards', samGameController.playCards);
 router.post('/rooms/:id/pass', samGameController.passTurn);

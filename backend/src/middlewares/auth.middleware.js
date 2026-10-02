@@ -28,4 +28,21 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { auth, requireRole };
+async function optionalAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    if (!token) return next();
+
+    const payload = jwt.verify(token, env.jwtSecret);
+    const user = await User.findByPk(payload.sub);
+    if (user && user.status === 'active') {
+      req.user = user;
+    }
+    return next();
+  } catch {
+    return next();
+  }
+}
+
+module.exports = { auth, requireRole, optionalAuth };

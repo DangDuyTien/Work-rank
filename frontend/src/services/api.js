@@ -1202,6 +1202,40 @@ export const samGame = {
   },
 };
 
+export const activityApi = {
+  sendBatch: async (events) => {
+    const res = await api.post('/api/activity/batch', { events });
+    return res.data;
+  },
+  getSettings: async () => {
+    const res = await api.get('/api/activity/settings');
+    return res.data;
+  },
+  updateSettings: async (data) => {
+    const res = await api.patch('/api/activity/settings', data);
+    return res.data;
+  },
+  getAnalytics: async (params = {}) => {
+    const res = await api.get('/api/activity/analytics', { params });
+    return res.data;
+  },
+};
+
+export const gameCatalogApi = {
+  getCatalog: async () => {
+    const res = await api.get('/api/games/catalog');
+    return res.data;
+  },
+  getGame: async (gameKey) => {
+    const res = await api.get(`/api/games/catalog/${gameKey}`);
+    return res.data;
+  },
+  updateGameStatus: async (gameKey, data) => {
+    const res = await api.patch(`/api/admin/games/${gameKey}`, data);
+    return res.data;
+  },
+};
+
 export { storeAuth };
 export default api;
 
