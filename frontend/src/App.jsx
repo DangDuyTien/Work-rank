@@ -51,6 +51,7 @@ const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
+const ActivityDiagnostics = lazyWithReload(() => import('./pages/ActivityDiagnostics'));
 import { useActivityTracker } from './hooks/useActivityTracker';
 
 
@@ -213,6 +214,9 @@ function AnimatedAppRoutes() {
             <Route path="/rankings" element={<Leaderboard />} />
             <Route path="/activity" element={<Navigate to="/rankings?scope=activity" replace />} />
             <Route path="/activity-wave" element={<Navigate to="/rankings?scope=activity" replace />} />
+            <Route path="/activity-diagnostics" element={<ActivityDiagnostics />} />
+            <Route path="/diagnostics" element={<Navigate to="/activity-diagnostics" replace />} />
+            <Route path="/admin/activity-diagnostics" element={<Navigate to="/activity-diagnostics" replace />} />
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />

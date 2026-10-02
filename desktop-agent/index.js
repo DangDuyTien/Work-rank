@@ -55,6 +55,7 @@ class DesktopAgent {
       },
     });
 
+    const initialConfig = this.ipcServer.loadConfig();
     this.buffer = new AgentBuffer({
       batchIntervalSeconds: 5,
       backendUrl: initialConfig.backendUrl || 'http://localhost:5001',

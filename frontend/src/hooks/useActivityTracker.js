@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { activityApi, computerActivityApi, desktopAgentIpc } from '../services/api';
+import { computerActivityApi, desktopAgentIpc } from '../services/api';
 
 const SESSION_KEY = 'workrank:telemetry_session_id';
 const TRACKING_ENABLED_KEY = 'workrank:tracking_enabled';
@@ -33,12 +33,16 @@ function getInitialTrackingState() {
 // Module-level reactive store for computer & web activity telemetry
 const telemetryStore = {
   isTrackingActive: getInitialTrackingState(),
+  trackingStatus: getInitialTrackingState() ? 'RUNNING' : 'OFF', // 'OFF' | 'STARTING' | 'RUNNING' | 'STOPPING' | 'ERROR'
   clicks: 0,
   keyboard: 0,
   activeSeconds: 0,
   idleSeconds: 0,
   agentStatus: { running: false, paired: false, trackingActive: false },
   lastEventTime: null,
+  lastFlushTime: null,
+  lastFlushStatus: 'IDLE', // 'IDLE' | 'SUCCESS' | 'ERROR' | 'FLUSHING'
+  queueLength: 0,
   sessionId: getOrCreateSessionId(),
 };
 
@@ -67,16 +71,22 @@ export async function startTrackingGlobal(userData = {}) {
     sessionStorage.setItem(TRACKING_ENABLED_KEY, 'true');
   } catch {}
   telemetryStore.isTrackingActive = true;
+  telemetryStore.trackingStatus = 'STARTING';
   emitStoreUpdate();
 
-  // 1. Notify Desktop Agent if running locally
-  const token = localStorage.getItem('token');
-  const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
-  await desktopAgentIpc.startTracking({ token, user: userData, backendUrl });
+  try {
+    // 1. Notify Desktop Agent if running locally
+    const token = localStorage.getItem('token');
+    const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
+    await desktopAgentIpc.startTracking({ token, user: userData, backendUrl });
 
-  // Update agent status
-  const status = await desktopAgentIpc.checkStatus();
-  telemetryStore.agentStatus = status;
+    // Update agent status
+    const status = await desktopAgentIpc.checkStatus();
+    telemetryStore.agentStatus = status;
+    telemetryStore.trackingStatus = 'RUNNING';
+  } catch (err) {
+    telemetryStore.trackingStatus = 'RUNNING'; // Web fallback continues
+  }
   emitStoreUpdate();
 }
 
@@ -85,13 +95,19 @@ export async function stopTrackingGlobal() {
     sessionStorage.removeItem(TRACKING_ENABLED_KEY);
   } catch {}
   telemetryStore.isTrackingActive = false;
+  telemetryStore.trackingStatus = 'STOPPING';
   emitStoreUpdate();
 
-  // 1. Notify Desktop Agent to stop immediately
-  await desktopAgentIpc.stopTracking();
+  try {
+    // 1. Notify Desktop Agent to stop immediately
+    await desktopAgentIpc.stopTracking();
 
-  const status = await desktopAgentIpc.checkStatus();
-  telemetryStore.agentStatus = status;
+    const status = await desktopAgentIpc.checkStatus();
+    telemetryStore.agentStatus = status;
+    telemetryStore.trackingStatus = 'OFF';
+  } catch {
+    telemetryStore.trackingStatus = 'OFF';
+  }
   emitStoreUpdate();
 }
 
@@ -140,10 +156,13 @@ export function useActivityStats() {
  */
 export function useActivityTracker() {
   const location = useLocation();
+  const { isTrackingActive, agentStatus } = useActivityStats();
+
   const queueRef = useRef([]);
   const heartbeatTimerRef = useRef(null);
   const flushTimerRef = useRef(null);
   const activeSecondTimerRef = useRef(null);
+  const debounceFlushTimerRef = useRef(null);
   const lastInteractionTimeRef = useRef(Date.now());
 
   // 1. Check Desktop Agent status periodically
@@ -169,7 +188,7 @@ export function useActivityTracker() {
 
   // 2. Desktop Agent Heartbeat & Watchdog
   useEffect(() => {
-    if (!telemetryStore.isTrackingActive) {
+    if (!isTrackingActive) {
       if (heartbeatTimerRef.current) {
         clearInterval(heartbeatTimerRef.current);
         heartbeatTimerRef.current = null;
@@ -193,7 +212,7 @@ export function useActivityTracker() {
         heartbeatTimerRef.current = null;
       }
     };
-  }, [telemetryStore.isTrackingActive]);
+  }, [isTrackingActive]);
 
   // 3. Fallback Web Batch Sender (Used when Desktop Agent is not running)
   const flushWebQueue = useCallback(async () => {
@@ -202,12 +221,22 @@ export function useActivityTracker() {
     // If Desktop Agent is already running, let agent handle full computer activity to avoid double count
     if (telemetryStore.agentStatus?.running && telemetryStore.agentStatus?.trackingActive) {
       queueRef.current = [];
+      telemetryStore.queueLength = 0;
+      emitStoreUpdate();
       return;
     }
 
     const eventsToSend = queueRef.current.splice(0, BATCH_TRIGGER_SIZE * 2);
+    telemetryStore.queueLength = queueRef.current.length;
+    telemetryStore.lastFlushStatus = 'FLUSHING';
+    emitStoreUpdate();
+
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      telemetryStore.lastFlushStatus = 'IDLE';
+      emitStoreUpdate();
+      return;
+    }
 
     try {
       await computerActivityApi.recordBatch({
@@ -215,7 +244,12 @@ export function useActivityTracker() {
         devicePlatform: 'web',
         events: eventsToSend,
       });
-    } catch {
+      telemetryStore.lastFlushTime = new Date().toISOString();
+      telemetryStore.lastFlushStatus = 'SUCCESS';
+      emitStoreUpdate();
+    } catch (err) {
+      telemetryStore.lastFlushStatus = 'ERROR';
+      emitStoreUpdate();
       // Silently ignore network failures without interfering with user
     }
   }, []);
@@ -254,9 +288,10 @@ export function useActivityTracker() {
 
   // 5. Active/Idle timer & interaction listeners (Only active when isTrackingActive is true)
   useEffect(() => {
-    if (!telemetryStore.isTrackingActive) {
+    if (!isTrackingActive) {
       if (flushTimerRef.current) clearInterval(flushTimerRef.current);
       if (activeSecondTimerRef.current) clearInterval(activeSecondTimerRef.current);
+      if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
       return;
     }
 
@@ -270,13 +305,13 @@ export function useActivityTracker() {
       } else {
         telemetryStore.activeSeconds += 1;
       }
+      emitStoreUpdate();
     }, 1000);
 
-    const debounceFlushTimerRef = useRef(null);
-
     const recordInteraction = (type) => {
-      lastInteractionTimeRef.current = Date.now();
-      telemetryStore.lastEventTime = Date.now();
+      const now = Date.now();
+      lastInteractionTimeRef.current = now;
+      telemetryStore.lastEventTime = now;
 
       if (type === 'click') {
         telemetryStore.clicks += 1;
@@ -285,8 +320,8 @@ export function useActivityTracker() {
       }
       emitStoreUpdate();
 
-      // Queue event for sync
-      if (!telemetryStore.agentStatus?.running) {
+      // Queue event for sync if desktop agent is not capturing
+      if (!agentStatus?.running) {
         if (queueRef.current.length >= MAX_QUEUE_SIZE) {
           queueRef.current.shift();
         }
@@ -303,6 +338,8 @@ export function useActivityTracker() {
           keyboardCount: type === 'key' ? 1 : 0,
           occurredAt: new Date().toISOString(),
         });
+        telemetryStore.queueLength = queueRef.current.length;
+        emitStoreUpdate();
 
         // Fast-flush if accumulated >= 5 actions or debounce within 1.2s for instant PTS responsiveness
         if (queueRef.current.length >= 5) {
@@ -319,9 +356,11 @@ export function useActivityTracker() {
 
     const handleClick = () => recordInteraction('click');
     const handleKeyDown = () => recordInteraction('key');
+    const handleTouch = () => recordInteraction('click');
 
     window.addEventListener('click', handleClick, { passive: true, capture: true });
     window.addEventListener('keydown', handleKeyDown, { passive: true, capture: true });
+    window.addEventListener('touchstart', handleTouch, { passive: true, capture: true });
 
     // Periodic flush
     flushTimerRef.current = setInterval(() => {
@@ -331,10 +370,12 @@ export function useActivityTracker() {
     return () => {
       window.removeEventListener('click', handleClick, { capture: true });
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('touchstart', handleTouch, { capture: true });
       if (flushTimerRef.current) clearInterval(flushTimerRef.current);
       if (activeSecondTimerRef.current) clearInterval(activeSecondTimerRef.current);
       if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
       flushWebQueue();
     };
-  }, [telemetryStore.isTrackingActive, flushWebQueue, location.pathname]);
+  }, [isTrackingActive, agentStatus?.running, flushWebQueue, location.pathname]);
 }
+

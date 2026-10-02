@@ -27,6 +27,8 @@ import {
   Trophy,
   Play,
   Pause,
+  Zap,
+  Terminal,
 } from 'lucide-react';
 
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -124,7 +126,24 @@ export default function Dashboard() {
   const [activeModalChannelId, setActiveModalChannelId] = useState(null);
 
   // Global activity tracking controller
-  const { isTrackingActive, toggleTracking, agentStatus: liveAgentStatus } = useActivityStats();
+  const {
+    isTrackingActive,
+    toggleTracking,
+    agentStatus: liveAgentStatus,
+    clicks,
+    keyboard,
+    lastEventTime,
+    trackingStatus,
+  } = useActivityStats();
+
+  const ptsPerHour = useMemo(() => {
+    const score = Number(myActivity?.activityScore || 0);
+    const mins = Number(myActivity?.activeMinutes || 0);
+    if (mins >= 1 && score > 0) {
+      return Math.round((score / mins) * 60);
+    }
+    return null;
+  }, [myActivity?.activityScore, myActivity?.activeMinutes]);
 
   const checkAgentStatus = useCallback(async () => {
     const status = await desktopAgentIpc.checkStatus();
@@ -512,10 +531,32 @@ export default function Dashboard() {
               <span>Xem BXH Độ Năng Động</span>
               <ChevronRight size={14} />
             </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/activity-diagnostics')}
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '7px 12px',
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                color: '#334155',
+                borderRadius: 4,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="Kiểm tra trạng thái kết nối Agent, Listeners và Pipeline"
+            >
+              <Terminal size={14} color="#0284c7" />
+              <span>Kiểm Tra Pipeline</span>
+            </button>
           </div>
         </div>
 
-        <div className="activity-stats-grid">
+        <div className="activity-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Vị trí BXH (Hôm nay)</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
@@ -537,24 +578,12 @@ export default function Dashboard() {
           </div>
 
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Thay đổi thứ hạng</div>
-            <div style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, color: (myActivity?.rankChange || 0) > 0 ? '#16a34a' : (myActivity?.rankChange || 0) < 0 ? '#dc2626' : '#64748b', marginTop: 2 }}>
-              {(myActivity?.rankChange || 0) > 0 ? (
-                <>
-                  <TrendingUp size={16} />
-                  <span>+{myActivity.rankChange} bậc</span>
-                </>
-              ) : (myActivity?.rankChange || 0) < 0 ? (
-                <>
-                  <TrendingDown size={16} />
-                  <span>{myActivity.rankChange} bậc</span>
-                </>
-              ) : (
-                <span>— Giữ nguyên</span>
-              )}
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Tốc độ tích lũy</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#0284c7' }}>
+              {ptsPerHour ? `${ptsPerHour.toLocaleString()} pts/h` : (isTrackingActive ? 'Đang tính...' : '0 pts/h')}
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              So với phiên tính toán trước
+              Tốc độ ghi nhận PTS / giờ
             </div>
           </div>
 
@@ -565,6 +594,16 @@ export default function Dashboard() {
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               {myActivity?.topApp ? `Chủ yếu: ${myActivity.topApp}` : 'Ghi nhận toàn máy tính'}
+            </div>
+          </div>
+
+          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Hoạt động cuối</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: isTrackingActive ? '#16a34a' : '#64748b', marginTop: 4 }}>
+              {isTrackingActive ? (lastEventTime ? formatRelativeTime(lastEventTime) : 'Vừa xong') : 'Tạm dừng'}
+            </div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+              {clicks || 0} clicks • {keyboard || 0} phím (web)
             </div>
           </div>
         </div>
