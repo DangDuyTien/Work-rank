@@ -1357,7 +1357,7 @@ export const gameCatalogApi = {
   },
 };
 
-export { storeAuth };
+export { storeAuth, refreshStoredAuth as refreshSession };
 export default api;
 
 

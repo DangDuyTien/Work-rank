@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { computerActivityApi, desktopAgentIpc } from '../services/api';
+import { computerActivityApi, desktopAgentIpc, refreshSession } from '../services/api';
 
 const SESSION_KEY = 'workrank:telemetry_session_id';
 const TRACKING_ENABLED_KEY = 'workrank:tracking_enabled';
@@ -76,8 +76,19 @@ export async function startTrackingGlobal(userData = {}) {
 
   try {
     // 1. Notify Desktop Agent if running locally
-    const token = localStorage.getItem('token');
-    const refreshToken = localStorage.getItem('refreshToken');
+    // Always try to get a fresh token before sending to agent (avoid sending expired token)
+    let token = localStorage.getItem('token');
+    let refreshToken = localStorage.getItem('refreshToken');
+    try {
+      // Proactively refresh if we have a refresh token — agent needs a valid token
+      if (refreshToken) {
+        await refreshSession();
+        token = localStorage.getItem('token'); // Read fresh token after refresh
+        refreshToken = localStorage.getItem('refreshToken');
+      }
+    } catch {
+      // Refresh failed (e.g. network error), proceed with existing token
+    }
     const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
     await desktopAgentIpc.startTracking({ token, refreshToken, user: userData, backendUrl });
 
