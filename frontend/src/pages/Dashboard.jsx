@@ -96,27 +96,56 @@ export default function Dashboard() {
   const { user, isAdmin, socket } = useAuth();
   const navigate = useNavigate();
 
-  const cachedTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS('today'));
-  const cachedUsers = getCached(CACHE_KEYS.DASHBOARD_USERS('today'));
+  const rawCachedTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS('today'));
+  const cachedTotals = rawCachedTotals ? {
+    keystrokes: Number(rawCachedTotals.keystrokes ?? rawCachedTotals.totalKeystrokes ?? 0),
+    clicks: Number(rawCachedTotals.clicks ?? rawCachedTotals.totalMouseClicks ?? 0),
+    activeSeconds: Number(rawCachedTotals.activeSeconds ?? rawCachedTotals.totalActiveSeconds ?? rawCachedTotals.totalActiveSecondsToday ?? 0),
+    online: Number(rawCachedTotals.online ?? rawCachedTotals.activeUsersNow ?? 0),
+  } : { keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 };
+
+  const rawCachedUsers = getCached(CACHE_KEYS.DASHBOARD_USERS('today'));
+  const cachedUsers = Array.isArray(rawCachedUsers)
+    ? rawCachedUsers
+    : Array.isArray(rawCachedUsers?.data)
+      ? rawCachedUsers.data
+      : [];
+
   const cachedCompanyYt = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_COMPANY('30d')) : null;
   const cachedMemberYt = !isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_MEMBER('30d')) : null;
-  const cachedChannels = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_CHANNELS()) : [];
-  const cachedRankings = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS());
-  const cachedMyActivity = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id));
 
-  const hasInitialCache = Boolean(cachedTotals || (cachedUsers && cachedUsers.length > 0));
+  const rawCachedChannels = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_CHANNELS()) : [];
+  const cachedChannels = Array.isArray(rawCachedChannels)
+    ? rawCachedChannels
+    : Array.isArray(rawCachedChannels?.items)
+      ? rawCachedChannels.items
+      : Array.isArray(rawCachedChannels?.channels)
+        ? rawCachedChannels.channels
+        : [];
+
+  const rawCachedRankings = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS());
+  const cachedRankings = Array.isArray(rawCachedRankings)
+    ? rawCachedRankings
+    : Array.isArray(rawCachedRankings?.items)
+      ? rawCachedRankings.items
+      : [];
+
+  const rawCachedMyActivity = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id));
+  const cachedMyActivity = rawCachedMyActivity?.data || rawCachedMyActivity || null;
+
+  const hasInitialCache = Boolean(rawCachedTotals || (cachedUsers && cachedUsers.length > 0));
 
   const [myActivity, setMyActivity] = useState(() => cachedMyActivity || null);
   const [agentStatus, setAgentStatus] = useState({ running: false, paired: false });
   const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
-  const [activityRankings, setActivityRankings] = useState(() => cachedRankings || []);
+  const [activityRankings, setActivityRankings] = useState(() => cachedRankings);
   const pageVisible = usePageVisibility();
 
   // Basic dashboard range
   const [range, setRange] = useState('today');
-  const [totals, setTotals] = useState(() => cachedTotals || { keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
+  const [totals, setTotals] = useState(() => cachedTotals);
   const [prevTotals, setPrevTotals] = useState(null);
-  const [users, setUsers] = useState(() => cachedUsers || []);
+  const [users, setUsers] = useState(() => cachedUsers);
   const [loading, setLoading] = useState(!hasInitialCache);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -126,7 +155,7 @@ export default function Dashboard() {
   const [ytPeriod, setYtPeriod] = useState('30d');
   const [companyOverview, setCompanyOverview] = useState(() => cachedCompanyYt || null);
   const [memberOverview, setMemberOverview] = useState(() => cachedMemberYt || null);
-  const [allChannels, setAllChannels] = useState(() => cachedChannels || []);
+  const [allChannels, setAllChannels] = useState(() => cachedChannels);
   const [channelsLoading, setChannelsLoading] = useState(false);
 
   // Admin Drill-down & Comparison states
@@ -197,8 +226,21 @@ export default function Dashboard() {
     requestIdRef.current = requestId;
     const background = options.background === true;
 
-    const cachedRangeTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange));
-    const cachedRangeUsers = getCached(CACHE_KEYS.DASHBOARD_USERS(selectedRange));
+    const rawRangeTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange));
+    const cachedRangeTotals = rawRangeTotals ? {
+      keystrokes: Number(rawRangeTotals.keystrokes ?? rawRangeTotals.totalKeystrokes ?? 0),
+      clicks: Number(rawRangeTotals.clicks ?? rawRangeTotals.totalMouseClicks ?? 0),
+      activeSeconds: Number(rawRangeTotals.activeSeconds ?? rawRangeTotals.totalActiveSeconds ?? rawRangeTotals.totalActiveSecondsToday ?? 0),
+      online: Number(rawRangeTotals.online ?? rawRangeTotals.activeUsersNow ?? 0),
+    } : null;
+
+    const rawRangeUsers = getCached(CACHE_KEYS.DASHBOARD_USERS(selectedRange));
+    const cachedRangeUsers = Array.isArray(rawRangeUsers)
+      ? rawRangeUsers
+      : Array.isArray(rawRangeUsers?.data)
+        ? rawRangeUsers.data
+        : null;
+
     const hasCachedRange = Boolean(cachedRangeTotals || (cachedRangeUsers && cachedRangeUsers.length > 0));
 
     if (hasCachedRange) {
@@ -215,65 +257,88 @@ export default function Dashboard() {
 
     try {
       const calls = [
-        fetchWithCache(CACHE_KEYS.DASHBOARD_USERS(selectedRange), () => leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT })),
+        fetchWithCache(CACHE_KEYS.DASHBOARD_USERS(selectedRange), async () => {
+          const res = await leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT });
+          return Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        }),
         fetchWithCache(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange), async () => {
           const res = await dashboard.overview(selectedRange);
-          return res.data || {};
+          const d = res?.data || {};
+          return {
+            keystrokes: Number(d.totalKeystrokes || 0),
+            clicks: Number(d.totalMouseClicks || 0),
+            activeSeconds: Number(d.totalActiveSeconds || d.totalActiveSecondsToday || 0),
+            online: Number(d.activeUsersNow || 0),
+          };
         }),
       ];
 
       if (isAdmin) {
         calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_COMPANY(period), () => youtube.getOverview({ period })).catch(() => null));
-        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), () => youtube.getLeaderboard({ view: 'channels', limit: 200 })).catch(() => ({ items: [] })));
+        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), async () => {
+          const res = await youtube.getLeaderboard({ view: 'channels', limit: 200 });
+          return Array.isArray(res?.items) ? res.items : Array.isArray(res?.channels) ? res.channels : [];
+        }).catch(() => []));
       } else {
         calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_MEMBER(period), () => youtube.getMyOverview({ period })).catch(() => null));
       }
 
       // Fetch computer activity summary, companion status, and rankings
-      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id), () => activityApi.getMySummary()).catch(() => null));
+      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id), async () => {
+        const res = await activityApi.getMySummary();
+        return res?.data || res || null;
+      }).catch(() => null));
       calls.push(desktopAgentIpc.checkStatus().catch(() => ({ running: false, paired: false })));
-      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS(), () => activityApi.getComputerRankings({ period: 'today', limit: 20 })).catch(() => ({ items: [] })));
+      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS(), async () => {
+        const res = await activityApi.getComputerRankings({ period: 'today', limit: 20 });
+        return Array.isArray(res?.items) ? res.items : Array.isArray(res?.data?.rankings) ? res.data.rankings : [];
+      }).catch(() => []));
 
       const results = await Promise.all(calls);
       if (requestId !== requestIdRef.current) return;
 
-      const [leaderboardRes, overviewData, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
+      const [usersListRes, totalsRes, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
 
       if (isAdmin) {
         if (ytDataRes) setCompanyOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
-        if (channelsRes) {
-          const chItems = channelsRes.items || channelsRes.channels || [];
-          setAllChannels((prev) => (isDeepEqual(prev, chItems) ? prev : chItems));
-        }
+        const safeChannels = Array.isArray(channelsRes)
+          ? channelsRes
+          : Array.isArray(channelsRes?.items)
+            ? channelsRes.items
+            : Array.isArray(channelsRes?.channels)
+              ? channelsRes.channels
+              : [];
+        setAllChannels((prev) => (isDeepEqual(prev, safeChannels) ? prev : safeChannels));
       } else {
         if (ytDataRes) setMemberOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
       }
 
-      if (activityRes?.data) {
-        setMyActivity((prev) => (isDeepEqual(prev, activityRes.data) ? prev : activityRes.data));
-        updateServerSummary(activityRes.data);
-      } else if (activityRes) {
-        setMyActivity((prev) => (isDeepEqual(prev, activityRes) ? prev : activityRes));
-        updateServerSummary(activityRes);
+      if (activityRes) {
+        const actData = activityRes?.data || activityRes;
+        setMyActivity((prev) => (isDeepEqual(prev, actData) ? prev : actData));
+        updateServerSummary(actData);
       }
 
-      if (rankingsRes?.items) {
-        setActivityRankings((prev) => (isDeepEqual(prev, rankingsRes.items) ? prev : rankingsRes.items));
-      }
+      const safeRankings = Array.isArray(rankingsRes)
+        ? rankingsRes
+        : Array.isArray(rankingsRes?.items)
+          ? rankingsRes.items
+          : [];
+      setActivityRankings((prev) => (isDeepEqual(prev, safeRankings) ? prev : safeRankings));
 
       if (agentRes) {
         setAgentStatus(agentRes);
       }
 
-      const safeOverview = overviewData || {};
+      const safeTotals = totalsRes || {};
       const newTotals = {
-        keystrokes: Number(safeOverview.totalKeystrokes || 0),
-        clicks: Number(safeOverview.totalMouseClicks || 0),
-        activeSeconds: Number(safeOverview.totalActiveSeconds || safeOverview.totalActiveSecondsToday || 0),
-        online: Number(safeOverview.activeUsersNow || 0),
+        keystrokes: Number(safeTotals.keystrokes ?? safeTotals.totalKeystrokes ?? 0),
+        clicks: Number(safeTotals.clicks ?? safeTotals.totalMouseClicks ?? 0),
+        activeSeconds: Number(safeTotals.activeSeconds ?? safeTotals.totalActiveSeconds ?? 0),
+        online: Number(safeTotals.online ?? safeTotals.activeUsersNow ?? 0),
       };
 
-      const newUsersList = leaderboardRes?.data || [];
+      const newUsersList = Array.isArray(usersListRes) ? usersListRes : (usersListRes?.data || []);
       setUsers((prev) => (isDeepEqual(prev, newUsersList) ? prev : newUsersList));
       if (prevRef.current) setPrevTotals(prevRef.current);
       prevRef.current = newTotals;
@@ -413,34 +478,50 @@ export default function Dashboard() {
 
   // Filtered channels list for admin
   const filteredChannels = useMemo(() => {
-    let list = [...allChannels];
+    const safeChannels = Array.isArray(allChannels)
+      ? allChannels
+      : Array.isArray(allChannels?.items)
+        ? allChannels.items
+        : Array.isArray(allChannels?.channels)
+          ? allChannels.channels
+          : [];
+    let list = [...safeChannels];
     if (channelFilter === 'assigned') {
-      list = list.filter((c) => Boolean(c.teamId));
+      list = list.filter((c) => Boolean(c?.teamId));
     } else if (channelFilter === 'unassigned') {
-      list = list.filter((c) => !c.teamId);
+      list = list.filter((c) => !c?.teamId);
     }
 
     if (channelSearch.trim()) {
       const q = channelSearch.trim().toLowerCase();
-      list = list.filter((c) => (c.title || '').toLowerCase().includes(q) || (c.customUrl || '').toLowerCase().includes(q));
+      list = list.filter((c) => (c?.title || '').toLowerCase().includes(q) || (c?.customUrl || '').toLowerCase().includes(q));
     }
     return list;
   }, [allChannels, channelFilter, channelSearch]);
 
-  const activeUsers = useMemo(
-    () => users.filter((u) => ONLINE_STATUSES.includes(String(u.status || u.presence || '').toLowerCase())).length,
-    [users]
-  );
+  const activeUsers = useMemo(() => {
+    const safeUsers = Array.isArray(users)
+      ? users
+      : Array.isArray(users?.data)
+        ? users.data
+        : [];
+    return safeUsers.filter((u) => ONLINE_STATUSES.includes(String(u?.status || u?.presence || '').toLowerCase())).length;
+  }, [users]);
   const currentOnlineUsers = Math.max(Number(totals.online || 0), activeUsers);
 
   const onlineRows = useMemo(() => {
-    return [...users]
-      .filter((u) => ONLINE_STATUSES.includes(String(u.status || u.presence || '').toLowerCase()))
+    const safeUsers = Array.isArray(users)
+      ? users
+      : Array.isArray(users?.data)
+        ? users.data
+        : [];
+    return [...safeUsers]
+      .filter((u) => ONLINE_STATUSES.includes(String(u?.status || u?.presence || '').toLowerCase()))
       .sort((a, b) => {
-        const aStatus = STATUS_PRIORITY[String(a.status || a.presence || '').toLowerCase()] ?? 9;
-        const bStatus = STATUS_PRIORITY[String(b.status || b.presence || '').toLowerCase()] ?? 9;
+        const aStatus = STATUS_PRIORITY[String(a?.status || a?.presence || '').toLowerCase()] ?? 9;
+        const bStatus = STATUS_PRIORITY[String(b?.status || b?.presence || '').toLowerCase()] ?? 9;
         if (aStatus !== bStatus) return aStatus - bStatus;
-        return Number(b.score || 0) - Number(a.score || 0);
+        return Number(b?.score || 0) - Number(a?.score || 0);
       })
       .slice(0, 12);
   }, [users]);
@@ -1049,7 +1130,7 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Tv size={16} color="#0f172a" />
                       <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        Danh Sách Kênh Toàn Công Ty ({allChannels.length})
+                        Danh Sách Kênh Toàn Công Ty ({Array.isArray(allChannels) ? allChannels.length : (allChannels?.items?.length || 0)})
                       </h3>
                     </div>
 

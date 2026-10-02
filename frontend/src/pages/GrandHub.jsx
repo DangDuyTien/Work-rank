@@ -31,14 +31,14 @@ export default function GrandHub() {
   const cachedStandings = cachedCurrentGrand?.id ? getCached(CACHE_KEYS.GRAND_STANDINGS(cachedCurrentGrand.id)) : null;
 
   const [grand, setGrand] = useState(() => cachedStandings?.grand || cachedCurrentGrand || null);
-  const [standings, setStandings] = useState(() => cachedStandings?.standings || []);
-  const [individualStandings, setIndividualStandings] = useState(() => cachedStandings?.individualStandings || []);
+  const [standings, setStandings] = useState(() => Array.isArray(cachedStandings?.standings) ? cachedStandings.standings : []);
+  const [individualStandings, setIndividualStandings] = useState(() => Array.isArray(cachedStandings?.individualStandings) ? cachedStandings.individualStandings : []);
   const [individualChampion, setIndividualChampion] = useState(() => cachedStandings?.individualChampion || null);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [timeline, setTimeline] = useState(() => cachedStandings?.timeline || []);
+  const [timeline, setTimeline] = useState(() => Array.isArray(cachedStandings?.timeline) ? cachedStandings.timeline : []);
   const [myTeamJourney, setMyTeamJourney] = useState(() => cachedStandings?.myTeamJourney || null);
-  const [youtubeStandings, setYoutubeStandings] = useState(() => cachedStandings?.youtubeStandings || []);
+  const [youtubeStandings, setYoutubeStandings] = useState(() => Array.isArray(cachedStandings?.youtubeStandings) ? cachedStandings.youtubeStandings : []);
   const [activeTab, setActiveTab] = useState('standings');
   const [loading, setLoading] = useState(!cachedStandings && !cachedCurrentGrand);
   const [refreshing, setRefreshing] = useState(false);

@@ -607,11 +607,21 @@ export default function Leaderboard() {
     return () => clearTimeout(timer);
   }, [searchKeyword]);
 
+  // Helper to normalize ranking responses/cache into { items: [], total: 0 }
+  const normalizeRankingObj = (val) => {
+    if (!val) return { items: [], total: 0 };
+    if (Array.isArray(val)) return { items: val, total: val.length };
+    return {
+      items: Array.isArray(val.items) ? val.items : (Array.isArray(val.data) ? val.data : []),
+      total: Number(val.total || val.count || 0),
+    };
+  };
+
   // Data states
-  const [teamRankings, setTeamRankings] = useState(() => (scopeMode === 'teams' && initialCached ? initialCached : { items: [], total: 0 }));
-  const [memberRankings, setMemberRankings] = useState(() => (scopeMode === 'members' && initialCached ? initialCached : { items: [], total: 0 }));
-  const [activityRankings, setActivityRankings] = useState(() => (scopeMode === 'activity' && initialCached ? initialCached : { items: [], total: 0 }));
-  const [youtubeRankings, setYoutubeRankings] = useState(() => (scopeMode === 'youtube' && initialCached ? initialCached : { items: [], total: 0 }));
+  const [teamRankings, setTeamRankings] = useState(() => (scopeMode === 'teams' ? normalizeRankingObj(initialCached) : { items: [], total: 0 }));
+  const [memberRankings, setMemberRankings] = useState(() => (scopeMode === 'members' ? normalizeRankingObj(initialCached) : { items: [], total: 0 }));
+  const [activityRankings, setActivityRankings] = useState(() => (scopeMode === 'activity' ? normalizeRankingObj(initialCached) : { items: [], total: 0 }));
+  const [youtubeRankings, setYoutubeRankings] = useState(() => (scopeMode === 'youtube' ? normalizeRankingObj(initialCached) : { items: [], total: 0 }));
   const [hallOfFameData, setHallOfFameData] = useState(() => (scopeMode === 'hall-of-fame' && initialCached ? initialCached : { seasonMvps: [], championTeams: [] }));
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
@@ -680,8 +690,10 @@ export default function Leaderboard() {
   }, [scopeMode, socket, currentPeriod, debouncedSearch]);
 
   // Selectors
-  const [seasonList, setSeasonList] = useState(() => getCached(CACHE_KEYS.RANKINGS_META() + ':seasons') || []);
-  const [grandList, setGrandList] = useState(() => getCached(CACHE_KEYS.RANKINGS_META() + ':grands') || []);
+  const rawSeasonList = getCached(CACHE_KEYS.RANKINGS_META() + ':seasons');
+  const [seasonList, setSeasonList] = useState(() => (Array.isArray(rawSeasonList) ? rawSeasonList : []));
+  const rawGrandList = getCached(CACHE_KEYS.RANKINGS_META() + ':grands');
+  const [grandList, setGrandList] = useState(() => (Array.isArray(rawGrandList) ? rawGrandList : []));
 
   const setParam = useCallback((key, value) => {
     const params = new URLSearchParams(searchParams);

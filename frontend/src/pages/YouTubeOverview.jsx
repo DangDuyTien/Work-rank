@@ -77,10 +77,31 @@ export default function YouTubeOverview() {
   // 'compare' (Admin only)
   // 'admin' (Admin only: Add channel, link/unlink, sync)
   const cachedOverview = getCached(CACHE_KEYS.YOUTUBE_OVERVIEW());
-  const cachedTeamLeaderboard = getCached(CACHE_KEYS.YOUTUBE_LEADERBOARD('teams', 'views'));
-  const cachedChannelLeaderboard = getCached(CACHE_KEYS.YOUTUBE_LEADERBOARD('channels', 'views'));
-  const cachedTeamsList = getCached('groups:list');
-  const hasInitialCache = Boolean(cachedOverview || cachedTeamLeaderboard?.length || cachedChannelLeaderboard?.length);
+
+  const rawCachedTeamLeaderboard = getCached(CACHE_KEYS.YOUTUBE_LEADERBOARD('teams', 'views'));
+  const cachedTeamLeaderboard = Array.isArray(rawCachedTeamLeaderboard)
+    ? rawCachedTeamLeaderboard
+    : Array.isArray(rawCachedTeamLeaderboard?.items)
+      ? rawCachedTeamLeaderboard.items
+      : [];
+
+  const rawCachedChannelLeaderboard = getCached(CACHE_KEYS.YOUTUBE_LEADERBOARD('channels', 'views'));
+  const cachedChannelLeaderboard = Array.isArray(rawCachedChannelLeaderboard)
+    ? rawCachedChannelLeaderboard
+    : Array.isArray(rawCachedChannelLeaderboard?.items)
+      ? rawCachedChannelLeaderboard.items
+      : [];
+
+  const rawCachedTeamsList = getCached('groups:list');
+  const cachedTeamsList = Array.isArray(rawCachedTeamsList)
+    ? rawCachedTeamsList
+    : Array.isArray(rawCachedTeamsList?.data?.teams)
+      ? rawCachedTeamsList.data.teams
+      : Array.isArray(rawCachedTeamsList?.data)
+        ? rawCachedTeamsList.data
+        : [];
+
+  const hasInitialCache = Boolean(cachedOverview || cachedTeamLeaderboard.length > 0 || cachedChannelLeaderboard.length > 0);
 
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(!hasInitialCache);
@@ -97,16 +118,16 @@ export default function YouTubeOverview() {
   const [channelSortBy, setChannelSortBy] = useState('views'); // 'views', 'subscribers', 'growth'
   const [channelSearch, setChannelSearch] = useState('');
   const [channelTeamFilter, setChannelTeamFilter] = useState(''); // '' (all), 'unassigned', or teamId
-  const [channelLeaderboard, setChannelLeaderboard] = useState(() => cachedChannelLeaderboard || []);
+  const [channelLeaderboard, setChannelLeaderboard] = useState(() => cachedChannelLeaderboard);
   const [channelLeaderboardLoading, setChannelLeaderboardLoading] = useState(false);
 
   // Team Leaderboard Data
   const [teamSortBy, setTeamSortBy] = useState('views'); // 'views', 'subscribers', 'growth'
-  const [teamLeaderboard, setTeamLeaderboard] = useState(() => cachedTeamLeaderboard || []);
+  const [teamLeaderboard, setTeamLeaderboard] = useState(() => cachedTeamLeaderboard);
   const [teamLeaderboardLoading, setTeamLeaderboardLoading] = useState(false);
 
   // Team comparison data (Admin)
-  const [teamsList, setTeamsList] = useState(() => cachedTeamsList || []);
+  const [teamsList, setTeamsList] = useState(() => cachedTeamsList);
   const [teamAId, setTeamAId] = useState('');
   const [teamBId, setTeamBId] = useState('');
   const [comparison, setComparison] = useState(null);
@@ -179,7 +200,7 @@ export default function YouTubeOverview() {
         params.teamId = channelTeamFilter;
       }
       const data = await fetchWithCache(cacheKey, () => youtube.getLeaderboard(params), { ttl: CACHE_TTL.MEDIUM });
-      const items = data.items || [];
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
       setChannelLeaderboard((prev) => (isDeepEqual(prev, items) ? prev : items));
     } catch (err) {
       console.error('Failed to load YouTube channel leaderboard:', err);
@@ -195,7 +216,7 @@ export default function YouTubeOverview() {
     if (!cached) setTeamLeaderboardLoading(true);
     try {
       const data = await fetchWithCache(cacheKey, () => youtube.getLeaderboard({ view: 'teams', sortBy: teamSortBy, limit: 50 }), { ttl: CACHE_TTL.MEDIUM });
-      const items = data.items || [];
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
       setTeamLeaderboard((prev) => (isDeepEqual(prev, items) ? prev : items));
     } catch (err) {
       console.error('Failed to load YouTube team leaderboard:', err);
@@ -209,7 +230,7 @@ export default function YouTubeOverview() {
     if (!isAdmin) return;
     try {
       const data = await fetchWithCache('youtube:admin_channels', () => youtube.adminGetChannels(), { ttl: CACHE_TTL.SHORT });
-      const items = data.items || [];
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
       setAdminChannels((prev) => (isDeepEqual(prev, items) ? prev : items));
     } catch (err) {
       console.error('Failed to load admin channels:', err);
@@ -220,7 +241,7 @@ export default function YouTubeOverview() {
   const fetchTeams = async () => {
     try {
       const res = await fetchWithCache('groups:list', () => groupsApi.list(), { ttl: CACHE_TTL.STATIC });
-      const teams = res.data?.teams || res.data || [];
+      const teams = Array.isArray(res) ? res : Array.isArray(res?.data?.teams) ? res.data.teams : Array.isArray(res?.data) ? res.data : [];
       setTeamsList((prev) => (isDeepEqual(prev, teams) ? prev : teams));
       if (teams.length >= 2) {
         setTeamAId((prev) => prev || teams[0].id);

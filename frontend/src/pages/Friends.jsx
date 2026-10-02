@@ -133,18 +133,44 @@ export default function Friends() {
   // Tab State
   const [activeTab, setActiveTab] = useState('directory'); // 'directory' | 'team' | 'leaderboard'
 
-  const cachedMembers = getCached('friends:members');
-  const cachedMyTeam = getCached('friends:myTeam');
-  const cachedAllTeams = getCached('friends:allTeams');
-  const cachedRankingRows = getCached('friends:rankingRows');
-  const hasInitialCache = Boolean(cachedMembers && cachedMembers.length > 0);
+  const rawCachedMembers = getCached(createCacheKey('friends:members', { page: 1, limit: 50 })) || getCached('friends:members');
+  const cachedMembers = Array.isArray(rawCachedMembers)
+    ? rawCachedMembers
+    : Array.isArray(rawCachedMembers?.data)
+      ? rawCachedMembers.data
+      : [];
+
+  const rawCachedMyTeam = getCached('friends:myTeam');
+  const cachedMyTeam = Array.isArray(rawCachedMyTeam)
+    ? rawCachedMyTeam[0] || null
+    : Array.isArray(rawCachedMyTeam?.data)
+      ? rawCachedMyTeam.data[0] || null
+      : rawCachedMyTeam || null;
+
+  const rawCachedAllTeams = getCached('friends:allTeams');
+  const cachedAllTeams = Array.isArray(rawCachedAllTeams)
+    ? rawCachedAllTeams
+    : Array.isArray(rawCachedAllTeams?.data)
+      ? rawCachedAllTeams.data
+      : [];
+
+  const rawCachedRankingRows = getCached('friends:rankingRows');
+  const cachedRankingRows = Array.isArray(rawCachedRankingRows)
+    ? rawCachedRankingRows
+    : Array.isArray(rawCachedRankingRows?.items)
+      ? rawCachedRankingRows.items
+      : Array.isArray(rawCachedRankingRows?.data)
+        ? rawCachedRankingRows.data
+        : [];
+
+  const hasInitialCache = Boolean(cachedMembers.length > 0 || cachedAllTeams.length > 0 || cachedRankingRows.length > 0);
 
   // Data States
-  const [memberList, setMemberList] = useState(() => cachedMembers || []);
-  const [memberPagination, setMemberPagination] = useState({ page: 1, limit: 50, total: cachedMembers?.length || 0, totalPages: 1 });
-  const [myTeam, setMyTeam] = useState(() => cachedMyTeam || null);
-  const [allTeams, setAllTeams] = useState(() => cachedAllTeams || []);
-  const [rankingRows, setRankingRows] = useState(() => cachedRankingRows || []);
+  const [memberList, setMemberList] = useState(() => cachedMembers);
+  const [memberPagination, setMemberPagination] = useState({ page: 1, limit: 50, total: cachedMembers.length, totalPages: 1 });
+  const [myTeam, setMyTeam] = useState(() => cachedMyTeam);
+  const [allTeams, setAllTeams] = useState(() => cachedAllTeams);
+  const [rankingRows, setRankingRows] = useState(() => cachedRankingRows);
   
   // Filter States (Directory)
   const [searchQuery, setSearchQuery] = useState('');

@@ -42,14 +42,14 @@ export default function Arena() {
 
   const [season, setSeason] = useState(() => cachedDetails?.season || cachedActive || null);
   const [myTeam, setMyTeam] = useState(() => cachedDetails?.myTeam || null);
-  const [leaderboard, setLeaderboard] = useState(() => cachedDetails?.leaderboard || []);
-  const [individualLeaderboard, setIndividualLeaderboard] = useState(() => cachedDetails?.individualLeaderboard || []);
+  const [leaderboard, setLeaderboard] = useState(() => Array.isArray(cachedDetails?.leaderboard) ? cachedDetails.leaderboard : []);
+  const [individualLeaderboard, setIndividualLeaderboard] = useState(() => Array.isArray(cachedDetails?.individualLeaderboard) ? cachedDetails.individualLeaderboard : []);
   const [individualChampion, setIndividualChampion] = useState(() => cachedDetails?.individualChampion || null);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [challenges, setChallenges] = useState(() => cachedDetails?.challenges || []);
+  const [challenges, setChallenges] = useState(() => Array.isArray(cachedDetails?.challenges) ? cachedDetails.challenges : []);
   const [seasonRules, setSeasonRules] = useState(() => cachedDetails?.seasonRules || null);
-  const [youtubeLeaderboard, setYoutubeLeaderboard] = useState(() => cachedDetails?.youtubeLeaderboard || []);
+  const [youtubeLeaderboard, setYoutubeLeaderboard] = useState(() => Array.isArray(cachedDetails?.youtubeLeaderboard) ? cachedDetails.youtubeLeaderboard : []);
   const [activeTab, setActiveTab] = useState('leaderboard');
   const [loading, setLoading] = useState(!cachedDetails && !cachedActive);
   const [refreshing, setRefreshing] = useState(false);
