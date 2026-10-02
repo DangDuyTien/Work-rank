@@ -65,11 +65,8 @@ test('Computer Activity Tracking & Leaderboard Test Suite', async (t) => {
     const focus50 = computerActivityService.calculateFocusScore(1800, 1800);
     assert.strictEqual(focus50, 52);
 
-    // Test calculateRankScore: actionScore + activeTimeScore + focusBonus
-    // 3600s = 60m. activeTimeScore = Math.min(300, 60 * 2) = 120.
-    // actions = 100 + 50 = 150.
-    // focusBonus = Math.round(100 * 0.5) = 50.
-    // Total = 150 + 120 + 50 = 320.
+    // Test calculateRankScore: total clicks + keystrokes
+    // actions = 100 clicks + 50 keystrokes = 150 pts.
     const score = computerActivityService.calculateRankScore({
       activeSeconds: 3600,
       idleSeconds: 0,
@@ -77,7 +74,7 @@ test('Computer Activity Tracking & Leaderboard Test Suite', async (t) => {
       keyboardCount: 50,
       focusScore: 100,
     });
-    assert.strictEqual(score, 320);
+    assert.strictEqual(score, 150);
   });
 
   await t.test('2. Ingestion: Ingests batches of OS-level activity for User A (VS Code)', async () => {

@@ -457,9 +457,15 @@ export default function ActivityDiagnostics() {
           </div>
           <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 6, color: '#334155' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#64748b' }}>Điểm Năng Động (DB):</span>
+              <span style={{ color: '#64748b' }}>Điểm Năng Động (PTS):</span>
               <strong style={{ color: '#059669', fontSize: 14 }}>
                 {(dbSummary?.activityScore || 0).toLocaleString()} pts
+              </strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#64748b' }}>Thao tác đã lưu:</span>
+              <strong style={{ color: '#0f172a' }}>
+                {(dbSummary?.mouseClicks || 0).toLocaleString()} clicks • {(dbSummary?.keyboardCount || 0).toLocaleString()} phím
               </strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

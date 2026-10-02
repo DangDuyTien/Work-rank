@@ -137,6 +137,8 @@ class WindowsProvider extends ComputerActivityProvider {
     } catch (err) {
       console.warn('[WindowsProvider] Failed to spawn PowerShell tracker:', err.message);
     }
+    this.accumulatedClicks = 0;
+    this.accumulatedKeys = 0;
   }
 
   _processStreamLine(line) {
@@ -144,6 +146,8 @@ class WindowsProvider extends ComputerActivityProvider {
     if (parts.length >= 2) {
       const idleSecs = parseInt(parts[0], 10);
       const rawProc = parts[1];
+      const clicks = parts.length >= 3 ? parseInt(parts[2], 10) || 0 : 0;
+      const keys = parts.length >= 4 ? parseInt(parts[3], 10) || 0 : 0;
 
       if (!isNaN(idleSecs)) {
         this.lastIdleCheck = Math.max(0, idleSecs);
@@ -153,6 +157,9 @@ class WindowsProvider extends ComputerActivityProvider {
       const friendlyName = normalizeWindowsApp(rawProc);
       this.lastApp = friendlyName;
       this.lastCategory = categorizeApp(friendlyName);
+
+      this.accumulatedClicks += clicks;
+      this.accumulatedKeys += keys;
     }
   }
 
@@ -160,11 +167,18 @@ class WindowsProvider extends ComputerActivityProvider {
    * Take periodic sample
    */
   async sample() {
+    const clicks = this.accumulatedClicks;
+    const keys = this.accumulatedKeys;
+    this.accumulatedClicks = 0;
+    this.accumulatedKeys = 0;
+
     return {
       state: this.currentState,
       idleSecondsCurrent: this.lastIdleCheck,
       activeApp: this.lastApp,
       appCategory: this.lastCategory,
+      mouseClicks: clicks,
+      keyboardCount: keys,
       timestamp: new Date(),
     };
   }

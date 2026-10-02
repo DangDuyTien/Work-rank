@@ -4,3 +4,4 @@ dist/
 *.log
 desktop-app/build/
 desktop-app/release/
+__pycache__/

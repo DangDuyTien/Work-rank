@@ -21,6 +21,8 @@ class AgentBuffer {
     this.currentBatch = {
       activeSeconds: 0,
       idleSeconds: 0,
+      mouseClicks: 0,
+      keyboardCount: 0,
       appTime: {}, // { appName: seconds }
       appCategory: {}, // { appName: category }
       currentState: 'ACTIVE',
@@ -74,9 +76,12 @@ class AgentBuffer {
    * Ingest a 1-second sample from Provider
    */
   addSample(sample) {
-    const { state, activeApp, appCategory } = sample;
+    const { state, activeApp, appCategory, mouseClicks = 0, keyboardCount = 0 } = sample;
 
     this.currentBatch.currentState = state;
+    this.currentBatch.mouseClicks = (this.currentBatch.mouseClicks || 0) + (Number(mouseClicks) || 0);
+    this.currentBatch.keyboardCount = (this.currentBatch.keyboardCount || 0) + (Number(keyboardCount) || 0);
+
     if (state === 'ACTIVE') {
       this.currentBatch.activeSeconds += 1;
       const app = activeApp || 'Unknown';
@@ -93,10 +98,15 @@ class AgentBuffer {
   }
 
   /**
-   * Commit current 15s window into an event
+   * Commit current window into an event
    */
   commitCurrentBatch() {
-    if (this.currentBatch.activeSeconds === 0 && this.currentBatch.idleSeconds === 0) {
+    if (
+      this.currentBatch.activeSeconds === 0 &&
+      this.currentBatch.idleSeconds === 0 &&
+      this.currentBatch.mouseClicks === 0 &&
+      this.currentBatch.keyboardCount === 0
+    ) {
       return;
     }
 
@@ -120,8 +130,8 @@ class AgentBuffer {
       context: 'COMPUTER',
       activeSeconds: this.currentBatch.activeSeconds,
       idleSeconds: this.currentBatch.idleSeconds,
-      mouseClicks: 0, // Pure telemetry - strictly NO intrusive capture
-      keyboardCount: 0, // Strictly NO keylogging
+      mouseClicks: this.currentBatch.mouseClicks || 0,
+      keyboardCount: this.currentBatch.keyboardCount || 0,
       occurredAt: new Date().toISOString(),
     };
 
@@ -131,6 +141,8 @@ class AgentBuffer {
     this.currentBatch = {
       activeSeconds: 0,
       idleSeconds: 0,
+      mouseClicks: 0,
+      keyboardCount: 0,
       appTime: {},
       appCategory: {},
       currentState: this.currentBatch.currentState,

@@ -1,6 +1,7 @@
 'use strict';
 
-const { exec } = require('child_process');
+const path = require('path');
+const { spawn, exec } = require('child_process');
 const ComputerActivityProvider = require('./ComputerActivityProvider');
 
 /**
@@ -102,10 +103,96 @@ class MacOSProvider extends ComputerActivityProvider {
     this.lastApp = 'Unknown';
     this.lastCategory = 'OTHER';
     this.currentState = 'ACTIVE';
+
+    this.accumulatedClicks = 0;
+    this.accumulatedKeys = 0;
+
+    this.pythonProcess = null;
+    this.lineBuffer = '';
+    this.isStopping = false;
+  }
+
+  async start() {
+    this.isStopping = false;
+    this._startPythonStream();
+  }
+
+  async stop() {
+    this.isStopping = true;
+    if (this.pythonProcess) {
+      try {
+        this.pythonProcess.kill('SIGTERM');
+      } catch {}
+      this.pythonProcess = null;
+    }
+  }
+
+  _startPythonStream() {
+    if (this.isStopping) return;
+
+    const scriptPath = path.resolve(__dirname, 'macos-tracker.py');
+    try {
+      this.pythonProcess = spawn('python3', ['-u', scriptPath], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      this.pythonProcess.stdout.on('data', (data) => {
+        this.lineBuffer += data.toString('utf8');
+        const lines = this.lineBuffer.split(/\r?\n/);
+        this.lineBuffer = lines.pop(); // Keep incomplete tail
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          this._processStreamLine(trimmed);
+        }
+      });
+
+      this.pythonProcess.stderr.on('data', () => {
+        // Silently swallow python logs
+      });
+
+      this.pythonProcess.on('exit', () => {
+        this.pythonProcess = null;
+        if (!this.isStopping) {
+          setTimeout(() => this._startPythonStream(), 2000);
+        }
+      });
+
+      this.pythonProcess.on('error', (err) => {
+        console.warn('[MacOSProvider] Python tracker spawn error:', err.message);
+        this.pythonProcess = null;
+      });
+    } catch (err) {
+      console.warn('[MacOSProvider] Failed to spawn Python tracker:', err.message);
+    }
+  }
+
+  _processStreamLine(line) {
+    const parts = line.split('|');
+    if (parts.length >= 2) {
+      const idleSecs = parseInt(parts[0], 10);
+      const rawApp = parts[1];
+      const clicks = parts.length >= 3 ? parseInt(parts[2], 10) || 0 : 0;
+      const keys = parts.length >= 4 ? parseInt(parts[3], 10) || 0 : 0;
+
+      if (!isNaN(idleSecs)) {
+        this.lastIdleCheck = Math.max(0, idleSecs);
+        this.currentState = this.lastIdleCheck >= this.idleThresholdSeconds ? 'IDLE' : 'ACTIVE';
+      }
+
+      if (rawApp) {
+        this.lastApp = rawApp;
+        this.lastCategory = categorizeApp(rawApp);
+      }
+
+      this.accumulatedClicks += clicks;
+      this.accumulatedKeys += keys;
+    }
   }
 
   /**
-   * Run a shell command returning a Promise
+   * Run a fallback shell command returning a Promise
    */
   _execCmd(cmd) {
     return new Promise((resolve) => {
@@ -120,7 +207,7 @@ class MacOSProvider extends ComputerActivityProvider {
   }
 
   /**
-   * Get system idle time in seconds from macOS IOHIDSystem
+   * Fallback system idle query
    */
   async getSystemIdleSeconds() {
     const output = await this._execCmd(
@@ -131,45 +218,24 @@ class MacOSProvider extends ComputerActivityProvider {
   }
 
   /**
-   * Get current frontmost application process name
-   */
-  async getFrontmostApp() {
-    const script = "osascript -e 'tell application \"System Events\" to get name of first application process whose frontmost is true'";
-    const appName = await this._execCmd(script);
-    return appName || 'Finder';
-  }
-
-  /**
-   * Take a periodic sample (e.g. 1-second interval)
+   * Take a periodic sample (1-second interval)
    */
   async sample() {
-    const idleSeconds = await this.getSystemIdleSeconds();
-    const isIdle = idleSeconds >= this.idleThresholdSeconds;
-    this.currentState = isIdle ? 'IDLE' : 'ACTIVE';
-
-    const activeApp = await this.getFrontmostApp();
-    const appCategory = categorizeApp(activeApp);
-
-    this.lastIdleCheck = idleSeconds;
-    this.lastApp = activeApp;
-    this.lastCategory = appCategory;
+    // If stream is active, consume accumulated deltas
+    const clicks = this.accumulatedClicks;
+    const keys = this.accumulatedKeys;
+    this.accumulatedClicks = 0;
+    this.accumulatedKeys = 0;
 
     return {
       state: this.currentState,
-      idleSecondsCurrent: idleSeconds,
-      activeApp,
-      appCategory,
+      idleSecondsCurrent: this.lastIdleCheck,
+      activeApp: this.lastApp,
+      appCategory: this.lastCategory,
+      mouseClicks: clicks,
+      keyboardCount: keys,
       timestamp: new Date(),
     };
-  }
-
-  async start() {
-    // Warmup sample
-    await this.sample();
-  }
-
-  async stop() {
-    // Cleanup if needed
   }
 }
 

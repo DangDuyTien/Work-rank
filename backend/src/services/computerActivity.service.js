@@ -18,24 +18,9 @@ function calculateFocusScore(activeSeconds, idleSeconds) {
 }
 
 function calculateRankScore(stats = {}) {
-  const activeSeconds = Math.max(0, Number(stats.activeSeconds) || 0);
-  const idleSeconds = Math.max(0, Number(stats.idleSeconds) || 0);
   const keystrokeCount = Math.max(0, Number(stats.keystrokeCount || stats.keyboardCount) || 0);
   const mouseClickCount = Math.max(0, Number(stats.mouseClickCount || stats.mouseClicks) || 0);
-  const actionCount = keystrokeCount + mouseClickCount;
-
-  if (!activeSeconds && !idleSeconds && !actionCount) return 0;
-
-  const focusScore = stats.focusScore !== undefined
-    ? Number(stats.focusScore)
-    : calculateFocusScore(activeSeconds, idleSeconds);
-
-  const activeMinutes = activeSeconds / 60;
-  const actionScore = Math.round(actionCount);
-  const activeTimeScore = Math.round(Math.min(300, activeMinutes * 2));
-  const focusBonus = Math.round(focusScore * 0.5);
-
-  return Math.max(0, actionScore + activeTimeScore + focusBonus);
+  return Math.max(0, Math.round(keystrokeCount + mouseClickCount));
 }
 
 function getTodayDateString() {
@@ -147,6 +132,8 @@ class ComputerActivityService {
 
     let finalScore = 0;
     let finalActiveSeconds = 0;
+    let finalClicks = 0;
+    let finalKeys = 0;
 
     // Execute atomic transaction to prevent lost updates
     const t = await sequelize.transaction();
@@ -166,8 +153,6 @@ class ComputerActivityService {
           keyboardCount: batchKeyboardCount,
           focusScore: calculateFocusScore(batchActiveSeconds, batchIdleSeconds),
           activityScore: calculateRankScore({
-            activeSeconds: batchActiveSeconds,
-            idleSeconds: batchIdleSeconds,
             mouseClicks: batchMouseClicks,
             keyboardCount: batchKeyboardCount,
           }),
@@ -194,11 +179,8 @@ class ComputerActivityService {
 
         const focusScore = calculateFocusScore(newActive, newIdle);
         const activityScore = calculateRankScore({
-          activeSeconds: newActive,
-          idleSeconds: newIdle,
           mouseClicks: newClicks,
           keyboardCount: newKeys,
-          focusScore,
         });
 
         await dailyStat.update({
@@ -213,9 +195,13 @@ class ComputerActivityService {
 
         finalScore = activityScore;
         finalActiveSeconds = newActive;
+        finalClicks = newClicks;
+        finalKeys = newKeys;
       } else {
         finalScore = dailyStat.activityScore;
         finalActiveSeconds = dailyStat.activeSeconds;
+        finalClicks = dailyStat.mouseClicks;
+        finalKeys = dailyStat.keyboardCount;
       }
 
       await t.commit();
@@ -252,6 +238,8 @@ class ComputerActivityService {
           userId: Number(userId),
           activityScore: finalScore,
           activeMinutes: Math.round(finalActiveSeconds / 60),
+          mouseClicks: finalClicks,
+          keyboardCount: finalKeys,
           rank: currentRank,
           topApp: lastEvent.activeApp,
         });
@@ -265,6 +253,8 @@ class ComputerActivityService {
       processed: sanitizedEvents.length,
       statDate: todayStr,
       activityScore: finalScore,
+      mouseClicks: finalClicks,
+      keyboardCount: finalKeys,
       rank: currentRank,
       activeMinutes: Math.round(finalActiveSeconds / 60),
     };
@@ -440,6 +430,8 @@ class ComputerActivityService {
         rank: higherRankCount + 1,
         activityScore: dailyStat.activityScore,
         activeMinutes: Math.round(dailyStat.activeSeconds / 60),
+        mouseClicks: dailyStat.mouseClicks || 0,
+        keyboardCount: dailyStat.keyboardCount || 0,
         rankChange: 0,
         topApp,
       };
@@ -450,6 +442,8 @@ class ComputerActivityService {
       rank: null,
       activityScore: 0,
       activeMinutes: 0,
+      mouseClicks: 0,
+      keyboardCount: 0,
       rankChange: 0,
       topApp: null,
     };

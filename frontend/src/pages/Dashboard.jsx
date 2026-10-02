@@ -145,6 +145,18 @@ export default function Dashboard() {
     return null;
   }, [myActivity?.activityScore, myActivity?.activeMinutes]);
 
+  const avgApm = useMemo(() => {
+    const score = Number(myActivity?.activityScore || 0);
+    const mins = Number(myActivity?.activeMinutes || 0);
+    if (mins >= 1 && score > 0) {
+      return Math.round(score / mins);
+    }
+    if (ptsPerHour) {
+      return Math.round(ptsPerHour / 60);
+    }
+    return null;
+  }, [myActivity?.activityScore, myActivity?.activeMinutes, ptsPerHour]);
+
   const checkAgentStatus = useCallback(async () => {
     const status = await desktopAgentIpc.checkStatus();
     setAgentStatus(status);
@@ -568,22 +580,32 @@ export default function Dashboard() {
           </div>
 
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Điểm Năng Động</div>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Điểm Năng Động (PTS)</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#059669' }}>
               {(myActivity?.activityScore || 0).toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              Tổng hợp thời gian & độ tập trung
+              1 click = 1 pt • 1 phím = 1 pt
             </div>
           </div>
 
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Tốc độ tích lũy</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#0284c7' }}>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Chi tiết thao tác</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
+              {(myActivity?.mouseClicks || clicks || 0).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • {(myActivity?.keyboardCount || keyboard || 0).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+              Tổng thao tác chuột & bàn phím
+            </div>
+          </div>
+
+          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Tốc độ trung bình</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#0284c7' }}>
               {ptsPerHour ? `${ptsPerHour.toLocaleString()} pts/h` : (isTrackingActive ? 'Đang tính...' : '0 pts/h')}
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              Tốc độ ghi nhận PTS / giờ
+              {avgApm ? `~${avgApm} thao tác / phút (APM)` : 'Tốc độ ghi nhận trung bình'}
             </div>
           </div>
 
@@ -594,16 +616,6 @@ export default function Dashboard() {
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               {myActivity?.topApp ? `Chủ yếu: ${myActivity.topApp}` : 'Ghi nhận toàn máy tính'}
-            </div>
-          </div>
-
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Hoạt động cuối</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: isTrackingActive ? '#16a34a' : '#64748b', marginTop: 4 }}>
-              {isTrackingActive ? (lastEventTime ? formatRelativeTime(lastEventTime) : 'Vừa xong') : 'Tạm dừng'}
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              {clicks || 0} clicks • {keyboard || 0} phím (web)
             </div>
           </div>
         </div>
