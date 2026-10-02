@@ -1,598 +1,587 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { TrendingUp, Activity, Zap, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, Activity, Zap, Clock, ShieldCheck, ArrowUp } from 'lucide-react';
 
 const WIDTH = 760;
-const HEIGHT = 160;
-const PAD_LEFT = 38;
-const PAD_RIGHT = 68;
-const PAD_TOP = 20;
-const PAD_BOTTOM = 24;
+const HEIGHT = 220;
+const PAD_LEFT = 52;
+const PAD_RIGHT = 32;
+const PAD_TOP = 24;
+const PAD_BOTTOM = 36;
 
-const LINE_COLORS = [
-  '#f59e0b', // Amber / Gold (Top 1)
-  '#64748b', // Slate / Silver (Top 2)
-  '#d97706', // Bronze (Top 3)
-  '#10b981', // Emerald (Top 4)
-  '#0284c7', // Sky Blue (Top 5)
-  '#8b5cf6', // Violet
-];
-
-function fmtNum(n) {
-  return (Number(n) || 0).toLocaleString();
+function formatNumber(n) {
+  const num = Number(n) || 0;
+  if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return num.toLocaleString();
 }
 
-function getShortName(fullName = '') {
-  if (!fullName) return 'Thành viên';
-  const parts = String(fullName).trim().split(/\s+/);
-  if (parts.length <= 2) return fullName;
-  return `${parts[0]} ${parts[parts.length - 1]}`;
+function formatFullTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function formatShortTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function CompactLiveWave({
   rankings = [],
   liveSnapshot = null,
   currentUser = null,
-  onSelectUser = null,
   embedded = false,
 }) {
-  const [historySlices, setHistorySlices] = useState([]);
-  const [latestOvertake, setLatestOvertake] = useState(null);
+  const [historyPoints, setHistoryPoints] = useState([]);
   const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [rankJumpNotice, setRankJumpNotice] = useState(null);
 
-  const prevRanksRef = useRef(new Map());
-  const overtakeTimeoutRef = useRef(null);
+  const prevRankRef = useRef(null);
+  const jumpTimerRef = useRef(null);
 
-  // 1. Ingest real-time snapshot / ranking update (~1s tick)
+  // Extract current user info & current score
+  const myId = currentUser ? Number(currentUser.id || currentUser.userId) : null;
+
+  const currentSummary = useMemo(() => {
+    if (!Array.isArray(rankings) || rankings.length === 0) {
+      return { score: 0, rank: null, name: currentUser?.name || 'Bạn', clicks: 0, keys: 0 };
+    }
+    const found = myId
+      ? rankings.find((r) => Number(r.userId || r.user?.id || r.id) === myId)
+      : rankings[0];
+
+    if (found) {
+      return {
+        score: Number(found.activityScore ?? found.score ?? 0),
+        rank: found.rank ? Number(found.rank) : null,
+        name: found.user?.fullName || found.user?.name || found.name || 'Bạn',
+        clicks: Number(found.mouseClicks || 0),
+        keys: Number(found.keyboardCount || 0),
+      };
+    }
+    return { score: 0, rank: null, name: currentUser?.name || 'Bạn', clicks: 0, keys: 0 };
+  }, [rankings, myId, currentUser]);
+
+  // Track rank jumps & notify cleanly
   useEffect(() => {
-    if (!rankings || rankings.length === 0) return;
+    if (currentSummary.rank && prevRankRef.current !== null) {
+      if (currentSummary.rank < prevRankRef.current) {
+        // Climbed UP
+        const delta = prevRankRef.current - currentSummary.rank;
+        setRankJumpNotice({
+          newRank: currentSummary.rank,
+          oldRank: prevRankRef.current,
+          delta,
+          time: new Date().toLocaleTimeString('vi-VN'),
+        });
 
-    const now = Date.now();
-    const timeStr = new Date(now).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    // Build current rank map
-    const currentRanks = new Map();
-    const currentScoreMap = new Map();
-    const nameMap = new Map();
-
-    rankings.forEach((item, idx) => {
-      const uid = Number(item.userId || item.user?.id || item.id);
-      const rank = Number(item.rank) || idx + 1;
-      const score = Number(item.activityScore ?? item.score ?? 0);
-      const name = item.user?.fullName || item.user?.name || item.fullName || item.name || `User #${uid}`;
-
-      currentRanks.set(uid, rank);
-      currentScoreMap.set(uid, score);
-      nameMap.set(uid, name);
-    });
-
-    // Detect overtake events compared to previous tick
-    const prevRanks = prevRanksRef.current;
-    if (prevRanks.size > 0) {
-      let detectedOvertake = null;
-
-      for (const [uid, newRank] of currentRanks.entries()) {
-        const oldRank = prevRanks.get(uid);
-        if (oldRank !== undefined && newRank < oldRank) {
-          // User climbed UP in ranks!
-          const delta = oldRank - newRank;
-          const climberName = nameMap.get(uid);
-
-          // Find who they overtook (the user who was previously at newRank)
-          let passedName = null;
-          for (const [otherUid, otherOldRank] of prevRanks.entries()) {
-            if (otherUid !== uid && otherOldRank === newRank) {
-              passedName = nameMap.get(otherUid);
-              break;
-            }
-          }
-
-          detectedOvertake = {
-            id: `${uid}-${now}`,
-            climberId: uid,
-            climberName: getShortName(climberName),
-            fullClimberName: climberName,
-            passedName: passedName ? getShortName(passedName) : null,
-            newRank,
-            oldRank,
-            delta,
-            time: timeStr,
-          };
-          break; // Keep the primary overtake
-        }
-      }
-
-      if (detectedOvertake) {
-        setLatestOvertake(detectedOvertake);
-        if (overtakeTimeoutRef.current) clearTimeout(overtakeTimeoutRef.current);
-        overtakeTimeoutRef.current = setTimeout(() => {
-          setLatestOvertake(null);
+        if (jumpTimerRef.current) clearTimeout(jumpTimerRef.current);
+        jumpTimerRef.current = setTimeout(() => {
+          setRankJumpNotice(null);
         }, 4500);
       }
     }
-
-    // Update prevRanks reference
-    prevRanksRef.current = new Map(currentRanks);
-
-    // Append to rolling history buffer (keep last 25 slices)
-    setHistorySlices((prev) => {
-      const slice = {
-        timestamp: now,
-        timeStr,
-        ranks: currentRanks,
-        scores: currentScoreMap,
-      };
-
-      const updated = [...prev, slice];
-      if (updated.length > 25) {
-        return updated.slice(updated.length - 25);
-      }
-      return updated;
-    });
-  }, [rankings, liveSnapshot]);
+    if (currentSummary.rank) {
+      prevRankRef.current = currentSummary.rank;
+    }
+  }, [currentSummary.rank]);
 
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
-      if (overtakeTimeoutRef.current) clearTimeout(overtakeTimeoutRef.current);
+      if (jumpTimerRef.current) clearTimeout(jumpTimerRef.current);
     };
   }, []);
 
-  // 2. Select top contenders to track (Top 4-5 contenders + Current User if outside top 5)
-  const contenders = useMemo(() => {
-    if (!rankings || rankings.length === 0) return [];
+  // Ingest Real-time Tick into the Rolling History Buffer
+  useEffect(() => {
+    const now = Date.now();
+    const curScore = currentSummary.score;
+    const curRank = currentSummary.rank;
 
-    const topList = rankings.slice(0, 5);
-    const myId = currentUser ? Number(currentUser.id) : null;
-    const isMeInTop = topList.some((item) => Number(item.userId || item.user?.id || item.id) === myId);
-
-    if (myId && !isMeInTop) {
-      const myItem = rankings.find((item) => Number(item.userId || item.user?.id || item.id) === myId);
-      if (myItem) {
-        topList.push(myItem);
+    setHistoryPoints((prev) => {
+      // If history is empty, populate initial baseline ramp so chart is rich from the start
+      if (prev.length === 0) {
+        const initial = [];
+        const baseScore = Math.max(0, curScore - 8);
+        for (let i = 8; i >= 0; i--) {
+          const t = now - i * 15000; // 15s intervals back
+          const stepScore = Math.round(baseScore + ((curScore - baseScore) * (8 - i)) / 8);
+          initial.push({
+            timestamp: t,
+            score: stepScore,
+            rank: curRank,
+            timeStr: formatFullTime(t),
+            shortTime: formatShortTime(t),
+          });
+        }
+        return initial;
       }
-    }
 
-    return topList.map((item, idx) => {
-      const uid = Number(item.userId || item.user?.id || item.id);
-      const isMe = uid === myId;
-      return {
-        userId: uid,
-        name: item.user?.fullName || item.user?.name || item.name || `User #${uid}`,
-        shortName: getShortName(item.user?.fullName || item.user?.name || item.name),
-        currentRank: Number(item.rank) || idx + 1,
-        score: Number(item.activityScore ?? item.score ?? 0),
-        color: isMe ? '#0284c7' : LINE_COLORS[idx % LINE_COLORS.length],
-        isMe,
+      const last = prev[prev.length - 1];
+      // Only append if at least 1.5s has passed or score changed
+      if (now - last.timestamp < 1500 && last.score === curScore) {
+        return prev;
+      }
+
+      const newPoint = {
+        timestamp: now,
+        score: curScore,
+        rank: curRank,
+        timeStr: formatFullTime(now),
+        shortTime: formatShortTime(now),
       };
-    });
-  }, [rankings, currentUser]);
 
-  // 3. Compute SVG coordinate paths & milestone points
-  const { contenderPaths, milestonePoints, minRankScale, maxRankScale } = useMemo(() => {
-    if (historySlices.length === 0 || contenders.length === 0) {
-      return { contenderPaths: [], milestonePoints: [], minRankScale: 1, maxRankScale: 5 };
+      const updated = [...prev, newPoint];
+      // Keep up to 35 rolling points (~5-10 minutes window)
+      if (updated.length > 35) {
+        return updated.slice(updated.length - 35);
+      }
+      return updated;
+    });
+  }, [currentSummary.score, currentSummary.rank, liveSnapshot]);
+
+  // Compute Scaled Coordinates, Gridlines, Ticks & Curve Path
+  const { points, linePath, areaPath, yTicks, xTicks, minScore, maxScore } = useMemo(() => {
+    if (historyPoints.length === 0) {
+      return {
+        points: [],
+        linePath: '',
+        areaPath: '',
+        yTicks: [],
+        xTicks: [],
+        minScore: 0,
+        maxScore: 100,
+      };
     }
 
     const innerWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
     const innerHeight = HEIGHT - PAD_TOP - PAD_BOTTOM;
-    const sliceCount = historySlices.length;
+    const total = historyPoints.length;
 
-    // Determine rank range to scale Y axis gracefully (Rank 1 at top, max rank at bottom)
-    let maxRankObserved = 5;
-    historySlices.forEach((slice) => {
-      contenders.forEach((c) => {
-        const r = slice.ranks.get(c.userId);
-        if (r && r > maxRankObserved) maxRankObserved = r;
-      });
+    const scores = historyPoints.map((p) => p.score);
+    const rawMax = Math.max(...scores);
+    const rawMin = Math.min(...scores);
+
+    // Compute nice human-readable Y-axis boundaries
+    let computedMax = Math.max(10, Math.ceil(rawMax * 1.15));
+    if (computedMax < 50) computedMax = 50;
+    const computedMin = 0; // Always anchor at 0 for accurate relative perception
+    const range = Math.max(1, computedMax - computedMin);
+
+    // Coordinate mapping
+    const pts = historyPoints.map((p, idx) => {
+      const x = PAD_LEFT + (total <= 1 ? innerWidth / 2 : (idx / (total - 1)) * innerWidth);
+      const normalized = (p.score - computedMin) / range;
+      const y = PAD_TOP + innerHeight - normalized * innerHeight;
+      return {
+        ...p,
+        x,
+        y,
+        index: idx,
+      };
     });
-    const maxRank = Math.min(15, Math.max(5, maxRankObserved + 1));
-    const minRank = 1;
-    const rankRange = maxRank - minRank || 1;
 
-    const getY = (rank) => {
-      const normalized = (rank - minRank) / rankRange; // 0 for rank 1, 1 for max rank
-      return PAD_TOP + normalized * innerHeight; // Top is rank 1
-    };
-
-    const getX = (sliceIdx) => {
-      if (sliceCount <= 1) return PAD_LEFT + innerWidth / 2;
-      return PAD_LEFT + (sliceIdx / (sliceCount - 1)) * innerWidth;
-    };
-
-    const paths = [];
-    const milestones = [];
-
-    contenders.forEach((contender) => {
-      const points = [];
-      let prevSliceRank = null;
-
-      historySlices.forEach((slice, idx) => {
-        const rank = slice.ranks.get(contender.userId) ?? contender.currentRank;
-        const score = slice.scores.get(contender.userId) ?? contender.score;
-        const x = getX(idx);
-        const y = getY(rank);
-
-        // Check if rank jumped at this step
-        let delta = 0;
-        if (prevSliceRank !== null && rank !== prevSliceRank) {
-          delta = prevSliceRank - rank; // positive means jumped up
-          milestones.push({
-            userId: contender.userId,
-            name: contender.name,
-            shortName: contender.shortName,
-            color: contender.color,
-            x,
-            y,
-            rank,
-            score,
-            delta,
-            time: slice.timeStr,
-            isMe: contender.isMe,
-          });
-        }
-        prevSliceRank = rank;
-
-        points.push({ x, y, rank, score, time: slice.timeStr });
-      });
-
-      if (points.length > 0) {
-        // Construct smooth curve path
-        let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
-        for (let i = 1; i < points.length; i++) {
-          const prev = points[i - 1];
-          const curr = points[i];
-          const cpx = (prev.x + curr.x) / 2;
-          d += ` C ${cpx.toFixed(1)} ${prev.y.toFixed(1)}, ${cpx.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
-        }
-
-        const lastPoint = points[points.length - 1];
-
-        paths.push({
-          contender,
-          d,
-          points,
-          lastPoint,
-        });
+    // Construct smooth Cubic Bézier line
+    let line = '';
+    if (pts.length > 0) {
+      line = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i];
+        const cpX = (prev.x + curr.x) / 2;
+        line += ` C ${cpX.toFixed(1)} ${prev.y.toFixed(1)}, ${cpX.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
       }
-    });
+    }
+
+    // Construct shaded area path below the line
+    let area = '';
+    if (pts.length > 0 && line) {
+      const baseY = HEIGHT - PAD_BOTTOM;
+      const first = pts[0];
+      const last = pts[pts.length - 1];
+      area = `${line} L ${last.x.toFixed(1)} ${baseY} L ${first.x.toFixed(1)} ${baseY} Z`;
+    }
+
+    // Y-axis 4 ticks
+    const tickSteps = 4;
+    const yTickList = [];
+    for (let i = 0; i <= tickSteps; i++) {
+      const val = Math.round(computedMin + (range * i) / tickSteps);
+      const y = PAD_TOP + innerHeight - (i / tickSteps) * innerHeight;
+      yTickList.push({ val, label: formatNumber(val), y });
+    }
+
+    // X-axis 5 sample timestamps
+    const xTickList = [];
+    if (pts.length > 1) {
+      const step = Math.max(1, Math.floor((pts.length - 1) / 4));
+      for (let i = 0; i < pts.length; i += step) {
+        xTickList.push(pts[i]);
+      }
+      if (xTickList[xTickList.length - 1].index !== pts.length - 1) {
+        xTickList.push(pts[pts.length - 1]);
+      }
+    } else if (pts.length === 1) {
+      xTickList.push(pts[0]);
+    }
 
     return {
-      contenderPaths: paths,
-      milestonePoints: milestones,
-      minRankScale: minRank,
-      maxRankScale: maxRank,
+      points: pts,
+      linePath: line,
+      areaPath: area,
+      yTicks: yTickList,
+      xTicks: xTickList,
+      minScore: computedMin,
+      maxScore: computedMax,
     };
-  }, [historySlices, contenders]);
+  }, [historyPoints]);
 
-  // Active status count from liveSnapshot or rankings
-  const activeCount = useMemo(() => {
-    if (liveSnapshot && typeof liveSnapshot.activeSurfers === 'number') {
-      return liveSnapshot.activeSurfers;
-    }
-    return (rankings || []).filter((r) => r.activeSecondsToday > 0 || r.activityScore > 0).length;
-  }, [liveSnapshot, rankings]);
+  const latestPoint = points.length > 0 ? points[points.length - 1] : null;
 
   return (
     <div
       style={
         embedded
           ? {
-              background: '#f8fafc',
+              background: '#ffffff',
               border: '1px solid #e2e8f0',
-              borderRadius: 6,
-              padding: '12px 16px 12px',
+              borderRadius: 0,
+              padding: '16px 18px 14px',
               position: 'relative',
-              overflow: 'hidden',
               marginTop: 14,
             }
           : {
               background: '#ffffff',
-              border: '1px solid rgba(15,23,42,0.08)',
-              borderRadius: 6,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-              padding: '14px 18px 12px',
+              border: '1px solid #e2e8f0',
+              borderRadius: 0,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+              padding: '18px 20px 16px',
               position: 'relative',
-              overflow: 'hidden',
             }
       }
     >
-      {/* ── HEADER: TITLE, OVERTAKE TICKER & LIVE BADGE ── */}
+      {/* ── HEADER: TITLE, STATS SUMMARY & LIVE PULSE ── */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 10,
           flexWrap: 'wrap',
-          gap: 8,
+          gap: 12,
+          marginBottom: 14,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 4,
-              background: 'rgba(5, 150, 105, 0.08)',
-              color: '#059669',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <TrendingUp size={15} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
-                Chuyển Động Thứ Hạng Realtime (Live Wave)
-              </span>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+              Biểu đồ độ năng động theo thời gian
+            </span>
+
+            {/* Rank jump indicator */}
+            {rankJumpNotice && (
               <span
                 style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#059669',
-                  background: 'rgba(5, 150, 105, 0.08)',
-                  padding: '1px 6px',
-                  borderRadius: 3,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#15803d',
+                  background: '#dcfce7',
+                  border: '1px solid #86efac',
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  animation: 'pulse 1.5s infinite',
                 }}
               >
-                <span
-                  style={{
-                    width: 5,
-                    height: 5,
-                    borderRadius: '50%',
-                    background: '#059669',
-                    boxShadow: '0 0 0 2px rgba(5,150,105,0.25)',
-                  }}
-                />
-                LIVE ~1s
+                <ArrowUp size={12} />
+                <span>
+                  Đã tăng lên hạng #{rankJumpNotice.newRank} (+{rankJumpNotice.delta} bậc)
+                </span>
               </span>
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>
-              Biểu đồ trực tiếp vị trí đua top & sự kiện vượt hạng toàn hệ thống
-            </div>
+            )}
           </div>
-
-          {/* OVERTAKE / VƯỢT HẠNG SUBTLE RIBBON */}
-          {latestOvertake && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 11,
-                fontWeight: 600,
-                color: '#059669',
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                padding: '3px 9px',
-                borderRadius: 12,
-                marginLeft: 10,
-                animation: 'fadeIn 0.25s ease-out',
-              }}
-            >
-              <Zap size={12} color="#059669" />
-              <span>
-                {latestOvertake.climberName}{' '}
-                {latestOvertake.passedName
-                  ? `vừa vượt ${latestOvertake.passedName}`
-                  : `vừa tăng +${latestOvertake.delta} bậc`}{' '}
-                (#{latestOvertake.newRank})
-              </span>
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+            Nhịp độ tích lũy điểm PTS và thao tác của bạn trong phiên làm việc
+          </div>
         </div>
 
-        {/* Right Info: Online count & Time Window */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#64748b' }}>
-          <span>
-            <strong style={{ color: '#0f172a' }}>{activeCount}</strong> thành viên đang hoạt động
-          </span>
-          <span style={{ color: '#cbd5e1' }}>•</span>
-          <span>Rolling 25s</span>
+        {/* Top Right Controls & Live Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#047857',
+              background: '#ecfdf5',
+              border: '1px solid #a7f3d0',
+              padding: '4px 10px',
+              borderRadius: 4,
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: '#10b981',
+                boxShadow: '0 0 6px #10b981',
+                display: 'inline-block',
+              }}
+            />
+            <span>LIVE REALTIME</span>
+          </div>
         </div>
       </div>
 
-      {/* ── CHART SVG: COMPACT LINE & WAVE TRAJECTORIES ── */}
-      <div style={{ position: 'relative', width: '100%', height: 160 }}>
+      {/* ── MAIN SVG LINE CHART ── */}
+      <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          style={{ width: '100%', height: '100%', overflow: 'visible', display: 'block' }}
+          role="img"
+          aria-label="Realtime Activity Points Chart"
+          style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 240 }}
+          onMouseLeave={() => setHoveredPoint(null)}
         >
-          {/* Subtle Horizontal Grid lines for Ranks */}
-          {[1, 3, 5, 8, 10].map((r) => {
-            if (r > maxRankScale) return null;
-            const innerHeight = HEIGHT - PAD_TOP - PAD_BOTTOM;
-            const normalized = (r - minRankScale) / (maxRankScale - minRankScale || 1);
-            const y = PAD_TOP + normalized * innerHeight;
+          <defs>
+            {/* Emerald Gradient for shaded area below the line */}
+            <linearGradient id="activity-emerald-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#059669" stopOpacity="0.22" />
+              <stop offset="85%" stopColor="#059669" stopOpacity="0.02" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.00" />
+            </linearGradient>
+
+            {/* Filter for glowing point */}
+            <filter id="glow-emerald" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* 1. Horizontal Gridlines & Y-Axis Labels */}
+          {yTicks.map((tick, idx) => (
+            <g key={`ytick-${idx}`}>
+              <line
+                x1={PAD_LEFT}
+                y1={tick.y}
+                x2={WIDTH - PAD_RIGHT}
+                y2={tick.y}
+                stroke="#f1f5f9"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+              <text
+                x={PAD_LEFT - 8}
+                y={tick.y + 4}
+                textAnchor="end"
+                fontSize="10"
+                fontWeight="500"
+                fill="#94a3b8"
+                fontFamily="system-ui, -apple-system, sans-serif"
+              >
+                {tick.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Bottom baseline axis line */}
+          <line
+            x1={PAD_LEFT}
+            y1={HEIGHT - PAD_BOTTOM}
+            x2={WIDTH - PAD_RIGHT}
+            y2={HEIGHT - PAD_BOTTOM}
+            stroke="#e2e8f0"
+            strokeWidth="1.2"
+          />
+
+          {/* 2. Shaded Area Under Curve */}
+          {areaPath && (
+            <path
+              d={areaPath}
+              fill="url(#activity-emerald-gradient)"
+              style={{ transition: 'all 0.3s ease-out' }}
+            />
+          )}
+
+          {/* 3. Main Trend Line */}
+          {linePath && (
+            <path
+              d={linePath}
+              fill="none"
+              stroke="#059669"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: 'all 0.3s ease-out' }}
+            />
+          )}
+
+          {/* 4. Interactive Hover Vertical Crosshair */}
+          {hoveredPoint && (
+            <g>
+              <line
+                x1={hoveredPoint.x}
+                y1={PAD_TOP}
+                x2={hoveredPoint.x}
+                y2={HEIGHT - PAD_BOTTOM}
+                stroke="#cbd5e1"
+                strokeWidth="1"
+                strokeDasharray="2 2"
+              />
+              <circle
+                cx={hoveredPoint.x}
+                cy={hoveredPoint.y}
+                r="5"
+                fill="#059669"
+                stroke="#ffffff"
+                strokeWidth="2.5"
+                filter="url(#glow-emerald)"
+              />
+            </g>
+          )}
+
+          {/* 5. Latest Active Point Highlight */}
+          {latestPoint && !hoveredPoint && (
+            <g>
+              <circle
+                cx={latestPoint.x}
+                cy={latestPoint.y}
+                r="7"
+                fill="#10b981"
+                opacity="0.25"
+                style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+              />
+              <circle
+                cx={latestPoint.x}
+                cy={latestPoint.y}
+                r="4.5"
+                fill="#059669"
+                stroke="#ffffff"
+                strokeWidth="2"
+              />
+            </g>
+          )}
+
+          {/* 6. X-Axis Time Labels */}
+          {xTicks.map((tick, idx) => (
+            <g key={`xtick-${idx}`}>
+              <line
+                x1={tick.x}
+                y1={HEIGHT - PAD_BOTTOM}
+                x2={tick.x}
+                y2={HEIGHT - PAD_BOTTOM + 4}
+                stroke="#cbd5e1"
+                strokeWidth="1"
+              />
+              <text
+                x={tick.x}
+                y={HEIGHT - PAD_BOTTOM + 16}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="500"
+                fill="#64748b"
+                fontFamily="system-ui, -apple-system, sans-serif"
+              >
+                {tick.shortTime || formatShortTime(tick.timestamp)}
+              </text>
+            </g>
+          ))}
+
+          {/* 7. Transparent Hover Target Overlay Rectangles */}
+          {points.map((p, idx) => {
+            const stepWidth = (WIDTH - PAD_LEFT - PAD_RIGHT) / Math.max(1, points.length);
+            const targetX = p.x - stepWidth / 2;
             return (
-              <g key={r}>
-                <line
-                  x1={PAD_LEFT}
-                  y1={y}
-                  x2={WIDTH - PAD_RIGHT}
-                  y2={y}
-                  stroke="rgba(15, 23, 42, 0.06)"
-                  strokeDasharray="3 3"
-                  strokeWidth="1"
-                />
-                <text
-                  x={PAD_LEFT - 6}
-                  y={y + 3}
-                  textAnchor="end"
-                  fontSize="9.5"
-                  fontWeight="600"
-                  fontFamily="'JetBrains Mono', monospace"
-                  fill="#94a3b8"
-                >
-                  #{r}
-                </text>
-              </g>
+              <rect
+                key={`hover-target-${idx}`}
+                x={Math.max(PAD_LEFT, targetX)}
+                y={PAD_TOP}
+                width={stepWidth}
+                height={HEIGHT - PAD_TOP - PAD_BOTTOM}
+                fill="transparent"
+                style={{ cursor: 'crosshair' }}
+                onMouseEnter={() => setHoveredPoint(p)}
+              />
             );
           })}
-
-          {/* Render Contender Trajectory Lines */}
-          {contenderPaths.map(({ contender, d, lastPoint }) => (
-            <g key={contender.userId}>
-              {/* Path Line */}
-              <path
-                d={d}
-                fill="none"
-                stroke={contender.color}
-                strokeWidth={contender.isMe ? 2.8 : 2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={contender.isMe ? 1 : 0.85}
-              />
-
-              {/* End Point Dot */}
-              {lastPoint && (
-                <circle
-                  cx={lastPoint.x}
-                  cy={lastPoint.y}
-                  r={contender.isMe ? 4 : 3}
-                  fill={contender.color}
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                />
-              )}
-
-              {/* End Point Label on Right Margin */}
-              {lastPoint && (
-                <text
-                  x={lastPoint.x + 8}
-                  y={lastPoint.y + 3.5}
-                  fontSize="9.5"
-                  fontWeight="600"
-                  fill={contender.color}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => onSelectUser && onSelectUser(contender)}
-                >
-                  #{lastPoint.rank} {contender.shortName}
-                </text>
-              )}
-            </g>
-          ))}
-
-          {/* CRUCIAL REQUIREMENT: ONLY RENDER MEMBER LABELS AT KEY MOVEMENT MILESTONES */}
-          {milestonePoints.map((m, idx) => (
-            <g
-              key={`${m.userId}-${idx}`}
-              transform={`translate(${m.x}, ${m.y})`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => onSelectUser && onSelectUser(m)}
-              onMouseEnter={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setHoveredPoint({
-                  name: m.name,
-                  rank: m.rank,
-                  score: m.score,
-                  delta: m.delta,
-                  time: m.time,
-                  x: m.x,
-                  y: m.y - 10,
-                });
-              }}
-              onMouseLeave={() => setHoveredPoint(null)}
-            >
-              {/* Milestone Pulse Circle */}
-              <circle
-                r="5"
-                fill={m.delta > 0 ? '#10b981' : '#ef4444'}
-                stroke="#ffffff"
-                strokeWidth="1.5"
-              />
-
-              {/* Subtle Milestone Label Tag */}
-              <g transform="translate(0, -14)">
-                <rect
-                  x="-32"
-                  y="-9"
-                  width="64"
-                  height="16"
-                  rx="3"
-                  fill="#0f172a"
-                  fillOpacity="0.88"
-                />
-                <text
-                  x="0"
-                  y="2.5"
-                  textAnchor="middle"
-                  fill="#ffffff"
-                  fontSize="9"
-                  fontWeight="600"
-                >
-                  {m.shortName} {m.delta > 0 ? `↑${m.delta}` : `↓${Math.abs(m.delta)}`}
-                </text>
-              </g>
-            </g>
-          ))}
-
-          {/* Invisible interactive hover points along the lines */}
-          {contenderPaths.map(({ contender, points }) =>
-            points.map((p, i) => (
-              <circle
-                key={`${contender.userId}-${i}`}
-                cx={p.x}
-                cy={p.y}
-                r="7"
-                fill="transparent"
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={() =>
-                  setHoveredPoint({
-                    name: contender.name,
-                    rank: p.rank,
-                    score: p.score,
-                    delta: 0,
-                    time: p.time,
-                    x: p.x,
-                    y: p.y,
-                  })
-                }
-                onMouseLeave={() => setHoveredPoint(null)}
-              />
-            ))
-          )}
         </svg>
 
-        {/* ── CLEAN INTERACTIVE TOOLTIP ── */}
+        {/* ── TOOLTIP POPOVER (CLEAN & MINIMALIST) ── */}
         {hoveredPoint && (
           <div
             style={{
               position: 'absolute',
-              left: Math.max(10, Math.min(WIDTH - 140, hoveredPoint.x)),
-              top: Math.max(0, hoveredPoint.y - 48),
+              left: Math.min(
+                WIDTH - 140,
+                Math.max(10, (hoveredPoint.x / WIDTH) * 100 + (hoveredPoint.x > WIDTH / 2 ? -18 : 2))
+              ) + '%',
+              top: Math.max(10, (hoveredPoint.y / HEIGHT) * 100 - 24) + '%',
               background: '#0f172a',
               color: '#ffffff',
-              padding: '6px 10px',
               borderRadius: 4,
+              padding: '6px 10px',
               fontSize: 11,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
               pointerEvents: 'none',
-              zIndex: 20,
+              zIndex: 10,
               whiteSpace: 'nowrap',
-              transform: 'translateX(-50%)',
             }}
           >
-            <div style={{ fontSize: 9.5, color: '#94a3b8' }}>{hoveredPoint.time}</div>
-            <div style={{ fontWeight: 700, color: '#ffffff', marginTop: 1 }}>{hoveredPoint.name}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, fontSize: 10.5 }}>
-              <span style={{ color: '#38bdf8', fontWeight: 600 }}>Hạng #{hoveredPoint.rank}</span>
-              <span style={{ color: '#475569' }}>•</span>
-              <span style={{ color: '#10b981', fontWeight: 600 }}>{fmtNum(hoveredPoint.score)} pts</span>
-              {hoveredPoint.delta !== 0 && (
-                <span style={{ color: hoveredPoint.delta > 0 ? '#4ade80' : '#f87171', fontWeight: 700 }}>
-                  {hoveredPoint.delta > 0 ? `+${hoveredPoint.delta}` : hoveredPoint.delta} bậc
-                </span>
-              )}
+            <div style={{ color: '#94a3b8', fontSize: 10, marginBottom: 2 }}>
+              {hoveredPoint.timeStr || formatFullTime(hoveredPoint.timestamp)}
             </div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#34d399' }}>
+              {hoveredPoint.score.toLocaleString()} <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>pts</span>
+            </div>
+            {hoveredPoint.rank && (
+              <div style={{ fontSize: 10, color: '#cbd5e1', marginTop: 2 }}>
+                Vị trí: #{hoveredPoint.rank} hôm nay
+              </div>
+            )}
           </div>
         )}
+      </div>
+
+      {/* ── BOTTOM METRICS BAR (CLEAN & SUBTLE) ── */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 10,
+          marginTop: 10,
+          paddingTop: 8,
+          borderTop: '1px solid #f1f5f9',
+          fontSize: 11,
+          color: '#64748b',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span>
+            Điểm hiện tại: <strong style={{ color: '#059669' }}>{currentSummary.score.toLocaleString()} pts</strong>
+          </span>
+          <span>
+            Thứ hạng: <strong style={{ color: '#0f172a' }}>{currentSummary.rank ? `#${currentSummary.rank}` : '—'}</strong>
+          </span>
+          {currentSummary.clicks > 0 || currentSummary.keys > 0 ? (
+            <span>
+              Thao tác: <strong>{currentSummary.clicks.toLocaleString()} click • {currentSummary.keys.toLocaleString()} phím</strong>
+            </span>
+          ) : null}
+        </div>
+
+        <div style={{ fontSize: 10, color: '#94a3b8' }}>
+          Tự động cập nhật theo thời gian thực (~1s)
+        </div>
       </div>
     </div>
   );
 }
+
+export { CompactLiveWave };
