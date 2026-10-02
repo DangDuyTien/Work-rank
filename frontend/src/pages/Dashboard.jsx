@@ -29,6 +29,8 @@ import {
   Pause,
   Zap,
   Terminal,
+  CheckCircle2,
+  Radio,
 } from 'lucide-react';
 
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -497,14 +499,26 @@ export default function Dashboard() {
                   {isTrackingActive ? 'ĐANG THEO DÕI' : 'ĐÃ TẮT'}
                 </span>
               </div>
-              <p style={{ margin: '2px 0 0', fontSize: 11, color: '#64748b' }}>
-                {isTrackingActive
-                  ? (liveAgentStatus?.running || agentStatus?.running
-                      ? `🟢 Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web hoặc tắt máy tính sẽ tự động dừng.`
-                      : (typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
-                          ? '🟢 Đang tự động đếm hoạt động Web/PWA (iOS) — Tắt web sẽ tự động ngắt.'
-                          : '🟢 Đang tự động đếm hoạt động trình duyệt Web — Tắt web sẽ tự động ngắt.'))
-                  : '💡 Bấm nút "Bật Theo Dõi" để bắt đầu đếm. Tắt web hoặc tắt máy tính sẽ tự động ngắt.'}
+              <p style={{ margin: '3px 0 0', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {isTrackingActive ? (
+                  <>
+                    <CheckCircle2 size={13} color="#16a34a" style={{ flexShrink: 0 }} />
+                    <span>
+                      {liveAgentStatus?.running || agentStatus?.running
+                        ? `Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web hoặc tắt máy tính sẽ tự động dừng.`
+                        : (typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+                            ? 'Đang tự động đếm hoạt động Web/PWA (iOS) — Tắt web sẽ tự động ngắt.'
+                            : 'Đang tự động đếm hoạt động trình duyệt Web — Tắt web sẽ tự động ngắt.')}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Clock3 size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+                    <span>
+                      Bấm nút "Bật Theo Dõi" để bắt đầu đếm. Tắt web hoặc tắt máy tính sẽ tự động ngắt.
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>
