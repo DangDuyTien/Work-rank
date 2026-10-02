@@ -13,7 +13,6 @@ import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import GameComingSoon from '../components/GameComingSoon';
-import GameActivityHud from '../components/GameActivityHud';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   Trophy,
@@ -544,7 +543,7 @@ export default function Game2048() {
 
   const currentMaxTile = getMaxTileFromTiles(tiles);
 
-  if (!availabilityLoading && isComingSoon && !isAdmin) {
+  if (!availabilityLoading && isComingSoon) {
     return (
       <GameFullscreenShell
         title="2048"
@@ -1281,7 +1280,6 @@ export default function Game2048() {
           </div>
         </div>
       </main>
-      <GameActivityHud position="bottom-right" />
     </GameFullscreenShell>
   );
 }

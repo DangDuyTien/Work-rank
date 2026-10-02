@@ -18,4 +18,11 @@ router.patch('/settings', auth, requireRole('admin'), asyncHandler(activityContr
 // 4. Admin: View Pure Activity Telemetry Analytics (Today / 7d / 30d)
 router.get('/analytics', auth, requireRole('admin'), asyncHandler(activityController.getAnalytics));
 
+// 5. COMPUTER ACTIVITY TRACKING (Desktop Agent Ingestion & BXH Độ Năng Động)
+const computerActivityController = require('../controllers/computerActivity.controller');
+router.post('/computer/batch', auth, asyncHandler(computerActivityController.recordBatch));
+router.get('/rankings', optionalAuth, asyncHandler(computerActivityController.getRankings));
+router.get('/my-summary', auth, asyncHandler(computerActivityController.getMySummary));
+router.get('/admin/overview', auth, requireRole('admin'), asyncHandler(computerActivityController.getAdminOverview));
+
 module.exports = router;

@@ -614,7 +614,7 @@ export default function YouTubeOverview() {
       </div>
 
       {/* NAVIGATION TABS */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', gap: 6, marginBottom: 24, overflowX: 'auto' }}>
+      <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', gap: 6, marginBottom: 24, overflowX: 'auto', scrollbarWidth: 'none' }}>
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
@@ -631,6 +631,7 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Building2 size={16} />
@@ -653,6 +654,7 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Tv size={16} />
@@ -675,6 +677,7 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Award size={16} />
@@ -702,6 +705,7 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
+            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Layers size={16} />
@@ -725,6 +729,7 @@ export default function YouTubeOverview() {
               alignItems: 'center',
               gap: 8,
               whiteSpace: 'nowrap',
+              transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             <Swords size={16} />
@@ -749,6 +754,7 @@ export default function YouTubeOverview() {
               alignItems: 'center',
               gap: 8,
               whiteSpace: 'nowrap',
+              transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             <Shield size={16} />

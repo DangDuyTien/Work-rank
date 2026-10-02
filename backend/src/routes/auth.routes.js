@@ -28,5 +28,7 @@ router.patch('/password', auth, validate(z.object({
     newPassword: z.string().min(1).max(128),
   }),
 })), asyncHandler(controller.changePassword));
+router.delete('/me/account', auth, asyncHandler(controller.deleteMe));
+router.post('/me/delete', auth, asyncHandler(controller.deleteMe));
 
 module.exports = router;

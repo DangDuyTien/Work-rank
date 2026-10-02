@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const userDeletionService = require('../services/userDeletion.service');
 
 async function register(req, res) {
   const result = await authService.register(req.validated.body);
@@ -34,4 +35,14 @@ async function changePassword(req, res) {
   res.json(result);
 }
 
-module.exports = { register, login, refreshToken, logout, me, updateMe, changePassword };
+async function deleteMe(req, res) {
+  const result = await userDeletionService.deleteUserAccount({
+    targetUserId: req.user.id,
+    actorUser: req.user,
+    isSelfDelete: true,
+    req,
+  });
+  res.json({ message: 'Tài khoản của bạn đã được xóa thành công.', ...result });
+}
+
+module.exports = { register, login, refreshToken, logout, me, updateMe, changePassword, deleteMe };

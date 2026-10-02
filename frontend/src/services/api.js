@@ -261,6 +261,14 @@ export const auth = {
   me: () => api.get('/api/auth/me'),
   updateProfile: (data) => api.patch('/api/auth/me', data),
   changePassword: (data) => api.patch('/api/auth/password', data),
+  deleteAccount: async () => {
+    try {
+      const res = await api.delete('/api/auth/me/account');
+      return res.data;
+    } finally {
+      clearAuth();
+    }
+  },
 };
 
 export const dashboard = {
@@ -454,6 +462,14 @@ export const users = {
   delete: async (id) => {
     const res = await api.delete(`/api/users/${id}`);
     return res.data;
+  },
+  selfDelete: async () => {
+    try {
+      const res = await api.delete('/api/users/me/account');
+      return res.data;
+    } finally {
+      clearAuth();
+    }
   },
   update: async (id, data) => {
     const res = await api.patch(`/api/users/${id}`, data);
@@ -1218,6 +1234,59 @@ export const activityApi = {
   getAnalytics: async (params = {}) => {
     const res = await api.get('/api/activity/analytics', { params });
     return res.data;
+  },
+  // Computer Activity Tracking (Desktop Agent & Độ Năng Động)
+  recordComputerBatch: async (payload) => {
+    const res = await api.post('/api/activity/computer/batch', payload);
+    return res.data;
+  },
+  getComputerRankings: async (params = {}) => {
+    const res = await api.get('/api/activity/rankings', { params });
+    return res.data;
+  },
+  getMySummary: async () => {
+    const res = await api.get('/api/activity/my-summary');
+    return res.data;
+  },
+  getAdminOverview: async (params = {}) => {
+    const res = await api.get('/api/activity/admin/overview', { params });
+    return res.data;
+  },
+};
+
+export const desktopAgentIpc = {
+  checkStatus: async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:43124/status', { signal: AbortSignal.timeout(2000) });
+      if (res.ok) return await res.json();
+    } catch {
+      // Companion not running or port unreachable
+    }
+    return { running: false, paired: false };
+  },
+  pair: async ({ token, user, backendUrl }) => {
+    try {
+      const res = await fetch('http://127.0.0.1:43124/pair', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, user, backendUrl }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // Silent fail if companion not running
+    }
+    return null;
+  },
+  logout: async () => {
+    try {
+      await fetch('http://127.0.0.1:43124/logout', {
+        method: 'POST',
+        signal: AbortSignal.timeout(2000),
+      });
+    } catch {
+      // Silent fail
+    }
   },
 };
 

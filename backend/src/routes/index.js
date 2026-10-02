@@ -26,6 +26,7 @@ router.use('/admin/games/sam', require('./samGame.routes'));
 router.use('/admin/games', require('./gameCatalog.routes'));
 router.use('/games/catalog', require('./gameCatalog.routes'));
 router.use('/games', require('./capitalBoardGame.routes'));
+router.delete('/admin/users/:id', require('../middlewares/auth.middleware').auth, require('../middlewares/auth.middleware').requireRole('admin'), asyncHandler(require('../controllers/users.controller').remove));
 
 module.exports = router;
 

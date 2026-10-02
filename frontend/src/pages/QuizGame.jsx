@@ -16,7 +16,6 @@ import QuizRoundResultModal from '../components/quiz/QuizRoundResultModal';
 import QuizFinalResults from '../components/quiz/QuizFinalResults';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import GameComingSoon from '../components/GameComingSoon';
-import GameActivityHud from '../components/GameActivityHud';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   AlertCircle,
@@ -446,7 +445,7 @@ export default function QuizGame() {
   const isPlayingOrShowing = room?.status === 'PLAYING' || room?.status === 'SHOWING_RESULT';
   const isFinished = room?.status === 'FINISHED' || Boolean(finalResults);
 
-  if (!availabilityLoading && isComingSoon && !isAdmin) {
+  if (!availabilityLoading && isComingSoon) {
     return (
       <GameFullscreenShell
         title="Đoán Hình & Đoán Nhạc"
@@ -736,7 +735,6 @@ export default function QuizGame() {
           </div>
         )}
       </div>
-      <GameActivityHud position="bottom-right" />
     </GameFullscreenShell>
   );
 }

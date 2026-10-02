@@ -282,12 +282,12 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
 
 /* ── Animations & Transitions ── */
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes tab-enter {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -379,12 +379,12 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
 }
 
 .page-transition {
-  animation: page-enter var(--transition-page) forwards;
+  animation: page-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: opacity, transform;
 }
 
 .tab-transition {
-  animation: tab-enter var(--transition-normal) forwards;
+  animation: tab-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: opacity, transform;
   min-height: 280px;
 }

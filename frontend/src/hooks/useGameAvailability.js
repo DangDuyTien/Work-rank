@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { gameCatalogApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,18 +9,18 @@ export function useGameAvailability(gameKey) {
   const [isComingSoon, setIsComingSoon] = useState(false);
   const [adminBypass, setAdminBypass] = useState(false);
 
-  useEffect(() => {
+  const checkAvailability = useCallback(() => {
     let mounted = true;
     gameCatalogApi
       .getCatalog()
       .then((res) => {
         if (!mounted) return;
-        const found = res?.games?.find((g) => g.gameKey === gameKey);
+        const list = res?.games || (Array.isArray(res) ? res : []);
+        const found = list.find((g) => (g.gameKey || g.game_key) === gameKey);
         if (found) {
           setGame(found);
-          if (found.status === 'COMING_SOON' || found.enabled === false) {
-            setIsComingSoon(true);
-          }
+          const isUnavailable = found.status === 'COMING_SOON' || found.enabled === false;
+          setIsComingSoon(isUnavailable);
         }
         setLoading(false);
       })
@@ -32,6 +32,18 @@ export function useGameAvailability(gameKey) {
       mounted = false;
     };
   }, [gameKey]);
+
+  useEffect(() => {
+    const cleanup = checkAvailability();
+    const handleUpdate = () => {
+      checkAvailability();
+    };
+    window.addEventListener('workrank:game-catalog-updated', handleUpdate);
+    return () => {
+      cleanup && cleanup();
+      window.removeEventListener('workrank:game-catalog-updated', handleUpdate);
+    };
+  }, [checkAvailability]);
 
   return {
     loading,

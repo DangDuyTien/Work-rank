@@ -28,6 +28,7 @@ import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '
 import { users as usersApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
+import { useAuth } from '../context/AuthContext';
 import { parseApiError } from '../utils/errors';
 
 const PAGE_SIZE = 50;

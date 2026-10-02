@@ -29,7 +29,6 @@ import GameRulesModal from '../components/game/GameRulesModal';
 import gameSound from '../components/game/gameSound';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import GameComingSoon from '../components/GameComingSoon';
-import GameActivityHud from '../components/GameActivityHud';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 
 export default function CapitalBoardGame() {
@@ -540,7 +539,7 @@ export default function CapitalBoardGame() {
   const isPlaying = room?.status === 'PLAYING';
   const isWaiting = room?.status === 'WAITING';
 
-  if (!availabilityLoading && isComingSoon && !isAdmin) {
+  if (!availabilityLoading && isComingSoon) {
     return (
       <GameFullscreenShell
         title="Cờ Tỷ Phú"
@@ -1437,7 +1436,6 @@ export default function CapitalBoardGame() {
         />
       )}
       </div>
-      <GameActivityHud position="bottom-right" />
     </GameFullscreenShell>
   );
 }

@@ -57,14 +57,32 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
 
   useEffect(() => {
     let mounted = true;
-    gameCatalogApi.getCatalog().then((games) => {
-      if (mounted && Array.isArray(games)) {
+    const fetchCatalog = () => {
+      gameCatalogApi.getCatalog().then((res) => {
+        if (!mounted) return;
+        const list = res?.games || (Array.isArray(res) ? res : []);
         const map = {};
-        games.forEach((g) => { map[g.game_key] = g.status; });
+        list.forEach((g) => {
+          const key = g.gameKey || g.game_key;
+          if (key) {
+            map[key] = g.status;
+          }
+        });
         setCatalogMap(map);
-      }
-    }).catch(() => {});
-    return () => { mounted = false; };
+      }).catch(() => {});
+    };
+
+    fetchCatalog();
+
+    const handleCatalogUpdate = () => {
+      fetchCatalog();
+    };
+
+    window.addEventListener('workrank:game-catalog-updated', handleCatalogUpdate);
+    return () => {
+      mounted = false;
+      window.removeEventListener('workrank:game-catalog-updated', handleCatalogUpdate);
+    };
   }, []);
 
   // Auto-expand parent whenever route changes to a child within it
@@ -319,11 +337,16 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                             style={{
                               marginLeft: 'auto',
                               fontSize: 10,
-                              fontWeight: 600,
+                              fontWeight: 700,
                               padding: '1.5px 5px',
                               borderRadius: 4,
-                              background: isBadgeWarning ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.06)',
-                              color: isBadgeWarning ? '#b45309' : '#111111',
+                              background: isGameComingSoon
+                                ? 'rgba(217, 119, 6, 0.12)'
+                                : isBadgeWarning
+                                  ? 'rgba(180,83,9,0.08)'
+                                  : 'rgba(0,0,0,0.06)',
+                              color: isGameComingSoon ? '#d97706' : isBadgeWarning ? '#b45309' : '#111111',
+                              border: isGameComingSoon ? '1px solid rgba(217, 119, 6, 0.3)' : 'none',
                               letterSpacing: '0.2px',
                               flexShrink: 0,
                               textTransform: 'uppercase',

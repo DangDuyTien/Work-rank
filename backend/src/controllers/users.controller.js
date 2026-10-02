@@ -19,6 +19,7 @@ const { decorateUserPresence } = require('../services/userPresence.service');
 const profileLikeService = require('../services/profileLike.service');
 const recognitionService = require('../services/recognition.service');
 const competitionRealtime = require('../services/competition/competitionRealtime.service');
+const userDeletionService = require('../services/userDeletion.service');
 
 const GALLERY_SLOT_COUNT = 6;
 const FEATURED_BADGE_LIMIT = 12;
@@ -155,6 +156,11 @@ async function list(req, res) {
   const hasTeam = req.query.hasTeam;
   const withCount = req.query.withCount !== '0' && req.query.withCount !== 'false';
   const where = {};
+  if (!req.query.status) {
+    where.status = 'active';
+  } else if (req.query.status !== 'all') {
+    where.status = req.query.status;
+  }
   if (search) {
     const idMatch = search.match(/^WR-?0*(\d+)$/i) || search.match(/^#?0*(\d+)$/);
     const searchClauses = [
@@ -528,12 +534,23 @@ async function update(req, res) {
 }
 
 async function remove(req, res) {
-  const user = await User.findByPk(req.params.id);
-  if (!user) return res.status(404).json({ message: 'User not found' });
-  const oldTeamId = user.teamId;
-  await user.update({ status: 'inactive' });
-  await syncUserAcrossReadModelsAndRealtime(req, user, oldTeamId);
-  return res.status(204).send();
+  const result = await userDeletionService.deleteUserAccount({
+    targetUserId: req.params.id,
+    actorUser: req.user,
+    isSelfDelete: false,
+    req,
+  });
+  return res.json({ message: 'Đã xóa tài khoản nhân sự thành công.', ...result });
+}
+
+async function selfDelete(req, res) {
+  const result = await userDeletionService.deleteUserAccount({
+    targetUserId: req.user.id,
+    actorUser: req.user,
+    isSelfDelete: true,
+    req,
+  });
+  return res.json({ message: 'Tài khoản của bạn đã được xóa thành công.', ...result });
 }
 
 async function getRecognitions(req, res) {
@@ -776,6 +793,7 @@ module.exports = {
   create,
   update,
   remove,
+  selfDelete,
   getRecognitions,
   adminAwardMVP,
   adminRevokeMVP,

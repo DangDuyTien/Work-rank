@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { rankings as rankingsApi, youtube as youtubeApi } from '../services/api';
+import { rankings as rankingsApi, youtube as youtubeApi, activityApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import {
@@ -552,6 +552,8 @@ export default function Leaderboard() {
     scopeMode = 'members';
   } else if (rawScope === 'members' || rawScope === 'member' || rawScope === 'individual' || rawScope === 'individuals') {
     scopeMode = 'members';
+  } else if (rawScope === 'activity' || rawMode === 'activity' || rawRanking === 'activity') {
+    scopeMode = 'activity';
   } else if (rawScope === 'youtube') {
     scopeMode = 'youtube';
   } else if (rawScope === 'hall-of-fame' || rawScope === 'hof') {
@@ -565,15 +567,17 @@ export default function Leaderboard() {
   // Team sub-view: 'members' | 'youtube'
   const teamSubView = searchParams.get('teamView') || 'members';
 
-  // Global Preserved Period: 'season' | 'grand' | 'all-time'
-  // CANONICAL DEFAULT: When scopeMode is 'members', default period is 'all-time'
+  // Global Preserved Period: 'season' | 'grand' | 'all-time' | 'today' | '7d' | '30d'
+  // CANONICAL DEFAULT: When scopeMode is 'members', default period is 'all-time'. When 'activity', default is 'today'.
   let currentPeriod;
   if (rawPeriod) {
     currentPeriod = rawPeriod;
-  } else if (rawScope === 'season' || rawScope === 'grand' || rawScope === 'all-time') {
+  } else if (rawScope === 'season' || rawScope === 'grand' || rawScope === 'all-time' || rawScope === 'today' || rawScope === '7d' || rawScope === '30d') {
     currentPeriod = rawScope;
   } else if (scopeMode === 'members') {
     currentPeriod = 'all-time';
+  } else if (scopeMode === 'activity') {
+    currentPeriod = 'today';
   } else {
     currentPeriod = 'season';
   }
@@ -600,6 +604,7 @@ export default function Leaderboard() {
   // Data states
   const [teamRankings, setTeamRankings] = useState({ items: [], total: 0 });
   const [memberRankings, setMemberRankings] = useState({ items: [], total: 0 });
+  const [activityRankings, setActivityRankings] = useState({ items: [], total: 0 });
   const [youtubeRankings, setYoutubeRankings] = useState({ items: [], total: 0 });
   const [hallOfFameData, setHallOfFameData] = useState({ seasonMvps: [], championTeams: [] });
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
@@ -693,6 +698,17 @@ export default function Leaderboard() {
             limit: 100,
           });
           setMemberRankings(res);
+        } else if (scopeMode === 'activity') {
+          const res = await activityApi.getComputerRankings({
+            period: currentPeriod,
+            search: debouncedSearch || undefined,
+            limit: 100,
+          });
+          const rawItems = res?.data?.rankings || res?.rankings || [];
+          setActivityRankings({
+            items: rawItems,
+            total: res?.data?.count || res?.count || rawItems.length,
+          });
         } else if (scopeMode === 'youtube') {
           const res = await rankingsApi.getYouTube({
             view: 'channels',
@@ -752,6 +768,9 @@ export default function Leaderboard() {
       params.set('period', 'all-time');
     } else if (mode === 'teams') {
       params.set('period', 'season');
+    } else if (mode === 'activity') {
+      params.set('period', 'today');
+      params.delete('metric');
     } else if (mode === 'youtube') {
       params.set('metric', 'views');
       params.delete('period');
@@ -864,14 +883,41 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* ── TOP CONTROLS: HIERARCHY SELECTOR & PRESERVED PERIOD ── */}
+      {/* ── TOP CONTROLS: HIERARCHY SELECTOR & PRESERVED PERIOD IN SINGLE UNIFIED TOOLBAR ── */}
       {!selectedTeamId ? (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-          {/* LEVEL 1: VIEW MODES */}
-          <div style={{ display: 'flex', gap: 3, background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: 4, borderRadius: 6 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px 10px',
+            marginBottom: 16,
+            background: '#ffffff',
+            border: '1px solid rgba(15,23,42,0.08)',
+            padding: '5px 6px',
+            borderRadius: 6,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {/* LEVEL 1: VIEW MODES (LEFT SIDE) */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 2,
+              alignItems: 'center',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch',
+              flex: '1 1 auto',
+              minWidth: 0,
+            }}
+          >
             {[
               { id: 'teams', label: 'BXH Đội Nhóm', icon: Users },
               { id: 'members', label: 'BXH Thành Viên', icon: User },
+              { id: 'activity', label: 'Độ Năng Động', icon: Sparkles },
               { id: 'youtube', label: 'BXH Kênh YouTube', icon: Tv },
               { id: 'hall-of-fame', label: 'Bảng Vinh Danh', icon: Award },
             ].map((tab) => {
@@ -884,29 +930,80 @@ export default function Leaderboard() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 6,
-                    padding: '8px 14px',
+                    gap: 5,
+                    padding: '7px 11px',
                     borderRadius: 4,
                     border: 'none',
-                    background: isActive ? '#b45309' : 'transparent',
+                    background: isActive
+                      ? (tab.id === 'activity' ? '#059669' : tab.id === 'youtube' ? '#dc2626' : '#b45309')
+                      : 'transparent',
                     color: isActive ? '#ffffff' : '#64748b',
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'all .15s ease',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'rgba(15,23,42,0.04)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent';
                   }}
                 >
-                  <IconComp size={14} />
+                  <IconComp size={13} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* GLOBAL PRESERVED PERIOD SELECTOR */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {scopeMode !== 'youtube' && scopeMode !== 'hall-of-fame' && (
-              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.06)', padding: 3, borderRadius: 4 }}>
+          {/* RIGHT SIDE: GLOBAL PRESERVED PERIOD & METRICS SELECTOR & SEARCH */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginLeft: 'auto',
+              flexShrink: 0,
+              flexWrap: 'nowrap',
+              transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            {scopeMode === 'activity' && (
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
+                {[
+                  { id: 'today', label: 'Hôm Nay' },
+                  { id: '7d', label: '7 Ngày' },
+                  { id: '30d', label: '30 Ngày' },
+                  { id: 'all-time', label: 'Toàn Bộ' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => handlePeriodChange(p.id)}
+                    style={{
+                      border: 'none',
+                      background: currentPeriod === p.id ? '#059669' : 'transparent',
+                      color: currentPeriod === p.id ? '#ffffff' : '#64748b',
+                      padding: '5px 9px',
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      borderRadius: 3,
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {scopeMode !== 'youtube' && scopeMode !== 'hall-of-fame' && scopeMode !== 'activity' && (
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
                 {[
                   { id: 'season', label: 'Mùa Giải' },
                   { id: 'grand', label: 'Vô Địch Năm (Grand)' },
@@ -919,11 +1016,13 @@ export default function Leaderboard() {
                       border: 'none',
                       background: currentPeriod === p.id ? '#b45309' : 'transparent',
                       color: currentPeriod === p.id ? '#ffffff' : '#64748b',
-                      padding: '6px 12px',
-                      fontSize: 12,
+                      padding: '5px 9px',
+                      fontSize: 11.5,
                       fontWeight: 600,
                       cursor: 'pointer',
-                      borderRadius: 4,
+                      borderRadius: 3,
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     {p.label}
@@ -933,7 +1032,7 @@ export default function Leaderboard() {
             )}
 
             {scopeMode === 'youtube' && (
-              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.06)', padding: 3, borderRadius: 4 }}>
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
                 {[
                   { id: 'views', label: 'Lượt Xem' },
                   { id: 'subscribers', label: 'Subscribers' },
@@ -946,11 +1045,13 @@ export default function Leaderboard() {
                       border: 'none',
                       background: urlMetric === m.id ? '#dc2626' : 'transparent',
                       color: urlMetric === m.id ? '#ffffff' : '#64748b',
-                      padding: '6px 12px',
-                      fontSize: 12,
+                      padding: '5px 9px',
+                      fontSize: 11.5,
                       fontWeight: 600,
                       cursor: 'pointer',
-                      borderRadius: 4,
+                      borderRadius: 3,
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     {m.label}
@@ -960,48 +1061,69 @@ export default function Leaderboard() {
             )}
 
             {/* INSTANT SEARCH */}
-            {(scopeMode === 'members' || scopeMode === 'youtube') && (
+            {(scopeMode === 'members' || scopeMode === 'youtube' || scopeMode === 'activity') && (
               <div style={{ position: 'relative' }}>
-                <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                 <input
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder={scopeMode === 'youtube' ? 'Tìm kênh YouTube...' : 'Tìm thành viên...'}
+                  placeholder={scopeMode === 'youtube' ? 'Tìm kênh...' : 'Tìm thành viên...'}
                   style={{
                     background: '#ffffff',
-                    border: '1px solid rgba(15,23,42,0.15)',
-                    padding: '6px 10px 6px 28px',
-                    fontSize: 12,
+                    border: '1px solid rgba(15,23,42,0.12)',
+                    padding: '5px 8px 5px 24px',
+                    fontSize: 11.5,
                     outline: 'none',
-                    width: 180,
-                    borderRadius: 4,
+                    width: 130,
+                    borderRadius: 3,
+                    transition: 'width 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease',
                   }}
+                  onFocus={(e) => { e.currentTarget.style.width = '170px'; e.currentTarget.style.borderColor = '#b45309'; }}
+                  onBlur={(e) => { if (!searchKeyword) e.currentTarget.style.width = '130px'; e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)'; }}
                 />
               </div>
             )}
           </div>
         </div>
       ) : (
-        /* LEVEL 2: TEAM SCOPE HEADER & SUB-TABS */
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 4, background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: 4, borderRadius: 6 }}>
+        /* LEVEL 2: TEAM SCOPE HEADER & SUB-TABS (SINGLE UNIFIED TOOLBAR) */
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px 10px',
+            marginBottom: 16,
+            background: '#ffffff',
+            border: '1px solid rgba(15,23,42,0.08)',
+            padding: '5px 6px',
+            borderRadius: 6,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <button
               onClick={() => setParam('teamView', 'members')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '8px 14px',
+                gap: 5,
+                padding: '7px 12px',
                 borderRadius: 4,
                 border: 'none',
                 background: teamSubView === 'members' ? '#b45309' : 'transparent',
                 color: teamSubView === 'members' ? '#ffffff' : '#64748b',
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: 600,
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transform: teamSubView === 'members' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
-              <Users size={14} />
+              <Users size={13} />
               <span>Thành Viên Trong Đội ({memberRankings.items?.length || 0})</span>
             </button>
             <button
@@ -1009,25 +1131,28 @@ export default function Leaderboard() {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '8px 14px',
+                gap: 5,
+                padding: '7px 12px',
                 borderRadius: 4,
                 border: 'none',
                 background: teamSubView === 'youtube' ? '#dc2626' : 'transparent',
                 color: teamSubView === 'youtube' ? '#ffffff' : '#64748b',
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: 600,
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transform: teamSubView === 'youtube' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
-              <Tv size={14} />
+              <Tv size={13} />
               <span>Kênh YouTube Của Đội ({teamChannels.length})</span>
             </button>
           </div>
 
-          {/* Period selector inside team view */}
+          {/* Period selector inside team view (Right aligned) */}
           {teamSubView === 'members' && (
-            <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.06)', padding: 3, borderRadius: 4 }}>
+            <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)', marginLeft: 'auto' }}>
               {[
                 { id: 'season', label: 'Mùa Giải' },
                 { id: 'grand', label: 'Grand' },
@@ -1040,11 +1165,13 @@ export default function Leaderboard() {
                     border: 'none',
                     background: currentPeriod === p.id ? '#b45309' : 'transparent',
                     color: currentPeriod === p.id ? '#ffffff' : '#64748b',
-                    padding: '6px 12px',
-                    fontSize: 12,
+                    padding: '5px 9px',
+                    fontSize: 11.5,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    borderRadius: 4,
+                    borderRadius: 3,
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   {p.label}
@@ -1475,7 +1602,189 @@ export default function Leaderboard() {
                 </div>
               )}
 
-              {/* 3. BXH KÊNH YOUTUBE (CÔNG TY - BAO GỒM CẢ CHƯA GÁN TEAM) */}
+              {/* 3. BXH ĐỘ NĂNG ĐỘNG (COMPUTER ACTIVITY) */}
+              {scopeMode === 'activity' && (
+                <div>
+                  <MyRankBanner
+                    currentUser={currentUser}
+                    items={activityRankings.items || []}
+                    scoreKey="activityScore"
+                    scoreSuffix="pts"
+                    serverRank={activityRankings.items?.find((x) => Number(x.userId) === Number(currentUser?.id))?.rank}
+                    onOpenProfile={(u) => navigate(`/users/${u.userId || u.id}`)}
+                  />
+
+                  {activityRankings.items?.length >= 1 && !searchKeyword && (
+                    <DynamicPodium
+                      items={activityRankings.items.map((x) => ({
+                        ...x,
+                        userName: x.user?.fullName || x.user?.username || `User #${x.userId}`,
+                        teamName: x.user?.teamName || null,
+                        avatar: x.user?.avatar,
+                      }))}
+                      nameKey="userName"
+                      scoreKey="activityScore"
+                      scoreSuffix="pts"
+                      onSelect={(u) => navigate(`/users/${u.userId || u.id}`)}
+                    />
+                  )}
+
+                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                        Bảng Xếp Hạng Độ Năng Động ({activityRankings.items?.length || 0} người)
+                      </span>
+                      <span style={{ fontSize: 11, color: '#64748b' }}>
+                        Ghi nhận toàn máy tính thông qua Desktop Companion
+                      </span>
+                    </div>
+                    <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', width: 90 }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Nhóm</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Ứng Dụng Chính</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thời Gian</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Năng Động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activityRankings.items?.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
+                              <Sparkles size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                                {searchKeyword ? `Không tìm thấy thành viên phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu hoạt động trong chu kỳ này'}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                                Dữ liệu được ghi nhận tự động thông qua WorkRank Desktop Companion.
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          activityRankings.items.map((u, i) => {
+                            const rank = u.rank || i + 1;
+                            const isMe = currentUser && Number(u.userId) === Number(currentUser.id);
+                            const rankChange = u.rankChange || 0;
+                            const activeMins = u.activeMinutes || 0;
+                            const hours = Math.floor(activeMins / 60);
+                            const mins = activeMins % 60;
+                            const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+                            return (
+                              <tr
+                                key={u.userId || i}
+                                style={{
+                                  borderBottom: '1px solid rgba(15,23,42,0.04)',
+                                  background: isMe ? 'rgba(5,150,105,0.04)' : i % 2 === 0 ? '#ffffff' : 'rgba(15,23,42,0.01)',
+                                  cursor: 'pointer',
+                                  transition: 'background .12s',
+                                }}
+                                onClick={() => navigate(`/users/${u.userId}`)}
+                              >
+                                <td style={{ padding: '12px 16px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: '50%',
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        background: rank === 1 ? '#fef3c7' : rank === 2 ? '#f1f5f9' : rank === 3 ? '#ffedd5' : 'transparent',
+                                        color: rank === 1 ? '#b45309' : rank === 2 ? '#475569' : rank === 3 ? '#c2410c' : '#64748b',
+                                      }}
+                                    >
+                                      {rank}
+                                    </span>
+                                    {rankChange > 0 ? (
+                                      <span style={{ fontSize: 10, color: '#16a34a', display: 'inline-flex', alignItems: 'center' }}>
+                                        <ArrowUp size={11} />
+                                        {rankChange}
+                                      </span>
+                                    ) : rankChange < 0 ? (
+                                      <span style={{ fontSize: 10, color: '#dc2626', display: 'inline-flex', alignItems: 'center' }}>
+                                        <ArrowDown size={11} />
+                                        {Math.abs(rankChange)}
+                                      </span>
+                                    ) : (
+                                      <span style={{ fontSize: 10, color: '#94a3b8' }}>—</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div
+                                      style={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '50%',
+                                        background: '#e2e8f0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: '#475569',
+                                        overflow: 'hidden',
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {u.user?.avatar ? (
+                                        <img src={getUserAvatar(u.user)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        initialsFromName(u.user?.fullName || u.user?.username || 'U')
+                                      )}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <span>{u.user?.fullName || u.user?.username || `User #${u.userId}`}</span>
+                                        {isMe && (
+                                          <span style={{ fontSize: 9, fontWeight: 700, background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3 }}>
+                                            BẠN
+                                          </span>
+                                        )}
+                                        <VerifiedBadge user={u.user} size={13} />
+                                      </div>
+                                      {u.user?.jobTitle && <JobTitleBadge title={u.user.jobTitle} compact />}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '12px 16px', color: '#475569' }}>
+                                  {u.user?.teamName || '—'}
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  {u.topApp ? (
+                                    <span style={{ fontSize: 11, background: '#f1f5f9', color: '#334155', padding: '3px 8px', borderRadius: 4, fontWeight: 500 }}>
+                                      {u.topApp}
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#94a3b8' }}>—</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'center', color: '#334155', fontWeight: 500 }}>
+                                  {durationStr}
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                  <div style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>
+                                    {fmtNum(u.activityScore)} <span style={{ fontSize: 10, fontWeight: 500, color: '#64748b' }}>pts</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. BXH KÊNH YOUTUBE (CÔNG TY - BAO GỒM CẢ CHƯA GÁN TEAM) */}
               {scopeMode === 'youtube' && (
                 <div>
                   {youtubeRankings.items?.length >= 1 && !searchKeyword && (

@@ -25,6 +25,8 @@ router.get('/:id', asyncHandler(controller.getById));
 router.post('/', requireRole('admin'), asyncHandler(controller.create));
 router.patch('/:id/profile', asyncHandler(controller.update));
 router.patch('/:id', asyncHandler(controller.update));
+router.delete('/me/account', asyncHandler(controller.selfDelete));
+router.delete('/admin/users/:id', requireRole('admin'), asyncHandler(controller.remove));
 router.delete('/:id', requireRole('admin'), asyncHandler(controller.remove));
 
 module.exports = router;

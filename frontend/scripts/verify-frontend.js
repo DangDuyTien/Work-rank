@@ -49,7 +49,7 @@ const KNOWN_GLOBALS = new Set([
   'RangeError', 'SyntaxError', 'URIError', 'Map', 'Set', 'WeakMap', 'WeakSet', 'Intl',
   'Event', 'CustomEvent', 'FileReader', 'Image', 'Blob', 'File', 'FormData', 'performance',
   'navigator', 'location', 'history', 'alert', 'confirm', 'prompt', 'requestAnimationFrame',
-  'cancelAnimationFrame', 'AbortController', 'WebSocket', 'MutationObserver', 'IntersectionObserver',
+  'cancelAnimationFrame', 'AbortController', 'AbortSignal', 'WebSocket', 'MutationObserver', 'IntersectionObserver',
   'ResizeObserver', 'Audio', 'Notification', 'process', 'globalThis', 'self', 'NaN', 'Infinity',
   'undefined', 'null', 'eval', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'React', 'atob', 'btoa',
   'crypto', 'indexedDB', 'Headers', 'Request', 'Response'

@@ -61,10 +61,12 @@ const SamPlayer = require('./SamPlayer');
 const SamAction = require('./SamAction');
 const SamResult = require('./SamResult');
 const SamUserStat = require('./SamUserStat');
-// Activity Tracking & System Settings & Game Catalog
+// Activity Tracking & System Settings & Game Catalog & Computer Activity
 const ActivityEvent = require('./ActivityEvent');
 const SystemSetting = require('./SystemSetting');
 const GameCatalog = require('./GameCatalog');
+const ComputerActivityEvent = require('./ComputerActivityEvent');
+const ComputerDailyStat = require('./ComputerDailyStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -250,6 +252,12 @@ SamResult.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
 User.hasOne(SamUserStat, { as: 'samStats', foreignKey: 'userId' });
 SamUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
+User.hasMany(ComputerActivityEvent, { foreignKey: 'userId' });
+ComputerActivityEvent.belongsTo(User, { foreignKey: 'userId' });
+
+User.hasMany(ComputerDailyStat, { foreignKey: 'userId' });
+ComputerDailyStat.belongsTo(User, { foreignKey: 'userId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -319,10 +327,12 @@ module.exports = {
   SamAction,
   SamResult,
   SamUserStat,
-  // Activity Tracking & System Settings & Game Catalog
+  // Activity Tracking & System Settings & Game Catalog & Computer Activity
   ActivityEvent,
   SystemSetting,
   GameCatalog,
+  ComputerActivityEvent,
+  ComputerDailyStat,
 };
 
 
