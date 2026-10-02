@@ -869,6 +869,7 @@ async function getYouTubeTeamLeaderboard(params = {}) {
   }
 
   let formatted = summaries.map((s) => ({
+    id: s.teamId,
     teamId: s.teamId,
     teamName: s.team ? s.team.name : `Team ${s.teamId}`,
     team: s.team ? { id: s.team.id, name: s.team.name, description: s.team.description } : null,

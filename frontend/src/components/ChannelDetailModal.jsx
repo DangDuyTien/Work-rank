@@ -255,7 +255,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                       marginTop: 4,
                     }}
                   >
-                    {channel.viewsGrowthPct !== null ? `${channel.viewsGrowthPct >= 0 ? '+' : ''}${channel.viewsGrowthPct}%` : 'Chưa đủ dữ liệu'}
+                    {channel.viewsGrowthPct !== null ? `${channel.viewsGrowthPct >= 0 ? '+' : ''}${Number(channel.viewsGrowthPct).toFixed(1)}%` : 'Chưa đủ dữ liệu'}
                   </div>
                 </div>
 

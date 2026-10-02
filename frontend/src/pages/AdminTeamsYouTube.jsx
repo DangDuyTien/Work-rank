@@ -558,8 +558,10 @@ export default function AdminTeamsYouTube() {
           <div style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
             {fmtNum(overview?.kpis?.totalViews || 0)}
           </div>
-          <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 4 }}>
-            +{overview?.kpis?.viewsGrowth30dPct || 0}% tăng trưởng 30D
+          <div style={{ fontSize: 11, color: overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined ? '#16a34a' : '#94a3b8', fontWeight: 600, marginTop: 4 }}>
+            {overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined
+              ? `${Number(overview?.kpis?.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(overview?.kpis?.viewsGrowth30dPct).toFixed(1)}% tăng trưởng 30D`
+              : 'Chưa đủ dữ liệu tăng trưởng'}
           </div>
         </div>
 

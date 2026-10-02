@@ -1142,8 +1142,10 @@ export default function UserDetail() {
                 </div>
                 <div style={{ padding: 12, background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Tăng Trưởng 30 Ngày</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#16a34a', marginTop: 2 }}>
-                    +{youtubeSummary.viewsGrowth30dPct || 0}%
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: youtubeSummary.viewsGrowth30dPct !== null && youtubeSummary.viewsGrowth30dPct !== undefined ? '#16a34a' : '#94a3b8', marginTop: 2 }}>
+                    {youtubeSummary.viewsGrowth30dPct !== null && youtubeSummary.viewsGrowth30dPct !== undefined
+                      ? `${Number(youtubeSummary.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(youtubeSummary.viewsGrowth30dPct).toFixed(1)}%`
+                      : '—'}
                   </div>
                 </div>
               </div>

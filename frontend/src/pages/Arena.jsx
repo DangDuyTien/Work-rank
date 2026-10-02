@@ -654,8 +654,8 @@ export default function Arena() {
                           <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
                             {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>views</span>
                           </div>
-                          <div style={{ fontSize: 11, color: '#15803d', fontWeight: 500, marginTop: 2 }}>
-                            {(team.totalSubscribers || 0).toLocaleString()} subs • +{team.viewsGrowth30dPct || 0}% 30D
+                          <div style={{ fontSize: 11, color: team.viewsGrowth30dPct !== null ? '#15803d' : '#64748b', fontWeight: 500, marginTop: 2 }}>
+                            {(team.totalSubscribers || 0).toLocaleString()} subs • {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `+${Number(team.viewsGrowth30dPct).toFixed(1)}% 30D` : '—'}
                           </div>
                         </div>
                       </div>
