@@ -89,9 +89,10 @@ class LiveActivityWaveService {
       appCategory: batchSummary.appCategory || existing.appCategory || 'DEVELOPMENT',
       lastBatchAt: now,
       lastActiveAt: activeSeconds > 0 ? now : (existing.lastActiveAt || now),
+      score: batchSummary.newScore !== undefined ? batchSummary.newScore : existing.score,
     });
 
-    // Invalidate daily stats cache so score updates reflect soon
+    // Invalidate daily stats cache so score updates reflect immediately
     this.lastStatsFetchTime = 0;
   }
 
@@ -121,17 +122,17 @@ class LiveActivityWaveService {
       const stats = await ComputerDailyStat.findAll({
         where: dateCondition,
         attributes: [
-          'userId',
+          ['user_id', 'userId'],
           [sequelize.fn('SUM', sequelize.col('active_seconds')), 'totalActiveSeconds'],
           [sequelize.fn('SUM', sequelize.col('idle_seconds')), 'totalIdleSeconds'],
           [sequelize.fn('SUM', sequelize.col('activity_score')), 'totalActivityScore'],
         ],
-        group: ['userId'],
+        group: ['user_id'],
         raw: true,
       });
 
       const userIds = [...new Set([
-        ...stats.map((s) => Number(s.userId)),
+        ...stats.map((s) => Number(s.userId || s.user_id)).filter(Boolean),
         ...Array.from(this.surfersMemory.keys()),
       ])];
 
@@ -148,7 +149,7 @@ class LiveActivityWaveService {
       });
 
       const userMap = new Map(users.map((u) => [Number(u.id), u]));
-      const statMap = new Map(stats.map((s) => [Number(s.userId), s]));
+      const statMap = new Map(stats.map((s) => [Number(s.userId || s.user_id), s]));
 
       const combined = userIds.map((uid) => {
         const u = userMap.get(uid);
@@ -192,10 +193,8 @@ class LiveActivityWaveService {
       const timeSinceBatch = mem.lastBatchAt ? now - mem.lastBatchAt : Infinity;
 
       if (timeSinceBatch < 75000) {
-        // Active or currently running
         state = mem.activityState || 'ACTIVE';
       } else if (timeSinceBatch < 600000) {
-        // Between 1.25m and 10m: idle resting intensity (0.05 to 0.25)
         state = 'IDLE';
         const decayFactor = Math.max(0.0, 1 - (timeSinceBatch - 75000) / 525000);
         intensity = Number((0.05 + 0.2 * decayFactor).toFixed(3));
@@ -203,6 +202,8 @@ class LiveActivityWaveService {
         state = 'OFFLINE';
         intensity = 0.0;
       }
+
+      const finalScore = mem.score !== undefined ? Math.max(item.activityScore, mem.score) : item.activityScore;
 
       return {
         userId: uid,
@@ -216,7 +217,7 @@ class LiveActivityWaveService {
         activityState: state,
         status: state,
         intensity: Number(intensity.toFixed(3)),
-        score: item.activityScore,
+        score: finalScore,
         activeSecondsToday: item.activeSeconds,
         idleSecondsToday: item.idleSeconds,
         currentApp: mem.currentApp || 'Chưa có dữ liệu',

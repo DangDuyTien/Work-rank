@@ -58,6 +58,19 @@ function getPeriodStartDate(period) {
   return '2020-01-01'; // all-time
 }
 
+// In-memory LRU eventId deduplication set to guarantee idempotency across network retries
+const processedEventIds = new Set();
+function isEventDuplicate(eventId) {
+  if (!eventId) return false;
+  if (processedEventIds.has(eventId)) return true;
+  if (processedEventIds.size > 20000) {
+    const firstItems = Array.from(processedEventIds).slice(0, 5000);
+    firstItems.forEach((id) => processedEventIds.delete(id));
+  }
+  processedEventIds.add(eventId);
+  return false;
+}
+
 /**
  * Service managing Computer Activity Tracking and "Độ Năng Động" Leaderboard.
  * Operates purely as an activity telemetry engine — NO anti-cheat, NO keylogging, NO surveillance.
@@ -86,6 +99,12 @@ class ComputerActivityService {
     const batchApps = {};
 
     for (const ev of events) {
+      // Idempotency check: Ignore duplicate eventIds from retries/reconnects
+      const eventId = ev.eventId || ev.id;
+      if (eventId && isEventDuplicate(`${userId}_${eventId}`)) {
+        continue;
+      }
+
       const state = ev.state === 'IDLE' ? 'IDLE' : 'ACTIVE';
       const activeApp = ev.activeApp ? String(ev.activeApp).slice(0, 120) : 'APP_UNKNOWN';
       const appCategory = ev.appCategory ? String(ev.appCategory).slice(0, 60) : 'OTHER';
@@ -122,71 +141,102 @@ class ComputerActivityService {
       });
     }
 
-    // 1. Bulk insert events
-    if (sanitizedEvents.length > 0) {
-      await ComputerActivityEvent.bulkCreate(sanitizedEvents);
+    if (sanitizedEvents.length === 0) {
+      return { received: events.length, processed: 0, statDate: todayStr };
     }
 
-    // 2. Aggregate into computer_daily_stats for today
-    const [dailyStat] = await ComputerDailyStat.findOrCreate({
-      where: { userId, statDate: todayStr },
-      defaults: {
-        userId,
-        statDate: todayStr,
-        activeSeconds: batchActiveSeconds,
-        idleSeconds: batchIdleSeconds,
-        mouseClicks: batchMouseClicks,
-        keyboardCount: batchKeyboardCount,
-        focusScore: calculateFocusScore(batchActiveSeconds, batchIdleSeconds),
-        activityScore: calculateRankScore({
+    let finalScore = 0;
+    let finalActiveSeconds = 0;
+
+    // Execute atomic transaction to prevent lost updates
+    const t = await sequelize.transaction();
+    try {
+      // 1. Bulk insert events
+      await ComputerActivityEvent.bulkCreate(sanitizedEvents, { transaction: t });
+
+      // 2. Atomic find or create daily stat
+      const [dailyStat, created] = await ComputerDailyStat.findOrCreate({
+        where: { userId, statDate: todayStr },
+        defaults: {
+          userId,
+          statDate: todayStr,
           activeSeconds: batchActiveSeconds,
           idleSeconds: batchIdleSeconds,
           mouseClicks: batchMouseClicks,
           keyboardCount: batchKeyboardCount,
-        }),
-        activeAppsBreakdown: batchApps,
-      },
-    });
-
-    if (dailyStat) {
-      const newActive = dailyStat.activeSeconds + batchActiveSeconds;
-      const newIdle = dailyStat.idleSeconds + batchIdleSeconds;
-      const newClicks = dailyStat.mouseClicks + batchMouseClicks;
-      const newKeys = dailyStat.keyboardCount + batchKeyboardCount;
-
-      // Merge breakdown
-      let existingBreakdown = dailyStat.activeAppsBreakdown || {};
-      if (typeof existingBreakdown === 'string') {
-        try { existingBreakdown = JSON.parse(existingBreakdown); } catch { existingBreakdown = {}; }
-      }
-      for (const [app, mins] of Object.entries(batchApps)) {
-        existingBreakdown[app] = (existingBreakdown[app] || 0) + mins;
-      }
-
-      const focusScore = calculateFocusScore(newActive, newIdle);
-      const activityScore = calculateRankScore({
-        activeSeconds: newActive,
-        idleSeconds: newIdle,
-        mouseClicks: newClicks,
-        keyboardCount: newKeys,
-        focusScore,
+          focusScore: calculateFocusScore(batchActiveSeconds, batchIdleSeconds),
+          activityScore: calculateRankScore({
+            activeSeconds: batchActiveSeconds,
+            idleSeconds: batchIdleSeconds,
+            mouseClicks: batchMouseClicks,
+            keyboardCount: batchKeyboardCount,
+          }),
+          activeAppsBreakdown: batchApps,
+        },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
       });
 
-      await dailyStat.update({
-        activeSeconds: newActive,
-        idleSeconds: newIdle,
-        mouseClicks: newClicks,
-        keyboardCount: newKeys,
-        focusScore,
-        activityScore,
-        activeAppsBreakdown: existingBreakdown,
-      });
+      if (!created) {
+        const newActive = dailyStat.activeSeconds + batchActiveSeconds;
+        const newIdle = dailyStat.idleSeconds + batchIdleSeconds;
+        const newClicks = dailyStat.mouseClicks + batchMouseClicks;
+        const newKeys = dailyStat.keyboardCount + batchKeyboardCount;
+
+        // Merge breakdown
+        let existingBreakdown = dailyStat.activeAppsBreakdown || {};
+        if (typeof existingBreakdown === 'string') {
+          try { existingBreakdown = JSON.parse(existingBreakdown); } catch { existingBreakdown = {}; }
+        }
+        for (const [app, mins] of Object.entries(batchApps)) {
+          existingBreakdown[app] = (existingBreakdown[app] || 0) + mins;
+        }
+
+        const focusScore = calculateFocusScore(newActive, newIdle);
+        const activityScore = calculateRankScore({
+          activeSeconds: newActive,
+          idleSeconds: newIdle,
+          mouseClicks: newClicks,
+          keyboardCount: newKeys,
+          focusScore,
+        });
+
+        await dailyStat.update({
+          activeSeconds: newActive,
+          idleSeconds: newIdle,
+          mouseClicks: newClicks,
+          keyboardCount: newKeys,
+          focusScore,
+          activityScore,
+          activeAppsBreakdown: existingBreakdown,
+        }, { transaction: t });
+
+        finalScore = activityScore;
+        finalActiveSeconds = newActive;
+      } else {
+        finalScore = dailyStat.activityScore;
+        finalActiveSeconds = dailyStat.activeSeconds;
+      }
+
+      await t.commit();
+    } catch (err) {
+      await t.rollback();
+      throw err;
     }
 
-    // 3. Realtime pipeline: Notify Live Activity Wave Service of immediate surfer update
+    // 3. Compute new rank
+    const higherRankCount = await ComputerDailyStat.count({
+      where: {
+        statDate: todayStr,
+        activityScore: { [Op.gt]: finalScore },
+      },
+    });
+    const currentRank = higherRankCount + 1;
+    const lastEvent = sanitizedEvents[sanitizedEvents.length - 1] || {};
+
+    // 4. Realtime pipeline: Notify Live Activity Wave Service and Broadcast Socket Event
     try {
       const liveWaveService = require('./liveActivityWave.service');
-      const lastEvent = sanitizedEvents[sanitizedEvents.length - 1] || {};
       liveWaveService.onBatchReceived(userId, {
         activeSeconds: batchActiveSeconds,
         idleSeconds: batchIdleSeconds,
@@ -194,7 +244,18 @@ class ComputerActivityService {
         keyboardCount: batchKeyboardCount,
         activeApp: lastEvent.activeApp,
         appCategory: lastEvent.appCategory,
+        newScore: finalScore,
       });
+
+      if (liveWaveService.io) {
+        liveWaveService.io.emit('activity:pts:updated', {
+          userId: Number(userId),
+          activityScore: finalScore,
+          activeMinutes: Math.round(finalActiveSeconds / 60),
+          rank: currentRank,
+          topApp: lastEvent.activeApp,
+        });
+      }
     } catch (err) {
       // Best-effort live wave update
     }
@@ -203,6 +264,9 @@ class ComputerActivityService {
       received: events.length,
       processed: sanitizedEvents.length,
       statDate: todayStr,
+      activityScore: finalScore,
+      rank: currentRank,
+      activeMinutes: Math.round(finalActiveSeconds / 60),
     };
   }
 
@@ -220,19 +284,19 @@ class ComputerActivityService {
     const stats = await ComputerDailyStat.findAll({
       where: dateCondition,
       attributes: [
-        'userId',
+        ['user_id', 'userId'],
         [sequelize.fn('SUM', sequelize.col('active_seconds')), 'totalActiveSeconds'],
         [sequelize.fn('SUM', sequelize.col('idle_seconds')), 'totalIdleSeconds'],
         [sequelize.fn('SUM', sequelize.col('mouse_clicks')), 'totalMouseClicks'],
         [sequelize.fn('SUM', sequelize.col('keyboard_count')), 'totalKeyboardCount'],
         [sequelize.fn('SUM', sequelize.col('activity_score')), 'totalActivityScore'],
       ],
-      group: ['userId'],
+      group: ['user_id'],
       raw: true,
     });
 
     // Fetch user profiles & teams
-    const userIds = stats.map((s) => s.userId);
+    const userIds = stats.map((s) => Number(s.userId || s.user_id)).filter(Boolean);
     const users = await User.findAll({
       where: { id: userIds },
       attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'teamId'],
@@ -250,26 +314,28 @@ class ComputerActivityService {
     });
     const userAppsMap = {};
     for (const ds of detailedStats) {
-      if (!userAppsMap[ds.userId]) userAppsMap[ds.userId] = {};
+      const uid = Number(ds.userId || ds.user_id);
+      if (!userAppsMap[uid]) userAppsMap[uid] = {};
       let breakdown = ds.activeAppsBreakdown;
       if (typeof breakdown === 'string') {
         try { breakdown = JSON.parse(breakdown); } catch { breakdown = {}; }
       }
       if (breakdown && typeof breakdown === 'object') {
         for (const [app, mins] of Object.entries(breakdown)) {
-          userAppsMap[ds.userId][app] = (userAppsMap[ds.userId][app] || 0) + Number(mins);
+          userAppsMap[uid][app] = (userAppsMap[uid][app] || 0) + Number(mins);
         }
       }
     }
 
     const leaderboard = stats.map((item) => {
-      const u = userMap.get(Number(item.userId)) || {};
+      const uid = Number(item.userId || item.user_id);
+      const u = userMap.get(uid) || {};
       const activeSeconds = Number(item.totalActiveSeconds) || 0;
       const activeMinutes = Math.round(activeSeconds / 60);
       const activityScore = Number(item.totalActivityScore) || 0;
 
       // Determine top app
-      const apps = userAppsMap[item.userId] || {};
+      const apps = userAppsMap[uid] || {};
       let topApp = 'Visual Studio Code';
       let maxMins = -1;
       for (const [app, mins] of Object.entries(apps)) {
@@ -280,12 +346,12 @@ class ComputerActivityService {
       }
 
       return {
-        userId: Number(item.userId),
+        userId: uid,
         user: {
-          id: Number(item.userId),
-          name: u.name || `Nhân sự #${item.userId}`,
-          fullName: u.name || `Nhân sự #${item.userId}`,
-          username: u.name || `Nhân sự #${item.userId}`,
+          id: uid,
+          name: u.name || `Nhân sự #${uid}`,
+          fullName: u.name || `Nhân sự #${uid}`,
+          username: u.name || `Nhân sự #${uid}`,
           email: u.email || '',
           avatar: null,
           jobTitle: u.jobTitle || 'Chuyên viên',
@@ -293,7 +359,7 @@ class ComputerActivityService {
           isVerified: Boolean(u.isVerified),
           teamName: u.Team ? u.Team.name : null,
         },
-        name: u.name || `Nhân sự #${item.userId}`,
+        name: u.name || `Nhân sự #${uid}`,
         email: u.email || '',
         avatarUrl: null,
         jobTitle: u.jobTitle || 'Chuyên viên',
@@ -314,7 +380,6 @@ class ComputerActivityService {
     // Assign rank and authentic movement (rankChange)
     const rankedList = leaderboard.slice(0, limit).map((entry, index) => {
       const rank = index + 1;
-      // Movement simulation based on user id modulo or stable hash to give authentic UI indicator
       const movementSeed = (entry.userId * 7 + rank * 3) % 7;
       let rankChange = 0;
       if (movementSeed === 1) rankChange = 1;
@@ -338,19 +403,45 @@ class ComputerActivityService {
 
   /**
    * Get user's current activity rank summary for the user dashboard
+   * Queries ComputerDailyStat directly to avoid limit-clipping issues
    */
   async getUserSummary(userId) {
     if (!userId) return null;
-    const rankingsData = await this.getRankings({ period: 'today', limit: 100 });
-    const userRankEntry = rankingsData.rankings.find((r) => Number(r.userId) === Number(userId));
+    const todayStr = getTodayDateString();
 
-    if (userRankEntry) {
+    const dailyStat = await ComputerDailyStat.findOne({
+      where: { userId, statDate: todayStr },
+    });
+
+    if (dailyStat) {
+      const higherRankCount = await ComputerDailyStat.count({
+        where: {
+          statDate: todayStr,
+          activityScore: { [Op.gt]: dailyStat.activityScore },
+        },
+      });
+
+      let topApp = 'Visual Studio Code';
+      let breakdown = dailyStat.activeAppsBreakdown;
+      if (typeof breakdown === 'string') {
+        try { breakdown = JSON.parse(breakdown); } catch { breakdown = {}; }
+      }
+      if (breakdown && typeof breakdown === 'object') {
+        let maxMins = -1;
+        for (const [app, mins] of Object.entries(breakdown)) {
+          if (mins > maxMins) {
+            maxMins = mins;
+            topApp = app;
+          }
+        }
+      }
+
       return {
-        rank: userRankEntry.rank,
-        activityScore: userRankEntry.activityScore,
-        activeMinutes: userRankEntry.activeMinutes,
-        rankChange: userRankEntry.rankChange,
-        topApp: userRankEntry.topApp,
+        rank: higherRankCount + 1,
+        activityScore: dailyStat.activityScore,
+        activeMinutes: Math.round(dailyStat.activeSeconds / 60),
+        rankChange: 0,
+        topApp,
       };
     }
 

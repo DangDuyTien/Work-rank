@@ -272,6 +272,8 @@ export function useActivityTracker() {
       }
     }, 1000);
 
+    const debounceFlushTimerRef = useRef(null);
+
     const recordInteraction = (type) => {
       lastInteractionTimeRef.current = Date.now();
       telemetryStore.lastEventTime = Date.now();
@@ -283,12 +285,14 @@ export function useActivityTracker() {
       }
       emitStoreUpdate();
 
-      // Queue event for fallback web sync if desktop agent not running
+      // Queue event for sync
       if (!telemetryStore.agentStatus?.running) {
         if (queueRef.current.length >= MAX_QUEUE_SIZE) {
           queueRef.current.shift();
         }
+        const eventId = 'ev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
         queueRef.current.push({
+          eventId,
           state: 'ACTIVE',
           activeApp: 'WorkRank Web',
           appCategory: 'BROWSER',
@@ -299,6 +303,17 @@ export function useActivityTracker() {
           keyboardCount: type === 'key' ? 1 : 0,
           occurredAt: new Date().toISOString(),
         });
+
+        // Fast-flush if accumulated >= 5 actions or debounce within 1.2s for instant PTS responsiveness
+        if (queueRef.current.length >= 5) {
+          if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
+          flushWebQueue();
+        } else {
+          if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
+          debounceFlushTimerRef.current = setTimeout(() => {
+            flushWebQueue();
+          }, 1200);
+        }
       }
     };
 
@@ -318,6 +333,7 @@ export function useActivityTracker() {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
       if (flushTimerRef.current) clearInterval(flushTimerRef.current);
       if (activeSecondTimerRef.current) clearInterval(activeSecondTimerRef.current);
+      if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
       flushWebQueue();
     };
   }, [telemetryStore.isTrackingActive, flushWebQueue, location.pathname]);

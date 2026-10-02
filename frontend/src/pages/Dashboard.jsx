@@ -300,13 +300,29 @@ export default function Dashboard() {
       }
     };
 
+    const onPtsUpdated = (data) => {
+      if (!data) return;
+      const myId = Number(user?.id || user?.userId);
+      if (Number(data.userId) === myId) {
+        setMyActivity((prev) => ({
+          ...prev,
+          rank: data.rank !== undefined ? data.rank : prev?.rank,
+          activityScore: data.activityScore !== undefined ? data.activityScore : prev?.activityScore,
+          activeMinutes: data.activeMinutes !== undefined ? data.activeMinutes : prev?.activeMinutes,
+          topApp: data.topApp || prev?.topApp,
+        }));
+      }
+    };
+
     socket.on('activity:wave:tick', onWaveTick);
     socket.on('activity:wave:initial', onWaveTick);
+    socket.on('activity:pts:updated', onPtsUpdated);
 
     return () => {
       socket.emit('activity:wave:leave');
       socket.off('activity:wave:tick', onWaveTick);
       socket.off('activity:wave:initial', onWaveTick);
+      socket.off('activity:pts:updated', onPtsUpdated);
     };
   }, [socket, user]);
 
@@ -431,7 +447,9 @@ export default function Dashboard() {
                 {isTrackingActive
                   ? (liveAgentStatus?.running || agentStatus?.running
                       ? `🟢 Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web hoặc tắt máy tính sẽ tự động dừng.`
-                      : '🟢 Đang tự động đếm hoạt động — Tắt web hoặc tắt máy tính sẽ tự động dừng.')
+                      : (typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+                          ? '🟢 Đang tự động đếm hoạt động Web/PWA (iOS) — Tắt web sẽ tự động ngắt.'
+                          : '🟢 Đang tự động đếm hoạt động trình duyệt Web — Tắt web sẽ tự động ngắt.'))
                   : '💡 Bấm nút "Bật Theo Dõi" để bắt đầu đếm. Tắt web hoặc tắt máy tính sẽ tự động ngắt.'}
               </p>
             </div>

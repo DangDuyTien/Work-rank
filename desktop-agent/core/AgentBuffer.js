@@ -12,7 +12,7 @@ const OFFLINE_QUEUE_FILE = path.join(WORKRANK_DIR, 'offline_queue.json');
 
 class AgentBuffer {
   constructor(options = {}) {
-    this.batchIntervalSeconds = options.batchIntervalSeconds || 15;
+    this.batchIntervalSeconds = options.batchIntervalSeconds || 5;
     this.backendUrl = options.backendUrl || 'http://localhost:5001';
     this.getToken = options.getToken || (() => null);
     this.devicePlatform = options.devicePlatform || (process.platform === 'darwin' ? 'macos' : 'windows');
@@ -113,6 +113,7 @@ class AgentBuffer {
     const dominantCategory = this.currentBatch.appCategory[dominantApp] || 'OTHER';
 
     const event = {
+      eventId: 'agt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
       state: this.currentBatch.currentState,
       activeApp: dominantApp,
       appCategory: dominantCategory,

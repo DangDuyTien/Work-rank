@@ -55,10 +55,8 @@ class DesktopAgent {
       },
     });
 
-    const initialConfig = this.ipcServer.loadConfig();
-
     this.buffer = new AgentBuffer({
-      batchIntervalSeconds: 15,
+      batchIntervalSeconds: 5,
       backendUrl: initialConfig.backendUrl || 'http://localhost:5001',
       getToken: () => this.ipcServer.loadConfig().token,
       devicePlatform: process.platform === 'darwin' ? 'macos' : 'windows',
@@ -127,9 +125,9 @@ class DesktopAgent {
       }
     }, 1000);
 
-    // 2. Periodic flush to backend every 15s ONLY WHEN SAMPLES EXIST
+    // 2. Periodic flush to backend every 5s ONLY WHEN SAMPLES EXIST
     this.flushTimer = setInterval(async () => {
-      if (!this.trackingActive && this.buffer.currentWindow.samples.length === 0) {
+      if (!this.trackingActive && this.buffer.pendingEvents.length === 0) {
         return;
       }
       try {
@@ -137,7 +135,7 @@ class DesktopAgent {
       } catch (err) {
         // Flush errors logged in buffer
       }
-    }, 15000);
+    }, 5000);
 
     console.log('[DesktopAgent] Agent is ready on http://127.0.0.1:43124 (Standby, waiting for Web toggle).');
   }
