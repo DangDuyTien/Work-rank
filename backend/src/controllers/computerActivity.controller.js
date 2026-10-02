@@ -50,3 +50,14 @@ exports.getAdminOverview = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.getLiveWave = async (req, res, next) => {
+  try {
+    const liveActivityWaveService = require('../services/liveActivityWave.service');
+    const period = req.query.period || 'today';
+    const snapshot = await liveActivityWaveService.getWaveSnapshot(period);
+    return res.status(200).json({ success: true, data: snapshot, ...snapshot });
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
+import LiveActivityWave from '../components/LiveActivityWave';
 import { TabTransition, TableSkeleton } from '../components/ui';
 
 /* =========================================================================
@@ -1602,185 +1603,10 @@ export default function Leaderboard() {
                 </div>
               )}
 
-              {/* 3. BXH ĐỘ NĂNG ĐỘNG (COMPUTER ACTIVITY) */}
+              {/* 3. BXH ĐỘ NĂNG ĐỘNG (LIVE ACTIVITY WAVE) */}
               {scopeMode === 'activity' && (
-                <div>
-                  <MyRankBanner
-                    currentUser={currentUser}
-                    items={activityRankings.items || []}
-                    scoreKey="activityScore"
-                    scoreSuffix="pts"
-                    serverRank={activityRankings.items?.find((x) => Number(x.userId) === Number(currentUser?.id))?.rank}
-                    onOpenProfile={(u) => navigate(`/users/${u.userId || u.id}`)}
-                  />
-
-                  {activityRankings.items?.length >= 1 && !searchKeyword && (
-                    <DynamicPodium
-                      items={activityRankings.items.map((x) => ({
-                        ...x,
-                        userName: x.user?.fullName || x.user?.username || `User #${x.userId}`,
-                        teamName: x.user?.teamName || null,
-                        avatar: x.user?.avatar,
-                      }))}
-                      nameKey="userName"
-                      scoreKey="activityScore"
-                      scoreSuffix="pts"
-                      onSelect={(u) => navigate(`/users/${u.userId || u.id}`)}
-                    />
-                  )}
-
-                  <div style={{ ...CARD, overflow: 'hidden' }}>
-                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
-                        Bảng Xếp Hạng Độ Năng Động ({activityRankings.items?.length || 0} người)
-                      </span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>
-                        Ghi nhận toàn máy tính thông qua Desktop Companion
-                      </span>
-                    </div>
-                    <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', width: 90 }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Nhóm</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Ứng Dụng Chính</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thời Gian</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Năng Động</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {activityRankings.items?.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
-                              <Sparkles size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
-                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
-                                {searchKeyword ? `Không tìm thấy thành viên phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu hoạt động trong chu kỳ này'}
-                              </div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
-                                Dữ liệu được ghi nhận tự động thông qua WorkRank Desktop Companion.
-                              </div>
-                            </td>
-                          </tr>
-                        ) : (
-                          activityRankings.items.map((u, i) => {
-                            const rank = u.rank || i + 1;
-                            const isMe = currentUser && Number(u.userId) === Number(currentUser.id);
-                            const rankChange = u.rankChange || 0;
-                            const activeMins = u.activeMinutes || 0;
-                            const hours = Math.floor(activeMins / 60);
-                            const mins = activeMins % 60;
-                            const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-
-                            return (
-                              <tr
-                                key={u.userId || i}
-                                style={{
-                                  borderBottom: '1px solid rgba(15,23,42,0.04)',
-                                  background: isMe ? 'rgba(5,150,105,0.04)' : i % 2 === 0 ? '#ffffff' : 'rgba(15,23,42,0.01)',
-                                  cursor: 'pointer',
-                                  transition: 'background .12s',
-                                }}
-                                onClick={() => navigate(`/users/${u.userId}`)}
-                              >
-                                <td style={{ padding: '12px 16px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: '50%',
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                        background: rank === 1 ? '#fef3c7' : rank === 2 ? '#f1f5f9' : rank === 3 ? '#ffedd5' : 'transparent',
-                                        color: rank === 1 ? '#b45309' : rank === 2 ? '#475569' : rank === 3 ? '#c2410c' : '#64748b',
-                                      }}
-                                    >
-                                      {rank}
-                                    </span>
-                                    {rankChange > 0 ? (
-                                      <span style={{ fontSize: 10, color: '#16a34a', display: 'inline-flex', alignItems: 'center' }}>
-                                        <ArrowUp size={11} />
-                                        {rankChange}
-                                      </span>
-                                    ) : rankChange < 0 ? (
-                                      <span style={{ fontSize: 10, color: '#dc2626', display: 'inline-flex', alignItems: 'center' }}>
-                                        <ArrowDown size={11} />
-                                        {Math.abs(rankChange)}
-                                      </span>
-                                    ) : (
-                                      <span style={{ fontSize: 10, color: '#94a3b8' }}>—</span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <div
-                                      style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: '50%',
-                                        background: '#e2e8f0',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        color: '#475569',
-                                        overflow: 'hidden',
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      {u.user?.avatar ? (
-                                        <img src={getUserAvatar(u.user)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      ) : (
-                                        initialsFromName(u.user?.fullName || u.user?.username || 'U')
-                                      )}
-                                    </div>
-                                    <div>
-                                      <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span>{u.user?.fullName || u.user?.username || `User #${u.userId}`}</span>
-                                        {isMe && (
-                                          <span style={{ fontSize: 9, fontWeight: 700, background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3 }}>
-                                            BẠN
-                                          </span>
-                                        )}
-                                        <VerifiedBadge user={u.user} size={13} />
-                                      </div>
-                                      {u.user?.jobTitle && <JobTitleBadge title={u.user.jobTitle} compact />}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td style={{ padding: '12px 16px', color: '#475569' }}>
-                                  {u.user?.teamName || '—'}
-                                </td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  {u.topApp ? (
-                                    <span style={{ fontSize: 11, background: '#f1f5f9', color: '#334155', padding: '3px 8px', borderRadius: 4, fontWeight: 500 }}>
-                                      {u.topApp}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: '#94a3b8' }}>—</span>
-                                  )}
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center', color: '#334155', fontWeight: 500 }}>
-                                  {durationStr}
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <div style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>
-                                    {fmtNum(u.activityScore)} <span style={{ fontSize: 10, fontWeight: 500, color: '#64748b' }}>pts</span>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                <div style={{ marginTop: 8 }}>
+                  <LiveActivityWave defaultPeriod={currentPeriod} />
                 </div>
               )}
 
@@ -1875,16 +1701,22 @@ export default function Leaderboard() {
                                   {fmtNum(c.subscribers)}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{
-                                    padding: '2px 6px',
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    borderRadius: 4,
-                                    background: Number(c.viewsGrowth30dPct || 0) >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(220,38,38,0.12)',
-                                    color: Number(c.viewsGrowth30dPct || 0) >= 0 ? '#16a34a' : '#dc2626',
-                                  }}>
-                                    {Number(c.viewsGrowth30dPct || 0) > 0 ? `+${c.viewsGrowth30dPct}%` : `${c.viewsGrowth30dPct || 0}%`}
-                                  </span>
+                                  {c.viewsGrowth30dPct !== null && c.viewsGrowth30dPct !== undefined ? (
+                                    <span style={{
+                                      padding: '2px 6px',
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      borderRadius: 4,
+                                      background: Number(c.viewsGrowth30dPct) >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(220,38,38,0.12)',
+                                      color: Number(c.viewsGrowth30dPct) >= 0 ? '#16a34a' : '#dc2626',
+                                    }}>
+                                      {Number(c.viewsGrowth30dPct) >= 0 ? '+' : ''}{Number(c.viewsGrowth30dPct).toFixed(1)}%
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>
+                                      —
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
                             );

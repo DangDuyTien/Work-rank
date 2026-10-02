@@ -22,6 +22,7 @@ router.get('/analytics', auth, requireRole('admin'), asyncHandler(activityContro
 const computerActivityController = require('../controllers/computerActivity.controller');
 router.post('/computer/batch', auth, asyncHandler(computerActivityController.recordBatch));
 router.get('/rankings', optionalAuth, asyncHandler(computerActivityController.getRankings));
+router.get('/wave/live', optionalAuth, asyncHandler(computerActivityController.getLiveWave));
 router.get('/my-summary', auth, asyncHandler(computerActivityController.getMySummary));
 router.get('/admin/overview', auth, requireRole('admin'), asyncHandler(computerActivityController.getAdminOverview));
 

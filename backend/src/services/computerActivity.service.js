@@ -183,6 +183,22 @@ class ComputerActivityService {
       });
     }
 
+    // 3. Realtime pipeline: Notify Live Activity Wave Service of immediate surfer update
+    try {
+      const liveWaveService = require('./liveActivityWave.service');
+      const lastEvent = sanitizedEvents[sanitizedEvents.length - 1] || {};
+      liveWaveService.onBatchReceived(userId, {
+        activeSeconds: batchActiveSeconds,
+        idleSeconds: batchIdleSeconds,
+        mouseClicks: batchMouseClicks,
+        keyboardCount: batchKeyboardCount,
+        activeApp: lastEvent.activeApp,
+        appCategory: lastEvent.appCategory,
+      });
+    } catch (err) {
+      // Best-effort live wave update
+    }
+
     return {
       received: events.length,
       processed: sanitizedEvents.length,

@@ -1259,6 +1259,10 @@ export const computerActivityApi = {
   getRankings: async (params) => activityApi.getComputerRankings(params),
   getMySummary: async () => activityApi.getMySummary(),
   getAdminOverview: async (params) => activityApi.getAdminOverview(params),
+  getLiveWaveState: async (params = {}) => {
+    const res = await api.get('/api/activity/wave/live', { params });
+    return res.data;
+  },
 };
 
 export const desktopAgentIpc = {

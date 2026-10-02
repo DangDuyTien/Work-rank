@@ -51,6 +51,7 @@ const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
+const LiveActivityOcean = lazyWithReload(() => import('./pages/LiveActivityOcean'));
 import { useActivityTracker } from './hooks/useActivityTracker';
 
 
@@ -211,6 +212,8 @@ function AnimatedAppRoutes() {
             <Route path="/grand" element={<GrandHub />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/rankings" element={<Leaderboard />} />
+            <Route path="/activity" element={<LiveActivityOcean />} />
+            <Route path="/activity-wave" element={<LiveActivityOcean />} />
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
