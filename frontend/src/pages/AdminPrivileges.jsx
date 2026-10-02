@@ -436,7 +436,7 @@ export default function AdminPrivileges() {
   const adminCount = users.filter((u) => u.role === 'admin').length;
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
+    <div style={{ width: '100%', maxWidth: 1680, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
       {/* ── HEADER & STATS ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>

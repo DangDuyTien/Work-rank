@@ -427,7 +427,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+        <div className="activity-stats-grid">
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Vị trí BXH (Hôm nay)</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
@@ -541,14 +541,7 @@ export default function Dashboard() {
 
           {/* KPI CARDS GRID */}
           {companyOverview?.kpis && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: 12,
-                marginBottom: 16,
-              }}
-            >
+            <div className="youtube-kpis-grid" style={{ marginBottom: 16 }}>
               {/* Total Views */}
               <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
@@ -586,7 +579,7 @@ export default function Dashboard() {
                   }}
                 >
                   {companyOverview.kpis.viewsGrowthPct !== null
-                    ? `${companyOverview.kpis.viewsGrowthPct >= 0 ? '+' : ''}${companyOverview.kpis.viewsGrowthPct}%`
+                    ? `${companyOverview.kpis.viewsGrowthPct >= 0 ? '+' : ''}${Number(companyOverview.kpis.viewsGrowthPct).toFixed(1)}%`
                     : 'Chưa đủ dữ liệu'}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
@@ -748,7 +741,7 @@ export default function Dashboard() {
               </div>
 
               {/* TWO-COLUMN ANALYTICS: TEAMS PERFORMANCE & CHANNELS PERFORMANCE */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
+              <div className="analytics-two-columns-grid">
                 {/* COLUMN 1: TEAM PERFORMANCE & COMPARISON */}
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -998,14 +991,7 @@ export default function Dashboard() {
           </div>
 
           {/* 3-GRID CARDS: MY PROFILE / MY RANKING / MY TEAM */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: 14,
-              marginBottom: 18,
-            }}
-          >
+          <div className="member-overview-grid">
             {/* CARD 1: MY PROFILE */}
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 18 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 10 }}>

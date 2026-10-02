@@ -235,7 +235,7 @@ export function TableSkeleton({ rows = 6, cols = 4, minHeight = 320 }) {
 
 export function PageTransitionSkeleton() {
   return (
-    <div className="page-transition" style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="page-transition" style={{ maxWidth: 1680, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '50%' }}>
           <Skeleton height={24} width="60%" />

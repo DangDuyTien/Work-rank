@@ -431,7 +431,7 @@ export default function YouTubeOverview() {
   const unassignedViews = overview?.kpis?.unassignedViews || overview?.unassignedSummary?.totalViews || 0;
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ width: '100%', maxWidth: 1680, margin: '0 auto', padding: '24px 16px' }}>
       {/* HEADER & BREADCRUMB */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
         <div>

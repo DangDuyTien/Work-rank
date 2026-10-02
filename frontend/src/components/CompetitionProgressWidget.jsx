@@ -144,7 +144,7 @@ export default function CompetitionProgressWidget() {
       </div>
 
       {/* ── 4 SUMMARY STAT CARDS (UNIFIED NEUTRAL WITH GOLD HIGHLIGHTS) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginBottom: 14 }}>
+      <div className="competition-overview-grid">
         {/* 1. MY SEASON SCORE */}
         <Card
           onClick={() => navigate('/rankings?scope=individual')}
