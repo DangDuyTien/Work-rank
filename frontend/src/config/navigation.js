@@ -60,15 +60,6 @@ export const NAVIGATION_CONFIG = [
         tourTarget: 'nav-leaderboard',
         description: 'Bảng xếp hạng cá nhân và phòng ban thi đua',
       },
-      {
-        to: '/rankings?scope=activity',
-        label: 'Độ Năng Động (Live Wave)',
-        shortLabel: 'Năng động',
-        icon: Sparkles,
-        badge: 'LIVE',
-        tourTarget: 'nav-activity-wave',
-        description: 'BXH máy tính & biểu đồ chuyển động thứ hạng realtime',
-      },
     ],
   },
 
