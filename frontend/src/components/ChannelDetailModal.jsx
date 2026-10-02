@@ -50,17 +50,38 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
     };
   }, [channelId, isOpen, period]);
 
+  const [mounted, setMounted] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      setClosing(false);
+    } else if (mounted) {
+      setClosing(true);
+      const timer = setTimeout(() => {
+        setMounted(false);
+        setClosing(false);
+      }, 160);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, mounted]);
+
+  const handleClose = () => {
+    if (onClose) onClose();
+  };
+
   // Handle ESC key to close
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   const youtubeUrl = channel?.customUrl
     ? `https://youtube.com/${channel.customUrl.startsWith('@') ? channel.customUrl : '@' + channel.customUrl}`
@@ -70,20 +91,22 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
 
   return (
     <div
+      className={closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}
       style={{
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(3px)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
         padding: 16,
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
+        className={closing ? 'modal-dialog-exit' : 'modal-dialog-enter'}
         style={{
           background: '#ffffff',
           width: '100%',
@@ -91,6 +114,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
           maxHeight: '90vh',
           overflowY: 'auto',
           border: '1px solid #cbd5e1',
+          borderRadius: 8,
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
           display: 'flex',
           flexDirection: 'column',

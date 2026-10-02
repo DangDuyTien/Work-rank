@@ -502,23 +502,89 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
   box-shadow: var(--shadow-card-hover);
 }
 
-/* ── Tab sliding indicator ── */
-.motion-tab-indicator {
-  transition: left var(--motion-normal) var(--ease-spring),
-              width var(--motion-normal) var(--ease-spring),
-              background-color var(--motion-fast) ease;
+/* ── Right Drawer Animation ── */
+@keyframes drawer-right-enter {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes drawer-right-exit {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+.drawer-slide-right-enter {
+  animation: drawer-right-enter var(--motion-slow) var(--ease-emphasized) forwards;
+}
+.drawer-slide-right-exit {
+  animation: drawer-right-exit var(--motion-normal) var(--ease-exit) forwards;
+  pointer-events: none;
 }
 
-/* ── Skeleton shimmer ── */
-.skeleton-box {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
+/* ── Toast Animation ── */
+@keyframes toast-enter {
+  from { transform: translateY(-12px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes toast-exit {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to   { transform: translateY(-8px) scale(0.96); opacity: 0; }
+}
+.motion-toast-enter {
+  animation: toast-enter var(--motion-normal) var(--ease-spring) forwards;
+}
+.motion-toast-exit {
+  animation: toast-exit var(--motion-fast) var(--ease-exit) forwards;
+  pointer-events: none;
 }
 
-.row-highlight-active {
-  animation: row-highlight 1.5s ease forwards;
+/* ── Staggered list reveals ── */
+.motion-stagger-1 { animation-delay: 40ms !important; }
+.motion-stagger-2 { animation-delay: 80ms !important; }
+.motion-stagger-3 { animation-delay: 120ms !important; }
+.motion-stagger-4 { animation-delay: 160ms !important; }
+.motion-stagger-5 { animation-delay: 200ms !important; }
+.motion-stagger-6 { animation-delay: 240ms !important; }
+
+/* ── Tabular numbers for animated counters ── */
+.motion-number-counter {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' on, 'zero' on;
+  display: inline-block;
+  transition: color var(--motion-fast) ease;
+}
+
+/* ── Interactive table rows transition ── */
+table tbody tr {
+  transition: background-color var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+
+/* ── Standardized UI Modal Classes ── */
+.ui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+.ui-modal-dialog {
+  background: #ffffff;
+  border-radius: var(--radius-modal);
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Standardized UI Button Press & Hover ── */
+button:not(:disabled):active,
+.ui-button:not(:disabled):active,
+.btn:not(:disabled):active {
+  transform: scale(0.985);
+  transition: transform var(--motion-instant) ease;
 }
 
 

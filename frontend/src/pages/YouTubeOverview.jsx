@@ -34,7 +34,7 @@ import { youtube, groups as groupsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { TabTransition, TableSkeleton } from '../components/ui';
+import { TabTransition, TableSkeleton, AnimatedNumber, PageTransition } from '../components/ui';
 
 function formatNumber(num) {
   if (num === null || num === undefined) return '0';
@@ -576,7 +576,7 @@ export default function YouTubeOverview() {
             <Eye size={18} color="#3b82f6" />
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
-            {formatNumber(overview?.kpis?.totalViews || 0)}
+            <AnimatedNumber value={overview?.kpis?.totalViews || 0} formatFn={formatNumber} />
           </div>
           <div style={{ fontSize: 12, color: '#10b981', fontWeight: 500, marginTop: 4 }}>
             Bao gồm toàn bộ kênh thuộc đội & độc lập
@@ -589,7 +589,7 @@ export default function YouTubeOverview() {
             <Users size={18} color="#8b5cf6" />
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
-            {formatNumber(overview?.kpis?.totalSubscribers || 0)}
+            <AnimatedNumber value={overview?.kpis?.totalSubscribers || 0} formatFn={formatNumber} />
           </div>
           <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, fontWeight: 400 }}>
             Người theo dõi toàn hệ thống
@@ -602,7 +602,7 @@ export default function YouTubeOverview() {
             <TrendingUp size={18} color="#f59e0b" />
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a', marginTop: 8 }}>
-            {overview?.kpis?.totalChannels || 0}{' '}
+            <AnimatedNumber value={overview?.kpis?.totalChannels || 0} />{' '}
             <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b', fontFamily: 'inherit' }}>
               kênh ({overview?.kpis?.totalTeams || 0} teams)
             </span>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Inbox, RotateCcw } from 'lucide-react';
 
 function cx(...values) {
@@ -163,7 +163,7 @@ export function PageTransition({ children, className = '', style }) {
   );
 }
 
-export function TabTransition({ children, className = '', minHeight = 280, style }) {
+export function TabTransition({ children, className = '', minHeight = 200, style }) {
   return (
     <div
       className={cx('tab-transition', className)}
@@ -193,6 +193,166 @@ export function AnimatedCollapse({ isOpen, children, className = '', style }) {
       <div className="animated-collapse__inner">
         {children}
       </div>
+    </div>
+  );
+}
+
+/**
+ * AnimatedNumber — Smooth counter animation with requestAnimationFrame.
+ * Usage: <AnimatedNumber value={pts} formatFn={(v) => `${v.toLocaleString()} PTS`} />
+ */
+export function AnimatedNumber({ value, duration = 450, formatFn, className = '', style }) {
+  const numVal = typeof value === 'number' ? value : (parseFloat(String(value).replace(/,/g, '')) || 0);
+  const [displayValue, setDisplayValue] = useState(numVal);
+  const startValRef = useRef(numVal);
+  const targetValRef = useRef(numVal);
+  const startTimeRef = useRef(null);
+  const animFrameRef = useRef(null);
+
+  useEffect(() => {
+    const target = typeof value === 'number' ? value : (parseFloat(String(value).replace(/,/g, '')) || 0);
+    if (target === targetValRef.current && displayValue === target) return;
+
+    startValRef.current = displayValue;
+    targetValRef.current = target;
+    startTimeRef.current = null;
+
+    const animate = (timestamp) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
+      const elapsed = timestamp - startTimeRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutQuad: fast start, soft settle
+      const eased = 1 - (1 - progress) * (1 - progress);
+      const current = startValRef.current + (targetValRef.current - startValRef.current) * eased;
+
+      const nextVal = progress === 1
+        ? targetValRef.current
+        : (Number.isInteger(targetValRef.current) ? Math.round(current) : Math.round(current * 10) / 10);
+
+      setDisplayValue(nextVal);
+
+      if (progress < 1) {
+        animFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [value, duration]);
+
+  const formatted = formatFn ? formatFn(displayValue) : displayValue.toLocaleString();
+
+  return (
+    <span className={cx('motion-number-counter', className)} style={style}>
+      {formatted}
+    </span>
+  );
+}
+
+/**
+ * AnimatedModal — Standardized accessible modal with coordinated enter and exit animations.
+ */
+export function AnimatedModal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = 600,
+  className = '',
+  dialogStyle,
+  hideCloseButton = false,
+  actions,
+}) {
+  const [mounted, setMounted] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      setClosing(false);
+    } else if (mounted) {
+      setClosing(true);
+      const timer = setTimeout(() => {
+        setMounted(false);
+        setClosing(false);
+      }, 160); // match --motion-fast
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, mounted]);
+
+  const handleClose = React.useCallback(() => {
+    if (onClose) onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, handleClose]);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      className={cx('ui-modal-overlay', closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter')}
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className={cx('ui-modal-dialog', closing ? 'modal-dialog-exit' : 'modal-dialog-enter', className)}
+        style={{ width: '100%', maxWidth, maxHeight: '90vh', ...dialogStyle }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {(title || !hideCloseButton) && (
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            {title && <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111111' }}>{title}</h3>}
+            {!hideCloseButton && (
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="Đóng"
+                style={{ marginLeft: 'auto', border: 'none', background: 'rgba(0,0,0,0.04)', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555555', fontSize: 13, transition: 'background var(--motion-fast) ease' }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+        <div style={{ overflowY: 'auto', flex: 1, padding: 20 }}>
+          {children}
+        </div>
+        {actions && (
+          <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.08)', background: '#fafaf8', display: 'flex', justifyContent: 'flex-end', gap: 10, flexShrink: 0 }}>
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * AnimatedList & AnimatedListItem — Staggered list reveals without layout jumps
+ */
+export function AnimatedList({ children, className = '', style }) {
+  return (
+    <div className={cx('animated-list', className)} style={style}>
+      {children}
+    </div>
+  );
+}
+
+export function AnimatedListItem({ index = 0, children, className = '', style }) {
+  const staggerClass = index < 6 ? `motion-stagger-${Math.min(index + 1, 6)}` : '';
+  return (
+    <div className={cx('motion-fade-in-up', staggerClass, className)} style={style}>
+      {children}
     </div>
   );
 }

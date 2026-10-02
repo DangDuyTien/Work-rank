@@ -39,6 +39,7 @@ import YouTubeTrendChart from '../components/YouTubeTrendChart';
 import TeamComparisonBar from '../components/TeamComparisonBar';
 import ChannelDetailModal from '../components/ChannelDetailModal';
 import CompactLiveWave from '../components/CompactLiveWave';
+import { AnimatedNumber, TabTransition, PageTransition } from '../components/ui';
 
 function isVerifiedUser(user) {
   return user?.verified === true || user?.isVerified === true || user?.verified === 1 || user?.isVerified === 1 || user?.verified === '1';
@@ -621,7 +622,7 @@ export default function Dashboard() {
               )}
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              {displayPts.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
+              <AnimatedNumber value={displayPts} /> <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               {pendingPts > 0 ? 'Tức thì • Đang đồng bộ máy chủ...' : '1 click = 1 pt • 1 phím = 1 pt'}
@@ -631,7 +632,7 @@ export default function Dashboard() {
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Chi tiết thao tác</div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
-              {displayClicks.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • {displayKeys.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
+              <AnimatedNumber value={displayClicks} /> <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • <AnimatedNumber value={displayKeys} /> <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               Tổng thao tác chuột & bàn phím
