@@ -408,7 +408,7 @@ async function getTeamRankings(params = {}) {
  * @param {Object} params - { scope: 'season'|'grand'|'all-time', seasonId, grandId, teamId, search, limit, page }
  */
 async function getIndividualRankings(params = {}) {
-  const { scope = 'season', seasonId, grandId, teamId, search, limit = 50, page = 1 } = params;
+  const { scope = 'all-time', seasonId, grandId, teamId, search, limit = 50, page = 1 } = params;
   const numLimit = Math.max(1, Math.min(100, Number(limit) || 50));
   const numPage = Math.max(1, Number(page) || 1);
   const offset = (numPage - 1) * numLimit;

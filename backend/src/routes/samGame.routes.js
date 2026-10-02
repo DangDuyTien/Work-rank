@@ -15,6 +15,7 @@ router.get('/rooms/active', samGameController.getActiveRoom);
 router.get('/rooms/:id', samGameController.getRoom);
 router.post('/rooms/:id/join', samGameController.joinRoom);
 router.post('/rooms/:id/leave', samGameController.leaveRoom);
+router.post('/rooms/:id/ready', samGameController.toggleReady);
 
 // ── GAMEPLAY ACTIONS ──
 router.post('/rooms/:id/start', samGameController.startMatch);

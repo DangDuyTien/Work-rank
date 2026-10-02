@@ -40,6 +40,12 @@ SamPlayer.init(
       allowNull: false,
       defaultValue: 'WAITING',
     },
+    isReady: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_ready',
+    },
     hasDeclaredSam: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: null, field: 'has_declared_sam' },
     isBaoMot: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_bao_mot' },
     scoreDelta: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'score_delta' },

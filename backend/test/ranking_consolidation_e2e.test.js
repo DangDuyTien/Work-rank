@@ -341,6 +341,26 @@ describe('Unified Ranking & Leaderboard Consolidation Test Suite', () => {
       assert.equal(res.body.items.length, 1);
       assert.equal(res.body.items[0].grandPoints, 85);
     });
+
+    it('GET /api/rankings/individuals (without scope) defaults to all-time ranking', async () => {
+      const res = await request(app)
+        .get('/api/rankings/individuals')
+        .set('Authorization', `Bearer ${memberToken}`);
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.scope, 'all-time');
+      assert.ok(res.body.items.length >= 1);
+    });
+
+    it('GET /api/rankings/individuals?scope=all-time returns all-time individual rankings', async () => {
+      const res = await request(app)
+        .get('/api/rankings/individuals?scope=all-time')
+        .set('Authorization', `Bearer ${memberToken}`);
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.scope, 'all-time');
+      assert.ok(res.body.items.length >= 1);
+    });
   });
 
   describe('5. Selectors & YouTube Rankings', () => {

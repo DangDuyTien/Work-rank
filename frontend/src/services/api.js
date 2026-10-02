@@ -1117,6 +1117,10 @@ export const samGame = {
     const res = await api.post(`/api/games/sam/rooms/${id}/leave`);
     return res.data;
   },
+  toggleReady: async (id, isReady) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/ready`, { isReady });
+    return res.data;
+  },
   startMatch: async (id) => {
     const res = await api.post(`/api/games/sam/rooms/${id}/start`);
     return res.data;

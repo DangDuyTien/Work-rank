@@ -528,14 +528,45 @@ export default function Leaderboard() {
 
   // Hierarchy Navigation States
   // Level 1: scopeMode = 'teams' | 'members' | 'youtube' | 'hall-of-fame'
-  const scopeMode = searchParams.get('mode') || searchParams.get('scope') || 'teams';
+  const rawMode = searchParams.get('mode');
+  const rawScope = searchParams.get('scope');
+  const rawRanking = searchParams.get('ranking');
+  const rawPeriod = searchParams.get('period');
+
+  // Normalize scopeMode
+  let scopeMode = 'teams';
+  if (rawMode) {
+    scopeMode = (rawMode === 'member' || rawMode === 'individual' || rawMode === 'individuals') ? 'members' : rawMode;
+  } else if (rawRanking === 'individual' || rawRanking === 'individuals' || rawRanking === 'member' || rawRanking === 'members') {
+    scopeMode = 'members';
+  } else if (rawScope === 'members' || rawScope === 'member' || rawScope === 'individual' || rawScope === 'individuals') {
+    scopeMode = 'members';
+  } else if (rawScope === 'youtube') {
+    scopeMode = 'youtube';
+  } else if (rawScope === 'hall-of-fame' || rawScope === 'hof') {
+    scopeMode = 'hall-of-fame';
+  } else if (rawScope === 'teams' || rawScope === 'team') {
+    scopeMode = 'teams';
+  }
+
   // Level 2: selectedTeamId (if present, user is drilling down into a Team)
   const selectedTeamId = searchParams.get('teamId') || null;
   // Team sub-view: 'members' | 'youtube'
   const teamSubView = searchParams.get('teamView') || 'members';
 
   // Global Preserved Period: 'season' | 'grand' | 'all-time'
-  const currentPeriod = searchParams.get('period') || 'season';
+  // CANONICAL DEFAULT: When scopeMode is 'members', default period is 'all-time'
+  let currentPeriod;
+  if (rawPeriod) {
+    currentPeriod = rawPeriod;
+  } else if (rawScope === 'season' || rawScope === 'grand' || rawScope === 'all-time') {
+    currentPeriod = rawScope;
+  } else if (scopeMode === 'members') {
+    currentPeriod = 'all-time';
+  } else {
+    currentPeriod = 'season';
+  }
+
   const urlSeasonId = searchParams.get('seasonId') || '';
   const urlGrandId = searchParams.get('grandId') || '';
   const urlMetric = searchParams.get('metric') || 'views';
@@ -686,8 +717,13 @@ export default function Leaderboard() {
   const handleScopeChange = (mode) => {
     const params = new URLSearchParams(searchParams);
     params.set('mode', mode);
+    params.delete('scope');
+    params.delete('ranking');
     params.delete('teamId');
     params.delete('search');
+    if (mode === 'members' && !searchParams.get('period')) {
+      params.set('period', 'all-time');
+    }
     setSearchKeyword('');
     setSearchParams(params, { replace: true });
   };

@@ -161,6 +161,18 @@ function registerSockets(io) {
       }
     });
 
+    socket.on('sam:toggleReady', async (payload = {}, ack) => {
+      try {
+        const samGameService = require('../services/samGame.service');
+        const roomId = Number(payload.roomId);
+        const isReady = Boolean(payload.isReady);
+        const result = await samGameService.toggleReady(roomId, socket.user.id, isReady);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
     socket.on('disconnect', () => {
       samRealtime.removeSpectatorFromAll(socket.id);
       const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {

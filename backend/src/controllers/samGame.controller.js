@@ -73,6 +73,17 @@ async function leaveRoom(req, res, next) {
   }
 }
 
+async function toggleReady(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { isReady } = req.body;
+    const room = await samGameService.toggleReady(Number(id), req.user.id, isReady);
+    return res.status(200).json(room);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function startMatch(req, res, next) {
   try {
     const { id } = req.params;
@@ -242,6 +253,7 @@ module.exports = {
   getActiveRoom,
   joinRoom,
   leaveRoom,
+  toggleReady,
   startMatch,
   declareSam,
   playCards,

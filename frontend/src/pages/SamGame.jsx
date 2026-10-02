@@ -733,14 +733,16 @@ function GameResultModal({ isOpen, result, isSamWin, isTest, onPlayAgain, onLeav
 }
 
 // ── OPPONENT SEAT COMPONENT ──
-function OpponentSeat({ player, isTurn, timeLeft, position }) {
+function OpponentSeat({ player, isTurn, timeLeft, position, samPhase, samDeclarerId, passPlayerIds = [] }) {
   if (!player) return null;
 
   const isBot = player.isBot;
-  const isPassed = player.status === 'PASSED';
   const isBaoMot = player.isBaoMot;
   const cardCount = player.remainingCardsCount ?? 10;
   const name = isBot ? (player.botName || 'Bot') : (player.user?.name || 'Người chơi');
+  const playerId = player.userId ? Number(player.userId) : (player.id || player.botId);
+  const isPassed = Array.isArray(passPlayerIds) && passPlayerIds.some((pid) => String(pid) === String(playerId));
+  const isSamDeclarer = samDeclarerId && String(samDeclarerId) === String(playerId);
 
   return (
     <div
@@ -750,6 +752,7 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
         alignItems: 'center',
         gap: 6,
         position: 'relative',
+        transition: 'all 200ms ease',
       }}
     >
       {/* Avatar Container with Active Turn Glow */}
@@ -762,19 +765,26 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
             padding: 3,
             background: isTurn
               ? 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)'
+              : isSamDeclarer
+              ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
               : 'rgba(255,255,255,0.1)',
-            boxShadow: isTurn ? '0 0 20px rgba(56, 189, 248, 0.7)' : 'none',
+            boxShadow: isTurn
+              ? '0 0 22px rgba(56, 189, 248, 0.75)'
+              : isSamDeclarer
+              ? '0 0 20px rgba(245, 158, 11, 0.7)'
+              : 'none',
             transition: 'all 200ms ease',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            opacity: isPassed ? 0.6 : 1,
           }}
         >
           <DefaultAvatar name={name} size={48} />
         </div>
 
         {/* Mini Turn Countdown on Avatar */}
-        {isTurn && (
+        {isTurn && !isPassed && (
           <div
             style={{
               position: 'absolute',
@@ -792,6 +802,7 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
               justifyContent: 'center',
               border: '2px solid #0f172a',
               boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+              animation: 'pulse 1s infinite',
             }}
           >
             {timeLeft}
@@ -816,6 +827,7 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
             display: 'flex',
             alignItems: 'center',
             gap: 3,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
           }}
         >
           <span>🂠</span>
@@ -825,12 +837,23 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
 
       {/* Name and Badges */}
       <div style={{ textAlign: 'center', marginTop: 4 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#f8fafc', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#f8fafc',
+            maxWidth: 110,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            opacity: isPassed ? 0.65 : 1,
+          }}
+        >
           {name}
         </div>
 
         {/* Status Tag */}
-        <div style={{ marginTop: 2, display: 'flex', gap: 4, justifyContent: 'center' }}>
+        <div style={{ marginTop: 3, display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
           {isBot && (
             <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '1px 4px', borderRadius: 3 }}>
               BOT
@@ -841,20 +864,45 @@ function OpponentSeat({ player, isTurn, timeLeft, position }) {
               HOST
             </span>
           )}
-          {isBaoMot && (
-            <span style={{ fontSize: 9, fontWeight: 800, background: '#ef4444', color: '#fff', padding: '1px 4px', borderRadius: 3, animation: 'pulse 1s infinite' }}>
-              BÁO 1
-            </span>
-          )}
-          {isPassed && (
-            <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(148, 163, 184, 0.2)', color: '#94a3b8', padding: '1px 4px', borderRadius: 3 }}>
-              BỎ LƯỢT
-            </span>
-          )}
-          {isTurn && !isPassed && (
-            <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(56, 189, 248, 0.25)', color: '#38bdf8', padding: '1px 4px', borderRadius: 3 }}>
-              ĐANG ĐÁNH
-            </span>
+
+          {/* SÂM DECLARATION PHASE BADGES */}
+          {samPhase === 'SAM_DECLARING' ? (
+            player.hasDeclaredSam === true ? (
+              <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245, 158, 11, 0.3)', color: '#fbbf24', padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(251,191,36,0.4)', animation: 'pulse 1.2s infinite' }}>
+                ⚡ ĐÃ BÁO SÂM
+              </span>
+            ) : player.hasDeclaredSam === false ? (
+              <span style={{ fontSize: 9, fontWeight: 600, background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', padding: '1px 4px', borderRadius: 3 }}>
+                Không Báo
+              </span>
+            ) : (
+              <span style={{ fontSize: 9, fontWeight: 600, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '1px 4px', borderRadius: 3, animation: 'pulse 1.5s infinite' }}>
+                Đang chọn...
+              </span>
+            )
+          ) : (
+            /* PLAYING PHASE BADGES */
+            <>
+              {isSamDeclarer && (
+                <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245, 158, 11, 0.3)', color: '#fbbf24', padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(251,191,36,0.4)' }}>
+                  👑 XIN SÂM
+                </span>
+              )}
+              {isBaoMot && (
+                <span style={{ fontSize: 9, fontWeight: 800, background: '#ef4444', color: '#fff', padding: '1px 4px', borderRadius: 3, animation: 'pulse 1s infinite' }}>
+                  BÁO 1
+                </span>
+              )}
+              {isPassed ? (
+                <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(148, 163, 184, 0.25)', color: '#cbd5e1', padding: '1px 4px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  BỎ LƯỢT
+                </span>
+              ) : isTurn ? (
+                <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(56, 189, 248, 0.25)', color: '#38bdf8', padding: '1px 4px', borderRadius: 3, border: '1px solid rgba(56, 189, 248, 0.35)' }}>
+                  ĐANG ĐÁNH
+                </span>
+              ) : null}
+            </>
           )}
         </div>
       </div>
@@ -893,6 +941,9 @@ export default function SamGame() {
   const [timeLeft, setTimeLeft] = useState(25);
   const [bannerMessage, setBannerMessage] = useState('');
   const [lastActionAnimation, setLastActionAnimation] = useState(null);
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
+  const [startCountdownSec, setStartCountdownSec] = useState(null);
+  const lastPlayedCountdownSecRef = useRef(null);
 
   // Sorting Mode for Hand: 'RANK' (3->2) or 'SMART' (Group combinations)
   const [sortMode, setSortMode] = useState('RANK');
@@ -954,6 +1005,9 @@ export default function SamGame() {
       const data = await samGame.getRoom(roomIdToFetch);
       if (data && data.room) {
         setRoom(data.room);
+        if (data.room.serverTime) {
+          setServerTimeOffset(new Date(data.room.serverTime).getTime() - Date.now());
+        }
         setPlayers(data.players || []);
         setMyHandCards(data.myHandCards || []);
         setIsSpectator(!!data.isSpectator);
@@ -1000,6 +1054,36 @@ export default function SamGame() {
     return () => clearInterval(interval);
   }, [room?.turnDeadline, room?.status]);
 
+  // Start Match 5-Second Countdown Timer (Server Authoritative)
+  useEffect(() => {
+    if (!room || room.status !== 'STARTING' || !room.startAt) {
+      setStartCountdownSec(null);
+      lastPlayedCountdownSecRef.current = null;
+      return;
+    }
+
+    const updateCountdown = () => {
+      const deadline = new Date(room.startAt).getTime();
+      const now = Date.now() + serverTimeOffset;
+      const diffMs = deadline - now;
+      const sec = Math.max(0, Math.ceil(diffMs / 1000));
+      setStartCountdownSec(sec);
+
+      if (lastPlayedCountdownSecRef.current !== sec) {
+        lastPlayedCountdownSecRef.current = sec;
+        if (sec > 0) {
+          samSound.playCountdownTick();
+        } else if (sec === 0) {
+          samSound.playCountdownStart();
+        }
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 100);
+    return () => clearInterval(interval);
+  }, [room?.status, room?.startAt, serverTimeOffset]);
+
   // Socket.IO Listeners
   useEffect(() => {
     if (!socket || !room?.id) return;
@@ -1016,6 +1100,31 @@ export default function SamGame() {
 
     const handlePlayerLeft = (data) => {
       if (data?.players) setPlayers(data.players);
+    };
+
+    const handlePlayerReady = (data) => {
+      if (data?.players) setPlayers(data.players);
+    };
+
+    const handleStarting = (data) => {
+      if (data?.room) {
+        setRoom((prev) => ({ ...prev, ...data.room }));
+        if (data.serverTime) {
+          setServerTimeOffset(new Date(data.serverTime).getTime() - Date.now());
+        }
+      }
+      if (data?.players) setPlayers(data.players);
+      setBannerMessage('⏳ Tất cả đã sẵn sàng! Đếm ngược 5 giây để bắt đầu...');
+    };
+
+    const handleStartingCancelled = (data) => {
+      if (data?.room) setRoom((prev) => ({ ...prev, ...data.room }));
+      if (data?.players) setPlayers(data.players);
+      setBannerMessage(
+        data?.reason === 'PLAYER_UNREADY'
+          ? '⚠️ Đã hủy đếm ngược do người chơi hủy sẵn sàng'
+          : '⚠️ Đã hủy đếm ngược do có người chơi rời phòng'
+      );
     };
 
     const handleStarted = (data) => {
@@ -1217,6 +1326,9 @@ export default function SamGame() {
     socket.on('sam:roomUpdated', handleRoomUpdated);
     socket.on('sam:playerJoined', handlePlayerJoined);
     socket.on('sam:playerLeft', handlePlayerLeft);
+    socket.on('sam:playerReady', handlePlayerReady);
+    socket.on('sam:starting', handleStarting);
+    socket.on('sam:startingCancelled', handleStartingCancelled);
     socket.on('sam:started', handleStarted);
     socket.on('sam:handCards', handleHandCards);
     socket.on('sam:samDecision', handleSamDecision);
@@ -1237,6 +1349,9 @@ export default function SamGame() {
       socket.off('sam:roomUpdated', handleRoomUpdated);
       socket.off('sam:playerJoined', handlePlayerJoined);
       socket.off('sam:playerLeft', handlePlayerLeft);
+      socket.off('sam:playerReady', handlePlayerReady);
+      socket.off('sam:starting', handleStarting);
+      socket.off('sam:startingCancelled', handleStartingCancelled);
       socket.off('sam:started', handleStarted);
       socket.off('sam:handCards', handleHandCards);
       socket.off('sam:samDecision', handleSamDecision);
@@ -1403,6 +1518,24 @@ export default function SamGame() {
     }
   };
 
+  const handleToggleReady = async (targetReady) => {
+    if (!room?.id) return;
+    try {
+      setActionLoading(true);
+      if (socket && socket.connected) {
+        socket.emit('sam:toggleReady', { roomId: room.id, isReady: targetReady });
+      }
+      const res = await samGame.toggleReady(room.id, targetReady);
+      if (res?.players) setPlayers(res.players);
+      if (res?.room) setRoom(res.room);
+    } catch (err) {
+      console.error('Toggle ready failed:', err);
+      setErrorMsg(err.response?.data?.message || 'Không thể thay đổi trạng thái sẵn sàng');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleStartMatch = async () => {
     if (!room?.id) return;
     try {
@@ -1533,8 +1666,54 @@ export default function SamGame() {
   // RENDER PHASE 1: FULLSCREEN GAME SHELL (WHEN IN ACTIVE MATCH)
   // ─────────────────────────────────────────────────────────────
   if (room && room.status === 'PLAYING') {
+    const myId = user?.id;
+    const isSelfPassed = Array.isArray(room?.passPlayerIds) && myId && room.passPlayerIds.some((pid) => String(pid) === String(myId));
+
     return (
       <GameFullscreenShell topBar={false} className="wr-sam-match-fullscreen">
+        <style>{`
+          @keyframes dealIn {
+            0% {
+              opacity: 0;
+              transform: translateY(-60px) scale(0.7) rotate(-6deg);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1) rotate(0deg);
+            }
+          }
+          @keyframes playCardIn {
+            0% {
+              opacity: 0;
+              transform: translateY(35px) scale(0.7);
+            }
+            60% {
+              opacity: 1;
+              transform: translateY(-4px) scale(1.04);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+          @keyframes pulseGlow {
+            0%, 100% {
+              box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+            }
+            50% {
+              box-shadow: 0 0 28px rgba(56, 189, 248, 0.9);
+            }
+          }
+          @keyframes scaleUp {
+            0% { transform: scale(0.88); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `}</style>
+
         <div
           style={{
             position: 'fixed',
@@ -1750,6 +1929,7 @@ export default function SamGame() {
                   position="top"
                   samPhase={room.samPhase}
                   samDeclarerId={room.samDeclarerId}
+                  passPlayerIds={room.passPlayerIds}
                 />
               )}
             </div>
@@ -1777,6 +1957,7 @@ export default function SamGame() {
                     position="left"
                     samPhase={room.samPhase}
                     samDeclarerId={room.samDeclarerId}
+                    passPlayerIds={room.passPlayerIds}
                   />
                 )}
               </div>
@@ -1844,28 +2025,37 @@ export default function SamGame() {
                   )}
                 </div>
 
-                {/* Cards on Table (Cascading Trick Fan) */}
+                {/* Cards on Table (Cascading Trick Fan with Smooth Animated Entry) */}
                 {room.lastPlayedCards ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <div
+                    key={`trick-${room.lastPlayedCards.userId}-${(room.lastPlayedCards.cards || []).join('-')}`}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
+                  >
                     <div
                       style={{
                         display: 'flex',
                         gap: 8,
                         justifyContent: 'center',
                         flexWrap: 'wrap',
-                        animation: 'scaleUp 0.18s ease-out',
                       }}
                     >
                       {room.lastPlayedCards.cards.map((c, i) => (
-                        <PlayingCard
-                          key={c}
-                          cardId={c}
-                          disabled
+                        <div
+                          key={`${c}-${i}`}
                           style={{
-                            transform: `rotate(${(i - (room.lastPlayedCards.cards.length - 1) / 2) * 4}deg)`,
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                            animation: 'playCardIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) backwards',
+                            animationDelay: `${i * 55}ms`,
                           }}
-                        />
+                        >
+                          <PlayingCard
+                            cardId={c}
+                            disabled
+                            style={{
+                              transform: `rotate(${(i - (room.lastPlayedCards.cards.length - 1) / 2) * 5}deg)`,
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                     <div
@@ -1873,10 +2063,12 @@ export default function SamGame() {
                         fontSize: 13,
                         fontWeight: 700,
                         color: '#fbbf24',
-                        background: 'rgba(15, 23, 42, 0.8)',
-                        padding: '4px 14px',
-                        borderRadius: 16,
-                        border: '1px solid rgba(251,191,36,0.25)',
+                        background: 'rgba(15, 23, 42, 0.85)',
+                        padding: '5px 16px',
+                        borderRadius: 20,
+                        border: '1px solid rgba(251,191,36,0.3)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        animation: 'fadeIn 0.2s ease-out',
                       }}
                     >
                       {room.lastPlayedCards.name || 'Bộ bài vừa đánh'}
@@ -1924,6 +2116,7 @@ export default function SamGame() {
                     position="right"
                     samPhase={room.samPhase}
                     samDeclarerId={room.samDeclarerId}
+                    passPlayerIds={room.passPlayerIds}
                   />
                 )}
               </div>
@@ -2111,7 +2304,7 @@ export default function SamGame() {
                     )}
                   </div>
 
-                  {/* Horizontal Fan Cards Container */}
+                  {/* Horizontal Fan Cards Container with Sequential Deal In Animation */}
                   <div
                     style={{
                       display: 'flex',
@@ -2134,6 +2327,8 @@ export default function SamGame() {
                           style={{
                             marginRight: -20,
                             zIndex: selectedCards.includes(cardId) ? 20 : index + 1,
+                            animation: 'dealIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) backwards',
+                            animationDelay: `${index * 45}ms`,
                           }}
                         >
                           <PlayingCard
@@ -2150,7 +2345,22 @@ export default function SamGame() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
                     <DefaultAvatar name={user?.name} size={30} />
                     <strong style={{ fontSize: 13, color: '#f8fafc' }}>{user?.name} (Bạn)</strong>
-                    {isMyTurn && (
+                    {isSelfPassed && (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: '#cbd5e1',
+                          background: 'rgba(148, 163, 184, 0.25)',
+                          padding: '2px 8px',
+                          borderRadius: 12,
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        BỎ LƯỢT (VÒNG NÀY)
+                      </span>
+                    )}
+                    {isMyTurn && !isSelfPassed && (
                       <span
                         style={{
                           fontSize: 11,
@@ -2283,8 +2493,10 @@ export default function SamGame() {
   // ─────────────────────────────────────────────────────────────
   // RENDER PHASE 2: WAITING ROOM (BEFORE MATCH STARTS)
   // ─────────────────────────────────────────────────────────────
-  if (room && room.status === 'WAITING') {
+  if (room && (room.status === 'WAITING' || room.status === 'STARTING')) {
     const isHost = Number(room.hostUserId) === Number(user?.id);
+    const myPlayer = players.find((pl) => Number(pl.userId) === Number(user?.id));
+    const isMeReady = Boolean(myPlayer?.isReady);
 
     return (
       <div
@@ -2343,6 +2555,51 @@ export default function SamGame() {
             </div>
           </div>
 
+          {/* 5-Second Start Countdown Display (Server Authoritative) */}
+          {room.status === 'STARTING' && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(253, 230, 138, 0.98))',
+                border: '2px solid #f59e0b',
+                borderRadius: 14,
+                padding: '18px 24px',
+                marginBottom: 20,
+                textAlign: 'center',
+                boxShadow: '0 8px 24px rgba(245, 158, 11, 0.25)',
+                animation: 'pulseGlow 2s infinite',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  color: '#b45309',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                TẤT CẢ NGƯỜI CHƠI ĐÃ SẴN SÀNG
+              </div>
+              <div style={{ fontSize: 13, color: '#78350f', marginTop: 2, marginBottom: 8, fontWeight: 600 }}>
+                Trận đấu sẽ bắt đầu sau
+              </div>
+              <div
+                key={startCountdownSec}
+                style={{
+                  fontSize: startCountdownSec === 0 ? 32 : 56,
+                  fontWeight: 900,
+                  color: '#d97706',
+                  lineHeight: 1,
+                  animation: 'scaleUp 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
+                  fontFamily: 'monospace, system-ui',
+                  textShadow: '0 2px 10px rgba(245, 158, 11, 0.35)',
+                }}
+              >
+                {startCountdownSec === 0 ? 'BẮT ĐẦU!' : startCountdownSec ?? '5'}
+              </div>
+            </div>
+          )}
+
           {/* 4 Player Seats Grid */}
           <div
             style={{
@@ -2360,15 +2617,16 @@ export default function SamGame() {
                   <div
                     key={seatIdx}
                     style={{
-                      border: '1px solid rgba(0,0,0,0.1)',
+                      border: p.isReady ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(0,0,0,0.1)',
                       borderRadius: 8,
                       padding: 16,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
-                      background: '#fafafa',
+                      background: p.isReady ? 'rgba(240, 253, 244, 0.7)' : '#fafafa',
                       position: 'relative',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     {p.isHost && (
@@ -2410,6 +2668,41 @@ export default function SamGame() {
                       {name} {!p.isBot && Number(p.userId) === Number(user?.id) && '(Bạn)'}
                     </strong>
                     {!p.isBot && <JobTitleBadge jobTitle={p.user?.jobTitle} size="xs" />}
+
+                    {/* Ready Status Badge */}
+                    {p.isReady ? (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          background: 'rgba(22, 163, 74, 0.12)',
+                          color: '#16a34a',
+                          border: '1px solid rgba(22, 163, 74, 0.3)',
+                          padding: '2px 8px',
+                          borderRadius: 12,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          marginTop: 6,
+                        }}
+                      >
+                        <Check size={11} strokeWidth={3} /> SẴN SÀNG
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          background: 'rgba(156, 163, 175, 0.15)',
+                          color: '#6b7280',
+                          padding: '2px 8px',
+                          borderRadius: 12,
+                          marginTop: 6,
+                        }}
+                      >
+                        CHƯA SẴN SÀNG
+                      </span>
+                    )}
                   </div>
                 );
               }
@@ -2438,11 +2731,11 @@ export default function SamGame() {
           </div>
 
           {/* Action Footer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <Button variant="secondary" onClick={handleLeaveRoom}>
               Rời phòng
             </Button>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <Button variant="secondary" onClick={() => setShowRulesModal(true)}>
                 Luật chơi
               </Button>
@@ -2451,23 +2744,39 @@ export default function SamGame() {
                   Lấp đầy Bot
                 </Button>
               )}
-              {isHost ? (
+
+              {/* Local Player Ready Button */}
+              {myPlayer && (
+                <Button
+                  variant={isMeReady ? 'secondary' : 'primary'}
+                  disabled={actionLoading}
+                  onClick={() => handleToggleReady(!isMeReady)}
+                  style={
+                    isMeReady
+                      ? { color: '#dc2626', borderColor: '#fca5a5', fontWeight: 700 }
+                      : { background: '#10b981', borderColor: '#059669', color: '#fff', fontWeight: 800 }
+                  }
+                >
+                  {isMeReady ? 'Hủy sẵn sàng' : '✓ Sẵn sàng'}
+                </Button>
+              )}
+
+              {/* Host manual Start Button */}
+              {isHost && (
                 <Button
                   variant="primary"
-                  disabled={players.length < 2 || actionLoading}
+                  disabled={players.length < 2 || actionLoading || room.status === 'STARTING'}
                   onClick={handleStartMatch}
                   style={{ background: '#b45309', borderColor: '#b45309' }}
                 >
-                  {players.length < 2
+                  {room.status === 'STARTING'
+                    ? 'Đang đếm ngược...'
+                    : players.length < 2
                     ? 'Cần ít nhất 2 người'
                     : actionLoading
                     ? 'Đang chia bài...'
-                    : 'Bắt đầu ván bài'}
+                    : 'Bắt đầu ngay'}
                 </Button>
-              ) : (
-                <div style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center' }}>
-                  Đang chờ chủ phòng bắt đầu...
-                </div>
               )}
             </div>
           </div>

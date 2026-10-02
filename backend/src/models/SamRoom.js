@@ -12,7 +12,7 @@ SamRoom.init(
     title: { type: DataTypes.STRING(120), allowNull: false, defaultValue: 'Phòng Đánh Sâm' },
     hostUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, field: 'host_user_id' },
     status: {
-      type: DataTypes.ENUM('WAITING', 'PLAYING', 'FINISHED', 'ABANDONED'),
+      type: DataTypes.ENUM('WAITING', 'STARTING', 'PLAYING', 'FINISHED', 'ABANDONED'),
       allowNull: false,
       defaultValue: 'WAITING',
     },
@@ -27,7 +27,7 @@ SamRoom.init(
     passPlayerIds: { type: DataTypes.JSON, allowNull: true, field: 'pass_player_ids' },
     samDeclarerId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'sam_declarer_id' },
     samPhase: {
-      type: DataTypes.ENUM('WAITING', 'SAM_DECLARING', 'PLAYING', 'FINISHED'),
+      type: DataTypes.ENUM('WAITING', 'STARTING', 'SAM_DECLARING', 'PLAYING', 'FINISHED'),
       allowNull: false,
       defaultValue: 'WAITING',
       field: 'sam_phase',
@@ -68,6 +68,7 @@ SamRoom.init(
       field: 'spectator_count',
     },
     winnerUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'winner_user_id' },
+    startAt: { type: DataTypes.DATE, allowNull: true, field: 'start_at' },
     startedAt: { type: DataTypes.DATE, allowNull: true, field: 'started_at' },
     finishedAt: { type: DataTypes.DATE, allowNull: true, field: 'finished_at' },
   },

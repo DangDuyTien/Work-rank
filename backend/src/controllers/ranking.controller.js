@@ -26,7 +26,7 @@ async function getTeams(req, res) {
 }
 
 async function getIndividuals(req, res) {
-  const { scope, seasonId, grandId, teamId, search, limit, page } = req.query;
+  const { scope = 'all-time', seasonId, grandId, teamId, search, limit, page } = req.query;
   const result = await rankingService.getIndividualRankings({
     scope,
     seasonId,

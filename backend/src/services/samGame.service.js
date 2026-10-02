@@ -23,6 +23,55 @@ const samRealtime = require('./samRealtime.service');
 // In-memory bot timer tracker to safely schedule and clear bot delays
 const botTimers = new Map();
 
+// In-memory start countdown timer tracker (5s server authoritative countdown)
+const startCountdownTimers = new Map();
+
+function scheduleStartCountdown(roomId) {
+  const numId = Number(roomId);
+  if (startCountdownTimers.has(numId)) {
+    clearTimeout(startCountdownTimers.get(numId));
+  }
+  const timer = setTimeout(async () => {
+    startCountdownTimers.delete(numId);
+    try {
+      const room = await SamRoom.findByPk(numId, {
+        include: [{ model: SamPlayer, as: 'players' }],
+      });
+      if (!room || room.status !== 'STARTING') return;
+
+      const players = room.players || [];
+      if (players.length >= 2 && players.every((p) => p.isReady)) {
+        await startMatch(numId, room.hostUserId, true);
+      } else {
+        // Player unreadied or left before countdown reached 0
+        room.status = 'WAITING';
+        room.samPhase = 'WAITING';
+        room.startAt = null;
+        await room.save();
+        const detail = await getRoomDetail(numId, room.hostUserId).catch(() => null);
+        samRealtime.emitToRoom(numId, 'sam:startingCancelled', {
+          roomId: numId,
+          reason: 'PLAYERS_NOT_READY',
+          room: detail ? detail.room : null,
+          players: detail ? detail.players : [],
+        });
+        samRealtime.emitToRoom(numId, 'sam:roomUpdated', { room: detail ? detail.room : null });
+      }
+    } catch (err) {
+      console.error(`[SamStartCountdown Error room ${numId}]:`, err.message);
+    }
+  }, 5000);
+  startCountdownTimers.set(numId, timer);
+}
+
+function clearStartCountdown(roomId) {
+  const numId = Number(roomId);
+  if (startCountdownTimers.has(numId)) {
+    clearTimeout(startCountdownTimers.get(numId));
+    startCountdownTimers.delete(numId);
+  }
+}
+
 function scheduleBotTimer(roomId, fn, delayMs = 800) {
   const numId = Number(roomId);
   if (botTimers.has(numId)) {
@@ -87,7 +136,7 @@ async function listRooms(filters = {}, requestingUser = null) {
   if (filters.status) {
     where.status = filters.status;
   } else {
-    where.status = { [Op.in]: ['WAITING', 'PLAYING'] };
+    where.status = { [Op.in]: ['WAITING', 'STARTING', 'PLAYING'] };
   }
 
   const rooms = await SamRoom.findAll({
@@ -241,6 +290,7 @@ async function createBotTestRoom(data, adminUser) {
           handCards: [],
           remainingCardsCount: 0,
           status: 'WAITING',
+          isReady: true,
           playerType: 'BOT',
           isBot: true,
           botId: `BOT_TEST_0${botIndex}`,
@@ -344,7 +394,20 @@ async function leaveRoom(roomId, userId) {
     return { success: true };
   }
 
-  if (room.status === 'WAITING') {
+  if (room.status === 'WAITING' || room.status === 'STARTING') {
+    if (room.status === 'STARTING') {
+      clearStartCountdown(room.id);
+      room.status = 'WAITING';
+      room.samPhase = 'WAITING';
+      room.startAt = null;
+      await room.save();
+      samRealtime.emitToRoom(room.id, 'sam:startingCancelled', {
+        roomId: room.id,
+        reason: 'PLAYER_LEFT',
+        userId,
+      });
+    }
+
     await player.destroy();
 
     const remainingPlayers = await SamPlayer.findAll({
@@ -391,6 +454,108 @@ async function leaveRoom(roomId, userId) {
   return { success: true };
 }
 
+async function toggleReady(roomId, userId, isReady) {
+  const room = await SamRoom.findByPk(roomId, {
+    include: [
+      {
+        model: SamPlayer,
+        as: 'players',
+        include: [{ model: User, as: 'user' }],
+      },
+    ],
+  });
+
+  if (!room) {
+    throw new Error('Phòng chơi không tồn tại');
+  }
+
+  if (room.status === 'PLAYING') {
+    throw new Error('Phòng đang trong trận đấu');
+  }
+
+  const player = room.players.find((p) => isPlayerMatch(p, userId));
+  if (!player) {
+    throw new Error('Người chơi không tồn tại trong phòng');
+  }
+
+  const readyVal = Boolean(isReady);
+  player.isReady = readyVal;
+  await player.save();
+
+  // Re-fetch all players
+  const allPlayers = await SamPlayer.findAll({
+    where: { roomId: room.id },
+    include: [{ model: User, as: 'user' }],
+    order: [['seatIndex', 'ASC']],
+  });
+
+  const numPlayers = allPlayers.length;
+  const allReady = numPlayers >= 2 && allPlayers.every((p) => p.isReady);
+
+  if (allReady) {
+    room.status = 'STARTING';
+    room.samPhase = 'STARTING';
+    const startAt = new Date(Date.now() + 5000);
+    room.startAt = startAt;
+    await room.save();
+
+    scheduleStartCountdown(room.id);
+
+    const detail = await getRoomDetail(room.id, userId);
+    samRealtime.emitToRoom(room.id, 'sam:playerReady', {
+      roomId: room.id,
+      userId,
+      isReady: readyVal,
+      players: detail.players,
+    });
+    samRealtime.emitToRoom(room.id, 'sam:starting', {
+      roomId: room.id,
+      startAt: room.startAt,
+      serverTime: new Date().toISOString(),
+      room: detail.room,
+      players: detail.players,
+    });
+    samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+    return detail;
+  } else {
+    // If room was in STARTING state and someone cancelled ready
+    if (room.status === 'STARTING') {
+      clearStartCountdown(room.id);
+      room.status = 'WAITING';
+      room.samPhase = 'WAITING';
+      room.startAt = null;
+      await room.save();
+
+      const detail = await getRoomDetail(room.id, userId);
+      samRealtime.emitToRoom(room.id, 'sam:startingCancelled', {
+        roomId: room.id,
+        reason: 'PLAYER_UNREADY',
+        userId,
+        room: detail.room,
+        players: detail.players,
+      });
+      samRealtime.emitToRoom(room.id, 'sam:playerReady', {
+        roomId: room.id,
+        userId,
+        isReady: readyVal,
+        players: detail.players,
+      });
+      samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+      return detail;
+    }
+
+    const detail = await getRoomDetail(room.id, userId);
+    samRealtime.emitToRoom(room.id, 'sam:playerReady', {
+      roomId: room.id,
+      userId,
+      isReady: readyVal,
+      players: detail.players,
+    });
+    samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+    return detail;
+  }
+}
+
 // ── MATCH LIFECYCLE ──
 
 async function startMatch(roomId, hostUserId, isAdmin = false) {
@@ -408,11 +573,13 @@ async function startMatch(roomId, hostUserId, isAdmin = false) {
     throw new Error('Phòng chơi không tồn tại');
   }
 
+  clearStartCountdown(roomId);
+
   if (!isAdmin && Number(room.hostUserId) !== Number(hostUserId)) {
     throw new Error('Chỉ có chủ phòng mới có quyền bắt đầu trận đấu');
   }
 
-  if (room.status !== 'WAITING' && room.status !== 'FINISHED' && !isAdmin && !room.isTest) {
+  if (room.status !== 'WAITING' && room.status !== 'STARTING' && room.status !== 'FINISHED' && !isAdmin && !room.isTest) {
     throw new Error('Phòng đang trong trận đấu');
   }
 
@@ -438,6 +605,7 @@ async function startMatch(roomId, hostUserId, isAdmin = false) {
     }
 
     // 2. Set phase to SAM_DECLARING (10s window to declare Sâm)
+    room.startAt = null;
     room.status = 'PLAYING';
     room.samPhase = 'SAM_DECLARING';
     room.samDeclarerId = null;
@@ -1253,6 +1421,7 @@ async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'use
       rank: p.rank,
       user: userObj,
       isHost: Number(room.hostUserId) === Number(p.userId),
+      isReady: Boolean(p.isReady),
       isBot: p.isBot || false,
       botId: p.botId,
       playerType: p.playerType,
@@ -1286,6 +1455,8 @@ async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'use
       testScenario: room.testScenario,
       spectatorCount: samRealtime.getSpectatorCount(room.id),
       winnerUserId: room.winnerUserId,
+      startAt: room.startAt ? (room.startAt instanceof Date ? room.startAt.toISOString() : new Date(room.startAt).toISOString()) : null,
+      serverTime: new Date().toISOString(),
       startedAt: room.startedAt,
       finishedAt: room.finishedAt,
       host: room.host,
@@ -1309,7 +1480,7 @@ async function getActiveRoom(userId) {
       {
         model: SamRoom,
         as: 'room',
-        where: { status: { [Op.in]: ['WAITING', 'PLAYING'] }, isTest: false },
+        where: { status: { [Op.in]: ['WAITING', 'STARTING', 'PLAYING'] }, isTest: false },
       },
     ],
   });
@@ -1411,6 +1582,7 @@ async function fillBots(roomId, adminUserId) {
         handCards: [],
         remainingCardsCount: 0,
         status: 'WAITING',
+        isReady: true,
         playerType: 'BOT',
         isBot: true,
         botId: `BOT_TEST_0${s + 1}`,
@@ -1579,7 +1751,9 @@ module.exports = {
   createBotTestRoom,
   joinRoom,
   leaveRoom,
+  toggleReady,
   startMatch,
+  clearStartCountdown,
   declareSam,
   playCards,
   passTurn,
