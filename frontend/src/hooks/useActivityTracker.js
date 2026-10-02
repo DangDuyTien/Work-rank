@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { activityApi } from '../services/api';
 
@@ -20,6 +20,50 @@ function getOrCreateSessionId() {
   }
 }
 
+// Module-level reactive store for live activity telemetry counters
+const telemetryStore = {
+  clicks: 0,
+  keyboard: 0,
+  mouseTrackingEnabled: true,
+  keyboardTrackingEnabled: true,
+  lastEventTime: null,
+  sessionId: getOrCreateSessionId(),
+};
+
+const listeners = new Set();
+let notifyScheduled = false;
+
+function emitStoreUpdate() {
+  if (notifyScheduled) return;
+  notifyScheduled = true;
+  requestAnimationFrame(() => {
+    notifyScheduled = false;
+    const snapshot = { ...telemetryStore };
+    listeners.forEach((fn) => {
+      try {
+        fn(snapshot);
+      } catch {}
+    });
+  });
+}
+
+/**
+ * Hook to consume live activity telemetry stats in any component (header, game hud, dashboard)
+ */
+export function useActivityStats() {
+  const [stats, setStats] = useState({ ...telemetryStore });
+
+  useEffect(() => {
+    listeners.add(setStats);
+    setStats({ ...telemetryStore });
+    return () => {
+      listeners.delete(setStats);
+    };
+  }, []);
+
+  return stats;
+}
+
 /**
  * Pure Telemetry Activity Tracker Hook.
  * Records CLICK and KEYBOARD_ACTIVITY.
@@ -29,7 +73,7 @@ export function useActivityTracker() {
   const location = useLocation();
   const queueRef = useRef([]);
   const settingsRef = useRef({ mouseTrackingEnabled: true, keyboardTrackingEnabled: true });
-  const sessionIdRef = useRef(getOrCreateSessionId());
+  const sessionIdRef = useRef(telemetryStore.sessionId);
   const timerRef = useRef(null);
 
   // 1. Fetch system tracking settings periodically
@@ -39,10 +83,15 @@ export function useActivityTracker() {
       try {
         const settings = await activityApi.getSettings();
         if (mounted && settings) {
+          const mEnabled = settings.mouseTrackingEnabled !== false;
+          const kEnabled = settings.keyboardTrackingEnabled !== false;
           settingsRef.current = {
-            mouseTrackingEnabled: settings.mouseTrackingEnabled !== false,
-            keyboardTrackingEnabled: settings.keyboardTrackingEnabled !== false,
+            mouseTrackingEnabled: mEnabled,
+            keyboardTrackingEnabled: kEnabled,
           };
+          telemetryStore.mouseTrackingEnabled = mEnabled;
+          telemetryStore.keyboardTrackingEnabled = kEnabled;
+          emitStoreUpdate();
         }
       } catch {
         // Fallback to active by default
@@ -115,6 +164,10 @@ export function useActivityTracker() {
         target: targetIdentifier ? String(targetIdentifier).slice(0, 60) : undefined,
         tag: tagName ? String(tagName).slice(0, 20) : undefined,
       });
+
+      telemetryStore.clicks += 1;
+      telemetryStore.lastEventTime = Date.now();
+      emitStoreUpdate();
     };
 
     // Keyboard handler - strictly records existence of keyboard activity, NO typed characters/values
@@ -124,6 +177,10 @@ export function useActivityTracker() {
       pushEvent('KEYBOARD_ACTIVITY', {
         event: 'keypress',
       });
+
+      telemetryStore.keyboard += 1;
+      telemetryStore.lastEventTime = Date.now();
+      emitStoreUpdate();
     };
 
     // Flush on page unload or visibility change

@@ -29,6 +29,7 @@ import GameRulesModal from '../components/game/GameRulesModal';
 import gameSound from '../components/game/gameSound';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import GameComingSoon from '../components/GameComingSoon';
+import GameActivityHud from '../components/GameActivityHud';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 
 export default function CapitalBoardGame() {
@@ -1436,6 +1437,7 @@ export default function CapitalBoardGame() {
         />
       )}
       </div>
+      <GameActivityHud position="bottom-right" />
     </GameFullscreenShell>
   );
 }

@@ -6,6 +6,14 @@ import BrandMark from './BrandMark';
 import VerifiedBadge from './VerifiedBadge';
 import JobTitleBadge from './JobTitleBadge';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
+import { gameCatalogApi } from '../services/api';
+
+const GAME_ROUTE_TO_KEY = {
+  '/games/capital-board': 'capital_board',
+  '/games/2048': 'game_2048',
+  '/games/sam': 'sam',
+  '/games/quiz': 'quiz',
+};
 
 /**
  * Sidebar Component for WorkRank V3.3.
@@ -44,6 +52,20 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
     });
     return initial;
   });
+
+  const [catalogMap, setCatalogMap] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    gameCatalogApi.getCatalog().then((games) => {
+      if (mounted && Array.isArray(games)) {
+        const map = {};
+        games.forEach((g) => { map[g.game_key] = g.status; });
+        setCatalogMap(map);
+      }
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   // Auto-expand parent whenever route changes to a child within it
   useEffect(() => {
@@ -246,6 +268,11 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     const isActive = isRouteActive(location.pathname, path);
                     const ItemIcon = item.icon;
 
+                    const gameKey = GAME_ROUTE_TO_KEY[path];
+                    const isGameComingSoon = gameKey && catalogMap[gameKey] === 'COMING_SOON';
+                    const effectiveBadge = isGameComingSoon ? 'Sắp ra mắt' : item.badge;
+                    const isBadgeWarning = isGameComingSoon || item.comingSoon;
+
                     return (
                       <NavLink
                         key={path}
@@ -287,7 +314,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.label}
                         </span>
-                        {item.badge && (
+                        {effectiveBadge && (
                           <span
                             style={{
                               marginLeft: 'auto',
@@ -295,17 +322,17 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                               fontWeight: 600,
                               padding: '1.5px 5px',
                               borderRadius: 4,
-                              background: item.comingSoon ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.06)',
-                              color: item.comingSoon ? '#b45309' : '#111111',
+                              background: isBadgeWarning ? 'rgba(180,83,9,0.08)' : 'rgba(0,0,0,0.06)',
+                              color: isBadgeWarning ? '#b45309' : '#111111',
                               letterSpacing: '0.2px',
                               flexShrink: 0,
                               textTransform: 'uppercase',
                             }}
                           >
-                            {item.badge}
+                            {effectiveBadge}
                           </span>
                         )}
-                        {isActive && !item.badge && (
+                        {isActive && !effectiveBadge && (
                           <span
                             style={{
                               marginLeft: 'auto',

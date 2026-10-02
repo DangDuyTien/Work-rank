@@ -48,6 +48,7 @@ import DefaultAvatar from '../components/DefaultAvatar';
 import JobTitleBadge from '../components/JobTitleBadge';
 import GameFullscreenShell from '../components/game/GameFullscreenShell';
 import GameComingSoon from '../components/GameComingSoon';
+import GameActivityHud from '../components/GameActivityHud';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 import {
   Card,
@@ -3245,6 +3246,7 @@ export default function SamGame() {
       />
       <CreateBotTestModal isOpen={showBotModal} onClose={() => setShowBotModal(false)} onSubmit={handleCreateBotRoom} />
       <SamRulesModal isOpen={showRulesModal} onClose={() => setShowRulesModal(false)} />
+      <GameActivityHud position="bottom-right" />
     </div>
   );
 }

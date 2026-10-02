@@ -24,6 +24,8 @@ import {
   Layers,
   Sparkles,
   Trophy,
+  MousePointerClick,
+  Keyboard,
 } from 'lucide-react';
 
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -33,6 +35,7 @@ import CompetitionProgressWidget from '../components/CompetitionProgressWidget';
 import YouTubeTrendChart from '../components/YouTubeTrendChart';
 import TeamComparisonBar from '../components/TeamComparisonBar';
 import ChannelDetailModal from '../components/ChannelDetailModal';
+import { useActivityStats } from '../hooks/useActivityTracker';
 
 function isVerifiedUser(user) {
   return user?.verified === true || user?.isVerified === true || user?.verified === 1 || user?.isVerified === 1 || user?.verified === '1';
@@ -85,6 +88,7 @@ function dashboardUserId(user = {}) {
 export default function Dashboard() {
   const { user, isAdmin, socket } = useAuth();
   const navigate = useNavigate();
+  const { clicks: sessionClicks, keyboard: sessionKeys, mouseTrackingEnabled, keyboardTrackingEnabled } = useActivityStats();
   const pageVisible = usePageVisibility();
 
   // Basic dashboard range
@@ -295,6 +299,76 @@ export default function Dashboard() {
 
       {/* COMPETITION PROGRESS WIDGET */}
       <CompetitionProgressWidget />
+
+      {/* ACTIVITY TELEMETRY WIDGET */}
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 20px', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 28, height: 28, background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Activity size={16} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                Hoạt Động & Tương Tác Trực Tiếp (Activity Telemetry)
+              </h3>
+              <p style={{ margin: 0, fontSize: 11, color: '#64748b' }}>
+                Đo lường số lượng tương tác phiên hiện tại — Tuyệt đối không anti-cheat, không lưu ký tự gõ phím
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 8px' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a' }} />
+              Đang ghi nhận
+            </span>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => navigate('/settings')}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  color: '#334155',
+                  cursor: 'pointer',
+                }}
+              >
+                Cài đặt
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+              <MousePointerClick size={14} color="#0284c7" />
+              <span>Mouse Clicks (Phiên này)</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+              {sessionClicks.toLocaleString()}
+            </div>
+            <div style={{ fontSize: 11, color: mouseTrackingEnabled ? '#16a34a' : '#94a3b8', marginTop: 3 }}>
+              {mouseTrackingEnabled ? 'Mouse tracking đang hoạt động' : 'Mouse tracking đã tắt'}
+            </div>
+          </div>
+
+          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+              <Keyboard size={14} color="#0284c7" />
+              <span>Thao tác phím (Phiên này)</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
+              {sessionKeys.toLocaleString()}
+            </div>
+            <div style={{ fontSize: 11, color: keyboardTrackingEnabled ? '#16a34a' : '#94a3b8', marginTop: 3 }}>
+              {keyboardTrackingEnabled ? 'Keyboard tracking đang hoạt động' : 'Keyboard tracking đã tắt'}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* 1. ADMIN DASHBOARD VIEW (COMPANY -> TEAM -> CHANNEL DRILL-DOWN)           */}

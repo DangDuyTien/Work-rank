@@ -11,6 +11,7 @@ import { isVerifiedAccount } from '../utils/account';
 import { getStoredAvatar, removeStoredAvatar, initialsFromName, getUserAvatar, AVATAR_UPDATED_EVENT } from '../utils/avatar';
 import { PageTransition, PageTransitionSkeleton } from './ui';
 import { sendBrowserNotification } from '../utils/notifications';
+import ActivityTelemetryIndicator from './ActivityTelemetryIndicator';
 
 const APP_SETTINGS_STORAGE_KEY = 'workrank:app-settings:v1';
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
@@ -338,7 +339,9 @@ export default function Layout() {
             </div>
           </div>
 
-          <div data-tour="quick-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <div data-tour="quick-actions" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap' }}>
+            <ActivityTelemetryIndicator />
+
             <div ref={notificationRef} style={{ position: 'relative' }}>
               <button
                 data-tour="notifications"
