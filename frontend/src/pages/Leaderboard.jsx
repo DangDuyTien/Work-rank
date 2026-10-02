@@ -33,7 +33,6 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
-import CompactLiveWave from '../components/CompactLiveWave';
 import { TabTransition, TableSkeleton } from '../components/ui';
 
 /* =========================================================================
@@ -610,9 +609,8 @@ export default function Leaderboard() {
   const [hallOfFameData, setHallOfFameData] = useState({ seasonMvps: [], championTeams: [] });
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
-  const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
 
-  // Real-time synchronization for Computer Activity Rankings & Compact Live Wave
+  // Real-time synchronization for Computer Activity Rankings
   useEffect(() => {
     if (scopeMode !== 'activity' || !socket) return;
 
@@ -620,7 +618,6 @@ export default function Leaderboard() {
 
     const onWaveTick = (snapshot) => {
       if (!snapshot) return;
-      setLiveWaveSnapshot(snapshot);
 
       // Keep main table ranking synchronized with the canonical real-time stream
       if (Array.isArray(snapshot.surfers) && snapshot.surfers.length > 0) {
@@ -1679,14 +1676,6 @@ export default function Leaderboard() {
                     scoreSuffix="pts"
                     serverRank={activityRankings.items?.find((x) => Number(x.userId) === Number(currentUser?.id))?.rank}
                     onOpenProfile={(u) => navigate(`/users/${u.userId || u.id}`)}
-                  />
-
-                  {/* BIỂU ĐỒ CHUYỂN ĐỘNG THỨ HẠNG REALTIME (COMPACT LIVE WAVE) */}
-                  <CompactLiveWave
-                    rankings={activityRankings.items || []}
-                    liveSnapshot={liveWaveSnapshot}
-                    currentUser={currentUser}
-                    onSelectUser={(u) => navigate(`/users/${u.userId || u.id}`)}
                   />
 
                   {/* Podium Top 3 */}

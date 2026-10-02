@@ -36,6 +36,7 @@ import CompetitionProgressWidget from '../components/CompetitionProgressWidget';
 import YouTubeTrendChart from '../components/YouTubeTrendChart';
 import TeamComparisonBar from '../components/TeamComparisonBar';
 import ChannelDetailModal from '../components/ChannelDetailModal';
+import CompactLiveWave from '../components/CompactLiveWave';
 
 function isVerifiedUser(user) {
   return user?.verified === true || user?.isVerified === true || user?.verified === 1 || user?.isVerified === 1 || user?.verified === '1';
@@ -90,6 +91,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [myActivity, setMyActivity] = useState(null);
   const [agentStatus, setAgentStatus] = useState({ running: false, paired: false });
+  const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
+  const [activityRankings, setActivityRankings] = useState([]);
   const pageVisible = usePageVisibility();
 
   // Basic dashboard range
@@ -157,14 +160,15 @@ export default function Dashboard() {
         calls.push(youtube.getMyOverview({ period }).catch(() => null));
       }
 
-      // Fetch computer activity summary & companion status
+      // Fetch computer activity summary, companion status, and rankings
       calls.push(activityApi.getMySummary().catch(() => null));
       calls.push(desktopAgentIpc.checkStatus().catch(() => ({ running: false, paired: false })));
+      calls.push(activityApi.getComputerRankings({ period: 'today', limit: 20 }).catch(() => ({ items: [] })));
 
       const results = await Promise.all(calls);
       if (requestId !== requestIdRef.current) return;
 
-      const [leaderboardRes, overviewRes, ytDataRes, channelsRes, activityRes, agentRes] = results;
+      const [leaderboardRes, overviewRes, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
 
       if (isAdmin) {
         if (ytDataRes) setCompanyOverview(ytDataRes);
@@ -177,6 +181,10 @@ export default function Dashboard() {
         setMyActivity(activityRes.data);
       } else if (activityRes) {
         setMyActivity(activityRes);
+      }
+
+      if (rankingsRes?.items) {
+        setActivityRankings(rankingsRes.items);
       }
 
       if (agentRes) {
@@ -239,6 +247,68 @@ export default function Dashboard() {
     window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
   }, []);
+
+  // Real-time synchronization for Computer Activity Rankings & Compact Live Wave
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit('activity:wave:join', { period: 'today' });
+
+    const onWaveTick = (snapshot) => {
+      if (!snapshot) return;
+      setLiveWaveSnapshot(snapshot);
+
+      if (Array.isArray(snapshot.surfers) && snapshot.surfers.length > 0) {
+        const updatedItems = snapshot.surfers.map((s, idx) => ({
+          userId: s.userId,
+          user: {
+            id: s.userId,
+            name: s.name,
+            fullName: s.name,
+            username: s.name,
+            email: s.email,
+            avatar: null,
+            jobTitle: s.jobTitle,
+            department: s.department,
+            isVerified: s.isVerified,
+            teamName: s.teamName && s.teamName !== 'Chưa gán đội' ? s.teamName : null,
+          },
+          name: s.name,
+          activityScore: s.score,
+          activeMinutes: Math.round((s.activeSecondsToday || 0) / 60),
+          topApp: s.currentApp,
+          rank: s.rank || idx + 1,
+          rankChange: s.rankDelta || 0,
+          activityState: s.activityState,
+        }));
+        setActivityRankings(updatedItems);
+
+        // Sync current user's live summary metrics directly from server tick
+        const myId = Number(user?.id || user?.userId);
+        const me = snapshot.surfers.find((s) => Number(s.userId) === myId);
+        if (me) {
+          setMyActivity((prev) => ({
+            ...prev,
+            rank: me.rank,
+            activityScore: me.score,
+            rankChange: me.rankDelta || 0,
+            activeMinutes: Math.round((me.activeSecondsToday || 0) / 60),
+            topApp: me.currentApp || prev?.topApp,
+            activityState: me.activityState,
+          }));
+        }
+      }
+    };
+
+    socket.on('activity:wave:tick', onWaveTick);
+    socket.on('activity:wave:initial', onWaveTick);
+
+    return () => {
+      socket.emit('activity:wave:leave');
+      socket.off('activity:wave:tick', onWaveTick);
+      socket.off('activity:wave:initial', onWaveTick);
+    };
+  }, [socket, user]);
 
   // Filtered channels list for admin
   const filteredChannels = useMemo(() => {
@@ -480,6 +550,15 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* BIỂU ĐỒ CHUYỂN ĐỘNG THỨ HẠNG REALTIME (COMPACT LIVE WAVE) */}
+        <CompactLiveWave
+          rankings={activityRankings}
+          liveSnapshot={liveWaveSnapshot}
+          currentUser={user}
+          onSelectUser={() => navigate('/rankings?scope=activity')}
+          embedded={true}
+        />
       </div>
 
       {/* ========================================================================= */}

@@ -33,6 +33,7 @@ export default function CompactLiveWave({
   liveSnapshot = null,
   currentUser = null,
   onSelectUser = null,
+  embedded = false,
 }) {
   const [historySlices, setHistorySlices] = useState([]);
   const [latestOvertake, setLatestOvertake] = useState(null);
@@ -273,15 +274,27 @@ export default function CompactLiveWave({
 
   return (
     <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid rgba(15,23,42,0.08)',
-        borderRadius: 6,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-        padding: '14px 18px 12px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      style={
+        embedded
+          ? {
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 6,
+              padding: '12px 16px 12px',
+              position: 'relative',
+              overflow: 'hidden',
+              marginTop: 14,
+            }
+          : {
+              background: '#ffffff',
+              border: '1px solid rgba(15,23,42,0.08)',
+              borderRadius: 6,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+              padding: '14px 18px 12px',
+              position: 'relative',
+              overflow: 'hidden',
+            }
+      }
     >
       {/* ── HEADER: TITLE, OVERTAKE TICKER & LIVE BADGE ── */}
       <div
