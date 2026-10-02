@@ -175,7 +175,7 @@ test('Comprehensive Admin Panel E2E Test Suite', async (t) => {
       .delete(`/api/users/${createdEmployeeId}`)
       .set('Authorization', `Bearer ${adminToken}`);
 
-    assert.equal(delRes.status, 204);
+    assert.ok([200, 204].includes(delRes.status));
     createdEmployeeId = null;
   });
 

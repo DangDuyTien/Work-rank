@@ -835,7 +835,7 @@ export default function YouTubeOverview() {
                           #{idx + 1} {team.teamName}
                         </div>
                         <div style={{ fontSize: 12, color: '#64748b' }}>
-                          {formatNumber(team.totalSubscribers)} subs • +{team.viewsGrowth30dPct}% 30D
+                          {formatNumber(team.totalSubscribers)} subs • {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `+${Number(team.viewsGrowth30dPct).toFixed(1)}% 30D` : '—'}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
@@ -889,8 +889,8 @@ export default function YouTubeOverview() {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, fontSize: 16, fontFamily: "'JetBrains Mono', monospace", color: '#10b981' }}>
-                          +{team.viewsGrowth30dPct}%
+                        <div style={{ fontWeight: 700, fontSize: 16, fontFamily: "'JetBrains Mono', monospace", color: team.viewsGrowth30dPct !== null ? '#10b981' : '#94a3b8' }}>
+                          {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `${Number(team.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(team.viewsGrowth30dPct).toFixed(1)}%` : '—'}
                         </div>
                         <div style={{ fontSize: 11, color: '#64748b' }}>tốc độ tăng</div>
                       </div>
@@ -1108,12 +1108,20 @@ export default function YouTubeOverview() {
                             {formatNumber(ch.views)}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            <div style={{ fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: Number(ch.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
-                              {Number(ch.viewsGrowth30dPct) >= 0 ? '+' : ''}{ch.viewsGrowth30dPct}%
-                            </div>
-                            <div style={{ fontSize: 11, color: '#64748b', fontFamily: "'JetBrains Mono', monospace" }}>
-                              +{formatNumber(ch.views30d)} views
-                            </div>
+                            {ch.viewsGrowth30dPct !== null && ch.viewsGrowth30dPct !== undefined ? (
+                              <>
+                                <div style={{ fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: Number(ch.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
+                                  {Number(ch.viewsGrowth30dPct) >= 0 ? '+' : ''}{Number(ch.viewsGrowth30dPct).toFixed(1)}%
+                                </div>
+                                <div style={{ fontSize: 11, color: '#64748b', fontFamily: "'JetBrains Mono', monospace" }}>
+                                  +{formatNumber(ch.views30d)} views
+                                </div>
+                              </>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500 }} title="Chưa đủ dữ liệu lịch sử để tính tăng trưởng">
+                                —
+                              </span>
+                            )}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#64748b' }}>
                             {formatNumber(ch.subscribers)}
@@ -1268,9 +1276,15 @@ export default function YouTubeOverview() {
                           {formatNumber(item.totalSubscribers)}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                          <span style={{ fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: Number(item.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
-                            {Number(item.viewsGrowth30dPct) >= 0 ? '+' : ''}{item.viewsGrowth30dPct}%
-                          </span>
+                          {item.viewsGrowth30dPct !== null && item.viewsGrowth30dPct !== undefined ? (
+                            <span style={{ fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: Number(item.viewsGrowth30dPct) >= 0 ? '#10b981' : '#ef4444' }}>
+                              {Number(item.viewsGrowth30dPct) >= 0 ? '+' : ''}{Number(item.viewsGrowth30dPct).toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500 }} title="Chưa đủ dữ liệu lịch sử để tính tăng trưởng">
+                              —
+                            </span>
+                          )}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                           <button
@@ -1389,11 +1403,13 @@ export default function YouTubeOverview() {
 
                       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 16 }}>
                         <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Tăng Trưởng 30 Ngày</div>
-                        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#10b981', marginTop: 4 }}>
-                          {Number(summary?.viewsGrowth30dPct || 0) >= 0 ? '+' : ''}{summary?.viewsGrowth30dPct || 0}%
+                        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: summary?.viewsGrowth30dPct !== null ? '#10b981' : '#94a3b8', marginTop: 4 }}>
+                          {summary?.viewsGrowth30dPct !== null && summary?.viewsGrowth30dPct !== undefined
+                            ? `${Number(summary.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(summary.viewsGrowth30dPct).toFixed(1)}%`
+                            : 'Chưa đủ dữ liệu'}
                         </div>
                         <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                          Hạng #{summary?.rankByGrowth || summary?.rankByViews || '—'} công ty
+                          {summary?.viewsGrowth30dPct !== null ? `Hạng #${summary?.rankByGrowth || '—'} công ty` : 'Cần thêm dữ liệu lịch sử'}
                         </div>
                       </div>
                     </div>
@@ -1560,12 +1576,16 @@ export default function YouTubeOverview() {
 
                   {/* 30D Growth Row */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 1fr', gap: 16, alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#10b981' }}>
-                      +{comparison.teamA?.viewsGrowth30dPct}%
+                    <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: comparison.teamA?.viewsGrowth30dPct !== null ? '#10b981' : '#94a3b8' }}>
+                      {comparison.teamA?.viewsGrowth30dPct !== null && comparison.teamA?.viewsGrowth30dPct !== undefined
+                        ? `${Number(comparison.teamA.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(comparison.teamA.viewsGrowth30dPct).toFixed(1)}%`
+                        : '—'}
                     </div>
                     <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tăng Trưởng (30D)</div>
-                    <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#10b981' }}>
-                      +{comparison.teamB?.viewsGrowth30dPct}%
+                    <div style={{ textAlign: 'left', fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: comparison.teamB?.viewsGrowth30dPct !== null ? '#10b981' : '#94a3b8' }}>
+                      {comparison.teamB?.viewsGrowth30dPct !== null && comparison.teamB?.viewsGrowth30dPct !== undefined
+                        ? `${Number(comparison.teamB.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(comparison.teamB.viewsGrowth30dPct).toFixed(1)}%`
+                        : '—'}
                     </div>
                   </div>
 
