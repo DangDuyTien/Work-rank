@@ -34,6 +34,7 @@ import {
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
 import { TabTransition, TableSkeleton } from '../components/ui';
+import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 /* =========================================================================
  * STYLES & THEME CONSTANTS (WorkRank Standard)
@@ -587,7 +588,12 @@ export default function Leaderboard() {
   const urlMetric = searchParams.get('metric') || 'views';
   const urlSearch = searchParams.get('search') || '';
 
-  const [loading, setLoading] = useState(true);
+  const initialCacheKey = selectedTeamId
+    ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, period: currentPeriod, search: urlSearch, metric: urlMetric })
+    : CACHE_KEYS.RANKINGS(scopeMode, { period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, search: urlSearch });
+  const initialCached = getCached(initialCacheKey);
+
+  const [loading, setLoading] = useState(!initialCached);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState(urlSearch);
@@ -602,11 +608,11 @@ export default function Leaderboard() {
   }, [searchKeyword]);
 
   // Data states
-  const [teamRankings, setTeamRankings] = useState({ items: [], total: 0 });
-  const [memberRankings, setMemberRankings] = useState({ items: [], total: 0 });
-  const [activityRankings, setActivityRankings] = useState({ items: [], total: 0 });
-  const [youtubeRankings, setYoutubeRankings] = useState({ items: [], total: 0 });
-  const [hallOfFameData, setHallOfFameData] = useState({ seasonMvps: [], championTeams: [] });
+  const [teamRankings, setTeamRankings] = useState(() => (scopeMode === 'teams' && initialCached ? initialCached : { items: [], total: 0 }));
+  const [memberRankings, setMemberRankings] = useState(() => (scopeMode === 'members' && initialCached ? initialCached : { items: [], total: 0 }));
+  const [activityRankings, setActivityRankings] = useState(() => (scopeMode === 'activity' && initialCached ? initialCached : { items: [], total: 0 }));
+  const [youtubeRankings, setYoutubeRankings] = useState(() => (scopeMode === 'youtube' && initialCached ? initialCached : { items: [], total: 0 }));
+  const [hallOfFameData, setHallOfFameData] = useState(() => (scopeMode === 'hall-of-fame' && initialCached ? initialCached : { seasonMvps: [], championTeams: [] }));
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
 
@@ -674,8 +680,8 @@ export default function Leaderboard() {
   }, [scopeMode, socket, currentPeriod, debouncedSearch]);
 
   // Selectors
-  const [seasonList, setSeasonList] = useState([]);
-  const [grandList, setGrandList] = useState([]);
+  const [seasonList, setSeasonList] = useState(() => getCached(CACHE_KEYS.RANKINGS_META() + ':seasons') || []);
+  const [grandList, setGrandList] = useState(() => getCached(CACHE_KEYS.RANKINGS_META() + ':grands') || []);
 
   const setParam = useCallback((key, value) => {
     const params = new URLSearchParams(searchParams);
@@ -690,12 +696,12 @@ export default function Leaderboard() {
     async function loadMeta() {
       try {
         const [seasons, grands] = await Promise.all([
-          rankingsApi.getSeasons().catch(() => []),
-          rankingsApi.getGrands().catch(() => []),
+          fetchWithCache(CACHE_KEYS.RANKINGS_META() + ':seasons', () => rankingsApi.getSeasons().catch(() => []), { ttl: CACHE_TTL.STATIC }),
+          fetchWithCache(CACHE_KEYS.RANKINGS_META() + ':grands', () => rankingsApi.getGrands().catch(() => []), { ttl: CACHE_TTL.STATIC }),
         ]);
         if (!mounted) return;
-        setSeasonList(seasons);
-        setGrandList(grands);
+        setSeasonList((prev) => (isDeepEqual(prev, seasons) ? prev : seasons));
+        setGrandList((prev) => (isDeepEqual(prev, grands) ? prev : grands));
       } catch (err) {
         console.error('Failed to load season/grand list:', err);
       }
@@ -706,8 +712,33 @@ export default function Leaderboard() {
 
   // Fetch ranking data
   const fetchData = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
+    const cacheKey = selectedTeamId
+      ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, period: currentPeriod, search: debouncedSearch, metric: urlMetric })
+      : CACHE_KEYS.RANKINGS(scopeMode, { period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, search: debouncedSearch });
+    const cachedData = getCached(cacheKey);
+
+    if (cachedData) {
+      if (selectedTeamId) {
+        if (cachedData.teamMembers) setMemberRankings((prev) => (isDeepEqual(prev, cachedData.teamMembers) ? prev : cachedData.teamMembers));
+        if (cachedData.teamChannels) setTeamChannels((prev) => (isDeepEqual(prev, cachedData.teamChannels) ? prev : cachedData.teamChannels));
+      } else if (scopeMode === 'teams') {
+        setTeamRankings((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
+      } else if (scopeMode === 'members') {
+        setMemberRankings((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
+      } else if (scopeMode === 'activity') {
+        setActivityRankings((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
+      } else if (scopeMode === 'youtube') {
+        setYoutubeRankings((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
+      } else if (scopeMode === 'hall-of-fame') {
+        setHallOfFameData((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
+      }
+      setLoading(false);
+      setRefreshing(true);
+    } else if (isManual) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -715,22 +746,33 @@ export default function Leaderboard() {
         // LEVEL 2: DRILL-DOWN INTO SPECIFIC TEAM
         const numTeamId = Number(selectedTeamId);
         const [teamMembersRes, teamYtRes] = await Promise.all([
-          rankingsApi.getIndividuals({
-            scope: currentPeriod,
-            teamId: numTeamId,
-            search: debouncedSearch || undefined,
-            limit: 100,
-          }),
-          youtubeApi.getLeaderboard({
-            view: 'channels',
-            teamId: numTeamId,
-            sortBy: urlMetric,
-            limit: 100,
-          }).catch(() => ({ items: [] })),
+          fetchWithCache(
+            CACHE_KEYS.RANKINGS('team_members', { teamId: numTeamId, period: currentPeriod, search: debouncedSearch }),
+            () => rankingsApi.getIndividuals({
+              scope: currentPeriod,
+              teamId: numTeamId,
+              search: debouncedSearch || undefined,
+              limit: 100,
+            }),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          ),
+          fetchWithCache(
+            CACHE_KEYS.RANKINGS('team_channels', { teamId: numTeamId, metric: urlMetric }),
+            () => youtubeApi.getLeaderboard({
+              view: 'channels',
+              teamId: numTeamId,
+              sortBy: urlMetric,
+              limit: 100,
+            }).catch(() => ({ items: [] })),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          ),
         ]);
 
-        setMemberRankings(teamMembersRes);
-        setTeamChannels(teamYtRes.items || []);
+        const drilldownData = { teamMembers: teamMembersRes, teamChannels: teamYtRes.items || [] };
+        setCached(cacheKey, drilldownData, { ttl: CACHE_TTL.MEDIUM });
+
+        setMemberRankings((prev) => (isDeepEqual(prev, teamMembersRes) ? prev : teamMembersRes));
+        setTeamChannels((prev) => (isDeepEqual(prev, teamYtRes.items || []) ? prev : (teamYtRes.items || [])));
 
         setSelectedTeamDetails((prev) => {
           if (prev && Number(prev.teamId || prev.id) === numTeamId && prev.teamName && !prev.teamName.startsWith('Team #')) {
@@ -745,44 +787,65 @@ export default function Leaderboard() {
       } else {
         // LEVEL 1: COMPANY / ALL
         if (scopeMode === 'teams') {
-          const res = await rankingsApi.getTeams({
-            scope: currentPeriod,
-            seasonId: urlSeasonId || undefined,
-            grandId: urlGrandId || undefined,
-            limit: 100,
-          });
-          setTeamRankings(res);
+          const res = await fetchWithCache(
+            cacheKey,
+            () => rankingsApi.getTeams({
+              scope: currentPeriod,
+              seasonId: urlSeasonId || undefined,
+              grandId: urlGrandId || undefined,
+              limit: 100,
+            }),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          );
+          setTeamRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'members') {
-          const res = await rankingsApi.getIndividuals({
-            scope: currentPeriod,
-            seasonId: urlSeasonId || undefined,
-            grandId: urlGrandId || undefined,
-            search: debouncedSearch || undefined,
-            limit: 100,
-          });
-          setMemberRankings(res);
+          const res = await fetchWithCache(
+            cacheKey,
+            () => rankingsApi.getIndividuals({
+              scope: currentPeriod,
+              seasonId: urlSeasonId || undefined,
+              grandId: urlGrandId || undefined,
+              search: debouncedSearch || undefined,
+              limit: 100,
+            }),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          );
+          setMemberRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'activity') {
-          const res = await activityApi.getComputerRankings({
-            period: currentPeriod,
-            search: debouncedSearch || undefined,
-            limit: 100,
-          });
+          const res = await fetchWithCache(
+            cacheKey,
+            () => activityApi.getComputerRankings({
+              period: currentPeriod,
+              search: debouncedSearch || undefined,
+              limit: 100,
+            }),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          );
           const rawItems = res?.data?.rankings || res?.rankings || [];
-          setActivityRankings({
+          const actData = {
             items: rawItems,
             total: res?.data?.count || res?.count || rawItems.length,
-          });
+          };
+          setActivityRankings((prev) => (isDeepEqual(prev, actData) ? prev : actData));
         } else if (scopeMode === 'youtube') {
-          const res = await rankingsApi.getYouTube({
-            view: 'channels',
-            sortBy: urlMetric,
-            search: debouncedSearch || undefined,
-            limit: 100,
-          });
-          setYoutubeRankings(res);
+          const res = await fetchWithCache(
+            cacheKey,
+            () => rankingsApi.getYouTube({
+              view: 'channels',
+              sortBy: urlMetric,
+              search: debouncedSearch || undefined,
+              limit: 100,
+            }),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          );
+          setYoutubeRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'hall-of-fame') {
-          const res = await rankingsApi.getTopPerformers();
-          setHallOfFameData(res);
+          const res = await fetchWithCache(
+            cacheKey,
+            () => rankingsApi.getTopPerformers(),
+            { ttl: CACHE_TTL.MEDIUM, force: isManual }
+          );
+          setHallOfFameData((prev) => (isDeepEqual(prev, res) ? prev : res));
         }
       }
     } catch (err) {
@@ -1005,8 +1068,7 @@ export default function Leaderboard() {
                     fontWeight: 600,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                    transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                    transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
                     boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                   }}
                   onMouseEnter={(e) => {

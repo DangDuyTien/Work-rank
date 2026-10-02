@@ -479,23 +479,14 @@ export default function AdminGrand() {
 
       {/* Create Grand Modal */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15,23,42,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 16,
-        }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px', color: '#0f172a' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden modal-dialog-enter p-6">
+            <h3 className="text-base font-bold text-slate-900 mb-4">
               Tạo Grand Championship Mới
             </h3>
-            <form onSubmit={handleCreateGrand} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleCreateGrand} className="flex flex-col gap-3">
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Tên Giải Vô Địch</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Tên Giải Vô Địch</label>
                 <input
                   type="text"
                   required
@@ -506,92 +497,84 @@ export default function AdminGrand() {
                     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                     setFormData({ ...formData, name, slug });
                   }}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Slug</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Slug</label>
                   <input
                     type="text"
                     required
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Năm Thi Đấu</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Năm Thi Đấu</label>
                   <input
                     type="number"
                     required
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Ngày Bắt Đầu</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Ngày Bắt Đầu</label>
                   <input
                     type="date"
                     required
                     value={formData.startAt}
                     onChange={(e) => setFormData({ ...formData, startAt: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Ngày Kết Thúc</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Ngày Kết Thúc</label>
                   <input
                     type="date"
                     required
                     value={formData.endAt}
                     onChange={(e) => setFormData({ ...formData, endAt: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Mô tả</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Mô tả</label>
                 <textarea
                   rows={2}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Thứ Tự Tie-Break</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Thứ Tự Tie-Break</label>
                 <input
                   type="text"
                   value={formData.tieBreakOrder}
                   onChange={(e) => setFormData({ ...formData, tieBreakOrder: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
-                <span style={{ fontSize: 10, color: '#64748b' }}>Mặc định: grand_points,season_wins,podium_count,earliest_award</span>
+                <span className="text-[10px] text-slate-500">Mặc định: grand_points,season_wins,podium_count,earliest_award</span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
+              <div className="flex justify-end gap-2.5 mt-2">
+                <Button variant="secondary" type="button" onClick={() => setShowCreateModal(false)}>
                   Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={{ border: 'none', background: '#eab308', color: '#000', padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
+                </Button>
+                <Button variant="primary" type="submit" disabled={submitting}>
                   {submitting ? 'Đang tạo...' : 'Tạo Giải'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -600,28 +583,19 @@ export default function AdminGrand() {
 
       {/* Link Season Modal */}
       {selectedGrandForSeason && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15,23,42,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 16,
-        }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 450, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px', color: '#0f172a' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden modal-dialog-enter p-6">
+            <h3 className="text-base font-bold text-slate-900 mb-3">
               Ghép Mùa Giải Vào: {selectedGrandForSeason.name}
             </h3>
-            <form onSubmit={handleLinkSeason} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleLinkSeason} className="flex flex-col gap-3">
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Chọn Mùa Giải</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Chọn Mùa Giải</label>
                 <select
                   required
                   value={selectedSeasonId}
                   onChange={(e) => setSelectedSeasonId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 >
                   <option value="">-- Chọn Mùa Giải --</option>
                   {seasons.map((s) => (
@@ -631,30 +605,17 @@ export default function AdminGrand() {
                   ))}
                 </select>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGrandForSeason(null)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
+              <div className="flex justify-end gap-2.5 mt-2">
+                <Button variant="secondary" type="button" onClick={() => setSelectedGrandForSeason(null)}>
                   Hủy
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   type="submit"
                   disabled={submittingLink}
-                  style={{
-                    border: 'none',
-                    background: '#b45309',
-                    color: '#fff',
-                    padding: '8px 16px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: submittingLink ? 'not-allowed' : 'pointer',
-                    opacity: submittingLink ? 0.6 : 1,
-                  }}
                 >
                   {submittingLink ? 'Đang ghép...' : 'Xác Nhận Ghép'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -663,31 +624,22 @@ export default function AdminGrand() {
 
       {/* Reconcile Modal */}
       {selectedGrandForReconcile && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15,23,42,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 16,
-        }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 480, padding: 24, border: '1px solid #cbd5e1' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden modal-dialog-enter p-6">
+            <h3 className="text-base font-bold text-slate-900 mb-2">
               Điều Chỉnh Điểm Grand Points (Immutable Reconciliation)
             </h3>
-            <p style={{ fontSize: 11, color: '#dc2626', margin: '0 0 12px', lineHeight: 1.4 }}>
+            <p className="text-xs text-red-600 mb-3 leading-relaxed">
               Lưu ý: Grand Points Ledger là bảng bất biến (Append-Only). Bản ghi điều chỉnh sẽ được ghi mới (Reversal / Adjustment) và không làm mất lịch sử cũ.
             </p>
-            <form onSubmit={handleReconcilePoints} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleReconcilePoints} className="flex flex-col gap-3">
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Chọn Team</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Chọn Team</label>
                 <select
                   required
                   value={reconcileData.teamId}
                   onChange={(e) => setReconcileData({ ...reconcileData, teamId: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 >
                   <option value="">-- Chọn Đội --</option>
                   {availableTeams.map((t) => (
@@ -697,53 +649,40 @@ export default function AdminGrand() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Số Điểm Điều Chỉnh (Có thể âm hoặc dương)</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Số Điểm Điều Chỉnh (Có thể âm hoặc dương)</label>
                 <input
                   type="number"
                   required
                   placeholder="Ví dụ: 100 hoặc -50"
                   value={reconcileData.points}
                   onChange={(e) => setReconcileData({ ...reconcileData, points: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Lý Do Điều Chỉnh (Bắt buộc để kiểm toán)</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Lý Do Điều Chỉnh (Bắt buộc để kiểm toán)</label>
                 <textarea
                   rows={2}
                   required
                   placeholder="Ghi rõ biên bản vi phạm hoặc quyết định phúc khảo..."
                   value={reconcileData.reason}
                   onChange={(e) => setReconcileData({ ...reconcileData, reason: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 0 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGrandForReconcile(null)}
-                  style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
+              <div className="flex justify-end gap-2.5 mt-2">
+                <Button variant="secondary" type="button" onClick={() => setSelectedGrandForReconcile(null)}>
                   Hủy
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   type="submit"
                   disabled={submittingReconcile}
-                  style={{
-                    border: 'none',
-                    background: '#ea580c',
-                    color: '#fff',
-                    padding: '8px 16px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: submittingReconcile ? 'not-allowed' : 'pointer',
-                    opacity: submittingReconcile ? 0.6 : 1,
-                  }}
                 >
                   {submittingReconcile ? 'Đang ghi nhận...' : 'Ghi Nhận Điều Chỉnh'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

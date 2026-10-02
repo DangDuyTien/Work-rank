@@ -402,6 +402,33 @@ export default function AdminOperations() {
                   </div>
                 </div>
               </div>
+
+              {/* 4. Web Service & Keep-Alive (Render Free) */}
+              <div style={{ ...CARD, padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Radio size={18} color="#0284c7" />
+                    <strong style={{ fontSize: 14, color: '#0f172a' }}>Web Service & Keep-Alive</strong>
+                  </div>
+                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#e0f2fe', color: '#0284c7', fontWeight: 600 }}>
+                    {integrationHealth?.renderService || 'ONLINE'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Keep-alive gần nhất:</span>
+                    <strong>{integrationHealth?.lastHealthPingAt ? fmtDate(integrationHealth.lastHealthPingAt) : 'Chưa có ping'}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Tổng lượt Ping nhận:</span>
+                    <strong style={{ color: '#0284c7' }}>{fmtNum(integrationHealth?.healthPingCount || 0)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Tần suất khuyến nghị:</span>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>10 phút / lần</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Read Model Projections Status Card */}
@@ -728,8 +755,8 @@ export default function AdminOperations() {
           MODAL: CHI TIẾT AUDIT LOG
          ══════════════════════════════════════════════════════════════════════ */}
       {selectedAuditLog && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FileText size={18} color="#b45309" /> Chi Tiết Nhật Ký Kiểm Toán
@@ -783,8 +810,8 @@ export default function AdminOperations() {
           MODAL: THỬ LẠI SỰ KIỆN LỖI (RETRY EVENT)
          ══════════════════════════════════════════════════════════════════════ */}
       {retryModalEvent && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} color="#b45309" /> Thử Lại Sự Kiện
@@ -830,8 +857,8 @@ export default function AdminOperations() {
           MODAL: REBUILD PROJECTIONS
          ══════════════════════════════════════════════════════════════════════ */}
       {rebuildModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} /> Xác Nhận Rebuild Bảng Xếp Hạng

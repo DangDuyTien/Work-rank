@@ -42,6 +42,7 @@ import TeamComparisonBar from '../components/TeamComparisonBar';
 import ChannelDetailModal from '../components/ChannelDetailModal';
 import CompactLiveWave from '../components/CompactLiveWave';
 import { AnimatedNumber, TabTransition, PageTransition } from '../components/ui';
+import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function isVerifiedUser(user) {
   return user?.verified === true || user?.isVerified === true || user?.verified === 1 || user?.isVerified === 1 || user?.verified === '1';
@@ -94,27 +95,38 @@ function dashboardUserId(user = {}) {
 export default function Dashboard() {
   const { user, isAdmin, socket } = useAuth();
   const navigate = useNavigate();
-  const [myActivity, setMyActivity] = useState(null);
+
+  const cachedTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS('today'));
+  const cachedUsers = getCached(CACHE_KEYS.DASHBOARD_USERS('today'));
+  const cachedCompanyYt = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_COMPANY('30d')) : null;
+  const cachedMemberYt = !isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_MEMBER('30d')) : null;
+  const cachedChannels = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_CHANNELS()) : [];
+  const cachedRankings = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS());
+  const cachedMyActivity = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id));
+
+  const hasInitialCache = Boolean(cachedTotals || (cachedUsers && cachedUsers.length > 0));
+
+  const [myActivity, setMyActivity] = useState(() => cachedMyActivity || null);
   const [agentStatus, setAgentStatus] = useState({ running: false, paired: false });
   const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
-  const [activityRankings, setActivityRankings] = useState([]);
+  const [activityRankings, setActivityRankings] = useState(() => cachedRankings || []);
   const pageVisible = usePageVisibility();
 
   // Basic dashboard range
   const [range, setRange] = useState('today');
-  const [totals, setTotals] = useState({ keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
+  const [totals, setTotals] = useState(() => cachedTotals || { keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 });
   const [prevTotals, setPrevTotals] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState(() => cachedUsers || []);
+  const [loading, setLoading] = useState(!hasInitialCache);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
   // YouTube module states
   const [ytPeriod, setYtPeriod] = useState('30d');
-  const [companyOverview, setCompanyOverview] = useState(null);
-  const [memberOverview, setMemberOverview] = useState(null);
-  const [allChannels, setAllChannels] = useState([]);
+  const [companyOverview, setCompanyOverview] = useState(() => cachedCompanyYt || null);
+  const [memberOverview, setMemberOverview] = useState(() => cachedMemberYt || null);
+  const [allChannels, setAllChannels] = useState(() => cachedChannels || []);
   const [channelsLoading, setChannelsLoading] = useState(false);
 
   // Admin Drill-down & Comparison states
@@ -128,10 +140,12 @@ export default function Dashboard() {
   // Modal state
   const [activeModalChannelId, setActiveModalChannelId] = useState(null);
 
-  // Global activity tracking controller with Optimistic Local Scoring
+  // Global activity tracking controller with Autonomous Schedule (08:00 - 17:30)
   const {
+    trackingState,
     isTrackingActive,
-    toggleTracking,
+    isOutsideSchedule,
+    isScheduleOpen,
     agentStatus: liveAgentStatus,
     displayPts,
     displayClicks,
@@ -143,7 +157,6 @@ export default function Dashboard() {
     ptsPerHour: livePtsPerHour,
     avgApm: liveAvgApm,
     lastEventTime,
-    trackingStatus,
     updateServerSummary,
   } = useActivityStats();
 
@@ -184,7 +197,16 @@ export default function Dashboard() {
     requestIdRef.current = requestId;
     const background = options.background === true;
 
-    if (!background) {
+    const cachedRangeTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange));
+    const cachedRangeUsers = getCached(CACHE_KEYS.DASHBOARD_USERS(selectedRange));
+    const hasCachedRange = Boolean(cachedRangeTotals || (cachedRangeUsers && cachedRangeUsers.length > 0));
+
+    if (hasCachedRange) {
+      if (cachedRangeTotals) setTotals((prev) => (isDeepEqual(prev, cachedRangeTotals) ? prev : cachedRangeTotals));
+      if (cachedRangeUsers) setUsers((prev) => (isDeepEqual(prev, cachedRangeUsers) ? prev : cachedRangeUsers));
+      setLoading(false);
+      setRefreshing(true);
+    } else if (!background) {
       setLoading(true);
     } else {
       setRefreshing(true);
@@ -193,62 +215,69 @@ export default function Dashboard() {
 
     try {
       const calls = [
-        leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT }),
-        dashboard.overview(selectedRange),
+        fetchWithCache(CACHE_KEYS.DASHBOARD_USERS(selectedRange), () => leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT })),
+        fetchWithCache(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange), async () => {
+          const res = await dashboard.overview(selectedRange);
+          return res.data || {};
+        }),
       ];
 
       if (isAdmin) {
-        calls.push(youtube.getOverview({ period }).catch(() => null));
-        calls.push(youtube.getLeaderboard({ view: 'channels', limit: 200 }).catch(() => ({ items: [] })));
+        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_COMPANY(period), () => youtube.getOverview({ period })).catch(() => null));
+        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), () => youtube.getLeaderboard({ view: 'channels', limit: 200 })).catch(() => ({ items: [] })));
       } else {
-        calls.push(youtube.getMyOverview({ period }).catch(() => null));
+        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_MEMBER(period), () => youtube.getMyOverview({ period })).catch(() => null));
       }
 
       // Fetch computer activity summary, companion status, and rankings
-      calls.push(activityApi.getMySummary().catch(() => null));
+      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id), () => activityApi.getMySummary()).catch(() => null));
       calls.push(desktopAgentIpc.checkStatus().catch(() => ({ running: false, paired: false })));
-      calls.push(activityApi.getComputerRankings({ period: 'today', limit: 20 }).catch(() => ({ items: [] })));
+      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS(), () => activityApi.getComputerRankings({ period: 'today', limit: 20 })).catch(() => ({ items: [] })));
 
       const results = await Promise.all(calls);
       if (requestId !== requestIdRef.current) return;
 
-      const [leaderboardRes, overviewRes, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
+      const [leaderboardRes, overviewData, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
 
       if (isAdmin) {
-        if (ytDataRes) setCompanyOverview(ytDataRes);
-        if (channelsRes) setAllChannels(channelsRes.items || channelsRes.channels || []);
+        if (ytDataRes) setCompanyOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
+        if (channelsRes) {
+          const chItems = channelsRes.items || channelsRes.channels || [];
+          setAllChannels((prev) => (isDeepEqual(prev, chItems) ? prev : chItems));
+        }
       } else {
-        if (ytDataRes) setMemberOverview(ytDataRes);
+        if (ytDataRes) setMemberOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
       }
 
       if (activityRes?.data) {
-        setMyActivity(activityRes.data);
+        setMyActivity((prev) => (isDeepEqual(prev, activityRes.data) ? prev : activityRes.data));
         updateServerSummary(activityRes.data);
       } else if (activityRes) {
-        setMyActivity(activityRes);
+        setMyActivity((prev) => (isDeepEqual(prev, activityRes) ? prev : activityRes));
         updateServerSummary(activityRes);
       }
 
       if (rankingsRes?.items) {
-        setActivityRankings(rankingsRes.items);
+        setActivityRankings((prev) => (isDeepEqual(prev, rankingsRes.items) ? prev : rankingsRes.items));
       }
 
       if (agentRes) {
         setAgentStatus(agentRes);
       }
 
-      const overviewData = overviewRes.data || {};
+      const safeOverview = overviewData || {};
       const newTotals = {
-        keystrokes: Number(overviewData.totalKeystrokes || 0),
-        clicks: Number(overviewData.totalMouseClicks || 0),
-        activeSeconds: Number(overviewData.totalActiveSeconds || overviewData.totalActiveSecondsToday || 0),
-        online: Number(overviewData.activeUsersNow || 0),
+        keystrokes: Number(safeOverview.totalKeystrokes || 0),
+        clicks: Number(safeOverview.totalMouseClicks || 0),
+        activeSeconds: Number(safeOverview.totalActiveSeconds || safeOverview.totalActiveSecondsToday || 0),
+        online: Number(safeOverview.activeUsersNow || 0),
       };
 
-      setUsers(leaderboardRes.data || []);
+      const newUsersList = leaderboardRes?.data || [];
+      setUsers((prev) => (isDeepEqual(prev, newUsersList) ? prev : newUsersList));
       if (prevRef.current) setPrevTotals(prevRef.current);
       prevRef.current = newTotals;
-      setTotals(newTotals);
+      setTotals((prev) => (isDeepEqual(prev, newTotals) ? prev : newTotals));
     } catch (err) {
       if (requestId === requestIdRef.current) {
         setError(err?.response?.data?.message || err?.message || 'Không tải được dữ liệu dashboard');
@@ -259,7 +288,7 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     }
-  }, [isAdmin, ytPeriod, updateServerSummary]);
+  }, [isAdmin, ytPeriod, user?.id, updateServerSummary]);
 
   // Load team drilldown if selected
   const fetchTeamDrilldown = useCallback(async (teamId, period) => {
@@ -469,11 +498,20 @@ export default function Dashboard() {
       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 20px', marginBottom: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, background: isTrackingActive ? '#ecfdf5' : '#f1f5f9', color: isTrackingActive ? '#059669' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              background: isTrackingActive ? '#ecfdf5' : isOutsideSchedule ? '#fffbeb' : '#f1f5f9',
+              color: isTrackingActive ? '#059669' : isOutsideSchedule ? '#b45309' : '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 6,
+            }}>
               <Sparkles size={20} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                   Độ Năng Động Của Bạn (Computer Activity)
                 </h3>
@@ -485,18 +523,18 @@ export default function Dashboard() {
                   gap: 5,
                   padding: '2px 8px',
                   borderRadius: 12,
-                  background: isTrackingActive ? '#dcfce7' : '#f1f5f9',
-                  color: isTrackingActive ? '#15803d' : '#64748b',
-                  border: `1px solid ${isTrackingActive ? '#86efac' : '#cbd5e1'}`,
+                  background: isTrackingActive ? '#dcfce7' : isOutsideSchedule ? '#fef3c7' : '#f1f5f9',
+                  color: isTrackingActive ? '#15803d' : isOutsideSchedule ? '#b45309' : '#64748b',
+                  border: `1px solid ${isTrackingActive ? '#86efac' : isOutsideSchedule ? '#fde68a' : '#cbd5e1'}`,
                 }}>
                   <span style={{
                     width: 7,
                     height: 7,
                     borderRadius: '50%',
-                    background: isTrackingActive ? '#16a34a' : '#94a3b8',
+                    background: isTrackingActive ? '#16a34a' : isOutsideSchedule ? '#d97706' : '#94a3b8',
                     boxShadow: isTrackingActive ? '0 0 0 2px rgba(22,163,74,0.3)' : 'none',
                   }} />
-                  {isTrackingActive ? 'ĐANG THEO DÕI' : 'ĐÃ TẮT'}
+                  {isTrackingActive ? 'ĐANG THEO DÕI TỰ ĐỘNG' : isOutsideSchedule ? 'NGOÀI GIỜ LÀM VIỆC (08:00 - 17:30)' : 'TẠM DỪNG'}
                 </span>
               </div>
               <p style={{ margin: '3px 0 0', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -505,17 +543,24 @@ export default function Dashboard() {
                     <CheckCircle2 size={13} color="#16a34a" style={{ flexShrink: 0 }} />
                     <span>
                       {liveAgentStatus?.running || agentStatus?.running
-                        ? `Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web hoặc tắt máy tính sẽ tự động dừng.`
+                        ? `Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web sẽ tự động ngắt.`
                         : (typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
                             ? 'Đang tự động đếm hoạt động Web/PWA (iOS) — Tắt web sẽ tự động ngắt.'
                             : 'Đang tự động đếm hoạt động trình duyệt Web — Tắt web sẽ tự động ngắt.')}
+                    </span>
+                  </>
+                ) : isOutsideSchedule ? (
+                  <>
+                    <Clock3 size={13} color="#b45309" style={{ flexShrink: 0 }} />
+                    <span>
+                      Khung giờ ghi nhận: 08:00 – 17:30 (Asia/Ho_Chi_Minh). Tự động tiếp tục vào 08:00 ngày làm việc tiếp theo.
                     </span>
                   </>
                 ) : (
                   <>
                     <Clock3 size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
                     <span>
-                      Bấm nút "Bật Theo Dõi" để bắt đầu đếm. Tắt web hoặc tắt máy tính sẽ tự động ngắt.
+                      Tracking tự động hoạt động khi bạn đăng nhập và mở WorkRank trong khung giờ 08:00 - 17:30.
                     </span>
                   </>
                 )}
@@ -524,42 +569,6 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {/* ONE-CLICK START / STOP CONTROLLER */}
-            <button
-              type="button"
-              onClick={async () => {
-                await toggleTracking(user);
-                setTimeout(() => fetchData(range, ytPeriod, { background: true }), 1000);
-              }}
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                padding: '7px 16px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.15s ease',
-                background: isTrackingActive ? '#dc2626' : '#16a34a',
-                color: '#ffffff',
-                border: 'none',
-                boxShadow: isTrackingActive ? '0 2px 6px rgba(220,38,38,0.25)' : '0 2px 6px rgba(22,163,74,0.25)',
-              }}
-            >
-              {isTrackingActive ? (
-                <>
-                  <Pause size={14} fill="#ffffff" />
-                  <span>Tắt Theo Dõi</span>
-                </>
-              ) : (
-                <>
-                  <Play size={14} fill="#ffffff" />
-                  <span>Bật Theo Dõi</span>
-                </>
-              )}
-            </button>
-
             <button
               type="button"
               onClick={() => navigate('/rankings?scope=activity')}

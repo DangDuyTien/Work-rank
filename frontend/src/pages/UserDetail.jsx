@@ -51,6 +51,7 @@ import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '
 import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
 import usePageVisibility from '../hooks/usePageVisibility';
 import { TabTransition, PageTransitionSkeleton } from '../components/ui';
+import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 /* =========================================================================
  * STYLES & THEME CONSTANTS (WorkRank Corporate Design System)
@@ -139,10 +140,12 @@ export default function UserDetail() {
   const isSelf = authUser?.id && Number(authUser.id) === Number(targetUserId);
   const canEdit = isSelf || isAdmin;
 
+  const cachedProfile = targetUserId ? getCached(CACHE_KEYS.USER_PROFILE(targetUserId)) : null;
+
   // Data states
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedProfile);
   const [error, setError] = useState(null);
-  const [profileData, setProfileData] = useState(null);
+  const [profileData, setProfileData] = useState(() => cachedProfile || null);
   const [activeTab, setActiveTab] = useState('overview'); // overview | performance | work | history
 
   // Social / Preferences states
@@ -232,17 +235,25 @@ export default function UserDetail() {
   // Fetch full profile data
   const loadProfile = async (silent = false) => {
     if (!targetUserId) return;
-    if (!silent) setLoading(true);
+    if (!silent && !cachedProfile) setLoading(true);
     setError(null);
 
     try {
-      const res = await usersApi.get(targetUserId);
-      setProfileData(res);
+      const res = await fetchWithCache(
+        CACHE_KEYS.USER_PROFILE(targetUserId),
+        () => usersApi.get(targetUserId),
+        { ttl: CACHE_TTL.STATIC, force: silent }
+      );
+      setProfileData((prev) => (isDeepEqual(prev, res) ? prev : res));
       setAvatarImgError(false);
 
       // Load Likes
       try {
-        const likeRes = await usersApi.profileLikes(targetUserId);
+        const likeRes = await fetchWithCache(
+          `user:likes:${targetUserId}`,
+          () => usersApi.profileLikes(targetUserId),
+          { ttl: CACHE_TTL.MEDIUM }
+        );
         setLikesCount(Number(likeRes.data?.totalLikes || 0));
         setHasLiked(Boolean(likeRes.data?.viewerHasLiked));
       } catch (e) {
@@ -251,8 +262,13 @@ export default function UserDetail() {
 
       // Load Gallery
       try {
-        const galRes = await usersApi.gallery(targetUserId);
-        setGalleryImages(galRes.data || []);
+        const galRes = await fetchWithCache(
+          `user:gallery:${targetUserId}`,
+          () => usersApi.gallery(targetUserId),
+          { ttl: CACHE_TTL.MEDIUM }
+        );
+        const galData = galRes.data || [];
+        setGalleryImages((prev) => (isDeepEqual(prev, galData) ? prev : galData));
       } catch (e) {
         // Silent fail
       }
@@ -823,7 +839,7 @@ export default function UserDetail() {
                 color: isActive ? '#ffffff' : '#64748b',
                 fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease',
+                transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
               }}
             >
               <TabIcon size={14} color={isActive ? '#ffffff' : 'currentColor'} />

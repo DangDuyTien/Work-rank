@@ -38,6 +38,10 @@ export default function ActivityDiagnostics() {
   const activityStats = useActivityStats();
   const {
     isTrackingActive,
+    isOutsideSchedule,
+    isWebClosed,
+    isLoggedOut,
+    trackingState,
     trackingStatus,
     displayPts,
     displayClicks,
@@ -59,7 +63,7 @@ export default function ActivityDiagnostics() {
     lastFlushTime,
     lastFlushStatus,
     agentStatus: liveAgentStatus,
-    toggleTracking,
+    isLeaderTab,
     flushQueue,
     updateServerSummary,
   } = activityStats;
@@ -279,59 +283,76 @@ export default function ActivityDiagnostics() {
         </div>
       </div>
 
-      {/* TOP STATUS & CONTROL BAR */}
+      {/* TOP STATUS BAR */}
       <div style={{ background: '#0f172a', color: '#ffffff', padding: '18px 20px', borderRadius: 8, marginBottom: 24, boxShadow: '0 4px 12px rgba(15,23,42,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 8, background: isTrackingActive ? '#15803d' : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: 8,
+              background: isTrackingActive ? '#15803d' : isOutsideSchedule ? '#b45309' : '#334155',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
               <Activity size={24} color="#ffffff" />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16, fontWeight: 800 }}>Trạng Thái Tracking:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 16, fontWeight: 800 }}>Trạng Thái Hệ Thống:</span>
                 <span style={{
-                  padding: '3px 10px',
+                  padding: '4px 12px',
                   borderRadius: 12,
                   fontSize: 12,
                   fontWeight: 800,
-                  background: isTrackingActive ? '#dcfce7' : '#fee2e2',
-                  color: isTrackingActive ? '#15803d' : '#991b1b',
+                  background: isTrackingActive ? '#dcfce7' : isOutsideSchedule ? '#fef3c7' : '#fee2e2',
+                  color: isTrackingActive ? '#15803d' : isOutsideSchedule ? '#b45309' : '#991b1b',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}>
-                  {isTrackingActive ? 'ĐANG THEO DÕI (ACTIVE)' : 'ĐÃ TẮT (OFF)'}
+                  <span style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: isTrackingActive ? '#22c55e' : isOutsideSchedule ? '#f59e0b' : '#ef4444',
+                    display: 'inline-block'
+                  }} />
+                  {isTrackingActive
+                    ? 'ĐANG THEO DÕI TỰ ĐỘNG (ACTIVE)'
+                    : isOutsideSchedule
+                    ? 'NGOÀI KHUNG GIỜ HOẠT ĐỘNG (08:00 - 17:30)'
+                    : isWebClosed
+                    ? 'TẠM DỪNG (WEB CLOSED)'
+                    : 'CHƯA ĐĂNG NHẬP'}
                 </span>
-                <span style={{ fontSize: 12, color: '#94a3b8' }}>State: {trackingStatus}</span>
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>State: <code>{trackingState}</code></span>
+                {isLeaderTab && (
+                  <span style={{ fontSize: 11, background: '#1e293b', color: '#38bdf8', padding: '2px 8px', borderRadius: 4, border: '1px solid #0284c7' }}>
+                    Leader Tab (IPC Heartbeat Master)
+                  </span>
+                )}
               </div>
-              <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>
-                Platform: <strong>{isAgentActive ? `${companionDetail?.platform || 'Desktop'} System-Wide (CoreGraphics/Win32)` : 'Browser Activity Fallback'}</strong> • User: <strong>{user?.name}</strong> (#{user?.id || user?.userId})
+              <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 5 }}>
+                Khung giờ cố định: <strong>08:00 - 17:30 (Asia/Ho_Chi_Minh)</strong> • Platform: <strong>{isAgentActive ? `${companionDetail?.platform || 'Desktop'} System-Wide (CoreGraphics/Win32)` : 'Browser Activity Fallback'}</strong> • User: <strong>{user?.name}</strong> (#{user?.id || user?.userId})
               </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              type="button"
-              onClick={async () => {
-                await toggleTracking(user);
-                setTimeout(refreshDiagnostics, 500);
-              }}
-              style={{
-                padding: '9px 20px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 13,
-                fontWeight: 800,
-                border: 'none',
-                background: isTrackingActive ? '#ef4444' : '#22c55e',
-                color: '#ffffff',
-                boxShadow: isTrackingActive ? '0 2px 8px rgba(239,68,68,0.4)' : '0 2px 8px rgba(34,197,94,0.4)',
-              }}
-            >
-              {isTrackingActive ? <Pause size={16} /> : <Play size={16} />}
-              <span>{isTrackingActive ? 'Tắt Theo Dõi' : 'Bật Theo Dõi'}</span>
-            </button>
+            <div style={{
+              background: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: 6,
+              padding: '8px 14px',
+              fontSize: 12,
+              color: '#94a3b8',
+              textAlign: 'right'
+            }}>
+              <div>Cơ chế: <strong style={{ color: '#f8fafc' }}>Tự Động 100% (No Toggle)</strong></div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>Tự đóng/mở theo phiên Web & Schedule</div>
+            </div>
           </div>
         </div>
       </div>
@@ -633,7 +654,7 @@ export default function ActivityDiagnostics() {
           overflowY: 'auto',
         }}>
           {logs.length === 0 ? (
-            <div style={{ color: '#64748b', fontStyle: 'italic' }}>Chưa có sự kiện nào được ghi nhận. Bấm nút Bật Theo Dõi hoặc Bắn Batch Tự Test để xem luồng dữ liệu...</div>
+            <div style={{ color: '#64748b', fontStyle: 'italic' }}>Chưa có sự kiện nào được ghi nhận. Thao tác trên máy tính hoặc bấm Bắn Batch Tự Test để xem luồng dữ liệu...</div>
           ) : (
             logs.map((log) => (
               <div key={log.id} style={{

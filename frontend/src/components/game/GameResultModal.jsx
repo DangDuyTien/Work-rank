@@ -21,6 +21,7 @@ export default function GameResultModal({
 
   return (
     <div
+      className="modal-backdrop-enter"
       style={{
         position: 'fixed',
         top: 0,
@@ -37,6 +38,7 @@ export default function GameResultModal({
       }}
     >
       <div
+        className="modal-dialog-enter"
         style={{
           background: '#ffffff',
           borderRadius: 12,
@@ -45,7 +47,6 @@ export default function GameResultModal({
           width: '100%',
           maxWidth: 580,
           overflow: 'hidden',
-          animation: 'scaleIn 0.25s ease-out',
         }}
       >
         {/* Header Ribbon */}

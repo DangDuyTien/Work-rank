@@ -1161,8 +1161,8 @@ export default function AdminTeamsYouTube() {
           DRAWER / MODAL: CHI TIẾT KÊNH YOUTUBE
          ══════════════════════════════════════════════════════════════════════ */}
       {selectedChannelDetail && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 540, border: '1px solid rgba(15,23,42,0.15)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 540, border: '1px solid rgba(15,23,42,0.15)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 36, height: 36, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1277,8 +1277,8 @@ export default function AdminTeamsYouTube() {
           MODAL: TẠO ĐỘI NHÓM MỚI
          ══════════════════════════════════════════════════════════════════════ */}
       {createTeamModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Building2 size={18} color="#b45309" /> Thêm Đội Nhóm Mới
@@ -1359,8 +1359,8 @@ export default function AdminTeamsYouTube() {
           MODAL: CHỈNH SỬA ĐỘI NHÓM
          ══════════════════════════════════════════════════════════════════════ */}
       {editTeamModalOpen && selectedTeam && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#b45309" /> Cập Nhật Đội: {selectedTeam.name}
@@ -1439,8 +1439,8 @@ export default function AdminTeamsYouTube() {
           DRAWER / MODAL: QUẢN LÝ THÀNH VIÊN TRONG ĐỘI
          ══════════════════════════════════════════════════════════════════════ */}
       {membersDrawerTeam && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 520, maxHeight: '85vh', display: 'flex', flexDirection: 'column', border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 520, maxHeight: '85vh', display: 'flex', flexDirection: 'column', border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1542,8 +1542,8 @@ export default function AdminTeamsYouTube() {
           MODAL: THÊM KÊNH YOUTUBE MỚI
          ══════════════════════════════════════════════════════════════════════ */}
       {createChannelModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Tv size={18} color="#ef4444" /> Thêm Kênh YouTube Mới

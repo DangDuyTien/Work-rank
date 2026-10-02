@@ -331,68 +331,68 @@ export default function AdminSeasons() {
 
       {/* CREATE SEASON MODAL */}
       {showCreateModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ width: 'min(520px, 100%)', background: '#ffffff', borderRadius: 10, padding: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px 0' }}>Tạo Mùa Giải Mới</h2>
-            <form onSubmit={handleCreateSeason} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden modal-dialog-enter p-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">Tạo Mùa Giải Mới</h2>
+            <form onSubmit={handleCreateSeason} className="flex flex-col gap-3">
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tên mùa giải</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Tên mùa giải</label>
                 <input
                   type="text"
                   required
                   placeholder="Ví dụ: October Championship 2026"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Slug định danh</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Slug định danh</label>
                 <input
                   type="text"
                   required
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Bắt đầu</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Bắt đầu</label>
                   <input
                     type="datetime-local"
                     required
                     value={formData.startAt}
                     onChange={(e) => setFormData({ ...formData, startAt: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Kết thúc</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Kết thúc</label>
                   <input
                     type="datetime-local"
                     required
                     value={formData.endAt}
                     onChange={(e) => setFormData({ ...formData, endAt: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Mô tả ngắn</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Mô tả ngắn</label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Mô tả mục tiêu giải đấu và thể thức..."
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+              <div className="flex justify-end gap-2.5 mt-2">
                 <Button variant="secondary" type="button" onClick={() => setShowCreateModal(false)}>Hủy</Button>
                 <Button variant="primary" type="submit" disabled={submitting}>
                   {submitting ? 'Đang tạo...' : 'Tạo Mùa Giải'}
@@ -405,19 +405,19 @@ export default function AdminSeasons() {
 
       {/* ADD TEAM MODAL */}
       {selectedSeasonForTeam && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ width: 'min(440px, 100%)', background: '#ffffff', borderRadius: 10, padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden modal-dialog-enter p-6">
+            <h2 className="text-base font-bold text-slate-900 mb-3">
               Thêm Đội vào Season: {selectedSeasonForTeam.name}
             </h2>
-            <form onSubmit={handleAddTeam} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleAddTeam} className="flex flex-col gap-3">
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Chọn Team</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Chọn Team</label>
                 <select
                   required
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 6 }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
                 >
                   <option value="">-- Chọn Team --</option>
                   {availableTeams.map((t) => (
@@ -427,16 +427,16 @@ export default function AdminSeasons() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Màu đại diện đội (Hex)</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Màu đại diện đội (Hex)</label>
                 <input
                   type="color"
                   value={teamColor}
                   onChange={(e) => setTeamColor(e.target.value)}
-                  style={{ width: '100%', height: 40, border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}
+                  className="w-full h-10 border border-slate-300 rounded-lg cursor-pointer"
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+              <div className="flex justify-end gap-2.5 mt-2">
                 <Button variant="secondary" type="button" onClick={() => setSelectedSeasonForTeam(null)}>Đóng</Button>
                 <Button variant="primary" type="submit" disabled={addingTeam}>
                   {addingTeam ? 'Đang thêm...' : 'Thêm và Snapshot'}

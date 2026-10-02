@@ -39,10 +39,14 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
-// Root health probes (Liveness / Readiness / Detailed Health)
+// Root health & keep-alive probes (Liveness / Readiness / Ping)
+// Placed before rate limiters to guarantee keep-alive and platform probes never fail
 app.get('/health', asyncHandler(healthController.health));
 app.get('/health/live', asyncHandler(healthController.live));
 app.get('/health/ready', asyncHandler(healthController.ready));
+app.get('/api/health', asyncHandler(healthController.health));
+app.get('/api/health/live', asyncHandler(healthController.live));
+app.get('/api/health/ready', asyncHandler(healthController.ready));
 
 // Static files for uploads (Quiz images, user assets, etc.)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));

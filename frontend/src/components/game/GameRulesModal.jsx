@@ -4,6 +4,7 @@ import { BookOpen, Flag, Building, Sparkles, CreditCard, Gift, Trophy, Clock, Sk
 export default function GameRulesModal({ onClose }) {
   return (
     <div
+      className="modal-backdrop-enter"
       style={{
         position: 'fixed',
         top: 0,
@@ -20,6 +21,7 @@ export default function GameRulesModal({ onClose }) {
       }}
     >
       <div
+        className="modal-dialog-enter"
         style={{
           background: '#ffffff',
           borderRadius: 12,
@@ -31,7 +33,6 @@ export default function GameRulesModal({ onClose }) {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          animation: 'scaleIn 0.2s ease-out',
         }}
       >
         {/* Header */}

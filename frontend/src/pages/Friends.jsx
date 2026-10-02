@@ -40,6 +40,7 @@ import {
 } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
+import { getCached, setCached, fetchWithCache, createCacheKey, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 const STATUS_META = {
   active: { label: 'Đang làm việc', color: '#16a34a', bg: 'rgba(22,163,74,0.1)', border: 'rgba(22,163,74,0.28)', dot: '#22c55e' },
@@ -132,12 +133,18 @@ export default function Friends() {
   // Tab State
   const [activeTab, setActiveTab] = useState('directory'); // 'directory' | 'team' | 'leaderboard'
 
+  const cachedMembers = getCached('friends:members');
+  const cachedMyTeam = getCached('friends:myTeam');
+  const cachedAllTeams = getCached('friends:allTeams');
+  const cachedRankingRows = getCached('friends:rankingRows');
+  const hasInitialCache = Boolean(cachedMembers && cachedMembers.length > 0);
+
   // Data States
-  const [memberList, setMemberList] = useState([]);
-  const [memberPagination, setMemberPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 1 });
-  const [myTeam, setMyTeam] = useState(null);
-  const [allTeams, setAllTeams] = useState([]);
-  const [rankingRows, setRankingRows] = useState([]);
+  const [memberList, setMemberList] = useState(() => cachedMembers || []);
+  const [memberPagination, setMemberPagination] = useState({ page: 1, limit: 50, total: cachedMembers?.length || 0, totalPages: 1 });
+  const [myTeam, setMyTeam] = useState(() => cachedMyTeam || null);
+  const [allTeams, setAllTeams] = useState(() => cachedAllTeams || []);
+  const [rankingRows, setRankingRows] = useState(() => cachedRankingRows || []);
   
   // Filter States (Directory)
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,7 +152,7 @@ export default function Friends() {
   const [teamStatusFilter, setTeamStatusFilter] = useState('all'); // 'all' | 'has_team' | 'no_team'
 
   // Status & Busy States
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hasInitialCache);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [busyAction, setBusyAction] = useState('');
@@ -183,7 +190,7 @@ export default function Friends() {
   // Load Main Data
   const loadData = useCallback(async (options = {}) => {
     const background = options.background === true;
-    if (background) setRefreshing(true);
+    if (background || hasInitialCache) setRefreshing(true);
     else setLoading(true);
     setError('');
 
@@ -198,33 +205,38 @@ export default function Friends() {
       if (teamStatusFilter === 'has_team') searchParams.hasTeam = 'true';
       if (teamStatusFilter === 'no_team') searchParams.hasTeam = 'false';
 
+      const cacheKeyUsers = createCacheKey('friends:members', searchParams);
+
       const [usersRes, groupsRes, allTeamsRes, rankingRes] = await Promise.allSettled([
-        usersApi.list(searchParams),
-        groupsApi.list(),
-        groupsApi.listAll(),
-        rankingsApi.getIndividuals({ limit: 50 }),
+        fetchWithCache(cacheKeyUsers, () => usersApi.list(searchParams), { ttl: CACHE_TTL.MEDIUM, force: background }),
+        fetchWithCache('friends:myTeam', () => groupsApi.list(), { ttl: CACHE_TTL.STATIC, force: background }),
+        fetchWithCache('friends:allTeams', () => groupsApi.listAll(), { ttl: CACHE_TTL.STATIC, force: background }),
+        fetchWithCache('friends:rankingRows', () => rankingsApi.getIndividuals({ limit: 50 }), { ttl: CACHE_TTL.MEDIUM, force: background }),
       ]);
 
       if (usersRes.status === 'fulfilled') {
-        const uData = usersRes.value.data || [];
-        setMemberList(uData);
-        if (usersRes.value.pagination) {
-          setMemberPagination(usersRes.value.pagination);
+        const uData = usersRes.value?.data || [];
+        setMemberList((prev) => (isDeepEqual(prev, uData) ? prev : uData));
+        if (usersRes.value?.pagination) {
+          setMemberPagination((prev) => (isDeepEqual(prev, usersRes.value.pagination) ? prev : usersRes.value.pagination));
         }
       }
 
       if (groupsRes.status === 'fulfilled') {
-        const groups = groupsRes.value.data || [];
-        setMyTeam(groups.length > 0 ? groups[0] : null);
+        const groups = groupsRes.value?.data || [];
+        const foundTeam = groups.length > 0 ? groups[0] : null;
+        setMyTeam((prev) => (isDeepEqual(prev, foundTeam) ? prev : foundTeam));
       }
 
       if (allTeamsRes.status === 'fulfilled') {
-        setAllTeams(allTeamsRes.value.data || []);
+        const allT = allTeamsRes.value?.data || [];
+        setAllTeams((prev) => (isDeepEqual(prev, allT) ? prev : allT));
       }
 
       if (rankingRes.status === 'fulfilled') {
-        const ranks = rankingRes.value.items || rankingRes.value.data || rankingRes.value.individuals || [];
-        setRankingRows(Array.isArray(ranks) ? ranks : []);
+        const ranks = rankingRes.value?.items || rankingRes.value?.data || rankingRes.value?.individuals || [];
+        const safeRanks = Array.isArray(ranks) ? ranks : [];
+        setRankingRows((prev) => (isDeepEqual(prev, safeRanks) ? prev : safeRanks));
       }
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Không thể tải dữ liệu thành viên & đội nhóm';
@@ -234,7 +246,7 @@ export default function Friends() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [searchQuery, departmentFilter, teamStatusFilter, toast]);
+  }, [searchQuery, departmentFilter, teamStatusFilter, hasInitialCache, toast]);
 
   useEffect(() => {
     if (pageVisible) {
@@ -1505,8 +1517,8 @@ export default function Friends() {
           MODAL: TẠO ĐỘI MỚI (CREATE TEAM)
           ========================================================================= */}
       {showCreateTeamModal && (
-        <div style={MODAL_BACKDROP}>
-          <div style={MODAL_PANEL}>
+        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
+          <div className="modal-dialog-enter" style={MODAL_PANEL}>
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Shield size={18} color="#0284c7" />
@@ -1588,8 +1600,8 @@ export default function Friends() {
           MODAL: GIA NHẬP BẰNG MÃ MỜI (JOIN TEAM)
           ========================================================================= */}
       {showJoinModal && (
-        <div style={MODAL_BACKDROP}>
-          <div style={MODAL_PANEL}>
+        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
+          <div className="modal-dialog-enter" style={MODAL_PANEL}>
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <KeyRoundIcon size={18} color="#0284c7" />
@@ -1651,8 +1663,8 @@ export default function Friends() {
           MODAL: CHỈNH SỬA THÔNG TIN ĐỘI (EDIT TEAM)
           ========================================================================= */}
       {showEditTeamModal && myTeam && (
-        <div style={MODAL_BACKDROP}>
-          <div style={MODAL_PANEL}>
+        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
+          <div className="modal-dialog-enter" style={MODAL_PANEL}>
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#0284c7" />
@@ -1721,8 +1733,8 @@ export default function Friends() {
           MODAL: THÊM THÀNH VIÊN VÀO ĐỘI (LEADER ADD MEMBER DIRECTLY)
           ========================================================================= */}
       {showAddMemberModal && myTeam && (
-        <div style={MODAL_BACKDROP}>
-          <div style={{ ...MODAL_PANEL, maxWidth: 560 }}>
+        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
+          <div className="modal-dialog-enter" style={{ ...MODAL_PANEL, maxWidth: 560 }}>
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <UserPlus size={18} color="#0284c7" />

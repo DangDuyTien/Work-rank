@@ -1,6 +1,11 @@
-const { User } = require('../models');
 const { sequelize } = require('../models');
-const presence = require('../services/presence.service');
+
+// In-memory process and keep-alive health state (Zero DB cost)
+const serviceState = {
+  startedAt: new Date().toISOString(),
+  lastHealthPingAt: null,
+  healthPingCount: 0,
+};
 
 function formatUptime(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds || 0)));
@@ -12,74 +17,83 @@ function formatUptime(totalSeconds) {
   return `${Math.max(1, minutes)}m`;
 }
 
-async function loadPublicStats() {
-  const onlineIds = presence.activeUserIds();
-  const activeUsers = await User.count({ where: { status: 'active' } });
-
-  return {
-    usersOnline: onlineIds.length,
-    activeUsers,
-    activeUsersToday: onlineIds.length,
-  };
-}
-
-async function health(req, res) {
-  let realtime = {
-    usersOnline: 0,
-    activeUsers: 0,
-    activeUsersToday: 0,
-  };
-  let database = 'ok';
-
-  try {
-    realtime = await loadPublicStats();
-  } catch (error) {
-    database = 'degraded';
-    console.warn('Public health stats failed:', error.message);
-  }
-
-  res.set('Cache-Control', 'no-store');
-  res.json({
-    status: 'ok',
-    database,
-    timestamp: new Date().toISOString(),
-    uptime: formatUptime(process.uptime()),
-    uptimeSeconds: Math.floor(process.uptime()),
-    cycle: '5s',
-    users: realtime.usersOnline,
-    realtime,
+/**
+ * Standard anti-cache headers for health & keep-alive probes
+ * Ensures proxies/CDNs (Render edge, Cloudflare, etc.) do NOT serve cached responses
+ * and always forward inbound keep-alive requests directly to the web process.
+ */
+function setNoCacheHeaders(res) {
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   });
 }
 
 /**
- * GET /health/live
- * Lightweight liveness probe for Kubernetes / orchestrators.
+ * GET /health and GET /api/health
+ * Primary ultra-lightweight keep-alive & health check endpoint.
+ *
+ * Rules:
+ * - Ultra-lightweight: NO database query, NO business logic, NO mutations.
+ * - HTTP 200 OK immediately with tiny payload (< 200 bytes).
+ * - No authentication required.
+ * - Anti-cache headers to ensure inbound traffic actually hits the process.
+ * - In-memory ping tracking for Admin diagnostics.
+ */
+function health(req, res) {
+  setNoCacheHeaders(res);
+
+  // Track inbound keep-alive ping timestamp and count
+  serviceState.lastHealthPingAt = new Date().toISOString();
+  serviceState.healthPingCount += 1;
+
+  return res.status(200).json({
+    ok: true,
+    status: 'ok',
+    service: 'workrank-backend',
+    database: 'ok',
+    timestamp: serviceState.lastHealthPingAt,
+    uptime: formatUptime(process.uptime()),
+    uptimeSeconds: Math.floor(process.uptime()),
+  });
+}
+
+/**
+ * GET /health/live and GET /api/health/live
+ * Lightweight liveness probe for orchestrators.
  */
 function live(req, res) {
-  res.set('Cache-Control', 'no-store');
-  return res.json({
+  setNoCacheHeaders(res);
+  return res.status(200).json({
+    ok: true,
     status: 'live',
-    uptime: Math.floor(process.uptime()),
+    service: 'workrank-backend',
+    uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     pid: process.pid,
   });
 }
 
 /**
- * GET /health/ready
+ * GET /health/ready and GET /api/health/ready
  * Readiness probe checking database connectivity without heavy queries.
+ * Only call when verifying if backend is ready to accept database traffic.
  */
 async function ready(req, res) {
-  res.set('Cache-Control', 'no-store');
+  setNoCacheHeaders(res);
   try {
     await sequelize.authenticate();
-    return res.json({
+    return res.status(200).json({
+      ok: true,
       status: 'ready',
       database: 'connected',
       timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime()),
     });
   } catch (error) {
     return res.status(503).json({
+      ok: false,
       status: 'unhealthy',
       database: 'disconnected',
       error: 'Database unreachable',
@@ -88,4 +102,22 @@ async function ready(req, res) {
   }
 }
 
-module.exports = { health, live, ready };
+/**
+ * Get in-memory diagnostics for Admin Operations
+ */
+function getDiagnostics() {
+  return {
+    renderService: 'ONLINE',
+    startedAt: serviceState.startedAt,
+    lastHealthPingAt: serviceState.lastHealthPingAt,
+    healthPingCount: serviceState.healthPingCount,
+    uptimeSeconds: Math.floor(process.uptime()),
+  };
+}
+
+module.exports = {
+  health,
+  live,
+  ready,
+  getDiagnostics,
+};

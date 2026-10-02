@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { calculateRankScore } from '../utils/scoring';
+import { clearCache, invalidateCache } from './cache';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -18,6 +19,7 @@ function storeAuth(data) {
 }
 
 function clearAuth(options = {}) {
+  clearCache();
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token: null } }));
@@ -259,7 +261,13 @@ export const auth = {
     }
   },
   me: () => api.get('/api/auth/me'),
-  updateProfile: (data) => api.patch('/api/auth/me', data),
+  updateProfile: async (data) => {
+    const res = await api.patch('/api/auth/me', data);
+    invalidateCache('user:profile');
+    invalidateCache('dashboard');
+    invalidateCache('rankings');
+    return res;
+  },
   changePassword: (data) => api.patch('/api/auth/password', data),
   deleteAccount: async () => {
     try {
@@ -461,6 +469,9 @@ export const users = {
   },
   delete: async (id) => {
     const res = await api.delete(`/api/users/${id}`);
+    invalidateCache(`user:profile:${id}`);
+    invalidateCache('dashboard');
+    invalidateCache('rankings');
     return res.data;
   },
   selfDelete: async () => {
@@ -473,6 +484,9 @@ export const users = {
   },
   update: async (id, data) => {
     const res = await api.patch(`/api/users/${id}`, data);
+    invalidateCache(`user:profile:${id}`);
+    invalidateCache('dashboard');
+    invalidateCache('rankings');
     const user = res.data?.user || res.data || {};
     return {
       ...res,
@@ -481,6 +495,9 @@ export const users = {
   },
   updateProfile: async (id, data) => {
     const res = await api.patch(`/api/users/${id}/profile`, data);
+    invalidateCache(`user:profile:${id}`);
+    invalidateCache('dashboard');
+    invalidateCache('rankings');
     const user = res.data?.user || res.data || {};
     return {
       ...res,

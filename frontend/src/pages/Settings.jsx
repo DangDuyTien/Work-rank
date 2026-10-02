@@ -43,6 +43,7 @@ import { useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
 import { auth, users as usersApi, competition as compApi, gameCatalogApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
+import { AnimatedModal, PageTransition, TabTransition, AnimatedCollapse } from '../components/ui';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
 import {
   getUserAvatar,
@@ -1398,230 +1399,187 @@ export default function Settings() {
       </div>
 
       {/* ── MODAL XÁC NHẬN XÓA TÀI KHOẢN (SELF-DELETE) ── */}
-      {showDeleteModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div style={{
-            background: '#ffffff', width: '100%', maxWidth: 480,
-            padding: 24, border: '1px solid rgba(239,68,68,0.3)',
-            borderRadius: 6, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.2)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
-                <Trash2 size={20} />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.35, color: '#991b1b' }}>
-                  Xác Nhận Xóa Tài Khoản Cá Nhân
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => !isDeletingAccount && setShowDeleteModal(false)}
-                disabled={isDeletingAccount}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
+      <AnimatedModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeletingAccount && setShowDeleteModal(false)}
+        title="Xác Nhận Xóa Tài Khoản Cá Nhân"
+        maxWidth={480}
+        dialogStyle={{ border: '1px solid rgba(239,68,68,0.3)' }}
+      >
+        <div>
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
+              Bạn đang chuẩn bị xóa tài khoản <strong>{user?.name || user?.email}</strong> (WR ID: <code>{user?.id}</code>).
+            </p>
+
+            <div style={{
+              padding: '12px 14px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: 4,
+              fontSize: 12,
+              color: '#991b1b',
+              lineHeight: 1.5,
+              marginBottom: 12,
+            }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>Lưu ý an toàn quan trọng:</div>
+              <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
+                <li>Tất cả phiên đăng nhập sẽ bị kết thúc và đăng xuất ngay lập tức.</li>
+                <li>Email và thông tin định danh sẽ được ẩn danh.</li>
+                <li>Nếu bạn là trưởng nhóm, quyền sở hữu nhóm sẽ được giải phóng.</li>
+                <li>Kênh YouTube (nếu có) sẽ chuyển sang trạng thái chưa gán người phụ trách.</li>
+                <li>Lịch sử thành tích mùa giải vẫn được bảo lưu cho tập thể.</li>
+              </ul>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ margin: '0 0 12px', fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                Bạn đang chuẩn bị xóa tài khoản <strong>{user?.name || user?.email}</strong> (WR ID: <code>{user?.id}</code>).
-              </p>
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748b' }}>
+              Bạn có chắc chắn 100% muốn tiếp tục hành động này không?
+            </p>
+          </div>
 
-              <div style={{
-                padding: '12px 14px',
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+            <button
+              type="button"
+              disabled={isDeletingAccount}
+              onClick={() => setShowDeleteModal(false)}
+              style={{
+                padding: '9px 16px',
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
                 borderRadius: 4,
-                fontSize: 12,
-                color: '#991b1b',
-                lineHeight: 1.5,
-                marginBottom: 12,
-              }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Lưu ý an toàn quan trọng:</div>
-                <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
-                  <li>Tất cả phiên đăng nhập sẽ bị kết thúc và đăng xuất ngay lập tức.</li>
-                  <li>Email và thông tin định danh sẽ được ẩn danh.</li>
-                  <li>Nếu bạn là trưởng nhóm, quyền sở hữu nhóm sẽ được giải phóng.</li>
-                  <li>Kênh YouTube (nếu có) sẽ chuyển sang trạng thái chưa gán người phụ trách.</li>
-                  <li>Lịch sử thành tích mùa giải vẫn được bảo lưu cho tập thể.</li>
-                </ul>
-              </div>
-
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748b' }}>
-                Bạn có chắc chắn 100% muốn tiếp tục hành động này không?
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-              <button
-                type="button"
-                disabled={isDeletingAccount}
-                onClick={() => setShowDeleteModal(false)}
-                style={{
-                  padding: '9px 16px',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: 4,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#475569',
-                  cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="button"
-                disabled={isDeletingAccount}
-                onClick={handleSelfDeleteAccount}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '9px 18px',
-                  background: '#dc2626',
-                  border: 'none',
-                  borderRadius: 4,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#ffffff',
-                  cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
-                  opacity: isDeletingAccount ? 0.7 : 1,
-                }}
-              >
-                <Trash2 size={15} />
-                {isDeletingAccount ? 'Đang xử lý xóa...' : 'Đồng ý xóa vĩnh viễn'}
-              </button>
-            </div>
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#475569',
+                cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              disabled={isDeletingAccount}
+              onClick={handleSelfDeleteAccount}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 18px',
+                background: '#dc2626',
+                border: 'none',
+                borderRadius: 4,
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#ffffff',
+                cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
+                opacity: isDeletingAccount ? 0.7 : 1,
+              }}
+            >
+              <Trash2 size={15} />
+              {isDeletingAccount ? 'Đang xử lý xóa...' : 'Đồng ý xóa vĩnh viễn'}
+            </button>
           </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* ── MODAL TRAO GIẢI THƯỞNG CHO ADMIN ── */}
-      {showAwardModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div style={{
-            background: '#ffffff', width: '100%', maxWidth: 480,
-            padding: 24, border: '1px solid rgba(15,23,42,0.15)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Award size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.35, color: '#0f172a' }}>
-                  Trao Thưởng Danh Hiệu Chính Thức
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAwardModal(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAdminAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Loại Danh Hiệu / Giải Thưởng *
-                </label>
-                <select
-                  value={awardForm.awardType}
-                  onChange={(e) => setAwardForm({ ...awardForm, awardType: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                >
-                  <option value="MVP">MVP — Nhân Viên Xuất Sắc</option>
-                  <option value="CHAMPION">CHAMPION — Vô Địch Giải Đấu</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Nhân Viên Nhận Giải *
-                </label>
-                <select
-                  value={awardForm.targetUserId}
-                  onChange={(e) => setAwardForm({ ...awardForm, targetUserId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                >
-                  <option value="">-- Chọn nhân viên --</option>
-                  {userList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      #{u.id} - {u.name} ({u.jobTitle || 'Nhân viên'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Mã Mùa Giải (Season ID - Tùy chọn)
-                </label>
-                <input
-                  type="number"
-                  value={awardForm.seasonId}
-                  onChange={(e) => setAwardForm({ ...awardForm, seasonId: e.target.value })}
-                  placeholder="Ví dụ: 1"
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Tiêu Đề Vinh Danh (Tùy chọn)
-                </label>
-                <input
-                  type="text"
-                  value={awardForm.title}
-                  onChange={(e) => setAwardForm({ ...awardForm, title: e.target.value })}
-                  placeholder={awardForm.awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải #1' : 'Ví dụ: Quán Quân Mùa #1'}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Lý Do & Căn Cứ Vinh Danh *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={awardForm.reason}
-                  onChange={(e) => setAwardForm({ ...awardForm, reason: e.target.value })}
-                  placeholder="Ghi rõ thành tích, đóng góp nổi bật hoặc chỉ số đạt được..."
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAwardModal(false)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={awarding}
-                  className="settings-primary-button"
-                  style={{ padding: '8px 18px' }}
-                >
-                  <Award size={14} /> {awarding ? 'Đang trao giải...' : 'Xác Nhận Trao Giải'}
-                </button>
-              </div>
-            </form>
+      <AnimatedModal
+        isOpen={showAwardModal}
+        onClose={() => setShowAwardModal(false)}
+        title="Trao Thưởng Danh Hiệu Chính Thức"
+        maxWidth={480}
+      >
+        <form onSubmit={handleAdminAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              Loại Danh Hiệu / Giải Thưởng *
+            </label>
+            <select
+              value={awardForm.awardType}
+              onChange={(e) => setAwardForm({ ...awardForm, awardType: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
+            >
+              <option value="MVP">MVP — Nhân Viên Xuất Sắc</option>
+              <option value="CHAMPION">CHAMPION — Vô Địch Giải Đấu</option>
+            </select>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              Nhân Viên Nhận Giải *
+            </label>
+            <select
+              value={awardForm.targetUserId}
+              onChange={(e) => setAwardForm({ ...awardForm, targetUserId: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
+            >
+              <option value="">-- Chọn nhân viên --</option>
+              {userList.map((u) => (
+                <option key={u.id} value={u.id}>
+                  #{u.id} - {u.name} ({u.jobTitle || 'Nhân viên'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              Mã Mùa Giải (Season ID - Tùy chọn)
+            </label>
+            <input
+              type="number"
+              value={awardForm.seasonId}
+              onChange={(e) => setAwardForm({ ...awardForm, seasonId: e.target.value })}
+              placeholder="Ví dụ: 1"
+              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              Tiêu Đề Vinh Danh (Tùy chọn)
+            </label>
+            <input
+              type="text"
+              value={awardForm.title}
+              onChange={(e) => setAwardForm({ ...awardForm, title: e.target.value })}
+              placeholder={awardForm.awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải #1' : 'Ví dụ: Quán Quân Mùa #1'}
+              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              Lý Do & Căn Cứ Vinh Danh *
+            </label>
+            <textarea
+              rows={3}
+              required
+              value={awardForm.reason}
+              onChange={(e) => setAwardForm({ ...awardForm, reason: e.target.value })}
+              placeholder="Ghi rõ thành tích, đóng góp nổi bật hoặc chỉ số đạt được..."
+              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical', borderRadius: 4 }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={() => setShowAwardModal(false)}
+              style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={awarding}
+              className="settings-primary-button"
+              style={{ padding: '8px 18px', borderRadius: 4 }}
+            >
+              <Award size={14} /> {awarding ? 'Đang trao giải...' : 'Xác Nhận Trao Giải'}
+            </button>
+          </div>
+        </form>
+      </AnimatedModal>
     </div>
   );
 }

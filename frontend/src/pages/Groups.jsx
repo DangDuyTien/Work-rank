@@ -670,8 +670,8 @@ export default function Groups() {
 
       {/* Edit Modal */}
       {editingGroup && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="edit-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div role="dialog" aria-modal="true" aria-labelledby="edit-group-title" className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 overflow-hidden modal-dialog-enter">
             <h2 id="edit-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Sửa nhóm</h2>
             <form onSubmit={handleUpdateGroup}>
               <div style={{ marginBottom: 16 }}>
@@ -680,7 +680,7 @@ export default function Groups() {
                   required
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               <div style={{ marginBottom: 20 }}>
@@ -688,13 +688,13 @@ export default function Groups() {
                 <textarea
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setEditingGroup(null)} style={{ ...BUTTON, flex: 1, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
-                <button type="submit" style={{ ...BUTTON, flex: 1, background: '#0f172a', color: '#fff' }}>Lưu thay đổi</button>
+                <button type="button" onClick={() => setEditingGroup(null)} style={{ ...BUTTON, flex: 1, borderRadius: 8, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
+                <button type="submit" style={{ ...BUTTON, flex: 1, borderRadius: 8, background: '#0f172a', color: '#fff' }}>Lưu thay đổi</button>
               </div>
             </form>
           </div>
@@ -703,8 +703,8 @@ export default function Groups() {
 
       {/* Contest Modal */}
       {showContest && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="create-contest-title" style={{ ...CARD, width: '100%', maxWidth: 760, maxHeight: '90vh', overflow: 'auto', background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div role="dialog" aria-modal="true" aria-labelledby="create-contest-title" className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto p-6 modal-dialog-enter">
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
               <div>
                 <h2 id="create-contest-title" style={{ fontSize: 20, fontWeight: 700, margin: 0, color: '#0f172a' }}>Tạo cuộc thi nhóm</h2>
@@ -824,8 +824,8 @@ export default function Groups() {
 
       {/* Create Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 overflow-hidden modal-dialog-enter">
             <h2 id="create-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Tạo Nhóm Mới</h2>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: 16 }}>
@@ -834,9 +834,7 @@ export default function Groups() {
                   required
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  onFocus={e => e.target.style.borderColor = 'rgba(56,189,248,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               <div style={{ marginBottom: 20 }}>
@@ -844,15 +842,13 @@ export default function Groups() {
                 <textarea
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
-                  onFocus={e => e.target.style.borderColor = 'rgba(56,189,248,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', height: 80, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
-                <button type="submit" style={{ ...BUTTON, flex: 1, background: '#38bdf8', color: '#fff' }}>Tạo Nhóm</button>
+                <button type="button" onClick={() => setShowCreate(false)} style={{ ...BUTTON, flex: 1, borderRadius: 8, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
+                <button type="submit" style={{ ...BUTTON, flex: 1, borderRadius: 8, background: '#0284c7', color: '#fff' }}>Tạo Nhóm</button>
               </div>
             </form>
           </div>
@@ -861,8 +857,8 @@ export default function Groups() {
 
       {/* Join Modal */}
       {showJoin && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 18 }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="join-group-title" style={{ ...CARD, width: '100%', maxWidth: 400, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)' }}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div role="dialog" aria-modal="true" aria-labelledby="join-group-title" className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 overflow-hidden modal-dialog-enter">
             <h2 id="join-group-title" style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' }}>Tham Gia Nhóm</h2>
             <form onSubmit={handleJoin}>
               <div style={{ marginBottom: 20 }}>
@@ -872,15 +868,13 @@ export default function Groups() {
                   placeholder="Ví dụ: WR-XXXXXX"
                   value={inviteCode}
                   onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                  onFocus={e => e.target.style.borderColor = 'rgba(56,189,248,0.6)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(15,23,42,0.12)'}
-                  style={{ width: '100%', padding: '12px', borderRadius: 0, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 600, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: 8, background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', color: '#0f172a', textAlign: 'center', fontSize: 18, fontWeight: 600, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
               {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16 }}>{error}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
-                <button type="submit" style={{ ...BUTTON, flex: 1, background: '#22c55e', color: '#fff' }}>Tham Gia</button>
+                <button type="button" onClick={() => setShowJoin(false)} style={{ ...BUTTON, flex: 1, borderRadius: 8, background: 'rgba(15,23,42,0.06)', color: '#94a3b8', border: '1px solid rgba(15,23,42,0.08)' }}>Hủy</button>
+                <button type="submit" style={{ ...BUTTON, flex: 1, borderRadius: 8, background: '#22c55e', color: '#fff' }}>Tham Gia</button>
               </div>
             </form>
           </div>

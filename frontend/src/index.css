@@ -109,20 +109,22 @@
   /* ── Global Motion System ── */
   /* Duration tokens */
   --motion-instant:  80ms;
-  --motion-fast:     140ms;   /* hover, press, icon, small status */
-  --motion-normal:   220ms;   /* dropdown, tab, accordion, card expand */
-  --motion-slow:     340ms;   /* page, drawer, large layout change */
+  --motion-fast:     140ms;   /* hover, press, icon, small status (120–160ms) */
+  --motion-normal:   220ms;   /* dropdown, tab, accordion, card expand (180–260ms) */
+  --motion-layout:   280ms;   /* layout reflow, sidebar, filter panel (250–350ms) */
+  --motion-slow:     380ms;   /* page, drawer, large layout change (350–450ms) */
   --motion-xslow:    500ms;   /* profile reveal, onboarding */
 
   /* Easing tokens */
-  --ease-standard:   cubic-bezier(0.4, 0.0, 0.2, 1);   /* most UI transitions */
-  --ease-enter:      cubic-bezier(0.0, 0.0, 0.2, 1);   /* elements entering */
-  --ease-exit:       cubic-bezier(0.4, 0.0, 1, 1);     /* elements leaving */
+  --ease-standard:   cubic-bezier(0.4, 0.0, 0.2, 1);   /* smooth standard UI transitions */
+  --ease-in-out:     cubic-bezier(0.4, 0.0, 0.2, 1);   /* ease-in-out */
+  --ease-enter:      cubic-bezier(0.0, 0.0, 0.2, 1);   /* elements entering (ease-out) */
+  --ease-exit:       cubic-bezier(0.4, 0.0, 1, 1);     /* elements leaving (ease-in) */
   --ease-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);   /* expressive / modal */
-  --ease-spring:     cubic-bezier(0.16, 1, 0.3, 1);    /* existing spring — keep compat */
+  --ease-spring:     cubic-bezier(0.16, 1, 0.3, 1);    /* responsive spring */
 
   /* Semantic transition shorthands (backward-compat aliases) */
-  --transition-fast:      var(--motion-fast) ease;
+  --transition-fast:      var(--motion-fast) var(--ease-standard);
   --transition-normal:    var(--motion-normal) var(--ease-spring);
   --transition-page:      var(--motion-normal) var(--ease-spring);
   --transition-dropdown:  var(--motion-fast) var(--ease-spring);
@@ -580,11 +582,50 @@ table tbody tr {
 }
 
 /* ── Standardized UI Button Press & Hover ── */
+button,
+.ui-button,
+.btn {
+  transition:
+    transform var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard),
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+
 button:not(:disabled):active,
 .ui-button:not(:disabled):active,
 .btn:not(:disabled):active {
   transform: scale(0.985);
   transition: transform var(--motion-instant) ease;
+}
+
+/* ── Standardized Card & Interactive Surface Transitions ── */
+.ui-card,
+.workrank-card {
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard);
+}
+
+/* ── Standardized Input Transitions ── */
+input,
+select,
+textarea {
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard);
+}
+
+/* ── Realtime Update Highlight Animation ── */
+@keyframes realtime-row-flash {
+  0% { background-color: rgba(180, 83, 9, 0.18); }
+  100% { background-color: transparent; }
+}
+.realtime-updated-row {
+  animation: realtime-row-flash 1.2s var(--ease-exit) forwards;
 }
 
 
@@ -10719,7 +10760,31 @@ html[data-workrank-contrast="true"] .profile-level-card {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), [data-workrank-reduce-motion="true"] {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .page-transition,
+  .tab-transition,
+  .wr-page-enter,
+  .wr-page-exit,
+  .modal-backdrop-enter,
+  .modal-backdrop-exit,
+  .modal-dialog-enter,
+  .modal-dialog-exit,
+  .drawer-slide-enter,
+  .drawer-slide-exit,
+  .drawer-slide-right-enter,
+  .drawer-slide-right-exit {
+    transform: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+  }
   .wr-2048-tile {
     transition: none !important;
     animation: none !important;
@@ -10728,6 +10793,11 @@ html[data-workrank-contrast="true"] .profile-level-card {
   .wr-game-shell-exiting {
     animation: none !important;
     transition: opacity 80ms ease !important;
+  }
+  .skeleton-box,
+  .ui-skeleton {
+    animation: none !important;
+    background: rgba(0, 0, 0, 0.05) !important;
   }
 }
 

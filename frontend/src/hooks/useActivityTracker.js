@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { computerActivityApi, desktopAgentIpc, refreshSession } from '../services/api';
+import { isWithinWorkingSchedule, computeTrackingState, getVietnamTimeParts, TIMEZONE } from '../utils/schedule';
 
 const SESSION_KEY = 'workrank:telemetry_session_id';
-const TRACKING_ENABLED_KEY = 'workrank:tracking_enabled';
 const PENDING_EVENTS_KEY = 'workrank:pending_activity_events';
 const SERVER_SNAPSHOT_KEY = 'workrank:server_activity_snapshot';
+const LEADER_TAB_KEY = 'workrank:tracker_leader_tab';
+const LEADER_HEARTBEAT_KEY = 'workrank:tracker_leader_heartbeat';
+
 const FLUSH_INTERVAL_MS = 4000; // Flush batch every 4 seconds
-const HEARTBEAT_INTERVAL_MS = 10000;
+const HEARTBEAT_INTERVAL_MS = 8000;
 const MAX_QUEUE_SIZE = 500;
-const FAST_FLUSH_THRESHOLD = 8; // Auto-flush when accumulated 8 events
+const FAST_FLUSH_THRESHOLD = 8;
+
+// Generate unique tab ID for multi-tab coordination
+const TAB_ID = 'tab_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+
+// Broadcast Channel for multi-tab coordination
+let tabChannel = null;
+try {
+  if (typeof BroadcastChannel !== 'undefined') {
+    tabChannel = new BroadcastChannel('workrank_tab_coordination');
+  }
+} catch {}
 
 function getOrCreateSessionId() {
   try {
@@ -21,14 +35,6 @@ function getOrCreateSessionId() {
     return sid;
   } catch {
     return 'ses_' + Date.now();
-  }
-}
-
-function getInitialTrackingState() {
-  try {
-    return sessionStorage.getItem(TRACKING_ENABLED_KEY) === 'true';
-  } catch {
-    return false;
   }
 }
 
@@ -67,12 +73,20 @@ const initialPendingPts = initialQueue.reduce((sum, e) => sum + (Number(e.localP
 const initialPendingClicks = initialQueue.reduce((sum, e) => sum + (Number(e.mouseClicks) || 0), 0);
 const initialPendingKeys = initialQueue.reduce((sum, e) => sum + (Number(e.keyboardCount) || 0), 0);
 
-// Module-level reactive store for computer & web activity telemetry (Optimistic Local + Server Persistence)
-const telemetryStore = {
-  isTrackingActive: getInitialTrackingState(),
-  trackingStatus: getInitialTrackingState() ? 'RUNNING' : 'OFF', // 'OFF' | 'STARTING' | 'RUNNING' | 'STOPPING' | 'ERROR'
+function getInitialState() {
+  const hasToken = typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('token'));
+  return computeTrackingState({ isAuthenticated: hasToken, isWebOpen: true });
+}
 
-  // 1. Canonical Server State (Source of truth from database)
+// Module-level reactive store for computer & web activity telemetry
+const telemetryStore = {
+  // 1. CANONICAL 4-STATE TRACKING MACHINE
+  // 'TRACKING_ACTIVE' | 'TRACKING_OUTSIDE_SCHEDULE' | 'TRACKING_WEB_CLOSED' | 'TRACKING_LOGGED_OUT'
+  trackingState: getInitialState(),
+  isScheduleOpen: isWithinWorkingSchedule(),
+  isLeaderTab: false,
+
+  // 2. CANONICAL SERVER STATE (from DB via API/Socket/ACK)
   serverPts: initialSnapshot.serverPts || 0,
   serverClicks: initialSnapshot.serverClicks || 0,
   serverKeys: initialSnapshot.serverKeys || 0,
@@ -80,21 +94,21 @@ const telemetryStore = {
   serverRank: initialSnapshot.serverRank || null,
   topApp: initialSnapshot.topApp || null,
 
-  // 2. Local Pending Buffer (Activity recorded locally, awaiting server ACK)
+  // 3. LOCAL PENDING BUFFER (Un-ACKed deltas)
   pendingQueue: initialQueue,
   pendingPts: initialPendingPts,
   pendingClicks: initialPendingClicks,
   pendingKeys: initialPendingKeys,
   pendingActiveSeconds: 0,
 
-  // 3. Instant Display State: DISPLAY_PTS = SERVER_PTS + PENDING_PTS
+  // 4. INSTANT DISPLAY STATE: DISPLAY_PTS = SERVER_PTS + PENDING_PTS
   displayPts: (initialSnapshot.serverPts || 0) + initialPendingPts,
   displayClicks: (initialSnapshot.serverClicks || 0) + initialPendingClicks,
   displayKeys: (initialSnapshot.serverKeys || 0) + initialPendingKeys,
   displayActiveMinutes: initialSnapshot.serverActiveMinutes || 0,
 
   // Diagnostics & Status
-  syncStatus: initialQueue.length > 0 ? 'PENDING_RETRY' : 'SYNCED', // 'SYNCED' | 'SYNCING' | 'PENDING_RETRY' | 'OFFLINE'
+  syncStatus: initialQueue.length > 0 ? 'PENDING_RETRY' : 'SYNCED', // 'SYNCED' | 'SYNCING' | 'PENDING_RETRY'
   lastSyncTime: null,
   lastEventTime: null,
   lastFlushTime: null,
@@ -161,7 +175,6 @@ function recomputeTotals() {
   telemetryStore.pendingKeys = pendingKeys;
   telemetryStore.queueLength = telemetryStore.pendingQueue.length;
 
-  // DISPLAY_PTS = SERVER_PTS + PENDING_PTS
   telemetryStore.displayPts = Number(telemetryStore.serverPts || 0) + pendingPts;
   telemetryStore.displayClicks = Number(telemetryStore.serverClicks || 0) + pendingClicks;
   telemetryStore.displayKeys = Number(telemetryStore.serverKeys || 0) + pendingKeys;
@@ -169,14 +182,13 @@ function recomputeTotals() {
   const extraMins = Math.floor(telemetryStore.pendingActiveSeconds / 60);
   telemetryStore.displayActiveMinutes = Number(telemetryStore.serverActiveMinutes || 0) + extraMins;
 
-  // Calculate live PTS/Hour & APM
   const totalMins = telemetryStore.displayActiveMinutes;
   const score = telemetryStore.displayPts;
   if (totalMins >= 1 && score > 0) {
     telemetryStore.ptsPerHour = Math.round((score / totalMins) * 60);
     telemetryStore.avgApm = Math.round(score / totalMins);
   } else if (score > 0) {
-    telemetryStore.ptsPerHour = score * 60; // First minute projection
+    telemetryStore.ptsPerHour = score * 60;
     telemetryStore.avgApm = score;
   } else {
     telemetryStore.ptsPerHour = null;
@@ -218,72 +230,6 @@ export function setServerSummary(summary = {}) {
 }
 
 /**
- * Global Tracking Controls
- */
-export async function startTrackingGlobal(userData = {}) {
-  try {
-    sessionStorage.setItem(TRACKING_ENABLED_KEY, 'true');
-  } catch {}
-  telemetryStore.isTrackingActive = true;
-  telemetryStore.trackingStatus = 'STARTING';
-  emitStoreUpdate();
-
-  try {
-    let token = localStorage.getItem('token');
-    let refreshToken = localStorage.getItem('refreshToken');
-    try {
-      if (refreshToken) {
-        await refreshSession();
-        token = localStorage.getItem('token');
-        refreshToken = localStorage.getItem('refreshToken');
-      }
-    } catch {}
-
-    const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
-    await desktopAgentIpc.startTracking({ token, refreshToken, user: userData, backendUrl });
-
-    const status = await desktopAgentIpc.checkStatus();
-    telemetryStore.agentStatus = status;
-    telemetryStore.trackingStatus = 'RUNNING';
-  } catch (err) {
-    telemetryStore.trackingStatus = 'RUNNING'; // Fallback Web activity continues
-  }
-  emitStoreUpdate();
-}
-
-export async function stopTrackingGlobal() {
-  try {
-    sessionStorage.removeItem(TRACKING_ENABLED_KEY);
-  } catch {}
-  telemetryStore.isTrackingActive = false;
-  telemetryStore.trackingStatus = 'STOPPING';
-  emitStoreUpdate();
-
-  try {
-    // 1. Notify Desktop Agent to stop immediately
-    await desktopAgentIpc.stopTracking();
-
-    const status = await desktopAgentIpc.checkStatus();
-    telemetryStore.agentStatus = status;
-    telemetryStore.trackingStatus = 'OFF';
-  } catch {
-    telemetryStore.trackingStatus = 'OFF';
-  }
-
-  // Flush any remaining local pending events to server without losing score
-  flushPendingQueueGlobal().catch(() => {});
-  emitStoreUpdate();
-}
-
-export function toggleTrackingGlobal(userData = {}) {
-  if (telemetryStore.isTrackingActive) {
-    return stopTrackingGlobal();
-  } else {
-    return startTrackingGlobal(userData);
-  }
-}
-
-/**
  * Flush pending queue to server and reconcile with ACK
  */
 let isFlushing = false;
@@ -321,7 +267,7 @@ export async function flushPendingQueueGlobal() {
     const data = response?.data || response || {};
     const acceptedIds = new Set(data.acceptedEventIds || inflightEvents.map((e) => e.eventId));
 
-    // 1. Update canonical Server state from ACK
+    // Update canonical Server state from ACK
     if (data.activityScore !== undefined || data.serverPts !== undefined) {
       telemetryStore.serverPts = Number(data.activityScore ?? data.serverPts ?? telemetryStore.serverPts);
     }
@@ -338,7 +284,7 @@ export async function flushPendingQueueGlobal() {
       telemetryStore.serverRank = data.rank;
     }
 
-    // 2. Remove ONLY accepted events from the pending queue (Partial ACK safe)
+    // Remove ONLY accepted events from pending queue
     telemetryStore.pendingQueue = telemetryStore.pendingQueue.filter((e) => !acceptedIds.has(e.eventId));
     telemetryStore.pendingActiveSeconds = 0;
 
@@ -350,8 +296,6 @@ export async function flushPendingQueueGlobal() {
     saveServerSnapshot();
     recomputeTotals();
   } catch (err) {
-    // Network / server failure: DO NOT ROLLBACK DISPLAY PTS.
-    // Retain events in pendingQueue for retry on next flush.
     telemetryStore.syncStatus = 'PENDING_RETRY';
     telemetryStore.lastFlushStatus = 'ERROR';
     emitStoreUpdate();
@@ -361,7 +305,26 @@ export async function flushPendingQueueGlobal() {
 }
 
 /**
- * Hook to consume live activity telemetry stats and control tracking
+ * Multi-Tab Leader Election & Coordination
+ */
+function checkLeaderStatus() {
+  const currentLeader = localStorage.getItem(LEADER_TAB_KEY);
+  const lastHeartbeat = Number(localStorage.getItem(LEADER_HEARTBEAT_KEY) || 0);
+  const now = Date.now();
+
+  // If no leader or leader heartbeat expired (> 12s), this tab claims leadership
+  if (!currentLeader || currentLeader === TAB_ID || now - lastHeartbeat > 12000) {
+    localStorage.setItem(LEADER_TAB_KEY, TAB_ID);
+    localStorage.setItem(LEADER_HEARTBEAT_KEY, String(now));
+    telemetryStore.isLeaderTab = true;
+  } else {
+    telemetryStore.isLeaderTab = false;
+  }
+  emitStoreUpdate();
+}
+
+/**
+ * Hook to consume live activity telemetry stats (Read-Only)
  */
 export function useActivityStats() {
   const [stats, setStats] = useState({ ...telemetryStore });
@@ -374,95 +337,167 @@ export function useActivityStats() {
     };
   }, []);
 
-  const startTracking = useCallback((userData) => startTrackingGlobal(userData), []);
-  const stopTracking = useCallback(() => stopTrackingGlobal(), []);
-  const toggleTracking = useCallback((userData) => toggleTrackingGlobal(userData), []);
   const flushQueue = useCallback(() => flushPendingQueueGlobal(), []);
   const updateServerSummary = useCallback((summary) => setServerSummary(summary), []);
 
   return {
     ...stats,
-    startTracking,
-    stopTracking,
-    toggleTracking,
+    // Backward compatibility helper flags (computed from 4-state machine)
+    isTrackingActive: stats.trackingState === 'TRACKING_ACTIVE',
+    isOutsideSchedule: stats.trackingState === 'TRACKING_OUTSIDE_SCHEDULE',
+    isWebClosed: stats.trackingState === 'TRACKING_WEB_CLOSED',
+    isLoggedOut: stats.trackingState === 'TRACKING_LOGGED_OUT',
     flushQueue,
     updateServerSummary,
   };
 }
 
 /**
- * Central Activity Tracker Hook.
- * Implements:
- * 1. Instant optimistic local PTS accumulation (< 100ms UI responsiveness).
- * 2. Background queue buffering & batch flushing to backend.
- * 3. Exact reconciliation upon Server ACK to prevent double counting.
- * 4. Zero PTS loss across reconnects, offline mode, and tracking toggle.
+ * Central Activity Tracker Hook (Autonomous Lifecycle & Schedule Enforcement).
+ *
+ * Requirements:
+ * 1. ZERO user toggle buttons (always active when logged in during 08:00 - 17:30).
+ * 2. 4 Canonical States: TRACKING_ACTIVE, TRACKING_OUTSIDE_SCHEDULE, TRACKING_WEB_CLOSED, TRACKING_LOGGED_OUT.
+ * 3. Schedule 08:00 - 17:30 Asia/Ho_Chi_Minh.
+ * 4. Multi-tab coordination: single leader tab sends heartbeat to Agent.
+ * 5. Full Desktop & Web activity capture without surveillance.
  */
 export function useActivityTracker() {
   const location = useLocation();
-  const { isTrackingActive, agentStatus } = useActivityStats();
+  const { trackingState, isTrackingActive, agentStatus } = useActivityStats();
 
   const heartbeatTimerRef = useRef(null);
   const flushTimerRef = useRef(null);
   const activeSecondTimerRef = useRef(null);
+  const scheduleCheckTimerRef = useRef(null);
   const debounceFlushTimerRef = useRef(null);
   const lastInteractionTimeRef = useRef(Date.now());
 
-  // 1. Periodically check Desktop Companion Agent status
+  // 1. Multi-Tab Leader Election & Channel Listener
+  useEffect(() => {
+    checkLeaderStatus();
+    const leaderInterval = setInterval(checkLeaderStatus, 6000);
+
+    const handleStorage = (e) => {
+      if (e.key === LEADER_TAB_KEY || e.key === LEADER_HEARTBEAT_KEY) {
+        checkLeaderStatus();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    if (tabChannel) {
+      tabChannel.onmessage = (msg) => {
+        if (msg.data?.type === 'LEADER_RESIGN') {
+          checkLeaderStatus();
+        }
+      };
+    }
+
+    return () => {
+      clearInterval(leaderInterval);
+      window.removeEventListener('storage', handleStorage);
+      if (localStorage.getItem(LEADER_TAB_KEY) === TAB_ID) {
+        localStorage.removeItem(LEADER_TAB_KEY);
+        localStorage.removeItem(LEADER_HEARTBEAT_KEY);
+        try {
+          tabChannel?.postMessage({ type: 'LEADER_RESIGN', tabId: TAB_ID });
+        } catch {}
+      }
+    };
+  }, []);
+
+  // 2. Autonomous Schedule & Auth State Watcher (08:00 - 17:30 Asia/Ho_Chi_Minh)
+  useEffect(() => {
+    const updateScheduleAndState = () => {
+      const hasToken = Boolean(localStorage.getItem('token'));
+      const inSchedule = isWithinWorkingSchedule();
+      const newState = computeTrackingState({ isAuthenticated: hasToken, isWebOpen: true });
+
+      telemetryStore.isScheduleOpen = inSchedule;
+      if (telemetryStore.trackingState !== newState) {
+        console.log(`[ActivityTracker] State transition: ${telemetryStore.trackingState} -> ${newState}`);
+        telemetryStore.trackingState = newState;
+        emitStoreUpdate();
+
+        // If transition to OUTSIDE_SCHEDULE, flush pending queue before locking
+        if (newState === 'TRACKING_OUTSIDE_SCHEDULE') {
+          flushPendingQueueGlobal();
+        }
+      }
+    };
+
+    updateScheduleAndState();
+    // Re-verify schedule and auth every 2 seconds
+    scheduleCheckTimerRef.current = setInterval(updateScheduleAndState, 2000);
+
+    // Also update on visibilitychange (laptop sleep/wake)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        updateScheduleAndState();
+        checkLeaderStatus();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (scheduleCheckTimerRef.current) clearInterval(scheduleCheckTimerRef.current);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  // 3. Desktop Companion Agent Heartbeat & Connection (Leader Tab Only)
   useEffect(() => {
     let mounted = true;
-    const checkAgent = async () => {
+
+    const syncWithDesktopAgent = async () => {
+      if (!mounted) return;
+      const inSchedule = isWithinWorkingSchedule();
+      const hasToken = Boolean(localStorage.getItem('token'));
+
       try {
         const status = await desktopAgentIpc.checkStatus();
         if (mounted) {
           telemetryStore.agentStatus = status;
           emitStoreUpdate();
         }
+
+        // Leader Tab maintains active session with Desktop Agent
+        if (telemetryStore.isLeaderTab && hasToken && inSchedule) {
+          let token = localStorage.getItem('token');
+          let refreshToken = localStorage.getItem('refreshToken');
+          const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
+
+          // Start or maintain heartbeat with agent
+          if (!status.trackingActive) {
+            await desktopAgentIpc.startTracking({ token, refreshToken, backendUrl });
+          } else {
+            await desktopAgentIpc.sendHeartbeat();
+          }
+        }
       } catch {}
     };
 
-    checkAgent();
-    const interval = setInterval(checkAgent, 12000);
+    syncWithDesktopAgent();
+    heartbeatTimerRef.current = setInterval(syncWithDesktopAgent, HEARTBEAT_INTERVAL_MS);
+
     return () => {
       mounted = false;
-      clearInterval(interval);
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
     };
   }, []);
 
-  // 2. Desktop Agent Heartbeat & Watchdog
-  useEffect(() => {
-    if (!isTrackingActive) {
-      if (heartbeatTimerRef.current) {
-        clearInterval(heartbeatTimerRef.current);
-        heartbeatTimerRef.current = null;
-      }
-      return;
-    }
-
-    // Ping agent immediately when active
-    desktopAgentIpc.sendHeartbeat();
-
-    heartbeatTimerRef.current = setInterval(() => {
-      if (telemetryStore.isTrackingActive) {
-        desktopAgentIpc.sendHeartbeat();
-      }
-    }, HEARTBEAT_INTERVAL_MS);
-
-    return () => {
-      if (heartbeatTimerRef.current) {
-        clearInterval(heartbeatTimerRef.current);
-        heartbeatTimerRef.current = null;
-      }
-    };
-  }, [isTrackingActive]);
-
-  // 3. Auto-flush on page unload / web close ("tắt web thì tự ngắt & flush")
+  // 4. Auto-flush on page unload / web close
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // 1. Immediately signal Desktop Agent to stop
-      desktopAgentIpc.stopTracking();
+      // If leader tab is closing, notify agent to pause
+      if (telemetryStore.isLeaderTab) {
+        desktopAgentIpc.stopTracking();
+      }
 
-      // 2. If local pending events exist, flush via sendBeacon
+      // Flush remaining events via sendBeacon
       if (telemetryStore.pendingQueue.length > 0) {
         try {
           const payload = JSON.stringify({
@@ -488,10 +523,10 @@ export function useActivityTracker() {
     };
   }, []);
 
-  // 4. Online / Offline network reconnection handler
+  // 5. Network Reconnection Handler
   useEffect(() => {
     const handleOnline = () => {
-      if (telemetryStore.pendingQueue.length > 0) {
+      if (telemetryStore.pendingQueue.length > 0 && isWithinWorkingSchedule()) {
         flushPendingQueueGlobal();
       }
     };
@@ -499,9 +534,9 @@ export function useActivityTracker() {
     return () => window.removeEventListener('online', handleOnline);
   }, []);
 
-  // 5. Active/Idle timer & interaction listeners (Instant Optimistic Local Scoring)
+  // 6. Active/Idle timer & interaction listeners (Active ONLY in schedule 08:00 - 17:30)
   useEffect(() => {
-    if (!isTrackingActive) {
+    if (trackingState !== 'TRACKING_ACTIVE') {
       if (flushTimerRef.current) clearInterval(flushTimerRef.current);
       if (activeSecondTimerRef.current) clearInterval(activeSecondTimerRef.current);
       if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
@@ -513,13 +548,18 @@ export function useActivityTracker() {
       const now = Date.now();
       const isCurrentlyIdle = now - lastInteractionTimeRef.current > 60000; // 60s idle
 
-      if (!isCurrentlyIdle) {
+      if (!isCurrentlyIdle && isWithinWorkingSchedule()) {
         telemetryStore.pendingActiveSeconds += 1;
         recomputeTotals();
       }
     }, 1000);
 
     const recordInteraction = (type) => {
+      // Strict schedule guard: No events created outside 08:00 - 17:30
+      if (!isWithinWorkingSchedule()) {
+        return;
+      }
+
       const now = Date.now();
       lastInteractionTimeRef.current = now;
       telemetryStore.lastEventTime = now;
@@ -545,7 +585,6 @@ export function useActivityTracker() {
         status: 'PENDING',
       };
 
-      // Queue limit safeguard
       if (telemetryStore.pendingQueue.length >= MAX_QUEUE_SIZE) {
         telemetryStore.pendingQueue.shift();
       }
@@ -554,7 +593,7 @@ export function useActivityTracker() {
       // 2. INSTANT OPTIMISTIC SCORE UPDATE (< 1ms UI response)
       recomputeTotals();
 
-      // 3. Trigger batch flush if queue hits fast threshold or schedule debounced flush
+      // 3. Fast flush if accumulated >= threshold, else debounced flush
       if (telemetryStore.pendingQueue.length >= FAST_FLUSH_THRESHOLD) {
         if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
         flushPendingQueueGlobal();
@@ -588,5 +627,5 @@ export function useActivityTracker() {
       if (debounceFlushTimerRef.current) clearTimeout(debounceFlushTimerRef.current);
       flushPendingQueueGlobal();
     };
-  }, [isTrackingActive, location.pathname]);
+  }, [trackingState, location.pathname]);
 }

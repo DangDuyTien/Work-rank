@@ -16,7 +16,7 @@ export default function UserRow({ user, formatDuration, showRank }) {
   const avatarUrl = getUserAvatar(user, userId);
 
   return (
-    <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50" onClick={() => navigate(`/users/${user.user_id}`)}>
+    <tr className="cursor-pointer border-b border-slate-200 hover:bg-slate-50 transition-colors duration-150" onClick={() => navigate(`/users/${userId}`)}>
       <td className="px-6 py-4 flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-sky-400 text-sm font-bold text-white">
           {avatarUrl ? (

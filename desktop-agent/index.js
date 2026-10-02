@@ -9,6 +9,8 @@ const LocalIpcServer = require('./core/LocalIpcServer');
 const LaunchAgentInstaller = require('./autostart/LaunchAgentInstaller');
 const WindowsAutostartInstaller = require('./autostart/WindowsAutostartInstaller');
 
+const { isWithinWorkingSchedule, getVietnamTimeParts } = require('./utils/schedule');
+
 const AutostartInstaller = process.platform === 'win32' ? WindowsAutostartInstaller : LaunchAgentInstaller;
 
 // Choose platform provider
@@ -22,20 +24,41 @@ function getProvider() {
 class DesktopAgent {
   constructor() {
     this.provider = getProvider();
-    this.trackingActive = false; // INACTIVE BY DEFAULT: Must be turned on via Web UI
+    this.trackingActive = false;
     this.lastHeartbeat = 0;
-    this.heartbeatTimeoutMs = 25000; // Auto-stop if web tab closed or crashed
+    this.heartbeatTimeoutMs = 20000; // Auto-stop if web tab closed or crashed after 20s
 
     this.ipcServer = new LocalIpcServer({
       port: 43124,
-      getStatusData: () => ({
-        trackingActive: this.trackingActive,
-        currentState: this.trackingActive ? this.provider.currentState : 'PAUSED',
-        currentApp: this.trackingActive ? this.provider.lastApp : null,
-        currentCategory: this.trackingActive ? this.provider.lastCategory : null,
-        lastIdleSeconds: this.provider.lastIdleCheck,
-        lastHeartbeat: this.lastHeartbeat,
-      }),
+      getStatusData: () => {
+        const isScheduleOpen = isWithinWorkingSchedule();
+        const isWebActive = Boolean(this.lastHeartbeat && (Date.now() - this.lastHeartbeat <= this.heartbeatTimeoutMs));
+        const cfg = this.ipcServer.loadConfig();
+        const isAuthenticated = Boolean(cfg?.token);
+
+        let trackingState = 'TRACKING_WEB_CLOSED';
+        if (!isAuthenticated) {
+          trackingState = 'TRACKING_LOGGED_OUT';
+        } else if (!isScheduleOpen) {
+          trackingState = 'TRACKING_OUTSIDE_SCHEDULE';
+        } else if (isWebActive && this.trackingActive) {
+          trackingState = 'TRACKING_ACTIVE';
+        }
+
+        return {
+          trackingActive: trackingState === 'TRACKING_ACTIVE',
+          trackingState,
+          isScheduleOpen,
+          isWebActive,
+          isAuthenticated,
+          platform: process.platform === 'darwin' ? 'macos' : 'windows',
+          currentState: trackingState === 'TRACKING_ACTIVE' ? this.provider.currentState : 'PAUSED',
+          currentApp: trackingState === 'TRACKING_ACTIVE' ? this.provider.lastApp : null,
+          currentCategory: trackingState === 'TRACKING_ACTIVE' ? this.provider.lastCategory : null,
+          lastIdleSeconds: this.provider.lastIdleCheck,
+          lastHeartbeat: this.lastHeartbeat,
+        };
+      },
       onPair: (cfg) => {
         console.log(`[DesktopAgent] Paired with user: ${cfg.user?.username || cfg.user?.id}`);
         this.buffer.backendUrl = cfg.backendUrl || this.buffer.backendUrl;
@@ -80,21 +103,32 @@ class DesktopAgent {
   }
 
   startTracking() {
-    console.log('[DesktopAgent] Web requested START tracking. Beginning activity capture...');
-    this.trackingActive = true;
     this.lastHeartbeat = Date.now();
-    return { trackingActive: true };
+    const isScheduleOpen = isWithinWorkingSchedule();
+    if (isScheduleOpen) {
+      this.trackingActive = true;
+      console.log('[DesktopAgent] Web active in working hours (08:00 - 17:30). Tracking ACTIVE.');
+    } else {
+      this.trackingActive = false;
+      console.log('[DesktopAgent] Web active but OUTSIDE working hours (08:00 - 17:30). Tracking STANDBY.');
+    }
+    return { trackingActive: this.trackingActive, isScheduleOpen };
   }
 
   renewHeartbeat() {
-    this.trackingActive = true;
     this.lastHeartbeat = Date.now();
-    return { trackingActive: true };
+    const isScheduleOpen = isWithinWorkingSchedule();
+    if (isScheduleOpen) {
+      this.trackingActive = true;
+    } else {
+      this.trackingActive = false;
+    }
+    return { trackingActive: this.trackingActive, isScheduleOpen };
   }
 
   stopTracking() {
     if (this.trackingActive) {
-      console.log('[DesktopAgent] Web requested STOP tracking or web closed. Pausing activity capture...');
+      console.log('[DesktopAgent] Web closed / requested pause. Pausing activity capture...');
     }
     this.trackingActive = false;
     this.lastHeartbeat = 0;
@@ -116,17 +150,29 @@ class DesktopAgent {
 
     this.isRunning = true;
 
-    // 1. Sample OS idle & frontmost app every 1000ms ONLY WHEN TRACKING IS ACTIVE
+    // 1. Sample OS idle & frontmost app every 1000ms ONLY WHEN TRACKING IS ACTIVE & IN SCHEDULE
     this.sampleTimer = setInterval(async () => {
-      if (!this.trackingActive) {
-        return; // Standby: 0 CPU, 0 sampling
+      // Schedule check: If time has passed 17:30 or before 08:00, stop tracking immediately
+      if (!isWithinWorkingSchedule()) {
+        if (this.trackingActive) {
+          console.log('[DesktopAgent] Working hours ended (17:30). Automatically pausing tracking.');
+          this.trackingActive = false;
+          this.buffer.flush().catch(() => {});
+        }
+        return;
       }
 
-      // Watchdog: If Web tab was closed without sending stop, heartbeat expires in 25s
-      if (Date.now() - this.lastHeartbeat > this.heartbeatTimeoutMs) {
-        console.log('[DesktopAgent] Web heartbeat expired (Web tab/browser closed). Auto-stopping tracking.');
-        this.stopTracking();
+      // If web heartbeat expired (Web tab closed > 20s), pause tracking
+      if (this.lastHeartbeat && Date.now() - this.lastHeartbeat > this.heartbeatTimeoutMs) {
+        if (this.trackingActive) {
+          console.log('[DesktopAgent] Web heartbeat expired (WorkRank web closed). Auto-pausing tracking.');
+          this.stopTracking();
+        }
         return;
+      }
+
+      if (!this.trackingActive) {
+        return; // Standby: 0 CPU, 0 sampling
       }
 
       try {

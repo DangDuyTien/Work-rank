@@ -14,23 +14,28 @@ import {
 } from 'lucide-react';
 import { competition } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Card, Button } from './ui';
+import { Card, Button, AnimatedNumber } from './ui';
+import { getCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 export default function CompetitionProgressWidget() {
   const navigate = useNavigate();
   const { user, socket } = useAuth();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cachedDashboard = getCached(CACHE_KEYS.COMPETITION_DASHBOARD());
+  const [data, setData] = useState(() => cachedDashboard || null);
+  const [loading, setLoading] = useState(!cachedDashboard);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchDashboard = useCallback(async (isBackground = false) => {
     try {
-      if (!isBackground) setLoading(true);
+      if (!isBackground && !cachedDashboard) setLoading(true);
       else setRefreshing(true);
       setError(null);
-      const res = await competition.getDashboard();
-      setData(res);
+      const res = await fetchWithCache(CACHE_KEYS.COMPETITION_DASHBOARD(), () => competition.getDashboard(), {
+        ttl: CACHE_TTL.SHORT,
+        force: isBackground,
+      });
+      setData((prev) => (isDeepEqual(prev, res) ? prev : res));
     } catch (err) {
       console.warn('[CompetitionWidget] Error loading dashboard:', err.message);
       setError('Chưa thể tải dữ liệu thi đua tổng quan');
@@ -38,7 +43,7 @@ export default function CompetitionProgressWidget() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [cachedDashboard]);
 
   useEffect(() => {
     fetchDashboard();
@@ -147,6 +152,7 @@ export default function CompetitionProgressWidget() {
       <div className="competition-overview-grid">
         {/* 1. MY SEASON SCORE */}
         <Card
+          className="motion-hover-lift"
           onClick={() => navigate('/rankings?scope=individual')}
           title="Bấm để xem Bảng Xếp Hạng Cá Nhân"
           style={{
@@ -156,7 +162,6 @@ export default function CompetitionProgressWidget() {
             borderRadius: 10,
             cursor: 'pointer',
             boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -169,7 +174,7 @@ export default function CompetitionProgressWidget() {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700, color: '#111111' }}>
-              {uSum?.currentSeasonScore?.toLocaleString() || 0}
+              <AnimatedNumber value={uSum?.currentSeasonScore || 0} />
             </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#777777' }}>XP</span>
           </div>
@@ -185,6 +190,7 @@ export default function CompetitionProgressWidget() {
 
         {/* 2. MY TEAM SEASON */}
         <Card
+          className="motion-hover-lift"
           onClick={() => navigate('/rankings?scope=team')}
           title="Bấm để xem Bảng Xếp Hạng Đội"
           style={{
@@ -194,7 +200,6 @@ export default function CompetitionProgressWidget() {
             borderRadius: 10,
             cursor: 'pointer',
             boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -207,7 +212,7 @@ export default function CompetitionProgressWidget() {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700, color: '#111111' }}>
-              {tSum?.currentSeasonScore?.toLocaleString() || 0}
+              <AnimatedNumber value={tSum?.currentSeasonScore || 0} />
             </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#777777' }}>XP</span>
           </div>
@@ -219,6 +224,7 @@ export default function CompetitionProgressWidget() {
 
         {/* 3. GRAND CHAMPIONSHIP */}
         <Card
+          className="motion-hover-lift"
           onClick={() => navigate('/rankings?scope=grand')}
           title="Bấm để xem Bảng Xếp Hạng Grand Championship"
           style={{
@@ -228,7 +234,6 @@ export default function CompetitionProgressWidget() {
             borderRadius: 10,
             cursor: 'pointer',
             boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -241,7 +246,7 @@ export default function CompetitionProgressWidget() {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 24, fontWeight: 700, color: '#111111' }}>
-              {(uSum?.grandPoints ?? tSum?.grandPoints ?? 0).toLocaleString()}
+              <AnimatedNumber value={uSum?.grandPoints ?? tSum?.grandPoints ?? 0} />
             </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309' }}>GP</span>
           </div>

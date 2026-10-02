@@ -3,6 +3,7 @@
 const youtubeDataService = require('../services/youtube/youtubeData.service');
 const youtubeAggregationService = require('../services/youtube/youtubeAggregation.service');
 const youtubeSyncService = require('../services/youtube/youtubeSync.service');
+const healthController = require('./health.controller');
 const { Team } = require('../models');
 
 /**
@@ -277,6 +278,7 @@ async function getAdminOverview(req, res, next) {
   try {
     const overview = await youtubeAggregationService.getCompanyYouTubeOverview();
     const allChannels = await youtubeDataService.listChannels();
+    const healthDiag = healthController.getDiagnostics();
 
     return res.status(200).json({
       ...overview,
@@ -288,6 +290,11 @@ async function getAdminOverview(req, res, next) {
         unlinkedChannels: allChannels.filter((c) => !c.teamId).length,
         lastSyncedAt: overview.kpis.lastSyncedAt,
         freshnessStatus: overview.kpis.freshnessStatus,
+        renderService: healthDiag.renderService,
+        lastHealthPingAt: healthDiag.lastHealthPingAt,
+        healthPingCount: healthDiag.healthPingCount,
+        serverStartedAt: healthDiag.startedAt,
+        uptimeSeconds: healthDiag.uptimeSeconds,
       },
     });
   } catch (err) {

@@ -647,7 +647,9 @@ export default function Layout() {
             }}
           >
             <Suspense fallback={<PageTransitionSkeleton />}>
-              <Outlet />
+              <PageTransition key={location.pathname} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Outlet />
+              </PageTransition>
             </Suspense>
           </main>
 

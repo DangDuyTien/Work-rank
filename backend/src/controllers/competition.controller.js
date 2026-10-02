@@ -670,6 +670,7 @@ const eventContractRegistry = require('../services/competition/eventContractRegi
 const eventIngestionService = require('../services/competition/eventIngestion.service');
 const competitionEventTrace = require('../services/competition/competitionEventTrace.service');
 const competitionIntegrationMonitor = require('../services/competition/competitionIntegrationMonitor.service');
+const healthController = require('./health.controller');
 const productionIntegration = require('../services/competition/productionIntegration.service');
 const youtubeIntegration = require('../services/competition/youtubeIntegration.service');
 const communityIntegration = require('../services/competition/communityIntegration.service');
@@ -692,7 +693,15 @@ async function getEventTrace(req, res) {
 
 async function adminGetIntegrationHealth(req, res) {
   const health = await competitionIntegrationMonitor.getIntegrationHealth();
-  res.json(health);
+  const sysDiag = healthController.getDiagnostics();
+  res.json({
+    ...health,
+    renderService: sysDiag.renderService,
+    lastHealthPingAt: sysDiag.lastHealthPingAt,
+    healthPingCount: sysDiag.healthPingCount,
+    serverStartedAt: sysDiag.startedAt,
+    uptimeSeconds: sysDiag.uptimeSeconds,
+  });
 }
 
 async function adminListIntegrationEvents(req, res) {

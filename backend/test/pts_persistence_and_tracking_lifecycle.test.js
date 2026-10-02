@@ -14,6 +14,12 @@ const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
 const computerActivityService = require('../src/services/computerActivity.service');
 
+function getWorkHourIso() {
+  const d = new Date();
+  // 10:00:00 VN Time = 03:00:00 UTC (inside 08:00 - 17:30 schedule)
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 3, 0, 0)).toISOString();
+}
+
 test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', async (t) => {
   let testUser;
   let userToken;
@@ -58,7 +64,7 @@ test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', 
             idleSeconds: 0,
             mouseClicks: 30,
             keyboardCount: 70,
-            occurredAt: new Date().toISOString(),
+            occurredAt: getWorkHourIso(),
           },
         ],
       });
@@ -130,7 +136,7 @@ test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', 
             activeSeconds: 60,
             mouseClicks: 10,
             keyboardCount: 10,
-            occurredAt: new Date().toISOString(),
+            occurredAt: getWorkHourIso(),
           },
         ],
       });
@@ -153,7 +159,7 @@ test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', 
             activeSeconds: 60,
             mouseClicks: 10,
             keyboardCount: 10,
-            occurredAt: new Date().toISOString(),
+            occurredAt: getWorkHourIso(),
           },
         ],
       });
@@ -182,7 +188,7 @@ test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', 
             activeSeconds: 60,
             mouseClicks: 25,
             keyboardCount: 5,
-            occurredAt: new Date().toISOString(),
+            occurredAt: getWorkHourIso(),
           },
         ],
       });
@@ -205,7 +211,7 @@ test('PTS Persistence, Idempotency & Tracking Lifecycle Acceptance Test Suite', 
             activeSeconds: 60,
             mouseClicks: 15,
             keyboardCount: 45,
-            occurredAt: new Date().toISOString(),
+            occurredAt: getWorkHourIso(),
           },
         ],
       });

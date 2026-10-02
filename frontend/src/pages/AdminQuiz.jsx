@@ -1398,8 +1398,8 @@ export default function AdminQuiz() {
           MODAL 1: CREATE / EDIT QUIZ SET
          ══════════════════════════════════════════════════════════════════ */}
       {showSetModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden modal-dialog-enter">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <FolderPlus className="w-5 h-5 text-amber-600" />
@@ -1499,8 +1499,8 @@ export default function AdminQuiz() {
           MODAL 2: QUESTION EDITOR (CREATE / EDIT QUESTION)
          ══════════════════════════════════════════════════════════════════ */}
       {showQuestionModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl my-8 overflow-hidden modal-dialog-enter">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-amber-600" />
@@ -1852,8 +1852,8 @@ export default function AdminQuiz() {
           MODAL 3: IMPORT MODAL (JSON / CSV / TEXT)
          ══════════════════════════════════════════════════════════════════ */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden modal-dialog-enter max-h-[85vh] flex flex-col">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Upload className="w-5 h-5 text-emerald-600" />
@@ -2033,8 +2033,8 @@ export default function AdminQuiz() {
           MODAL 4: SHARE CODE MODAL (QUICK IMPORT FROM SHARE CODE)
          ══════════════════════════════════════════════════════════════════ */}
       {showShareCodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden modal-dialog-enter">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Link2 className="w-5 h-5 text-amber-600" />
@@ -2112,8 +2112,8 @@ export default function AdminQuiz() {
           MODAL 5: EXPORT / SHARE MODAL
          ══════════════════════════════════════════════════════════════════ */}
       {showExportModal && exportingSet && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden modal-dialog-enter">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Share2 className="w-5 h-5 text-blue-600" />
@@ -2189,8 +2189,8 @@ export default function AdminQuiz() {
           MODAL 6: REALISTIC PLAYER PREVIEW MODAL
          ══════════════════════════════════════════════════════════════════ */}
       {showPreviewModal && questions[previewIndex] && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 modal-backdrop-enter">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden modal-dialog-enter">
             {/* Preview Header */}
             <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold">
@@ -2320,10 +2320,10 @@ export default function AdminQuiz() {
          ══════════════════════════════════════════════════════════════════ */}
       {zoomImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer modal-backdrop-enter"
           onClick={() => setZoomImage(null)}
         >
-          <div className="relative max-w-3xl max-h-[90vh]">
+          <div className="relative max-w-3xl max-h-[90vh] modal-dialog-enter">
             <img
               src={zoomImage}
               alt="Zoomed quiz media"

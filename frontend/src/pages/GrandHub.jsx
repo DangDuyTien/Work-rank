@@ -4,7 +4,7 @@ import { Trophy, Crown, Flame, Award, Calendar, ChevronRight, RefreshCw, Clock, 
 import { competition, youtube } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton } from '../components/ui';
-
+import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatDaysRemaining(endAt) {
   if (!endAt) return 'Không giới hạn';
@@ -27,54 +27,77 @@ export default function GrandHub() {
   const { user, socket } = useAuth();
   const navigate = useNavigate();
 
-  const [grand, setGrand] = useState(null);
-  const [standings, setStandings] = useState([]);
-  const [individualStandings, setIndividualStandings] = useState([]);
-  const [individualChampion, setIndividualChampion] = useState(null);
+  const cachedCurrentGrand = getCached(CACHE_KEYS.GRAND_CURRENT());
+  const cachedStandings = cachedCurrentGrand?.id ? getCached(CACHE_KEYS.GRAND_STANDINGS(cachedCurrentGrand.id)) : null;
+
+  const [grand, setGrand] = useState(() => cachedStandings?.grand || cachedCurrentGrand || null);
+  const [standings, setStandings] = useState(() => cachedStandings?.standings || []);
+  const [individualStandings, setIndividualStandings] = useState(() => cachedStandings?.individualStandings || []);
+  const [individualChampion, setIndividualChampion] = useState(() => cachedStandings?.individualChampion || null);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [timeline, setTimeline] = useState([]);
-  const [myTeamJourney, setMyTeamJourney] = useState(null);
-  const [youtubeStandings, setYoutubeStandings] = useState([]);
+  const [timeline, setTimeline] = useState(() => cachedStandings?.timeline || []);
+  const [myTeamJourney, setMyTeamJourney] = useState(() => cachedStandings?.myTeamJourney || null);
+  const [youtubeStandings, setYoutubeStandings] = useState(() => cachedStandings?.youtubeStandings || []);
   const [activeTab, setActiveTab] = useState('standings');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedStandings && !cachedCurrentGrand);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchGrandData = useCallback(async () => {
+  const fetchGrandData = useCallback(async (isManual = false) => {
     try {
+      if (!isManual && !cachedStandings) setLoading(true);
+      else setRefreshing(true);
       setError(null);
-      const currentGrand = await competition.getCurrentGrand();
+
+      const currentGrand = await fetchWithCache(CACHE_KEYS.GRAND_CURRENT(), () => competition.getCurrentGrand(), { ttl: CACHE_TTL.SHORT, force: isManual });
       if (!currentGrand) {
         setGrand(null);
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
-      setGrand(currentGrand);
+      const cacheKey = CACHE_KEYS.GRAND_STANDINGS(currentGrand.id);
 
       const [standingsRes, indRes, timelineRes, ytRes] = await Promise.all([
-        competition.getGrandStandings(currentGrand.id),
-        competition.getGrandIndividualStandings(currentGrand.id).catch(() => ({ standings: [], grandIndividualChampion: null })),
-        competition.getGrandTimeline(currentGrand.id),
-        youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })),
+        fetchWithCache(`${cacheKey}:standings`, () => competition.getGrandStandings(currentGrand.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:ind`, () => competition.getGrandIndividualStandings(currentGrand.id).catch(() => ({ standings: [], grandIndividualChampion: null })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:timeline`, () => competition.getGrandTimeline(currentGrand.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:yt`, () => youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
       ]);
 
-      setStandings(standingsRes.standings || []);
-      setIndividualStandings(indRes.standings || []);
-      setIndividualChampion(indRes.grandIndividualChampion || (indRes.standings?.[0] || null));
-      setTimeline(timelineRes || []);
-      setYoutubeStandings(ytRes.items || []);
-
+      let journeyRes = null;
       if (user?.teamId) {
-        const journeyRes = await competition.getGrandTeamJourney(currentGrand.id, user.teamId);
-        setMyTeamJourney(journeyRes || null);
+        journeyRes = await fetchWithCache(`${cacheKey}:journey:${user.teamId}`, () => competition.getGrandTeamJourney(currentGrand.id, user.teamId), { ttl: CACHE_TTL.MEDIUM, force: isManual }).catch(() => null);
       }
+
+      const bundle = {
+        grand: currentGrand,
+        standings: standingsRes.standings || [],
+        individualStandings: indRes.standings || [],
+        individualChampion: indRes.grandIndividualChampion || (indRes.standings?.[0] || null),
+        timeline: timelineRes || [],
+        youtubeStandings: ytRes.items || [],
+        myTeamJourney: journeyRes || null,
+      };
+
+      setCached(cacheKey, bundle, { ttl: CACHE_TTL.MEDIUM });
+
+      setGrand((prev) => (isDeepEqual(prev, currentGrand) ? prev : currentGrand));
+      setStandings((prev) => (isDeepEqual(prev, bundle.standings) ? prev : bundle.standings));
+      setIndividualStandings((prev) => (isDeepEqual(prev, bundle.individualStandings) ? prev : bundle.individualStandings));
+      setIndividualChampion((prev) => (isDeepEqual(prev, bundle.individualChampion) ? prev : bundle.individualChampion));
+      setTimeline((prev) => (isDeepEqual(prev, bundle.timeline) ? prev : bundle.timeline));
+      setYoutubeStandings((prev) => (isDeepEqual(prev, bundle.youtubeStandings) ? prev : bundle.youtubeStandings));
+      if (journeyRes) setMyTeamJourney((prev) => (isDeepEqual(prev, journeyRes) ? prev : journeyRes));
     } catch (err) {
       setError(err?.response?.data?.message || 'Không thể tải dữ liệu Grand Championship');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [user?.teamId]);
+  }, [cachedStandings, user?.teamId]);
 
   useEffect(() => {
     fetchGrandData();

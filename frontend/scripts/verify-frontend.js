@@ -52,7 +52,7 @@ const KNOWN_GLOBALS = new Set([
   'cancelAnimationFrame', 'AbortController', 'AbortSignal', 'WebSocket', 'MutationObserver', 'IntersectionObserver',
   'ResizeObserver', 'Audio', 'Notification', 'process', 'globalThis', 'self', 'NaN', 'Infinity',
   'undefined', 'null', 'eval', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'React', 'atob', 'btoa',
-  'crypto', 'indexedDB', 'Headers', 'Request', 'Response'
+  'crypto', 'indexedDB', 'Headers', 'Request', 'Response', 'BroadcastChannel'
 ]);
 
 const fileExportsMap = new Map(); // path -> { hasDefault: boolean, named: Set<string> }

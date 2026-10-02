@@ -22,8 +22,8 @@ async function start() {
   const samRealtime = require('./services/samRealtime.service');
   samRealtime.setIo(io);
   registerSockets(io);
-  server.listen(env.port, () => {
-    console.log(`WorkRank backend listening on ${env.port}`);
+  server.listen(env.port, '0.0.0.0', () => {
+    console.log(`WorkRank backend listening on 0.0.0.0:${env.port}`);
   });
 }
 

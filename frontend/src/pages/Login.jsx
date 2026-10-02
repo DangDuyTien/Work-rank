@@ -598,6 +598,7 @@ export default function Login() {
           {/* Flash Notice */}
           {notice && (
             <div
+              className="motion-slide-down"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -620,6 +621,7 @@ export default function Login() {
           {/* Flash Error */}
           {error && (
             <div
+              className="motion-slide-down"
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',

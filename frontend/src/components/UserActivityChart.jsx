@@ -51,6 +51,7 @@ export default function UserActivityChart({ chartData = [], chartTickInterval = 
 
   return (
     <svg
+      className="motion-fade-in"
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       role="img"
       aria-label="Biểu đồ hoạt động theo từng khung 15 phút"

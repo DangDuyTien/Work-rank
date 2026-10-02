@@ -1,7 +1,16 @@
-'use strict';
-
 const { Op } = require('sequelize');
 const { sequelize, User, Team, ComputerActivityEvent, ComputerDailyStat } = require('../models');
+const {
+  getVietnamTimeParts,
+  isWithinWorkingSchedule,
+  getTrackingState,
+  SCHEDULE_METADATA,
+  TIMEZONE,
+  START_HOUR,
+  START_MINUTE,
+  END_HOUR,
+  END_MINUTE,
+} = require('../utils/schedule');
 
 // Restored Focus and Activity Score formula from historical WorkRank score engine
 function clampScore(score) {
@@ -24,21 +33,21 @@ function calculateRankScore(stats = {}) {
 }
 
 function getTodayDateString() {
-  return new Date().toISOString().slice(0, 10);
+  return getVietnamTimeParts().dateStr;
 }
 
 function getPeriodStartDate(period) {
-  const now = new Date();
+  const { dateStr, rawDate } = getVietnamTimeParts();
   if (period === 'today') {
-    return now.toISOString().slice(0, 10);
+    return dateStr;
   }
   if (period === '7d') {
-    const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return d.toISOString().slice(0, 10);
+    const d = new Date(rawDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return getVietnamTimeParts(d).dateStr;
   }
   if (period === '30d') {
-    const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    return d.toISOString().slice(0, 10);
+    const d = new Date(rawDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return getVietnamTimeParts(d).dateStr;
   }
   return '2020-01-01'; // all-time
 }
@@ -77,6 +86,7 @@ class ComputerActivityService {
     const sanitizedEvents = [];
     const acceptedEventIds = [];
     const todayStr = getTodayDateString();
+    const isCurrentTimeInSchedule = isWithinWorkingSchedule();
 
     let batchActiveSeconds = 0;
     let batchIdleSeconds = 0;
@@ -96,6 +106,13 @@ class ComputerActivityService {
         acceptedEventIds.push(eventId);
       }
 
+      // Schedule Check: Events must strictly fall between 08:00 and 17:30 Asia/Ho_Chi_Minh
+      const occurredAt = ev.occurredAt ? new Date(ev.occurredAt) : new Date();
+      if (!isWithinWorkingSchedule(occurredAt)) {
+        // Outside schedule: Accepted so client clears pending queue, but DO NOT accumulate score or persist event
+        continue;
+      }
+
       const state = ev.state === 'IDLE' ? 'IDLE' : 'ACTIVE';
       const activeApp = ev.activeApp ? String(ev.activeApp).slice(0, 120) : 'APP_UNKNOWN';
       const appCategory = ev.appCategory ? String(ev.appCategory).slice(0, 60) : 'OTHER';
@@ -104,7 +121,6 @@ class ComputerActivityService {
       const idleSeconds = Math.max(0, parseInt(ev.idleSeconds, 10) || 0);
       const mouseClicks = Math.max(0, parseInt(ev.mouseClicks, 10) || 0);
       const keyboardCount = Math.max(0, parseInt(ev.keyboardCount, 10) || 0);
-      const occurredAt = ev.occurredAt ? new Date(ev.occurredAt) : new Date();
 
       batchActiveSeconds += activeSeconds;
       batchIdleSeconds += idleSeconds;
@@ -132,8 +148,10 @@ class ComputerActivityService {
       });
     }
 
+    const trackingState = isCurrentTimeInSchedule ? 'TRACKING_ACTIVE' : 'TRACKING_OUTSIDE_SCHEDULE';
+
     if (sanitizedEvents.length === 0) {
-      // All events in batch were deduplicated retries or empty
+      // All events in batch were deduplicated retries, outside schedule, or empty
       const existingStat = await ComputerDailyStat.findOne({
         where: { userId, statDate: todayStr },
       });
@@ -156,6 +174,12 @@ class ComputerActivityService {
         keyboardCount: curKeys,
         rank: higherCount + 1,
         activeMinutes: Math.round(curActive / 60),
+        trackingState,
+        serverSchedule: {
+          timezone: TIMEZONE,
+          workingHours: '08:00 - 17:30',
+          isWithinSchedule: isCurrentTimeInSchedule,
+        },
         serverUpdatedAt: new Date().toISOString(),
       };
     }
@@ -292,6 +316,11 @@ class ComputerActivityService {
       keyboardCount: finalKeys,
       rank: currentRank,
       activeMinutes: Math.round(finalActiveSeconds / 60),
+      trackingState: isCurrentTimeInSchedule ? 'TRACKING_ACTIVE' : 'TRACKING_OUTSIDE_SCHEDULE',
+      serverSchedule: {
+        ...SCHEDULE_METADATA,
+        isWithinSchedule: isCurrentTimeInSchedule,
+      },
       serverUpdatedAt: new Date().toISOString(),
     };
   }
@@ -470,6 +499,11 @@ class ComputerActivityService {
         keyboardCount: dailyStat.keyboardCount || 0,
         rankChange: 0,
         topApp,
+        trackingState: isWithinWorkingSchedule() ? 'TRACKING_ACTIVE' : 'TRACKING_OUTSIDE_SCHEDULE',
+        serverSchedule: {
+          ...SCHEDULE_METADATA,
+          isWithinSchedule: isWithinWorkingSchedule(),
+        },
       };
     }
 
@@ -482,6 +516,11 @@ class ComputerActivityService {
       keyboardCount: 0,
       rankChange: 0,
       topApp: null,
+      trackingState: isWithinWorkingSchedule() ? 'TRACKING_ACTIVE' : 'TRACKING_OUTSIDE_SCHEDULE',
+      serverSchedule: {
+        ...SCHEDULE_METADATA,
+        isWithinSchedule: isWithinWorkingSchedule(),
+      },
     };
   }
 

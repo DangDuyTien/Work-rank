@@ -4,7 +4,7 @@ import { Trophy, Flame, Clock, Users, BookOpen, RefreshCw, CheckCircle2, Tv, Ext
 import { competition, youtube } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton } from '../components/ui';
-
+import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatCountdown(endAt) {
   if (!endAt) return 'Không giới hạn';
@@ -37,54 +37,77 @@ const STATUS_BADGE = {
 
 export default function Arena() {
   const { user, socket } = useAuth();
-  const [season, setSeason] = useState(null);
-  const [myTeam, setMyTeam] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [individualLeaderboard, setIndividualLeaderboard] = useState([]);
-  const [individualChampion, setIndividualChampion] = useState(null);
+  const cachedActive = getCached(CACHE_KEYS.ARENA_ACTIVE());
+  const cachedDetails = cachedActive?.id ? getCached(CACHE_KEYS.ARENA_SEASON_DETAILS(cachedActive.id)) : null;
+
+  const [season, setSeason] = useState(() => cachedDetails?.season || cachedActive || null);
+  const [myTeam, setMyTeam] = useState(() => cachedDetails?.myTeam || null);
+  const [leaderboard, setLeaderboard] = useState(() => cachedDetails?.leaderboard || []);
+  const [individualLeaderboard, setIndividualLeaderboard] = useState(() => cachedDetails?.individualLeaderboard || []);
+  const [individualChampion, setIndividualChampion] = useState(() => cachedDetails?.individualChampion || null);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [challenges, setChallenges] = useState([]);
-  const [seasonRules, setSeasonRules] = useState(null);
-  const [youtubeLeaderboard, setYoutubeLeaderboard] = useState([]);
+  const [challenges, setChallenges] = useState(() => cachedDetails?.challenges || []);
+  const [seasonRules, setSeasonRules] = useState(() => cachedDetails?.seasonRules || null);
+  const [youtubeLeaderboard, setYoutubeLeaderboard] = useState(() => cachedDetails?.youtubeLeaderboard || []);
   const [activeTab, setActiveTab] = useState('leaderboard');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedDetails && !cachedActive);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchActiveArena = useCallback(async () => {
+  const fetchActiveArena = useCallback(async (isManual = false) => {
     try {
+      if (!isManual && !cachedDetails) setLoading(true);
+      else setRefreshing(true);
       setError(null);
-      const active = await competition.getActiveSeason();
+
+      const active = await fetchWithCache(CACHE_KEYS.ARENA_ACTIVE(), () => competition.getActiveSeason(), { ttl: CACHE_TTL.SHORT, force: isManual });
       if (!active) {
         setSeason(null);
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
+      const cacheKey = CACHE_KEYS.ARENA_SEASON_DETAILS(active.id);
+
       const [detailRes, lbRes, indRes, chRes, rulesRes, ytRes] = await Promise.all([
-        competition.getSeasonDetail(active.id),
-        competition.getSeasonLeaderboard(active.id),
-        competition.getSeasonIndividualLeaderboard(active.id).catch(() => ({ rankings: [], individualChampion: null })),
-        competition.getSeasonChallenges(active.id),
-        competition.getSeasonRules(active.id).catch(() => null),
-        youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })),
+        fetchWithCache(`${cacheKey}:detail`, () => competition.getSeasonDetail(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:lb`, () => competition.getSeasonLeaderboard(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:ind`, () => competition.getSeasonIndividualLeaderboard(active.id).catch(() => ({ rankings: [], individualChampion: null })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:ch`, () => competition.getSeasonChallenges(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:rules`, () => competition.getSeasonRules(active.id).catch(() => null), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
+        fetchWithCache(`${cacheKey}:yt`, () => youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
       ]);
 
-      setSeason(detailRes.season || active);
-      setMyTeam(detailRes.myTeam || null);
-      setLeaderboard(lbRes.rankings || []);
-      setIndividualLeaderboard(indRes.rankings || []);
-      setIndividualChampion(indRes.individualChampion || (indRes.rankings?.[0] || null));
-      setChallenges(chRes || []);
-      setSeasonRules(rulesRes);
-      setYoutubeLeaderboard(ytRes.items || []);
+      const bundle = {
+        season: detailRes.season || active,
+        myTeam: detailRes.myTeam || null,
+        leaderboard: lbRes.rankings || [],
+        individualLeaderboard: indRes.rankings || [],
+        individualChampion: indRes.individualChampion || (indRes.rankings?.[0] || null),
+        challenges: chRes || [],
+        seasonRules: rulesRes,
+        youtubeLeaderboard: ytRes.items || [],
+      };
+
+      setCached(cacheKey, bundle, { ttl: CACHE_TTL.MEDIUM });
+
+      setSeason((prev) => (isDeepEqual(prev, bundle.season) ? prev : bundle.season));
+      setMyTeam((prev) => (isDeepEqual(prev, bundle.myTeam) ? prev : bundle.myTeam));
+      setLeaderboard((prev) => (isDeepEqual(prev, bundle.leaderboard) ? prev : bundle.leaderboard));
+      setIndividualLeaderboard((prev) => (isDeepEqual(prev, bundle.individualLeaderboard) ? prev : bundle.individualLeaderboard));
+      setIndividualChampion((prev) => (isDeepEqual(prev, bundle.individualChampion) ? prev : bundle.individualChampion));
+      setChallenges((prev) => (isDeepEqual(prev, bundle.challenges) ? prev : bundle.challenges));
+      setSeasonRules((prev) => (isDeepEqual(prev, bundle.seasonRules) ? prev : bundle.seasonRules));
+      setYoutubeLeaderboard((prev) => (isDeepEqual(prev, bundle.youtubeLeaderboard) ? prev : bundle.youtubeLeaderboard));
     } catch (err) {
       setError(err?.response?.data?.message || 'Không thể tải dữ liệu Đấu Trường Arena');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, []);
-
+  }, [cachedDetails]);
 
   useEffect(() => {
     fetchActiveArena();

@@ -6,6 +6,12 @@ const assert = require('node:assert');
 const { User, ComputerDailyStat, ComputerActivityEvent } = require('../src/models');
 const computerActivityService = require('../src/services/computerActivity.service');
 
+function getWorkHourIso() {
+  const d = new Date();
+  // Set to 10:00:00 VN Time = 03:00:00 UTC (well within 08:00 - 17:30 schedule)
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 3, 0, 0)).toISOString();
+}
+
 describe('Optimistic Local + Server Persistence End-to-End Suite', () => {
   let testUser = null;
   const uniqueEmail = `opt_test_${Date.now()}@workrank.test`;
@@ -42,7 +48,7 @@ describe('Optimistic Local + Server Persistence End-to-End Suite', () => {
         mouseClicks: 3,
         keyboardCount: 2,
         localPoints: 5,
-        occurredAt: new Date().toISOString(),
+        occurredAt: getWorkHourIso(),
       },
     ];
 
@@ -75,7 +81,7 @@ describe('Optimistic Local + Server Persistence End-to-End Suite', () => {
         mouseClicks: 3,
         keyboardCount: 2,
         localPoints: 5,
-        occurredAt: new Date().toISOString(),
+        occurredAt: getWorkHourIso(),
       },
     ];
 
@@ -104,7 +110,7 @@ describe('Optimistic Local + Server Persistence End-to-End Suite', () => {
         idleSeconds: 0,
         mouseClicks: 3,
         keyboardCount: 2,
-        occurredAt: new Date().toISOString(),
+        occurredAt: getWorkHourIso(),
       },
       {
         eventId: 'evt_test_002', // new
@@ -116,7 +122,7 @@ describe('Optimistic Local + Server Persistence End-to-End Suite', () => {
         idleSeconds: 0,
         mouseClicks: 10,
         keyboardCount: 20,
-        occurredAt: new Date().toISOString(),
+        occurredAt: getWorkHourIso(),
       },
     ];
 

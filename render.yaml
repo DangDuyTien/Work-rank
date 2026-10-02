@@ -6,7 +6,7 @@ services:
     region: singapore
     buildCommand: npm --prefix backend ci && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
     startCommand: npm --prefix backend run db:migrate && npm --prefix backend start
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
       - key: NODE_ENV

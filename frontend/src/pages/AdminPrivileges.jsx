@@ -757,12 +757,12 @@ export default function AdminPrivileges() {
 
       {/* ── MODAL THÊM NHÂN SỰ MỚI ── */}
       {createModalOpen && (
-        <div style={{
+        <div className="modal-backdrop-enter" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <UserPlus size={18} color="#b45309" />
@@ -924,12 +924,12 @@ export default function AdminPrivileges() {
 
       {/* ── MODAL CHỈNH SỬA TOÀN BỘ HỒ SƠ ── */}
       {editModalUser && (
-        <div style={{
+        <div className="modal-backdrop-enter" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#b45309" />
@@ -1089,12 +1089,12 @@ export default function AdminPrivileges() {
 
       {/* ── MODAL TRAO GIẢI THƯỞNG ── */}
       {awardModalUser && (
-        <div style={{
+        <div className="modal-backdrop-enter" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)' }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {awardType === 'MVP' ? <Star size={18} color="#7c3aed" /> : <Trophy size={18} color="#d97706" />}
@@ -1185,12 +1185,12 @@ export default function AdminPrivileges() {
 
       {/* ── DRAWER CHI TIẾT NHÂN SỰ ── */}
       {detailDrawerUser && (
-        <div style={{
+        <div className="modal-backdrop-enter" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(3px)',
           display: 'flex', justifyContent: 'flex-end',
         }}>
-          <div style={{
+          <div className="drawer-slide-right-enter" style={{
             background: '#ffffff', width: '100%', maxWidth: 440, height: '100%',
             overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20,
             boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
@@ -1211,9 +1211,9 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <Avatar user={detailDrawerUser} size={56} />
               <div>
-                <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+                <div style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   {detailDrawerUser.name}
-                </h2>
+                </div>
                 <div style={{ color: '#64748b', fontSize: 12 }}>
                   WR-{String(detailDrawerUser.id).padStart(4, '0')} · {detailDrawerUser.email}
                 </div>
@@ -1283,12 +1283,12 @@ export default function AdminPrivileges() {
 
       {/* ── MODAL XÁC NHẬN XÓA NHÂN SỰ ── */}
       {deleteConfirmUser && (
-        <div style={{
+        <div className="modal-backdrop-enter" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(220,38,38,0.3)', borderRadius: 6 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(220,38,38,0.3)', borderRadius: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', marginBottom: 14 }}>
               <Trash2 size={20} />
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>Xác Nhận Xóa Nhân Sự</h3>
