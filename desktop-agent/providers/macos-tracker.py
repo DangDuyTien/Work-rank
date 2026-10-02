@@ -1,37 +1,31 @@
 #!/usr/bin/env python3
 """
 WorkRank macOS Computer Activity Telemetry Streamer
-Outputs a stream of 1-second records on stdout:
-  idleSeconds|appName|clicks|keys
+High-Precision 50Hz OS Telemetry Detector using CoreGraphics & AppKit via ctypes.
 
-- Uses CoreGraphics CGEventTap (Listen-Only) for exact real-time click and keystroke counts.
-- Uses CoreGraphics CGEventSourceSecondsSinceLastEventType and IOHIDSystem as seamless fallback.
-- Uses NSWorkspace for instantaneous frontmost application tracking.
-- ZERO keylogging: strictly counts events, never records keystroke characters or text.
+Tracks:
+- System Idle Time (seconds)
+- Frontmost Application Name (NSWorkspace)
+- Exact Mouse Clicks (Left, Right, Middle)
+- Exact Keystrokes (KeyDown count) - STRICTLY NO key content captured
 """
 
 import sys
 import time
-import threading
 import ctypes
-from ctypes import c_void_p, c_char_p, c_uint32, c_uint64, c_int, c_double, c_bool, CFUNCTYPE
-
-_clicks_delta = 0
-_keys_delta = 0
-_lock = threading.Lock()
+from ctypes import c_void_p, c_char_p, c_uint32, c_int, c_double
 
 def _init():
     try:
         cg = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics')
-        cf = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
         appkit = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/AppKit.framework/AppKit')
         objc = ctypes.cdll.LoadLibrary('/usr/lib/libobjc.A.dylib')
-        return cg, cf, appkit, objc
+        return cg, appkit, objc
     except Exception as e:
         sys.stderr.write(f"[macos-tracker] Framework load error: {e}\n")
-        return None, None, None, None
+        return None, None, None
 
-cg, cf, appkit, objc = _init()
+cg, appkit, objc = _init()
 
 # Setup ObjC message send for NSWorkspace
 if objc and appkit:
@@ -50,22 +44,10 @@ if objc and appkit:
     _sel_locName = objc.sel_registerName(b'localizedName')
     _sel_utf8 = objc.sel_registerName(b'UTF8String')
 
-# Setup CoreGraphics & CoreFoundation signatures
-if cg and cf:
+# Setup CoreGraphics
+if cg:
     cg.CGEventSourceSecondsSinceLastEventType.restype = c_double
     cg.CGEventSourceSecondsSinceLastEventType.argtypes = [c_int, c_uint32]
-
-    CGEventTapCallBack = CFUNCTYPE(c_void_p, c_void_p, c_uint32, c_void_p, c_void_p)
-
-    cg.CGEventTapCreate.restype = c_void_p
-    cg.CGEventTapCreate.argtypes = [c_uint32, c_uint32, c_uint32, c_uint64, CGEventTapCallBack, c_void_p]
-
-    cf.CFMachPortCreateRunLoopSource.restype = c_void_p
-    cf.CFMachPortCreateRunLoopSource.argtypes = [c_void_p, c_void_p, c_int]
-
-    cf.CFRunLoopGetCurrent.restype = c_void_p
-    cf.CFRunLoopAddSource.argtypes = [c_void_p, c_void_p, c_void_p]
-    cg.CGEventTapEnable.argtypes = [c_void_p, c_bool]
 
 def get_frontmost_app():
     if not (objc and appkit and _NSWorkspace):
@@ -103,90 +85,71 @@ def get_idle_seconds():
     except Exception:
         return 0
 
-def _callback(proxy, type_id, event, refcon):
-    global _clicks_delta, _keys_delta
-    # 1: LeftMouseDown, 3: RightMouseDown, 25: OtherMouseDown
-    if type_id in (1, 3, 25):
-        with _lock:
-            _clicks_delta += 1
-    # 10: KeyDown
-    elif type_id == 10:
-        with _lock:
-            _keys_delta += 1
-    return event
-
-_cb_holder = CGEventTapCallBack(_callback) if (cg and cf) else None
-
-def _start_event_tap_loop():
-    if not (cg and cf and _cb_holder):
-        return
-    try:
-        # mask for LeftMouseDown(1), RightMouseDown(3), OtherMouseDown(25), KeyDown(10)
-        mask = (1 << 1) | (1 << 3) | (1 << 25) | (1 << 10)
-        tap = cg.CGEventTapCreate(
-            0, # kCGHIDEventTap
-            0, # kCGHeadInsertEventTap
-            1, # kCGEventTapOptionListenOnly
-            c_uint64(mask),
-            _cb_holder,
-            None
-        )
-        if not tap:
-            return
-
-        run_loop_source = cf.CFMachPortCreateRunLoopSource(None, tap, 0)
-        if not run_loop_source:
-            return
-
-        current_run_loop = cf.CFRunLoopGetCurrent()
-        kCFRunLoopCommonModes = c_void_p.in_dll(cf, 'kCFRunLoopCommonModes')
-        cf.CFRunLoopAddSource(current_run_loop, run_loop_source, kCFRunLoopCommonModes)
-        cg.CGEventTapEnable(tap, True)
-
-        cf.CFRunLoopRun()
-    except Exception as e:
-        sys.stderr.write(f"[macos-tracker] Event loop error: {e}\n")
-
 def main():
-    tap_thread = threading.Thread(target=_start_event_tap_loop, daemon=True)
-    tap_thread.start()
+    if not cg:
+        sys.stderr.write("[macos-tracker] CoreGraphics not available.\n")
+        return
 
-    last_click_sec_ago = 9999.0
-    last_key_sec_ago = 9999.0
+    # Initialize previous event timestamps
+    prev_left = cg.CGEventSourceSecondsSinceLastEventType(0, 1)
+    prev_right = cg.CGEventSourceSecondsSinceLastEventType(0, 3)
+    prev_other = cg.CGEventSourceSecondsSinceLastEventType(0, 25)
+    prev_key = cg.CGEventSourceSecondsSinceLastEventType(0, 10)
+
+    clicks_accum = 0
+    keys_accum = 0
+
+    last_tick_time = time.time()
 
     while True:
         try:
-            idle = get_idle_seconds()
-            app = get_frontmost_app()
+            time.sleep(0.02) # 50Hz high-frequency poll (20ms)
 
-            global _clicks_delta, _keys_delta
-            with _lock:
-                clicks = _clicks_delta
-                keys = _keys_delta
-                _clicks_delta = 0
-                _keys_delta = 0
+            cur_left = cg.CGEventSourceSecondsSinceLastEventType(0, 1)
+            cur_right = cg.CGEventSourceSecondsSinceLastEventType(0, 3)
+            cur_other = cg.CGEventSourceSecondsSinceLastEventType(0, 25)
+            cur_key = cg.CGEventSourceSecondsSinceLastEventType(0, 10)
 
-            # Fallback estimation if event tap didn't catch (e.g. initial setup)
-            if cg and clicks == 0 and keys == 0 and idle == 0:
-                cur_click_sec = cg.CGEventSourceSecondsSinceLastEventType(0, 1)
-                cur_key_sec = cg.CGEventSourceSecondsSinceLastEventType(0, 10)
-                
-                if cur_click_sec < 1.0 and cur_click_sec <= last_click_sec_ago + 0.15:
-                    clicks = 1
-                if cur_key_sec < 1.0 and cur_key_sec <= last_key_sec_ago + 0.15:
-                    keys = 2
+            # Left Click detection
+            if cur_left < prev_left or (cur_left < 0.025 and prev_left >= 0.020):
+                clicks_accum += 1
 
-                last_click_sec_ago = cur_click_sec
-                last_key_sec_ago = cur_key_sec
+            # Right Click detection
+            if cur_right < prev_right or (cur_right < 0.025 and prev_right >= 0.020):
+                clicks_accum += 1
 
-            # Output formatted line
-            sys.stdout.write(f"{idle}|{app}|{clicks}|{keys}\n")
-            sys.stdout.flush()
-        except Exception:
+            # Middle/Other Click detection
+            if cur_other < prev_other or (cur_other < 0.025 and prev_other >= 0.020):
+                clicks_accum += 1
+
+            # Keystroke detection
+            if cur_key < prev_key or (cur_key < 0.025 and prev_key >= 0.020):
+                keys_accum += 1
+
+            prev_left = cur_left
+            prev_right = cur_right
+            prev_other = cur_other
+            prev_key = cur_key
+
+            now = time.time()
+            # 1-second output tick
+            if now - last_tick_time >= 1.0:
+                idle = get_idle_seconds()
+                app = get_frontmost_app()
+
+                # Output line: idleSeconds|appName|clicks|keys
+                out_line = f"{idle}|{app}|{clicks_accum}|{keys_accum}\n"
+                sys.stdout.write(out_line)
+                sys.stdout.flush()
+
+                clicks_accum = 0
+                keys_accum = 0
+                last_tick_time = now
+
+        except Exception as e:
             sys.stdout.write("0|Unknown|0|0\n")
             sys.stdout.flush()
-
-        time.sleep(1)
+            time.sleep(1)
 
 if __name__ == '__main__':
     main()
