@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
-import LiveActivityWave from '../components/LiveActivityWave';
+import CompactLiveWave from '../components/CompactLiveWave';
 import { TabTransition, TableSkeleton } from '../components/ui';
 
 /* =========================================================================
@@ -536,7 +536,7 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
 export default function Leaderboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, socket } = useAuth();
 
   // Hierarchy Navigation States
   // Level 1: scopeMode = 'teams' | 'members' | 'youtube' | 'hall-of-fame'
@@ -610,6 +610,71 @@ export default function Leaderboard() {
   const [hallOfFameData, setHallOfFameData] = useState({ seasonMvps: [], championTeams: [] });
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
+  const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
+
+  // Real-time synchronization for Computer Activity Rankings & Compact Live Wave
+  useEffect(() => {
+    if (scopeMode !== 'activity' || !socket) return;
+
+    socket.emit('activity:wave:join', { period: currentPeriod });
+
+    const onWaveTick = (snapshot) => {
+      if (!snapshot) return;
+      setLiveWaveSnapshot(snapshot);
+
+      // Keep main table ranking synchronized with the canonical real-time stream
+      if (Array.isArray(snapshot.surfers) && snapshot.surfers.length > 0) {
+        setActivityRankings((prev) => {
+          let list = snapshot.surfers;
+          if (debouncedSearch) {
+            const q = debouncedSearch.toLowerCase();
+            list = list.filter(
+              (s) =>
+                (s.name || '').toLowerCase().includes(q) ||
+                (s.teamName || '').toLowerCase().includes(q)
+            );
+          }
+
+          const updatedItems = list.map((s, idx) => ({
+            userId: s.userId,
+            user: {
+              id: s.userId,
+              name: s.name,
+              fullName: s.name,
+              username: s.name,
+              email: s.email,
+              avatar: null,
+              jobTitle: s.jobTitle,
+              department: s.department,
+              isVerified: s.isVerified,
+              teamName: s.teamName && s.teamName !== 'Chưa gán đội' ? s.teamName : null,
+            },
+            name: s.name,
+            activityScore: s.score,
+            activeMinutes: Math.round((s.activeSecondsToday || 0) / 60),
+            topApp: s.currentApp,
+            rank: s.rank || idx + 1,
+            rankChange: s.rankDelta || 0,
+            activityState: s.activityState,
+          }));
+
+          return {
+            items: updatedItems,
+            total: snapshot.totalSurfers || updatedItems.length,
+          };
+        });
+      }
+    };
+
+    socket.on('activity:wave:tick', onWaveTick);
+    socket.on('activity:wave:initial', onWaveTick);
+
+    return () => {
+      socket.emit('activity:wave:leave');
+      socket.off('activity:wave:tick', onWaveTick);
+      socket.off('activity:wave:initial', onWaveTick);
+    };
+  }, [scopeMode, socket, currentPeriod, debouncedSearch]);
 
   // Selectors
   const [seasonList, setSeasonList] = useState([]);
@@ -1603,10 +1668,213 @@ export default function Leaderboard() {
                 </div>
               )}
 
-              {/* 3. BXH ĐỘ NĂNG ĐỘNG (LIVE ACTIVITY WAVE) */}
+              {/* 3. BXH ĐỘ NĂNG ĐỘNG (RESTORED ORIGINAL BXH + COMPACT LIVE WAVE) */}
               {scopeMode === 'activity' && (
-                <div style={{ marginTop: 8 }}>
-                  <LiveActivityWave defaultPeriod={currentPeriod} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {/* Banner Hạng Của Bạn */}
+                  <MyRankBanner
+                    currentUser={currentUser}
+                    items={activityRankings.items || []}
+                    scoreKey="activityScore"
+                    scoreSuffix="pts"
+                    serverRank={activityRankings.items?.find((x) => Number(x.userId) === Number(currentUser?.id))?.rank}
+                    onOpenProfile={(u) => navigate(`/users/${u.userId || u.id}`)}
+                  />
+
+                  {/* BIỂU ĐỒ CHUYỂN ĐỘNG THỨ HẠNG REALTIME (COMPACT LIVE WAVE) */}
+                  <CompactLiveWave
+                    rankings={activityRankings.items || []}
+                    liveSnapshot={liveWaveSnapshot}
+                    currentUser={currentUser}
+                    onSelectUser={(u) => navigate(`/users/${u.userId || u.id}`)}
+                  />
+
+                  {/* Podium Top 3 */}
+                  {activityRankings.items?.length >= 1 && !searchKeyword && (
+                    <DynamicPodium
+                      items={activityRankings.items.map((x) => ({
+                        ...x,
+                        userName: x.user?.fullName || x.user?.username || `User #${x.userId}`,
+                        teamName: x.user?.teamName || null,
+                        avatar: x.user?.avatar,
+                      }))}
+                      nameKey="userName"
+                      scoreKey="activityScore"
+                      scoreSuffix="pts"
+                      onSelect={(u) => navigate(`/users/${u.userId || u.id}`)}
+                    />
+                  )}
+
+                  {/* Bảng Xếp Hạng Độ Năng Động (Nội dung chính) */}
+                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                        Bảng Xếp Hạng Độ Năng Động ({activityRankings.items?.length || 0} người)
+                      </span>
+                      <span style={{ fontSize: 11, color: '#64748b' }}>
+                        Ghi nhận toàn máy tính thông qua Desktop Companion
+                      </span>
+                    </div>
+                    <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', width: 90 }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Nhóm</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Ứng Dụng Chính</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thời Gian</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Năng Động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activityRankings.items?.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
+                              <Sparkles size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                                {searchKeyword ? `Không tìm thấy thành viên phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu hoạt động trong chu kỳ này'}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                                Dữ liệu được ghi nhận tự động thông qua WorkRank Desktop Companion.
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          activityRankings.items.map((u, i) => {
+                            const rank = u.rank || i + 1;
+                            const isMe = currentUser && Number(u.userId) === Number(currentUser.id);
+                            const rankChange = u.rankChange || 0;
+                            const activeMins = u.activeMinutes || 0;
+                            const hours = Math.floor(activeMins / 60);
+                            const mins = activeMins % 60;
+                            const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                            const activityState = u.activityState || (u.activeMinutes > 0 ? 'ACTIVE' : 'OFFLINE');
+
+                            return (
+                              <tr
+                                key={u.userId || i}
+                                style={{
+                                  borderBottom: '1px solid rgba(15,23,42,0.04)',
+                                  background: isMe ? 'rgba(5,150,105,0.04)' : i % 2 === 0 ? '#ffffff' : 'rgba(15,23,42,0.01)',
+                                  cursor: 'pointer',
+                                  transition: 'background .2s ease, transform .15s ease',
+                                }}
+                                onClick={() => navigate(`/users/${u.userId}`)}
+                              >
+                                <td style={{ padding: '12px 16px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: '50%',
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        background: rank === 1 ? '#fef3c7' : rank === 2 ? '#f1f5f9' : rank === 3 ? '#ffedd5' : 'transparent',
+                                        color: rank === 1 ? '#b45309' : rank === 2 ? '#475569' : rank === 3 ? '#c2410c' : '#64748b',
+                                      }}
+                                    >
+                                      {rank}
+                                    </span>
+                                    {rankChange > 0 ? (
+                                      <span style={{ fontSize: 10, color: '#16a34a', display: 'inline-flex', alignItems: 'center' }}>
+                                        <ArrowUp size={11} />
+                                        {rankChange}
+                                      </span>
+                                    ) : rankChange < 0 ? (
+                                      <span style={{ fontSize: 10, color: '#dc2626', display: 'inline-flex', alignItems: 'center' }}>
+                                        <ArrowDown size={11} />
+                                        {Math.abs(rankChange)}
+                                      </span>
+                                    ) : (
+                                      <span style={{ fontSize: 10, color: '#94a3b8' }}>—</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ position: 'relative' }}>
+                                      <div
+                                        style={{
+                                          width: 32,
+                                          height: 32,
+                                          borderRadius: '50%',
+                                          background: '#e2e8f0',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          fontSize: 12,
+                                          fontWeight: 700,
+                                          color: '#475569',
+                                          overflow: 'hidden',
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        {u.user?.avatar ? (
+                                          <img src={getUserAvatar(u.user)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                          initialsFromName(u.user?.fullName || u.user?.username || 'U')
+                                        )}
+                                      </div>
+                                      {/* Small live status dot */}
+                                      <span
+                                        title={activityState === 'ACTIVE' ? 'Đang hoạt động' : (activityState === 'IDLE' ? 'Tạm nghỉ' : 'Ngoại tuyến')}
+                                        style={{
+                                          position: 'absolute',
+                                          bottom: -1,
+                                          right: -1,
+                                          width: 8,
+                                          height: 8,
+                                          borderRadius: '50%',
+                                          background: activityState === 'ACTIVE' ? '#10b981' : (activityState === 'IDLE' ? '#f59e0b' : '#94a3b8'),
+                                          border: '1.5px solid #ffffff',
+                                        }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <span>{u.user?.fullName || u.user?.username || `User #${u.userId}`}</span>
+                                        {isMe && (
+                                          <span style={{ fontSize: 9, fontWeight: 700, background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3 }}>
+                                            BẠN
+                                          </span>
+                                        )}
+                                        <VerifiedBadge user={u.user} size={13} />
+                                      </div>
+                                      {u.user?.jobTitle && <JobTitleBadge title={u.user.jobTitle} compact />}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '12px 16px', color: '#475569' }}>
+                                  {u.user?.teamName || '—'}
+                                </td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  {u.topApp ? (
+                                    <span style={{ fontSize: 11, background: '#f1f5f9', color: '#334155', padding: '3px 8px', borderRadius: 4, fontWeight: 500 }}>
+                                      {u.topApp}
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#94a3b8' }}>—</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'center', color: '#334155', fontWeight: 500 }}>
+                                  {durationStr}
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                  <div style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>
+                                    {fmtNum(u.activityScore)} <span style={{ fontSize: 10, fontWeight: 500, color: '#64748b' }}>pts</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 

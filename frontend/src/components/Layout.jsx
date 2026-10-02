@@ -71,10 +71,29 @@ export default function Layout() {
   const navigate = useNavigate();
 
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileDrawerClosing, setMobileDrawerClosing] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifClosing, setNotifClosing] = useState(false);
   const [accountAvatarUrl, setAccountAvatarUrl] = useState('');
   const [notifications, setNotifications] = useState(() => loadStoredNotifications(user?.id));
+
+  // Animated close helpers
+  const closeDrawer = useCallback(() => {
+    setMobileDrawerClosing(true);
+    setTimeout(() => {
+      setMobileDrawerOpen(false);
+      setMobileDrawerClosing(false);
+    }, 220); // --motion-normal
+  }, []);
+
+  const closeNotif = useCallback(() => {
+    setNotifClosing(true);
+    setTimeout(() => {
+      setNotifOpen(false);
+      setNotifClosing(false);
+    }, 140); // --motion-fast
+  }, []);
 
   const dropRef = useRef(null);
   const notificationRef = useRef(null);
@@ -171,18 +190,19 @@ export default function Layout() {
         setDropOpen(false);
       }
       if (notificationRef.current && !notificationRef.current.contains(e.target)) {
-        setNotifOpen(false);
+        if (notifOpen && !notifClosing) closeNotif();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [notifOpen, notifClosing, closeNotif]);
 
   // Close mobile drawer on route change
   useEffect(() => {
-    setMobileDrawerOpen(false);
+    if (mobileDrawerOpen && !mobileDrawerClosing) closeDrawer();
     setDropOpen(false);
-    setNotifOpen(false);
+    if (notifOpen && !notifClosing) closeNotif();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -211,10 +231,10 @@ export default function Layout() {
       </aside>
 
       {/* Mobile Off-Canvas Navigation Drawer */}
-      {mobileDrawerOpen && (
+      {(mobileDrawerOpen) && (
         <div
-          className="workrank-mobile-drawer-overlay modal-backdrop-enter"
-          onClick={() => setMobileDrawerOpen(false)}
+          className={`workrank-mobile-drawer-overlay ${mobileDrawerClosing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}
+          onClick={closeDrawer}
           style={{
             position: 'fixed',
             inset: 0,
@@ -225,7 +245,7 @@ export default function Layout() {
           }}
         >
           <aside
-            className="workrank-mobile-drawer drawer-slide-enter"
+            className={`workrank-mobile-drawer ${mobileDrawerClosing ? 'drawer-slide-exit' : 'drawer-slide-enter'}`}
             onClick={(e) => e.stopPropagation()}
             style={{
               width: 280,
@@ -249,7 +269,7 @@ export default function Layout() {
             >
               <button
                 type="button"
-                onClick={() => setMobileDrawerOpen(false)}
+                onClick={closeDrawer}
                 aria-label="Đóng menu"
                 style={{
                   width: 32,
@@ -270,7 +290,7 @@ export default function Layout() {
             <Sidebar
               user={user}
               isAdmin={isAdmin}
-              onNavigate={() => setMobileDrawerOpen(false)}
+              onNavigate={closeDrawer}
               isMobile
             />
           </aside>
@@ -346,9 +366,12 @@ export default function Layout() {
                 className="app-icon-action"
                 aria-label="Thông báo"
                 onClick={() => {
-                  const nextOpen = !notifOpen;
-                  setNotifOpen(nextOpen);
-                  if (nextOpen) markNotificationsRead();
+                  if (notifOpen) {
+                    closeNotif();
+                  } else {
+                    setNotifOpen(true);
+                    markNotificationsRead();
+                  }
                 }}
                 style={{
                   position: 'relative',
@@ -362,7 +385,7 @@ export default function Layout() {
                   cursor: 'pointer',
                   color: notifOpen ? '#111111' : '#666666',
                   borderRadius: 6,
-                  transition: 'background 0.15s ease, color 0.15s ease',
+                  transition: 'background var(--motion-fast) ease, color var(--motion-fast) ease',
                 }}
               >
                 <Bell size={17} />
@@ -389,7 +412,9 @@ export default function Layout() {
               </button>
 
               {notifOpen && (
-                <div style={{
+                <div
+                  className={notifClosing ? 'dropdown-exit' : 'motion-slide-down'}
+                  style={{
                   position: 'absolute',
                   top: 'calc(100% + 8px)',
                   right: -42,
@@ -400,7 +425,6 @@ export default function Layout() {
                   borderRadius: 10,
                   overflow: 'hidden',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.08)',
-                  animation: 'slide-down 0.15s ease',
                   zIndex: 220,
                 }}>
                   <div style={{

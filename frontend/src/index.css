@@ -106,11 +106,26 @@
   --space-5:           20px;
   --space-6:           24px;
 
-  /* ── Transitions ── */
-  --transition-fast:   120ms ease;
-  --transition-normal: 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-page:   200ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-dropdown: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* ── Global Motion System ── */
+  /* Duration tokens */
+  --motion-instant:  80ms;
+  --motion-fast:     140ms;   /* hover, press, icon, small status */
+  --motion-normal:   220ms;   /* dropdown, tab, accordion, card expand */
+  --motion-slow:     340ms;   /* page, drawer, large layout change */
+  --motion-xslow:    500ms;   /* profile reveal, onboarding */
+
+  /* Easing tokens */
+  --ease-standard:   cubic-bezier(0.4, 0.0, 0.2, 1);   /* most UI transitions */
+  --ease-enter:      cubic-bezier(0.0, 0.0, 0.2, 1);   /* elements entering */
+  --ease-exit:       cubic-bezier(0.4, 0.0, 1, 1);     /* elements leaving */
+  --ease-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);   /* expressive / modal */
+  --ease-spring:     cubic-bezier(0.16, 1, 0.3, 1);    /* existing spring — keep compat */
+
+  /* Semantic transition shorthands (backward-compat aliases) */
+  --transition-fast:      var(--motion-fast) ease;
+  --transition-normal:    var(--motion-normal) var(--ease-spring);
+  --transition-page:      var(--motion-normal) var(--ease-spring);
+  --transition-dropdown:  var(--motion-fast) var(--ease-spring);
 
   /* ── Typography Tokens (Standardized Hierarchy & Vietnamese Diacritic Safety) ── */
   --font-sans:           'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -398,9 +413,103 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
 }
 
 .drawer-slide-enter {
-  animation: drawer-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: drawer-enter var(--motion-slow) var(--ease-emphasized) forwards;
 }
 
+/* ── Drawer exit animation ── */
+@keyframes drawer-exit {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(-100%); opacity: 0; }
+}
+.drawer-slide-exit {
+  animation: drawer-exit var(--motion-normal) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+
+/* ── Overlay exit animation ── */
+@keyframes overlay-exit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.modal-backdrop-exit {
+  animation: overlay-exit var(--motion-normal) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+
+/* ── Modal dialog exit animation ── */
+@keyframes modal-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.97); }
+}
+.modal-dialog-exit {
+  animation: modal-exit var(--motion-fast) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+
+/* ── Dropdown / popover exit ── */
+@keyframes dropdown-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+.dropdown-exit {
+  animation: dropdown-exit var(--motion-fast) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+
+/* ── AnimatedCollapse — CSS grid trick for smooth height 0 ↔ auto ── */
+/* Usage: wrap content in .animated-collapse > .animated-collapse__inner */
+.animated-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-normal) var(--ease-spring);
+}
+.animated-collapse.is-open {
+  grid-template-rows: 1fr;
+}
+.animated-collapse__inner {
+  overflow: hidden;
+  /* Opacity fade for extra polish */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--motion-fast) var(--ease-enter),
+    transform var(--motion-fast) var(--ease-enter);
+}
+.animated-collapse.is-open > .animated-collapse__inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Fade slide primitives ── */
+.motion-fade-in-up {
+  animation: page-enter var(--motion-normal) var(--ease-spring) forwards;
+}
+.motion-fade-in {
+  animation: fade-in var(--motion-normal) var(--ease-enter) forwards;
+}
+.motion-slide-down {
+  animation: slide-down var(--motion-fast) var(--ease-spring) forwards;
+}
+
+/* ── Hover lift primitive (apply to interactive cards) ── */
+.motion-hover-lift {
+  transition:
+    transform var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard);
+}
+.motion-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* ── Tab sliding indicator ── */
+.motion-tab-indicator {
+  transition: left var(--motion-normal) var(--ease-spring),
+              width var(--motion-normal) var(--ease-spring),
+              background-color var(--motion-fast) ease;
+}
+
+/* ── Skeleton shimmer ── */
 .skeleton-box {
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
@@ -411,6 +520,9 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
 .row-highlight-active {
   animation: row-highlight 1.5s ease forwards;
 }
+
+
+
 
 @keyframes glow-pulse {
   0%, 100% { box-shadow: none; }
@@ -1127,7 +1239,8 @@ tbody tr:hover { background: rgba(0, 0, 0, 0.025) !important; }
   font-size: 12px;
   font-weight: var(--font-medium);
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+
 }
 
 .ui-segmented__button.is-active {
@@ -8502,8 +8615,9 @@ html[data-workrank-contrast="true"] .profile-level-card {
   font-size: 14px;
   font-weight: 900;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), background var(--motion-fast) ease;
 }
+
 
 .home-primary-action:hover {
   transform: translateY(-1px);
@@ -8591,8 +8705,9 @@ html[data-workrank-contrast="true"] .profile-level-card {
   border-radius: 0;
   background: #ffffff;
   box-shadow: none;
-  transition: all 0.25s ease;
+  transition: transform var(--motion-normal) var(--ease-standard), border-color var(--motion-normal) ease;
 }
+
 
 .home-feature-item:hover {
   transform: translateY(-3px);
@@ -9650,7 +9765,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
   position: fixed;
   background: rgba(15, 23, 42, 0.62);
   pointer-events: auto;
-  transition: all 0.18s ease;
+  transition: top var(--motion-fast) ease, left var(--motion-fast) ease, width var(--motion-fast) ease, height var(--motion-fast) ease;
 }
 
 .product-tour-mask-top,
@@ -9685,7 +9800,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
     0 0 0 7px var(--accent-border),
     0 24px 60px rgba(15, 23, 42, 0.28);
   pointer-events: none;
-  transition: all 0.18s ease;
+  transition: top var(--motion-fast) ease, left var(--motion-fast) ease, width var(--motion-fast) ease, height var(--motion-fast) ease;
 }
 
 .product-tour-tooltip {
@@ -9921,13 +10036,23 @@ html[data-workrank-contrast="true"] .profile-level-card {
   .page-transition,
   .tab-transition,
   .modal-dialog-enter,
+  .modal-dialog-exit,
+  .modal-backdrop-exit,
   .drawer-slide-enter,
+  .drawer-slide-exit,
+  .dropdown-exit,
+  .motion-fade-in-up,
+  .motion-fade-in,
+  .motion-slide-down,
+  .animated-collapse,
+  .animated-collapse__inner,
   .skeleton-box,
   .ui-spinner,
   .job-badge-tier-6::after,
   .job-badge-tier-5::after {
     transform: none !important;
     animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -9947,7 +10072,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
   line-height: 1 !important;
   border-radius: 4px;
   position: relative;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease;
   vertical-align: middle;
   white-space: nowrap !important;
   user-select: none;

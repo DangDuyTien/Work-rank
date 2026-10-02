@@ -265,10 +265,13 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                 </div>
               )}
 
-              {/* Child Items */}
-              {(!group.collapsible || isExpanded) && (
+              {/* Child Items — AnimatedCollapse: CSS grid-template-rows trick */}
+              <div
+                className={`animated-collapse${isExpanded ? ' is-open' : ''}`}
+                aria-hidden={!isExpanded}
+              >
                 <div
-                  className="workrank-nav-subitems tab-transition"
+                  className="animated-collapse__inner workrank-nav-subitems"
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -277,7 +280,6 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     paddingLeft: group.collapsible ? 10 : 0,
                     borderLeft: group.collapsible ? '1px solid rgba(0,0,0,0.06)' : 'none',
                     marginLeft: group.collapsible ? 14 : 0,
-                    minHeight: 'auto',
                   }}
                 >
                   {group.items.map((item) => {
@@ -299,6 +301,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                         aria-current={isActive ? 'page' : undefined}
                         onClick={handleLinkClick}
                         title={item.description || item.label}
+                        tabIndex={isExpanded ? 0 : -1}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -312,7 +315,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           textDecoration: 'none',
                           lineHeight: 1.3,
                           position: 'relative',
-                          transition: 'background 0.15s ease, color 0.15s ease',
+                          transition: 'background var(--motion-fast) ease, color var(--motion-fast) ease',
                         }}
                         onMouseEnter={(e) => {
                           if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
@@ -371,7 +374,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     );
                   })}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

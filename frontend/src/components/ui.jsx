@@ -174,6 +174,29 @@ export function TabTransition({ children, className = '', minHeight = 280, style
   );
 }
 
+/**
+ * AnimatedCollapse — smooth height 0 ↔ auto using CSS grid trick.
+ * No JavaScript height measurement needed.
+ *
+ * Usage:
+ *   <AnimatedCollapse isOpen={expanded}>
+ *     <div>content</div>
+ *   </AnimatedCollapse>
+ */
+export function AnimatedCollapse({ isOpen, children, className = '', style }) {
+  return (
+    <div
+      className={cx('animated-collapse', isOpen && 'is-open', className)}
+      aria-hidden={!isOpen}
+      style={style}
+    >
+      <div className="animated-collapse__inner">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function Skeleton({ width, height = 18, radius = 4, className = '', style, variant = 'rect' }) {
   const isCircle = variant === 'circle' || variant === 'avatar';
   return (
