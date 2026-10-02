@@ -75,6 +75,7 @@ class ComputerActivityService {
     }
 
     const sanitizedEvents = [];
+    const acceptedEventIds = [];
     const todayStr = getTodayDateString();
 
     let batchActiveSeconds = 0;
@@ -84,10 +85,15 @@ class ComputerActivityService {
     const batchApps = {};
 
     for (const ev of events) {
-      // Idempotency check: Ignore duplicate eventIds from retries/reconnects
       const eventId = ev.eventId || ev.id;
+      // Idempotency check: If already processed, mark as accepted (so client can clear pending) but do not re-accumulate
       if (eventId && isEventDuplicate(`${userId}_${eventId}`)) {
+        acceptedEventIds.push(eventId);
         continue;
+      }
+
+      if (eventId) {
+        acceptedEventIds.push(eventId);
       }
 
       const state = ev.state === 'IDLE' ? 'IDLE' : 'ACTIVE';
@@ -127,7 +133,31 @@ class ComputerActivityService {
     }
 
     if (sanitizedEvents.length === 0) {
-      return { received: events.length, processed: 0, statDate: todayStr };
+      // All events in batch were deduplicated retries or empty
+      const existingStat = await ComputerDailyStat.findOne({
+        where: { userId, statDate: todayStr },
+      });
+      const curScore = existingStat?.activityScore || 0;
+      const curClicks = existingStat?.mouseClicks || 0;
+      const curKeys = existingStat?.keyboardCount || 0;
+      const curActive = existingStat?.activeSeconds || 0;
+      const higherCount = await ComputerDailyStat.count({
+        where: { statDate: todayStr, activityScore: { [Op.gt]: curScore } },
+      });
+      return {
+        success: true,
+        received: events.length,
+        processed: 0,
+        acceptedEventIds,
+        statDate: todayStr,
+        serverPts: curScore,
+        activityScore: curScore,
+        mouseClicks: curClicks,
+        keyboardCount: curKeys,
+        rank: higherCount + 1,
+        activeMinutes: Math.round(curActive / 60),
+        serverUpdatedAt: new Date().toISOString(),
+      };
     }
 
     let finalScore = 0;
@@ -236,12 +266,14 @@ class ComputerActivityService {
       if (liveWaveService.io) {
         liveWaveService.io.emit('activity:pts:updated', {
           userId: Number(userId),
+          serverPts: finalScore,
           activityScore: finalScore,
           activeMinutes: Math.round(finalActiveSeconds / 60),
           mouseClicks: finalClicks,
           keyboardCount: finalKeys,
           rank: currentRank,
           topApp: lastEvent.activeApp,
+          serverUpdatedAt: new Date().toISOString(),
         });
       }
     } catch (err) {
@@ -249,14 +281,18 @@ class ComputerActivityService {
     }
 
     return {
+      success: true,
       received: events.length,
       processed: sanitizedEvents.length,
+      acceptedEventIds,
       statDate: todayStr,
+      serverPts: finalScore,
       activityScore: finalScore,
       mouseClicks: finalClicks,
       keyboardCount: finalKeys,
       rank: currentRank,
       activeMinutes: Math.round(finalActiveSeconds / 60),
+      serverUpdatedAt: new Date().toISOString(),
     };
   }
 

@@ -125,29 +125,39 @@ export default function Dashboard() {
   // Modal state
   const [activeModalChannelId, setActiveModalChannelId] = useState(null);
 
-  // Global activity tracking controller
+  // Global activity tracking controller with Optimistic Local Scoring
   const {
     isTrackingActive,
     toggleTracking,
     agentStatus: liveAgentStatus,
-    clicks,
-    keyboard,
+    displayPts,
+    displayClicks,
+    displayKeys,
+    displayActiveMinutes,
+    serverPts,
+    pendingPts,
+    syncStatus,
+    ptsPerHour: livePtsPerHour,
+    avgApm: liveAvgApm,
     lastEventTime,
     trackingStatus,
+    updateServerSummary,
   } = useActivityStats();
 
   const ptsPerHour = useMemo(() => {
-    const score = Number(myActivity?.activityScore || 0);
-    const mins = Number(myActivity?.activeMinutes || 0);
+    if (livePtsPerHour) return livePtsPerHour;
+    const score = Number(displayPts || myActivity?.activityScore || 0);
+    const mins = Number(displayActiveMinutes || myActivity?.activeMinutes || 0);
     if (mins >= 1 && score > 0) {
       return Math.round((score / mins) * 60);
     }
     return null;
-  }, [myActivity?.activityScore, myActivity?.activeMinutes]);
+  }, [livePtsPerHour, displayPts, displayActiveMinutes, myActivity?.activityScore, myActivity?.activeMinutes]);
 
   const avgApm = useMemo(() => {
-    const score = Number(myActivity?.activityScore || 0);
-    const mins = Number(myActivity?.activeMinutes || 0);
+    if (liveAvgApm) return liveAvgApm;
+    const score = Number(displayPts || myActivity?.activityScore || 0);
+    const mins = Number(displayActiveMinutes || myActivity?.activeMinutes || 0);
     if (mins >= 1 && score > 0) {
       return Math.round(score / mins);
     }
@@ -155,7 +165,7 @@ export default function Dashboard() {
       return Math.round(ptsPerHour / 60);
     }
     return null;
-  }, [myActivity?.activityScore, myActivity?.activeMinutes, ptsPerHour]);
+  }, [liveAvgApm, displayPts, displayActiveMinutes, myActivity?.activityScore, myActivity?.activeMinutes, ptsPerHour]);
 
   const checkAgentStatus = useCallback(async () => {
     const status = await desktopAgentIpc.checkStatus();
@@ -210,8 +220,10 @@ export default function Dashboard() {
 
       if (activityRes?.data) {
         setMyActivity(activityRes.data);
+        updateServerSummary(activityRes.data);
       } else if (activityRes) {
         setMyActivity(activityRes);
+        updateServerSummary(activityRes);
       }
 
       if (rankingsRes?.items) {
@@ -244,7 +256,7 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     }
-  }, [isAdmin, ytPeriod]);
+  }, [isAdmin, ytPeriod, updateServerSummary]);
 
   // Load team drilldown if selected
   const fetchTeamDrilldown = useCallback(async (teamId, period) => {
@@ -318,15 +330,19 @@ export default function Dashboard() {
         const myId = Number(user?.id || user?.userId);
         const me = snapshot.surfers.find((s) => Number(s.userId) === myId);
         if (me) {
-          setMyActivity((prev) => ({
-            ...prev,
+          const serverUpdate = {
             rank: me.rank,
             activityScore: me.score,
             rankChange: me.rankDelta || 0,
             activeMinutes: Math.round((me.activeSecondsToday || 0) / 60),
-            topApp: me.currentApp || prev?.topApp,
+            topApp: me.currentApp,
             activityState: me.activityState,
+          };
+          setMyActivity((prev) => ({
+            ...prev,
+            ...serverUpdate,
           }));
+          updateServerSummary(serverUpdate);
         }
       }
     };
@@ -335,13 +351,19 @@ export default function Dashboard() {
       if (!data) return;
       const myId = Number(user?.id || user?.userId);
       if (Number(data.userId) === myId) {
+        const serverUpdate = {
+          rank: data.rank !== undefined ? data.rank : undefined,
+          activityScore: data.activityScore !== undefined ? data.activityScore : data.serverPts,
+          activeMinutes: data.activeMinutes !== undefined ? data.activeMinutes : undefined,
+          mouseClicks: data.mouseClicks !== undefined ? data.mouseClicks : undefined,
+          keyboardCount: data.keyboardCount !== undefined ? data.keyboardCount : undefined,
+          topApp: data.topApp || undefined,
+        };
         setMyActivity((prev) => ({
           ...prev,
-          rank: data.rank !== undefined ? data.rank : prev?.rank,
-          activityScore: data.activityScore !== undefined ? data.activityScore : prev?.activityScore,
-          activeMinutes: data.activeMinutes !== undefined ? data.activeMinutes : prev?.activeMinutes,
-          topApp: data.topApp || prev?.topApp,
+          ...serverUpdate,
         }));
+        updateServerSummary(serverUpdate);
       }
     };
 
@@ -579,20 +601,37 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Điểm Năng Động (PTS)</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#059669' }}>
-              {(myActivity?.activityScore || 0).toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
+          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: '#64748b' }}>Điểm Năng Động (PTS)</span>
+              {pendingPts > 0 && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: '#d97706',
+                    background: '#fef3c7',
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                  }}
+                  title="Điểm đã ghi nhận ngay tức thì, đang lưu nền lên máy chủ"
+                >
+                  +{pendingPts} đang lưu
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              {displayPts.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              1 click = 1 pt • 1 phím = 1 pt
+              {pendingPts > 0 ? 'Tức thì • Đang đồng bộ máy chủ...' : '1 click = 1 pt • 1 phím = 1 pt'}
             </div>
           </div>
 
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Chi tiết thao tác</div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
-              {(myActivity?.mouseClicks || clicks || 0).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • {(myActivity?.keyboardCount || keyboard || 0).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
+              {displayClicks.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • {displayKeys.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               Tổng thao tác chuột & bàn phím
@@ -612,7 +651,7 @@ export default function Dashboard() {
           <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Thời gian làm việc</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
-              {myActivity?.activeMinutes ? `${Math.floor(myActivity.activeMinutes / 60)}h ${myActivity.activeMinutes % 60}m` : '0m'}
+              {displayActiveMinutes ? `${Math.floor(displayActiveMinutes / 60)}h ${displayActiveMinutes % 60}m` : (myActivity?.activeMinutes ? `${Math.floor(myActivity.activeMinutes / 60)}h ${myActivity.activeMinutes % 60}m` : '0m')}
             </div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
               {myActivity?.topApp ? `Chủ yếu: ${myActivity.topApp}` : 'Ghi nhận toàn máy tính'}
