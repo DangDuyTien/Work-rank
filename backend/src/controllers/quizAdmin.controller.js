@@ -63,6 +63,55 @@ const uploadImage = [
   },
 ];
 
+const audioFileFilter = (req, file, cb) => {
+  const allowedAudioTypes = [
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/ogg',
+    'audio/wav',
+    'audio/x-wav',
+    'audio/aac',
+    'audio/x-m4a',
+    'audio/mp4',
+    'audio/webm',
+    'audio/flac',
+  ];
+  if (allowedAudioTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Chỉ chấp nhận các định dạng âm thanh: MP3, OGG, WAV, AAC, M4A, WEBM, FLAC'), false);
+  }
+};
+
+const audioUpload = multer({
+  storage,
+  fileFilter: audioFileFilter,
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 20MB limit
+  },
+});
+
+/**
+ * Handle single audio upload
+ */
+const uploadAudio = [
+  audioUpload.single('audio'),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn tệp âm thanh để tải lên' });
+    }
+
+    const publicUrl = `/uploads/quiz/${req.file.filename}`;
+    return res.json({
+      success: true,
+      url: publicUrl,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+    });
+  },
+];
+
 /**
  * Helper to generate random 8-character unique share code
  */
@@ -978,6 +1027,7 @@ async function getSharedQuizSet(req, res) {
 
 module.exports = {
   uploadImage,
+  uploadAudio,
   listQuestions,
   getQuestion,
   createQuestion,

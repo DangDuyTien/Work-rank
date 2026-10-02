@@ -10,6 +10,8 @@ router.get('/leaderboard', auth, youtubeController.getLeaderboard);
 
 // Member / Scoped Endpoints (Authenticated & Team Scoped)
 router.get('/overview', auth, youtubeController.getOverview);
+router.get('/history', auth, youtubeController.getCompanyHistory);
+router.get('/my-overview', auth, youtubeController.getMyOverview);
 router.get('/my-team', auth, youtubeController.getMyTeam);
 router.get('/teams/:teamId', auth, youtubeController.getTeamDetails);
 router.get('/channels', auth, youtubeController.listChannels);

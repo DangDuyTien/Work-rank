@@ -154,6 +154,9 @@ GrandIndividualLeaderboardProjection.belongsTo(Team, { foreignKey: 'teamId', as:
 Team.hasMany(YouTubeChannel, { foreignKey: 'teamId', as: 'youtubeChannels' });
 YouTubeChannel.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
 
+User.hasMany(YouTubeChannel, { foreignKey: 'assignedUserId', as: 'assignedYouTubeChannels' });
+YouTubeChannel.belongsTo(User, { foreignKey: 'assignedUserId', as: 'assignedUser' });
+
 YouTubeChannel.hasMany(YouTubeChannelMetric, { foreignKey: 'channelId', as: 'metrics' });
 YouTubeChannelMetric.belongsTo(YouTubeChannel, { foreignKey: 'channelId', as: 'channel' });
 

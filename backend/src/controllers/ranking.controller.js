@@ -21,6 +21,7 @@ async function getTeams(req, res) {
     grandId,
     limit,
     page,
+    currentUserTeamId: req.user?.teamId,
   });
   return res.json({ success: true, ...result });
 }
@@ -35,6 +36,7 @@ async function getIndividuals(req, res) {
     search,
     limit,
     page,
+    currentUserId: req.user?.id,
   });
   return res.json({ success: true, ...result });
 }

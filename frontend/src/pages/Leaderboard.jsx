@@ -231,8 +231,9 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
             <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 95 }}>
               {getName(top2).split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
-              {fmtNum(getScore(top2))}
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span>{fmtNum(getScore(top2))}</span>
+              <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
             <div style={{
               width: '100%', height: 90,
@@ -257,6 +258,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               cursor: onSelect ? 'pointer' : 'default',
               gap: 6,
               flex: 1.25,
+              maxWidth: items.length === 1 ? 240 : 'none',
             }}
           >
             <Crown size={24} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 2 }} />
@@ -280,8 +282,9 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
             <div style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 115 }}>
               {getName(top1).split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
-              {fmtNum(getScore(top1))}
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>{fmtNum(getScore(top1))}</span>
+              <span style={{ fontSize: 11, color: '#d97706', fontWeight: 600 }}>{scoreSuffix}</span>
             </div>
             <div style={{
               width: '100%', height: 130,
@@ -328,8 +331,9 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
             <div style={{ fontSize: 12, fontWeight: 600, color: '#d97706', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 95 }}>
               {getName(top3).split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace" }}>
-              {fmtNum(getScore(top3))}
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span>{fmtNum(getScore(top3))}</span>
+              <span style={{ fontSize: 10, color: '#b45309', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
             <div style={{
               width: '100%', height: 70,
@@ -415,12 +419,19 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
  * BANNER HẠNG CỦA BẠN (My Rank Card)
  * ========================================================================= */
 
-function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'score', scoreSuffix = 'pts', onOpenProfile }) {
-  if (!currentUser || !items.length) return null;
+function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'score', scoreSuffix = 'pts', onOpenProfile, serverRank }) {
+  if (!currentUser) return null;
 
-  const myEntry = isTeam
-    ? items.find((r) => Number(r.teamId) === Number(currentUser.teamId))
+  let myEntry = isTeam
+    ? (currentUser.teamId ? items.find((r) => Number(r.teamId) === Number(currentUser.teamId)) : null)
     : items.find((r) => Number(r.userId || r.id) === Number(currentUser.id) || r.userName === currentUser.name);
+
+  if (!myEntry && serverRank) {
+    myEntry = {
+      ...serverRank,
+      [scoreKey]: serverRank.score,
+    };
+  }
 
   if (!myEntry) {
     return (
@@ -431,11 +442,11 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
     );
   }
 
-  const myRank = myEntry.rank || items.indexOf(myEntry) + 1;
+  const myRank = myEntry.rank || (items.length > 0 ? items.indexOf(myEntry) + 1 : 1);
   const myScore = myEntry[scoreKey] ?? myEntry.totalScore ?? myEntry.grandPoints ?? myEntry.score ?? 0;
-  const leader = items[0];
+  const leader = items[0] || myEntry;
   const leaderScore = leader?.[scoreKey] ?? leader?.totalScore ?? leader?.grandPoints ?? leader?.score ?? 0;
-  const gap = Math.max(0, Number(leaderScore) - Number(myScore));
+  const gap = myEntry.gap !== undefined ? myEntry.gap : Math.max(0, Number(leaderScore) - Number(myScore));
 
   return (
     <div
@@ -549,8 +560,8 @@ export default function Leaderboard() {
     scopeMode = 'teams';
   }
 
-  // Level 2: selectedTeamId (if present, user is drilling down into a Team)
-  const selectedTeamId = searchParams.get('teamId') || null;
+  // Level 2: selectedTeamId (if present, user is drilling down into a Team, supports teamId and groupId)
+  const selectedTeamId = searchParams.get('teamId') || searchParams.get('groupId') || null;
   // Team sub-view: 'members' | 'youtube'
   const teamSubView = searchParams.get('teamView') || 'members';
 
@@ -576,6 +587,15 @@ export default function Leaderboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState(urlSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchKeyword);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   // Data states
   const [teamRankings, setTeamRankings] = useState({ items: [], total: 0 });
@@ -630,7 +650,7 @@ export default function Leaderboard() {
           rankingsApi.getIndividuals({
             scope: currentPeriod,
             teamId: numTeamId,
-            search: searchKeyword || undefined,
+            search: debouncedSearch || undefined,
             limit: 100,
           }),
           youtubeApi.getLeaderboard({
@@ -644,11 +664,15 @@ export default function Leaderboard() {
         setMemberRankings(teamMembersRes);
         setTeamChannels(teamYtRes.items || []);
 
-        // Find team name from teams list or member rows
-        const currentTeamRow = teamRankings.items?.find((t) => Number(t.teamId) === numTeamId);
-        setSelectedTeamDetails(currentTeamRow || {
-          teamId: numTeamId,
-          teamName: teamMembersRes.items?.[0]?.teamName || `Team #${numTeamId}`,
+        setSelectedTeamDetails((prev) => {
+          if (prev && Number(prev.teamId || prev.id) === numTeamId && prev.teamName && !prev.teamName.startsWith('Team #')) {
+            return prev;
+          }
+          const foundName = teamMembersRes.items?.[0]?.teamName;
+          return {
+            teamId: numTeamId,
+            teamName: foundName || prev?.teamName || `Team #${numTeamId}`,
+          };
         });
       } else {
         // LEVEL 1: COMPANY / ALL
@@ -665,7 +689,7 @@ export default function Leaderboard() {
             scope: currentPeriod,
             seasonId: urlSeasonId || undefined,
             grandId: urlGrandId || undefined,
-            search: searchKeyword || undefined,
+            search: debouncedSearch || undefined,
             limit: 100,
           });
           setMemberRankings(res);
@@ -673,7 +697,7 @@ export default function Leaderboard() {
           const res = await rankingsApi.getYouTube({
             view: 'channels',
             sortBy: urlMetric,
-            search: searchKeyword || undefined,
+            search: debouncedSearch || undefined,
             limit: 100,
           });
           setYoutubeRankings(res);
@@ -689,7 +713,7 @@ export default function Leaderboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [scopeMode, selectedTeamId, currentPeriod, urlSeasonId, urlGrandId, urlMetric, searchKeyword, teamRankings.items]);
+  }, [scopeMode, selectedTeamId, currentPeriod, urlSeasonId, urlGrandId, urlMetric, debouncedSearch]);
 
   useEffect(() => {
     fetchData();
@@ -698,6 +722,7 @@ export default function Leaderboard() {
   // Drill-down handlers
   const handleDrillDownTeam = (team) => {
     const tId = team.teamId || team.id;
+    setSelectedTeamDetails(team);
     const params = new URLSearchParams(searchParams);
     params.set('teamId', String(tId));
     params.delete('search');
@@ -708,6 +733,7 @@ export default function Leaderboard() {
   const handleBackToCompany = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('teamId');
+    params.delete('groupId');
     params.delete('teamView');
     params.delete('search');
     setSearchKeyword('');
@@ -716,13 +742,22 @@ export default function Leaderboard() {
 
   const handleScopeChange = (mode) => {
     const params = new URLSearchParams(searchParams);
-    params.set('mode', mode);
-    params.delete('scope');
+    params.set('scope', mode);
+    params.delete('mode');
     params.delete('ranking');
     params.delete('teamId');
+    params.delete('groupId');
     params.delete('search');
-    if (mode === 'members' && !searchParams.get('period')) {
+    if (mode === 'members') {
       params.set('period', 'all-time');
+    } else if (mode === 'teams') {
+      params.set('period', 'season');
+    } else if (mode === 'youtube') {
+      params.set('metric', 'views');
+      params.delete('period');
+    } else if (mode === 'hall-of-fame') {
+      params.delete('period');
+      params.delete('metric');
     }
     setSearchKeyword('');
     setSearchParams(params, { replace: true });
@@ -1048,10 +1083,11 @@ export default function Leaderboard() {
                     items={memberRankings.items || []}
                     scoreKey="score"
                     scoreSuffix="XP"
+                    serverRank={memberRankings.currentUserRank}
                     onOpenProfile={(u) => navigate(`/users/${u.id || u.userId}`)}
                   />
 
-                  {memberRankings.items?.length >= 2 && !searchKeyword && (
+                  {memberRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={memberRankings.items}
                       nameKey="userName"
@@ -1195,10 +1231,11 @@ export default function Leaderboard() {
                     items={teamRankings.items || []}
                     scoreKey={currentPeriod === 'grand' ? 'grandPoints' : 'totalScore'}
                     scoreSuffix={currentPeriod === 'grand' ? 'GP' : 'pts'}
+                    serverRank={teamRankings.currentUserTeamRank}
                     isTeam
                   />
 
-                  {teamRankings.items?.length >= 2 && (
+                  {teamRankings.items?.length >= 1 && (
                     <DynamicPodium
                       items={teamRankings.items}
                       nameKey="teamName"
@@ -1228,7 +1265,22 @@ export default function Leaderboard() {
                       </thead>
                       <tbody>
                         {teamRankings.items?.length === 0 ? (
-                          <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chưa có dữ liệu xếp hạng</td></tr>
+                          <tr>
+                            <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
+                              <Users size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                                Chưa có dữ liệu xếp hạng đội nhóm trong chu kỳ này
+                              </div>
+                              {currentPeriod !== 'all-time' && (
+                                <button
+                                  onClick={() => handlePeriodChange('all-time')}
+                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                >
+                                  Xem Toàn Thời Gian
+                                </button>
+                              )}
+                            </td>
+                          </tr>
                         ) : (
                           teamRankings.items.map((row, idx) => {
                             const rank = row.rank || idx + 1;
@@ -1296,10 +1348,11 @@ export default function Leaderboard() {
                     items={memberRankings.items || []}
                     scoreKey={currentPeriod === 'all-time' ? 'lifetimeScore' : 'score'}
                     scoreSuffix="XP"
+                    serverRank={memberRankings.currentUserRank}
                     onOpenProfile={(u) => navigate(`/users/${u.id || u.userId}`)}
                   />
 
-                  {memberRankings.items?.length >= 2 && !searchKeyword && (
+                  {memberRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={memberRankings.items}
                       nameKey="userName"
@@ -1327,7 +1380,29 @@ export default function Leaderboard() {
                       </thead>
                       <tbody>
                         {memberRankings.items?.length === 0 ? (
-                          <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Không tìm thấy thành viên phù hợp</td></tr>
+                          <tr>
+                            <td colSpan={5} style={{ padding: 48, textAlign: 'center' }}>
+                              <User size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                                {searchKeyword ? `Không tìm thấy thành viên phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu thành viên trong chu kỳ này'}
+                              </div>
+                              {searchKeyword ? (
+                                <button
+                                  onClick={() => setSearchKeyword('')}
+                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                >
+                                  Xóa tìm kiếm
+                                </button>
+                              ) : currentPeriod !== 'all-time' && (
+                                <button
+                                  onClick={() => handlePeriodChange('all-time')}
+                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                >
+                                  Xem Toàn Thời Gian
+                                </button>
+                              )}
+                            </td>
+                          </tr>
                         ) : (
                           memberRankings.items.map((u, i) => {
                             const rank = u.rank || i + 1;
@@ -1365,7 +1440,23 @@ export default function Leaderboard() {
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px', color: '#64748b', fontWeight: 500 }}>
-                                  {u.teamName || '—'}
+                                  {u.teamName ? (
+                                    <span
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (u.teamId) handleDrillDownTeam({ teamId: u.teamId, name: u.teamName });
+                                      }}
+                                      style={{
+                                        cursor: u.teamId ? 'pointer' : 'default',
+                                        color: u.teamId ? '#0f172a' : '#64748b',
+                                        textDecoration: u.teamId ? 'underline' : 'none',
+                                      }}
+                                    >
+                                      {u.teamName}
+                                    </span>
+                                  ) : (
+                                    '—'
+                                  )}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                   <LevelText user={u} />
@@ -1387,7 +1478,7 @@ export default function Leaderboard() {
               {/* 3. BXH KÊNH YOUTUBE (CÔNG TY - BAO GỒM CẢ CHƯA GÁN TEAM) */}
               {scopeMode === 'youtube' && (
                 <div>
-                  {youtubeRankings.items?.length >= 2 && !searchKeyword && (
+                  {youtubeRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={youtubeRankings.items}
                       nameKey="title"
@@ -1417,7 +1508,22 @@ export default function Leaderboard() {
                       </thead>
                       <tbody>
                         {youtubeRankings.items?.length === 0 ? (
-                          <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Không tìm thấy kênh YouTube nào</td></tr>
+                          <tr>
+                            <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
+                              <Tv size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                                {searchKeyword ? `Không tìm thấy kênh YouTube phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu kênh YouTube'}
+                              </div>
+                              {searchKeyword && (
+                                <button
+                                  onClick={() => setSearchKeyword('')}
+                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                >
+                                  Xóa tìm kiếm
+                                </button>
+                              )}
+                            </td>
+                          </tr>
                         ) : (
                           youtubeRankings.items.map((c, idx) => {
                             const rank = c.rank || idx + 1;

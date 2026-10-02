@@ -18,6 +18,11 @@ YouTubeChannel.init(
       allowNull: true,
       field: 'team_id',
     },
+    assignedUserId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: 'assigned_user_id',
+    },
     channelId: {
       type: DataTypes.STRING(64),
       allowNull: false,

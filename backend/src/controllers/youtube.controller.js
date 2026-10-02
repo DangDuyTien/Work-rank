@@ -20,14 +20,15 @@ const { Team } = require('../models');
  */
 async function getOverview(req, res, next) {
   try {
-    const overview = await youtubeAggregationService.getCompanyYouTubeOverview();
+    const period = req.query.period || '30d';
+    const overview = await youtubeAggregationService.getCompanyYouTubeOverview({ period });
     const isAdmin = req.user && req.user.role === 'admin';
     const userTeamId = req.user && req.user.teamId ? Number(req.user.teamId) : null;
 
     let myTeamSummary = null;
     if (userTeamId) {
       try {
-        const teamDetails = await youtubeAggregationService.getTeamYouTubeDetails(userTeamId);
+        const teamDetails = await youtubeAggregationService.getTeamYouTubeDetails(userTeamId, { period });
         myTeamSummary = teamDetails.summary;
       } catch {
         // Safe fallback if user team summary has not been generated yet
@@ -39,6 +40,38 @@ async function getOverview(req, res, next) {
       myTeamSummary,
       scope: isAdmin ? 'COMPANY_ADMIN' : 'TEAM_MEMBER',
     });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/**
+ * Get Company Historical Growth Time-Series
+ */
+async function getCompanyHistory(req, res, next) {
+  try {
+    const period = req.query.period || '30d';
+    const overview = await youtubeAggregationService.getCompanyYouTubeOverview({ period });
+    return res.status(200).json({
+      history: overview.history || [],
+      period,
+      kpis: overview.kpis,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/**
+ * Get Authenticated User's Personal Dashboard & Channels ("CỦA TÔI")
+ */
+async function getMyOverview(req, res, next) {
+  try {
+    const period = req.query.period || '30d';
+    const userId = req.user.id;
+    const userTeamId = req.user && req.user.teamId ? Number(req.user.teamId) : null;
+    const data = await youtubeAggregationService.getMyYouTubeDashboard(userId, userTeamId, { period });
+    return res.status(200).json(data);
   } catch (err) {
     return next(err);
   }
@@ -77,19 +110,19 @@ async function getLeaderboard(req, res, next) {
  */
 async function getMyTeam(req, res, next) {
   try {
+    const period = req.query.period || '30d';
     const userTeamId = req.user && req.user.teamId ? Number(req.user.teamId) : null;
     if (!userTeamId) {
       return res.status(200).json({
         team: null,
         summary: null,
         channels: [],
-        topVideos: [],
         history: [],
         message: 'User is not assigned to any team',
       });
     }
 
-    const details = await youtubeAggregationService.getTeamYouTubeDetails(userTeamId);
+    const details = await youtubeAggregationService.getTeamYouTubeDetails(userTeamId, { period });
     return res.status(200).json(details);
   } catch (err) {
     return next(err);
@@ -122,7 +155,8 @@ async function getTeamDetails(req, res, next) {
       return res.status(404).json({ message: `Team with id ${targetTeamId} not found`, code: 'TEAM_NOT_FOUND' });
     }
 
-    const details = await youtubeAggregationService.getTeamYouTubeDetails(targetTeamId);
+    const period = req.query.period || '30d';
+    const details = await youtubeAggregationService.getTeamYouTubeDetails(targetTeamId, { period });
     return res.status(200).json(details);
   } catch (err) {
     return next(err);
@@ -139,16 +173,21 @@ async function getChannelDetails(req, res, next) {
       return res.status(400).json({ message: 'Invalid channel ID', code: 'INVALID_CHANNEL_ID' });
     }
 
-    const channel = await youtubeDataService.getChannelById(channelId);
+    const period = req.query.period || '30d';
+    const channel = await youtubeDataService.getChannelById(channelId, { period });
     if (!channel) {
       return res.status(404).json({ message: 'Channel not found', code: 'CHANNEL_NOT_FOUND' });
     }
 
     const isAdmin = req.user && req.user.role === 'admin';
     const userTeamId = req.user && req.user.teamId ? Number(req.user.teamId) : null;
+    const userId = req.user && req.user.id ? Number(req.user.id) : null;
 
-    // Cross-team protection: non-admins cannot access channels belonging to other teams
-    if (!isAdmin && (!channel.teamId || Number(channel.teamId) !== userTeamId)) {
+    const isOwnTeam = channel.teamId && Number(channel.teamId) === userTeamId;
+    const isAssignedUser = channel.assignedUserId && Number(channel.assignedUserId) === userId;
+
+    // Cross-team protection: non-admins cannot access channels belonging to other teams unless assigned directly
+    if (!isAdmin && !isOwnTeam && !isAssignedUser) {
       return res.status(403).json({
         message: 'Forbidden: You do not have permission to view channels of other teams',
         code: 'CROSS_CHANNEL_FORBIDDEN',
@@ -443,6 +482,8 @@ async function getAdminHealth(req, res, next) {
 
 module.exports = {
   getOverview,
+  getCompanyHistory,
+  getMyOverview,
   getLeaderboard,
   getMyTeam,
   getTeamDetails,

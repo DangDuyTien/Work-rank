@@ -11,8 +11,9 @@ const router = express.Router();
 router.use(auth);
 router.use(requireRole('admin'));
 
-// Image Upload
+// Media Uploads (Image & Audio)
 router.post('/upload-image', controller.uploadImage);
+router.post('/upload-audio', controller.uploadAudio);
 
 // Questions Management
 router.get('/questions', asyncHandler(controller.listQuestions));

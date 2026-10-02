@@ -87,7 +87,7 @@ export default function YouTubeOverview() {
   const [myTeamLoading, setMyTeamLoading] = useState(false);
 
   // Channel Leaderboard (All channels, assigned + unassigned)
-  const [channelSortBy, setChannelSortBy] = useState('views'); // 'views', 'subscribers', 'growth', 'videos'
+  const [channelSortBy, setChannelSortBy] = useState('views'); // 'views', 'subscribers', 'growth'
   const [channelSearch, setChannelSearch] = useState('');
   const [channelTeamFilter, setChannelTeamFilter] = useState(''); // '' (all), 'unassigned', or teamId
   const [channelLeaderboard, setChannelLeaderboard] = useState([]);
@@ -401,7 +401,7 @@ export default function YouTubeOverview() {
   const handleDeleteChannel = async (channelId) => {
     const confirmed = await confirm({
       title: 'Xóa kênh YouTube',
-      message: 'Bạn có chắc chắn muốn xóa kênh này khỏi hệ thống? Dữ liệu lịch sử và video liên quan sẽ bị gỡ bỏ.',
+      message: 'Bạn có chắc chắn muốn xóa kênh này khỏi hệ thống? Dữ liệu lịch sử và snapshot liên quan sẽ bị gỡ bỏ.',
       confirmText: 'Xóa kênh',
       tone: 'danger',
     });

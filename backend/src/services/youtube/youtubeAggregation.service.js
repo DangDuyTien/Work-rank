@@ -6,6 +6,9 @@ const {
   YouTubeChannel,
   YouTubeChannelMetric,
   TeamYouTubeSummary,
+  User,
+  CompetitionUserSummary,
+  UserProfilePreference,
   sequelize,
 } = require('../../models');
 
@@ -143,9 +146,6 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       if (metric7d) {
         views7d += Math.max(0, Number(latest.views) - Number(metric7d.views));
         subscriberGrowth7d += Number(latest.subscribers) - Number(metric7d.subscribers);
-      } else {
-        views7d += Number(latest.views);
-        subscriberGrowth7d += Number(latest.subscribers);
       }
 
       // 30 days ago metric
@@ -160,20 +160,17 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       if (metric30d) {
         views30d += Math.max(0, Number(latest.views) - Number(metric30d.views));
         subscriberGrowth30d += Number(latest.subscribers) - Number(metric30d.subscribers);
-      } else {
-        views30d += Number(latest.views);
-        subscriberGrowth30d += Number(latest.subscribers);
       }
     }
   }
 
   // Calculate percentage growths safely (clamped to DECIMAL(10,4) limit [-999999.9999, 999999.9999])
   const baselineViews30d = Math.max(0, totalViews - views30d);
-  const rawViewsGrowth = baselineViews30d > 0 ? (views30d / baselineViews30d) * 100 : (totalViews > 0 ? 100.0 : 0.0);
+  const rawViewsGrowth = (baselineViews30d > 0 && views30d >= 0) ? (views30d / baselineViews30d) * 100 : 0.0;
   const viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawViewsGrowth)).toFixed(4));
 
   const baselineSubs30d = Math.max(0, totalSubscribers - subscriberGrowth30d);
-  const rawSubGrowth = baselineSubs30d > 0 ? (subscriberGrowth30d / baselineSubs30d) * 100 : (totalSubscribers > 0 ? 100.0 : 0.0);
+  const rawSubGrowth = (baselineSubs30d > 0 && subscriberGrowth30d >= 0) ? (subscriberGrowth30d / baselineSubs30d) * 100 : 0.0;
   const subGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawSubGrowth)).toFixed(4));
 
   // Freshness status calculation
@@ -271,10 +268,98 @@ async function recalculateAllTeamYouTubeSummaries(options = {}) {
 }
 
 /**
+ * Helper to compute daily aggregated history for a list of channel IDs over a period.
+ * Periods supported: '7d', '30d', '90d', '12m'.
+ * Avoids double-counting multiple syncs per day by taking the latest metric per day per channel.
+ * Carries forward latest known metric so days without sync don't artificially drop to zero.
+ */
+async function getChannelsHistory(channelIds, period = '30d') {
+  if (!Array.isArray(channelIds) || channelIds.length === 0) {
+    return [];
+  }
+
+  const now = new Date();
+  let daysCount = 30;
+  if (period === '7d') daysCount = 7;
+  else if (period === '90d') daysCount = 90;
+  else if (period === '12m') daysCount = 365;
+
+  const startDate = new Date(now.getTime() - daysCount * 86400000);
+
+  const metrics = await YouTubeChannelMetric.findAll({
+    where: {
+      channelId: { [Op.in]: channelIds },
+      capturedAt: { [Op.gte]: startDate },
+    },
+    order: [['capturedAt', 'ASC']],
+  });
+
+  if (metrics.length === 0) {
+    const latestMetrics = await YouTubeChannelMetric.findAll({
+      where: { channelId: { [Op.in]: channelIds } },
+      order: [['capturedAt', 'DESC']],
+      limit: channelIds.length,
+    });
+    if (latestMetrics.length > 0) {
+      const today = now.toISOString().split('T')[0];
+      const sumViews = latestMetrics.reduce((acc, m) => acc + Number(m.views || 0), 0);
+      const sumSubs = latestMetrics.reduce((acc, m) => acc + Number(m.subscribers || 0), 0);
+      return [{ date: today, views: sumViews, subscribers: sumSubs }];
+    }
+    return [];
+  }
+
+  const byDateAndChannel = {};
+  const datesSet = new Set();
+
+  for (const m of metrics) {
+    const day = new Date(m.capturedAt).toISOString().split('T')[0];
+    datesSet.add(day);
+    if (!byDateAndChannel[day]) byDateAndChannel[day] = {};
+    byDateAndChannel[day][m.channelId] = {
+      views: Number(m.views || 0),
+      subscribers: Number(m.subscribers || 0),
+    };
+  }
+
+  const sortedDates = Array.from(datesSet).sort();
+  const latestKnown = {};
+  const history = [];
+
+  for (const day of sortedDates) {
+    const dayData = byDateAndChannel[day] || {};
+    for (const chId of channelIds) {
+      if (dayData[chId]) {
+        latestKnown[chId] = dayData[chId];
+      }
+    }
+
+    let dayTotalViews = 0;
+    let dayTotalSubs = 0;
+    for (const chId of channelIds) {
+      if (latestKnown[chId]) {
+        dayTotalViews += latestKnown[chId].views;
+        dayTotalSubs += latestKnown[chId].subscribers;
+      }
+    }
+
+    history.push({
+      date: day,
+      views: dayTotalViews,
+      subscribers: dayTotalSubs,
+    });
+  }
+
+  return history;
+}
+
+/**
  * Get Company-wide YouTube Overview & Metrics
  * Aggregates across ALL active channels in the system (both team-assigned and unassigned).
  */
-async function getCompanyYouTubeOverview() {
+async function getCompanyYouTubeOverview(options = {}) {
+  const period = typeof options === 'string' ? options : (options?.period || '30d');
+
   const summaries = await TeamYouTubeSummary.findAll({
     include: [{ model: Team, as: 'team', attributes: ['id', 'name', 'description'] }],
   });
@@ -282,6 +367,11 @@ async function getCompanyYouTubeOverview() {
   const allChannels = await YouTubeChannel.findAll({
     where: { status: 'ACTIVE' },
     include: [
+      {
+        model: Team,
+        as: 'team',
+        attributes: ['id', 'name', 'description'],
+      },
       {
         model: YouTubeChannelMetric,
         as: 'metrics',
@@ -292,7 +382,12 @@ async function getCompanyYouTubeOverview() {
   });
 
   const now = new Date();
-  const t30d = new Date(now.getTime() - 30 * 86400000);
+  let daysCount = 30;
+  if (period === '7d') daysCount = 7;
+  else if (period === '90d') daysCount = 90;
+  else if (period === '12m') daysCount = 365;
+
+  const tPeriod = new Date(now.getTime() - daysCount * 86400000);
 
   let totalViews = 0;
   let totalSubscribers = 0;
@@ -300,10 +395,16 @@ async function getCompanyYouTubeOverview() {
   let unassignedChannelsCount = 0;
   let unassignedViews = 0;
   let unassignedSubscribers = 0;
-  let companyViews30d = 0;
+  let companyViewsPeriodDelta = 0;
+  let companySubsPeriodDelta = 0;
+  let totalBaselineViews = 0;
+  let totalBaselineSubs = 0;
+  let hasValidBaseline = false;
   let latestSync = null;
   let hasStale = false;
   let hasFailed = false;
+
+  const channelIds = allChannels.map((c) => c.id);
 
   for (const channel of allChannels) {
     const isUnassigned = !channel.teamId;
@@ -331,36 +432,49 @@ async function getCompanyYouTubeOverview() {
         unassignedSubscribers += cSubs;
       }
 
-      // Calculate 30d views delta for this channel
-      const metric30d = await YouTubeChannelMetric.findOne({
+      // Snapshot prior to period start for real baseline comparison
+      const metricPrior = await YouTubeChannelMetric.findOne({
         where: {
           channelId: channel.id,
-          capturedAt: { [Op.lte]: t30d },
+          capturedAt: { [Op.lte]: tPeriod },
         },
         order: [['capturedAt', 'DESC']],
       });
-      if (metric30d) {
-        companyViews30d += Math.max(0, cViews - Number(metric30d.views));
-      } else {
-        companyViews30d += cViews;
+
+      if (metricPrior) {
+        hasValidBaseline = true;
+        const bViews = Number(metricPrior.views || 0);
+        const bSubs = Number(metricPrior.subscribers || 0);
+        companyViewsPeriodDelta += Math.max(0, cViews - bViews);
+        companySubsPeriodDelta += (cSubs - bSubs);
+        totalBaselineViews += bViews;
+        totalBaselineSubs += bSubs;
       }
     }
   }
 
-  // Company 30D views growth percentage
-  const baselineViews30d = Math.max(0, totalViews - companyViews30d);
-  const rawViewsGrowth = baselineViews30d > 0
-    ? (companyViews30d / baselineViews30d) * 100
-    : (totalViews > 0 ? 100.0 : 0.0);
-  const viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawViewsGrowth)).toFixed(2));
+  // Real statistical growth percentage (null if no baseline exists)
+  let viewsGrowthPct = null;
+  let subGrowthPct = null;
+  if (hasValidBaseline && totalBaselineViews > 0) {
+    const rawGrowth = (companyViewsPeriodDelta / totalBaselineViews) * 100;
+    viewsGrowthPct = Number(Math.min(999999.99, Math.max(-999999.99, rawGrowth)).toFixed(2));
+  }
+  if (hasValidBaseline && totalBaselineSubs > 0) {
+    const rawSubGrowth = (companySubsPeriodDelta / totalBaselineSubs) * 100;
+    subGrowthPct = Number(Math.min(999999.99, Math.max(-999999.99, rawSubGrowth)).toFixed(2));
+  }
 
-  // Company freshness status: FRESH if any channel synced within last 2h, STALE if no recent sync
+  // Company freshness status
   let freshnessStatus = 'FRESH';
   if (hasFailed && !latestSync) {
     freshnessStatus = 'FAILED';
   } else if (!latestSync || (Date.now() - new Date(latestSync).getTime() > 2 * 3600000)) {
     freshnessStatus = 'STALE';
   }
+
+  // Company-wide time-series history
+  const history = await getChannelsHistory(channelIds, period);
 
   // Top Teams by Views
   const topTeamsByViews = [...summaries]
@@ -371,7 +485,7 @@ async function getCompanyYouTubeOverview() {
       teamName: s.team ? s.team.name : `Team ${s.teamId}`,
       totalViews: Number(s.totalViews),
       totalSubscribers: Number(s.totalSubscribers),
-      viewsGrowth30dPct: Number(s.viewsGrowth30dPct),
+      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
       rank: s.rankByViews,
     }));
 
@@ -384,9 +498,28 @@ async function getCompanyYouTubeOverview() {
       teamName: s.team ? s.team.name : `Team ${s.teamId}`,
       totalViews: Number(s.totalViews),
       totalSubscribers: Number(s.totalSubscribers),
-      viewsGrowth30dPct: Number(s.viewsGrowth30dPct),
+      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
       rank: s.rankByGrowth,
     }));
+
+  // All teams formatted with rank
+  const allTeams = summaries
+    .map((s) => ({
+      teamId: s.teamId,
+      teamName: s.team ? s.team.name : `Team ${s.teamId}`,
+      channelsCount: Number(s.channelsCount || 0),
+      totalViews: Number(s.totalViews || 0),
+      totalSubscribers: Number(s.totalSubscribers || 0),
+      views30d: Number(s.views30d || 0),
+      viewsGrowth30dPct: Number(s.viewsGrowth30dPct) > 0 ? Number(s.viewsGrowth30dPct) : null,
+      subGrowth30dPct: Number(s.subGrowth30dPct) > 0 ? Number(s.subGrowth30dPct) : null,
+      rankByViews: s.rankByViews,
+      rankBySubs: s.rankBySubs,
+      rankByGrowth: s.rankByGrowth,
+      freshnessStatus: s.freshnessStatus,
+      lastSyncedAt: s.lastSyncedAt,
+    }))
+    .sort((a, b) => b.totalViews - a.totalViews);
 
   return {
     kpis: {
@@ -397,24 +530,30 @@ async function getCompanyYouTubeOverview() {
       unassignedChannelsCount,
       unassignedViews,
       unassignedSubscribers,
-      viewsGrowth30dPct,
+      viewsGrowthPct,
+      subGrowthPct,
+      viewsGrowth30dPct: viewsGrowthPct,
       freshnessStatus,
       lastSyncedAt: latestSync,
     },
     topTeamsByViews,
     topTeamsByGrowth,
+    allTeams,
     unassignedSummary: {
       totalChannels: unassignedChannelsCount,
       totalViews: unassignedViews,
       totalSubscribers: unassignedSubscribers,
     },
+    history,
+    period,
   };
 }
 
 /**
  * Get full YouTube details for a specific team
  */
-async function getTeamYouTubeDetails(teamId) {
+async function getTeamYouTubeDetails(teamId, options = {}) {
+  const period = typeof options === 'string' ? options : (options?.period || '30d');
   const team = await Team.findByPk(teamId);
   if (!team) {
     throw new Error(`Team with id ${teamId} not found`);
@@ -442,32 +581,15 @@ async function getTeamYouTubeDetails(teamId) {
   });
 
   const channelIds = channels.map((c) => c.id);
-
-  // 30D historical snapshots
-  const t30d = new Date(Date.now() - 30 * 86400000);
-  const metrics30d = await YouTubeChannelMetric.findAll({
-    where: {
-      channelId: { [Op.in]: channelIds.length > 0 ? channelIds : [-1] },
-      capturedAt: { [Op.gte]: t30d },
-    },
-    order: [['capturedAt', 'ASC']],
-  });
-
-  // Group daily totals for charts
-  const dailyMap = {};
-  for (const m of metrics30d) {
-    const day = new Date(m.capturedAt).toISOString().split('T')[0];
-    if (!dailyMap[day]) {
-      dailyMap[day] = { date: day, views: 0, subscribers: 0 };
-    }
-    dailyMap[day].views += Number(m.views);
-    dailyMap[day].subscribers += Number(m.subscribers);
-  }
-  const history = Object.values(dailyMap);
+  const history = await getChannelsHistory(channelIds, period);
 
   return {
     team: { id: team.id, name: team.name, description: team.description },
-    summary,
+    summary: summary ? {
+      ...summary.toJSON(),
+      viewsGrowth30dPct: Number(summary.viewsGrowth30dPct) > 0 ? Number(summary.viewsGrowth30dPct) : null,
+      subGrowth30dPct: Number(summary.subGrowth30dPct) > 0 ? Number(summary.subGrowth30dPct) : null,
+    } : null,
     channels: channels.map((c) => {
       const m = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
       return {
@@ -485,6 +607,157 @@ async function getTeamYouTubeDetails(teamId) {
       };
     }),
     history,
+    period,
+  };
+}
+
+/**
+ * Get Authenticated Member's Personal YouTube & Team Dashboard Data ("CỦA TÔI")
+ */
+async function getMyYouTubeDashboard(userId, userTeamId, options = {}) {
+  const period = typeof options === 'string' ? options : (options?.period || '30d');
+
+  // 1. User Profile & Canonical All-Time Ranking
+  const user = await User.findByPk(userId, {
+    attributes: ['id', 'name', 'email', 'role', 'teamId', 'jobTitle', 'department', 'isVerified', 'isDev'],
+    include: [
+      { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'] },
+      { model: CompetitionUserSummary, as: 'competitionSummary' },
+      { model: Team, attributes: ['id', 'name'] },
+    ],
+  });
+
+  let ranking = null;
+  if (user) {
+    const allUsers = await User.findAll({
+      where: { status: { [Op.ne]: 'inactive' } },
+      attributes: ['id', 'name', 'createdAt'],
+      include: [
+        { model: CompetitionUserSummary, as: 'competitionSummary' },
+      ],
+    });
+
+    allUsers.sort((a, b) => {
+      const aScore = Number(a.competitionSummary?.currentSeasonScore || 0);
+      const bScore = Number(b.competitionSummary?.currentSeasonScore || 0);
+      if (bScore !== aScore) return bScore - aScore;
+      const aWins = Number(a.competitionSummary?.seasonWins || 0);
+      const bWins = Number(b.competitionSummary?.seasonWins || 0);
+      if (bWins !== aWins) return bWins - aWins;
+      return Number(a.id) - Number(b.id);
+    });
+
+    const userIndex = allUsers.findIndex((u) => Number(u.id) === Number(userId));
+    const leaderScore = Number(allUsers[0]?.competitionSummary?.currentSeasonScore || 0);
+    const userScore = Number(user.competitionSummary?.currentSeasonScore || 0);
+
+    ranking = {
+      rank: userIndex >= 0 ? userIndex + 1 : 1,
+      totalUsers: allUsers.length,
+      score: userScore,
+      leaderScore,
+      gap: Math.max(0, leaderScore - userScore),
+      trend: 'SAME',
+    };
+  }
+
+  // 2. User Team Information
+  let teamDetails = null;
+  const effectiveTeamId = userTeamId || user?.teamId;
+  if (effectiveTeamId) {
+    try {
+      teamDetails = await getTeamYouTubeDetails(effectiveTeamId, { period });
+    } catch {
+      // Graceful fallback
+    }
+  }
+
+  // 3. User's Channels (Direct assigned channels + Team channels)
+  const channelWhereConditions = [
+    { assignedUserId: userId },
+  ];
+  if (effectiveTeamId) {
+    channelWhereConditions.push({ teamId: effectiveTeamId });
+  }
+
+  const userChannels = await YouTubeChannel.findAll({
+    where: {
+      status: 'ACTIVE',
+      [Op.or]: channelWhereConditions,
+    },
+    include: [
+      { model: Team, as: 'team', attributes: ['id', 'name'] },
+      {
+        model: YouTubeChannelMetric,
+        as: 'metrics',
+        limit: 1,
+        order: [['capturedAt', 'DESC']],
+      },
+    ],
+  });
+
+  const channelIds = userChannels.map((c) => c.id);
+  const history = await getChannelsHistory(channelIds, period);
+
+  // Compute User Channel KPIs
+  let totalViews = 0;
+  let totalSubscribers = 0;
+  let latestSync = null;
+
+  const formattedChannels = userChannels.map((c) => {
+    const m = c.metrics && c.metrics.length > 0 ? c.metrics[0] : null;
+    const views = m ? Number(m.views) : 0;
+    const subs = m ? Number(m.subscribers) : 0;
+    totalViews += views;
+    totalSubscribers += subs;
+    if (c.lastSyncedAt && (!latestSync || new Date(c.lastSyncedAt) > new Date(latestSync))) {
+      latestSync = c.lastSyncedAt;
+    }
+    return {
+      id: c.id,
+      channelId: c.channelId,
+      title: c.title,
+      customUrl: c.customUrl,
+      thumbnailUrl: c.thumbnailUrl,
+      teamId: c.teamId,
+      teamName: c.team ? c.team.name : 'Chưa gán đội',
+      assignedUserId: c.assignedUserId,
+      isDirectlyAssigned: Number(c.assignedUserId) === Number(userId),
+      views,
+      subscribers: subs,
+      status: c.status,
+      syncStatus: c.syncStatus,
+      lastSyncedAt: c.lastSyncedAt,
+    };
+  });
+
+  return {
+    user: user ? {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      jobTitle: user.jobTitle || 'Nhân viên',
+      department: user.department || 'Media & Content',
+      isVerified: Boolean(user.isVerified),
+      isDev: Boolean(user.isDev),
+      teamId: user.teamId,
+      teamName: user.Team ? user.Team.name : null,
+      avatarData: user.UserProfilePreference?.avatarData || null,
+    } : null,
+    ranking,
+    team: teamDetails ? teamDetails.team : null,
+    teamSummary: teamDetails ? teamDetails.summary : null,
+    teamHasChannels: Boolean(teamDetails?.channels && teamDetails.channels.length > 0),
+    channels: formattedChannels,
+    kpis: {
+      totalViews,
+      totalSubscribers,
+      totalChannels: formattedChannels.length,
+      lastSyncedAt: latestSync,
+    },
+    history,
+    period,
   };
 }
 
@@ -648,7 +921,7 @@ async function getYouTubeChannelLeaderboard(params = {}) {
 
       // 30 days ago metric
       let views30d = 0;
-      let viewsGrowth30dPct = 0;
+      let viewsGrowth30dPct = null;
 
       if (latestMetric) {
         const metric30d = await YouTubeChannelMetric.findOne({
@@ -661,13 +934,15 @@ async function getYouTubeChannelLeaderboard(params = {}) {
 
         if (metric30d) {
           views30d = Math.max(0, views - Number(metric30d.views || 0));
+          const baseline = Number(metric30d.views || 0);
+          const rawGrowth = baseline > 0 ? (views30d / baseline) * 100 : null;
+          viewsGrowth30dPct = rawGrowth !== null
+            ? Number(Math.min(999999.99, Math.max(-999999.99, rawGrowth)).toFixed(2))
+            : null;
         } else {
-          views30d = views;
+          views30d = 0;
+          viewsGrowth30dPct = null;
         }
-
-        const baseline = Math.max(0, views - views30d);
-        const rawGrowth = baseline > 0 ? (views30d / baseline) * 100 : (views > 0 ? 100.0 : 0.0);
-        viewsGrowth30dPct = Number(Math.min(999999.9999, Math.max(-999999.9999, rawGrowth)).toFixed(2));
       }
 
       return {
@@ -679,6 +954,7 @@ async function getYouTubeChannelLeaderboard(params = {}) {
         teamId: c.teamId,
         teamName: c.team ? c.team.name : 'Chưa gán đội',
         team: c.team ? { id: c.team.id, name: c.team.name } : null,
+        assignedUserId: c.assignedUserId,
         isUnassigned: !c.teamId,
         views,
         totalViews: views,
@@ -697,7 +973,7 @@ async function getYouTubeChannelLeaderboard(params = {}) {
   if (sortBy === 'subscribers') {
     channelsWithMetrics.sort((a, b) => b.subscribers - a.subscribers || b.views - a.views);
   } else if (sortBy === 'growth') {
-    channelsWithMetrics.sort((a, b) => b.viewsGrowth30dPct - a.viewsGrowth30dPct || b.views - a.views);
+    channelsWithMetrics.sort((a, b) => (Number(b.viewsGrowth30dPct) || -Infinity) - (Number(a.viewsGrowth30dPct) || -Infinity) || b.views - a.views);
   } else {
     // Default: views
     channelsWithMetrics.sort((a, b) => b.views - a.views || b.subscribers - a.subscribers);
@@ -727,10 +1003,12 @@ async function getYouTubeChannelLeaderboard(params = {}) {
 }
 
 module.exports = {
+  getChannelsHistory,
   aggregateTeamYouTubeSummary,
   recalculateAllTeamYouTubeSummaries,
   getCompanyYouTubeOverview,
   getTeamYouTubeDetails,
+  getMyYouTubeDashboard,
   compareTeams,
   getYouTubeTeamLeaderboard,
   getYouTubeChannelLeaderboard,

@@ -262,31 +262,47 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
   }
 
   // Live aggregation from ScoreLedger
-  const seasonTeams = await SeasonTeam.findAll({
+  let seasonTeams = await SeasonTeam.findAll({
     where: { seasonId, isDisqualified: false },
     transaction,
   });
 
-  const teamIds = seasonTeams.map((st) => st.teamId);
+  if (seasonTeams.length === 0) {
+    const allTeams = await Team.findAll({ transaction });
+    seasonTeams = allTeams.map((t) => ({
+      teamId: t.id,
+      teamNameSnapshot: t.name,
+      teamAvatarSnapshot: null,
+      teamColorSnapshot: '#0284c7',
+      isEligible: true,
+    }));
+  }
 
-  // Group scores by team
-  const teamScores = await ScoreLedger.findAll({
-    attributes: [
-      'team_id',
-      [sequelize.fn('SUM', sequelize.col('points_delta')), 'totalScore'],
-    ],
-    where: {
-      seasonId,
-      teamId: { [Op.in]: teamIds.length > 0 ? teamIds : [0] },
-    },
-    group: ['team_id'],
+  // Map users to teamId so points from ScoreLedger are accurately attributed to teams
+  const userTeamRows = await User.findAll({
+    where: { teamId: { [Op.ne]: null } },
+    attributes: ['id', 'teamId'],
+    raw: true,
+    transaction,
+  });
+  const userToTeam = new Map();
+  for (const u of userTeamRows) {
+    userToTeam.set(Number(u.id), Number(u.teamId));
+  }
+
+  const scoreLedgerRows = await ScoreLedger.findAll({
+    where: { seasonId },
+    attributes: ['userId', 'teamId', 'pointsDelta'],
     raw: true,
     transaction,
   });
 
   const scoreMap = new Map();
-  for (const row of teamScores) {
-    scoreMap.set(Number(row.team_id), Number(row.totalScore || 0));
+  for (const row of scoreLedgerRows) {
+    const tId = Number(row.teamId) || userToTeam.get(Number(row.userId));
+    if (tId) {
+      scoreMap.set(tId, (scoreMap.get(tId) || 0) + Number(row.pointsDelta || 0));
+    }
   }
 
   // Build sorted rankings
@@ -297,12 +313,12 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
         teamId: st.teamId,
         teamName: st.teamNameSnapshot,
         avatar: st.teamAvatarSnapshot,
-        color: st.teamColorSnapshot,
+        color: st.teamColorSnapshot || '#0284c7',
         score,
-        isEligible: st.isEligible,
+        isEligible: st.isEligible !== false,
       };
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score || Number(a.teamId) - Number(b.teamId))
     .map((item, idx) => ({ rank: idx + 1, ...item }));
 
   return {
@@ -429,7 +445,10 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   let allUserIds = new Set([...memberTeamMap.keys(), ...scoreMap.keys()]);
   if (allUserIds.size === 0) {
     const fallbackUsers = await User.findAll({
-      where: { status: { [Op.ne]: 'inactive' } },
+      where: {
+        status: { [Op.ne]: 'inactive' },
+        isSimulated: { [Op.ne]: true },
+      },
       attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
       include: [
         { model: Team, attributes: ['id', 'name'] },

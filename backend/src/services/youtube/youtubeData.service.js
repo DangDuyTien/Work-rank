@@ -98,6 +98,7 @@ async function unlinkChannel(channelIdentifier, options = {}) {
 }
 
 async function getChannelById(id, options = {}) {
+  const period = options.period || '30d';
   const channel = await YouTubeChannel.findByPk(id, {
     include: [
       { model: Team, as: 'team', attributes: ['id', 'name', 'description'] },
@@ -108,12 +109,59 @@ async function getChannelById(id, options = {}) {
         order: [['capturedAt', 'DESC']],
       },
     ],
-    ...options,
+    transaction: options.transaction,
   });
 
   if (!channel) return null;
 
+  let daysCount = 30;
+  if (period === '7d') daysCount = 7;
+  else if (period === '90d') daysCount = 90;
+  else if (period === '12m') daysCount = 365;
+
+  const startDate = new Date(Date.now() - daysCount * 86400000);
+  const metrics = await YouTubeChannelMetric.findAll({
+    where: {
+      channelId: channel.id,
+      capturedAt: { [Op.gte]: startDate },
+    },
+    order: [['capturedAt', 'ASC']],
+    transaction: options.transaction,
+  });
+
+  const dailyMap = {};
+  for (const metric of metrics) {
+    const day = new Date(metric.capturedAt).toISOString().split('T')[0];
+    dailyMap[day] = {
+      date: day,
+      views: Number(metric.views || 0),
+      subscribers: Number(metric.subscribers || 0),
+    };
+  }
+  const history = Object.values(dailyMap);
+
   const m = channel.metrics && channel.metrics.length > 0 ? channel.metrics[0] : null;
+
+  const priorMetric = await YouTubeChannelMetric.findOne({
+    where: {
+      channelId: channel.id,
+      capturedAt: { [Op.lte]: startDate },
+    },
+    order: [['capturedAt', 'DESC']],
+    transaction: options.transaction,
+  });
+
+  let viewsGrowthPct = null;
+  let subGrowthPct = null;
+  if (priorMetric && Number(priorMetric.views) > 0 && m) {
+    const diff = Number(m.views) - Number(priorMetric.views);
+    viewsGrowthPct = Number(((diff / Number(priorMetric.views)) * 100).toFixed(2));
+  }
+  if (priorMetric && Number(priorMetric.subscribers) > 0 && m) {
+    const sDiff = Number(m.subscribers) - Number(priorMetric.subscribers);
+    subGrowthPct = Number(((sDiff / Number(priorMetric.subscribers)) * 100).toFixed(2));
+  }
+
   return {
     id: channel.id,
     channelId: channel.channelId,
@@ -123,6 +171,7 @@ async function getChannelById(id, options = {}) {
     description: channel.description,
     teamId: channel.teamId,
     team: channel.team ? { id: channel.team.id, name: channel.team.name, description: channel.team.description } : null,
+    assignedUserId: channel.assignedUserId,
     status: channel.status,
     syncStatus: channel.syncStatus,
     lastSyncedAt: channel.lastSyncedAt,
@@ -132,6 +181,10 @@ async function getChannelById(id, options = {}) {
     views: m ? Number(m.views) : 0,
     subscribers: m ? Number(m.subscribers) : 0,
     engagementRate: m ? Number(m.engagementRate) : 0,
+    viewsGrowthPct,
+    subGrowthPct,
+    history,
+    period,
   };
 }
 

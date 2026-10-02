@@ -287,6 +287,22 @@ async function getTeamRankings(params = {}) {
       attributes: ['id', 'name', 'year', 'status'],
     });
 
+    let currentUserTeamRank = null;
+    if (params.currentUserTeamId) {
+      const myTeam = await GrandLeaderboardProjection.findOne({
+        where: { grandId: targetGrandId, teamId: params.currentUserTeamId },
+      });
+      if (myTeam) {
+        currentUserTeamRank = {
+          rank: myTeam.rank,
+          teamId: myTeam.teamId,
+          teamName: myTeam.teamName,
+          score: Number(myTeam.grandPoints || 0),
+          gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(myTeam.grandPoints || 0)),
+        };
+      }
+    }
+
     return {
       scope: 'grand',
       grand,
@@ -305,6 +321,7 @@ async function getTeamRankings(params = {}) {
       page: numPage,
       limit: numLimit,
       totalPages: Math.ceil(count / numLimit),
+      currentUserTeamRank,
     };
   }
 
@@ -329,6 +346,25 @@ async function getTeamRankings(params = {}) {
       gap: Math.max(0, leaderScore - Number(r.currentSeasonScore || 0)),
     }));
 
+    let currentUserTeamRank = null;
+    if (params.currentUserTeamId) {
+      const allTeamSummaries = await CompetitionTeamSummary.findAll({
+        order: [['currentSeasonScore', 'DESC'], ['seasonWins', 'DESC']],
+        attributes: ['teamId', 'teamName', 'currentSeasonScore'],
+      });
+      const tIdx = allTeamSummaries.findIndex((t) => Number(t.teamId) === Number(params.currentUserTeamId));
+      if (tIdx !== -1) {
+        const t = allTeamSummaries[tIdx];
+        currentUserTeamRank = {
+          rank: tIdx + 1,
+          teamId: t.teamId,
+          teamName: t.teamName,
+          score: Number(t.currentSeasonScore || 0),
+          gap: Math.max(0, leaderScore - Number(t.currentSeasonScore || 0)),
+        };
+      }
+    }
+
     return {
       scope: 'all-time',
       items,
@@ -336,6 +372,7 @@ async function getTeamRankings(params = {}) {
       page: numPage,
       limit: numLimit,
       totalPages: Math.ceil(count / numLimit),
+      currentUserTeamRank,
     };
   }
 
@@ -381,6 +418,22 @@ async function getTeamRankings(params = {}) {
     attributes: ['id', 'name', 'slug', 'status', 'startAt', 'endAt'],
   });
 
+  let currentUserTeamRank = null;
+  if (params.currentUserTeamId) {
+    const myTeam = await SeasonLeaderboardProjection.findOne({
+      where: { seasonId: targetSeasonId, teamId: params.currentUserTeamId },
+    });
+    if (myTeam) {
+      currentUserTeamRank = {
+        rank: myTeam.rank,
+        teamId: myTeam.teamId,
+        teamName: myTeam.teamName,
+        score: Number(myTeam.score || 0),
+        gap: Math.max(0, Number(rows[0]?.score || 0) - Number(myTeam.score || 0)),
+      };
+    }
+  }
+
   return {
     scope: 'season',
     season,
@@ -400,6 +453,7 @@ async function getTeamRankings(params = {}) {
     page: numPage,
     limit: numLimit,
     totalPages: Math.ceil(count / numLimit),
+    currentUserTeamRank,
   };
 }
 
@@ -481,6 +535,23 @@ async function getIndividualRankings(params = {}) {
       attributes: ['id', 'name', 'year', 'status'],
     });
 
+    let currentUserRank = null;
+    if (params.currentUserId) {
+      const myRow = await GrandIndividualLeaderboardProjection.findOne({
+        where: { grandId: targetGrandId, userId: params.currentUserId },
+      });
+      if (myRow) {
+        currentUserRank = {
+          rank: myRow.rank,
+          userId: myRow.userId,
+          userName: myRow.userName,
+          score: Number(myRow.grandPoints || 0),
+          teamName: myRow.teamName,
+          gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(myRow.grandPoints || 0)),
+        };
+      }
+    }
+
     return {
       scope: 'grand',
       grand,
@@ -513,11 +584,15 @@ async function getIndividualRankings(params = {}) {
       page: numPage,
       limit: numLimit,
       totalPages: Math.ceil(count / numLimit) || 1,
+      currentUserRank,
     };
   }
 
   if (scope === 'all-time') {
-    const userWhere = { status: { [Op.ne]: 'inactive' } };
+    const userWhere = {
+      status: { [Op.ne]: 'inactive' },
+      isSimulated: { [Op.ne]: true },
+    };
     if (teamId) userWhere.teamId = teamId;
     if (search && search.trim()) {
       userWhere[Op.or] = [
@@ -585,6 +660,25 @@ async function getIndividualRankings(params = {}) {
       };
     });
 
+    let currentUserRank = null;
+    if (params.currentUserId) {
+      const myIdx = allUsers.findIndex((u) => Number(u.id) === Number(params.currentUserId));
+      if (myIdx !== -1) {
+        const u = allUsers[myIdx];
+        const score = Number(u.competitionSummary?.currentSeasonScore || 0);
+        currentUserRank = {
+          rank: myIdx + 1,
+          userId: u.id,
+          userName: u.name,
+          score,
+          totalScore: score,
+          lifetimeScore: score,
+          teamName: u.Team ? u.Team.name : '—',
+          gap: Math.max(0, leaderScore - score),
+        };
+      }
+    }
+
     return {
       scope: 'all-time',
       items,
@@ -592,6 +686,7 @@ async function getIndividualRankings(params = {}) {
       page: numPage,
       limit: numLimit,
       totalPages: Math.ceil(total / numLimit) || 1,
+      currentUserRank,
     };
   }
 
@@ -665,6 +760,24 @@ async function getIndividualRankings(params = {}) {
     attributes: ['id', 'name', 'slug', 'status', 'startAt', 'endAt'],
   });
 
+  let currentUserRank = null;
+  if (params.currentUserId) {
+    const myRow = await SeasonIndividualLeaderboardProjection.findOne({
+      where: { seasonId: targetSeasonId, userId: params.currentUserId },
+    });
+    if (myRow) {
+      currentUserRank = {
+        rank: myRow.rank,
+        userId: myRow.userId,
+        userName: myRow.userName,
+        score: Number(myRow.points || 0),
+        points: Number(myRow.points || 0),
+        teamName: myRow.teamName,
+        gap: Math.max(0, Number(rows[0]?.points || 0) - Number(myRow.points || 0)),
+      };
+    }
+  }
+
   return {
     scope: 'season',
     season,
@@ -697,6 +810,7 @@ async function getIndividualRankings(params = {}) {
     page: numPage,
     limit: numLimit,
     totalPages: Math.ceil(count / numLimit) || 1,
+    currentUserRank,
   };
 }
 

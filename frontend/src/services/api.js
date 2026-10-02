@@ -788,24 +788,32 @@ export const competition = {
 };
 
 export const youtube = {
-  getOverview: async () => {
-    const res = await api.get('/api/youtube/overview');
+  getOverview: async (params = {}) => {
+    const res = await api.get('/api/youtube/overview', { params });
     return res.data;
   },
-  getMyTeam: async () => {
-    const res = await api.get('/api/youtube/my-team');
+  getHistory: async (params = {}) => {
+    const res = await api.get('/api/youtube/history', { params });
+    return res.data;
+  },
+  getMyOverview: async (params = {}) => {
+    const res = await api.get('/api/youtube/my-overview', { params });
+    return res.data;
+  },
+  getMyTeam: async (params = {}) => {
+    const res = await api.get('/api/youtube/my-team', { params });
     return res.data;
   },
   getLeaderboard: async (params = {}) => {
     const res = await api.get('/api/youtube/leaderboard', { params });
     return res.data;
   },
-  getTeamDetails: async (teamId) => {
-    const res = await api.get(`/api/youtube/teams/${teamId}`);
+  getTeamDetails: async (teamId, params = {}) => {
+    const res = await api.get(`/api/youtube/teams/${teamId}`, { params });
     return res.data;
   },
-  getChannelDetails: async (id) => {
-    const res = await api.get(`/api/youtube/channels/${id}`);
+  getChannelDetails: async (id, params = {}) => {
+    const res = await api.get(`/api/youtube/channels/${id}`, { params });
     return res.data;
   },
   compareTeams: async (teamA, teamB) => {
@@ -1014,6 +1022,16 @@ export const quizAdmin = {
     const formData = new FormData();
     formData.append('image', file);
     const res = await api.post('/api/admin/quiz/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return res.data;
+  },
+  // Direct Audio Upload
+  uploadAudio: async (file, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('audio', file);
+    const res = await api.post('/api/admin/quiz/upload-audio', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress,
     });
