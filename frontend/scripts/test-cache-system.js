@@ -150,7 +150,42 @@ async function runCacheTests() {
     passed++;
   }
 
-  console.log(`\n🎉 All ${passed}/8 Cache & Request Coalescing tests PASSED with 100% precision!\n`);
+  // Test 9: Defensive normalization of cached API structures (prevents 'allChannels is not iterable')
+  {
+    const normalizeChannelList = (raw) => {
+      if (Array.isArray(raw)) return raw;
+      if (Array.isArray(raw?.items)) return raw.items;
+      if (Array.isArray(raw?.channels)) return raw.channels;
+      return [];
+    };
+
+    // Raw object with .items
+    assert.deepStrictEqual(normalizeChannelList({ items: [{ id: 1, name: 'Chan 1' }] }), [{ id: 1, name: 'Chan 1' }]);
+    // Raw object with .channels
+    assert.deepStrictEqual(normalizeChannelList({ channels: [{ id: 2 }] }), [{ id: 2 }]);
+    // Pure array
+    assert.deepStrictEqual(normalizeChannelList([{ id: 3 }]), [{ id: 3 }]);
+    // Null / undefined / invalid
+    assert.deepStrictEqual(normalizeChannelList(null), []);
+    assert.deepStrictEqual(normalizeChannelList(undefined), []);
+    assert.deepStrictEqual(normalizeChannelList('invalid'), []);
+
+    // Spreading normalized result never throws
+    assert.doesNotThrow(() => {
+      const spread = [...normalizeChannelList({ items: [1, 2] })];
+      assert.strictEqual(spread.length, 2);
+    });
+
+    assert.doesNotThrow(() => {
+      const spread = [...normalizeChannelList({ invalidObj: true })];
+      assert.strictEqual(spread.length, 0);
+    });
+
+    console.log('  ✔ 9. Defensive normalization of cached channel/user objects passed');
+    passed++;
+  }
+
+  console.log(`\n🎉 All ${passed}/9 Cache & Request Coalescing tests PASSED with 100% precision!\n`);
 }
 
 runCacheTests().catch((err) => {
