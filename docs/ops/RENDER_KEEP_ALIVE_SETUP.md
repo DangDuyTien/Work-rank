@@ -67,7 +67,7 @@ Chọn một trong 3 phương pháp bên dưới (chỉ cần chọn **1 phươn
 1. Truy cập [https://cron-job.org](https://cron-job.org) và đăng ký tài khoản miễn phí.
 2. Bấm **Create Cronjob**:
    - **Title**: `WorkRank Render Keep-Alive`
-   - **URL**: `https://work3winmedia.onrender.com/health`
+   - **URL**: `https://<render-service-url>/health` (Kiểm tra chính xác URL service trong Render Dashboard)
    - **Execution Schedule**: Chọn **User-defined** → `Every 10 minutes` (hoặc `*/10 * * * *`).
    - **Request Method**: `GET`
    - **Request Headers**:
@@ -75,20 +75,17 @@ Chọn một trong 3 phương pháp bên dưới (chỉ cần chọn **1 phươn
    - **Request Timeout**: 15 seconds.
 3. Bấm **Create** để kích hoạt.
 
-### Phương Pháp 2: Dùng GitHub Actions (Tích Hợp Sẵn Trong Repo)
-Trong repository đã có file workflow tại:
-`.github/workflows/render-keep-alive.yml`
+> [!TIP]
+> **Tại sao nên dùng Cron-Job.org thay vì GitHub Actions?**
+> GitHub Actions giới hạn 2,000 phút chạy/tháng cho tài khoản miễn phí. Nếu đặt lịch 10 phút/lần thì 1 tháng cần hơn 4,300 phút, sẽ bị khóa GitHub Actions (`account locked due to a billing issue`).
+> Trong khi đó, **Cron-job.org** hoặc **UptimeRobot** hoàn toàn miễn phí, không giới hạn lượt ping HTTP, không bị tính phút compute.
 
-- Workflow này chạy lịch trình tự động `cron: '*/10 * * * *'` bằng runner Ubuntu của GitHub.
-- Mặc định gọi đến `https://work3winmedia.onrender.com/health`.
-- Nếu đổi domain, bạn có thể tạo GitHub Repository Variable: `KEEP_ALIVE_URL` với giá trị URL mới.
-
-### Phương Pháp 3: Dùng UptimeRobot / Better Stack
+### Phương Pháp 2: Dùng UptimeRobot / Better Stack
 1. Đăng ký tài khoản tại [https://uptimerobot.com](https://uptimerobot.com).
 2. Tạo **New Monitor**:
    - **Monitor Type**: `HTTP(s)`
    - **Friendly Name**: `WorkRank Health Probe`
-   - **URL (or IP)**: `https://work3winmedia.onrender.com/health`
+   - **URL (or IP)**: `https://<render-service-url>/health`
    - **Monitoring Interval**: `10 minutes` (hoặc 5 minutes).
 3. Lưu monitor.
 
