@@ -1235,131 +1235,65 @@ export const samGame = {
   },
 };
 
-export const activityApi = {
-  sendBatch: async (events) => {
-    const res = await api.post('/api/activity/batch', { events });
+export const kpiApi = {
+  getMyKpis: async () => {
+    const res = await api.get('/api/kpi/my-kpis');
     return res.data;
   },
-  getSettings: async () => {
-    const res = await api.get('/api/activity/settings');
+  getDepartments: async () => {
+    const res = await api.get('/api/kpi/departments');
     return res.data;
   },
-  updateSettings: async (data) => {
-    const res = await api.patch('/api/activity/settings', data);
+  createDepartment: async (data) => {
+    const res = await api.post('/api/kpi/departments', data);
     return res.data;
   },
-  getAnalytics: async (params = {}) => {
-    const res = await api.get('/api/activity/analytics', { params });
+  updateDepartment: async (id, data) => {
+    const res = await api.put(`/api/kpi/departments/${id}`, data);
     return res.data;
   },
-  // Computer Activity Tracking (Desktop Agent & Độ Năng Động)
-  recordComputerBatch: async (payload) => {
-    const res = await api.post('/api/activity/computer/batch', payload);
+  getDefinitions: async (params = {}) => {
+    const res = await api.get('/api/kpi/definitions', { params });
     return res.data;
   },
-  getComputerRankings: async (params = {}) => {
-    const res = await api.get('/api/activity/rankings', { params });
+  createDefinition: async (data) => {
+    const res = await api.post('/api/kpi/definitions', data);
     return res.data;
   },
-  getMySummary: async () => {
-    const res = await api.get('/api/activity/my-summary');
+  updateDefinition: async (id, data) => {
+    const res = await api.put(`/api/kpi/definitions/${id}`, data);
     return res.data;
   },
-  getAdminOverview: async (params = {}) => {
-    const res = await api.get('/api/activity/admin/overview', { params });
+  toggleDefinition: async (id) => {
+    const res = await api.patch(`/api/kpi/definitions/${id}/toggle`);
+    return res.data;
+  },
+  deleteDefinition: async (id) => {
+    const res = await api.delete(`/api/kpi/definitions/${id}`);
+    return res.data;
+  },
+  getPeriods: async (params = {}) => {
+    const res = await api.get('/api/kpi/periods', { params });
+    return res.data;
+  },
+  createPeriod: async (data) => {
+    const res = await api.post('/api/kpi/periods', data);
+    return res.data;
+  },
+  getResults: async (params = {}) => {
+    const res = await api.get('/api/kpi/results', { params });
+    return res.data;
+  },
+  recordResult: async (data) => {
+    const res = await api.post('/api/kpi/results', data);
+    return res.data;
+  },
+  getResultHistory: async (params = {}) => {
+    const res = await api.get('/api/kpi/results/history', { params });
     return res.data;
   },
 };
 
-export const computerActivityApi = {
-  recordBatch: async (payload) => activityApi.recordComputerBatch(payload),
-  getRankings: async (params) => activityApi.getComputerRankings(params),
-  getMySummary: async () => activityApi.getMySummary(),
-  getAdminOverview: async (params) => activityApi.getAdminOverview(params),
-  getLiveWaveState: async (params = {}) => {
-    const res = await api.get('/api/activity/wave/live', { params });
-    return res.data;
-  },
-};
-
-export const desktopAgentIpc = {
-  checkStatus: async () => {
-    try {
-      const res = await fetch('http://127.0.0.1:43124/status', { signal: AbortSignal.timeout(2000) });
-      if (res.ok) return await res.json();
-    } catch {
-      // Companion not running or port unreachable
-    }
-    return { running: false, paired: false, trackingActive: false };
-  },
-  pair: async ({ token, refreshToken, user, backendUrl }) => {
-    try {
-      const res = await fetch('http://127.0.0.1:43124/pair', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, refreshToken, user, backendUrl }),
-        signal: AbortSignal.timeout(3000),
-      });
-      if (res.ok) return await res.json();
-    } catch {
-      // Silent fail if companion not running
-    }
-    return null;
-  },
-  startTracking: async ({ token, refreshToken, user, backendUrl } = {}) => {
-    try {
-      const res = await fetch('http://127.0.0.1:43124/tracking/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, refreshToken, user, backendUrl }),
-        signal: AbortSignal.timeout(3000),
-      });
-      if (res.ok) return await res.json();
-    } catch {
-      // Silent fail
-    }
-    return null;
-  },
-  sendHeartbeat: async ({ token, refreshToken } = {}) => {
-    try {
-      const res = await fetch('http://127.0.0.1:43124/tracking/heartbeat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, refreshToken }),
-        signal: AbortSignal.timeout(2000),
-      });
-      if (res.ok) return await res.json();
-    } catch {
-      // Silent fail
-    }
-    return null;
-  },
-  stopTracking: async () => {
-    try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon('http://127.0.0.1:43124/tracking/stop');
-      } else {
-        await fetch('http://127.0.0.1:43124/tracking/stop', {
-          method: 'POST',
-          keepalive: true,
-          signal: AbortSignal.timeout(2000),
-        });
-      }
-    } catch {
-      // Silent fail
-    }
-  },
-  logout: async () => {
-    try {
-      await fetch('http://127.0.0.1:43124/logout', {
-        method: 'POST',
-        signal: AbortSignal.timeout(2000),
-      });
-    } catch {
-      // Silent fail
-    }
-  },
-};
 
 export const gameCatalogApi = {
   getCatalog: async () => {

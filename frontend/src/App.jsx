@@ -51,8 +51,7 @@ const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
-const ActivityDiagnostics = lazyWithReload(() => import('./pages/ActivityDiagnostics'));
-import { useActivityTracker } from './hooks/useActivityTracker';
+const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
 
 
 const ProtectedRoute = ({ children }) => {
@@ -134,9 +133,6 @@ function AnimatedAppRoutes() {
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState('none'); // 'none' | 'fadeIn' | 'fadeOut'
 
-  // Global pure activity tracker telemetry
-  useActivityTracker();
-
   useEffect(() => {
     // Cinematic exit/enter transitions
     const isFullscreenGame = (p) => ['/games/2048', '/games/capital-board', '/games/quiz', '/games/sam'].some((base) => p.startsWith(base));
@@ -212,20 +208,13 @@ function AnimatedAppRoutes() {
             <Route path="/grand" element={<GrandHub />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/rankings" element={<Leaderboard />} />
-            <Route path="/activity" element={<Navigate to="/rankings?scope=activity" replace />} />
-            <Route path="/activity-wave" element={<Navigate to="/rankings?scope=activity" replace />} />
-            <Route path="/activity-diagnostics" element={<ActivityDiagnostics />} />
-            <Route path="/diagnostics" element={<Navigate to="/activity-diagnostics" replace />} />
-            <Route path="/admin/activity-diagnostics" element={<Navigate to="/activity-diagnostics" replace />} />
+            <Route path="/admin/kpi" element={<AdminRoute><AdminKpi /></AdminRoute>} />
+            <Route path="/admin/departments" element={<Navigate to="/admin/kpi" replace />} />
 
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<GameHub />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
-            <Route path="/tracker" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/pomodoro" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/security" element={<Navigate to="/dashboard" replace />} />
             <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
             <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />

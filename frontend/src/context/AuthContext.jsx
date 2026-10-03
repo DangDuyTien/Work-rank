@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { auth, desktopAgentIpc } from '../services/api';
+import { auth } from '../services/api';
 import { connectSocket, disconnectSocket } from '../services/socket';
 
 import { setStoredAvatar, removeStoredAvatar } from '../utils/avatar';
@@ -76,10 +76,6 @@ export function AuthProvider({ children }) {
     if (user && token) {
       const s = connectSocket(token);
       setSocket(s);
-      // Transparent handshake with desktop agent if running
-      const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
-      const refreshToken = localStorage.getItem('refreshToken');
-      desktopAgentIpc.pair({ token, refreshToken, user, backendUrl });
     } else if (!user) {
       setSocket(null);
       disconnectSocket();
@@ -142,7 +138,6 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      desktopAgentIpc.logout();
       await auth.logout();
     } finally {
       disconnectSocket();

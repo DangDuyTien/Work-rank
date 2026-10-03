@@ -11,8 +11,6 @@
     "test": "npm --prefix backend test",
     "build": "npm --prefix frontend run build",
     "test:load": "npm --prefix backend run test:load",
-    "test:e2e": "npm --prefix frontend run test:e2e",
-    "agent": "node desktop-agent/index.js",
-    "agent:status": "node desktop-agent/index.js --status"
+    "test:e2e": "npm --prefix frontend run test:e2e"
   }
 }

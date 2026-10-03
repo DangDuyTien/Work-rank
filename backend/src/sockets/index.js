@@ -4,7 +4,6 @@ const { User } = require('../models');
 const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
 const samRealtime = require('../services/samRealtime.service');
-const liveActivityWaveService = require('../services/liveActivityWave.service');
 
 function emitPresence(io, user, status) {
   const payload = {
@@ -174,23 +173,6 @@ function registerSockets(io) {
       }
     });
 
-    // ── Live Activity Ocean / Wave Socket Rooms ──
-    socket.on('activity:wave:join', async (payload = {}, ack) => {
-      socket.join('activity:wave');
-      try {
-        const period = payload?.period || 'today';
-        const snapshot = await liveActivityWaveService.getWaveSnapshot(period);
-        if (typeof ack === 'function') ack({ ok: true, data: snapshot });
-        socket.emit('activity:wave:initial', snapshot);
-      } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
-      }
-    });
-
-    socket.on('activity:wave:leave', () => {
-      socket.leave('activity:wave');
-    });
-
     socket.on('disconnect', () => {
       samRealtime.removeSpectatorFromAll(socket.id);
       const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
@@ -199,9 +181,6 @@ function registerSockets(io) {
       if (state.sockets.size > 0) return;
     });
   });
-
-  // Start 1-second live wave aggregation and broadcast loop
-  liveActivityWaveService.setIo(io);
 }
 
 module.exports = registerSockets;

@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dashboard, leaderboard, youtube, activityApi, desktopAgentIpc } from '../services/api';
+import { dashboard, leaderboard, youtube, kpiApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useActivityStats } from '../hooks/useActivityTracker';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import {
   Activity,
@@ -30,7 +29,13 @@ import {
   Zap,
   Terminal,
   CheckCircle2,
+  CheckCircle,
   Radio,
+  Download,
+  Info,
+  X,
+  Target,
+  FolderCheck,
 } from 'lucide-react';
 
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -40,7 +45,6 @@ import CompetitionProgressWidget from '../components/CompetitionProgressWidget';
 import YouTubeTrendChart from '../components/YouTubeTrendChart';
 import TeamComparisonBar from '../components/TeamComparisonBar';
 import ChannelDetailModal from '../components/ChannelDetailModal';
-import CompactLiveWave from '../components/CompactLiveWave';
 import { AnimatedNumber, TabTransition, PageTransition } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
@@ -123,22 +127,12 @@ export default function Dashboard() {
         ? rawCachedChannels.channels
         : [];
 
-  const rawCachedRankings = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS());
-  const cachedRankings = Array.isArray(rawCachedRankings)
-    ? rawCachedRankings
-    : Array.isArray(rawCachedRankings?.items)
-      ? rawCachedRankings.items
-      : [];
-
-  const rawCachedMyActivity = getCached(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id));
-  const cachedMyActivity = rawCachedMyActivity?.data || rawCachedMyActivity || null;
+  const rawCachedKpi = getCached(CACHE_KEYS.DASHBOARD_KPI_MY_SUMMARY(user?.id));
+  const cachedKpi = rawCachedKpi?.data || rawCachedKpi || { department: null, currentPeriod: null, kpis: [] };
 
   const hasInitialCache = Boolean(rawCachedTotals || (cachedUsers && cachedUsers.length > 0));
 
-  const [myActivity, setMyActivity] = useState(() => cachedMyActivity || null);
-  const [agentStatus, setAgentStatus] = useState({ running: false, paired: false });
-  const [liveWaveSnapshot, setLiveWaveSnapshot] = useState(null);
-  const [activityRankings, setActivityRankings] = useState(() => cachedRankings);
+  const [myKpiData, setMyKpiData] = useState(() => cachedKpi);
   const pageVisible = usePageVisibility();
 
   // Basic dashboard range
@@ -168,54 +162,6 @@ export default function Dashboard() {
 
   // Modal state
   const [activeModalChannelId, setActiveModalChannelId] = useState(null);
-
-  // Global activity tracking controller with Autonomous Schedule (08:00 - 17:30)
-  const {
-    trackingState,
-    isTrackingActive,
-    isOutsideSchedule,
-    isScheduleOpen,
-    agentStatus: liveAgentStatus,
-    displayPts,
-    displayClicks,
-    displayKeys,
-    displayActiveMinutes,
-    serverPts,
-    pendingPts,
-    syncStatus,
-    ptsPerHour: livePtsPerHour,
-    avgApm: liveAvgApm,
-    lastEventTime,
-    updateServerSummary,
-  } = useActivityStats();
-
-  const ptsPerHour = useMemo(() => {
-    if (livePtsPerHour) return livePtsPerHour;
-    const score = Number(displayPts || myActivity?.activityScore || 0);
-    const mins = Number(displayActiveMinutes || myActivity?.activeMinutes || 0);
-    if (mins >= 1 && score > 0) {
-      return Math.round((score / mins) * 60);
-    }
-    return null;
-  }, [livePtsPerHour, displayPts, displayActiveMinutes, myActivity?.activityScore, myActivity?.activeMinutes]);
-
-  const avgApm = useMemo(() => {
-    if (liveAvgApm) return liveAvgApm;
-    const score = Number(displayPts || myActivity?.activityScore || 0);
-    const mins = Number(displayActiveMinutes || myActivity?.activeMinutes || 0);
-    if (mins >= 1 && score > 0) {
-      return Math.round(score / mins);
-    }
-    if (ptsPerHour) {
-      return Math.round(ptsPerHour / 60);
-    }
-    return null;
-  }, [liveAvgApm, displayPts, displayActiveMinutes, myActivity?.activityScore, myActivity?.activeMinutes, ptsPerHour]);
-
-  const checkAgentStatus = useCallback(async () => {
-    const status = await desktopAgentIpc.checkStatus();
-    setAgentStatus(status);
-  }, []);
 
   const prevRef = useRef(null);
   const requestIdRef = useRef(0);
@@ -273,61 +219,49 @@ export default function Dashboard() {
         }),
       ];
 
-      if (isAdmin) {
-        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_COMPANY(period), () => youtube.getOverview({ period })).catch(() => null));
-        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), async () => {
+      const [usersListRes, totalsRes, ytCompanyRes, ytChannelsRes, ytMemberRes, kpiRes] = await Promise.all([
+        fetchWithCache(CACHE_KEYS.DASHBOARD_USERS(selectedRange), () => dashboard.getUsers(selectedRange)),
+        fetchWithCache(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange), async () => {
+          const res = await dashboard.getTotals(selectedRange);
+          const d = res?.data || {};
+          return {
+            keystrokes: Number(d.totalKeystrokes || 0),
+            clicks: Number(d.totalMouseClicks || 0),
+            activeSeconds: Number(d.totalActiveSeconds || d.totalActiveSecondsToday || 0),
+            online: Number(d.activeUsersNow || 0),
+          };
+        }),
+        isAdmin ? fetchWithCache(CACHE_KEYS.DASHBOARD_YT_COMPANY(period), () => youtube.getOverview({ period })).catch(() => null) : Promise.resolve(null),
+        isAdmin ? fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), async () => {
           const res = await youtube.getLeaderboard({ view: 'channels', limit: 200 });
           return Array.isArray(res?.items) ? res.items : Array.isArray(res?.channels) ? res.channels : [];
-        }).catch(() => []));
-      } else {
-        calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_YT_MEMBER(period), () => youtube.getMyOverview({ period })).catch(() => null));
-      }
+        }).catch(() => []) : Promise.resolve([]),
+        !isAdmin ? fetchWithCache(CACHE_KEYS.DASHBOARD_YT_MEMBER(period), () => youtube.getMyOverview({ period })).catch(() => null) : Promise.resolve(null),
+        fetchWithCache(CACHE_KEYS.DASHBOARD_KPI_MY_SUMMARY(user?.id), async () => {
+          const res = await kpiApi.getMyKpis();
+          return res?.data || res || { department: null, currentPeriod: null, kpis: [] };
+        }).catch(() => ({ department: null, currentPeriod: null, kpis: [] })),
+      ]);
 
-      // Fetch computer activity summary, companion status, and rankings
-      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_MY_SUMMARY(user?.id), async () => {
-        const res = await activityApi.getMySummary();
-        return res?.data || res || null;
-      }).catch(() => null));
-      calls.push(desktopAgentIpc.checkStatus().catch(() => ({ running: false, paired: false })));
-      calls.push(fetchWithCache(CACHE_KEYS.DASHBOARD_ACTIVITY_RANKINGS(), async () => {
-        const res = await activityApi.getComputerRankings({ period: 'today', limit: 20 });
-        return Array.isArray(res?.items) ? res.items : Array.isArray(res?.data?.rankings) ? res.data.rankings : [];
-      }).catch(() => []));
-
-      const results = await Promise.all(calls);
       if (requestId !== requestIdRef.current) return;
 
-      const [usersListRes, totalsRes, ytDataRes, channelsRes, activityRes, agentRes, rankingsRes] = results;
-
       if (isAdmin) {
-        if (ytDataRes) setCompanyOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
-        const safeChannels = Array.isArray(channelsRes)
-          ? channelsRes
-          : Array.isArray(channelsRes?.items)
-            ? channelsRes.items
-            : Array.isArray(channelsRes?.channels)
-              ? channelsRes.channels
+        if (ytCompanyRes) setCompanyOverview((prev) => (isDeepEqual(prev, ytCompanyRes) ? prev : ytCompanyRes));
+        const safeChannels = Array.isArray(ytChannelsRes)
+          ? ytChannelsRes
+          : Array.isArray(ytChannelsRes?.items)
+            ? ytChannelsRes.items
+            : Array.isArray(ytChannelsRes?.channels)
+              ? ytChannelsRes.channels
               : [];
         setAllChannels((prev) => (isDeepEqual(prev, safeChannels) ? prev : safeChannels));
       } else {
-        if (ytDataRes) setMemberOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
+        if (ytMemberRes) setMemberOverview((prev) => (isDeepEqual(prev, ytMemberRes) ? prev : ytMemberRes));
       }
 
-      if (activityRes) {
-        const actData = activityRes?.data || activityRes;
-        setMyActivity((prev) => (isDeepEqual(prev, actData) ? prev : actData));
-        updateServerSummary(actData);
-      }
-
-      const safeRankings = Array.isArray(rankingsRes)
-        ? rankingsRes
-        : Array.isArray(rankingsRes?.items)
-          ? rankingsRes.items
-          : [];
-      setActivityRankings((prev) => (isDeepEqual(prev, safeRankings) ? prev : safeRankings));
-
-      if (agentRes) {
-        setAgentStatus(agentRes);
+      if (kpiRes) {
+        const kpiData = kpiRes?.data || kpiRes;
+        setMyKpiData((prev) => (isDeepEqual(prev, kpiData) ? prev : kpiData));
       }
 
       const safeTotals = totalsRes || {};
@@ -353,7 +287,7 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     }
-  }, [isAdmin, ytPeriod, user?.id, updateServerSummary]);
+  }, [isAdmin, ytPeriod, user?.id]);
 
   // Load team drilldown if selected
   const fetchTeamDrilldown = useCallback(async (teamId, period) => {
@@ -387,94 +321,6 @@ export default function Dashboard() {
     window.addEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
   }, []);
-
-  // Real-time synchronization for Computer Activity Rankings & Compact Live Wave
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.emit('activity:wave:join', { period: 'today' });
-
-    const onWaveTick = (snapshot) => {
-      if (!snapshot) return;
-      setLiveWaveSnapshot(snapshot);
-
-      if (Array.isArray(snapshot.surfers) && snapshot.surfers.length > 0) {
-        const updatedItems = snapshot.surfers.map((s, idx) => ({
-          userId: s.userId,
-          user: {
-            id: s.userId,
-            name: s.name,
-            fullName: s.name,
-            username: s.name,
-            email: s.email,
-            avatar: null,
-            jobTitle: s.jobTitle,
-            department: s.department,
-            isVerified: s.isVerified,
-            teamName: s.teamName && s.teamName !== 'Chưa gán đội' ? s.teamName : null,
-          },
-          name: s.name,
-          activityScore: s.score,
-          activeMinutes: Math.round((s.activeSecondsToday || 0) / 60),
-          topApp: s.currentApp,
-          rank: s.rank || idx + 1,
-          rankChange: s.rankDelta || 0,
-          activityState: s.activityState,
-        }));
-        setActivityRankings(updatedItems);
-
-        // Sync current user's live summary metrics directly from server tick
-        const myId = Number(user?.id || user?.userId);
-        const me = snapshot.surfers.find((s) => Number(s.userId) === myId);
-        if (me) {
-          const serverUpdate = {
-            rank: me.rank,
-            activityScore: me.score,
-            rankChange: me.rankDelta || 0,
-            activeMinutes: Math.round((me.activeSecondsToday || 0) / 60),
-            topApp: me.currentApp,
-            activityState: me.activityState,
-          };
-          setMyActivity((prev) => ({
-            ...prev,
-            ...serverUpdate,
-          }));
-          updateServerSummary(serverUpdate);
-        }
-      }
-    };
-
-    const onPtsUpdated = (data) => {
-      if (!data) return;
-      const myId = Number(user?.id || user?.userId);
-      if (Number(data.userId) === myId) {
-        const serverUpdate = {
-          rank: data.rank !== undefined ? data.rank : undefined,
-          activityScore: data.activityScore !== undefined ? data.activityScore : data.serverPts,
-          activeMinutes: data.activeMinutes !== undefined ? data.activeMinutes : undefined,
-          mouseClicks: data.mouseClicks !== undefined ? data.mouseClicks : undefined,
-          keyboardCount: data.keyboardCount !== undefined ? data.keyboardCount : undefined,
-          topApp: data.topApp || undefined,
-        };
-        setMyActivity((prev) => ({
-          ...prev,
-          ...serverUpdate,
-        }));
-        updateServerSummary(serverUpdate);
-      }
-    };
-
-    socket.on('activity:wave:tick', onWaveTick);
-    socket.on('activity:wave:initial', onWaveTick);
-    socket.on('activity:pts:updated', onPtsUpdated);
-
-    return () => {
-      socket.emit('activity:wave:leave');
-      socket.off('activity:wave:tick', onWaveTick);
-      socket.off('activity:wave:initial', onWaveTick);
-      socket.off('activity:pts:updated', onPtsUpdated);
-    };
-  }, [socket, user]);
 
   // Filtered channels list for admin
   const filteredChannels = useMemo(() => {
@@ -575,203 +421,283 @@ export default function Dashboard() {
       {/* COMPETITION PROGRESS WIDGET */}
       <CompetitionProgressWidget />
 
-      {/* ĐỘ NĂNG ĐỘNG CỦA BẠN (COMPUTER ACTIVITY WIDGET) */}
-      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 20px', marginBottom: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* WORKRANK KPI FOUNDATION WIDGET */}
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '18px 20px', marginBottom: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 36,
-              height: 36,
-              background: isTrackingActive ? '#ecfdf5' : isOutsideSchedule ? '#fffbeb' : '#f1f5f9',
-              color: isTrackingActive ? '#059669' : isOutsideSchedule ? '#b45309' : '#64748b',
+              width: 40,
+              height: 40,
+              background: '#ecfdf5',
+              color: '#059669',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 6,
+              border: '1px solid #a7f3d0',
             }}>
-              <Sparkles size={20} />
+              <Target size={22} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                  Độ Năng Động Của Bạn (Computer Activity)
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                  Chỉ Tiêu & Tiến Độ KPI Của Bạn
                 </h3>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  padding: '2px 8px',
-                  borderRadius: 12,
-                  background: isTrackingActive ? '#dcfce7' : isOutsideSchedule ? '#fef3c7' : '#f1f5f9',
-                  color: isTrackingActive ? '#15803d' : isOutsideSchedule ? '#b45309' : '#64748b',
-                  border: `1px solid ${isTrackingActive ? '#86efac' : isOutsideSchedule ? '#fde68a' : '#cbd5e1'}`,
-                }}>
+                {myKpiData?.department ? (
                   <span style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: isTrackingActive ? '#16a34a' : isOutsideSchedule ? '#d97706' : '#94a3b8',
-                    boxShadow: isTrackingActive ? '0 0 0 2px rgba(22,163,74,0.3)' : 'none',
-                  }} />
-                  {isTrackingActive ? 'ĐANG THEO DÕI TỰ ĐỘNG' : isOutsideSchedule ? 'NGOÀI GIỜ LÀM VIỆC (08:00 - 17:30)' : 'TẠM DỪNG'}
-                </span>
-              </div>
-              <p style={{ margin: '3px 0 0', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {isTrackingActive ? (
-                  <>
-                    <CheckCircle2 size={13} color="#16a34a" style={{ flexShrink: 0 }} />
-                    <span>
-                      {liveAgentStatus?.running || agentStatus?.running
-                        ? `Đang tự động đếm hoạt động toàn máy tính (${(liveAgentStatus?.platform || agentStatus?.platform) === 'darwin' ? 'macOS' : 'Windows'}) — Tắt web sẽ tự động ngắt.`
-                        : (typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
-                            ? 'Đang tự động đếm hoạt động Web/PWA (iOS) — Tắt web sẽ tự động ngắt.'
-                            : 'Đang tự động đếm hoạt động trình duyệt Web — Tắt web sẽ tự động ngắt.')}
-                    </span>
-                  </>
-                ) : isOutsideSchedule ? (
-                  <>
-                    <Clock3 size={13} color="#b45309" style={{ flexShrink: 0 }} />
-                    <span>
-                      Khung giờ ghi nhận: 08:00 – 17:30 (Asia/Ho_Chi_Minh). Tự động tiếp tục vào 08:00 ngày làm việc tiếp theo.
-                    </span>
-                  </>
+                    fontSize: 11,
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    background: '#eff6ff',
+                    color: '#1d4ed8',
+                    border: '1px solid #bfdbfe',
+                  }}>
+                    <Building2 size={12} />
+                    PHÒNG BAN: {myKpiData.department.name || myKpiData.department.code}
+                  </span>
                 ) : (
-                  <>
-                    <Clock3 size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
-                    <span>
-                      Tracking tự động hoạt động khi bạn đăng nhập và mở WorkRank trong khung giờ 08:00 - 17:30.
-                    </span>
-                  </>
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    background: '#fef3c7',
+                    color: '#b45309',
+                    border: '1px solid #fde68a',
+                  }}>
+                    Chưa phân bổ phòng ban
+                  </span>
                 )}
+                {myKpiData?.currentPeriod && (
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    background: '#f1f5f9',
+                    color: '#475569',
+                    border: '1px solid #cbd5e1',
+                  }}>
+                    Kỳ: {myKpiData.currentPeriod.name}
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>
+                Theo dõi mục tiêu và kết quả thực tế theo từng chỉ tiêu của bộ phận.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => navigate('/rankings?scope=activity')}
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                padding: '7px 14px',
-                background: '#0f172a',
-                border: 'none',
-                color: '#ffffff',
-                borderRadius: 4,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span>Xem BXH Độ Năng Động</span>
-              <ChevronRight size={14} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/activity-diagnostics')}
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                padding: '7px 12px',
-                background: '#f1f5f9',
-                border: '1px solid #cbd5e1',
-                color: '#334155',
-                borderRadius: 4,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-              title="Kiểm tra trạng thái kết nối Agent, Listeners và Pipeline"
-            >
-              <Terminal size={14} color="#0284c7" />
-              <span>Kiểm Tra Pipeline</span>
-            </button>
-          </div>
+          {isAdmin && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/kpi')}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '7px 14px',
+                  background: '#0f172a',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>Quản Lý Cấu Hình KPI</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="activity-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Vị trí BXH (Hôm nay)</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
-              {myActivity?.rank ? `#${myActivity.rank}` : '—'}
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              {myActivity?.rank ? 'Trong Top năng động' : 'Chưa có xếp hạng hôm nay'}
+        {/* Department Not Assigned Banner */}
+        {!myKpiData?.department && (
+          <div style={{
+            padding: '14px 16px',
+            background: '#fffbeb',
+            border: '1px solid #fef3c7',
+            borderRadius: 4,
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <AlertCircle size={20} color="#b45309" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: 12.5, color: '#92400e' }}>
+              <strong>Chưa phân bổ phòng ban:</strong> Tài khoản của bạn hiện chưa được gán vào phòng ban <strong>CONTENT</strong> hoặc <strong>EDIT</strong>. Vui lòng liên hệ Quản trị viên để được phân bổ phòng ban và nhận chỉ tiêu KPI.
             </div>
           </div>
+        )}
 
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: '#64748b' }}>Điểm Năng Động (PTS)</span>
-              {pendingPts > 0 && (
-                <span
+        {/* KPIs Grid */}
+        {myKpiData?.kpis && myKpiData.kpis.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+            {myKpiData.kpis.map((kpiItem) => {
+              const target = Number(kpiItem.target || 0);
+              const actual = Number(kpiItem.actual || 0);
+              const progressPct = Number(kpiItem.progressPct || (target > 0 ? Math.round((actual / target) * 100) : 0));
+              const isCompleted = progressPct >= 100;
+              const isGood = progressPct >= 70;
+
+              return (
+                <div
+                  key={kpiItem.kpiId || kpiItem.id}
                   style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: '#d97706',
-                    background: '#fef3c7',
-                    padding: '2px 6px',
-                    borderRadius: 4,
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 6,
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    position: 'relative',
                   }}
-                  title="Điểm đã ghi nhận ngay tức thì, đang lưu nền lên máy chủ"
                 >
-                  +{pendingPts} đang lưu
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <AnimatedNumber value={displayPts} /> <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>pts</span>
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              {pendingPts > 0 ? 'Tức thì • Đang đồng bộ máy chủ...' : '1 click = 1 pt • 1 phím = 1 pt'}
-            </div>
-          </div>
+                  <div>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
+                          {kpiItem.name}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                          <span style={{
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            background: '#e2e8f0',
+                            color: '#334155',
+                            padding: '1px 6px',
+                            borderRadius: 3,
+                          }}>
+                            {kpiItem.code}
+                          </span>
+                          <span style={{ fontSize: 11, color: '#64748b' }}>
+                            Đơn vị: <strong>{kpiItem.unit || 'lần'}</strong>
+                          </span>
+                        </div>
+                      </div>
 
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Chi tiết thao tác</div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
-              <AnimatedNumber value={displayClicks} /> <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>click</span> • <AnimatedNumber value={displayKeys} /> <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>phím</span>
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              Tổng thao tác chuột & bàn phím
-            </div>
-          </div>
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: 4,
+                        background: isCompleted ? '#dcfce7' : isGood ? '#fef3c7' : '#f1f5f9',
+                        color: isCompleted ? '#15803d' : isGood ? '#b45309' : '#64748b',
+                        border: `1px solid ${isCompleted ? '#86efac' : isGood ? '#fde68a' : '#cbd5e1'}`,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {isCompleted ? 'ĐẠT CHỈ TIÊU' : isGood ? 'TIẾN ĐỘ TỐT' : 'ĐANG THỰC HIỆN'}
+                      </span>
+                    </div>
 
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Tốc độ trung bình</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#0284c7' }}>
-              {ptsPerHour ? `${ptsPerHour.toLocaleString()} pts/h` : (isTrackingActive ? 'Đang tính...' : '0 pts/h')}
-            </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              {avgApm ? `~${avgApm} thao tác / phút (APM)` : 'Tốc độ ghi nhận trung bình'}
-            </div>
-          </div>
+                    {kpiItem.description && (
+                      <p style={{ margin: '0 0 10px', fontSize: 11.5, color: '#64748b', lineHeight: 1.4 }}>
+                        {kpiItem.description}
+                      </p>
+                    )}
+                  </div>
 
-          <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Thời gian làm việc</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
-              {displayActiveMinutes ? `${Math.floor(displayActiveMinutes / 60)}h ${displayActiveMinutes % 60}m` : (myActivity?.activeMinutes ? `${Math.floor(myActivity.activeMinutes / 60)}h ${myActivity.activeMinutes % 60}m` : '0m')}
+                  <div>
+                    {/* Target vs Actual */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      justifyContent: 'space-between',
+                      marginBottom: 6,
+                    }}>
+                      <div>
+                        <span style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Thực tế: </span>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: isCompleted ? '#059669' : '#0f172a' }}>
+                          {actual.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: 11, color: '#64748b', marginLeft: 3 }}>/ {target.toLocaleString()} {kpiItem.unit}</span>
+                      </div>
+                      <div style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: isCompleted ? '#059669' : isGood ? '#b45309' : '#0284c7',
+                      }}>
+                        {progressPct}%
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div style={{
+                      width: '100%',
+                      height: 8,
+                      background: '#e2e8f0',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        width: `${Math.min(progressPct, 100)}%`,
+                        height: '100%',
+                        background: isCompleted ? '#10b981' : isGood ? '#f59e0b' : '#3b82f6',
+                        borderRadius: 4,
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+
+                    {/* Footer Info */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: 8,
+                      fontSize: 10.5,
+                      color: '#94a3b8',
+                    }}>
+                      <span>Kỳ: {kpiItem.periodType || 'monthly'}</span>
+                      <span>Nguồn: {kpiItem.sourceType || 'manual'}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : myKpiData?.department ? (
+          <div style={{
+            padding: '36px 20px',
+            textAlign: 'center',
+            background: '#f8fafc',
+            border: '1px dashed #cbd5e1',
+            borderRadius: 6,
+          }}>
+            <Target size={32} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>
+              Chưa có chỉ tiêu KPI nào được gán cho phòng {myKpiData.department.name} trong kỳ này
             </div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-              {myActivity?.topApp ? `Chủ yếu: ${myActivity.topApp}` : 'Ghi nhận toàn máy tính'}
+            <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+              Quản trị viên có thể thiết lập danh mục KPI và chỉ tiêu trong mục Quản Lý KPI.
             </div>
           </div>
+        ) : null}
+
+        <div style={{
+          marginTop: 14,
+          paddingTop: 10,
+          borderTop: '1px solid #f1f5f9',
+          fontSize: 11,
+          color: '#94a3b8',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <Info size={13} />
+          <span>Hệ thống WorkRank KPI Foundation đánh giá dựa trên chỉ tiêu công việc thực tế, không can thiệp giám sát thao tác máy tính. Quy tắc tính điểm XP & thưởng sẽ được cấu hình ở giai đoạn tiếp theo.</span>
         </div>
-
-        {/* BIỂU ĐỒ CHUYỂN ĐỘNG THỨ HẠNG REALTIME (COMPACT LIVE WAVE) */}
-        <CompactLiveWave
-          rankings={activityRankings}
-          liveSnapshot={liveWaveSnapshot}
-          currentUser={user}
-          onSelectUser={() => navigate('/rankings?scope=activity')}
-          embedded={true}
-        />
       </div>
 
       {/* ========================================================================= */}

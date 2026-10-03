@@ -14,6 +14,7 @@ User.init(
     teamId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'team_id' },
     jobTitle: { type: DataTypes.STRING(120), allowNull: true, defaultValue: 'Nhân viên', field: 'job_title' },
     department: { type: DataTypes.STRING(120), allowNull: true, defaultValue: 'Media & Content', field: 'department' },
+    departmentId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'department_id' },
     bio: { type: DataTypes.TEXT, allowNull: true },
     phone: { type: DataTypes.STRING(32), allowNull: true },
     isVerified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_verified' },

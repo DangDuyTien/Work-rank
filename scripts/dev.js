@@ -8,7 +8,7 @@ const colorsEnabled = !process.env.NO_COLOR;
 const reset = colorsEnabled ? '\x1b[0m' : '';
 const projectRoot = path.resolve(process.cwd());
 const requiredPorts = [5001, 5173];
-const portsToRelease = [5001, 5173, 5174, 43124];
+const portsToRelease = [5001, 5173, 5174];
 
 const services = [
   {
@@ -20,11 +20,6 @@ const services = [
     name: 'frontend',
     color: colorsEnabled ? '\x1b[35m' : '',
     args: ['--prefix', 'frontend', 'run', 'dev', '--', '--host', '0.0.0.0'],
-  },
-  {
-    name: 'agent',
-    color: colorsEnabled ? '\x1b[32m' : '',
-    args: ['run', 'agent'],
   },
 ];
 
@@ -72,7 +67,6 @@ function oldDevPids() {
       if (!pid || pid === process.pid) return false;
       if (command.includes(`${projectRoot}/backend/node_modules/.bin/nodemon`)) return true;
       if (command.includes(`${projectRoot}/frontend/node_modules/.bin/vite`)) return true;
-      if (command.includes('desktop-agent/index.js')) return true;
       if (/(^|\s)node\s+src\/server\.js(\s|$)/.test(command)) return processCwd(pid).startsWith(path.join(projectRoot, 'backend'));
       return false;
     })

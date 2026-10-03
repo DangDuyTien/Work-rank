@@ -16,6 +16,7 @@ import {
   Sparkles,
   LayoutGrid,
   Club,
+  Target,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -147,6 +148,15 @@ export const NAVIGATION_CONFIG = [
     badge: 'Quản Trị',
     items: [
       {
+        to: '/admin/kpi',
+        label: 'Quản Lý KPI & Phòng Ban',
+        shortLabel: 'KPI & Ban',
+        icon: Target,
+        adminOnly: true,
+        badge: 'Mới',
+        description: 'Cấu hình phòng ban, thiết lập chỉ tiêu KPI và quản lý kết quả thực hiện',
+      },
+      {
         to: '/admin/quiz',
         label: 'Quản Lý Quiz Game',
         shortLabel: 'Quiz Game',
@@ -259,6 +269,7 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú';
   if (pathname.startsWith('/games/sam')) return 'Đánh Sâm';
   if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
+  if (pathname.startsWith('/admin/kpi')) return 'Quản Lý KPI & Phòng Ban';
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';
   if (pathname.startsWith('/admin/competition/seasons')) return 'Quản Lý Mùa Giải';

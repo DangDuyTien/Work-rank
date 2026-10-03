@@ -61,12 +61,15 @@ const SamPlayer = require('./SamPlayer');
 const SamAction = require('./SamAction');
 const SamResult = require('./SamResult');
 const SamUserStat = require('./SamUserStat');
-// Activity Tracking & System Settings & Game Catalog & Computer Activity
-const ActivityEvent = require('./ActivityEvent');
+// KPI Foundation Models
+const Department = require('./Department');
+const Kpi = require('./Kpi');
+const KpiPeriod = require('./KpiPeriod');
+const KpiResult = require('./KpiResult');
+const KpiEvent = require('./KpiEvent');
+// System Settings & Game Catalog
 const SystemSetting = require('./SystemSetting');
 const GameCatalog = require('./GameCatalog');
-const ComputerActivityEvent = require('./ComputerActivityEvent');
-const ComputerDailyStat = require('./ComputerDailyStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -92,9 +95,6 @@ User.hasMany(ChatMessage, { as: 'SentChatMessages', foreignKey: 'senderId' });
 User.hasMany(ChatMessage, { as: 'ReceivedChatMessages', foreignKey: 'receiverId' });
 ChatMessage.belongsTo(User, { as: 'Sender', foreignKey: 'senderId' });
 ChatMessage.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId' });
-
-User.hasMany(ActivityEvent, { as: 'activityEvents', foreignKey: 'userId' });
-ActivityEvent.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 // Phase 4 Associations
 RuleSet.hasMany(RuleSetVersion, { foreignKey: 'ruleSetId', as: 'versions' });
@@ -252,11 +252,27 @@ SamResult.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
 User.hasOne(SamUserStat, { as: 'samStats', foreignKey: 'userId' });
 SamUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
-User.hasMany(ComputerActivityEvent, { foreignKey: 'userId' });
-ComputerActivityEvent.belongsTo(User, { foreignKey: 'userId' });
+// KPI Foundation Associations
+Department.hasMany(Kpi, { foreignKey: 'departmentId', as: 'kpis' });
+Kpi.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
 
-User.hasMany(ComputerDailyStat, { foreignKey: 'userId' });
-ComputerDailyStat.belongsTo(User, { foreignKey: 'userId' });
+Department.hasMany(User, { foreignKey: 'departmentId', as: 'users' });
+User.belongsTo(Department, { foreignKey: 'departmentId', as: 'departmentRef' });
+
+Department.hasMany(KpiResult, { foreignKey: 'departmentId', as: 'kpiResults' });
+KpiResult.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
+
+Kpi.hasMany(KpiResult, { foreignKey: 'kpiId', as: 'results' });
+KpiResult.belongsTo(Kpi, { foreignKey: 'kpiId', as: 'kpi' });
+
+KpiPeriod.hasMany(KpiResult, { foreignKey: 'periodId', as: 'results' });
+KpiResult.belongsTo(KpiPeriod, { foreignKey: 'periodId', as: 'period' });
+
+User.hasMany(KpiResult, { foreignKey: 'userId', as: 'kpiResults' });
+KpiResult.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+KpiResult.hasMany(KpiEvent, { foreignKey: 'kpiResultId', as: 'events' });
+KpiEvent.belongsTo(KpiResult, { foreignKey: 'kpiResultId', as: 'kpiResult' });
 
 module.exports = {
   sequelize,
@@ -327,12 +343,15 @@ module.exports = {
   SamAction,
   SamResult,
   SamUserStat,
-  // Activity Tracking & System Settings & Game Catalog & Computer Activity
-  ActivityEvent,
+  // KPI Foundation Models
+  Department,
+  Kpi,
+  KpiPeriod,
+  KpiResult,
+  KpiEvent,
+  // System Settings & Game Catalog
   SystemSetting,
   GameCatalog,
-  ComputerActivityEvent,
-  ComputerDailyStat,
 };
 
 
