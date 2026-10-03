@@ -78,7 +78,8 @@ export function AuthProvider({ children }) {
       setSocket(s);
       // Transparent handshake with desktop agent if running
       const backendUrl = window.location.port === '5173' ? 'http://localhost:5001' : window.location.origin;
-      desktopAgentIpc.pair({ token, user, backendUrl });
+      const refreshToken = localStorage.getItem('refreshToken');
+      desktopAgentIpc.pair({ token, refreshToken, user, backendUrl });
     } else if (!user) {
       setSocket(null);
       disconnectSocket();

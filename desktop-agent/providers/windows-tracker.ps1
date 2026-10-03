@@ -1,12 +1,24 @@
 # WorkRank Windows Computer Activity Telemetry Helper
 # Lightweight Win32 API loop: reads idle seconds, active process name, click and keystroke counts.
+# Runs inside dedicated STA worker thread attached to interactive desktop ("default").
 
 $win32TypeDef = @"
 using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Threading;
+using System.Text;
 
 public class WorkRankWin32 {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr OpenDesktop(string lpszDesktop, uint dwFlags, bool fInherit, uint dwDesiredAccess);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetThreadDesktop(IntPtr hDesktop);
+
     [DllImport("user32.dll")]
     public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
@@ -15,6 +27,9 @@ public class WorkRankWin32 {
 
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
@@ -41,39 +56,92 @@ public class WorkRankWin32 {
     public static string GetActiveProcessName() {
         IntPtr hwnd = GetForegroundWindow();
         if (hwnd == IntPtr.Zero) return "Desktop";
-        uint pid;
+        uint pid = 0;
         GetWindowThreadProcessId(hwnd, out pid);
+        if (pid == 0) return "Desktop";
+
         try {
-            return Process.GetProcessById((int)pid).ProcessName;
+            string procName = Process.GetProcessById((int)pid).ProcessName;
+
+            // Handle Windows 10/11 UWP apps running under ApplicationFrameHost (e.g. Settings, Calculator)
+            if (string.Equals(procName, "ApplicationFrameHost", StringComparison.OrdinalIgnoreCase)) {
+                IntPtr childHwnd = FindWindowEx(hwnd, IntPtr.Zero, "Windows.UI.Core.CoreWindow", null);
+                if (childHwnd != IntPtr.Zero) {
+                    uint childPid = 0;
+                    GetWindowThreadProcessId(childHwnd, out childPid);
+                    if (childPid > 0 && childPid != pid) {
+                        return Process.GetProcessById((int)childPid).ProcessName;
+                    }
+                }
+            }
+            return procName;
         } catch {
             return "Unknown";
         }
     }
 
-    public static void PollDeltas(out int clicks, out int keys) {
-        clicks = 0;
-        keys = 0;
-
-        // Mouse buttons: 1=Left, 2=Right, 4=Middle
-        int[] mouseKeys = new int[] { 0x01, 0x02, 0x04 };
-        for (int i = 0; i < mouseKeys.Length; i++) {
-            int vk = mouseKeys[i];
-            bool isDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
-            if (isDown && !prevMouseStates[i]) {
-                clicks++;
+    public static void AttachToUserDesktop() {
+        try {
+            IntPtr hDesk = OpenDesktop("default", 0, false, 0x01FF);
+            if (hDesk == IntPtr.Zero) {
+                hDesk = OpenInputDesktop(0, false, 0x01FF);
             }
-            prevMouseStates[i] = isDown;
-        }
-
-        // Keyboard keys: 0x08 (Backspace) .. 0xFE
-        for (int vk = 0x08; vk <= 0xFE; vk++) {
-            if (vk == 0x01 || vk == 0x02 || vk == 0x04) continue;
-            bool isDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
-            if (isDown && !prevKeyStates[vk]) {
-                keys++;
+            if (hDesk != IntPtr.Zero) {
+                SetThreadDesktop(hDesk);
             }
-            prevKeyStates[vk] = isDown;
+        } catch {}
+    }
+
+    public static void RunLoop() {
+        AttachToUserDesktop();
+
+        int clicks = 0;
+        int keys = 0;
+
+        while (true) {
+            // 40 ticks * 25ms = 1000ms window (smooth, high-accuracy, zero CPU spike)
+            for (int tick = 0; tick < 40; tick++) {
+                // Mouse buttons: 1=Left, 2=Right, 4=Middle
+                int[] mouseKeys = new int[] { 0x01, 0x02, 0x04 };
+                for (int i = 0; i < mouseKeys.Length; i++) {
+                    int vk = mouseKeys[i];
+                    bool isDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+                    if (isDown && !prevMouseStates[i]) {
+                        clicks++;
+                    }
+                    prevMouseStates[i] = isDown;
+                }
+
+                // Keyboard keys: 0x08 (Backspace) .. 0xFE
+                for (int vk = 0x08; vk <= 0xFE; vk++) {
+                    if (vk == 0x01 || vk == 0x02 || vk == 0x04) continue;
+                    bool isDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+                    if (isDown && !prevKeyStates[vk]) {
+                        keys++;
+                    }
+                    prevKeyStates[vk] = isDown;
+                }
+
+                Thread.Sleep(25);
+            }
+
+            uint idle = GetIdleSeconds();
+            string proc = GetActiveProcessName();
+
+            Console.WriteLine(idle + "|" + proc + "|" + clicks + "|" + keys);
+            Console.Out.Flush();
+
+            clicks = 0;
+            keys = 0;
         }
+    }
+
+    public static void StartTracker() {
+        Thread worker = new Thread(RunLoop);
+        worker.SetApartmentState(ApartmentState.STA);
+        worker.IsBackground = false;
+        worker.Start();
+        worker.Join();
     }
 }
 "@
@@ -84,29 +152,4 @@ try {
     # If already compiled in current session, ignore
 }
 
-while ($true) {
-    try {
-        $totalClicks = 0
-        $totalKeys = 0
-
-        # High-frequency poll (10 ticks x 100ms = 1s total window)
-        for ($i = 0; $i -lt 10; $i++) {
-            $c = 0
-            $k = 0
-            [WorkRankWin32]::PollDeltas([ref]$c, [ref]$k)
-            $totalClicks += $c
-            $totalKeys += $k
-            Start-Sleep -Milliseconds 100
-        }
-
-        $idle = [WorkRankWin32]::GetIdleSeconds()
-        $proc = [WorkRankWin32]::GetActiveProcessName()
-
-        Write-Output "$idle|$proc|$totalClicks|$totalKeys"
-        [Console]::Out.Flush()
-    } catch {
-        Write-Output "0|Unknown|0|0"
-        [Console]::Out.Flush()
-        Start-Sleep -Seconds 1
-    }
-}
+[WorkRankWin32]::StartTracker()

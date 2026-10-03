@@ -16,8 +16,10 @@ class WindowsAutostartInstaller {
   }
 
   static generateVbsContent(nodeExe, scriptPath) {
+    const scriptDir = path.dirname(scriptPath);
     // 0 = hide window completely (runs silently in background)
     return `Set WshShell = CreateObject("WScript.Shell")
+WshShell.CurrentDirectory = "${scriptDir.replace(/"/g, '""')}"
 WshShell.Run """${nodeExe}"" ""${scriptPath}"" --daemon", 0, False
 Set WshShell = Nothing
 `;

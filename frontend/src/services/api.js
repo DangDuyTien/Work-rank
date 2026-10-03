@@ -1292,12 +1292,12 @@ export const desktopAgentIpc = {
     }
     return { running: false, paired: false, trackingActive: false };
   },
-  pair: async ({ token, user, backendUrl }) => {
+  pair: async ({ token, refreshToken, user, backendUrl }) => {
     try {
       const res = await fetch('http://127.0.0.1:43124/pair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, user, backendUrl }),
+        body: JSON.stringify({ token, refreshToken, user, backendUrl }),
         signal: AbortSignal.timeout(3000),
       });
       if (res.ok) return await res.json();
@@ -1306,12 +1306,12 @@ export const desktopAgentIpc = {
     }
     return null;
   },
-  startTracking: async ({ token, user, backendUrl } = {}) => {
+  startTracking: async ({ token, refreshToken, user, backendUrl } = {}) => {
     try {
       const res = await fetch('http://127.0.0.1:43124/tracking/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, user, backendUrl }),
+        body: JSON.stringify({ token, refreshToken, user, backendUrl }),
         signal: AbortSignal.timeout(3000),
       });
       if (res.ok) return await res.json();
@@ -1320,10 +1320,12 @@ export const desktopAgentIpc = {
     }
     return null;
   },
-  sendHeartbeat: async () => {
+  sendHeartbeat: async ({ token, refreshToken } = {}) => {
     try {
       const res = await fetch('http://127.0.0.1:43124/tracking/heartbeat', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, refreshToken }),
         signal: AbortSignal.timeout(2000),
       });
       if (res.ok) return await res.json();

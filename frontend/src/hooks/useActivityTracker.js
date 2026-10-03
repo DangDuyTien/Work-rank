@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { computerActivityApi, desktopAgentIpc, refreshSession } from '../services/api';
+import { getSocket } from '../services/socket';
 import { isWithinWorkingSchedule, computeTrackingState, getVietnamTimeParts, TIMEZONE } from '../utils/schedule';
 
 const SESSION_KEY = 'workrank:telemetry_session_id';
@@ -471,7 +472,7 @@ export function useActivityTracker() {
           if (!status.trackingActive) {
             await desktopAgentIpc.startTracking({ token, refreshToken, backendUrl });
           } else {
-            await desktopAgentIpc.sendHeartbeat();
+            await desktopAgentIpc.sendHeartbeat({ token, refreshToken });
           }
         }
       } catch {}
@@ -492,11 +493,6 @@ export function useActivityTracker() {
   // 4. Auto-flush on page unload / web close
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // If leader tab is closing, notify agent to pause
-      if (telemetryStore.isLeaderTab) {
-        desktopAgentIpc.stopTracking();
-      }
-
       // Flush remaining events via sendBeacon
       if (telemetryStore.pendingQueue.length > 0) {
         try {
@@ -534,6 +530,64 @@ export function useActivityTracker() {
     return () => window.removeEventListener('online', handleOnline);
   }, []);
 
+  // 5b. Real-time Socket & Window Focus Sync with Server Summary
+  useEffect(() => {
+    const syncSummary = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await computerActivityApi.getMySummary();
+        const data = res?.data || res;
+        if (data) setServerSummary(data);
+      } catch {}
+    };
+
+    syncSummary();
+
+    const handleFocus = () => {
+      syncSummary();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    let socketCleanup = null;
+    const setupSocket = () => {
+      const s = getSocket();
+      if (!s) return;
+      const handlePts = (data) => {
+        if (!data) return;
+        const userRaw = localStorage.getItem('user');
+        let myId = null;
+        try { myId = JSON.parse(userRaw)?.id; } catch {}
+        if (myId && Number(data.userId) === Number(myId)) {
+          setServerSummary({
+            activityScore: data.activityScore !== undefined ? data.activityScore : data.serverPts,
+            serverPts: data.serverPts !== undefined ? data.serverPts : data.activityScore,
+            activeMinutes: data.activeMinutes,
+            mouseClicks: data.mouseClicks,
+            keyboardCount: data.keyboardCount,
+            rank: data.rank,
+            topApp: data.topApp,
+          });
+        }
+      };
+      s.on('activity:pts:updated', handlePts);
+      socketCleanup = () => s.off('activity:pts:updated', handlePts);
+    };
+
+    setupSocket();
+    const sockInterval = setInterval(() => {
+      if (!socketCleanup && getSocket()) {
+        setupSocket();
+      }
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(sockInterval);
+      if (socketCleanup) socketCleanup();
+    };
+  }, []);
+
   // 6. Active/Idle timer & interaction listeners (Active ONLY in schedule 08:00 - 17:30)
   useEffect(() => {
     if (trackingState !== 'TRACKING_ACTIVE') {
@@ -563,6 +617,12 @@ export function useActivityTracker() {
       const now = Date.now();
       lastInteractionTimeRef.current = now;
       telemetryStore.lastEventTime = now;
+
+      // If desktop agent is actively tracking the entire computer, let the desktop agent
+      // record system activity to prevent double counting browser clicks and keys
+      if (telemetryStore.agentStatus?.trackingActive) {
+        return;
+      }
 
       // 1. Create unique event
       const eventId = 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);

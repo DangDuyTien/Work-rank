@@ -95,7 +95,7 @@ class LocalIpcServer {
           req.on('end', () => {
             try {
               const data = JSON.parse(body || '{}');
-              const { token, user, backendUrl } = data;
+              const { token, refreshToken, user, backendUrl } = data;
               if (!token) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, message: 'Token is required' }));
@@ -106,6 +106,7 @@ class LocalIpcServer {
               const updated = {
                 ...existing,
                 token,
+                refreshToken: refreshToken || existing.refreshToken,
                 user: user || existing.user,
                 backendUrl: backendUrl || existing.backendUrl || 'http://localhost:5001',
                 pairedAt: new Date().toISOString(),
@@ -126,6 +127,7 @@ class LocalIpcServer {
         if (req.method === 'POST' && url.pathname === '/logout') {
           const cfg = this.loadConfig();
           delete cfg.token;
+          delete cfg.refreshToken;
           delete cfg.user;
           this.saveConfig(cfg);
           this.onLogout();
@@ -167,9 +169,27 @@ class LocalIpcServer {
         }
 
         if (req.method === 'POST' && (url.pathname === '/tracking/heartbeat' || url.pathname === '/session/heartbeat')) {
-          const resData = this.onHeartbeat() || {};
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, tracking: true, ...resData }));
+          let body = '';
+          req.on('data', (chunk) => { body += chunk; });
+          req.on('end', () => {
+            try {
+              if (body) {
+                const data = JSON.parse(body);
+                if (data.token || data.refreshToken) {
+                  const existing = this.loadConfig();
+                  const updated = {
+                    ...existing,
+                    token: data.token || existing.token,
+                    refreshToken: data.refreshToken || existing.refreshToken,
+                  };
+                  this.saveConfig(updated);
+                }
+              }
+            } catch {}
+            const resData = this.onHeartbeat() || {};
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, tracking: true, ...resData }));
+          });
           return;
         }
 

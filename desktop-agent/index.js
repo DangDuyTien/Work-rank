@@ -24,37 +24,33 @@ function getProvider() {
 class DesktopAgent {
   constructor() {
     this.provider = getProvider();
-    this.trackingActive = false;
     this.lastHeartbeat = 0;
-    this.heartbeatTimeoutMs = 20000; // Auto-stop if web tab closed or crashed after 20s
 
     this.ipcServer = new LocalIpcServer({
       port: 43124,
       getStatusData: () => {
         const isScheduleOpen = isWithinWorkingSchedule();
-        const isWebActive = Boolean(this.lastHeartbeat && (Date.now() - this.lastHeartbeat <= this.heartbeatTimeoutMs));
+        const isWebActive = Boolean(this.lastHeartbeat && (Date.now() - this.lastHeartbeat <= 60000));
         const cfg = this.ipcServer.loadConfig();
         const isAuthenticated = Boolean(cfg?.token);
 
-        let trackingState = 'TRACKING_WEB_CLOSED';
+        let trackingState = 'TRACKING_ACTIVE';
         if (!isAuthenticated) {
           trackingState = 'TRACKING_LOGGED_OUT';
         } else if (!isScheduleOpen) {
           trackingState = 'TRACKING_OUTSIDE_SCHEDULE';
-        } else if (isWebActive && this.trackingActive) {
-          trackingState = 'TRACKING_ACTIVE';
         }
 
         return {
-          trackingActive: trackingState === 'TRACKING_ACTIVE',
+          trackingActive: this.trackingActive,
           trackingState,
           isScheduleOpen,
           isWebActive,
           isAuthenticated,
           platform: process.platform === 'darwin' ? 'macos' : 'windows',
-          currentState: trackingState === 'TRACKING_ACTIVE' ? this.provider.currentState : 'PAUSED',
-          currentApp: trackingState === 'TRACKING_ACTIVE' ? this.provider.lastApp : null,
-          currentCategory: trackingState === 'TRACKING_ACTIVE' ? this.provider.lastCategory : null,
+          currentState: this.trackingActive ? this.provider.currentState : 'PAUSED',
+          currentApp: this.trackingActive ? this.provider.lastApp : null,
+          currentCategory: this.trackingActive ? this.provider.lastCategory : null,
           lastIdleSeconds: this.provider.lastIdleCheck,
           lastHeartbeat: this.lastHeartbeat,
         };
@@ -62,6 +58,10 @@ class DesktopAgent {
       onPair: (cfg) => {
         console.log(`[DesktopAgent] Paired with user: ${cfg.user?.username || cfg.user?.id}`);
         this.buffer.backendUrl = cfg.backendUrl || this.buffer.backendUrl;
+        if (isWithinWorkingSchedule() && cfg.token) {
+          this.trackingActive = true;
+          console.log('[DesktopAgent] Active in working hours (08:00 - 17:30). Tracking ACTIVE.');
+        }
       },
       onLogout: () => {
         console.log('[DesktopAgent] Unpaired / logged out');
@@ -79,16 +79,22 @@ class DesktopAgent {
     });
 
     const initialConfig = this.ipcServer.loadConfig();
+    const isPaired = Boolean(initialConfig?.token);
+    const inSchedule = isWithinWorkingSchedule();
+    this.trackingActive = isPaired && inSchedule;
+
     this.buffer = new AgentBuffer({
       batchIntervalSeconds: 5,
       backendUrl: initialConfig.backendUrl || 'http://localhost:5001',
       getToken: () => this.ipcServer.loadConfig().token,
       getRefreshToken: () => this.ipcServer.loadConfig().refreshToken,
-      onTokenRefreshed: (newToken) => {
-        // Persist the refreshed access token back to config file
+      onTokenRefreshed: (newToken, newRefreshToken) => {
+        // Persist the refreshed access and refresh token back to config file
         try {
           const cfg = this.ipcServer.loadConfig();
-          this.ipcServer.saveConfig({ ...cfg, token: newToken });
+          const updated = { ...cfg, token: newToken };
+          if (newRefreshToken) updated.refreshToken = newRefreshToken;
+          this.ipcServer.saveConfig(updated);
           console.log('[DesktopAgent] Persisted refreshed access token to config');
         } catch (err) {
           console.warn('[DesktopAgent] Failed to persist refreshed token:', err.message);
@@ -105,12 +111,18 @@ class DesktopAgent {
   startTracking() {
     this.lastHeartbeat = Date.now();
     const isScheduleOpen = isWithinWorkingSchedule();
-    if (isScheduleOpen) {
+    const cfg = this.ipcServer.loadConfig();
+    const isPaired = Boolean(cfg?.token);
+
+    if (isScheduleOpen && isPaired) {
       this.trackingActive = true;
-      console.log('[DesktopAgent] Web active in working hours (08:00 - 17:30). Tracking ACTIVE.');
-    } else {
+      console.log('[DesktopAgent] Paired user in working hours (08:00 - 17:30). Tracking ACTIVE.');
+    } else if (!isScheduleOpen) {
       this.trackingActive = false;
       console.log('[DesktopAgent] Web active but OUTSIDE working hours (08:00 - 17:30). Tracking STANDBY.');
+    } else {
+      this.trackingActive = false;
+      console.log('[DesktopAgent] Not paired / logged out. Tracking STANDBY.');
     }
     return { trackingActive: this.trackingActive, isScheduleOpen };
   }
@@ -118,7 +130,10 @@ class DesktopAgent {
   renewHeartbeat() {
     this.lastHeartbeat = Date.now();
     const isScheduleOpen = isWithinWorkingSchedule();
-    if (isScheduleOpen) {
+    const cfg = this.ipcServer.loadConfig();
+    const isPaired = Boolean(cfg?.token);
+
+    if (isScheduleOpen && isPaired) {
       this.trackingActive = true;
     } else {
       this.trackingActive = false;
@@ -128,7 +143,7 @@ class DesktopAgent {
 
   stopTracking() {
     if (this.trackingActive) {
-      console.log('[DesktopAgent] Web closed / requested pause. Pausing activity capture...');
+      console.log('[DesktopAgent] Requested pause / logout. Pausing activity capture...');
     }
     this.trackingActive = false;
     this.lastHeartbeat = 0;
@@ -152,27 +167,34 @@ class DesktopAgent {
 
     // 1. Sample OS idle & frontmost app every 1000ms ONLY WHEN TRACKING IS ACTIVE & IN SCHEDULE
     this.sampleTimer = setInterval(async () => {
-      // Schedule check: If time has passed 17:30 or before 08:00, stop tracking immediately
-      if (!isWithinWorkingSchedule()) {
+      const isScheduleOpen = isWithinWorkingSchedule();
+      const cfg = this.ipcServer.loadConfig();
+      const isAuthenticated = Boolean(cfg?.token);
+
+      // Auth check: If user logged out, pause
+      if (!isAuthenticated) {
         if (this.trackingActive) {
-          console.log('[DesktopAgent] Working hours ended (17:30). Automatically pausing tracking.');
+          console.log('[DesktopAgent] User logged out. Pausing tracking.');
           this.trackingActive = false;
           this.buffer.flush().catch(() => {});
         }
         return;
       }
 
-      // If web heartbeat expired (Web tab closed > 20s), pause tracking
-      if (this.lastHeartbeat && Date.now() - this.lastHeartbeat > this.heartbeatTimeoutMs) {
+      // Schedule check: If time has passed 17:30 or before 08:00, stop tracking immediately
+      if (!isScheduleOpen) {
         if (this.trackingActive) {
-          console.log('[DesktopAgent] Web heartbeat expired (WorkRank web closed). Auto-pausing tracking.');
-          this.stopTracking();
+          console.log('[DesktopAgent] Working hours ended (17:30) or outside schedule. Automatically pausing tracking.');
+          this.trackingActive = false;
+          this.buffer.flush().catch(() => {});
         }
         return;
       }
 
+      // Auto-resume tracking if paired and in schedule
       if (!this.trackingActive) {
-        return; // Standby: 0 CPU, 0 sampling
+        this.trackingActive = true;
+        console.log('[DesktopAgent] Work hours active (08:00 - 17:30) and user paired. Automatically starting tracking.');
       }
 
       try {
@@ -195,7 +217,7 @@ class DesktopAgent {
       }
     }, 5000);
 
-    console.log('[DesktopAgent] Agent is ready on http://127.0.0.1:43124 (Standby, waiting for Web toggle).');
+    console.log(`[DesktopAgent] Agent is ready on http://127.0.0.1:43124 (Status: ${this.trackingActive ? 'TRACKING_ACTIVE' : 'STANDBY'}).`);
   }
 
   async stop() {

@@ -117,7 +117,7 @@ class AgentBuffer {
       const newToken = parsed.accessToken || parsed.data?.token || parsed.token;
       if (newToken) {
         console.log('[AgentBuffer] Access token refreshed successfully');
-        this.onTokenRefreshed(newToken);
+        this.onTokenRefreshed(newToken, parsed.refreshToken || refreshToken);
         return newToken;
       }
       console.warn('[AgentBuffer] Refresh response missing token field');
