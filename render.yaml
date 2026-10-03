@@ -4,7 +4,7 @@ services:
     name: work3winmedia
     plan: free
     region: singapore
-    buildCommand: npm --prefix backend ci && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
+    buildCommand: npm --prefix backend ci --omit=dev && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
     startCommand: npm --prefix backend run db:migrate && npm --prefix backend start
     healthCheckPath: /health
     autoDeployTrigger: commit

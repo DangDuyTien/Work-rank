@@ -13,8 +13,8 @@ module.exports = {
         description: { type: Sequelize.TEXT, allowNull: true },
         active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true },
         metadata: { type: Sequelize.JSON, allowNull: true },
-        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
-        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
       await queryInterface.addIndex('departments', ['code'], { name: 'idx_departments_code', unique: true });
@@ -52,20 +52,57 @@ module.exports = {
       });
       await queryInterface.addIndex('users', ['department_id'], { name: 'idx_users_department_id' });
 
-      // Map existing users with department string to new department_id
-      const [contentDepts] = await queryInterface.sequelize.query("SELECT id FROM departments WHERE code = 'CONTENT' LIMIT 1");
-      const [editDepts] = await queryInterface.sequelize.query("SELECT id FROM departments WHERE code = 'EDIT' LIMIT 1");
+      // Verify and fetch required department IDs
+      const contentDepts = await queryInterface.sequelize.query(
+        "SELECT id FROM departments WHERE code = 'CONTENT' LIMIT 1",
+        { type: Sequelize.QueryTypes.SELECT }
+      );
       const contentId = contentDepts?.[0]?.id;
-      const editId = editDepts?.[0]?.id;
-
-      if (contentId) {
-        await queryInterface.sequelize.query(
-          `UPDATE users SET department_id = ${contentId} WHERE department LIKE '%Content%' OR department IS NULL OR department = ''`
-        );
+      if (!contentId) {
+        throw new Error('[Migration create-kpi-foundation] Required department CONTENT was not found after department seeding.');
       }
-      if (editId) {
+
+      const editDepts = await queryInterface.sequelize.query(
+        "SELECT id FROM departments WHERE code = 'EDIT' LIMIT 1",
+        { type: Sequelize.QueryTypes.SELECT }
+      );
+      const editId = editDepts?.[0]?.id;
+      if (!editId) {
+        throw new Error('[Migration create-kpi-foundation] Required department EDIT was not found after department seeding.');
+      }
+
+      // Check schema dependencies before update
+      const hasDepartmentColumn = Boolean(usersTableInfo.department);
+
+      if (hasDepartmentColumn) {
+        // Map users matching Edit
         await queryInterface.sequelize.query(
-          `UPDATE users SET department_id = ${editId} WHERE department LIKE '%Edit%'`
+          'UPDATE users SET department_id = :editId WHERE department_id IS NULL AND department LIKE :editPattern',
+          {
+            replacements: {
+              editId,
+              editPattern: '%Edit%',
+            },
+          }
+        );
+
+        // Map users matching Content or unassigned
+        await queryInterface.sequelize.query(
+          'UPDATE users SET department_id = :contentId WHERE department_id IS NULL AND (department LIKE :contentPattern OR department IS NULL OR department = :emptyVal)',
+          {
+            replacements: {
+              contentId,
+              contentPattern: '%Content%',
+              emptyVal: '',
+            },
+          }
+        );
+      } else {
+        await queryInterface.sequelize.query(
+          'UPDATE users SET department_id = :contentId WHERE department_id IS NULL',
+          {
+            replacements: { contentId },
+          }
         );
       }
     }
@@ -90,8 +127,8 @@ module.exports = {
           defaultValue: 'ACTIVE',
         },
         metadata: { type: Sequelize.JSON, allowNull: true },
-        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
-        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
       await queryInterface.addIndex('kpi_periods', ['code'], { name: 'idx_kpi_periods_code', unique: true });
@@ -136,8 +173,8 @@ module.exports = {
         source_type: { type: Sequelize.STRING(64), allowNull: false, defaultValue: 'MANUAL' },
         active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true },
         metadata: { type: Sequelize.JSON, allowNull: true },
-        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
-        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
       await queryInterface.addIndex('kpis', ['department_id', 'active'], { name: 'idx_kpis_dept_active' });
@@ -183,8 +220,8 @@ module.exports = {
         source: { type: Sequelize.STRING(64), allowNull: false, defaultValue: 'MANUAL' },
         metadata: { type: Sequelize.JSON, allowNull: true },
         calculated_at: { type: Sequelize.DATE, allowNull: true },
-        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
-        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+        updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
       await queryInterface.addIndex('kpi_results', ['user_id', 'kpi_id', 'period_id'], {
@@ -231,7 +268,7 @@ module.exports = {
           onDelete: 'SET NULL',
         },
         metadata: { type: Sequelize.JSON, allowNull: true },
-        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+        created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
       await queryInterface.addIndex('kpi_events', ['kpi_result_id'], { name: 'idx_kpi_events_result_id' });
