@@ -17,94 +17,117 @@ module.exports = {
         updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
 
-      await queryInterface.addIndex('departments', ['code'], { name: 'idx_departments_code', unique: true });
-      await queryInterface.addIndex('departments', ['active'], { name: 'idx_departments_active' });
+      await queryInterface.addIndex('departments', ['code'], { name: 'idx_departments_code', unique: true }).catch(() => {});
+      await queryInterface.addIndex('departments', ['active'], { name: 'idx_departments_active' }).catch(() => {});
+    }
 
-      // Seed 2 initial departments: CONTENT and EDIT
-      await queryInterface.bulkInsert('departments', [
-        {
-          code: 'CONTENT',
-          name: 'Phòng Nội Dung (Content)',
-          description: 'Sáng tạo kịch bản, ý tưởng và sản xuất nội dung truyền thông',
-          active: true,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
-          code: 'EDIT',
-          name: 'Phòng Biên Tập (Edit)',
-          description: 'Dựng phim, hậu kỳ video, âm thanh và hiệu ứng visual',
-          active: true,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      ]);
+    // Ensure initial departments exist (both on fresh create and partial migration recovery)
+    const existingDepts = await queryInterface.sequelize.query(
+      "SELECT code FROM departments",
+      { type: Sequelize.QueryTypes.SELECT }
+    ).catch(() => []);
+    const existingDeptCodes = new Set((existingDepts || []).map((d) => d.code));
+    const deptsToSeed = [];
+    if (!existingDeptCodes.has('CONTENT')) {
+      deptsToSeed.push({
+        code: 'CONTENT',
+        name: 'Phòng Nội Dung (Content)',
+        description: 'Sáng tạo kịch bản, ý tưởng và sản xuất nội dung truyền thông',
+        active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+    }
+    if (!existingDeptCodes.has('EDIT')) {
+      deptsToSeed.push({
+        code: 'EDIT',
+        name: 'Phòng Biên Tập (Edit)',
+        description: 'Dựng phim, hậu kỳ video, âm thanh và hiệu ứng visual',
+        active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+    }
+    if (deptsToSeed.length > 0) {
+      await queryInterface.bulkInsert('departments', deptsToSeed);
     }
 
     // 2. Add department_id column to users table if not exists
     const usersTableInfo = await queryInterface.describeTable('users');
     if (!usersTableInfo.department_id) {
+      // NOTE: In MySQL, combining ADD COLUMN and ADD CONSTRAINT FOREIGN KEY in a single
+      // ALTER TABLE causes MySQL ERROR 1072: Key column 'department_id' doesn't exist in table.
+      // Therefore, add the column first, then add index and constraint separately.
       await queryInterface.addColumn('users', 'department_id', {
         type: Sequelize.BIGINT.UNSIGNED,
         allowNull: true,
-        references: { model: 'departments', key: 'id' },
-        onDelete: 'SET NULL',
       });
-      await queryInterface.addIndex('users', ['department_id'], { name: 'idx_users_department_id' });
+      await queryInterface.addIndex('users', ['department_id'], { name: 'idx_users_department_id' }).catch(() => {});
+      await queryInterface.addConstraint('users', {
+        fields: ['department_id'],
+        type: 'foreign key',
+        name: 'fk_users_department_id',
+        references: {
+          table: 'departments',
+          field: 'id',
+        },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE',
+      }).catch(() => {});
+    }
 
-      // Verify and fetch required department IDs
-      const contentDepts = await queryInterface.sequelize.query(
-        "SELECT id FROM departments WHERE code = 'CONTENT' LIMIT 1",
-        { type: Sequelize.QueryTypes.SELECT }
-      );
-      const contentId = contentDepts?.[0]?.id;
-      if (!contentId) {
-        throw new Error('[Migration create-kpi-foundation] Required department CONTENT was not found after department seeding.');
-      }
+    // Verify and fetch required department IDs
+    const contentDepts = await queryInterface.sequelize.query(
+      "SELECT id FROM departments WHERE code = 'CONTENT' LIMIT 1",
+      { type: Sequelize.QueryTypes.SELECT }
+    );
+    const contentId = contentDepts?.[0]?.id;
+    if (!contentId) {
+      throw new Error('[Migration create-kpi-foundation] Required department CONTENT was not found after department seeding.');
+    }
 
-      const editDepts = await queryInterface.sequelize.query(
-        "SELECT id FROM departments WHERE code = 'EDIT' LIMIT 1",
-        { type: Sequelize.QueryTypes.SELECT }
-      );
-      const editId = editDepts?.[0]?.id;
-      if (!editId) {
-        throw new Error('[Migration create-kpi-foundation] Required department EDIT was not found after department seeding.');
-      }
+    const editDepts = await queryInterface.sequelize.query(
+      "SELECT id FROM departments WHERE code = 'EDIT' LIMIT 1",
+      { type: Sequelize.QueryTypes.SELECT }
+    );
+    const editId = editDepts?.[0]?.id;
+    if (!editId) {
+      throw new Error('[Migration create-kpi-foundation] Required department EDIT was not found after department seeding.');
+    }
 
-      // Check schema dependencies before update
-      const hasDepartmentColumn = Boolean(usersTableInfo.department);
+    // Check schema dependencies before update
+    const hasDepartmentColumn = Boolean(usersTableInfo.department);
 
-      if (hasDepartmentColumn) {
-        // Map users matching Edit
-        await queryInterface.sequelize.query(
-          'UPDATE users SET department_id = :editId WHERE department_id IS NULL AND department LIKE :editPattern',
-          {
-            replacements: {
-              editId,
-              editPattern: '%Edit%',
-            },
-          }
-        );
+    if (hasDepartmentColumn) {
+      // Map users matching Edit
+      await queryInterface.sequelize.query(
+        'UPDATE users SET department_id = :editId WHERE department_id IS NULL AND department LIKE :editPattern',
+        {
+          replacements: {
+            editId,
+            editPattern: '%Edit%',
+          },
+        }
+      ).catch(() => {});
 
-        // Map users matching Content or unassigned
-        await queryInterface.sequelize.query(
-          'UPDATE users SET department_id = :contentId WHERE department_id IS NULL AND (department LIKE :contentPattern OR department IS NULL OR department = :emptyVal)',
-          {
-            replacements: {
-              contentId,
-              contentPattern: '%Content%',
-              emptyVal: '',
-            },
-          }
-        );
-      } else {
-        await queryInterface.sequelize.query(
-          'UPDATE users SET department_id = :contentId WHERE department_id IS NULL',
-          {
-            replacements: { contentId },
-          }
-        );
-      }
+      // Map users matching Content or unassigned
+      await queryInterface.sequelize.query(
+        'UPDATE users SET department_id = :contentId WHERE department_id IS NULL AND (department LIKE :contentPattern OR department IS NULL OR department = :emptyVal)',
+        {
+          replacements: {
+            contentId,
+            contentPattern: '%Content%',
+            emptyVal: '',
+          },
+        }
+      ).catch(() => {});
+    } else {
+      await queryInterface.sequelize.query(
+        'UPDATE users SET department_id = :contentId WHERE department_id IS NULL',
+        {
+          replacements: { contentId },
+        }
+      ).catch(() => {});
     }
 
     // 3. Create kpi_periods table
@@ -282,8 +305,9 @@ module.exports = {
     await queryInterface.dropTable('kpi_results').catch(() => {});
     await queryInterface.dropTable('kpis').catch(() => {});
     await queryInterface.dropTable('kpi_periods').catch(() => {});
-    const usersTableInfo = await queryInterface.describeTable('users');
-    if (usersTableInfo.department_id) {
+    const usersTableInfo = await queryInterface.describeTable('users').catch(() => ({}));
+    if (usersTableInfo && usersTableInfo.department_id) {
+      await queryInterface.removeConstraint('users', 'fk_users_department_id').catch(() => {});
       await queryInterface.removeColumn('users', 'department_id').catch(() => {});
     }
     await queryInterface.dropTable('departments').catch(() => {});
