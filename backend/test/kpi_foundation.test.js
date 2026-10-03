@@ -216,4 +216,65 @@ test('KPI Foundation Test Suite (Department, Definition, Period, Result, Audit, 
       assert.equal(ledgers.length, 0);
     }
   });
+
+  await t.test('8. Edit User Dashboard: Editor user retrieves assigned KPIs for EDIT department', async () => {
+    // Seed an Edit KPI
+    const editKpi = await Kpi.create({
+      departmentId: editDept.id,
+      name: 'Video Edit Hoàn Chỉnh',
+      code: `EDIT_VID_${Date.now()}`,
+      description: 'Số video hậu kỳ hoàn tất trong tháng',
+      unit: 'video',
+      target: 25,
+      periodType: 'monthly',
+      sourceType: 'manual',
+      active: true,
+    });
+
+    const res = await request(app)
+      .get('/api/kpi/my-kpis')
+      .set('Authorization', `Bearer ${editToken}`);
+
+    assert.equal(res.status, 200);
+    assert.ok(res.body.data.department);
+    assert.equal(res.body.data.department.code, 'EDIT');
+    assert.ok(Array.isArray(res.body.data.kpis));
+    const found = res.body.data.kpis.find((k) => k.kpiId === editKpi.id);
+    assert.ok(found);
+    assert.equal(Number(found.target), 25);
+  });
+
+  await t.test('9. Tracker Decommissioning: Legacy activity tracking endpoints return 404', async () => {
+    const res1 = await request(app)
+      .get('/api/activity/state')
+      .set('Authorization', `Bearer ${contentToken}`);
+    assert.equal(res1.status, 404);
+
+    const res2 = await request(app)
+      .post('/api/activity/events')
+      .set('Authorization', `Bearer ${contentToken}`)
+      .send({ keystrokes: 10, clicks: 5 });
+    assert.equal(res2.status, 404);
+
+    const res3 = await request(app)
+      .get('/api/activity/leaderboard')
+      .set('Authorization', `Bearer ${contentToken}`);
+    assert.equal(res3.status, 404);
+  });
+
+  await t.test('10. Admin Department Override: Admin can query KPIs for specific department', async () => {
+    const resContent = await request(app)
+      .get('/api/kpi/my-kpis?departmentCode=CONTENT')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    assert.equal(resContent.status, 200);
+    assert.equal(resContent.body.data.department.code, 'CONTENT');
+
+    const resEdit = await request(app)
+      .get('/api/kpi/my-kpis?departmentCode=EDIT')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    assert.equal(resEdit.status, 200);
+    assert.equal(resEdit.body.data.department.code, 'EDIT');
+  });
 });

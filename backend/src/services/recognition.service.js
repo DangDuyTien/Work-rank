@@ -307,7 +307,23 @@ async function setJobTitle({ userId, jobTitle, department, teamId, actorId, reas
 
   const updateFields = {};
   if (jobTitle !== undefined) updateFields.jobTitle = jobTitle;
-  if (department !== undefined) updateFields.department = department;
+  if (department !== undefined) {
+    updateFields.department = department;
+    try {
+      const { Department } = require('../models');
+      const deptStr = String(department || '').toLowerCase();
+      const matchedDept = await Department.findOne({
+        where: {
+          code: deptStr.includes('edit') ? 'EDIT' : 'CONTENT',
+        },
+      });
+      if (matchedDept) {
+        updateFields.departmentId = matchedDept.id;
+      }
+    } catch {
+      // Best-effort department mapping
+    }
+  }
   if (teamId !== undefined) updateFields.teamId = teamId ? Number(teamId) : null;
 
   await user.update(updateFields);

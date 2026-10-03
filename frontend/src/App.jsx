@@ -203,6 +203,12 @@ function AnimatedAppRoutes() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/kpi" element={<Dashboard />} />
+            <Route path="/activity" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/tracking" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/productivity" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/activity-ranking" element={<Navigate to="/leaderboard?mode=kpi" replace />} />
+            <Route path="/activity-leaderboard" element={<Navigate to="/leaderboard?mode=kpi" replace />} />
             <Route path="/youtube" element={<YouTubeOverview />} />
             <Route path="/arena" element={<Arena />} />
             <Route path="/grand" element={<GrandHub />} />

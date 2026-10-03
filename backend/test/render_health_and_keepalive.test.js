@@ -5,13 +5,14 @@ const request = require('supertest');
 const app = require('../src/app');
 const env = require('../src/config/env');
 const healthController = require('../src/controllers/health.controller');
-const { User } = require('../src/models');
+const { User, sequelize } = require('../src/models');
 
 describe('Render Health & Keep-Alive Probe Test Suite', () => {
   let adminUser;
   let adminToken;
 
   before(async () => {
+    await sequelize.sync();
     adminUser = await User.create({
       username: `admin_health_${Date.now()}`,
       name: 'Admin Health Tester',

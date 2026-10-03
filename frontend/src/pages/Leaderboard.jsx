@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { rankings as rankingsApi, youtube as youtubeApi } from '../services/api';
+import { rankings as rankingsApi, youtube as youtubeApi, kpiApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import {
@@ -30,6 +30,9 @@ import {
   Building2,
   ArrowLeft,
   Filter,
+  Target,
+  CheckCircle2,
+  Clock3,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
@@ -546,8 +549,10 @@ export default function Leaderboard() {
   const rawPeriod = searchParams.get('period');
 
   // Normalize scopeMode
-  let scopeMode = 'teams';
-  if (rawMode) {
+  let scopeMode = 'kpi';
+  if (rawScope === 'kpi' || rawMode === 'kpi' || rawRanking === 'kpi') {
+    scopeMode = 'kpi';
+  } else if (rawMode) {
     scopeMode = (rawMode === 'member' || rawMode === 'individual' || rawMode === 'individuals') ? 'members' : rawMode;
   } else if (rawRanking === 'individual' || rawRanking === 'individuals' || rawRanking === 'member' || rawRanking === 'members') {
     scopeMode = 'members';
@@ -620,6 +625,55 @@ export default function Leaderboard() {
   const [hallOfFameData, setHallOfFameData] = useState(() => (scopeMode === 'hall-of-fame' && initialCached ? initialCached : { seasonMvps: [], championTeams: [] }));
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
+  const [kpiResults, setKpiResults] = useState([]);
+  const [kpiDepartments, setKpiDepartments] = useState([]);
+  const [selectedKpiDeptCode, setSelectedKpiDeptCode] = useState('CONTENT');
+
+  const filteredKpiDepartment = useMemo(() => {
+    return kpiDepartments.find((d) => d.code === selectedKpiDeptCode) || kpiDepartments[0] || null;
+  }, [kpiDepartments, selectedKpiDeptCode]);
+
+  const kpiUserLeaderboard = useMemo(() => {
+    if (!filteredKpiDepartment) return [];
+    const deptId = filteredKpiDepartment.id;
+
+    const deptResults = kpiResults.filter(
+      (r) => Number(r.departmentId || r.department?.id) === Number(deptId)
+    );
+
+    const userMap = new Map();
+    deptResults.forEach((r) => {
+      const u = r.user;
+      if (!u) return;
+      const uid = u.id;
+      if (!userMap.has(uid)) {
+        userMap.set(uid, {
+          user: u,
+          kpis: [],
+          totalProgress: 0,
+        });
+      }
+      const entry = userMap.get(uid);
+      entry.kpis.push(r);
+      entry.totalProgress += Number(r.progressPct || 0);
+    });
+
+    const list = Array.from(userMap.values()).map((item) => {
+      const avgProgress = item.kpis.length > 0 ? Math.round(item.totalProgress / item.kpis.length) : 0;
+      return {
+        ...item,
+        avgProgress,
+      };
+    });
+
+    list.sort((a, b) => b.avgProgress - a.avgProgress || a.user.name.localeCompare(b.user.name));
+
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      return list.filter((item) => (item.user?.name || '').toLowerCase().includes(q) || (item.user?.email || '').toLowerCase().includes(q));
+    }
+    return list;
+  }, [filteredKpiDepartment, kpiResults, debouncedSearch]);
 
   // Selectors
   const rawSeasonList = getCached(CACHE_KEYS.RANKINGS_META() + ':seasons');
@@ -772,6 +826,15 @@ export default function Leaderboard() {
             { ttl: CACHE_TTL.MEDIUM, force: isManual }
           );
           setHallOfFameData((prev) => (isDeepEqual(prev, res) ? prev : res));
+        } else if (scopeMode === 'kpi') {
+          const [deptsRes, resultsRes] = await Promise.all([
+            fetchWithCache(CACHE_KEYS.KPI_DEPARTMENTS(), () => kpiApi.getDepartments(), { ttl: CACHE_TTL.STATIC, force: isManual }),
+            fetchWithCache(CACHE_KEYS.KPI_RESULTS(), () => kpiApi.getResults(), { ttl: CACHE_TTL.SHORT, force: isManual }),
+          ]);
+          const depts = deptsRes?.data || deptsRes || [];
+          const resList = resultsRes?.data || resultsRes || [];
+          setKpiDepartments(depts);
+          setKpiResults(resList);
         }
       }
     } catch (err) {

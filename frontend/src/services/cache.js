@@ -247,4 +247,6 @@ export const CACHE_KEYS = {
   GRAND_STANDINGS: (grandId) => `grand:${grandId}:standings`,
   USER_PROFILE: (userId) => `user:profile:${userId}`,
   SETTINGS: () => `settings:user`,
+  KPI_DEPARTMENTS: () => `kpi:departments`,
+  KPI_RESULTS: (params = {}) => createCacheKey(`kpi:results`, params),
 };

@@ -71,15 +71,6 @@ async function overviewUncached({ range = 'today', teamId } = {}) {
   return {
     range: normalizeRange(range),
     activeUsersNow,
-    totalActiveSecondsToday: 0,
-    totalActiveSeconds: 0,
-    totalIdleSeconds: 0,
-    totalKeystrokes: 0,
-    totalMouseClicks: 0,
-    totalSessions: 0,
-    averageFocusScore: 100,
-    idleRatio: 0,
-    suspiciousEventsToday: 0,
   };
 }
 

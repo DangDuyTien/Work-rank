@@ -47,9 +47,9 @@ async function runCacheTests() {
   // Test 3: Set and Get
   {
     clearCache();
-    setCached('dashboard:totals:today', { keystrokes: 100, clicks: 50 });
+    setCached('dashboard:totals:today', { items: 100, views: 50 });
     const res = getCached('dashboard:totals:today');
-    assert.deepStrictEqual(res, { keystrokes: 100, clicks: 50 });
+    assert.deepStrictEqual(res, { items: 100, views: 50 });
     console.log('  ✔ 3. Synchronous in-memory set and get passed');
     passed++;
   }
@@ -119,7 +119,7 @@ async function runCacheTests() {
   // Test 7: Cache Clear on Logout
   {
     setCached('private:user:1', { secret: 'abc' });
-    setCached('dashboard:totals:today', { clicks: 10 });
+    setCached('dashboard:totals:today', { views: 10 });
     assert.strictEqual(cache.has('private:user:1'), true);
 
     clearCache();

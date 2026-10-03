@@ -149,7 +149,10 @@ exports.getMyKpis = async (req, res, next) => {
     if (!userId) {
       return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Yêu cầu đăng nhập' });
     }
-    const summary = await kpiService.getMyKpis(userId);
+    const departmentId = req.query.departmentId ? Number(req.query.departmentId) : undefined;
+    const departmentCode = req.query.departmentCode ? String(req.query.departmentCode) : undefined;
+    const periodId = req.query.periodId ? Number(req.query.periodId) : undefined;
+    const summary = await kpiService.getMyKpis(userId, { departmentId, departmentCode, periodId });
     return res.json({ success: true, data: summary });
   } catch (error) {
     return next(error);

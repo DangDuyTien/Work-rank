@@ -423,7 +423,7 @@ class KpiService {
   /**
    * ─── 5. USER KPI SUMMARY (Dashboard Consumption) ────────────
    */
-  async getMyKpis(userId) {
+  async getMyKpis(userId, { departmentId, departmentCode, periodId } = {}) {
     if (!userId) {
       throw new Error('User ID là bắt buộc');
     }
@@ -433,27 +433,41 @@ class KpiService {
       throw new Error('Không tìm thấy người dùng');
     }
 
-    // Resolve user's department:
-    // 1. By departmentId FK if present
-    // 2. Fallback by matching user.department string with Department code/name
+    // Resolve department:
+    // 1. Explicit override if requested (e.g. for preview or filter)
+    // 2. By user's departmentId FK if present
+    // 3. Fallback by matching user.department string with Department code/name
     let dept = null;
-    if (user.departmentId) {
+    if (departmentId) {
+      dept = await Department.findByPk(departmentId);
+    } else if (departmentCode) {
+      dept = await Department.findOne({ where: { code: String(departmentCode).trim().toUpperCase() } });
+    }
+
+    if (!dept && user.departmentId) {
       dept = await Department.findByPk(user.departmentId);
     }
-    if (!dept) {
+    if (!dept && user.department) {
       const userDeptStr = String(user.department || '').toLowerCase();
       if (userDeptStr.includes('edit')) {
         dept = await Department.findOne({ where: { code: 'EDIT' } });
-      } else {
+      } else if (userDeptStr.includes('content')) {
         dept = await Department.findOne({ where: { code: 'CONTENT' } });
       }
     }
     if (!dept) {
-      dept = await Department.findOne({ where: { active: true } });
+      dept = await Department.findOne({ where: { code: 'CONTENT' } })
+        || await Department.findOne({ where: { active: true } });
     }
 
-    // Get active period (current month)
-    const currentPeriod = await this.getOrCreateCurrentPeriod();
+    // Get active period
+    let currentPeriod = null;
+    if (periodId) {
+      currentPeriod = await KpiPeriod.findByPk(periodId);
+    }
+    if (!currentPeriod) {
+      currentPeriod = await this.getOrCreateCurrentPeriod();
+    }
 
     if (!dept) {
       return {

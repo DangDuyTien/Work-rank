@@ -34,16 +34,16 @@ export const NAVIGATION_CONFIG = [
   {
     id: 'overview',
     label: 'Tổng Quan & Sản Lượng',
-    icon: Activity,
+    icon: Target,
     collapsible: false,
     items: [
       {
         to: '/dashboard',
-        label: 'Bảng Điều Khiển',
-        shortLabel: 'Tổng quan',
-        icon: Activity,
+        label: 'KPI Của Bạn',
+        shortLabel: 'KPI',
+        icon: Target,
         tourTarget: 'nav-dashboard',
-        description: 'Chỉ số hiệu suất thi đấu và hoạt động theo thời gian thực',
+        description: 'Theo dõi kết quả công việc và chỉ tiêu KPI theo bộ phận',
       },
       {
         to: '/youtube',
@@ -55,11 +55,11 @@ export const NAVIGATION_CONFIG = [
       },
       {
         to: '/leaderboard',
-        label: 'Bảng Xếp Hạng',
-        shortLabel: 'Xếp hạng',
+        label: 'BXH KPI & Phòng Ban',
+        shortLabel: 'BXH KPI',
         icon: Trophy,
         tourTarget: 'nav-leaderboard',
-        description: 'Bảng xếp hạng cá nhân và phòng ban thi đua',
+        description: 'Bảng xếp hạng tiến độ hoàn thành chỉ tiêu KPI phòng CONTENT & EDIT',
       },
     ],
   },
@@ -236,7 +236,7 @@ export const NAVIGATION_CONFIG = [
  */
 export function isRouteActive(currentPath, targetPath) {
   if (!targetPath || typeof targetPath !== 'string') return false;
-  if (targetPath === '/dashboard') return currentPath === '/dashboard';
+  if (targetPath === '/dashboard') return currentPath === '/dashboard' || currentPath === '/kpi';
   if (targetPath === '/leaderboard' || targetPath === '/rankings') {
     return currentPath === '/leaderboard' || currentPath.startsWith('/leaderboard/') ||
            currentPath === '/rankings' || currentPath.startsWith('/rankings');
@@ -259,7 +259,7 @@ export function resolveItemPath(item, userId) {
  */
 export function resolveCurrentTitle(pathname) {
   if (!pathname) return 'WorkRank';
-  if (pathname === '/dashboard') return 'Bảng Điều Khiển';
+  if (pathname === '/dashboard' || pathname === '/kpi') return 'KPI Của Bạn';
   if (pathname.startsWith('/leaderboard') || pathname.startsWith('/rankings')) return 'Bảng Xếp Hạng';
   if (pathname.startsWith('/youtube')) return 'Số Liệu YouTube & Đội Nhóm';
   if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';

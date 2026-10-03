@@ -49,11 +49,6 @@ function formatDateTimeLocal(value) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function actionCount(user = {}) {
-  return Number(user.keystrokeCount || user.keystrokes || user.total_keystrokes || 0)
-    + Number(user.mouseClickCount || user.mouse_clicks || user.total_mouse_clicks || 0);
-}
-
 function memberInviteCode(userId) {
   return `WRU-${String(userId || '').padStart(4, '0')}`;
 }

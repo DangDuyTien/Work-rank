@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { calculateRankScore } from '../utils/scoring';
 import { clearCache, invalidateCache } from './cache';
+
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -92,40 +92,14 @@ function normalizeLeaderboardRow(row, index = 0) {
       accountStatus: 'active',
       status: 'offline',
       rank: index + 1,
-      focusScore: 0,
       score: 0,
-      total_keystrokes: 0,
-      total_mouse_clicks: 0,
-      total_active_seconds: 0,
-      total_idle_seconds: 0,
-      lifetimeKeystrokeCount: 0,
-      lifetimeMouseClickCount: 0,
-      lifetimeActions: 0,
       level: 0,
-      keystrokes: 0,
-      mouse_clicks: 0,
-      active_seconds: 0,
-      idle_seconds: 0,
     };
   }
   const user = row.User || row.user || row;
-  const activeSeconds = Number(row.activeSeconds ?? row.active_seconds ?? row.total_active_seconds ?? 0);
-  const idleSeconds = Number(row.idleSeconds ?? row.idle_seconds ?? row.total_idle_seconds ?? 0);
-  const keystrokes = Number(row.keystrokeCount ?? row.keystrokes ?? row.total_keystrokes ?? 0);
-  const clicks = Number(row.mouseClickCount ?? row.mouse_clicks ?? row.total_mouse_clicks ?? 0);
-  const lifetimeKeystrokeCount = Number(row.lifetimeKeystrokeCount ?? row.lifetime_keystroke_count ?? row.total_lifetime_keystrokes ?? 0);
-  const lifetimeMouseClickCount = Number(row.lifetimeMouseClickCount ?? row.lifetime_mouse_click_count ?? row.total_lifetime_mouse_clicks ?? 0);
-  const lifetimeActions = Number(row.lifetimeActions ?? row.lifetime_actions ?? (lifetimeKeystrokeCount + lifetimeMouseClickCount));
   const level = Number(row.level ?? row.userLevel ?? row.user_level ?? 0);
-  const focusScore = Number(row.focusScore ?? row.focus_score ?? 0);
-  const fallbackScore = calculateRankScore({
-    activeSeconds,
-    idleSeconds,
-    keystrokeCount: keystrokes,
-    mouseClickCount: clicks,
-    focusScore,
-  });
-  const score = Number(row.score ?? fallbackScore);
+  const score = Number(row.score ?? 0);
+
   return {
     ...row,
     user_id: user?.id ?? row.userId ?? row.user_id,
@@ -149,20 +123,8 @@ function normalizeLeaderboardRow(row, index = 0) {
     accountStatus: user?.status || row.accountStatus || row.status || 'active',
     status: row.presence || row.presenceStatus || row.status || 'offline',
     rank: row.rankPosition || index + 1,
-    focusScore,
     score,
-    total_keystrokes: keystrokes,
-    total_mouse_clicks: clicks,
-    total_active_seconds: activeSeconds,
-    total_idle_seconds: idleSeconds,
-    lifetimeKeystrokeCount,
-    lifetimeMouseClickCount,
-    lifetimeActions,
     level,
-    keystrokes,
-    mouse_clicks: clicks,
-    active_seconds: activeSeconds,
-    idle_seconds: idleSeconds,
   };
 }
 
@@ -1236,8 +1198,8 @@ export const samGame = {
 };
 
 export const kpiApi = {
-  getMyKpis: async () => {
-    const res = await api.get('/api/kpi/my-kpis');
+  getMyKpis: async (params = {}) => {
+    const res = await api.get('/api/kpi/my-kpis', { params });
     return res.data;
   },
   getDepartments: async () => {
