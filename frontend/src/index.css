@@ -101,7 +101,8 @@
 }
 .public-season-section { padding: 16px 0 28px; scroll-margin-top: 110px; }
 .public-season-heading { display: flex; align-items: baseline; gap: 28px; margin-bottom: 28px; }
-.public-season-heading h2 { font-family: 'RuderPlakatLLVar', sans-serif; font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100; font-size: clamp(56px, 6vw, 92px); font-weight: 400; letter-spacing: 0; line-height: 1; }
+.public-season-heading h2 { font-family: 'Segoe UI', Arial, sans-serif; font-size: clamp(56px, 6vw, 92px); font-weight: 800; letter-spacing: -.055em; line-height: 1; }
+.public-archive-year { font-family: 'RuderPlakatLLVar', Arial, sans-serif; font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100; font-weight: 400; letter-spacing: 0; }
 .public-season-heading p { font-size: 15px; font-weight: 500; }
 .public-season-heading span { display: block; color: var(--text-secondary); font-size: 11px; margin-top: 4px; }
 .public-season-heading h2 > span { font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; margin-top: 10px; }
@@ -109,7 +110,7 @@
 .public-archive-section + .public-archive-section { padding-top: 24px; }
 .public-archive-content { min-width: 0; }
 .public-archive-row { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: clamp(16px, 2vw, 32px); padding: 0 0 22px; border-bottom: 1px solid var(--accent-border); }
-.public-archive-row h3 { font-family: Impact, Haettenschweiler, 'Arial Narrow', sans-serif; font-weight: 400; font-size: clamp(32px, 3vw, 48px); line-height: 1.15; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.public-archive-row h3 { font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; font-size: clamp(32px, 3vw, 48px); line-height: 1.15; letter-spacing: -.035em; overflow-wrap: anywhere; }
 .public-archive-person { min-width: 0; }
 .public-archive-name-line { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
 .public-archive-name-line .public-archive-name { min-width: 0; flex: 1; }
@@ -221,7 +222,7 @@ html[data-workrank-reduce-motion="true"] .public-featured-frame.is-ready > .publ
 .public-auth-shell { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100svh; max-width: 1600px; margin: auto; }
 .public-auth-recognition { order: 0; padding: 36px clamp(28px, 5vw, 72px) 36px; border-right: 1px solid var(--border-strong); }
 .public-auth-editorial-heading { margin: 44px 0 22px; }
-.public-auth-editorial-heading h2 { font-family: 'RuderPlakatLLVar', sans-serif; font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100; font-size: clamp(64px, 7vw, 110px); line-height: 1; font-weight: 400; letter-spacing: 0; color: #ae604b; margin: 12px 0 20px; }
+.public-auth-editorial-heading h2 { font-family: 'Segoe UI', Arial, sans-serif; font-size: clamp(64px, 7vw, 110px); line-height: 1; font-weight: 800; letter-spacing: -.055em; color: #ae604b; margin: 12px 0 20px; }
 .public-auth-editorial-heading p { color: var(--text-secondary); font-size: 12px; }
 .public-auth-recognition .public-featured-frame { max-width: 440px; }
 .public-auth-recognition .public-recognition-portrait { width: 100%; aspect-ratio: 4 / 5; }
@@ -234,7 +235,7 @@ html[data-workrank-reduce-motion="true"] .public-featured-frame.is-ready > .publ
 .public-auth-reason { font-size: 12px; color: var(--text-secondary); max-width: 400px; margin-bottom: 12px; }
 .public-auth-form-panel { order: 1; width: 100%; max-width: 540px; padding: 90px clamp(28px, 4.5vw, 64px) 48px; align-self: start; justify-self: center; }
 .public-auth-form-heading { margin-bottom: 28px; }
-.public-auth-form-heading h1 { font-family: Arial, 'Helvetica Neue', sans-serif; font-weight: 700; font-size: clamp(28px, 2.8vw, 40px); line-height: 1.3; letter-spacing: -.02em; color: #ae604b; }
+.public-auth-form-heading h1 { font-family: Arial, 'Helvetica Neue', sans-serif; font-weight: 700; font-size: clamp(28px, 2.8vw, 40px); line-height: 1.3; letter-spacing: -.02em; color: #ae604b; overflow-wrap: anywhere; }
 .public-auth-form-panel { transition: transform 420ms cubic-bezier(.22, 1, .36, 1); }
 .public-auth-form-panel.is-register { transform: translateY(-16px); }
 .public-auth-form-resize { overflow: hidden; padding: 6px; margin: -6px; transition: height 420ms cubic-bezier(.22, 1, .36, 1); }

@@ -16,11 +16,12 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
   const name = isMvp ? record?.name : record?.teamName;
   const state = recognitionState(data, type);
   const category = isMvp ? 'Cá nhân' : 'Đội nhóm';
-  const title = state === 'official' ? (isMvp ? 'MVP' : 'Quán quân') : state === 'projected' ? (isMvp ? 'Ứng viên' : 'Dẫn đầu') : category;
+  const title = isMvp ? 'MVP' : state === 'official' ? 'Quán quân' : state === 'projected' ? 'Dẫn đầu' : category;
+  const displayYear = year || new Date().getFullYear();
   return (
     <section className="public-season-section public-archive-section" aria-labelledby={`archive-${type}-title`} aria-busy={loading}>
       <div className="public-season-heading">
-        <h2 id={`archive-${type}-title`}>{year || new Date().getFullYear()}<span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
+        <h2 id={`archive-${type}-title`}><b className="public-archive-year">{displayYear}</b><span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
         <div><p>{seasonName}</p>{data?.season?.frozenAt && <span>Chốt ngày {new Date(data.season.frozenAt).toLocaleDateString('vi-VN')}</span>}</div>
       </div>
       <div className="public-recognition-grid">

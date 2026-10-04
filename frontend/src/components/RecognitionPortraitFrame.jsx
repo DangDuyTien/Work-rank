@@ -13,6 +13,7 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   const slides = members.length ? members.map((member) => ({ name: member.name, image: member.avatarData || member.avatarUrl }))
     : [{ name: type === 'mvp' ? record?.name : record?.teamName, image: type === 'mvp' ? record?.avatarData : record?.avatarUrl }];
   const slide = slides[index % slides.length];
+  const rotationEnabled = type === 'champion';
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.2 });
@@ -35,10 +36,10 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   }, [loading, visible, reducedMotion]);
 
   useEffect(() => {
-    if (phase !== 'open' || !visible || paused || reducedMotion || slides.length < 2) return;
+    if (phase !== 'open' || !visible || paused || reducedMotion || !rotationEnabled) return;
     const timer = window.setTimeout(() => setPhase('closing'), 2000);
     return () => window.clearTimeout(timer);
-  }, [phase, visible, paused, reducedMotion, slides.length]);
+  }, [phase, visible, paused, reducedMotion, rotationEnabled]);
 
   function handleAnimationEnd(event) {
     if (event.animationName === 'publicPortraitReveal') setPhase('open');
@@ -54,6 +55,6 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
       <svg className="public-frame-quote is-closing" viewBox="0 0 100 175" aria-hidden="true" focusable="false"><path d="M0 0H100V100L52 175H0L48 100H0Z" /></svg>
       <RecognitionPortrait name={slide.name} image={slide.image} type={members.length ? 'member' : type} imageOnly />
     </div>
-    {slides.length > 1 && !reducedMotion && <button className="public-portrait-pause" type="button" aria-pressed={paused} onClick={() => setPaused((current) => !current)}>{paused ? 'Tiếp tục chuyển ảnh' : 'Tạm dừng chuyển ảnh'}</button>}
+    {rotationEnabled && !reducedMotion && <button className="public-portrait-pause" type="button" aria-pressed={paused} onClick={() => setPaused((current) => !current)}>{paused ? 'Tiếp tục hiệu ứng' : 'Tạm dừng hiệu ứng'}</button>}
   </>;
 }

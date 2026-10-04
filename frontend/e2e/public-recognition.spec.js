@@ -17,6 +17,17 @@ test('empty public spotlight keeps the calendar year without claiming a season o
   await expect(page.getByText('MVP đã xác nhận', { exact: true })).toHaveCount(0);
 });
 
+test('empty spotlight keeps 2026 archive year and MVP label', async ({ page }) => {
+  await page.route('**/api/competition/public/spotlight', (route) => route.fulfill({
+    json: { hasSpotlight: false, season: null, championTeam: null, mvp: null, provenance: { resultState: 'none' } },
+  }));
+  await page.goto('/');
+  await expect(page.locator('.public-season-heading h2').first()).toContainText('2026');
+  await expect(page.locator('.public-season-heading h2').nth(1)).toContainText('2026');
+  await expect(page.locator('.public-archive-section').nth(1).locator('h3')).toHaveText('MVP');
+  await expect(page.locator('.public-season-heading').getByText('Mùa giải', { exact: true })).toHaveCount(0);
+});
+
 test('MVP waits until its portrait enters the viewport', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.setViewportSize({ width: 1280, height: 600 });
@@ -29,6 +40,15 @@ test('MVP waits until its portrait enters the viewport', async ({ page }) => {
   const visibleMvp = page.locator('.public-archive-section').nth(1).locator('.public-featured-frame');
   await expect(visibleMvp).toHaveClass(/is-ready/);
   await expect(visibleMvp.locator('.public-recognition-portrait')).toHaveCSS('opacity', '1');
+});
+
+test('team portrait repeats the open-close effect when there is only one public slide', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  const team = page.locator('.public-archive-section').first().locator('.public-featured-frame');
+  await expect(team).toHaveClass(/is-ready/);
+  await expect(team.locator('.public-recognition-portrait')).toHaveCSS('opacity', '1');
+  await expect(team).toHaveClass(/is-shutting/, { timeout: 3500 });
 });
 
 test('portrait stays hidden while quotation marks open, then appears', async ({ page }) => {
