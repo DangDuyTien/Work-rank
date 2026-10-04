@@ -36,6 +36,11 @@ router.post('/admin/seasons', auth, requireRole('admin'), asyncHandler(ctrl.admi
 router.patch('/admin/seasons/:id/status', auth, requireRole('admin'), asyncHandler(ctrl.adminUpdateSeasonStatus));
 router.post('/admin/seasons/:id/teams', auth, requireRole('admin'), asyncHandler(ctrl.adminAddTeamToSeason));
 
+// MVP Cup Admin Routes
+router.get('/admin/mvp/seasons', auth, requireRole('admin'), asyncHandler(ctrl.adminListMvpSeasons));
+router.get('/admin/mvp/preview/:seasonId', auth, requireRole('admin'), asyncHandler(ctrl.adminPreviewSeasonMvp));
+router.post('/admin/mvp/award', auth, requireRole('admin'), asyncHandler(ctrl.adminAwardMvpCup));
+
 // Phase 4 & Phase 7 Rule Sets & Visual Rule Builder Routes
 router.get('/admin/rules', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));
 router.get('/admin/rule-sets', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));

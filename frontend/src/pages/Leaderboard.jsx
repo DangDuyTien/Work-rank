@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
-import { TabTransition, TableSkeleton } from '../components/ui';
+import { TabTransition, TableSkeleton, AnimatedNumber, FlipTableBody } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 /* =========================================================================
@@ -236,16 +236,19 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               {getName(top2).split(' ').pop().toUpperCase()}
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
-              <span>{fmtNum(getScore(top2))}</span>
+              <AnimatedNumber value={getScore(top2)} duration={700} formatFn={fmtNum} />
               <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
-            <div style={{
-              width: '100%', height: 90,
-              background: 'rgba(148,163,184,0.08)',
-              border: '1px solid rgba(148,163,184,0.3)',
-              borderRadius: '4px 4px 0 0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <div
+              className="podium-step-transition"
+              style={{
+                width: '100%', height: 90,
+                background: 'rgba(148,163,184,0.08)',
+                border: '1px solid rgba(148,163,184,0.3)',
+                borderRadius: '4px 4px 0 0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
               <span style={{ fontSize: 18, fontWeight: 700, color: '#64748b' }}>2</span>
             </div>
           </div>
@@ -287,16 +290,19 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               {getName(top1).split(' ').pop().toUpperCase()}
             </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span>{fmtNum(getScore(top1))}</span>
+              <AnimatedNumber value={getScore(top1)} duration={700} formatFn={fmtNum} />
               <span style={{ fontSize: 11, color: '#d97706', fontWeight: 600 }}>{scoreSuffix}</span>
             </div>
-            <div style={{
-              width: '100%', height: 130,
-              background: 'rgba(245,158,11,0.08)',
-              border: '1.5px solid rgba(245,158,11,0.35)',
-              borderRadius: '4px 4px 0 0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <div
+              className="podium-step-transition"
+              style={{
+                width: '100%', height: 130,
+                background: 'rgba(245,158,11,0.08)',
+                border: '1.5px solid rgba(245,158,11,0.35)',
+                borderRadius: '4px 4px 0 0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
               <span style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b' }}>1</span>
             </div>
           </div>
@@ -336,16 +342,19 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               {getName(top3).split(' ').pop().toUpperCase()}
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
-              <span>{fmtNum(getScore(top3))}</span>
+              <AnimatedNumber value={getScore(top3)} duration={700} formatFn={fmtNum} />
               <span style={{ fontSize: 10, color: '#b45309', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
-            <div style={{
-              width: '100%', height: 70,
-              background: 'rgba(180,83,9,0.08)',
-              border: '1px solid rgba(180,83,9,0.25)',
-              borderRadius: '4px 4px 0 0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <div
+              className="podium-step-transition"
+              style={{
+                width: '100%', height: 70,
+                background: 'rgba(180,83,9,0.08)',
+                border: '1px solid rgba(180,83,9,0.25)',
+                borderRadius: '4px 4px 0 0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
               <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>3</span>
             </div>
           </div>
@@ -374,7 +383,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                   borderRadius: 4,
                   border: '1px solid rgba(15,23,42,0.06)',
                   cursor: onSelect ? 'pointer' : 'default',
-                  transition: 'background .15s ease',
+                  transition: 'background var(--motion-fast) ease',
                 }}
               >
                 <div
@@ -408,7 +417,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                   </div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
-                  {fmtNum(scoreVal)} <span style={{ fontSize: 10, color: '#94a3b8' }}>{scoreSuffix}</span>
+                  <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} /> <span style={{ fontSize: 10, color: '#94a3b8' }}>{scoreSuffix}</span>
                 </div>
               </div>
             );
@@ -901,7 +910,7 @@ export default function Leaderboard() {
   };
 
   return (
-    <div style={{ maxWidth: 1160, margin: '0 auto', padding: '16px 16px 48px', fontFamily: "'JetBrains Mono', monospace" }}>
+    <div className="leaderboard-page" style={{ maxWidth: 1160, margin: '0 auto', padding: '16px 16px 48px', fontFamily: "'JetBrains Mono', monospace" }}>
       {/* ── HEADER BANNER ── */}
       <div
         style={{
@@ -1027,6 +1036,7 @@ export default function Leaderboard() {
             }}
           >
             {[
+              { id: 'kpi', label: 'BXH KPI', icon: Target },
               { id: 'teams', label: 'BXH Đội Nhóm', icon: Users },
               { id: 'members', label: 'BXH Thành Viên', icon: User },
               { id: 'youtube', label: 'BXH Kênh YouTube', icon: Tv },
@@ -1320,7 +1330,7 @@ export default function Leaderboard() {
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Tích Lũy</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <FlipTableBody resetKey={`drilldown:${selectedTeamDetails?.teamId || ''}`}>
                         {memberRankings.items?.length === 0 ? (
                           <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Đội này chưa có thành viên tham gia thi đấu</td></tr>
                         ) : (
@@ -1329,7 +1339,9 @@ export default function Leaderboard() {
                             const isMe = Number(m.userId || m.id) === Number(currentUser?.id);
                             return (
                               <tr
-                                key={m.userId || idx}
+                                key={m.userId || m.id || idx}
+                                data-flip-id={m.userId || m.id}
+                                className="ranking-flip-row"
                                 onClick={() => navigate(`/users/${m.userId || m.id}`)}
                                 style={{
                                   borderBottom: '1px solid rgba(15,23,42,0.04)',
@@ -1360,7 +1372,7 @@ export default function Leaderboard() {
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                                   <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
-                                    {fmtNum(m.score ?? m.points ?? m.totalScore ?? 0)}
+                                    <AnimatedNumber value={m.score ?? m.points ?? m.totalScore ?? 0} duration={700} formatFn={fmtNum} />
                                   </span>
                                   <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 3 }}>XP</span>
                                 </td>
@@ -1368,7 +1380,7 @@ export default function Leaderboard() {
                             );
                           })
                         )}
-                      </tbody>
+                      </FlipTableBody>
                     </table>
                   </div>
                 </div>
@@ -1389,12 +1401,17 @@ export default function Leaderboard() {
                         <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <FlipTableBody resetKey={`drilldown-yt:${selectedTeamDetails?.teamId || ''}`}>
                       {teamChannels.length === 0 ? (
                         <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Đội này chưa liên kết kênh YouTube nào</td></tr>
                       ) : (
                         teamChannels.map((c, idx) => (
-                          <tr key={c.id || idx} style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
+                          <tr
+                            key={c.id || c.channelId || idx}
+                            data-flip-id={c.id || c.channelId}
+                            className="ranking-flip-row"
+                            style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}
+                          >
                             <td style={{ padding: '12px 16px' }}>
                               <span style={{ width: 24, height: 24, background: idx === 0 ? '#dc2626' : 'rgba(15,23,42,0.06)', color: idx === 0 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                 {idx + 1}
@@ -1412,7 +1429,9 @@ export default function Leaderboard() {
                               </div>
                             </td>
                             <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(c.views)}</span>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>
+                                <AnimatedNumber value={c.views || 0} duration={700} formatFn={fmtNum} />
+                              </span>
                             </td>
                             <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
                               {fmtNum(c.subscribers)}
@@ -1420,7 +1439,7 @@ export default function Leaderboard() {
                           </tr>
                         ))
                       )}
-                    </tbody>
+                    </FlipTableBody>
                   </table>
                 </div>
               )}
@@ -1430,6 +1449,106 @@ export default function Leaderboard() {
              * LEVEL 1: COMPANY / ALL SCOPES
              * ========================================================================= */
             <div>
+              {/* 0. BXH KPI THEO PHÒNG BAN */}
+              {scopeMode === 'kpi' && (
+                <div className="leaderboard-kpi-view">
+                  <div className="leaderboard-kpi-intro">
+                    <div>
+                      <div className="leaderboard-kpi-kicker"><Target size={15} /> Theo dõi tiến độ KPI</div>
+                      <h2>Bảng xếp hạng hiệu suất KPI</h2>
+                      <p>So sánh tiến độ hoàn thành chỉ tiêu theo từng phòng ban trong kỳ hiện tại.</p>
+                    </div>
+                    <div className="leaderboard-kpi-summary" aria-label="Tổng quan KPI">
+                      <div><strong>{kpiUserLeaderboard.length}</strong><span>thành viên</span></div>
+                      <div><strong>{kpiUserLeaderboard.length ? Math.round(kpiUserLeaderboard.reduce((sum, item) => sum + item.avgProgress, 0) / kpiUserLeaderboard.length) : 0}%</strong><span>tiến độ TB</span></div>
+                    </div>
+                  </div>
+
+                  {kpiDepartments.length > 0 && (
+                    <div className="leaderboard-kpi-departments" role="tablist" aria-label="Chọn phòng ban">
+                      {kpiDepartments.map((department) => (
+                        <button
+                          key={department.id || department.code}
+                          type="button"
+                          role="tab"
+                          aria-selected={filteredKpiDepartment?.id === department.id}
+                          className={filteredKpiDepartment?.id === department.id ? 'is-active' : ''}
+                          onClick={() => setSelectedKpiDeptCode(department.code)}
+                        >
+                          {department.name || department.code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="leaderboard-kpi-table-card">
+                    <div className="leaderboard-kpi-table-head">
+                      <div>
+                        <strong>{filteredKpiDepartment?.name || 'Tất cả phòng ban'}</strong>
+                        <span>{kpiUserLeaderboard.length ? `${kpiUserLeaderboard.length} thành viên có dữ liệu KPI` : 'Chưa có dữ liệu trong kỳ này'}</span>
+                      </div>
+                      <span className="leaderboard-kpi-period">Kỳ hiện tại</span>
+                    </div>
+                    {kpiUserLeaderboard.length === 0 ? (
+                      <div className="leaderboard-kpi-empty">
+                        <Target size={28} />
+                        <strong>Chưa có dữ liệu KPI</strong>
+                        <span>Hãy kiểm tra lại phòng ban hoặc kỳ giao chỉ tiêu.</span>
+                      </div>
+                    ) : (
+                      <div className="leaderboard-table-scroll">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Hạng</th>
+                              <th>Thành viên</th>
+                              <th>Đội nhóm</th>
+                              <th>Tiến độ KPI</th>
+                              <th>Trạng thái</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {kpiUserLeaderboard.map((item, index) => {
+                              const progress = Math.min(100, Math.max(0, Number(item.avgProgress || 0)));
+                              const completed = progress >= 100;
+                              return (
+                                <tr
+                                  key={item.user?.id || index}
+                                  tabIndex={0}
+                                  onClick={() => item.user?.id && navigate(`/users/${item.user.id}`)}
+                                  onKeyDown={(event) => {
+                                    if ((event.key === 'Enter' || event.key === ' ') && item.user?.id) {
+                                      event.preventDefault();
+                                      navigate(`/users/${item.user.id}`);
+                                    }
+                                  }}
+                                >
+                                  <td><span className={`leaderboard-kpi-rank rank-${Math.min(index + 1, 3)}`}>{index + 1}</span></td>
+                                  <td>
+                                    <div className="leaderboard-kpi-member">
+                                      <AvatarBox user={item.user} name={item.user?.name} userId={item.user?.id} size={34} idx={index} />
+                                      <span><strong>{item.user?.name || 'Chưa đặt tên'}</strong><small>{item.user?.email || '—'}</small></span>
+                                    </div>
+                                  </td>
+                                  <td>{item.user?.team?.name || item.user?.teamName || 'Chưa gia nhập đội'}</td>
+                                  <td>
+                                    <div className="leaderboard-kpi-progress">
+                                      <div><span style={{ width: `${progress}%` }} /></div>
+                                      <strong>{progress}%</strong>
+                                    </div>
+                                  </td>
+                                  <td><span className={`leaderboard-kpi-status ${completed ? 'is-complete' : ''}`}>{completed ? 'Đã đạt' : 'Đang thực hiện'}</span></td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* 1. BXH ĐỘI NHÓM */}
               {scopeMode === 'teams' && (
                 <div>
@@ -1470,7 +1589,7 @@ export default function Leaderboard() {
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hành Động</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <FlipTableBody resetKey={`teams:${currentPeriod}:${searchKeyword}`}>
                         {teamRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
@@ -1496,6 +1615,8 @@ export default function Leaderboard() {
                             return (
                               <tr
                                 key={row.teamId || idx}
+                                data-flip-id={row.teamId}
+                                className="ranking-flip-row"
                                 onClick={() => handleDrillDownTeam(row)}
                                 style={{
                                   borderBottom: '1px solid rgba(15,23,42,0.04)',
@@ -1518,7 +1639,9 @@ export default function Leaderboard() {
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
+                                    <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} />
+                                  </span>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b' }}>
                                   {row.activeMembersCount || '—'}
@@ -1541,7 +1664,7 @@ export default function Leaderboard() {
                             );
                           })
                         )}
-                      </tbody>
+                      </FlipTableBody>
                     </table>
                   </div>
                 </div>
@@ -1585,7 +1708,7 @@ export default function Leaderboard() {
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm XP</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <FlipTableBody resetKey={`members:${currentPeriod}:${searchKeyword}`}>
                         {memberRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={5} style={{ padding: 48, textAlign: 'center' }}>
@@ -1617,7 +1740,9 @@ export default function Leaderboard() {
                             const scoreVal = u[currentPeriod === 'all-time' ? 'lifetimeScore' : 'score'] ?? 0;
                             return (
                               <tr
-                                key={u.userId || i}
+                                key={u.userId || u.id || i}
+                                data-flip-id={u.userId || u.id}
+                                className="ranking-flip-row"
                                 onClick={() => navigate(`/users/${u.userId || u.id}`)}
                                 style={{
                                   borderBottom: '1px solid rgba(15,23,42,0.04)',
@@ -1669,14 +1794,16 @@ export default function Leaderboard() {
                                   <LevelText user={u} />
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(scoreVal)}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
+                                    <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} />
+                                  </span>
                                   <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 3 }}>XP</span>
                                 </td>
                               </tr>
                             );
                           })
                         )}
-                      </tbody>
+                      </FlipTableBody>
                     </table>
                   </div>
                 </div>
@@ -1713,7 +1840,7 @@ export default function Leaderboard() {
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Tăng Trưởng (30D)</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <FlipTableBody resetKey={`youtube:${urlMetric}:${searchKeyword}`}>
                         {youtubeRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
@@ -1735,7 +1862,12 @@ export default function Leaderboard() {
                           youtubeRankings.items.map((c, idx) => {
                             const rank = c.rank || idx + 1;
                             return (
-                              <tr key={c.id || idx} style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}>
+                              <tr
+                                key={c.id || c.channelId || idx}
+                                data-flip-id={c.id || c.channelId}
+                                className="ranking-flip-row"
+                                style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}
+                              >
                                 <td style={{ padding: '12px 16px' }}>
                                   <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                     {rank}
@@ -1767,7 +1899,9 @@ export default function Leaderboard() {
                                   )}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>{fmtNum(c.views)}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', fontFamily: "'JetBrains Mono',monospace" }}>
+                                    <AnimatedNumber value={c.views || 0} duration={700} formatFn={fmtNum} />
+                                  </span>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
                                   {fmtNum(c.subscribers)}
@@ -1794,7 +1928,7 @@ export default function Leaderboard() {
                             );
                           })
                         )}
-                      </tbody>
+                      </FlipTableBody>
                     </table>
                   </div>
                 </div>

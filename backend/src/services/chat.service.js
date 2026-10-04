@@ -67,6 +67,11 @@ async function assertCanChat(userId, friendValue) {
     err.status = 404;
     throw err;
   }
+  if (!(await areFriends(userId, friendId))) {
+    const err = new Error('Chỉ có thể nhắn tin với thành viên đã kết bạn');
+    err.status = 403;
+    throw err;
+  }
   return friendId;
 }
 

@@ -18,6 +18,7 @@ import {
   Club,
   Target,
   Settings as SettingsIcon,
+  Sliders,
 } from 'lucide-react';
 
 /**
@@ -189,6 +190,14 @@ export const NAVIGATION_CONFIG = [
         description: 'Cấu hình thời gian, kích hoạt, tạm dừng và kết toán mùa giải',
       },
       {
+        to: '/admin/competition/rules',
+        label: 'Rule Builder & Mô Phỏng',
+        shortLabel: 'Luật & Mô phỏng',
+        icon: Sliders,
+        adminOnly: true,
+        description: 'Kiểm tra, mô phỏng và phát hành phiên bản luật đã được kiểm duyệt',
+      },
+      {
         to: '/admin/competition/grand',
         label: 'Quản Lý Giải Vô Địch Năm',
         shortLabel: 'Vô địch năm',
@@ -273,6 +282,7 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';
   if (pathname.startsWith('/admin/competition/seasons')) return 'Quản Lý Mùa Giải';
+  if (pathname.startsWith('/admin/competition/rules')) return 'Rule Builder & Mô Phỏng';
   if (pathname.startsWith('/admin/competition/grand')) return 'Quản Lý Giải Vô Địch Năm';
   if (pathname.startsWith('/admin/operations')) return 'Giám Sát & Nhật Ký Kiểm Toán';
   if (pathname.startsWith('/users')) return 'Hồ Sơ Cá Nhân';
@@ -287,4 +297,3 @@ export function resolveCurrentTitle(pathname) {
   }
   return 'WorkRank';
 }
-

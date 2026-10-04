@@ -78,14 +78,14 @@ export default function QuizRoundResultModal({
         maxWidth: 440,
         zIndex: 100,
         textAlign: 'center',
-        animation: 'fadeIn 0.2s ease',
+        animation: 'modal-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
         boxSizing: 'border-box',
         userSelect: 'none',
       }}
     >
       {/* ── STAGE 1: OUTCOME & USER SCORE ── */}
       {subPhase === 'outcome' ? (
-        <div style={{ animation: 'fadeIn 0.18s ease' }}>
+        <div style={{ animation: 'tab-enter 0.26s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           {/* Status Icon */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
             {isMyCorrect ? (
@@ -213,7 +213,7 @@ export default function QuizRoundResultModal({
         </div>
       ) : (
         /* ── STAGE 2: ROUND MINI LEADERBOARD ── */
-        <div style={{ animation: 'fadeIn 0.18s ease' }}>
+        <div style={{ animation: 'tab-enter 0.26s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div
             style={{
               display: 'flex',

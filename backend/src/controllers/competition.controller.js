@@ -820,6 +820,9 @@ module.exports = {
   triggerYouTubeMilestone,
   triggerCommunityKudos,
   getPublicSpotlight,
+  adminListMvpSeasons,
+  adminPreviewSeasonMvp,
+  adminAwardMvpCup,
 };
 
 async function getPublicSpotlight(req, res) {
@@ -828,3 +831,36 @@ async function getPublicSpotlight(req, res) {
   return res.json(spotlight);
 }
 
+async function adminListMvpSeasons(req, res) {
+  const recognitionService = require('../services/recognition.service');
+  const seasons = await recognitionService.listSeasonsMvpStatus();
+  return res.json({ seasons });
+}
+
+async function adminPreviewSeasonMvp(req, res) {
+  const recognitionService = require('../services/recognition.service');
+  const { seasonId } = req.params;
+  const result = await recognitionService.previewSeasonMvpWinner(Number(seasonId));
+  return res.json(result);
+}
+
+async function adminAwardMvpCup(req, res) {
+  const recognitionService = require('../services/recognition.service');
+  const { userId, seasonId, title, reason, metadata } = req.body;
+  if (!seasonId) return res.status(400).json({ message: 'seasonId là bắt buộc' });
+  if (!userId) return res.status(400).json({ message: 'userId là bắt buộc' });
+
+  const recognition = await recognitionService.awardMVP({
+    userId: Number(userId),
+    seasonId: Number(seasonId),
+    title,
+    reason,
+    metadata,
+    actorId: req.user?.id,
+  });
+
+  return res.status(201).json({
+    message: 'Trao MVP Cup thành công',
+    recognition,
+  });
+}

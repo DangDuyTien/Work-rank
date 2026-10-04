@@ -84,7 +84,7 @@ export default function Layout() {
     setTimeout(() => {
       setMobileDrawerOpen(false);
       setMobileDrawerClosing(false);
-    }, 220); // --motion-normal
+    }, 260); // --motion-normal / drawer-slide-exit
   }, []);
 
   const closeNotif = useCallback(() => {
@@ -92,7 +92,7 @@ export default function Layout() {
     setTimeout(() => {
       setNotifOpen(false);
       setNotifClosing(false);
-    }, 140); // --motion-fast
+    }, 220); // dropdown-exit duration
   }, []);
 
   const dropRef = useRef(null);
@@ -600,7 +600,7 @@ export default function Layout() {
                   borderRadius: 10,
                   overflow: 'hidden',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.08)',
-                  animation: 'slide-down 0.15s ease',
+                  animation: 'slide-down 0.22s var(--ease-spring)',
                   zIndex: 200,
                 }}>
                   <button

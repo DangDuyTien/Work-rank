@@ -74,6 +74,8 @@ class CacheEngine {
     this.store = new Map(); // key -> { data, timestamp, ttl }
     this.inFlight = new Map(); // key -> Promise
     this.listeners = new Map(); // key -> Set<callback>
+    this.generation = 0;
+    this.versions = new Map();
   }
 
   get(key) {
@@ -164,11 +166,17 @@ class CacheEngine {
       return this.inFlight.get(key);
     }
 
+    const requestGeneration = this.generation;
+    const requestVersion = this.versions.get(key) || 0;
     const requestPromise = (async () => {
       try {
         const freshData = await fetcher();
-        this.set(key, freshData, { ttl });
-        if (onRevalidated) onRevalidated(freshData);
+        // A request started before logout or a full cache clear must not
+        // repopulate the next user's in-memory cache.
+        if (requestGeneration === this.generation && requestVersion === (this.versions.get(key) || 0)) {
+          this.set(key, freshData, { ttl });
+        }
+        if (onRevalidated && requestGeneration === this.generation && requestVersion === (this.versions.get(key) || 0)) onRevalidated(freshData);
         return freshData;
       } finally {
         this.inFlight.delete(key);
@@ -186,15 +194,22 @@ class CacheEngine {
     if (!pattern) return;
 
     if (typeof pattern === 'string') {
-      for (const [key, entry] of this.store.entries()) {
+      const keys = new Set([...this.store.keys(), ...this.inFlight.keys()]);
+      for (const key of keys) {
+        const entry = this.store.get(key);
         if (key === pattern || key.startsWith(`${pattern}:`) || key.startsWith(`${pattern}?`)) {
-          entry.timestamp = 0; // Mark stale
+          this.versions.set(key, (this.versions.get(key) || 0) + 1);
+          if (entry) entry.timestamp = 0; // Mark stale
         }
       }
     } else if (pattern instanceof RegExp) {
-      for (const [key, entry] of this.store.entries()) {
+      const keys = new Set([...this.store.keys(), ...this.inFlight.keys()]);
+      for (const key of keys) {
+        const entry = this.store.get(key);
+        pattern.lastIndex = 0;
         if (pattern.test(key)) {
-          entry.timestamp = 0;
+          this.versions.set(key, (this.versions.get(key) || 0) + 1);
+          if (entry) entry.timestamp = 0;
         }
       }
     }
@@ -214,8 +229,10 @@ class CacheEngine {
    * Clear entire cache on logout
    */
   clear() {
+    this.generation += 1;
     this.store.clear();
     this.inFlight.clear();
+    this.versions.clear();
   }
 }
 
@@ -233,10 +250,10 @@ export const CACHE_KEYS = {
   DASHBOARD_TOTALS: (range) => `dashboard:totals:${range}`,
   DASHBOARD_USERS: (range) => `dashboard:users:${range}`,
   DASHBOARD_YT_COMPANY: (period) => `dashboard:yt:company:${period}`,
-  DASHBOARD_YT_MEMBER: (period) => `dashboard:yt:member:${period}`,
+  DASHBOARD_YT_MEMBER: (period, userId) => createCacheKey('dashboard:yt:member', { period, userId }),
   DASHBOARD_YT_CHANNELS: () => `dashboard:yt:channels`,
   DASHBOARD_KPI_MY_SUMMARY: (userId) => `dashboard:kpi:summary:${userId}`,
-  COMPETITION_DASHBOARD: () => `competition:dashboard`,
+  COMPETITION_DASHBOARD: (userId, teamId) => createCacheKey('competition:dashboard', { userId, teamId }),
   RANKINGS: (scope, params = {}) => createCacheKey(`rankings:${scope}`, params),
   RANKINGS_META: () => `rankings:meta`,
   YOUTUBE_OVERVIEW: () => `youtube:overview`,

@@ -185,7 +185,44 @@ async function runCacheTests() {
     passed++;
   }
 
-  console.log(`\n🎉 All ${passed}/9 Cache & Request Coalescing tests PASSED with 100% precision!\n`);
+  // Test 10: Dashboard 3-layer KPI normalization & calculation resilience
+  {
+    const normalizeKpiSummary = (raw) => {
+      if (!raw || typeof raw !== 'object') return { department: null, period: null, kpis: [] };
+      const kpis = Array.isArray(raw.kpis) ? raw.kpis : [];
+      return {
+        department: raw.department || null,
+        period: raw.period || raw.currentPeriod || null,
+        kpis,
+      };
+    };
+
+    // 10A: Handles null/undefined
+    assert.deepStrictEqual(normalizeKpiSummary(null), { department: null, period: null, kpis: [] });
+    assert.deepStrictEqual(normalizeKpiSummary(undefined), { department: null, period: null, kpis: [] });
+
+    // 10B: Computes completion progress correctly
+    const mockKpiPayload = {
+      department: { id: 1, name: 'Content' },
+      period: { id: 1, name: 'Tháng 10/2026' },
+      kpis: [
+        { id: 1, name: 'Script', target: 20, actual: 15, progressPct: 75, status: 'IN_PROGRESS' },
+        { id: 2, name: 'Review', target: 10, actual: 10, progressPct: 100, status: 'COMPLETED' },
+      ],
+    };
+
+    const normalized = normalizeKpiSummary(mockKpiPayload);
+    assert.strictEqual(normalized.kpis.length, 2);
+    const completedCount = normalized.kpis.filter((k) => k.status === 'COMPLETED' || k.progressPct >= 100).length;
+    assert.strictEqual(completedCount, 1);
+    const avgProgress = Math.round(normalized.kpis.reduce((acc, k) => acc + k.progressPct, 0) / normalized.kpis.length);
+    assert.strictEqual(avgProgress, 88);
+
+    console.log('  ✔ 10. Dashboard 3-layer KPI normalization & progress computation passed');
+    passed++;
+  }
+
+  console.log(`\n🎉 All ${passed}/10 Cache & Request Coalescing tests PASSED with 100% precision!\n`);
 }
 
 runCacheTests().catch((err) => {

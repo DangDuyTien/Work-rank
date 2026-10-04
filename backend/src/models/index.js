@@ -67,6 +67,10 @@ const Kpi = require('./Kpi');
 const KpiPeriod = require('./KpiPeriod');
 const KpiResult = require('./KpiResult');
 const KpiEvent = require('./KpiEvent');
+// Production KPI Engine Models (Excel Mapping & Runtime Evaluation)
+const ProductionKpiRule = require('./ProductionKpiRule');
+const ProductionKpiActivation = require('./ProductionKpiActivation');
+const ProductionKpiExecutionSnapshot = require('./ProductionKpiExecutionSnapshot');
 // System Settings & Game Catalog
 const SystemSetting = require('./SystemSetting');
 const GameCatalog = require('./GameCatalog');
@@ -274,6 +278,13 @@ KpiResult.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 KpiResult.hasMany(KpiEvent, { foreignKey: 'kpiResultId', as: 'events' });
 KpiEvent.belongsTo(KpiResult, { foreignKey: 'kpiResultId', as: 'kpiResult' });
 
+// Production KPI Engine Associations
+ProductionKpiExecutionSnapshot.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ProductionKpiExecutionSnapshot.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
+ProductionKpiExecutionSnapshot.belongsTo(ProductionKpiRule, { foreignKey: 'ruleId', as: 'rule' });
+ProductionKpiExecutionSnapshot.belongsTo(ScoreLedger, { foreignKey: 'ledgerId', as: 'scoreLedger' });
+ProductionKpiExecutionSnapshot.belongsTo(CompetitionEvent, { foreignKey: 'eventId', as: 'event' });
+
 module.exports = {
   sequelize,
   Team,
@@ -349,6 +360,10 @@ module.exports = {
   KpiPeriod,
   KpiResult,
   KpiEvent,
+  // Production KPI Engine Models
+  ProductionKpiRule,
+  ProductionKpiActivation,
+  ProductionKpiExecutionSnapshot,
   // System Settings & Game Catalog
   SystemSetting,
   GameCatalog,

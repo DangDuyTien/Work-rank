@@ -28,6 +28,26 @@ router.patch('/password', auth, validate(z.object({
     newPassword: z.string().min(1).max(128),
   }),
 })), asyncHandler(controller.changePassword));
+
+router.patch('/email', auth, validate(z.object({
+  body: z.object({
+    newEmail: z.string().trim().email('Định dạng email không hợp lệ').min(5).max(191).transform((val) => val.toLowerCase()),
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại').max(128),
+  }),
+})), asyncHandler(controller.changeEmail));
+router.post('/email', auth, validate(z.object({
+  body: z.object({
+    newEmail: z.string().trim().email('Định dạng email không hợp lệ').min(5).max(191).transform((val) => val.toLowerCase()),
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại').max(128),
+  }),
+})), asyncHandler(controller.changeEmail));
+router.post('/change-email', auth, validate(z.object({
+  body: z.object({
+    newEmail: z.string().trim().email('Định dạng email không hợp lệ').min(5).max(191).transform((val) => val.toLowerCase()),
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại').max(128),
+  }),
+})), asyncHandler(controller.changeEmail));
+
 router.delete('/me/account', auth, asyncHandler(controller.deleteMe));
 router.post('/me/delete', auth, asyncHandler(controller.deleteMe));
 

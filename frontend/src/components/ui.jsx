@@ -199,9 +199,9 @@ export function AnimatedCollapse({ isOpen, children, className = '', style }) {
 
 /**
  * AnimatedNumber — Smooth counter animation with requestAnimationFrame.
- * Usage: <AnimatedNumber value={pts} formatFn={(v) => `${v.toLocaleString()} PTS`} />
+ * Usage: <AnimatedNumber value={pts} duration={700} formatFn={(v) => `${v.toLocaleString()} PTS`} />
  */
-export function AnimatedNumber({ value, duration = 450, formatFn, className = '', style }) {
+export function AnimatedNumber({ value, duration = 650, formatFn, className = '', style }) {
   const numVal = typeof value === 'number' ? value : (parseFloat(String(value).replace(/,/g, '')) || 0);
   const [displayValue, setDisplayValue] = useState(numVal);
   const startValRef = useRef(numVal);
@@ -213,6 +213,18 @@ export function AnimatedNumber({ value, duration = 450, formatFn, className = ''
     const target = typeof value === 'number' ? value : (parseFloat(String(value).replace(/,/g, '')) || 0);
     if (target === targetValRef.current && displayValue === target) return;
 
+    // Check reduced motion
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        document.documentElement?.dataset?.workrankReduceMotion === 'true');
+
+    if (prefersReducedMotion) {
+      targetValRef.current = target;
+      setDisplayValue(target);
+      return;
+    }
+
     startValRef.current = displayValue;
     targetValRef.current = target;
     startTimeRef.current = null;
@@ -221,8 +233,8 @@ export function AnimatedNumber({ value, duration = 450, formatFn, className = ''
       if (!startTimeRef.current) startTimeRef.current = timestamp;
       const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutQuad: fast start, soft settle
-      const eased = 1 - (1 - progress) * (1 - progress);
+      // easeOutCubic: very smooth deceleration into final resting value
+      const eased = 1 - Math.pow(1 - progress, 3);
       const current = startValRef.current + (targetValRef.current - startValRef.current) * eased;
 
       const nextVal = progress === 1
@@ -277,7 +289,7 @@ export function AnimatedModal({
       const timer = setTimeout(() => {
         setMounted(false);
         setClosing(false);
-      }, 160); // match --motion-fast
+      }, 240); // match --motion-normal exit (smooth without snap)
       return () => clearTimeout(timer);
     }
   }, [isOpen, mounted]);
@@ -433,4 +445,5 @@ export function PageTransitionSkeleton() {
 }
 
 export { default as Icon, ICON_SIZES, ICON_TONES } from './Icon';
+export { FlipTableBody, FlipList } from './FlipTableBody';
 

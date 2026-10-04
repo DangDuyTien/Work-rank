@@ -1271,7 +1271,8 @@ export default function AdminQuiz() {
                             alt="Question thumbnail"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             onError={(e) => {
-                              e.currentTarget.src = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=100&auto=format&fit=crop&q=80';
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement?.setAttribute('aria-label', 'Ảnh câu hỏi không tải được');
                             }}
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

@@ -30,6 +30,7 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 import { useAuth } from '../context/AuthContext';
 import { parseApiError } from '../utils/errors';
+import MvpCupAwardModal from '../components/MvpCupAwardModal';
 
 const PAGE_SIZE = 50;
 
@@ -138,6 +139,7 @@ export default function AdminPrivileges() {
   const [awardType, setAwardType] = useState('MVP');
   const [awardForm, setAwardForm] = useState({ seasonId: '', title: '', reason: '' });
   const [awarding, setAwarding] = useState(false);
+  const [mvpModalOpen, setMvpModalOpen] = useState(false);
 
   const [detailDrawerUser, setDetailDrawerUser] = useState(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
@@ -468,6 +470,25 @@ export default function AdminPrivileges() {
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Quản trị viên</div>
             <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#dc2626', fontWeight: 700 }}>{adminCount}</strong>
           </div>
+          <button
+            type="button"
+            onClick={() => setMvpModalOpen(true)}
+            style={{
+              minHeight: 40,
+              padding: '0 16px',
+              background: '#7c3aed',
+              color: '#ffffff',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Trophy size={15} /> Trao Cúp MVP
+          </button>
           <button
             type="button"
             onClick={() => setCreateModalOpen(true)}
@@ -1329,6 +1350,13 @@ export default function AdminPrivileges() {
           </div>
         </div>
       )}
+
+      {/* ── MODAL TRAO CÚP MVP MÙA GIẢI ── */}
+      <MvpCupAwardModal
+        isOpen={mvpModalOpen}
+        onClose={() => setMvpModalOpen(false)}
+        onSuccess={() => loadData(query, page)}
+      />
 
       <style>{`
         @media (max-width: 920px) {

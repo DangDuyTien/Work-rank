@@ -20,7 +20,7 @@ import { getCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '.
 export default function CompetitionProgressWidget() {
   const navigate = useNavigate();
   const { user, socket } = useAuth();
-  const cachedDashboard = getCached(CACHE_KEYS.COMPETITION_DASHBOARD());
+  const cachedDashboard = getCached(CACHE_KEYS.COMPETITION_DASHBOARD(user?.id, user?.teamId));
   const [data, setData] = useState(() => cachedDashboard || null);
   const [loading, setLoading] = useState(!cachedDashboard);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,7 +31,7 @@ export default function CompetitionProgressWidget() {
       if (!isBackground && !cachedDashboard) setLoading(true);
       else setRefreshing(true);
       setError(null);
-      const res = await fetchWithCache(CACHE_KEYS.COMPETITION_DASHBOARD(), () => competition.getDashboard(), {
+      const res = await fetchWithCache(CACHE_KEYS.COMPETITION_DASHBOARD(user?.id, user?.teamId), () => competition.getDashboard(), {
         ttl: CACHE_TTL.SHORT,
         force: isBackground,
       });
@@ -43,7 +43,7 @@ export default function CompetitionProgressWidget() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cachedDashboard]);
+  }, [cachedDashboard, user?.id, user?.teamId]);
 
   useEffect(() => {
     fetchDashboard();

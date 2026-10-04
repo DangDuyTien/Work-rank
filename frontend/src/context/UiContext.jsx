@@ -20,6 +20,16 @@ const TOAST_COLOR = {
 export function UiProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
+  const [confirmClosing, setConfirmClosing] = useState(false);
+
+  const removeToast = useCallback((id) => {
+    setToasts((current) =>
+      current.map((t) => (t.id === id ? { ...t, isExiting: true } : t))
+    );
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+    }, 180);
+  }, []);
 
   const toastFn = useCallback((message, options = {}) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -28,13 +38,14 @@ export function UiProvider({ children }) {
       message,
       type: options.type || 'info',
       title: options.title || '',
+      isExiting: false,
     };
     setToasts((current) => [...current, item].slice(-4));
     window.setTimeout(() => {
-      setToasts((current) => current.filter((toastItem) => toastItem.id !== id));
+      removeToast(id);
     }, options.duration || 4500);
     return id;
-  }, []);
+  }, [removeToast]);
 
   const toast = useMemo(() => {
     const fn = (message, options) => toastFn(message, options);
@@ -46,11 +57,8 @@ export function UiProvider({ children }) {
     return fn;
   }, [toastFn]);
 
-  const removeToast = useCallback((id) => {
-    setToasts((current) => current.filter((item) => item.id !== id));
-  }, []);
-
   const confirm = useCallback((options = {}) => new Promise((resolve) => {
+    setConfirmClosing(false);
     setConfirmState({
       title: options.title || 'Xác nhận thao tác',
       message: options.message || 'Bạn có chắc chắn muốn tiếp tục?',
@@ -62,10 +70,14 @@ export function UiProvider({ children }) {
   }), []);
 
   const closeConfirm = useCallback((result) => {
-    setConfirmState((current) => {
-      if (current?.resolve) current.resolve(result);
-      return null;
-    });
+    setConfirmClosing(true);
+    window.setTimeout(() => {
+      setConfirmState((current) => {
+        if (current?.resolve) current.resolve(result);
+        return null;
+      });
+      setConfirmClosing(false);
+    }, 240);
   }, []);
 
   const value = useMemo(() => ({ toast, confirm }), [toast, confirm]);
@@ -93,6 +105,7 @@ export function UiProvider({ children }) {
             <div
               key={item.id}
               role="status"
+              className={item.isExiting ? 'motion-toast-exit' : 'motion-toast-enter'}
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -131,11 +144,12 @@ export function UiProvider({ children }) {
       </div>
 
       {/* ── CONFIRM DIALOG MODAL (Warm Minimalist Theme) ── */}
-      {confirmState && (
+      {(confirmState || confirmClosing) && (
         <div
           role="presentation"
+          className={confirmClosing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeConfirm(false);
+            if (event.target === event.currentTarget && !confirmClosing) closeConfirm(false);
           }}
           style={{
             position: 'fixed',
@@ -153,6 +167,7 @@ export function UiProvider({ children }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="workrank-confirm-title"
+            className={confirmClosing ? 'modal-dialog-exit' : 'modal-dialog-enter'}
             style={{
               width: '100%',
               maxWidth: 420,

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trophy, Flame, Clock, Users, BookOpen, RefreshCw, CheckCircle2, Tv, ExternalLink, Crown, Sparkles, ArrowUp, ArrowDown, Minus, Search, Swords, Target, Zap } from 'lucide-react';
 import { competition, youtube } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton } from '../components/ui';
+import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatCountdown(endAt) {
@@ -338,13 +338,15 @@ export default function Arena() {
             {leaderboard.length === 0 ? (
               <EmptyState title="Chưa có điểm thi đấu" description="Chưa có đội nào ghi nhận điểm số trong mùa giải này." />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <FlipList resetKey={`arena-teams:${season?.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {leaderboard.map((team) => {
                   const isTop1 = team.rank === 1;
                   const isMyTeam = myTeam && Number(team.teamId) === Number(myTeam.teamId);
                   return (
                     <div
                       key={team.teamId}
+                      data-flip-id={team.teamId}
+                      className="ranking-flip-row"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -408,7 +410,7 @@ export default function Arena() {
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 17, fontWeight: 700, color: '#111111', fontFamily: "'JetBrains Mono', monospace" }}>
-                          {(team.score || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontFamily: 'inherit', fontWeight: 400 }}>XP</span>
+                          <AnimatedNumber value={team.score || 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777', fontFamily: 'inherit', fontWeight: 400 }}>XP</span>
                         </div>
                         <div style={{ fontSize: 11, color: isTop1 ? '#15803d' : '#777777', fontWeight: 500, marginTop: 2 }}>
                           {isTop1 ? (
@@ -423,7 +425,7 @@ export default function Arena() {
                     </div>
                   );
                 })}
-              </div>
+              </FlipList>
             )}
           </Section>
         )}
@@ -509,13 +511,15 @@ export default function Arena() {
               }
 
               return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <FlipList resetKey={`arena-ind:${season?.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {filtered.map((emp) => {
                     const isTop1 = emp.rank === 1;
                     const isMe = user && (Number(emp.userId) === Number(user.id) || Number(emp.id) === Number(user.id));
                     return (
                       <div
                         key={emp.userId || emp.id}
+                        data-flip-id={emp.userId || emp.id}
+                        className="ranking-flip-row"
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -562,7 +566,7 @@ export default function Arena() {
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(emp.points ?? emp.score ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>XP</span>
+                            <AnimatedNumber value={emp.points ?? emp.score ?? 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>XP</span>
                           </div>
                           {emp.trend && (
                             <div style={{ fontSize: 11, color: emp.trend === 'UP' ? '#15803d' : emp.trend === 'DOWN' ? '#b91c1c' : '#777777', fontWeight: 500, marginTop: 2 }}>
@@ -585,7 +589,7 @@ export default function Arena() {
                       </div>
                     );
                   })}
-                </div>
+                </FlipList>
               );
             })()}
           </Section>

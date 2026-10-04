@@ -25,6 +25,8 @@ import {
 import { kpiApi, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import VerifiedBadge from '../components/VerifiedBadge';
+import { TabTransition } from '../components/ui';
+import ProductionKpiPanel from '../components/ProductionKpiPanel';
 
 const PERIOD_TYPE_LABELS = {
   daily: 'Hàng ngày',
@@ -45,7 +47,7 @@ const SOURCE_TYPE_LABELS = {
 
 export default function AdminKpi() {
   const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('kpis'); // 'kpis' | 'departments' | 'results' | 'history'
+  const [activeTab, setActiveTab] = useState('kpis'); // 'kpis' | 'departments' | 'results' | 'history' | 'production'
 
   // Data states
   const [departments, setDepartments] = useState([]);
@@ -418,6 +420,7 @@ export default function AdminKpi() {
           { id: 'departments', label: 'Phòng Ban', icon: Building2, count: departments.length },
           { id: 'results', label: 'Kết Quả & Tiến Độ', icon: BarChart3, count: results.length },
           { id: 'history', label: 'Nhật Ký & Lịch Sử', icon: History, count: history.length },
+          { id: 'production', label: 'Production KPI', icon: Layers },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           const IconComp = tab.icon;
@@ -459,10 +462,11 @@ export default function AdminKpi() {
         })}
       </div>
 
-      {/* ========================================================================= */}
-      {/* TAB 1: KPI DEFINITIONS                                                    */}
-      {/* ========================================================================= */}
-      {activeTab === 'kpis' && (
+      <TabTransition key={activeTab} minHeight={420}>
+        {/* ========================================================================= */}
+        {/* TAB 1: KPI DEFINITIONS                                                    */}
+        {/* ========================================================================= */}
+        {activeTab === 'kpis' && (
         <div>
           {/* Controls Bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
@@ -1072,27 +1076,38 @@ export default function AdminKpi() {
         </div>
       )}
 
+      {activeTab === 'production' && (
+        <ProductionKpiPanel onNotice={showSuccess} />
+      )}
+      </TabTransition>
+
       {/* ========================================================================= */}
       {/* MODAL: CREATE / EDIT KPI                                                  */}
       {/* ========================================================================= */}
       {isKpiModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 20,
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: 6,
-            width: 'min(520px, 100%)',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            overflow: 'hidden',
-          }}>
+        <div
+          className="modal-backdrop-enter"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={{
+              background: '#ffffff',
+              borderRadius: 6,
+              width: 'min(520px, 100%)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
             <div style={{
               padding: '16px 20px',
               borderBottom: '1px solid #e2e8f0',
@@ -1295,23 +1310,29 @@ export default function AdminKpi() {
       {/* MODAL: CREATE / EDIT DEPARTMENT                                           */}
       {/* ========================================================================= */}
       {isDeptModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 20,
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: 6,
-            width: 'min(460px, 100%)',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            overflow: 'hidden',
-          }}>
+        <div
+          className="modal-backdrop-enter"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={{
+              background: '#ffffff',
+              borderRadius: 6,
+              width: 'min(460px, 100%)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
             <div style={{
               padding: '16px 20px',
               borderBottom: '1px solid #e2e8f0',
@@ -1426,23 +1447,29 @@ export default function AdminKpi() {
       {/* MODAL: RECORD KPI RESULT                                                  */}
       {/* ========================================================================= */}
       {isResultModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: 20,
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: 6,
-            width: 'min(500px, 100%)',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            overflow: 'hidden',
-          }}>
+        <div
+          className="modal-backdrop-enter"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={{
+              background: '#ffffff',
+              borderRadius: 6,
+              width: 'min(500px, 100%)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
             <div style={{
               padding: '16px 20px',
               borderBottom: '1px solid #e2e8f0',

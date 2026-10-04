@@ -6,7 +6,6 @@ const {
   SeasonFrozenResult,
   SeasonTeam,
   SeasonLeaderboardProjection,
-  SeasonIndividualLeaderboardProjection,
   UserRecognition,
   User,
   UserProfilePreference,
@@ -68,19 +67,28 @@ async function getPublicSpotlight() {
       season: null,
       championTeam: null,
       mvp: null,
+      provenance: {
+        resultState: 'none',
+        champion: { state: 'none', source: null, sourceId: null },
+        mvp: { state: 'none', source: null, sourceId: null },
+      },
     };
   }
 
   // 2. Extract Champion Team
   let championTeam = null;
   let rawChampionTeam = null;
+  let championSource = null;
 
   if (Array.isArray(finalRankings)) {
     rawChampionTeam = finalRankings.find((r) => r.rank === 1);
+    if (rawChampionTeam) championSource = 'SeasonFrozenResult.finalRankings';
   } else if (Array.isArray(finalRankings?.rankings)) {
     rawChampionTeam = finalRankings.rankings.find((r) => r.rank === 1);
+    if (rawChampionTeam) championSource = 'SeasonFrozenResult.finalRankings';
   } else if (Array.isArray(finalRankings?.teams)) {
     rawChampionTeam = finalRankings.teams.find((r) => r.rank === 1);
+    if (rawChampionTeam) championSource = 'SeasonFrozenResult.finalRankings';
   }
 
   if (!rawChampionTeam && SeasonLeaderboardProjection) {
@@ -95,6 +103,7 @@ async function getPublicSpotlight() {
         rank: 1,
         teamAvatar: proj.teamAvatar,
       };
+      championSource = 'SeasonLeaderboardProjection';
     }
   }
 
@@ -112,7 +121,7 @@ async function getPublicSpotlight() {
       color: seasonTeam?.teamColorSnapshot || '#0284c7',
       avatarUrl: seasonTeam?.teamAvatarSnapshot || rawChampionTeam.teamAvatar || null,
       membersCount: Number(rawChampionTeam.membersCount || 0),
-      title: 'Nhà Vô Địch Mùa Giải',
+      title: frozenResult ? 'Nhà Vô Địch Mùa Giải' : 'Đội đang dẫn đầu',
     };
   }
 
@@ -122,7 +131,7 @@ async function getPublicSpotlight() {
   const mvpRec = await UserRecognition.findOne({
     where: {
       seasonId: season.id,
-      awardType: { [Op.in]: ['mvp', 'champion'] },
+      awardType: 'mvp',
     },
     order: [
       [sequelize.literal("CASE WHEN award_type = 'mvp' THEN 0 ELSE 1 END"), 'ASC'],
@@ -131,32 +140,17 @@ async function getPublicSpotlight() {
   });
 
   let mvpUserId = mvpRec?.userId;
-  let mvpScore = 0;
-  let mvpTitle = mvpRec?.title || 'Most Valuable Player';
+  let mvpScore = Number(mvpRec?.metadata?.score || 0);
+  let mvpTitle = mvpRec?.title || 'MVP mùa giải';
+  let mvpSource = mvpRec ? 'UserRecognition' : null;
 
-  // B. Check frozen metadata individual champion or top individual ranking
-  if (!mvpUserId) {
+  // B. Check frozen metadata individual champion if recorded in finalized frozenResult
+  if (!mvpUserId && frozenResult) {
     const indChamp = metadata?.individualChampion;
     if (indChamp?.userId) {
       mvpUserId = indChamp.userId;
       mvpScore = Number(indChamp.score || 0);
-    } else if (Array.isArray(metadata?.finalIndividualRankings) && metadata.finalIndividualRankings.length > 0) {
-      const topInd = metadata.finalIndividualRankings.find((i) => i.rank === 1) || metadata.finalIndividualRankings[0];
-      if (topInd) {
-        mvpUserId = topInd.userId;
-        mvpScore = Number(topInd.score || 0);
-      }
-    }
-  }
-
-  // C. Fallback: check SeasonIndividualLeaderboardProjection rank 1
-  if (!mvpUserId && SeasonIndividualLeaderboardProjection) {
-    const topProj = await SeasonIndividualLeaderboardProjection.findOne({
-      where: { seasonId: season.id, rank: 1 },
-    });
-    if (topProj) {
-      mvpUserId = topProj.userId;
-      mvpScore = Number(topProj.score || 0);
+      mvpSource = 'SeasonFrozenResult.metadata.individualChampion';
     }
   }
 
@@ -174,13 +168,13 @@ async function getPublicSpotlight() {
       mvp = {
         userId: mvpUser.id,
         name: mvpUser.name,
-        jobTitle: mvpUser.jobTitle || 'Thành viên xuất sắc',
-        department: mvpUser.department || 'Media & Content',
+        jobTitle: mvpUser.jobTitle || null,
+        department: mvpUser.department || null,
         isVerified: Boolean(mvpUser.isVerified),
         score: mvpScore,
         awardTitle: mvpTitle,
         avatarData: userPref?.avatarData || null,
-        reason: mvpRec?.reason || `MVP Xuất Sắc Nhất ${season.name}`,
+        reason: mvpRec?.reason || null,
       };
     }
   }
@@ -195,10 +189,23 @@ async function getPublicSpotlight() {
       status: season.status,
       startAt: season.startAt,
       endAt: season.endAt,
-      frozenAt: frozenResult?.frozenAt || season.endAt,
+      frozenAt: frozenResult?.frozenAt || null,
     },
     championTeam,
     mvp,
+    provenance: {
+      resultState: frozenResult ? 'official' : championTeam || mvp ? 'projected' : 'none',
+      champion: {
+        state: championTeam ? (frozenResult ? 'official' : 'projected') : 'none',
+        source: championSource,
+        sourceId: frozenResult?.id || null,
+      },
+      mvp: {
+        state: mvp ? (mvpRec || frozenResult ? 'official' : 'projected') : 'none',
+        source: mvpSource,
+        sourceId: mvpRec?.id || frozenResult?.id || null,
+      },
+    },
   };
 }
 

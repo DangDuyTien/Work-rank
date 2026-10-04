@@ -4,6 +4,7 @@ import { competition, groups } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl } from '../components/ui';
+import MvpCupAwardModal from '../components/MvpCupAwardModal';
 
 export default function AdminSeasons() {
   const toast = useToast();
@@ -16,6 +17,8 @@ export default function AdminSeasons() {
 
   // Create Season Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMvpModal, setShowMvpModal] = useState(false);
+  const [selectedSeasonForMvp, setSelectedSeasonForMvp] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -154,6 +157,24 @@ export default function AdminSeasons() {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => {
+              setSelectedSeasonForMvp(null);
+              setShowMvpModal(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              color: '#7c3aed',
+              borderColor: 'rgba(124,58,237,0.3)',
+              background: 'rgba(124,58,237,0.06)',
+            }}
+          >
+            <Trophy size={16} /> Trao Cúp MVP
+          </Button>
           <Button variant="primary" size="md" onClick={() => setShowCreateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Plus size={16} /> Tạo Mùa Giải Mới
           </Button>
@@ -288,6 +309,17 @@ export default function AdminSeasons() {
                       >
                         <CheckCircle size={14} /> {statusChangingId === s.id ? 'Đang kết thúc...' : 'Kết thúc & Đóng băng'}
                       </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSeasonForMvp(s.id);
+                          setShowMvpModal(true);
+                        }}
+                        style={{ color: '#7c3aed', borderColor: 'rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.06)' }}
+                      >
+                        <Trophy size={14} /> Trao Cúp MVP
+                      </Button>
                     </>
                   )}
 
@@ -313,13 +345,40 @@ export default function AdminSeasons() {
                   )}
 
                   {s.status === 'FINISHED' && (
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSeasonForMvp(s.id);
+                          setShowMvpModal(true);
+                        }}
+                        style={{ color: '#7c3aed', borderColor: 'rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.06)' }}
+                      >
+                        <Trophy size={14} /> Trao Cúp MVP
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={statusChangingId === s.id}
+                        onClick={() => handleStatusChange(s.id, 'ARCHIVED')}
+                      >
+                        <Archive size={14} /> {statusChangingId === s.id ? 'Đang lưu trữ...' : 'Lưu trữ (Archive)'}
+                      </Button>
+                    </>
+                  )}
+
+                  {s.status === 'ARCHIVED' && (
                     <Button
                       variant="secondary"
                       size="sm"
-                      disabled={statusChangingId === s.id}
-                      onClick={() => handleStatusChange(s.id, 'ARCHIVED')}
+                      onClick={() => {
+                        setSelectedSeasonForMvp(s.id);
+                        setShowMvpModal(true);
+                      }}
+                      style={{ color: '#7c3aed', borderColor: 'rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.06)' }}
                     >
-                      <Archive size={14} /> {statusChangingId === s.id ? 'Đang lưu trữ...' : 'Lưu trữ (Archive)'}
+                      <Trophy size={14} /> Xem Cúp MVP
                     </Button>
                   )}
                 </div>
@@ -446,6 +505,14 @@ export default function AdminSeasons() {
           </div>
         </div>
       )}
+
+      {/* MVP CUP AWARD MODAL */}
+      <MvpCupAwardModal
+        isOpen={showMvpModal}
+        onClose={() => setShowMvpModal(false)}
+        defaultSeasonId={selectedSeasonForMvp}
+        onSuccess={fetchSeasons}
+      />
     </div>
   );
 }

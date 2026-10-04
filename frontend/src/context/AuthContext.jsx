@@ -127,19 +127,33 @@ export function AuthProvider({ children }) {
       window.dispatchEvent(new CustomEvent('workrank:team-updated', { detail: payload }));
     };
 
+    const handleAuthRevoked = () => {
+      auth.clearLocalSession();
+      disconnectSocket();
+      setSocket(null);
+      setUser(null);
+      sessionStorage.setItem('workrank_auth_notice', 'Tài khoản đã bị chấm dứt hoặc xóa.');
+      navigate('/login', { replace: true });
+    };
+
     socket.on('user:updated', handleUserUpdated);
     socket.on('team:membership:updated', handleTeamMembershipUpdated);
+    socket.on('auth:revoked', handleAuthRevoked);
 
     return () => {
       socket.off('user:updated', handleUserUpdated);
       socket.off('team:membership:updated', handleTeamMembershipUpdated);
+      socket.off('auth:revoked', handleAuthRevoked);
     };
-  }, [socket, user]);
+  }, [socket, user, navigate]);
 
-  const logout = async () => {
+  const logout = async (skipBackendCall = false) => {
     try {
-      await auth.logout();
+      if (!skipBackendCall && localStorage.getItem('token')) {
+        await auth.logout().catch(() => {});
+      }
     } finally {
+      auth.clearLocalSession();
       disconnectSocket();
       setSocket(null);
       setUser(null);

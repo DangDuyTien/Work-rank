@@ -1,5 +1,6 @@
 'use strict';
 
+const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const {
@@ -22,9 +23,10 @@ const competitionRealtime = require('./competition/competitionRealtime.service')
  * @param {number|string} options.targetUserId - ID of the user to delete
  * @param {Object} options.actorUser - Currently authenticated user
  * @param {boolean} options.isSelfDelete - True if requested via self-delete endpoint
+ * @param {string} [options.password] - Current user password for re-authentication
  * @param {Object} [options.req] - Express request object for socket broadcasting
  */
-async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false, req = null }) {
+async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false, password = null, req = null }) {
   if (!actorUser) {
     const error = new Error('Yêu cầu xác thực tài khoản');
     error.statusCode = 401;
@@ -71,6 +73,16 @@ async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false
     const error = new Error('Tài khoản này đã bị xóa hoặc đã ngừng hoạt động');
     error.statusCode = 400;
     throw error;
+  }
+
+  // Password verification for self-delete if password is provided
+  if (isSelfDelete && password) {
+    const valid = await bcrypt.compare(password, target.passwordHash);
+    if (!valid) {
+      const error = new Error('Mật khẩu xác nhận không chính xác');
+      error.statusCode = 400;
+      throw error;
+    }
   }
 
   const oldTeamId = target.teamId;

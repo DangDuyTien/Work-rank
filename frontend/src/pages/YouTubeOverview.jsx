@@ -34,7 +34,7 @@ import { youtube, groups as groupsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { TabTransition, TableSkeleton, AnimatedNumber, PageTransition } from '../components/ui';
+import { TabTransition, TableSkeleton, AnimatedNumber, PageTransition, FlipTableBody } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatNumber(num) {
@@ -1047,7 +1047,7 @@ export default function YouTubeOverview() {
                     <th style={{ padding: '12px 16px', textAlign: 'center' }}>Hành Động</th>
                   </tr>
                 </thead>
-                <tbody>
+                <FlipTableBody resetKey={`yt-overview:${channelSortBy}:${channelTeamFilter}`}>
                   {channelLeaderboardLoading ? (
                     <tr>
                       <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
@@ -1064,7 +1064,12 @@ export default function YouTubeOverview() {
                     channelLeaderboard.map((ch) => {
                       const isAssigned = !!ch.teamId;
                       return (
-                        <tr key={ch.id || ch.channelId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <tr
+                          key={ch.id || ch.channelId}
+                          data-flip-id={ch.id || ch.channelId}
+                          className="ranking-flip-row"
+                          style={{ borderBottom: '1px solid #f1f5f9' }}
+                        >
                           <td style={{ padding: '12px 16px', fontWeight: 700 }}>
                             {ch.rank === 1 && (
                               <span style={{ color: '#eab308', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -1146,7 +1151,7 @@ export default function YouTubeOverview() {
                             )}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0f172a' }}>
-                            {formatNumber(ch.views)}
+                            <AnimatedNumber value={ch.views || 0} duration={700} formatFn={formatNumber} />
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                             {ch.viewsGrowth30dPct !== null && ch.viewsGrowth30dPct !== undefined ? (
@@ -1193,7 +1198,7 @@ export default function YouTubeOverview() {
                       );
                     })
                   )}
-                </tbody>
+                </FlipTableBody>
               </table>
             </div>
           </div>

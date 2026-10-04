@@ -62,7 +62,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
       const timer = setTimeout(() => {
         setMounted(false);
         setClosing(false);
-      }, 160);
+      }, 240);
       return () => clearTimeout(timer);
     }
   }, [isOpen, mounted]);

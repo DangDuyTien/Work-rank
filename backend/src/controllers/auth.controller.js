@@ -35,14 +35,21 @@ async function changePassword(req, res) {
   res.json(result);
 }
 
+async function changeEmail(req, res) {
+  const result = await authService.changeEmail(req.user, req.validated.body);
+  res.json(result);
+}
+
 async function deleteMe(req, res) {
+  const password = req.validated?.body?.password || req.validated?.body?.currentPassword || req.body?.password || req.body?.currentPassword;
   const result = await userDeletionService.deleteUserAccount({
     targetUserId: req.user.id,
     actorUser: req.user,
     isSelfDelete: true,
+    password,
     req,
   });
   res.json({ message: 'Tài khoản của bạn đã được xóa thành công.', ...result });
 }
 
-module.exports = { register, login, refreshToken, logout, me, updateMe, changePassword, deleteMe };
+module.exports = { register, login, refreshToken, logout, me, updateMe, changePassword, changeEmail, deleteMe };

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trophy, Crown, Flame, Award, Calendar, ChevronRight, RefreshCw, Clock, Star, Zap, Sparkles, Tv, ExternalLink, CheckCircle2, Search } from 'lucide-react';
 import { competition, youtube } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton } from '../components/ui';
+import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatDaysRemaining(endAt) {
@@ -333,13 +333,15 @@ export default function GrandHub() {
             {standings.length === 0 ? (
               <EmptyState title="Chưa có điểm Grand Points" description="Các đội sẽ nhận Grand Points sau khi các Season trong năm được kết thúc." />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <FlipList resetKey={`grand-standings-${grand?.id || 'default'}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {standings.map((team) => {
                   const isTop1 = team.rank === 1;
                   const isMyTeam = user?.teamId && Number(team.teamId) === Number(user.teamId);
                   return (
                     <div
                       key={team.teamId}
+                      data-flip-id={team.teamId}
+                      className="ranking-flip-row"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -390,7 +392,7 @@ export default function GrandHub() {
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 18, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono', monospace" }}>
-                          {team.grandPoints} <span style={{ fontSize: 12, color: '#777777' }}>GP</span>
+                          <AnimatedNumber value={team.grandPoints || 0} duration={700} /> <span style={{ fontSize: 12, color: '#777777' }}>GP</span>
                         </div>
                         <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                           {isTop1 ? (
@@ -405,7 +407,7 @@ export default function GrandHub() {
                     </div>
                   );
                 })}
-              </div>
+              </FlipList>
             )}
           </Section>
         )}
@@ -483,13 +485,16 @@ export default function GrandHub() {
               }
 
               return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <FlipList resetKey={`grand-indiv-${grand?.id || 'default'}:${selectedTeamFilter}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {filtered.map((emp) => {
                     const isTop1 = emp.rank === 1;
                     const isMe = user && (Number(emp.userId) === Number(user.id) || Number(emp.id) === Number(user.id));
+                    const empKey = emp.userId || emp.id;
                     return (
                       <div
-                        key={emp.userId || emp.id}
+                        key={empKey}
+                        data-flip-id={empKey}
+                        className="ranking-flip-row"
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -522,20 +527,20 @@ export default function GrandHub() {
                             <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name}</span>
                               {isMe && (
-                                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
-                                  Bạn
-                                </span>
-                              )}
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                                Bạn
+                              </span>
+                            )}
                             </div>
                             <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
-                              Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 1} mùa giải • {emp.seasonWins || 0} MVP
+                              Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 0} mùa giải • {emp.seasonWins || 0} lần vô địch
                             </div>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(emp.grandPoints ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>GP</span>
+                            <AnimatedNumber value={emp.grandPoints ?? 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777' }}>GP</span>
                           </div>
                           <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
                             {isTop1 ? (
@@ -550,7 +555,7 @@ export default function GrandHub() {
                       </div>
                     );
                   })}
-                </div>
+                </FlipList>
               );
             })()}
           </Section>
@@ -575,12 +580,14 @@ export default function GrandHub() {
               {youtubeStandings.length === 0 ? (
                 <EmptyState title="Chưa có dữ liệu YouTube" description="Chưa có kênh YouTube nào được liên kết và đồng bộ số liệu." />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <FlipList resetKey={`grand-youtube-${grand?.id || 'default'}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {youtubeStandings.map((team, idx) => {
                     const isMyTeam = myTeamStandings && Number(team.teamId) === Number(myTeamStandings.teamId);
                     return (
                       <div
                         key={team.teamId}
+                        data-flip-id={team.teamId}
+                        className="ranking-flip-row"
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -626,7 +633,7 @@ export default function GrandHub() {
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777' }}>views</span>
+                            <AnimatedNumber value={team.totalViews || 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777' }}>views</span>
                           </div>
                           <div style={{ fontSize: 11, color: team.viewsGrowth30dPct !== null ? '#15803d' : '#64748b', fontWeight: 600, marginTop: 2 }}>
                             {(team.totalSubscribers || 0).toLocaleString()} subs • {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `+${Number(team.viewsGrowth30dPct).toFixed(1)}% 30D` : '—'}
@@ -635,7 +642,7 @@ export default function GrandHub() {
                       </div>
                     );
                   })}
-                </div>
+                </FlipList>
               )}
             </div>
           </Section>

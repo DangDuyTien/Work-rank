@@ -93,6 +93,26 @@ const EVENT_CONTRACTS = {
     producer: 'workrank-production',
     description: 'Triggered when quality control approves video technical specs.',
   },
+  'production.editor.kpi_evaluated': {
+    eventType: 'PRODUCTION_KPI_EVALUATED',
+    sourceModule: 'production_kpi',
+    aggregateType: 'editor_task',
+    schemaVersion: 1,
+    requiredFields: ['episodeId', 'actualDurationMinutes', 'standardTimeMinutes', 'points'],
+    optionalFields: ['taskType', 'startedAt', 'completedAt', 'performanceRatio', 'efficiencyRating', 'xp', 'ruleVersion', 'seasonId'],
+    producer: 'workrank-kpi-calculator',
+    description: 'Triggered when an Editor completes an episode and KPI efficiency is calculated against Excel benchmarks.',
+  },
+  'production.content.kpi_evaluated': {
+    eventType: 'PRODUCTION_KPI_EVALUATED',
+    sourceModule: 'production_kpi',
+    aggregateType: 'content_weekly',
+    schemaVersion: 1,
+    requiredFields: ['weekKey', 'weeklyOutput', 'averageTimePerEpisode', 'points'],
+    optionalFields: ['targetWeeklyOutput', 'totalDurationMinutes', 'standardTimePerEpisode', 'combinedMultiplier', 'efficiencyRating', 'episodesCount', 'xp', 'ruleVersion', 'seasonId'],
+    producer: 'workrank-kpi-calculator',
+    description: 'Triggered when Content Creator weekly output and average duration are evaluated against Excel benchmarks.',
+  },
 
   // ─── YouTube Metric Contracts ───────────────────────────────────────────────
   'youtube.video.published': {

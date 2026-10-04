@@ -1,5 +1,5 @@
-'use strict';
-
+const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 const {
   User,
   Team,
@@ -9,6 +9,9 @@ const {
   GrandChampionship,
   SeasonFrozenResult,
   SeasonTeamMember,
+  CompetitionUserSummary,
+  UserProfilePreference,
+  ScoreLedger,
 } = require('../models');
 
 const CANONICAL_JOB_TITLES = [
@@ -111,6 +114,27 @@ async function getUserRecognitions(userId) {
   const championAwards = rawAwards.filter((a) => a.awardType === 'champion');
   const mvpAwards = rawAwards.filter((a) => a.awardType === 'mvp');
 
+  const serializeAward = (a) => ({
+    id: a.id,
+    awardType: a.awardType,
+    title: a.title,
+    seasonId: a.seasonId,
+    seasonName: a.season?.name || null,
+    seasonStatus: a.season?.status || null,
+    grandId: a.grandId,
+    grandName: a.grand?.name || null,
+    grandStatus: a.grand?.status || null,
+    reason: a.reason || null,
+    awardedAt: a.awardedAt,
+    awardedBy: a.awardedBy,
+    metadata: a.metadata || null,
+    provenance: {
+      state: 'official',
+      sourceType: a.seasonId ? 'season' : a.grandId ? 'grand' : 'recognition_record',
+      sourceId: a.seasonId || a.grandId || a.id,
+    },
+  });
+
   return {
     userId: user.id,
     jobTitle: normalizeJobTitle(user.jobTitle) || 'Editor',
@@ -132,120 +156,264 @@ async function getUserRecognitions(userId) {
         count: championAwards.length,
         label: 'Vô địch giải đấu',
         type: 'champion',
-        awards: championAwards.map((a) => ({
-          id: a.id,
-          title: a.title,
-          seasonId: a.seasonId,
-          grandId: a.grandId,
-          reason: a.reason,
-          awardedAt: a.awardedAt,
-          awardedBy: a.awardedBy,
-        })),
+        awards: championAwards.map(serializeAward),
       },
       mvp: {
         active: mvpAwards.length > 0,
         count: mvpAwards.length,
         label: 'Nhân viên xuất sắc',
         type: 'mvp',
-        awards: mvpAwards.map((a) => ({
-          id: a.id,
-          title: a.title,
-          seasonId: a.seasonId,
-          grandId: a.grandId,
-          reason: a.reason,
-          awardedAt: a.awardedAt,
-          awardedBy: a.awardedBy,
-        })),
+        awards: mvpAwards.map(serializeAward),
       },
     },
-    awards: rawAwards.map((a) => ({
-      id: a.id,
-      awardType: a.awardType,
-      title: a.title,
-      seasonId: a.seasonId,
-      seasonName: a.season?.name || null,
-      grandId: a.grandId,
-      grandName: a.grand?.name || null,
-      reason: a.reason,
-      awardedAt: a.awardedAt,
-      awardedBy: a.awardedBy,
-    })),
+    awards: rawAwards.map(serializeAward),
   };
 }
 
 /**
  * Admin awards MVP to a user.
+ * Guaranteed ATOMIC, IDEMPOTENT (no duplicates per season), and records full snapshot metadata.
  */
 async function awardMVP({ userId, seasonId, grandId, title, reason, actorId, metadata }) {
-  const user = await User.findByPk(userId);
-  if (!user) throw new Error('User not found');
+  const competitionRealtime = require('./competition/competitionRealtime.service');
 
-  const defaultTitle = seasonId
-    ? `MVP Mùa Giải #${seasonId}`
-    : grandId
-      ? `MVP Grand Championship #${grandId}`
-      : 'Nhân Viên Xuất Sắc (MVP)';
+  const result = await sequelize.transaction(async (t) => {
+    // 1. Verify User
+    const user = await User.findByPk(userId, {
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
+    if (!user) {
+      const err = new Error('Không tìm thấy người dùng nhận giải');
+      err.statusCode = 404;
+      throw err;
+    }
+    if (user.status === 'inactive') {
+      const err = new Error('Tài khoản người dùng đã bị vô hiệu hóa hoặc không hợp lệ');
+      err.statusCode = 400;
+      throw err;
+    }
 
-  const recognition = await UserRecognition.create({
-    userId: user.id,
-    awardType: 'mvp',
-    title: title || defaultTitle,
-    seasonId: seasonId ? Number(seasonId) : null,
-    grandId: grandId ? Number(grandId) : null,
-    reason: reason || 'Trao giải MVP cho thành tích đóng góp xuất sắc',
-    awardedBy: actorId ? Number(actorId) : null,
-    awardedAt: new Date(),
-    metadata: metadata || null,
+    let season = null;
+    if (seasonId) {
+      season = await Season.findByPk(seasonId, {
+        lock: t.LOCK.UPDATE,
+        transaction: t,
+      });
+      if (!season) {
+        const err = new Error(`Mùa giải #${seasonId} không tồn tại`);
+        err.statusCode = 404;
+        throw err;
+      }
+      if (['CANCELLED', 'ARCHIVED'].includes(season.status)) {
+        const err = new Error(`Không thể trao giải cho mùa giải có trạng thái ${season.status}`);
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // 2. Strict Duplicate Check per Season
+      const existing = await UserRecognition.findOne({
+        where: { seasonId: season.id, awardType: 'mvp' },
+        lock: t.LOCK.UPDATE,
+        transaction: t,
+      });
+      if (existing) {
+        const err = new Error(
+          `Mùa giải "${season.name}" (ID #${season.id}) đã được trao MVP Cup cho người nhận ID #${existing.userId}. Không thể trao trùng.`
+        );
+        err.statusCode = 409;
+        throw err;
+      }
+    }
+
+    const defaultTitle = season
+      ? `MVP Mùa Giải #${season.id} — ${season.name}`
+      : grandId
+        ? `MVP Grand Championship #${grandId}`
+        : 'Nhân Viên Xuất Sắc (MVP)';
+
+    // 3. Build enriched snapshot metadata
+    let calculatedScore = metadata?.score;
+    let calculatedRank = metadata?.rank;
+    if (season && (calculatedScore === undefined || calculatedRank === undefined)) {
+      const scoreRow = await ScoreLedger.findOne({
+        attributes: [
+          [sequelize.fn('SUM', sequelize.col('points_delta')), 'totalPoints'],
+          [sequelize.fn('COUNT', sequelize.fn('DISTINCT', sequelize.col('event_id'))), 'eventsCount'],
+        ],
+        where: { seasonId: season.id, userId: user.id },
+        raw: true,
+        transaction: t,
+      });
+      if (calculatedScore === undefined) {
+        calculatedScore = Number(scoreRow?.totalPoints || 0);
+      }
+      if (calculatedRank === undefined) {
+        calculatedRank = 1;
+      }
+    }
+
+    const awardMetadata = {
+      ...(metadata || {}),
+      score: calculatedScore !== undefined ? calculatedScore : (metadata?.score ?? 0),
+      rank: calculatedRank !== undefined ? calculatedRank : (metadata?.rank ?? 1),
+      seasonName: season?.name || null,
+      seasonStatus: season?.status || null,
+      userName: user.name,
+      jobTitle: user.jobTitle,
+      department: user.department,
+      teamId: user.teamId,
+      awardedBy: actorId ? Number(actorId) : null,
+      awardedAt: new Date().toISOString(),
+    };
+
+    // 4. Create UserRecognition record
+    const recognition = await UserRecognition.create(
+      {
+        userId: user.id,
+        awardType: 'mvp',
+        title: (title && String(title).trim()) || defaultTitle,
+        seasonId: season ? Number(season.id) : null,
+        grandId: grandId ? Number(grandId) : null,
+        reason: (reason && String(reason).trim()) || 'Trao giải MVP cho thành tích đóng góp xuất sắc',
+        awardedBy: actorId ? Number(actorId) : null,
+        awardedAt: new Date(),
+        metadata: awardMetadata,
+      },
+      { transaction: t }
+    );
+
+    // 5. Synchronize CompetitionUserSummary (Profile & Hall of Fame consistency)
+    const [summary] = await CompetitionUserSummary.findOrCreate({
+      where: { userId: user.id },
+      defaults: { userId: user.id },
+      transaction: t,
+    });
+    const currentMeta = { ...(summary.metadata || {}) };
+    const prevMvpCount = Number(currentMeta.mvpCount || 0);
+    currentMeta.mvpCount = prevMvpCount + 1;
+    summary.metadata = currentMeta;
+    summary.changed('metadata', true);
+    await summary.save({ transaction: t });
+
+    // 6. Audit Log
+    await CompetitionAuditLog.create(
+      {
+        actorId: actorId ? Number(actorId) : null,
+        action: 'MVP_AWARDED',
+        entityType: 'RECOGNITION',
+        entityId: String(user.id),
+        afterState: {
+          recognitionId: recognition.id,
+          awardType: 'mvp',
+          title: recognition.title,
+          seasonId: recognition.seasonId,
+          grandId: recognition.grandId,
+          reason: recognition.reason,
+          metadata: awardMetadata,
+        },
+        reason: reason || 'Admin awarded MVP badge',
+      },
+      { transaction: t }
+    );
+
+    return { recognition, user, season };
   });
 
-  await CompetitionAuditLog.create({
-    actorId: actorId ? Number(actorId) : null,
-    action: 'MVP_AWARDED',
-    entityType: 'RECOGNITION',
-    entityId: String(user.id),
-    afterState: {
-      recognitionId: recognition.id,
-      awardType: 'mvp',
-      title: recognition.title,
-      seasonId: recognition.seasonId,
-      grandId: recognition.grandId,
-      reason: recognition.reason,
-    },
-    reason: reason || 'Admin awarded MVP badge',
-  });
+  // 7. Realtime emission after transaction commit
+  try {
+    const io = competitionRealtime.getIo();
+    if (io) {
+      io.emit('competition:mvp:awarded', {
+        recognitionId: result.recognition.id,
+        userId: result.user.id,
+        userName: result.user.name,
+        seasonId: result.recognition.seasonId,
+        seasonName: result.season?.name || null,
+        title: result.recognition.title,
+        reason: result.recognition.reason,
+        score: result.recognition.metadata?.score || 0,
+        awardedAt: result.recognition.awardedAt,
+      });
+    }
+  } catch (emitErr) {
+    console.warn('[awardMVP] Realtime emission warning:', emitErr.message);
+  }
 
-  return recognition;
+  return result.recognition;
 }
 
 /**
  * Admin revokes MVP.
+ * Guaranteed ATOMIC, decrements MVP count, and logs audit.
  */
 async function revokeMVP({ recognitionId, actorId, reason }) {
-  const recognition = await UserRecognition.findByPk(recognitionId);
-  if (!recognition || recognition.awardType !== 'mvp') {
-    throw new Error('MVP recognition not found');
-  }
+  const competitionRealtime = require('./competition/competitionRealtime.service');
 
-  const userId = recognition.userId;
-  const beforeState = {
-    recognitionId: recognition.id,
-    awardType: recognition.awardType,
-    title: recognition.title,
-    seasonId: recognition.seasonId,
-  };
+  const result = await sequelize.transaction(async (t) => {
+    const recognition = await UserRecognition.findByPk(recognitionId, {
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
+    if (!recognition || recognition.awardType !== 'mvp') {
+      const err = new Error('MVP recognition not found');
+      err.statusCode = 404;
+      throw err;
+    }
 
-  await recognition.destroy();
+    const userId = recognition.userId;
+    const beforeState = {
+      recognitionId: recognition.id,
+      awardType: recognition.awardType,
+      title: recognition.title,
+      seasonId: recognition.seasonId,
+      userId,
+    };
 
-  await CompetitionAuditLog.create({
-    actorId: actorId ? Number(actorId) : null,
-    action: 'MVP_REVOKED',
-    entityType: 'RECOGNITION',
-    entityId: String(userId),
-    beforeState,
-    reason: reason || 'Admin revoked MVP badge',
+    await recognition.destroy({ transaction: t });
+
+    // Decrement CompetitionUserSummary
+    const summary = await CompetitionUserSummary.findOne({
+      where: { userId },
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
+    if (summary) {
+      const currentMeta = { ...(summary.metadata || {}) };
+      currentMeta.mvpCount = Math.max(0, (Number(currentMeta.mvpCount || 0) - 1));
+      summary.metadata = currentMeta;
+      summary.changed('metadata', true);
+      await summary.save({ transaction: t });
+    }
+
+    await CompetitionAuditLog.create(
+      {
+        actorId: actorId ? Number(actorId) : null,
+        action: 'MVP_REVOKED',
+        entityType: 'RECOGNITION',
+        entityId: String(userId),
+        beforeState,
+        reason: reason || 'Admin revoked MVP badge',
+      },
+      { transaction: t }
+    );
+
+    return { success: true, recognition: beforeState, userId };
   });
 
-  return { success: true };
+  try {
+    const io = competitionRealtime.getIo();
+    if (io) {
+      io.emit('competition:mvp:revoked', {
+        recognitionId: Number(recognitionId),
+        userId: result.userId,
+      });
+    }
+  } catch (emitErr) {
+    console.warn('[revokeMVP] Realtime emission warning:', emitErr.message);
+  }
+
+  return result;
 }
 
 /**
@@ -490,6 +658,237 @@ async function syncSeasonChampionRecognitions(seasonId, actorId) {
   return awarded;
 }
 
+/**
+ * Preview candidate winner for a season's MVP Cup.
+ */
+async function previewSeasonMvpWinner(seasonId) {
+  const season = await Season.findByPk(seasonId);
+  if (!season) {
+    const err = new Error(`Mùa giải #${seasonId} không tồn tại`);
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // 1. Check if already awarded
+  const existingAward = await UserRecognition.findOne({
+    where: { seasonId: season.id, awardType: 'mvp' },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'jobTitle', 'department', 'teamId'],
+        include: [{ model: UserProfilePreference, as: 'UserProfilePreference', attributes: ['avatarData'], required: false }],
+      },
+    ],
+  });
+
+  if (existingAward) {
+    return {
+      status: 'ALREADY_AWARDED',
+      season: {
+        id: season.id,
+        name: season.name,
+        status: season.status,
+        startAt: season.startAt,
+        endAt: season.endAt,
+      },
+      existingAward: {
+        id: existingAward.id,
+        userId: existingAward.userId,
+        userName: existingAward.user?.name || `User #${existingAward.userId}`,
+        userAvatar: existingAward.user?.UserProfilePreference?.avatarData || null,
+        jobTitle: existingAward.user?.jobTitle || 'Nhân viên',
+        department: existingAward.user?.department || 'Media & Content',
+        title: existingAward.title,
+        reason: existingAward.reason,
+        awardedAt: existingAward.awardedAt,
+        awardedBy: existingAward.awardedBy,
+        metadata: existingAward.metadata,
+      },
+      candidate: null,
+    };
+  }
+
+  // 2. Determine winner from season source of truth
+  const seasonService = require('./competition/season.service');
+  let candidate = null;
+  let isTied = false;
+  let tiedCount = 1;
+
+  // Check if Season is FROZEN / FINISHED
+  const frozen = await SeasonFrozenResult.findOne({ where: { seasonId: season.id } });
+  if (frozen && frozen.metadata) {
+    const indChamp = frozen.metadata.individualChampion;
+    const finalRankings = frozen.metadata.finalIndividualRankings || [];
+
+    if (indChamp && indChamp.userId) {
+      candidate = indChamp;
+      if (Array.isArray(finalRankings) && finalRankings.length > 1) {
+        const topScore = Number(indChamp.score || indChamp.points || 0);
+        const tiedUsers = finalRankings.filter((r) => Number(r.score || r.points || 0) === topScore && topScore > 0);
+        if (tiedUsers.length > 1) {
+          isTied = true;
+          tiedCount = tiedUsers.length;
+        }
+      }
+    } else if (Array.isArray(finalRankings) && finalRankings.length > 0) {
+      candidate = finalRankings[0];
+    }
+  }
+
+  // Fallback to active leaderboard calculation if not in frozen result
+  if (!candidate) {
+    const leaderboard = await seasonService.getSeasonIndividualLeaderboard(season.id, { limit: 50 });
+    if (leaderboard.seasonIndividualChampion) {
+      candidate = leaderboard.seasonIndividualChampion;
+      const topScore = Number(candidate.score || candidate.points || 0);
+      if (topScore > 0 && Array.isArray(leaderboard.rankings)) {
+        const tiedUsers = leaderboard.rankings.filter((r) => Number(r.score || r.points || 0) === topScore);
+        if (tiedUsers.length > 1) {
+          isTied = true;
+          tiedCount = tiedUsers.length;
+        }
+      }
+    } else if (Array.isArray(leaderboard.rankings) && leaderboard.rankings.length > 0) {
+      candidate = leaderboard.rankings[0];
+    }
+  }
+
+  if (!candidate || !candidate.userId) {
+    return {
+      status: 'NO_CANDIDATE',
+      season: {
+        id: season.id,
+        name: season.name,
+        status: season.status,
+        startAt: season.startAt,
+        endAt: season.endAt,
+      },
+      message: 'Mùa giải này chưa có dữ liệu thành viên tham gia hoặc ghi điểm.',
+      candidate: null,
+    };
+  }
+
+  // Ensure full candidate profile
+  const user = await User.findByPk(candidate.userId, {
+    attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId', 'isVerified', 'isDev', 'status'],
+    include: [
+      { model: Team, attributes: ['id', 'name'] },
+      { model: UserProfilePreference, as: 'UserProfilePreference', attributes: ['avatarData'], required: false },
+    ],
+  });
+
+  const candScore = Number(candidate.score || candidate.points || candidate.totalScore || 0);
+  const candEvents = Number(candidate.eventsCount || 0);
+  const candRank = Number(candidate.rank || candidate.overallRank || 1);
+
+  if (candScore <= 0) {
+    return {
+      status: 'NO_CANDIDATE',
+      season: {
+        id: season.id,
+        name: season.name,
+        status: season.status,
+        startAt: season.startAt,
+        endAt: season.endAt,
+      },
+      message: 'Mùa giải này chưa có dữ liệu ghi điểm hoặc thành viên chưa tích lũy điểm.',
+      candidate: null,
+    };
+  }
+
+  const suggestedTitle = `MVP Mùa Giải #${season.id} — ${season.name}`;
+  const suggestedReason = candScore > 0
+    ? `Xuất sắc đạt Hạng #${candRank} cá nhân toàn mùa với ${candScore.toLocaleString()} XP qua ${candEvents} lượt đóng góp nổi bật.`
+    : `Vinh danh cá nhân dẫn đầu bảng xếp hạng Mùa Giải #${season.id}.`;
+
+  return {
+    status: 'READY',
+    season: {
+      id: season.id,
+      name: season.name,
+      status: season.status,
+      startAt: season.startAt,
+      endAt: season.endAt,
+    },
+    candidate: {
+      userId: candidate.userId,
+      name: user?.name || candidate.userName || `User #${candidate.userId}`,
+      email: user?.email || candidate.userEmail || '',
+      jobTitle: user?.jobTitle || candidate.jobTitle || 'Nhân viên',
+      department: user?.department || candidate.department || 'Media & Content',
+      teamId: user?.teamId || candidate.teamId || null,
+      teamName: user?.Team?.name || candidate.teamName || 'Chưa gán đội',
+      avatarData: user?.UserProfilePreference?.avatarData || candidate.avatarData || candidate.userAvatar || null,
+      isVerified: Boolean(user?.isVerified || candidate.isVerified),
+      isDev: Boolean(user?.isDev || candidate.isDev),
+      status: user?.status || 'active',
+      score: candScore,
+      rank: candRank,
+      eventsCount: candEvents,
+      lastScoredAt: candidate.lastScoredAt || null,
+    },
+    suggestedTitle,
+    suggestedReason,
+    isTied,
+    tiedCount,
+  };
+}
+
+/**
+ * List all seasons with their MVP Awarding status.
+ */
+async function listSeasonsMvpStatus() {
+  const seasons = await Season.findAll({
+    order: [['startAt', 'DESC'], ['id', 'DESC']],
+    attributes: ['id', 'name', 'slug', 'status', 'seasonType', 'startAt', 'endAt'],
+  });
+
+  const mvpAwards = await UserRecognition.findAll({
+    where: { awardType: 'mvp', seasonId: { [Op.ne]: null } },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId'],
+        include: [{ model: UserProfilePreference, as: 'UserProfilePreference', attributes: ['avatarData'], required: false }],
+      },
+    ],
+  });
+
+  const mvpMap = new Map();
+  for (const a of mvpAwards) {
+    mvpMap.set(Number(a.seasonId), a);
+  }
+
+  return seasons.map((s) => {
+    const existingAward = mvpMap.get(Number(s.id));
+    return {
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      status: s.status,
+      seasonType: s.seasonType,
+      startAt: s.startAt,
+      endAt: s.endAt,
+      hasMvpAwarded: Boolean(existingAward),
+      mvpAward: existingAward
+        ? {
+            id: existingAward.id,
+            userId: existingAward.userId,
+            userName: existingAward.user?.name || `User #${existingAward.userId}`,
+            userAvatar: existingAward.user?.UserProfilePreference?.avatarData || null,
+            jobTitle: existingAward.user?.jobTitle || 'Nhân viên',
+            department: existingAward.user?.department || 'Media & Content',
+            title: existingAward.title,
+            reason: existingAward.reason,
+            awardedAt: existingAward.awardedAt,
+          }
+        : null,
+    };
+  });
+}
+
 module.exports = {
   CANONICAL_JOB_TITLES,
   normalizeJobTitle,
@@ -501,4 +900,6 @@ module.exports = {
   setVerified,
   setDevBadge,
   syncSeasonChampionRecognitions,
+  previewSeasonMvpWinner,
+  listSeasonsMvpStatus,
 };

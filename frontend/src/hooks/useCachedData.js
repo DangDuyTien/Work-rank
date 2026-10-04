@@ -37,6 +37,7 @@ export function useCachedData(key, fetcher, options = {}) {
 
   const dataRef = useRef(data);
   dataRef.current = data;
+  const previousKeyRef = useRef(key);
 
   const revalidate = useCallback(async (isManual = false) => {
     if (!key || !fetcherRef.current) return;
@@ -84,6 +85,20 @@ export function useCachedData(key, fetcher, options = {}) {
 
     return unsubscribe;
   }, [key]);
+
+  // A scope change (for example switching account or team) must never keep
+  // rendering the previous resource while the new request is in flight.
+  useEffect(() => {
+    if (previousKeyRef.current === key) return;
+    previousKeyRef.current = key;
+    const nextEntry = key ? cache.getEntry(key) : null;
+    const nextData = nextEntry?.data !== undefined ? nextEntry.data : initialData;
+    dataRef.current = nextData;
+    setData(nextData);
+    setError(null);
+    setIsRevalidating(false);
+    setLoading(Boolean(enabled && key && !nextEntry));
+  }, [key, enabled, initialData]);
 
   // Handle key change / mount
   useEffect(() => {

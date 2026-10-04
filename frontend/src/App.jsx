@@ -56,15 +56,17 @@ const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <PageFallback text="Đang kiểm tra phiên đăng nhập..." />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   return children;
 };
 
 const AdminRoute = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
+  const location = useLocation();
   if (loading) return <PageFallback text="Đang kiểm tra quyền truy cập..." />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 };
@@ -128,6 +130,20 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
+// A failed route should not poison the whole application after the user moves
+// to another history entry. Remounting the boundary for each location gives
+// the next route a clean render attempt while preserving the error fallback
+// for repeated failures on the same entry.
+function RouteErrorBoundary({ children }) {
+  const location = useLocation();
+  const resetKey = `${location.key}:${location.pathname}:${location.search}`;
+  return (
+    <AppErrorBoundary key={resetKey}>
+      {children}
+    </AppErrorBoundary>
+  );
+}
+
 function AnimatedAppRoutes() {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
@@ -147,7 +163,7 @@ function AnimatedAppRoutes() {
           setDisplayLocation(location);
           setTransitionStage('fadeIn');
           window.scrollTo(0, 0);
-        }, 180);
+        }, 240);
         return () => clearTimeout(timer);
       } else if (isEnteringGame) {
         // App contents & navigation slide/fade out into full viewport game surface
@@ -226,6 +242,7 @@ function AnimatedAppRoutes() {
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
             <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
             <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />
+            <Route path="/admin/competition/rules" element={<AdminRoute><CompetitionAdmin /></AdminRoute>} />
             <Route path="/admin/competition/seasons" element={<AdminRoute><AdminSeasons /></AdminRoute>} />
             <Route path="/admin/competition/grand" element={<AdminRoute><AdminGrand /></AdminRoute>} />
             <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
@@ -301,9 +318,9 @@ export default function App() {
     <BrowserRouter>
       <UiProvider>
         <AuthProvider>
-          <AppErrorBoundary>
+          <RouteErrorBoundary>
             <AnimatedAppRoutes />
-          </AppErrorBoundary>
+          </RouteErrorBoundary>
         </AuthProvider>
       </UiProvider>
     </BrowserRouter>

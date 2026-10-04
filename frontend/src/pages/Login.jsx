@@ -1,23 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   LogIn,
   UserPlus,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   AlertCircle,
   Eye,
   EyeOff,
-  Tv,
-  Swords,
-  Trophy,
-  Star,
-  Crown,
-  Sparkles,
-  Award,
-  Medal,
-  Gamepad2,
   Lock,
   Mail,
   UserRound,
@@ -25,256 +15,40 @@ import {
   HelpCircle,
   X,
   LogOut,
-  Users,
 } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
-import VerifiedBadge from '../components/VerifiedBadge';
-import { initialsFromName } from '../utils/avatar';
-import { auth, competition } from '../services/api';
+import usePublicSpotlight from '../hooks/usePublicSpotlight';
+import { RecognitionStatus, SpotlightFeedback, displayScore, recognitionState } from '../components/PublicRecognition';
+import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
+import { auth } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-function MvpVisualAward({ mvp, championTeam, season }) {
+function MvpVisualAward({ data, loading, error, retry }) {
+  const mvp = data?.mvp;
+  const team = data?.championTeam;
+  const type = mvp ? 'mvp' : 'champion';
+  const championState = recognitionState(data, 'champion');
+  const mvpState = recognitionState(data, 'mvp');
+  const state = type === 'mvp' ? mvpState : championState;
+  const name = type === 'mvp' ? mvp?.name : team?.teamName;
   return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        minHeight: 580,
-        background: '#f5f4f0',
-        borderRight: '1px solid rgba(0, 0, 0, 0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '36px 32px',
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* ── Top Header: Brand & Eyebrow & Kinetic Headline (Identical to Homepage) ── */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BrandMark size={28} showLabel={false} />
-            <span
-              style={{
-                fontFamily: "'Space Grotesk', -apple-system, sans-serif",
-                fontSize: 15,
-                fontWeight: 700,
-                letterSpacing: '-0.4px',
-                color: '#111111',
-                textTransform: 'uppercase',
-              }}
-            >
-              WORKRANK <span style={{ color: '#b45309', fontWeight: 700 }}>3WIN MEDIA</span>
-            </span>
-          </Link>
-
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              padding: '4px 10px',
-              background: 'rgba(0,0,0,0.06)',
-              color: '#111111',
-              borderRadius: 9999,
-              textTransform: 'uppercase',
-              letterSpacing: '0.6px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            <Crown size={12} color="#b45309" />
-            {season?.name ? season.name : 'MÙA GIẢI 2026'}
-          </span>
-        </div>
-
-        {/* Eyebrow */}
-        <div className="wr-award-eyebrow" style={{ marginBottom: 12 }}>
-          <Star size={14} color="#b45309" />
-          <span className="wr-award-eyebrow-accent">
-            {season?.name ? `${season.name} • MOST VALUABLE PLAYER` : 'MÙA GIẢI 2026 • DANH HIỆU MVP'}
-          </span>
-        </div>
-
-        {/* Big Editorial Headline */}
-        <h2
-          style={{
-            fontSize: 'clamp(26px, 3vw, 38px)',
-            fontWeight: 700,
-            lineHeight: 1.15,
-            letterSpacing: '-0.035em',
-            textTransform: 'uppercase',
-            color: '#111111',
-            margin: '0 0 14px 0',
-          }}
-        >
-          <span style={{ display: 'block' }}>MVP XUẤT SẮC</span>
-          <span style={{ display: 'block' }}>MÙA GIẢI</span>
-          <span style={{ display: 'block', color: mvp ? '#111111' : '#888888' }}>
-            {mvp ? mvp.name : 'CHỜ CHỦ NHÂN'}
-          </span>
-        </h2>
-
-        {/* Tagline description */}
-        <p
-          style={{
-            fontSize: 13,
-            lineHeight: 1.55,
-            color: '#555555',
-            margin: '0 0 24px 0',
-            fontWeight: 400,
-            maxWidth: 420,
-          }}
-        >
-          {mvp
-            ? (mvp.reason || 'Vinh danh cá nhân có hiệu suất đóng góp cao nhất và chỉ số tăng trưởng ấn tượng nhất toàn cơ quan.')
-            : 'Cá nhân có thành tích bứt phá và đóng góp nổi bật nhất sẽ được xướng tên tại vị trí danh giá này.'}
-        </p>
+    <aside className="public-auth-recognition" aria-label="Ghi nhận mùa giải" aria-busy={loading}>
+      <Link to="/" className="public-editorial-brand" aria-label="WorkRank — Trang chủ">
+        <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
+      </Link>
+      <div className="public-auth-editorial-heading">
+        <h2>Vinh danh</h2>
+        <p>{data?.season?.name || (loading ? 'Đang tải mùa giải…' : error ? 'Chưa tải được mùa giải' : 'Chưa có mùa giải công bố')}</p>
       </div>
-
-      {/* ── Bottom Visual Boxes (Matching Homepage Exact Box 1 & Box 2) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14, marginTop: 'auto' }}>
-        {/* Box 1: MVP Portrait & Profile */}
-        <div
-          className="wr-award-visual-box"
-          style={{
-            background: '#ffffff',
-            border: '1px solid rgba(0, 0, 0, 0.08)',
-            padding: 16,
-            borderRadius: 8,
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#b45309', textTransform: 'uppercase' }}>
-              MVP RECOGNITION
-            </span>
-            <Sparkles size={14} color="#f59e0b" />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0' }}>
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                background: '#111111',
-                border: '2px solid #f59e0b',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 16px rgba(245,158,11,0.25)',
-                overflow: 'hidden',
-                position: 'relative',
-                flexShrink: 0,
-              }}
-            >
-              {mvp?.avatarData ? (
-                <img
-                  src={mvp.avatarData}
-                  alt={mvp.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : mvp ? (
-                <span
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: '#facc15',
-                  }}
-                >
-                  {initialsFromName(mvp.name)}
-                </span>
-              ) : (
-                <UserRound size={26} color="#facc15" strokeWidth={2} />
-              )}
-              {mvp?.isVerified && (
-                <div style={{ position: 'absolute', bottom: 1, right: 1 }}>
-                  <VerifiedBadge size={14} />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: '#111111', lineHeight: 1.25 }}>
-                  {mvp ? mvp.name : 'Nhân Tố Xuất Sắc'}
-                </span>
-                {mvp?.isVerified && <VerifiedBadge size={13} />}
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 500, color: '#777777', textTransform: 'uppercase', marginTop: 3 }}>
-                {mvp ? `${mvp.jobTitle || 'Chuyên viên'} • ${mvp.department || 'Media'}` : 'Chờ vinh danh'}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666666' }}>
-            <span>Danh hiệu</span>
-            <span style={{ fontWeight: 600, color: '#b45309' }}>
-              {mvp ? 'MVP Mùa Giải' : 'Chờ xác định'}
-            </span>
-          </div>
-        </div>
-
-        {/* Box 2: Excellence Award & Score */}
-        <div
-          className="wr-award-visual-box"
-          style={{
-            background: '#ffffff',
-            border: '1px solid rgba(0, 0, 0, 0.08)',
-            padding: 16,
-            borderRadius: 8,
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.6px', color: '#666666', textTransform: 'uppercase' }}>
-              EXCELLENCE RECOGNITION
-            </span>
-            <Medal size={14} color="#111111" />
-          </div>
-
-          <div style={{ margin: 'auto 0', textAlign: 'center', padding: '10px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Award size={36} color="#f59e0b" strokeWidth={1.75} />
-            </div>
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#b45309', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-              {mvp ? 'DANH HIỆU MVP' : 'CHỜ XÁC ĐỊNH'}
-            </span>
-          </div>
-
-          <div
-            style={{
-              borderTop: '1px solid rgba(0,0,0,0.06)',
-              paddingTop: 8,
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 6,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Điểm Cống Hiến</div>
-              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#111111', marginTop: 1 }}>
-                {mvp ? `${mvp.score.toLocaleString()} XP` : '--- XP'}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 500, color: '#888888', textTransform: 'uppercase' }}>Chứng Nhận</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0284c7', marginTop: 1 }}>
-                {mvp?.isVerified ? 'Đã Xác Thực' : 'Hệ Thống'}
-              </div>
-            </div>
-          </div>
-        </div>
+      <SpotlightFeedback loading={loading} error={error} retry={retry} />
+      <RecognitionPortraitFrame key={`${type}-${data?.season?.id || 'none'}-${name || 'none'}`} type={type} record={type === 'mvp' ? mvp : team} loading={loading} />
+      <div className="public-auth-person">
+        <div><span className="public-editorial-kicker">{type === 'mvp' ? 'CÁ NHÂN NỔI BẬT' : 'ĐỘI NHÓM NỔI BẬT'}</span><h3>{name || (loading ? 'Đang tải…' : 'Chờ ghi nhận tiếp theo')}</h3><RecognitionStatus state={state} type={type} /></div>
+        {(mvp || team) && <p className="public-auth-score"><strong>{displayScore(type === 'mvp' ? mvp?.score : team?.seasonScore)}</strong><span>Điểm mùa giải</span></p>}
       </div>
-    </div>
+      {mvp?.reason && <p className="public-auth-reason">{mvp.reason}</p>}
+      <Link className="public-editorial-link" to="/">Khám phá vinh danh <ArrowRight size={17} /></Link>
+    </aside>
   );
 }
 
@@ -283,14 +57,9 @@ export default function Login() {
   const location = useLocation();
   const { user, setUser, logout } = useAuth();
 
-  const [spotlight, setSpotlight] = useState({
-    hasSpotlight: false,
-    season: null,
-    championTeam: null,
-    mvp: null,
-  });
+  const spotlight = usePublicSpotlight();
 
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -298,6 +67,65 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const passwordHelpRef = useRef(null);
+  const formContentRef = useRef(null);
+  const [formHeight, setFormHeight] = useState(null);
+  const fieldPositionsRef = useRef(new Map());
+
+  useLayoutEffect(() => {
+    const form = formContentRef.current;
+    const positions = new Map();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.dataset.workrankReduceMotion === 'true';
+    for (const field of form.children) {
+      const key = field.querySelector('input')?.id || (field.type === 'submit' ? 'submit' : null);
+      if (!key) continue;
+      const top = field.offsetTop;
+      const previousTop = fieldPositionsRef.current.get(key);
+      if (!reduceMotion && previousTop !== undefined && previousTop !== top) {
+        field.animate([{ transform: `translateY(${previousTop - top}px)` }, { transform: 'translateY(0)' }],
+          { duration: 420, easing: 'cubic-bezier(.22, 1, .36, 1)' });
+      }
+      positions.set(key, top);
+    }
+    fieldPositionsRef.current = positions;
+  }, [isRegister]);
+
+  useEffect(() => {
+    const content = formContentRef.current;
+    const observer = new ResizeObserver(() => setFormHeight(content.getBoundingClientRect().height + 12));
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!showForgotPasswordModal) return undefined;
+    const dialog = passwordHelpRef.current;
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    const buttons = dialog.querySelectorAll('button');
+    buttons[0]?.focus();
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setShowForgotPasswordModal(false);
+      if (event.key !== 'Tab') return;
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    dialog.addEventListener('keydown', onKeyDown);
+    return () => {
+      dialog.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [showForgotPasswordModal]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -305,9 +133,7 @@ export default function Login() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('mode') === 'register') {
-      setIsRegister(true);
-    }
+    setIsRegister(params.get('mode') === 'register');
     const message = sessionStorage.getItem('workrank_auth_message');
     const logoutNotice = sessionStorage.getItem('workrank_auth_notice');
     if (message) {
@@ -319,24 +145,7 @@ export default function Login() {
       sessionStorage.removeItem('workrank_auth_notice');
     }
 
-    let isMounted = true;
-    competition
-      .getPublicSpotlight()
-      .then((data) => {
-        if (isMounted && data) {
-          setSpotlight(data);
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to load public spotlight on login page:', err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
   }, [location.search]);
-
-  const { season, championTeam, mvp } = spotlight;
 
   const switchMode = (mode) => {
     setIsRegister(mode);
@@ -348,7 +157,7 @@ export default function Login() {
     } else {
       params.delete('mode');
     }
-    navigate({ search: params.toString() }, { replace: true });
+    navigate({ search: params.toString() }, { replace: true, state: location.state });
   };
 
   const handleSubmit = async (e) => {
@@ -393,7 +202,10 @@ export default function Login() {
         });
         if (res.data?.user) {
           setUser(res.data.user);
-          const from = location.state?.from?.pathname || '/dashboard';
+          const requested = location.state?.from;
+          const from = requested?.pathname?.startsWith('/')
+            ? `${requested.pathname}${requested.search || ''}${requested.hash || ''}`
+            : '/dashboard';
           navigate(from, { replace: true });
         }
       }
@@ -406,46 +218,12 @@ export default function Login() {
   };
 
   return (
-    <main
-      className="login-page-wrapper"
-      style={{
-        width: '100vw',
-        minHeight: '100vh',
-        background: '#f4f3ef',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '32px 16px',
-        fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
-      {/* ── AUTH CONTAINER (Editorial Warm Aesthetic) ── */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 1040,
-          background: '#ffffff',
-          border: '1px solid rgba(0,0,0,0.08)',
-          borderRadius: 10,
-          boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-          overflow: 'hidden',
-        }}
-      >
-        {/* ── LEFT PANEL: FULL-BLEED MVP ARTWORK & FLOATING CARD ── */}
-        <MvpVisualAward mvp={mvp} championTeam={championTeam} season={season} />
-
-        {/* ── RIGHT PANEL: AUTH FORMS & STATE ── */}
-        <div
-          style={{
-            padding: '40px 36px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            background: '#ffffff',
-          }}
-        >
+    <main className="login-page-wrapper public-auth-page">
+      <div className="public-auth-shell">
+        <div className={`public-auth-form-panel ${isRegister ? 'is-register' : ''}`}>
+          <Link className="public-auth-mobile-brand public-editorial-brand" to="/" aria-label="WorkRank — Trang chủ">
+            <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
+          </Link>
           {/* Active session banner */}
           {user && (
             <div
@@ -536,6 +314,7 @@ export default function Login() {
           >
             <button
               type="button"
+              aria-pressed={!isRegister}
               onClick={() => switchMode(false)}
               style={{
                 display: 'flex',
@@ -560,6 +339,7 @@ export default function Login() {
 
             <button
               type="button"
+              aria-pressed={isRegister}
               onClick={() => switchMode(true)}
               style={{
                 display: 'flex',
@@ -584,14 +364,14 @@ export default function Login() {
           </div>
 
           {/* Form Header */}
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, lineHeight: 1.3, color: '#111111' }}>
-              {isRegister ? 'Tạo Tài Khoản Thành Viên' : 'Đăng Nhập Workspace'}
-            </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#666666', lineHeight: 1.55, fontWeight: 400 }}>
+          <div className="public-auth-form-heading">
+            <h1>
+              {isRegister ? 'Tham gia WorkRank.' : 'Chào mừng trở lại.'}
+            </h1>
+            <p>
               {isRegister
-                ? 'Nhập thông tin cá nhân để bắt đầu làm việc và thi đấu trên WorkRank'
-                : 'Sử dụng email công việc và mật khẩu để truy cập vào hệ thống'}
+                ? 'Tạo tài khoản để cùng đội ghi dấu những thành tích mới.'
+                : 'Đăng nhập để tiếp tục hành trình cùng đội của bạn.'}
             </p>
           </div>
 
@@ -599,6 +379,7 @@ export default function Login() {
           {notice && (
             <div
               className="motion-slide-down"
+              role="status"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -622,6 +403,7 @@ export default function Login() {
           {error && (
             <div
               className="motion-slide-down"
+              role="alert"
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -643,16 +425,19 @@ export default function Login() {
           )}
 
           {/* Auth Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="public-auth-form-resize" style={{ height: formHeight === null ? 'auto' : formHeight }}>
+          <form ref={formContentRef} aria-label={isRegister ? 'Đăng ký thành viên' : 'Đăng nhập WorkRank'} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Name Field (Register only) */}
             {isRegister && (
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+              <div className="public-auth-field-enter">
+                <label htmlFor="auth-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Họ và tên *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <UserRound size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input
+                    id="auth-name"
+                    autoComplete="name"
                     type="text"
                     required
                     value={name}
@@ -676,13 +461,14 @@ export default function Login() {
 
             {/* Email / Identifier Field */}
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+              <label htmlFor="auth-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                 Email hoặc Tên đăng nhập *
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
-                  type="text"
+                  id="auth-email"
+                  type={isRegister ? 'email' : 'text'}
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -706,7 +492,7 @@ export default function Login() {
             {/* Password Field */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#111111' }}>
+                <label htmlFor="auth-password" style={{ fontSize: 12, fontWeight: 600, color: '#111111' }}>
                   Mật khẩu *
                 </label>
 
@@ -732,6 +518,7 @@ export default function Login() {
               <div style={{ position: 'relative' }}>
                 <Lock size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
+                  id="auth-password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
@@ -752,6 +539,8 @@ export default function Login() {
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  aria-pressed={showPassword}
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
@@ -772,13 +561,14 @@ export default function Login() {
 
             {/* Confirm Password Field (Register only) */}
             {isRegister && (
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+              <div className="public-auth-field-enter">
+                <label htmlFor="auth-confirm-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Xác nhận mật khẩu *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input
+                    id="auth-confirm-password"
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
@@ -799,6 +589,8 @@ export default function Login() {
                   />
                   <button
                     type="button"
+                    aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
+                    aria-pressed={showConfirmPassword}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={{
                       position: 'absolute',
@@ -860,6 +652,7 @@ export default function Login() {
               )}
             </button>
           </form>
+          </div>
 
           {/* Switch Prompt */}
           <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: '#666666' }}>
@@ -881,11 +674,13 @@ export default function Login() {
             </button>
           </div>
         </div>
+        <MvpVisualAward {...spotlight} />
       </div>
 
       {/* ── FORGOT PASSWORD / ADMIN CONTACT MODAL ── */}
       {showForgotPasswordModal && (
         <div
+          onClick={(event) => { if (event.target === event.currentTarget) setShowForgotPasswordModal(false); }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -899,6 +694,10 @@ export default function Login() {
           }}
         >
           <div
+            ref={passwordHelpRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="password-help-title"
             style={{
               background: '#ffffff',
               borderRadius: 10,
@@ -908,15 +707,18 @@ export default function Login() {
               maxWidth: 440,
               boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
               position: 'relative',
+              maxHeight: 'calc(100svh - 32px)',
+              overflowY: 'auto',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: '#111111' }}>
                 <HelpCircle size={20} color="#b45309" />
-                <span>Hướng Dẫn Cấp Lại Mật Khẩu</span>
+                <span id="password-help-title">Hướng Dẫn Cấp Lại Mật Khẩu</span>
               </div>
               <button
                 type="button"
+                aria-label="Đóng hướng dẫn cấp lại mật khẩu"
                 onClick={() => setShowForgotPasswordModal(false)}
                 style={{ background: 'none', border: 'none', color: '#777777', cursor: 'pointer', padding: 4 }}
               >

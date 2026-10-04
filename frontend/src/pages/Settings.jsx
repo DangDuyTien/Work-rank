@@ -147,7 +147,16 @@ export default function Settings() {
 
   // Self-delete account states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  // Email Change state
+  const [emailForm, setEmailForm] = useState({
+    newEmail: '',
+    confirmEmail: '',
+    currentPassword: '',
+  });
+  const [savingEmail, setSavingEmail] = useState(false);
 
   // Profile Form state
   const [profile, setProfile] = useState({
@@ -306,11 +315,10 @@ export default function Settings() {
 
   const profileDirty = useMemo(() => (
     profile.name.trim() !== String(user?.name || '').trim()
-    || profile.email.trim().toLowerCase() !== String(user?.email || '').trim().toLowerCase()
     || profile.phone.trim() !== String(user?.phone || '').trim()
     || profile.bio.trim() !== String(user?.bio || '').trim()
     || profile.avatarData !== (user?.avatarData || getStoredAvatar(user?.id) || '')
-  ), [profile.avatarData, profile.bio, profile.email, profile.name, profile.phone, user?.avatarData, user?.bio, user?.email, user?.id, user?.name, user?.phone]);
+  ), [profile.avatarData, profile.bio, profile.name, profile.phone, user?.avatarData, user?.bio, user?.id, user?.name, user?.phone]);
 
   const updateSetting = (section, key, value) => {
     setSettings((current) => saveAppSettings({
@@ -324,8 +332,8 @@ export default function Settings() {
 
   const saveProfile = async (event) => {
     event.preventDefault();
-    if (!profile.name.trim() || !profile.email.trim()) {
-      toast.warning('Tên và email không được để trống.');
+    if (!profile.name.trim()) {
+      toast.warning('Tên hiển thị không được để trống.');
       return;
     }
 
@@ -333,7 +341,6 @@ export default function Settings() {
     try {
       const res = await usersApi.update(user.id, {
         name: profile.name.trim(),
-        email: profile.email.trim().toLowerCase(),
         phone: profile.phone.trim(),
         bio: profile.bio.trim(),
         avatarData: profile.avatarData || null,
@@ -356,6 +363,46 @@ export default function Settings() {
       toast.error(parseApiError(err, 'Không thể cập nhật hồ sơ.'));
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const saveEmail = async (event) => {
+    event.preventDefault();
+    const newEmail = emailForm.newEmail.trim().toLowerCase();
+    const confirmEmail = emailForm.confirmEmail.trim().toLowerCase();
+    if (!newEmail) {
+      toast.warning('Vui lòng nhập địa chỉ email mới.');
+      return;
+    }
+    if (newEmail === String(user?.email || '').toLowerCase()) {
+      toast.warning('Email mới không được trùng với email hiện tại.');
+      return;
+    }
+    if (newEmail !== confirmEmail) {
+      toast.warning('Xác nhận email mới không khớp.');
+      return;
+    }
+    if (!emailForm.currentPassword) {
+      toast.warning('Vui lòng nhập mật khẩu hiện tại để xác thực đổi email.');
+      return;
+    }
+
+    setSavingEmail(true);
+    try {
+      const res = await auth.changeEmail({
+        newEmail,
+        currentPassword: emailForm.currentPassword,
+      });
+      if (res?.user) {
+        setUser((prev) => ({ ...prev, email: res.user.email }));
+        setProfile((prev) => ({ ...prev, email: res.user.email }));
+      }
+      setEmailForm({ newEmail: '', confirmEmail: '', currentPassword: '' });
+      toast.success(res?.message || 'Đổi email đăng nhập thành công!');
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể đổi email. Vui lòng kiểm tra lại mật khẩu hoặc địa chỉ email.'));
+    } finally {
+      setSavingEmail(false);
     }
   };
 
@@ -490,15 +537,21 @@ export default function Settings() {
     toast.success('Đã khôi phục tùy chọn mặc định.');
   };
 
-  const handleSelfDeleteAccount = async () => {
+  const handleSelfDeleteAccount = async (event) => {
+    if (event && event.preventDefault) event.preventDefault();
+    if (!deletePassword) {
+      toast.warning('Vui lòng nhập mật khẩu xác nhận để xóa tài khoản.');
+      return;
+    }
     setIsDeletingAccount(true);
     try {
-      await auth.deleteAccount();
+      await auth.deleteAccount(deletePassword);
       toast.success('Tài khoản của bạn đã được xóa thành công.');
       setShowDeleteModal(false);
-      await logout();
+      setDeletePassword('');
+      await logout(true);
     } catch (err) {
-      toast.error(parseApiError(err, 'Không thể xóa tài khoản. Vui lòng thử lại.'));
+      toast.error(parseApiError(err, 'Không thể xóa tài khoản. Vui lòng kiểm tra lại mật khẩu.'));
     } finally {
       setIsDeletingAccount(false);
     }
@@ -633,13 +686,25 @@ export default function Settings() {
                 />
               </label>
               <label>
-                <span>Email đăng nhập *</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span>Email đăng nhập</span>
+                  <a
+                    href="#sec-change-email"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('sec-change-email')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    style={{ fontSize: 11, color: '#b45309', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Đổi email →
+                  </a>
+                </div>
                 <input
                   type="email"
                   value={profile.email}
-                  onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))}
-                  maxLength={191}
-                  placeholder="email@workrank.io"
+                  disabled
+                  readOnly
+                  style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
                 />
               </label>
             </div>
@@ -1001,11 +1066,11 @@ export default function Settings() {
                 <Trophy size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isChampionBadge ? '#d97706' : '#0f172a' }}>
-                  Vô Địch Giải Đấu {championCount > 1 && `(x${championCount})`}
+                <div style={{ fontSize: 13, fontWeight: 600, color: isChampionBadge ? '#d97706' : '#64748b' }}>
+                  {isChampionBadge ? `Vô Địch Giải Đấu ${championCount > 1 ? `(x${championCount})` : ''}` : 'Chưa Có Cúp Vô Địch'}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
-                  {isChampionBadge ? `Đạt ${championCount} cúp vô địch mùa giải` : 'Chưa có cúp vô địch'}
+                  {isChampionBadge ? `Đạt ${championCount} cúp vô địch mùa giải` : 'Chưa tham gia hoặc chưa vô địch mùa giải'}
                 </div>
               </div>
             </div>
@@ -1025,11 +1090,11 @@ export default function Settings() {
                 <Star size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isMvpBadge ? '#b45309' : '#0f172a' }}>
-                  Nhân Viên Xuất Sắc {mvpCount > 1 && `(x${mvpCount})`}
+                <div style={{ fontSize: 13, fontWeight: 600, color: isMvpBadge ? '#b45309' : '#64748b' }}>
+                  {isMvpBadge ? `Nhân Viên Xuất Sắc ${mvpCount > 1 ? `(x${mvpCount})` : ''}` : 'Chưa Có Danh Hiệu MVP'}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
-                  {isMvpBadge ? `Đã nhận ${mvpCount} danh hiệu MVP xuất sắc` : 'Chưa có danh hiệu MVP'}
+                  {isMvpBadge ? `Đã nhận ${mvpCount} danh hiệu MVP xuất sắc` : 'Chưa có danh hiệu vinh danh xuất sắc'}
                 </div>
               </div>
             </div>
@@ -1095,7 +1160,7 @@ export default function Settings() {
           </div>
         </SettingSection>
 
-        {/* KHỐI 4: BẢO MẬT ĐĂNG NHẬP */}
+        {/* KHỐI 4: BẢO MẬT ĐỔI MẬT KHẨU */}
         <SettingSection
           icon={ShieldCheck}
           title="Bảo mật & Đổi mật khẩu"
@@ -1140,6 +1205,71 @@ export default function Settings() {
             </div>
           </form>
         </SettingSection>
+
+        {/* KHỐI 4B: ĐỔI EMAIL ĐĂNG NHẬP */}
+        <div id="sec-change-email" style={{ scrollMarginTop: 80 }}>
+          <SettingSection
+            icon={Mail}
+            title="Bảo mật & Đổi Email Đăng Nhập"
+            desc="Cập nhật địa chỉ email dùng để đăng nhập và nhận thông báo quan trọng."
+          >
+            <form className="settings-form" onSubmit={saveEmail}>
+              <label>
+                <span>Email hiện tại</span>
+                <input
+                  type="email"
+                  value={user?.email || ''}
+                  disabled
+                  readOnly
+                  style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
+                />
+              </label>
+              <label>
+                <span>Địa chỉ Email mới *</span>
+                <input
+                  type="email"
+                  required
+                  value={emailForm.newEmail}
+                  onChange={(event) => setEmailForm((prev) => ({ ...prev, newEmail: event.target.value }))}
+                  placeholder="new-email@workrank.io"
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                <span>Xác nhận lại Email mới *</span>
+                <input
+                  type="email"
+                  required
+                  value={emailForm.confirmEmail}
+                  onChange={(event) => setEmailForm((prev) => ({ ...prev, confirmEmail: event.target.value }))}
+                  placeholder="Nhập lại chính xác email mới"
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                <span>Mật khẩu tài khoản hiện tại *</span>
+                <input
+                  type="password"
+                  required
+                  value={emailForm.currentPassword}
+                  onChange={(event) => setEmailForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                  autoComplete="current-password"
+                  placeholder="Nhập mật khẩu để xác thực"
+                />
+              </label>
+              <div className="settings-actions">
+                <button
+                  type="submit"
+                  className="settings-primary-button"
+                  disabled={savingEmail || !emailForm.newEmail || !emailForm.currentPassword}
+                >
+                  <Save size={15} />
+                  {savingEmail ? 'Đang cập nhật email...' : 'Lưu Email Mới'}
+                </button>
+              </div>
+            </form>
+          </SettingSection>
+        </div>
 
         {/* KHỐI 5: THÔNG BÁO */}
         <SettingSection
@@ -1406,7 +1536,7 @@ export default function Settings() {
         maxWidth={480}
         dialogStyle={{ border: '1px solid rgba(239,68,68,0.3)' }}
       >
-        <div>
+        <form onSubmit={handleSelfDeleteAccount}>
           <div style={{ marginBottom: 16 }}>
             <p style={{ margin: '0 0 12px', fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
               Bạn đang chuẩn bị xóa tài khoản <strong>{user?.name || user?.email}</strong> (WR ID: <code>{user?.id}</code>).
@@ -1432,8 +1562,31 @@ export default function Settings() {
               </ul>
             </div>
 
+            <div style={{ marginTop: 12, marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0f172a', marginBottom: 6 }}>
+                Nhập mật khẩu tài khoản hiện tại để xác nhận: *
+              </label>
+              <input
+                type="password"
+                required
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Mật khẩu của bạn..."
+                autoComplete="current-password"
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: 13,
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 4,
+                  outline: 'none',
+                  background: '#ffffff',
+                }}
+              />
+            </div>
+
             <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748b' }}>
-              Bạn có chắc chắn 100% muốn tiếp tục hành động này không?
+              Bạn có chắc chắn muốn xóa tài khoản này không?
             </p>
           </div>
 
@@ -1441,7 +1594,10 @@ export default function Settings() {
             <button
               type="button"
               disabled={isDeletingAccount}
-              onClick={() => setShowDeleteModal(false)}
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeletePassword('');
+              }}
               style={{
                 padding: '9px 16px',
                 background: '#ffffff',
@@ -1456,9 +1612,8 @@ export default function Settings() {
               Hủy bỏ
             </button>
             <button
-              type="button"
-              disabled={isDeletingAccount}
-              onClick={handleSelfDeleteAccount}
+              type="submit"
+              disabled={isDeletingAccount || !deletePassword}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1470,15 +1625,15 @@ export default function Settings() {
                 fontSize: 13,
                 fontWeight: 600,
                 color: '#ffffff',
-                cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
-                opacity: isDeletingAccount ? 0.7 : 1,
+                cursor: isDeletingAccount || !deletePassword ? 'not-allowed' : 'pointer',
+                opacity: isDeletingAccount || !deletePassword ? 0.7 : 1,
               }}
             >
               <Trash2 size={15} />
               {isDeletingAccount ? 'Đang xử lý xóa...' : 'Đồng ý xóa vĩnh viễn'}
             </button>
           </div>
-        </div>
+        </form>
       </AnimatedModal>
 
       {/* ── MODAL TRAO GIẢI THƯỞNG CHO ADMIN ── */}

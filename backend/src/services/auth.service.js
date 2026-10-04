@@ -126,14 +126,82 @@ async function updateProfile(user, payload = {}) {
 async function changePassword(user, { currentPassword, newPassword }) {
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!valid) {
-    const error = new Error('Current password is incorrect');
+    const error = new Error('Mật khẩu hiện tại không chính xác');
     error.statusCode = 400;
     throw error;
   }
 
   const passwordHash = await bcrypt.hash(newPassword, env.bcryptRounds);
   await user.update({ passwordHash, lastSeenAt: new Date() });
-  return { ok: true };
+  return { ok: true, message: 'Đổi mật khẩu thành công.' };
 }
 
-module.exports = { register, login, refresh, logout, updateProfile, changePassword, userPayload };
+async function changeEmail(user, { newEmail, currentPassword }) {
+  if (!currentPassword) {
+    const error = new Error('Vui lòng nhập mật khẩu hiện tại để xác thực đổi email');
+    error.statusCode = 400;
+    throw error;
+  }
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    const error = new Error('Mật khẩu hiện tại không chính xác');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const normalizedNewEmail = String(newEmail || '').trim().toLowerCase();
+  if (!normalizedNewEmail) {
+    const error = new Error('Email mới không được để trống');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(normalizedNewEmail)) {
+    const error = new Error('Định dạng email mới không hợp lệ');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const currentEmail = String(user.email || '').trim().toLowerCase();
+  if (normalizedNewEmail === currentEmail) {
+    const error = new Error('Email mới không được trùng với email hiện tại');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const existing = await User.findOne({
+    where: {
+      email: normalizedNewEmail,
+      id: { [Op.ne]: user.id },
+    },
+  });
+  if (existing) {
+    const error = new Error('Email này đã được sử dụng bởi một tài khoản khác');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  try {
+    await user.update({
+      email: normalizedNewEmail,
+      lastSeenAt: new Date(),
+    });
+  } catch (dbErr) {
+    if (dbErr.name === 'SequelizeUniqueConstraintError') {
+      const error = new Error('Email này đã được sử dụng bởi một tài khoản khác');
+      error.statusCode = 409;
+      throw error;
+    }
+    throw dbErr;
+  }
+
+  const tokens = await issueTokens(user);
+  return {
+    success: true,
+    message: 'Đổi email thành công.',
+    ...tokens,
+  };
+}
+
+module.exports = { register, login, refresh, logout, updateProfile, changePassword, changeEmail, userPayload };

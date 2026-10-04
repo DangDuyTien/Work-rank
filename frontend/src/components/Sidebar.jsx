@@ -208,7 +208,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     fontWeight: 600,
                     letterSpacing: '0.2px',
                     textAlign: 'left',
-                    transition: 'background 0.15s ease, color 0.15s ease',
+                    transition: 'background var(--motion-fast) ease, color var(--motion-fast) ease',
                   }}
                   onMouseEnter={(e) => {
                     if (!hasActiveChild || isExpanded) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
@@ -217,9 +217,19 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     e.currentTarget.style.background = hasActiveChild && !isExpanded ? 'rgba(0,0,0,0.04)' : 'transparent';
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
                     <GroupIcon size={15} strokeWidth={2.2} style={{ color: hasActiveChild ? '#111111' : '#777777' }} />
-                    <span style={{ color: hasActiveChild ? '#111111' : '#555555' }}>{group.label}</span>
+                    <span
+                      style={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        color: hasActiveChild ? '#111111' : '#555555',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {group.label}
+                    </span>
                     {group.badge && (
                       <span
                         style={{
@@ -229,6 +239,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           borderRadius: 3,
                           background: group.adminOnly ? 'rgba(185,28,28,0.08)' : 'rgba(180,83,9,0.08)',
                           color: group.adminOnly ? '#b91c1c' : '#b45309',
+                          flexShrink: 0,
                         }}
                       >
                         {group.badge}
@@ -240,8 +251,9 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                       display: 'flex',
                       alignItems: 'center',
                       color: '#888888',
+                      flexShrink: 0,
                       transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-                      transition: 'transform 0.15s ease',
+                      transition: 'transform var(--motion-normal) var(--ease-spring)',
                     }}
                   >
                     <ChevronDown size={14} />

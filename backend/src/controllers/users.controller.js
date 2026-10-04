@@ -544,10 +544,12 @@ async function remove(req, res) {
 }
 
 async function selfDelete(req, res) {
+  const password = req.body?.password || req.body?.currentPassword;
   const result = await userDeletionService.deleteUserAccount({
     targetUserId: req.user.id,
     actorUser: req.user,
     isSelfDelete: true,
+    password,
     req,
   });
   return res.json({ message: 'Tài khoản của bạn đã được xóa thành công.', ...result });
@@ -560,22 +562,24 @@ async function getRecognitions(req, res) {
 }
 
 async function adminAwardMVP(req, res) {
-  const { userId, seasonId, grandId, title, reason } = req.body;
+  const { userId, seasonId, grandId, title, reason, metadata } = req.body;
   if (!userId) return res.status(400).json({ message: 'userId is required' });
   try {
     const recognition = await recognitionService.awardMVP({
-      userId,
-      seasonId,
-      grandId,
+      userId: Number(userId),
+      seasonId: seasonId ? Number(seasonId) : null,
+      grandId: grandId ? Number(grandId) : null,
       title,
       reason,
+      metadata,
       actorId: req.user?.id,
     });
     const updatedUser = await User.findByPk(userId);
     if (updatedUser) await syncUserAcrossReadModelsAndRealtime(req, updatedUser);
     return res.status(201).json({ recognition });
   } catch (err) {
-    return res.status(400).json({ message: err.message });
+    const status = err.statusCode || 400;
+    return res.status(status).json({ message: err.message });
   }
 }
 
@@ -588,13 +592,14 @@ async function adminRevokeMVP(req, res) {
       actorId: req.user?.id,
       reason,
     });
-    if (result?.recognition?.userId) {
-      const updatedUser = await User.findByPk(result.recognition.userId);
+    if (result?.userId) {
+      const updatedUser = await User.findByPk(result.userId);
       if (updatedUser) await syncUserAcrossReadModelsAndRealtime(req, updatedUser);
     }
     return res.json(result);
   } catch (err) {
-    return res.status(400).json({ message: err.message });
+    const status = err.statusCode || 400;
+    return res.status(status).json({ message: err.message });
   }
 }
 

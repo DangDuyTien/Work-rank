@@ -104,12 +104,12 @@ const OFFICIAL_BADGE_CONFIG = {
 };
 
 const DEFAULT_GALLERY_IMAGES = [
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=360&q=80',
-  'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=360&q=80',
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
 ];
 
 function fmtNum(n) {
@@ -719,39 +719,45 @@ export default function UserDetail() {
               <div
                 key={index}
                 className="profile-gallery-cell"
-                onClick={() => setPreviewImage(imageUrl)}
-                title={`Ảnh #${index + 1} - Bấm để xem ảnh phóng to`}
+                onClick={() => imageUrl && setPreviewImage(imageUrl)}
+                title={imageUrl ? `Ảnh #${index + 1} - Bấm để xem ảnh phóng to` : `Ô ảnh #${index + 1} - Chưa có ảnh`}
                 tabIndex={0}
                 role="button"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setPreviewImage(imageUrl);
+                    if (imageUrl) setPreviewImage(imageUrl);
                   }
                 }}
               >
-                {/* Backdrop ambient blur for full contain without black bars */}
-                <img
-                  className="profile-gallery-backdrop"
-                  src={imageUrl}
-                  alt=""
-                  aria-hidden="true"
-                  onError={() => {
-                    setImgErrors((prev) => ({ ...prev, [index]: true }));
-                  }}
-                />
-
-                {/* Main foreground image (contain = 100% full view, no crop, no stretch) */}
-                <img
-                  className="gallery-main-img"
-                  loading="lazy"
-                  decoding="async"
-                  src={imageUrl}
-                  alt={`Ảnh giới thiệu ${index + 1}`}
-                  onError={() => {
-                    setImgErrors((prev) => ({ ...prev, [index]: true }));
-                  }}
-                />
+                {imageUrl ? (
+                  <>
+                    <img
+                      className="profile-gallery-backdrop"
+                      src={imageUrl}
+                      alt=""
+                      aria-hidden="true"
+                      onError={() => {
+                        setImgErrors((prev) => ({ ...prev, [index]: true }));
+                      }}
+                    />
+                    <img
+                      className="gallery-main-img"
+                      loading="lazy"
+                      decoding="async"
+                      src={imageUrl}
+                      alt={`Ảnh giới thiệu ${index + 1}`}
+                      onError={() => {
+                        setImgErrors((prev) => ({ ...prev, [index]: true }));
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#94a3b8', background: '#f8fafc' }}>
+                    <ImagePlus size={22} aria-hidden="true" />
+                    <span style={{ fontSize: 11 }}>Chưa có ảnh</span>
+                  </div>
+                )}
 
                 {/* Hover overlay controls (only visible on hover/focus) */}
                 <div className="profile-gallery-overlay">
@@ -785,7 +791,7 @@ export default function UserDetail() {
                         <span>{hasCustom ? 'Đổi ảnh' : '+ Thêm ảnh'}</span>
                       </button>
                     )}
-                    <button
+                    {imageUrl && <button
                       type="button"
                       className="profile-gallery-action-btn"
                       style={{ background: 'rgba(15,23,42,0.85)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
@@ -797,7 +803,7 @@ export default function UserDetail() {
                     >
                       <ExternalLink size={12} />
                       <span>Xem lớn</span>
-                    </button>
+                    </button>}
                   </div>
 
                   <div style={{ height: 12 }} />
@@ -1004,22 +1010,30 @@ export default function UserDetail() {
             </div>
 
             {/* Chi tiết danh sách giải thưởng nếu có */}
-            {awards.length > 0 && (
+            {awards.length > 0 ? (
               <div style={{ marginTop: 14, borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>Danh Sách Các Giải Thưởng Đã Vinh Danh:</div>
                 {awards.map((a) => (
                   <div key={a.id} style={{ padding: '8px 12px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11 }}>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <strong style={{ color: a.awardType === 'champion' ? '#b45309' : '#6d28d9', marginRight: 6 }}>
                         {a.title}
                       </strong>
-                      <span style={{ color: '#475569' }}>— {a.reason}</span>
+                      <span style={{ color: '#475569' }}>— {a.reason || 'Chưa có căn cứ mô tả trong bản ghi'}</span>
+                      <div style={{ marginTop: 4, color: '#64748b', fontSize: 10 }}>
+                        {a.seasonName ? `${a.seasonName}${a.seasonStatus ? ` · ${a.seasonStatus}` : ''}` : a.grandName || 'Ghi nhận WorkRank'}
+                        {' · '}Bản ghi chính thức
+                      </div>
                     </div>
                     <span style={{ color: '#94a3b8', whiteSpace: 'nowrap', marginLeft: 12 }}>
                       {a.awardedAt ? new Date(a.awardedAt).toLocaleDateString('vi-VN') : ''}
                     </span>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div style={{ marginTop: 14, borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 12, color: '#94a3b8', fontSize: 12 }}>
+                Chưa ghi nhận giải thưởng vinh danh nào trong hồ sơ.
               </div>
             )}
           </div>
@@ -1081,20 +1095,24 @@ export default function UserDetail() {
             </div>
 
             {/* MVP & PHONG ĐỘ */}
-            <div style={{ ...CARD, padding: 18, borderLeft: '4px solid #b45309' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={13} color="#b45309" /> Danh Hiệu MVP Mùa
+            <div style={{ ...CARD, padding: 18, borderLeft: (mvpCount > 0 || Number(competition?.mvpCount || 0) > 0) ? '4px solid #b45309' : '4px solid #cbd5e1' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: (mvpCount > 0 || Number(competition?.mvpCount || 0) > 0) ? '#b45309' : '#64748b', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={13} color={(mvpCount > 0 || Number(competition?.mvpCount || 0) > 0) ? '#b45309' : '#94a3b8'} /> Danh Hiệu MVP Mùa
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
-                {competition?.mvpCount || 0} <span style={{ fontSize: 12, color: '#64748b' }}>lần MVP</span>
+              <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: (mvpCount > 0 || Number(competition?.mvpCount || 0) > 0) ? '#b45309' : '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
+                {Math.max(Number(competition?.mvpCount || 0), mvpCount)} <span style={{ fontSize: 12, color: '#64748b' }}>lần MVP</span>
               </div>
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                {competition?.currentStreak > 0 ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Flame size={12} color="#f97316" /> Chuỗi phong độ: {competition.currentStreak}
-                  </span>
+                {(mvpCount > 0 || Number(competition?.mvpCount || 0) > 0) ? (
+                  competition?.currentStreak > 0 ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Flame size={12} color="#f97316" /> Chuỗi phong độ: {competition.currentStreak}
+                    </span>
+                  ) : (
+                    'Duy trì thi đấu ổn định'
+                  )
                 ) : (
-                  'Duy trì thi đấu ổn định'
+                  'Chưa có danh hiệu MVP mùa giải'
                 )}
               </div>
             </div>

@@ -23,8 +23,14 @@ test('KPI Foundation Test Suite (Department, Definition, Period, Result, Audit, 
   let activePeriod;
 
   before(async () => {
-    // Sync models
-    await sequelize.sync();
+    // Sync KPI models safely
+    await Promise.all([
+      Department.sync(),
+      Kpi.sync(),
+      KpiPeriod.sync(),
+      KpiResult.sync(),
+      KpiEvent.sync(),
+    ]);
 
     // Ensure CONTENT and EDIT departments exist
     [contentDept] = await Department.findOrCreate({

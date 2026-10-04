@@ -8,10 +8,10 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
 
 const STATUS_META = {
-  active: { label: 'Active', color: '#15803d', dot: '#15803d' },
-  online: { label: 'Online', color: '#b45309', dot: '#b45309' },
+  active: { label: 'Đang hoạt động', color: '#15803d', dot: '#15803d' },
+  online: { label: 'Trực tuyến', color: '#b45309', dot: '#b45309' },
   idle: { label: 'Tạm nghỉ', color: '#b45309', dot: '#d97706' },
-  offline: { label: 'Offline', color: '#777777', dot: '#a3a3a3' },
+  offline: { label: 'Ngoại tuyến', color: '#777777', dot: '#a3a3a3' },
 };
 
 function userIdOf(user = {}) {
@@ -104,7 +104,9 @@ export default function FriendsDock() {
   const { user: authUser, socket } = useAuth();
   const navigate = useNavigate();
   const pageVisible = usePageVisibility();
-  const [open, setOpen] = useState(() => localStorage.getItem('workrank:friends-dock-open') !== '0');
+  // Keep the dock closed on a fresh workspace so it never obscures the page.
+  // The user's explicit open/closed choice is persisted under the versioned key.
+  const [open, setOpen] = useState(() => localStorage.getItem('workrank:friends-dock-open:v2') === '1');
   const [friendRows, setFriendRows] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [outgoing, setOutgoing] = useState([]);
@@ -230,7 +232,7 @@ export default function FriendsDock() {
   }, [loadData, loadUnreadCounts]);
 
   useEffect(() => {
-    localStorage.setItem('workrank:friends-dock-open', open ? '1' : '0');
+    localStorage.setItem('workrank:friends-dock-open:v2', open ? '1' : '0');
   }, [open]);
 
   useEffect(() => {
@@ -547,7 +549,13 @@ export default function FriendsDock() {
 
   return (
     <aside className={open ? 'friends-dock is-open' : 'friends-dock'}>
-      <button type="button" className="friends-dock-tab" onClick={() => setOpen((value) => !value)} aria-label="Mở danh bạ đồng nghiệp">
+      <button
+        type="button"
+        className="friends-dock-tab"
+        onClick={() => setOpen((value) => !value)}
+        aria-label={open ? 'Thu gọn danh bạ đồng nghiệp' : 'Mở danh bạ đồng nghiệp'}
+        aria-expanded={open}
+      >
         <Users size={18} />
         {unreadTotal > 0 && <b>{unreadTotal}</b>}
       </button>

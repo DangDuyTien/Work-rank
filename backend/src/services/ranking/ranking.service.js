@@ -25,6 +25,7 @@ const {
   GrandIndividualLeaderboardProjection,
   TeamYouTubeSummary,
   ActivitySummary,
+  UserRecognition,
 } = require('../../models');
 
 const seasonService = require('../competition/season.service');
@@ -848,37 +849,108 @@ async function getYouTubeRankings(params = {}) {
 
 /**
  * 7. GET TOP PERFORMERS / AWARDS
+ * Integrates officially awarded MVP recognitions and competition summaries.
  */
-async function getTopPerformers() {
-  // 1. Season Top MVP candidates
-  const seasonMvps = await CompetitionUserSummary.findAll({
-    order: [['seasonWins', 'DESC'], ['currentSeasonScore', 'DESC']],
-    limit: 10,
-    include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
+async function getTopPerformers(options = {}) {
+  const limit = Math.max(1, Math.min(100, Number(options?.limit || 10)));
+  // 1. Query officially awarded MVP counts from UserRecognition table
+  const mvpAwards = await UserRecognition.findAll({
+    where: { awardType: 'mvp' },
+    attributes: [
+      'userId',
+      [sequelize.fn('COUNT', sequelize.col('id')), 'awardCount'],
+    ],
+    group: ['user_id'],
+    raw: true,
   });
 
-  // 2. High Scorers
+  const mvpCountMap = new Map();
+  for (const row of mvpAwards) {
+    mvpCountMap.set(Number(row.userId), Number(row.awardCount || 0));
+  }
+
+  // 2. Query summary candidates
+  const summaryUsers = await CompetitionUserSummary.findAll({
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId'],
+        include: [{ model: Team, attributes: ['id', 'name'], required: false }],
+      },
+    ],
+  });
+
+  const summaryMap = new Map();
+  for (const s of summaryUsers) {
+    summaryMap.set(Number(s.userId), s);
+  }
+
+  // 3. For any user with MVP award that does not have summary record, load user
+  const allMvpUserIds = new Set([
+    ...mvpCountMap.keys(),
+    ...summaryUsers.filter((u) => Number(u.metadata?.mvpCount || 0) > 0).map((u) => Number(u.userId)),
+  ]);
+  const missingUserIds = [...allMvpUserIds].filter((uid) => !summaryMap.has(uid));
+  let missingUsers = [];
+  if (missingUserIds.length > 0) {
+    missingUsers = await User.findAll({
+      where: { id: { [Op.in]: missingUserIds } },
+      attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId'],
+      include: [{ model: Team, attributes: ['id', 'name'], required: false }],
+    });
+  }
+
+  const userMap = new Map();
+  for (const s of summaryUsers) {
+    if (s.user) userMap.set(Number(s.userId), s.user);
+  }
+  for (const u of missingUsers) {
+    userMap.set(Number(u.id), u);
+  }
+
+  const seasonMvpsList = [];
+  for (const uid of allMvpUserIds) {
+    const u = userMap.get(uid);
+    const s = summaryMap.get(uid);
+    const countFromAwards = mvpCountMap.get(uid) || 0;
+    const countFromSummary = Number(s?.metadata?.mvpCount || 0);
+    const mvpCount = countFromAwards > 0 ? countFromAwards : countFromSummary;
+
+    if (mvpCount > 0) {
+      seasonMvpsList.push({
+        userId: uid,
+        userName: u?.name || s?.metadata?.userName || `User #${uid}`,
+        teamName: u?.Team?.name || s?.metadata?.teamName || '',
+        mvpCount,
+        lifetimeScore: Number(s?.currentSeasonScore || 0),
+      });
+    }
+  }
+
+  // Sort: MVP count DESC, lifetime score DESC, userId ASC
+  seasonMvpsList.sort((a, b) => {
+    if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
+    if (b.lifetimeScore !== a.lifetimeScore) return b.lifetimeScore - a.lifetimeScore;
+    return a.userId - b.userId;
+  });
+
+  // High Scorers
   const highScorers = await CompetitionUserSummary.findAll({
     order: [['currentSeasonScore', 'DESC']],
     limit: 10,
     include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
   });
 
-  // 3. Top Championship Teams
+  // Top Championship Teams
   const championTeams = await CompetitionTeamSummary.findAll({
     order: [['seasonWins', 'DESC'], ['grandPoints', 'DESC']],
     limit: 10,
   });
 
   return {
-    seasonMvps: seasonMvps.map((m) => ({
-      userId: m.userId,
-      userName: m.user?.name || m.metadata?.userName || `User #${m.userId}`,
-      teamName: m.metadata?.teamName || '',
-      mvpCount: Number(m.seasonWins || m.metadata?.mvpCount || 1),
-      lifetimeScore: Number(m.currentSeasonScore || 0),
-    })),
-    highScorers: highScorers.map((s) => ({
+    seasonMvps: seasonMvpsList.slice(0, limit),
+    highScorers: highScorers.slice(0, limit).map((s) => ({
       userId: s.userId,
       userName: s.user?.name || s.metadata?.userName || `User #${s.userId}`,
       teamName: s.metadata?.teamName || '',

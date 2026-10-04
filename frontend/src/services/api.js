@@ -231,9 +231,20 @@ export const auth = {
     return res;
   },
   changePassword: (data) => api.patch('/api/auth/password', data),
-  deleteAccount: async () => {
+  changeEmail: async (data) => {
+    const res = await api.patch('/api/auth/email', data);
+    if (res.data?.accessToken) {
+      storeAuth(res.data);
+    }
+    invalidateCache('user:profile');
+    invalidateCache('dashboard');
+    invalidateCache('rankings');
+    invalidateCache('users');
+    return res.data;
+  },
+  deleteAccount: async (password) => {
     try {
-      const res = await api.delete('/api/auth/me/account');
+      const res = await api.delete('/api/auth/me/account', { data: { password } });
       return res.data;
     } finally {
       clearAuth();
@@ -780,6 +791,18 @@ export const competition = {
     const res = await api.post(`/api/competition/admin/events/${eventId}/retry`, { reason });
     return res.data;
   },
+  adminListMvpSeasons: async () => {
+    const res = await api.get('/api/competition/admin/mvp/seasons');
+    return res.data?.seasons || [];
+  },
+  adminPreviewSeasonMvp: async (seasonId) => {
+    const res = await api.get(`/api/competition/admin/mvp/preview/${seasonId}`);
+    return res.data;
+  },
+  adminAwardMvpCup: async (data) => {
+    const res = await api.post('/api/competition/admin/mvp/award', data);
+    return res.data;
+  },
 };
 
 export const youtube = {
@@ -1254,6 +1277,37 @@ export const kpiApi = {
     const res = await api.get('/api/kpi/results/history', { params });
     return res.data;
   },
+  getProductionRules: async (params = {}) => {
+    const res = await api.get('/api/kpi/production/rules', { params });
+    return res.data;
+  },
+  getProductionVersions: async () => {
+    const res = await api.get('/api/kpi/production/versions');
+    return res.data;
+  },
+  previewProductionExcel: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post('/api/kpi/production/preview', formData);
+    return res.data;
+  },
+  importProductionExcel: async (file, options = {}) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') formData.append(key, String(value));
+    });
+    const res = await api.post('/api/kpi/production/import', formData);
+    return res.data;
+  },
+  activateProductionVersion: async (data) => {
+    const res = await api.post('/api/kpi/production/activate', data);
+    return res.data;
+  },
+  getProductionHistory: async (params = {}) => {
+    const res = await api.get('/api/kpi/production/history', { params });
+    return res.data;
+  },
 };
 
 
@@ -1274,5 +1328,4 @@ export const gameCatalogApi = {
 
 export { storeAuth, refreshStoredAuth as refreshSession };
 export default api;
-
 

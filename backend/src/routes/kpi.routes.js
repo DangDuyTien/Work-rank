@@ -30,4 +30,53 @@ router.get('/results', auth, asyncHandler(kpiController.getResults));
 router.post('/results', auth, requireRole('admin'), asyncHandler(kpiController.recordResult));
 router.get('/results/history', auth, asyncHandler(kpiController.getResultHistory));
 
+// ── 6. Production KPI Engine ──────────────────────────────────────────────────
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+    ];
+    if (allowed.includes(file.mimetype) || file.originalname.match(/\.(xlsx|xls)$/i)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ chấp nhận file Excel (.xlsx / .xls)'), false);
+    }
+  },
+});
+
+// Rule browsing (authenticated — all members can view active rules)
+router.get('/production/rules',    auth, asyncHandler(kpiController.getProductionKpiRules));
+router.get('/production/versions', auth, asyncHandler(kpiController.getProductionKpiVersions));
+
+// Excel import — admin only
+router.post(
+  '/production/preview',
+  auth, requireRole('admin'),
+  upload.single('file'),
+  asyncHandler(kpiController.previewProductionKpiExcel),
+);
+router.post(
+  '/production/import',
+  auth, requireRole('admin'),
+  upload.single('file'),
+  asyncHandler(kpiController.importProductionKpiExcel),
+);
+router.post(
+  '/production/activate',
+  auth, requireRole('admin'),
+  asyncHandler(kpiController.activateProductionKpiVersion),
+);
+
+// KPI evaluation awards Point/XP from caller-supplied timestamps, so it must NOT be
+// reachable by regular users (self-award / farming). Admin/manager or internal workflow only.
+router.post('/production/calculate/editor',  auth, requireRole('admin', 'manager'), asyncHandler(kpiController.calculateEditorKpi));
+router.post('/production/calculate/content', auth, requireRole('admin', 'manager'), asyncHandler(kpiController.calculateContentKpi));
+
+// History / audit trail
+router.get('/production/history', auth, asyncHandler(kpiController.getProductionKpiHistory));
+
 module.exports = router;
