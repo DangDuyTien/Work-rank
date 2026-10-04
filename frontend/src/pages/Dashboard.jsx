@@ -113,11 +113,8 @@ function statusConfig(status) {
 }
 
 function normalizeTotals(raw) {
-  if (!raw || typeof raw !== 'object') return { keystrokes: 0, clicks: 0, activeSeconds: 0, online: 0 };
+  if (!raw || typeof raw !== 'object') return { online: 0 };
   return {
-    keystrokes: Number(raw.keystrokes ?? raw.totalKeystrokes ?? 0),
-    clicks: Number(raw.clicks ?? raw.totalMouseClicks ?? 0),
-    activeSeconds: Number(raw.activeSeconds ?? raw.totalActiveSeconds ?? raw.totalActiveSecondsToday ?? 0),
     online: Number(raw.online ?? raw.activeUsersNow ?? 0),
   };
 }
@@ -162,7 +159,7 @@ export default function Dashboard() {
   const cachedChannels = isAdmin ? normalizeChannelList(getCached(CACHE_KEYS.DASHBOARD_YT_CHANNELS())) : [];
 
   const hasInitialCache = Boolean(
-    (cachedTotals && (cachedTotals.keystrokes > 0 || cachedTotals.online > 0)) ||
+    (cachedTotals && cachedTotals.online > 0) ||
     cachedUsers.length > 0 ||
     cachedMyKpis.kpis.length > 0 ||
     cachedCompetition ||
