@@ -101,7 +101,7 @@
 }
 .public-season-section { padding: 16px 0 28px; scroll-margin-top: 110px; }
 .public-season-heading { display: flex; align-items: baseline; gap: 28px; margin-bottom: 28px; }
-.public-season-heading h2 { font-family: Impact, Haettenschweiler, 'Arial Narrow', sans-serif; font-size: clamp(56px, 6vw, 92px); font-weight: 400; letter-spacing: -.025em; line-height: 1; }
+.public-season-heading h2 { font-family: 'RuderPlakatLLVar', sans-serif; font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100; font-size: clamp(56px, 6vw, 92px); font-weight: 400; letter-spacing: 0; line-height: 1; }
 .public-season-heading p { font-size: 15px; font-weight: 500; }
 .public-season-heading span { display: block; color: var(--text-secondary); font-size: 11px; margin-top: 4px; }
 .public-season-heading h2 > span { font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; margin-top: 10px; }
@@ -250,6 +250,7 @@ html[data-workrank-reduce-motion="true"] .public-auth-form-panel { transition: n
 
 @media (min-width: 1600px) { .public-editorial-footer { padding-left: calc((100vw - 1456px) / 2); padding-right: calc((100vw - 1456px) / 2); } }
 @media (max-width: 1000px) {
+  .public-editorial-title { font-size: clamp(80px, 12vw, 150px); }
   .public-archive-row { grid-template-columns: 1fr; gap: 20px; }
   .public-editorial-header { gap: 16px; }
   .public-editorial-nav { gap: 16px; font-size: 12px; }

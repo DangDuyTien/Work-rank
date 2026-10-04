@@ -20,7 +20,7 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
   return (
     <section className="public-season-section public-archive-section" aria-labelledby={`archive-${type}-title`} aria-busy={loading}>
       <div className="public-season-heading">
-        <h2 id={`archive-${type}-title`}>{year || 'Mùa giải'}<span>{category}</span></h2>
+        <h2 id={`archive-${type}-title`}>{year || new Date().getFullYear()}<span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
         <div><p>{seasonName}</p>{data?.season?.frozenAt && <span>Chốt ngày {new Date(data.season.frozenAt).toLocaleDateString('vi-VN')}</span>}</div>
       </div>
       <div className="public-recognition-grid">

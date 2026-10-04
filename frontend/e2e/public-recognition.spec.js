@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test';
 
+test('empty public spotlight keeps the calendar year without claiming a season or winner', async ({ page }) => {
+  await page.route('**/api/competition/public/spotlight', (route) => route.fulfill({
+    json: { hasSpotlight: false, season: null, championTeam: null, mvp: null,
+      provenance: { resultState: 'none', champion: { state: 'none' }, mvp: { state: 'none' } } },
+  }));
+  await page.goto('/');
+  const headings = page.locator('.public-season-heading h2');
+  await expect(headings).toHaveCount(2);
+  for (const heading of await headings.all()) {
+    await expect(heading).toContainText(String(new Date().getFullYear()));
+    await expect(heading).toContainText('Năm hiện tại');
+  }
+  await expect(page.getByText('Chưa có mùa giải công bố', { exact: true })).toHaveCount(2);
+  await expect(page.getByText('Chưa có ghi nhận được công bố.', { exact: true })).toHaveCount(2);
+  await expect(page.getByText('MVP đã xác nhận', { exact: true })).toHaveCount(0);
+});
+
 test('MVP waits until its portrait enters the viewport', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.setViewportSize({ width: 1280, height: 600 });
