@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -187,6 +188,17 @@ export default function Friends() {
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDesc, setNewTeamDesc] = useState('');
+  const [newTeamLeaderId, setNewTeamLeaderId] = useState('');
+
+  const [titleModalUser, setTitleModalUser] = useState(null);
+  const [titleForm, setTitleForm] = useState({
+    jobTitle: '',
+    isLeader: false,
+    isVerified: false,
+    awardType: 'none',
+    awardReason: '',
+  });
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinInviteCode, setJoinInviteCode] = useState('');
@@ -360,6 +372,10 @@ export default function Friends() {
   // Handle Team Actions
   const handleCreateTeam = async (e) => {
     e?.preventDefault?.();
+    if (!isAdmin) {
+      toast.warning('Chỉ Quản trị viên (Admin) mới có quyền tạo đội nhóm.');
+      return;
+    }
     if (!newTeamName.trim()) {
       toast.warning('Vui lòng nhập tên đội nhóm');
       return;
@@ -369,16 +385,82 @@ export default function Friends() {
       const res = await groupsApi.create({
         name: newTeamName.trim(),
         description: newTeamDesc.trim() || undefined,
+        ownerId: newTeamLeaderId ? Number(newTeamLeaderId) : undefined,
       });
-      toast.success(`Đã tạo đội "${res.data?.name || newTeamName}" thành công! Bạn là Trưởng nhóm.`);
+      toast.success(`Đã tạo đội "${res.data?.name || newTeamName}" thành công!`);
       setShowCreateTeamModal(false);
       setNewTeamName('');
       setNewTeamDesc('');
+      setNewTeamLeaderId('');
       await loadData({ background: true });
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể tạo đội nhóm'));
     } finally {
       setBusyAction('');
+    }
+  };
+
+  const openTitleModal = (member) => {
+    const isMemberLeader = String(myTeam?.ownerId || myTeam?.owner_id || '') === userIdOf(member);
+    setTitleModalUser(member);
+    setTitleForm({
+      jobTitle: member.jobTitle || 'Nhân viên',
+      isLeader: isMemberLeader,
+      isVerified: Boolean(isVerified(member)),
+      awardType: 'none',
+      awardReason: '',
+    });
+  };
+
+  const handleSaveTitle = async (e) => {
+    e?.preventDefault?.();
+    if (!titleModalUser) return;
+    setSavingTitle(true);
+    try {
+      const targetId = userIdOf(titleModalUser);
+      // 1. Update Job Profile & Verified status
+      await usersApi.adminUpdateJobProfile(targetId, {
+        jobTitle: titleForm.jobTitle.trim(),
+        isVerified: titleForm.isVerified,
+        reason: 'Admin setup danh hiệu và chức danh đội nhóm',
+      });
+
+      // 2. Set / update leader if changed
+      if (myTeam?.id) {
+        if (titleForm.isLeader) {
+          await groupsApi.update(myTeam.id, { ownerId: Number(targetId) });
+        } else {
+          const wasLeader = String(myTeam.ownerId || myTeam.owner_id || '') === String(targetId);
+          if (wasLeader) {
+            await groupsApi.update(myTeam.id, { ownerId: null });
+          }
+        }
+      }
+
+      // 3. Award MVP / Champion if selected
+      if (titleForm.awardType === 'MVP') {
+        await usersApi.adminAwardMVP({
+          userId: Number(targetId),
+          title: `MVP - ${titleForm.jobTitle || 'Xuất Sắc'}`,
+          reason: titleForm.awardReason.trim() || 'Admin trao thưởng danh hiệu xuất sắc của đội nhóm',
+        });
+        toast.success(`Đã trao danh hiệu MVP cho ${titleModalUser.name}!`);
+      } else if (titleForm.awardType === 'Champion') {
+        await usersApi.adminAwardChampion({
+          userId: Number(targetId),
+          title: `Vô Địch - ${myTeam?.name || 'Đội Nhóm'}`,
+          reason: titleForm.awardReason.trim() || 'Admin trao danh hiệu Quán quân đội nhóm',
+        });
+        toast.success(`Đã trao danh hiệu Champion cho ${titleModalUser.name}!`);
+      }
+
+      toast.success(`Đã cập nhật danh hiệu cho ${titleModalUser.name}!`);
+      setTitleModalUser(null);
+      await loadData({ background: true });
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể cập nhật danh hiệu'));
+    } finally {
+      setSavingTitle(false);
     }
   };
 
@@ -578,15 +660,17 @@ export default function Friends() {
                   <KeyRoundIcon size={14} />
                   Nhập mã mời
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setShowCreateTeamModal(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  <Plus size={14} />
-                  Tạo đội mới
-                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setShowCreateTeamModal(true)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Plus size={14} />
+                    Tạo đội mới
+                  </button>
+                )}
               </>
             ) : canManageTeam ? (
               <button
@@ -1281,6 +1365,29 @@ export default function Friends() {
                               Hồ sơ
                             </button>
 
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => openTitleModal(m)}
+                                style={{
+                                  minHeight: 30,
+                                  padding: '0 10px',
+                                  fontSize: 12,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 5,
+                                  color: '#b45309',
+                                  borderColor: 'rgba(180,83,9,0.3)',
+                                  background: 'rgba(180,83,9,0.04)',
+                                }}
+                                title="Thiết lập danh hiệu, chức danh và đặc quyền thành viên"
+                              >
+                                <Award size={13} />
+                                Danh hiệu
+                              </button>
+                            )}
+
                             {canManageTeam && !isMemberLeader && !isSelf && (
                               <button
                                 type="button"
@@ -1331,18 +1438,22 @@ export default function Friends() {
                     Bạn Chưa Thuộc Đội Nhóm Nào
                   </h2>
                   <p style={{ fontSize: 14, color: '#64748b', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
-                    Tham gia một đội nhóm để cùng các đồng nghiệp thi đua sản xuất video, tích lũy điểm thưởng mùa giải và tranh cúp vô địch WorkRank.
+                    {isAdmin
+                      ? 'Bạn là Quản trị viên (Admin). Bạn có thể tạo đội nhóm mới, phân bổ nhân sự và thiết lập danh hiệu thi đua.'
+                      : 'Đội nhóm được khởi tạo và phân bổ bởi Quản trị viên (Admin). Hãy liên hệ Admin để được thêm vào đội hoặc gia nhập bằng mã mời từ trưởng nhóm.'}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setShowCreateTeamModal(true)}
-                      style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-                    >
-                      <Plus size={16} />
-                      Tạo đội mới (Trở thành Trưởng nhóm)
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => setShowCreateTeamModal(true)}
+                        style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                      >
+                        <Plus size={16} />
+                        Tạo đội mới (Quản trị viên)
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="btn btn-secondary"
@@ -1542,9 +1653,21 @@ export default function Friends() {
       {/* =========================================================================
           MODAL: TẠO ĐỘI MỚI (CREATE TEAM)
           ========================================================================= */}
-      {showCreateTeamModal && (
-        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
-          <div className="modal-dialog-enter" style={MODAL_PANEL}>
+      {showCreateTeamModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="modal-backdrop-enter"
+          style={MODAL_BACKDROP}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && busyAction !== 'create-team') {
+              setShowCreateTeamModal(false);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={MODAL_PANEL}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Shield size={18} color="#0284c7" />
@@ -1561,7 +1684,7 @@ export default function Friends() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateTeam} style={{ padding: 20 }}>
+            <form onSubmit={handleCreateTeam} style={{ padding: 20, overflowY: 'auto', maxHeight: 'calc(90vh - 65px)' }}>
               <div style={{ marginBottom: 16 }}>
                 <label style={LABEL_STYLE}>
                   Tên Đội Nhóm <span style={{ color: '#dc2626' }}>*</span>
@@ -1575,6 +1698,28 @@ export default function Friends() {
                   style={INPUT_STYLE}
                   maxLength={120}
                 />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={LABEL_STYLE}>
+                  Chỉ Định Trưởng Nhóm (Leader)
+                </label>
+                <select
+                  value={newTeamLeaderId}
+                  onChange={(e) => setNewTeamLeaderId(e.target.value)}
+                  style={{ ...INPUT_STYLE, background: '#ffffff', cursor: 'pointer' }}
+                >
+                  <option value="">-- Chưa chỉ định (Để trống) --</option>
+                  {memberList.map((m) => {
+                    const uId = userIdOf(m) || String(m.id || '');
+                    const teamLabel = m.team?.name || m.teamName || (typeof m.team === 'string' ? m.team : null);
+                    return (
+                      <option key={uId} value={uId}>
+                        #{uId} · {m.name} ({m.jobTitle || 'Nhân viên'}) {teamLabel ? `[Đang ở ${teamLabel}]` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <div style={{ marginBottom: 20 }}>
@@ -1597,7 +1742,7 @@ export default function Friends() {
                 color: '#64748b',
                 marginBottom: 20,
               }}>
-                👑 <strong>Lưu ý:</strong> Bạn sẽ tự động trở thành <strong>Trưởng nhóm</strong> của đội này và có quyền mời đồng nghiệp, chỉnh sửa thông tin đội.
+                👑 <strong>Quản trị viên:</strong> Bạn có quyền thiết lập Trưởng nhóm, bổ nhiệm chức danh và trao danh hiệu thi đua (MVP / Champion) cho các thành viên trong đội.
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
@@ -1619,15 +1764,210 @@ export default function Friends() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* =========================================================================
+          MODAL: SETUP DANH HIỆU & QUYỀN HẠN (TITLE SETUP MODAL - ADMIN ONLY)
+          ========================================================================= */}
+      {titleModalUser && typeof document !== 'undefined' && createPortal(
+        <div
+          className="modal-backdrop-enter"
+          style={MODAL_BACKDROP}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !savingTitle) {
+              setTitleModalUser(null);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={{ ...MODAL_PANEL, maxWidth: 520 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={MODAL_HEADER}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Award size={18} color="#b45309" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                  Thiết Lập Danh Hiệu &amp; Chức Danh
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTitleModalUser(null)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTitle} style={{ padding: 20, overflowY: 'auto', maxHeight: 'calc(90vh - 65px)' }}>
+              <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                  {titleModalUser.name} <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>(#{userIdOf(titleModalUser)})</span>
+                </div>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                  {titleModalUser.email} · Đội hiện tại: <strong>{myTeam?.name || 'Chưa có đội'}</strong>
+                </div>
+              </div>
+
+              {/* 1. Chức danh công tác */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={LABEL_STYLE}>
+                  Chức Danh / Danh Hiệu Công Tác <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={titleForm.jobTitle}
+                  onChange={(e) => setTitleForm({ ...titleForm, jobTitle: e.target.value })}
+                  placeholder="Ví dụ: Editor, Content Creator, Trưởng phòng..."
+                  style={INPUT_STYLE}
+                  list="job-title-suggestions"
+                />
+                <datalist id="job-title-suggestions">
+                  <option value="Editor" />
+                  <option value="Content" />
+                  <option value="Content Creator" />
+                  <option value="Quản lý kênh" />
+                  <option value="Trưởng nhóm" />
+                  <option value="Trưởng phòng" />
+                  <option value="Phó phòng" />
+                  <option value="Phó giám đốc" />
+                  <option value="Giám đốc" />
+                  <option value="Kỹ sư hệ thống" />
+                  <option value="Chuyên viên truyền thông" />
+                </datalist>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                  {['Editor', 'Content', 'Quản lý kênh', 'Trưởng nhóm', 'Trưởng phòng'].map((title) => (
+                    <button
+                      key={title}
+                      type="button"
+                      onClick={() => setTitleForm({ ...titleForm, jobTitle: title })}
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        border: '1px solid rgba(15,23,42,0.12)',
+                        background: titleForm.jobTitle === title ? '#0f172a' : '#ffffff',
+                        color: titleForm.jobTitle === title ? '#ffffff' : '#334155',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Vai trò Trưởng nhóm & Tích xanh */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#0f172a', cursor: 'pointer', background: '#fffbeb', border: '1px solid rgba(217,119,6,0.25)', padding: '10px 12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={titleForm.isLeader}
+                    onChange={(e) => setTitleForm({ ...titleForm, isLeader: e.target.checked })}
+                  />
+                  <span>👑 Đặt làm Trưởng nhóm</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#0f172a', cursor: 'pointer', background: '#f0fdf4', border: '1px solid rgba(22,163,74,0.25)', padding: '10px 12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={titleForm.isVerified}
+                    onChange={(e) => setTitleForm({ ...titleForm, isVerified: e.target.checked })}
+                  />
+                  <span>🛡️ Cấp Tích Xanh (Verified)</span>
+                </label>
+              </div>
+
+              {/* 3. Trao danh hiệu vinh danh mùa giải */}
+              <div style={{ marginBottom: 20, border: '1px solid rgba(15,23,42,0.1)', padding: 12, background: '#fafafa' }}>
+                <label style={{ ...LABEL_STYLE, marginBottom: 6 }}>
+                  Trao Danh Hiệu Vinh Danh Mùa Giải (Tùy chọn)
+                </label>
+                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="awardType"
+                      checked={titleForm.awardType === 'none'}
+                      onChange={() => setTitleForm({ ...titleForm, awardType: 'none' })}
+                    />
+                    <span>Không trao giải</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: '#7c3aed', fontWeight: 600 }}>
+                    <input
+                      type="radio"
+                      name="awardType"
+                      checked={titleForm.awardType === 'MVP'}
+                      onChange={() => setTitleForm({ ...titleForm, awardType: 'MVP' })}
+                    />
+                    <span>⭐ Trao cúp MVP</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: '#b45309', fontWeight: 600 }}>
+                    <input
+                      type="radio"
+                      name="awardType"
+                      checked={titleForm.awardType === 'Champion'}
+                      onChange={() => setTitleForm({ ...titleForm, awardType: 'Champion' })}
+                    />
+                    <span>🏆 Trao Quán Quân (Champion)</span>
+                  </label>
+                </div>
+                {titleForm.awardType !== 'none' && (
+                  <input
+                    type="text"
+                    value={titleForm.awardReason}
+                    onChange={(e) => setTitleForm({ ...titleForm, awardReason: e.target.value })}
+                    placeholder="Lý do khen thưởng / thành tích xuất sắc..."
+                    style={INPUT_STYLE}
+                  />
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setTitleModalUser(null)}
+                  disabled={savingTitle}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={savingTitle || !titleForm.jobTitle.trim()}
+                >
+                  {savingTitle ? 'Đang lưu...' : 'Lưu Danh Hiệu & Quyền'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================
           MODAL: GIA NHẬP BẰNG MÃ MỜI (JOIN TEAM)
           ========================================================================= */}
-      {showJoinModal && (
-        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
-          <div className="modal-dialog-enter" style={MODAL_PANEL}>
+      {showJoinModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="modal-backdrop-enter"
+          style={MODAL_BACKDROP}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && busyAction !== 'join-team') {
+              setShowJoinModal(false);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={MODAL_PANEL}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <KeyRoundIcon size={18} color="#0284c7" />
@@ -1644,7 +1984,7 @@ export default function Friends() {
               </button>
             </div>
 
-            <form onSubmit={handleJoinTeam} style={{ padding: 20 }}>
+            <form onSubmit={handleJoinTeam} style={{ padding: 20, overflowY: 'auto', maxHeight: 'calc(90vh - 65px)' }}>
               <div style={{ marginBottom: 20 }}>
                 <label style={LABEL_STYLE}>
                   Nhập Mã Mời Của Đội (WR-XXXXXX) <span style={{ color: '#dc2626' }}>*</span>
@@ -1682,15 +2022,28 @@ export default function Friends() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================
           MODAL: CHỈNH SỬA THÔNG TIN ĐỘI (EDIT TEAM)
           ========================================================================= */}
-      {showEditTeamModal && myTeam && (
-        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
-          <div className="modal-dialog-enter" style={MODAL_PANEL}>
+      {showEditTeamModal && myTeam && typeof document !== 'undefined' && createPortal(
+        <div
+          className="modal-backdrop-enter"
+          style={MODAL_BACKDROP}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && busyAction !== 'edit-team') {
+              setShowEditTeamModal(false);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={MODAL_PANEL}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Edit3 size={18} color="#0284c7" />
@@ -1707,7 +2060,7 @@ export default function Friends() {
               </button>
             </div>
 
-            <form onSubmit={handleEditTeam} style={{ padding: 20 }}>
+            <form onSubmit={handleEditTeam} style={{ padding: 20, overflowY: 'auto', maxHeight: 'calc(90vh - 65px)' }}>
               <div style={{ marginBottom: 16 }}>
                 <label style={LABEL_STYLE}>
                   Tên Đội Nhóm <span style={{ color: '#dc2626' }}>*</span>
@@ -1752,15 +2105,28 @@ export default function Friends() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================
           MODAL: THÊM THÀNH VIÊN VÀO ĐỘI (LEADER ADD MEMBER DIRECTLY)
           ========================================================================= */}
-      {showAddMemberModal && myTeam && (
-        <div className="modal-backdrop-enter" style={MODAL_BACKDROP}>
-          <div className="modal-dialog-enter" style={{ ...MODAL_PANEL, maxWidth: 560 }}>
+      {showAddMemberModal && myTeam && typeof document !== 'undefined' && createPortal(
+        <div
+          className="modal-backdrop-enter"
+          style={MODAL_BACKDROP}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddMemberModal(false);
+            }
+          }}
+        >
+          <div
+            className="modal-dialog-enter"
+            style={{ ...MODAL_PANEL, maxWidth: 560 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <UserPlus size={18} color="#0284c7" />
@@ -1777,7 +2143,7 @@ export default function Friends() {
               </button>
             </div>
 
-            <div style={{ padding: 20 }}>
+            <div style={{ padding: 20, overflowY: 'auto', maxHeight: 'calc(90vh - 65px)' }}>
               <div style={{ marginBottom: 14, position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                 <input
@@ -1860,7 +2226,8 @@ export default function Friends() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </PageShell>
   );
@@ -1876,22 +2243,27 @@ const MODAL_BACKDROP = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(15,23,42,0.6)',
+  background: 'rgba(15,23,42,0.65)',
+  backdropFilter: 'blur(4px)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 9999,
+  zIndex: 99999,
   padding: 16,
+  overflowY: 'auto',
 };
 
 const MODAL_PANEL = {
   background: '#ffffff',
   width: '100%',
   maxWidth: 480,
+  maxHeight: '90vh',
   borderRadius: 10,
   overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
   border: '1px solid rgba(15,23,42,0.15)',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
 };
 
 const MODAL_HEADER = {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Inbox, RotateCcw } from 'lucide-react';
 
 function cx(...values) {
@@ -314,7 +315,7 @@ export function AnimatedModal({
 
   if (!mounted) return null;
 
-  return (
+  const modalNode = (
     <div
       className={cx('ui-modal-overlay', closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter')}
       onClick={handleClose}
@@ -352,6 +353,8 @@ export function AnimatedModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 }
 
 /**

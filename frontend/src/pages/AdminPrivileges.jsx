@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
-import { users as usersApi } from '../services/api';
+import { users as usersApi, groups as groupsApi } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 import { useAuth } from '../context/AuthContext';
@@ -109,6 +109,7 @@ export default function AdminPrivileges() {
   const loadIdRef = useRef(0);
 
   // Modal States
+  const [teamsList, setTeamsList] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
@@ -117,6 +118,7 @@ export default function AdminPrivileges() {
     role: 'user',
     jobTitle: 'Nhân viên',
     department: 'Media & Content',
+    teamId: '',
     isVerified: false,
     isDev: false,
   });
@@ -129,6 +131,7 @@ export default function AdminPrivileges() {
     role: 'user',
     jobTitle: 'Nhân viên',
     department: 'Media & Content',
+    teamId: '',
     status: 'active',
     isVerified: false,
     isDev: false,
@@ -163,6 +166,7 @@ export default function AdminPrivileges() {
 
   useEffect(() => {
     loadData('', 1);
+    groupsApi.listAll().then((res) => setTeamsList(res.data || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -290,13 +294,14 @@ export default function AdminPrivileges() {
     }
     setCreating(true);
     try {
-      const newUser = await usersApi.create({
+      await usersApi.create({
         name: createForm.name.trim(),
         email: createForm.email.trim(),
         password: createForm.password.trim(),
         role: createForm.role,
         jobTitle: createForm.jobTitle.trim(),
         department: createForm.department.trim(),
+        teamId: createForm.teamId ? Number(createForm.teamId) : undefined,
         isVerified: createForm.isVerified,
         isDev: createForm.isDev,
       });
@@ -309,6 +314,7 @@ export default function AdminPrivileges() {
         role: 'user',
         jobTitle: 'Nhân viên',
         department: 'Media & Content',
+        teamId: '',
         isVerified: false,
         isDev: false,
       });
@@ -328,6 +334,7 @@ export default function AdminPrivileges() {
       role: user.role || 'user',
       jobTitle: user.jobTitle || 'Nhân viên',
       department: user.department || 'Media & Content',
+      teamId: user.teamId ? String(user.teamId) : '',
       status: user.status || 'active',
       isVerified: isVerified(user),
       isDev: isDev(user),
@@ -349,16 +356,30 @@ export default function AdminPrivileges() {
         role: editForm.role,
         jobTitle: editForm.jobTitle.trim(),
         department: editForm.department.trim(),
+        teamId: editForm.teamId ? Number(editForm.teamId) : null,
         status: editForm.status,
         isVerified: editForm.isVerified,
         isDev: editForm.isDev,
       });
       const updated = res.data || {};
+      const matchedTeam = teamsList.find((t) => String(t.id) === String(editForm.teamId));
       setUsers((current) => current.map((item) => (
-        item.id === editModalUser.id ? { ...item, ...editForm, ...updated } : item
+        item.id === editModalUser.id ? {
+          ...item,
+          ...editForm,
+          ...updated,
+          teamId: editForm.teamId ? Number(editForm.teamId) : null,
+          teamName: matchedTeam ? matchedTeam.name : (editForm.teamId ? (updated.teamName || item.teamName) : null),
+        } : item
       )));
       if (detailDrawerUser?.id === editModalUser.id) {
-        setDetailDrawerUser((prev) => ({ ...prev, ...editForm, ...updated }));
+        setDetailDrawerUser((prev) => ({
+          ...prev,
+          ...editForm,
+          ...updated,
+          teamId: editForm.teamId ? Number(editForm.teamId) : null,
+          teamName: matchedTeam ? matchedTeam.name : (editForm.teamId ? (updated.teamName || prev.teamName) : null),
+        }));
       }
       toast.success(`Đã cập nhật hồ sơ của ${editForm.name}!`);
       setEditModalUser(null);
@@ -884,6 +905,22 @@ export default function AdminPrivileges() {
                 </div>
               </div>
 
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  Đội Nhóm Trực Thuộc (Team)
+                </label>
+                <select
+                  value={createForm.teamId}
+                  onChange={(e) => setCreateForm({ ...createForm, teamId: e.target.value })}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                >
+                  <option value="">-- Chưa gán đội nhóm (Không có đội) --</option>
+                  {teamsList.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.memberCount || 0} thành viên)</option>
+                  ))}
+                </select>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
@@ -1033,6 +1070,22 @@ export default function AdminPrivileges() {
                     </optgroup>
                   </select>
                 </div>
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  Đội Nhóm Trực Thuộc (Team)
+                </label>
+                <select
+                  value={editForm.teamId}
+                  onChange={(e) => setEditForm({ ...editForm, teamId: e.target.value })}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                >
+                  <option value="">-- Chưa gán đội nhóm (Không có đội) --</option>
+                  {teamsList.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.memberCount || 0} thành viên)</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

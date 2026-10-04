@@ -156,13 +156,22 @@ async function listAllTeams() {
 }
 
 async function create(user, payload) {
+  let ownerId = payload.ownerId || payload.owner_id;
+  if (!ownerId && user.role !== 'admin') {
+    ownerId = user.id;
+  }
   const team = await Team.create({
     name: payload.name,
     description: payload.description || null,
     inviteCode: makeInviteCode(),
-    ownerId: user.id,
+    ownerId: ownerId || null,
   });
-  await user.update({ teamId: team.id });
+  if (user.role !== 'admin' || payload.assignToUser === true) {
+    await user.update({ teamId: team.id });
+  }
+  if (ownerId && String(ownerId) !== String(user.id)) {
+    await User.update({ teamId: team.id }, { where: { id: ownerId } });
+  }
   return toGroupPayload(team, user.id);
 }
 
@@ -207,6 +216,20 @@ async function update(user, teamId, payload = {}) {
     updates.name = name;
   }
   if (payload.description !== undefined) updates.description = normalizeDescription(payload.description);
+  const targetOwnerId = payload.ownerId !== undefined ? payload.ownerId : payload.owner_id;
+  if (targetOwnerId !== undefined) {
+    if (targetOwnerId === null || targetOwnerId === 0 || targetOwnerId === '') {
+      updates.ownerId = null;
+    } else {
+      const newOwner = await User.findByPk(targetOwnerId);
+      if (newOwner) {
+        updates.ownerId = newOwner.id;
+        if (newOwner.teamId !== team.id) {
+          await newOwner.update({ teamId: team.id });
+        }
+      }
+    }
+  }
   if (Object.keys(updates).length > 0) {
     try {
       await team.update(updates);
@@ -259,9 +282,14 @@ async function addMember(user, teamId, targetUserId) {
   }
   if (target.teamId) {
     if (String(target.teamId) === String(team.id)) {
-      const error = new Error('Thành viên này đã ở trong đội của bạn');
+      const error = new Error('Thành viên này đã ở trong đội');
       error.statusCode = 400;
       throw error;
+    }
+    if (user.role === 'admin') {
+      // Admin có quyền chuyển thành viên từ đội khác sang đội này
+      await target.update({ teamId: team.id });
+      return toGroupPayload(team, user.id);
     }
     const error = new Error('Thành viên này đang thuộc một đội khác');
     error.statusCode = 400;

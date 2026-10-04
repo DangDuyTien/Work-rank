@@ -382,7 +382,7 @@ export default function Login() {
                 pointerEvents: isRegister ? 'auto' : 'none',
               }}
             >
-              <h1>Tham gia WorkRank.</h1>
+              <h1>Tham gia 3WIN MEDIA.</h1>
             </div>
 
             <div

@@ -70,6 +70,7 @@ Chuyển trang đã xử lý sẵn trong `Layout.jsx` (`<PageTransition key={loc
 7. RAF/timer/listener/socket phải cleanup khi unmount; `socket.off(event, callback)` luôn truyền callback.
 8. Hạn chế `backdrop-filter`, `filter: blur`, shadow lớn; `will-change` chỉ đặt khi đang animate.
 9. Tôn trọng giảm chuyển động: đã có sẵn `html[data-workrank-reduce-motion="true"]` và `prefers-reduced-motion` – CSS mới có keyframes riêng thì thêm nhánh tắt tương ứng; JS animation phải kiểm tra như `AnimatedNumber`.
+10. **Modal / Dialog / Drawer BẮT BUỘC dùng React Portal (`createPortal(..., document.body)`) hoặc `<AnimatedModal>`**: Tuyệt đối không render modal `position: fixed` lồng trực tiếp bên trong các trang/container có `PageTransition` hay `TabTransition`. Chuẩn CSS quy định `transform` hoặc `will-change: transform` trên cha sẽ biến nó thành containing block cho `position: fixed`, khiến modal bị trôi xuống giữa cả trang dài (hàng nghìn px) thay vì căn giữa màn hình (viewport). Modal backdrop phải có `overflow-y: auto`, modal panel có `max-height: 90vh` và backdrop click `e.target === e.currentTarget`.
 
 ## 5. Kiểm tra trước khi báo xong
 

@@ -2,7 +2,7 @@ const express = require('express');
 const { z } = require('zod');
 const controller = require('../controllers/groups.controller');
 const validate = require('../middlewares/validate.middleware');
-const { auth } = require('../middlewares/auth.middleware');
+const { auth, requireRole } = require('../middlewares/auth.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
@@ -12,22 +12,35 @@ router.get('/', asyncHandler(controller.list));
 router.get('/all', asyncHandler(controller.listAll));
 router.post(
   '/',
-  validate(z.object({ body: z.object({ name: z.string().min(1).max(120), description: z.string().max(1000).optional() }) })),
+  requireRole('admin'),
+  validate(z.object({
+    body: z.object({
+      name: z.string().min(1).max(120),
+      description: z.string().max(1000).optional(),
+      ownerId: z.coerce.number().int().positive().optional(),
+      owner_id: z.coerce.number().int().positive().optional(),
+      assignToUser: z.boolean().optional(),
+    }),
+  })),
   asyncHandler(controller.create),
 );
 router.patch(
   '/:id',
+  requireRole('admin'),
   validate(z.object({
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: z.object({
       name: z.string().trim().min(1).max(120).optional(),
       description: z.string().max(1000).optional(),
-    }).refine((body) => body.name !== undefined || body.description !== undefined, { message: 'No group fields to update' }),
+      ownerId: z.coerce.number().int().positive().nullable().optional(),
+      owner_id: z.coerce.number().int().positive().nullable().optional(),
+    }).refine((body) => body.name !== undefined || body.description !== undefined || body.ownerId !== undefined || body.owner_id !== undefined, { message: 'No group fields to update' }),
   })),
   asyncHandler(controller.update),
 );
 router.delete(
   '/:id',
+  requireRole('admin'),
   validate(z.object({ params: z.object({ id: z.coerce.number().int().positive() }) })),
   asyncHandler(controller.remove),
 );
@@ -43,6 +56,7 @@ router.post(
 );
 router.post(
   '/:id/kick',
+  requireRole('admin'),
   validate(z.object({
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: z.object({
@@ -54,6 +68,7 @@ router.post(
 );
 router.post(
   '/:id/add-member',
+  requireRole('admin'),
   validate(z.object({
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: z.object({
@@ -65,6 +80,7 @@ router.post(
 );
 router.post(
   '/:id/invite',
+  requireRole('admin'),
   validate(z.object({
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: z.object({
