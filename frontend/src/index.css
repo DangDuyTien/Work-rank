@@ -279,7 +279,12 @@ html[data-workrank-reduce-motion="true"] .public-featured-frame.is-shutting > .p
 .public-auth-editorial-heading h2 { font-family: 'RuderPlakatLLVar', Arial, sans-serif; font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100; font-size: 80px; line-height: 1; font-weight: 400; letter-spacing: 0; color: #ae604b; margin: 12px 0 20px; overflow-wrap: anywhere; }
 .public-auth-editorial-heading p { color: var(--text-secondary); font-size: 12px; }
 .public-auth-recognition .public-featured-frame { max-width: 440px; }
-.public-auth-recognition .public-recognition-portrait { width: 100%; aspect-ratio: 4 / 5; }
+.public-auth-recognition .public-recognition-portrait { width: auto; aspect-ratio: 4 / 5; }
+.public-auth-recognition .public-featured-frame > .public-recognition-portrait {
+  grid-column: 2;
+  margin: 0 clamp(14px, 2.2vw, 22px);
+  width: auto;
+}
 .public-auth-recognition .public-recognition-initials { font-size: 68px; }
 .public-auth-person { display: flex; gap: 20px; justify-content: space-between; max-width: 400px; padding: 22px 0 14px; }
 .public-auth-person h3 { font-size: 24px; line-height: 1.35; font-weight: 600; letter-spacing: -.03em; margin: 6px 0; overflow-wrap: anywhere; }
