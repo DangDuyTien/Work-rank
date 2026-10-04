@@ -41,6 +41,10 @@ router.get('/admin/mvp/seasons', auth, requireRole('admin'), asyncHandler(ctrl.a
 router.get('/admin/mvp/preview/:seasonId', auth, requireRole('admin'), asyncHandler(ctrl.adminPreviewSeasonMvp));
 router.post('/admin/mvp/award', auth, requireRole('admin'), asyncHandler(ctrl.adminAwardMvpCup));
 
+// Public Homepage Spotlight Admin Routes
+router.get('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminGetSpotlightConfig));
+router.post('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminSetSpotlightConfig));
+
 // Phase 4 & Phase 7 Rule Sets & Visual Rule Builder Routes
 router.get('/admin/rules', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));
 router.get('/admin/rule-sets', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));

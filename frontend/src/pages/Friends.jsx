@@ -22,6 +22,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  Star,
   UserCheck,
   UserPlus,
   Users,
@@ -29,7 +30,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
-import { PageShell, PageHeader, Card, EmptyState, PageState, TabTransition } from '../components/ui';
+import { PageShell, PageHeader, Card, EmptyState, PageState, TabTransition, AnimatedModal } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm, useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
@@ -38,6 +39,7 @@ import {
   users as usersApi,
   rankings as rankingsApi,
   leaderboard as leaderboardApi,
+  competition as competitionApi,
 } from '../services/api';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import usePageVisibility from '../hooks/usePageVisibility';
@@ -214,6 +216,18 @@ export default function Friends() {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberSearch, setAddMemberSearch] = useState('');
 
+  // Public Homepage Spotlight state
+  const [spotlightConfig, setSpotlightConfig] = useState(null);
+  const [showSpotlightModal, setShowSpotlightModal] = useState(false);
+  const [spotlightForm, setSpotlightForm] = useState({
+    teamId: '',
+    userId: '',
+    teamTitle: '',
+    mvpTitle: '',
+    mvpReason: '',
+  });
+  const [savingSpotlight, setSavingSpotlight] = useState(false);
+
   const searchTimerRef = useRef(null);
 
   // Derived Values
@@ -280,6 +294,15 @@ export default function Friends() {
         const safeRanks = Array.isArray(ranks) ? ranks : [];
         setRankingRows((prev) => (isDeepEqual(prev, safeRanks) ? prev : safeRanks));
       }
+
+      if (authUser?.role === 'admin') {
+        try {
+          const spot = await competitionApi.adminGetSpotlight();
+          setSpotlightConfig(spot);
+        } catch {
+          // ignore
+        }
+      }
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Không thể tải dữ liệu thành viên & đội nhóm';
       setError(msg);
@@ -288,7 +311,7 @@ export default function Friends() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [searchQuery, departmentFilter, teamStatusFilter, hasInitialCache, toast]);
+  }, [searchQuery, departmentFilter, teamStatusFilter, hasInitialCache, toast, authUser?.role]);
 
   useEffect(() => {
     if (pageVisible) {
@@ -456,13 +479,32 @@ export default function Friends() {
           title: `MVP - ${titleForm.jobTitle || 'Xuất Sắc'}`,
           reason: titleForm.awardReason.trim() || 'Admin trao thưởng danh hiệu xuất sắc của đội nhóm',
         });
-        toast.success(`Đã trao danh hiệu MVP cho ${titleModalUser.name}!`);
+        try {
+          await competitionApi.adminSetSpotlight({
+            userId: Number(targetId),
+            mvpTitle: `MVP - ${titleForm.jobTitle || 'Xuất Sắc'}`,
+            mvpReason: titleForm.awardReason.trim() || 'Cá nhân xuất sắc nhất hệ thống',
+          });
+        } catch {
+          // non-blocking
+        }
+        toast.success(`Đã trao danh hiệu MVP cho ${titleModalUser.name} & đưa lên Trang Chủ!`);
       } else if (titleForm.awardType === 'Champion') {
         await usersApi.adminAwardChampion({
           userId: Number(targetId),
           title: `Vô Địch - ${myTeam?.name || 'Đội Nhóm'}`,
           reason: titleForm.awardReason.trim() || 'Admin trao danh hiệu Quán quân đội nhóm',
         });
+        if (myTeam?.id) {
+          try {
+            await competitionApi.adminSetSpotlight({
+              teamId: Number(myTeam.id),
+              teamTitle: myTeam.name,
+            });
+          } catch {
+            // non-blocking
+          }
+        }
         toast.success(`Đã trao danh hiệu Champion cho ${titleModalUser.name}!`);
       }
 
@@ -473,6 +515,92 @@ export default function Friends() {
       toast.error(parseApiError(err, 'Không thể cập nhật danh hiệu'));
     } finally {
       setSavingTitle(false);
+    }
+  };
+
+  const handleSetTeamSpotlight = async (team) => {
+    try {
+      const isCurrentlySpotlighted = Number(spotlightConfig?.teamId) === Number(team.id);
+      if (isCurrentlySpotlighted) {
+        const ok = await confirm({
+          title: 'Hủy vinh danh Đội Quán quân?',
+          message: `Đội "${team.name}" đang được vinh danh trên Trang Chủ. Bạn có muốn bỏ vinh danh đội này khỏi Trang Chủ không?`,
+          confirmLabel: 'Bỏ vinh danh',
+        });
+        if (!ok) return;
+        await competitionApi.adminSetSpotlight({ teamId: null });
+        toast.success(`Đã bỏ vinh danh đội "${team.name}" trên Trang Chủ.`);
+      } else {
+        const ok = await confirm({
+          title: 'Vinh danh Đội Quán quân Trang Chủ?',
+          message: `Bạn có muốn đưa đội "${team.name}" và toàn bộ thành viên của đội lên vị trí Quán quân trên Trang Chủ (Homepage) không?`,
+          confirmLabel: 'Đưa lên Trang Chủ',
+        });
+        if (!ok) return;
+        await competitionApi.adminSetSpotlight({
+          teamId: Number(team.id),
+          teamTitle: team.name,
+        });
+        toast.success(`Đã đưa đội "${team.name}" lên vinh danh Quán quân trên Trang Chủ!`);
+      }
+      const updated = await competitionApi.adminGetSpotlight();
+      setSpotlightConfig(updated);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể cập nhật vinh danh Trang Chủ'));
+    }
+  };
+
+  const openSpotlightModal = () => {
+    setSpotlightForm({
+      teamId: spotlightConfig?.teamId ? String(spotlightConfig.teamId) : '',
+      userId: spotlightConfig?.userId ? String(spotlightConfig.userId) : '',
+      teamTitle: spotlightConfig?.teamTitle || '',
+      mvpTitle: spotlightConfig?.mvpTitle || '',
+      mvpReason: spotlightConfig?.mvpReason || '',
+    });
+    setShowSpotlightModal(true);
+  };
+
+  const handleSaveSpotlightConfig = async (e) => {
+    e?.preventDefault?.();
+    setSavingSpotlight(true);
+    try {
+      await competitionApi.adminSetSpotlight({
+        teamId: spotlightForm.teamId ? Number(spotlightForm.teamId) : null,
+        userId: spotlightForm.userId ? Number(spotlightForm.userId) : null,
+        teamTitle: spotlightForm.teamTitle.trim() || null,
+        mvpTitle: spotlightForm.mvpTitle.trim() || null,
+        mvpReason: spotlightForm.mvpReason.trim() || null,
+      });
+      const updated = await competitionApi.adminGetSpotlight();
+      setSpotlightConfig(updated);
+      toast.success('Đã lưu cấu hình vinh danh Trang Chủ thành công!');
+      setShowSpotlightModal(false);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể lưu cấu hình Trang Chủ'));
+    } finally {
+      setSavingSpotlight(false);
+    }
+  };
+
+  const handleResetSpotlightConfig = async () => {
+    const ok = await confirm({
+      title: 'Khôi phục vinh danh mặc định?',
+      message: 'Hệ thống sẽ tự động vinh danh Đội Quán quân và MVP theo điểm số và mùa giải gần nhất. Bạn có chắc chắn không?',
+      confirmLabel: 'Khôi phục tự động',
+    });
+    if (!ok) return;
+    setSavingSpotlight(true);
+    try {
+      await competitionApi.adminSetSpotlight({ clear: true });
+      const updated = await competitionApi.adminGetSpotlight();
+      setSpotlightConfig(updated);
+      toast.success('Đã đặt lại chế độ vinh danh tự động theo hệ thống!');
+      setShowSpotlightModal(false);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể đặt lại cấu hình Trang Chủ'));
+    } finally {
+      setSavingSpotlight(false);
     }
   };
 
@@ -1525,6 +1653,30 @@ export default function Friends() {
                   {isAdmin && (
                     <button
                       type="button"
+                      onClick={openSpotlightModal}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        minHeight: 34,
+                        padding: '0 12px',
+                        fontWeight: 600,
+                        background: '#fef3c7',
+                        border: '1px solid #fde68a',
+                        color: '#92400e',
+                        cursor: 'pointer',
+                        borderRadius: 4,
+                      }}
+                      title="Quản lý đội nhóm & cá nhân MVP hiển thị trên Trang Chủ"
+                    >
+                      <Trophy size={14} color="#b45309" />
+                      Vinh danh Trang Chủ
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      type="button"
                       className="btn btn-primary"
                       onClick={() => {
                         setNewTeamName('');
@@ -1568,28 +1720,43 @@ export default function Friends() {
                     })
                     .map((team) => {
                       const isCurrentTeam = String(myTeam?.id || '') === String(team.id);
+                      const isSpotlightTeam = Number(spotlightConfig?.teamId) === Number(team.id);
                       return (
                         <div
                           key={team.id}
                           style={{
-                            border: isCurrentTeam ? '2px solid #0284c7' : '1px solid rgba(15,23,42,0.08)',
+                            border: isSpotlightTeam
+                              ? '2px solid #f59e0b'
+                              : isCurrentTeam
+                              ? '2px solid #0284c7'
+                              : '1px solid rgba(15,23,42,0.08)',
                             padding: 16,
-                            background: isCurrentTeam ? '#f0f9ff' : '#ffffff',
+                            background: isSpotlightTeam
+                              ? '#fffdf5'
+                              : isCurrentTeam
+                              ? '#f0f9ff'
+                              : '#ffffff',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'space-between',
                             gap: 12,
+                            borderRadius: 6,
                           }}
                         >
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 <strong style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
                                   {team.name}
                                 </strong>
                                 {isCurrentTeam && (
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 6px' }}>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 6px', borderRadius: 3 }}>
                                     Đội của bạn
+                                  </span>
+                                )}
+                                {isSpotlightTeam && (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: '#fef3c7', border: '1px solid #fde68a', padding: '1px 6px', display: 'inline-flex', alignItems: 'center', gap: 3, borderRadius: 3 }}>
+                                    <Trophy size={11} /> Quán quân Trang Chủ
                                   </span>
                                 )}
                               </div>
@@ -1618,6 +1785,8 @@ export default function Friends() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
+                            gap: 8,
+                            flexWrap: 'wrap',
                           }}>
                             {isAdmin && team.inviteCode ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1637,10 +1806,35 @@ export default function Friends() {
                             ) : (
                               <span>Liên hệ Trưởng nhóm để nhận mã mời</span>
                             )}
+
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleSetTeamSpotlight(team)}
+                                style={{
+                                  border: isSpotlightTeam ? '1px solid #f59e0b' : '1px solid rgba(15,23,42,0.15)',
+                                  background: isSpotlightTeam ? '#fef3c7' : '#f8fafc',
+                                  color: isSpotlightTeam ? '#b45309' : '#334155',
+                                  padding: '4px 8px',
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  borderRadius: 4,
+                                }}
+                                title={isSpotlightTeam ? 'Hủy vinh danh đội này trên Trang Chủ' : 'Đặt làm Đội Quán quân hiển thị trên Trang Chủ'}
+                              >
+                                <Trophy size={12} color={isSpotlightTeam ? '#b45309' : '#64748b'} />
+                                {isSpotlightTeam ? 'Đang vinh danh Trang Chủ' : '⭐ Đưa lên Trang Chủ'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
                     })}
+
                 </div>
               )}
             </div>
@@ -2157,6 +2351,18 @@ export default function Friends() {
                     style={INPUT_STYLE}
                   />
                 )}
+                {titleForm.awardType === 'MVP' && (
+                  <div style={{ marginTop: 8, padding: '8px 10px', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 4, fontSize: 11, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Sparkles size={14} color="#7c3aed" />
+                    <span><strong>Vinh danh Trang Chủ:</strong> Cá nhân này sẽ được tự động đưa lên vị trí MVP trên Trang Chủ (workrank.com).</span>
+                  </div>
+                )}
+                {titleForm.awardType === 'Champion' && (
+                  <div style={{ marginTop: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, fontSize: 11, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Trophy size={14} color="#b45309" />
+                    <span><strong>Vinh danh Trang Chủ:</strong> Đội nhóm của cá nhân này sẽ được đồng bộ lên danh hiệu Quán quân trên Trang Chủ.</span>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
@@ -2461,6 +2667,146 @@ export default function Friends() {
         </div>,
         document.body
       )}
+
+      {/* =========================================================================
+          MODAL: QUẢN LÝ VINH DANH TRANG CHỦ (HOMEPAGE SPOTLIGHT)
+          ========================================================================= */}
+      <AnimatedModal
+        isOpen={showSpotlightModal}
+        onClose={() => setShowSpotlightModal(false)}
+        title="Quản Lý Vinh Danh Trang Chủ (Homepage Spotlight)"
+        maxWidth={540}
+      >
+        <form onSubmit={handleSaveSpotlightConfig} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', padding: '12px 14px', borderRadius: 6 }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#334155', lineHeight: 1.5 }}>
+              Quản trị viên có thể chủ động chọn <strong>Đội Quán quân</strong> và <strong>Cá nhân MVP</strong> để hiển thị nổi bật trên Trang Chủ (workrank.com). Ảnh đại diện và tên thành viên của đội sẽ tự động hiển thị xoay vòng.
+            </p>
+          </div>
+
+          {/* 1. Chọn Đội Nhóm Quán Quân */}
+          <div style={{ border: '1px solid rgba(15,23,42,0.1)', padding: 14, borderRadius: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Trophy size={16} color="#b45309" />
+              <strong style={{ fontSize: 13, color: '#0f172a' }}>1. Đội Nhóm Quán Quân (Champion Team)</strong>
+            </div>
+            <label style={{ ...LABEL_STYLE, fontSize: 11, marginBottom: 4 }}>
+              Chọn Đội Nhóm
+            </label>
+            <select
+              value={spotlightForm.teamId}
+              onChange={(e) => setSpotlightForm({ ...spotlightForm, teamId: e.target.value })}
+              style={{ ...INPUT_STYLE, height: 38 }}
+            >
+              <option value="">-- Tự động theo mùa giải / thành tích --</option>
+              {allTeams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.memberCount || 0} thành viên)
+                </option>
+              ))}
+            </select>
+
+            <div style={{ marginTop: 10 }}>
+              <label style={{ ...LABEL_STYLE, fontSize: 11, marginBottom: 4 }}>
+                Tiêu đề vinh danh đội (Tùy chọn)
+              </label>
+              <input
+                type="text"
+                value={spotlightForm.teamTitle}
+                onChange={(e) => setSpotlightForm({ ...spotlightForm, teamTitle: e.target.value })}
+                placeholder="Ví dụ: Nhà Vô Địch Mùa Giải, Đội Nhóm Xuất Sắc..."
+                style={{ ...INPUT_STYLE, height: 36 }}
+              />
+            </div>
+          </div>
+
+          {/* 2. Chọn Cá Nhân MVP */}
+          <div style={{ border: '1px solid rgba(15,23,42,0.1)', padding: 14, borderRadius: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Award size={16} color="#7c3aed" />
+              <strong style={{ fontSize: 13, color: '#0f172a' }}>2. Cá Nhân MVP (Most Valuable Player)</strong>
+            </div>
+            <label style={{ ...LABEL_STYLE, fontSize: 11, marginBottom: 4 }}>
+              Chọn Cá Nhân MVP
+            </label>
+            <select
+              value={spotlightForm.userId}
+              onChange={(e) => setSpotlightForm({ ...spotlightForm, userId: e.target.value })}
+              style={{ ...INPUT_STYLE, height: 38 }}
+            >
+              <option value="">-- Tự động theo danh hiệu MVP gần nhất --</option>
+              {memberList.map((m) => (
+                <option key={userIdOf(m)} value={userIdOf(m)}>
+                  {m.name} ({m.jobTitle || 'Nhân viên'}) - #{userIdOf(m)}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+              <div>
+                <label style={{ ...LABEL_STYLE, fontSize: 11, marginBottom: 4 }}>
+                  Chức danh MVP (Tùy chọn)
+                </label>
+                <input
+                  type="text"
+                  value={spotlightForm.mvpTitle}
+                  onChange={(e) => setSpotlightForm({ ...spotlightForm, mvpTitle: e.target.value })}
+                  placeholder="Ví dụ: MVP - Editor Xuất Sắc"
+                  style={{ ...INPUT_STYLE, height: 36 }}
+                />
+              </div>
+              <div>
+                <label style={{ ...LABEL_STYLE, fontSize: 11, marginBottom: 4 }}>
+                  Lý do / Thành tích (Tùy chọn)
+                </label>
+                <input
+                  type="text"
+                  value={spotlightForm.mvpReason}
+                  onChange={(e) => setSpotlightForm({ ...spotlightForm, mvpReason: e.target.value })}
+                  placeholder="Ví dụ: Đóng góp xuất sắc nhất..."
+                  style={{ ...INPUT_STYLE, height: 36 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 12, borderTop: '1px solid rgba(15,23,42,0.08)' }}>
+            <button
+              type="button"
+              onClick={handleResetSpotlightConfig}
+              disabled={savingSpotlight}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#dc2626',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: '6px 0',
+              }}
+            >
+              Khôi phục tự động
+            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowSpotlightModal(false)}
+                disabled={savingSpotlight}
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={savingSpotlight}
+              >
+                {savingSpotlight ? 'Đang lưu...' : 'Lưu Vinh Danh Trang Chủ'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </AnimatedModal>
     </PageShell>
   );
 }

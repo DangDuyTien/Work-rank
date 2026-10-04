@@ -823,12 +823,26 @@ module.exports = {
   adminListMvpSeasons,
   adminPreviewSeasonMvp,
   adminAwardMvpCup,
+  adminGetSpotlightConfig,
+  adminSetSpotlightConfig,
 };
 
 async function getPublicSpotlight(req, res) {
   const publicSpotlightService = require('../services/competition/publicSpotlight.service');
   const spotlight = await publicSpotlightService.getPublicSpotlight();
   return res.json(spotlight);
+}
+
+async function adminGetSpotlightConfig(req, res) {
+  const publicSpotlightService = require('../services/competition/publicSpotlight.service');
+  const config = await publicSpotlightService.getSpotlightConfig();
+  return res.json({ config });
+}
+
+async function adminSetSpotlightConfig(req, res) {
+  const publicSpotlightService = require('../services/competition/publicSpotlight.service');
+  const config = await publicSpotlightService.setSpotlightConfig(req.body);
+  return res.json({ message: 'Cập nhật vinh danh Trang chủ thành công', config });
 }
 
 async function adminListMvpSeasons(req, res) {
@@ -864,3 +878,4 @@ async function adminAwardMvpCup(req, res) {
     recognition,
   });
 }
+

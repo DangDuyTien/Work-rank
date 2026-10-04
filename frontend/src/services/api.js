@@ -803,6 +803,14 @@ export const competition = {
     const res = await api.post('/api/competition/admin/mvp/award', data);
     return res.data;
   },
+  adminGetSpotlight: async () => {
+    const res = await api.get('/api/competition/admin/spotlight');
+    return res.data?.config || null;
+  },
+  adminSetSpotlight: async (data) => {
+    const res = await api.post('/api/competition/admin/spotlight', data);
+    return res.data;
+  },
 };
 
 export const youtube = {
