@@ -17,9 +17,10 @@ router.post(
     body: z.object({
       name: z.string().min(1).max(120),
       description: z.string().max(1000).optional(),
-      ownerId: z.coerce.number().int().positive().optional(),
-      owner_id: z.coerce.number().int().positive().optional(),
+      ownerId: z.coerce.number().int().positive().nullable().optional(),
+      owner_id: z.coerce.number().int().positive().nullable().optional(),
       assignToUser: z.boolean().optional(),
+      memberIds: z.array(z.coerce.number().int().positive()).optional(),
     }),
   })),
   asyncHandler(controller.create),

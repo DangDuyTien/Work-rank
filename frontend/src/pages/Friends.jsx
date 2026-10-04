@@ -189,6 +189,10 @@ export default function Friends() {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDesc, setNewTeamDesc] = useState('');
   const [newTeamLeaderId, setNewTeamLeaderId] = useState('');
+  const [newTeamMemberIds, setNewTeamMemberIds] = useState([]);
+  const [newTeamAssignSelf, setNewTeamAssignSelf] = useState(false);
+  const [newTeamMemberSearch, setNewTeamMemberSearch] = useState('');
+  const [allTeamsSearchQuery, setAllTeamsSearchQuery] = useState('');
 
   const [titleModalUser, setTitleModalUser] = useState(null);
   const [titleForm, setTitleForm] = useState({
@@ -382,16 +386,24 @@ export default function Friends() {
     }
     setBusyAction('create-team');
     try {
-      const res = await groupsApi.create({
+      const payload = {
         name: newTeamName.trim(),
         description: newTeamDesc.trim() || undefined,
         ownerId: newTeamLeaderId ? Number(newTeamLeaderId) : undefined,
-      });
+        assignToUser: Boolean(newTeamAssignSelf),
+      };
+      if (newTeamMemberIds.length > 0) {
+        payload.memberIds = newTeamMemberIds.map(Number);
+      }
+      const res = await groupsApi.create(payload);
       toast.success(`Đã tạo đội "${res.data?.name || newTeamName}" thành công!`);
       setShowCreateTeamModal(false);
       setNewTeamName('');
       setNewTeamDesc('');
       setNewTeamLeaderId('');
+      setNewTeamMemberIds([]);
+      setNewTeamAssignSelf(false);
+      setNewTeamMemberSearch('');
       await loadData({ background: true });
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể tạo đội nhóm'));
@@ -649,33 +661,40 @@ export default function Friends() {
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               Làm mới
             </button>
-            {!myTeam ? (
-              <>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowJoinModal(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  <KeyRoundIcon size={14} />
-                  Nhập mã mời
-                </button>
-                {isAdmin && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => setShowCreateTeamModal(true)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                  >
-                    <Plus size={14} />
-                    Tạo đội mới
-                  </button>
-                )}
-              </>
-            ) : canManageTeam ? (
+            {isAdmin && (
               <button
                 type="button"
                 className="btn btn-primary"
+                onClick={() => {
+                  setNewTeamName('');
+                  setNewTeamDesc('');
+                  setNewTeamLeaderId('');
+                  setNewTeamMemberIds([]);
+                  setNewTeamAssignSelf(false);
+                  setNewTeamMemberSearch('');
+                  setShowCreateTeamModal(true);
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                title="Quản trị viên: Tạo đội nhóm mới cho công ty"
+              >
+                <Plus size={14} />
+                Tạo đội mới
+              </button>
+            )}
+            {!myTeam ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowJoinModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <KeyRoundIcon size={14} />
+                Nhập mã mời
+              </button>
+            ) : canManageTeam ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
                 onClick={() => setShowAddMemberModal(true)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
@@ -1415,85 +1434,147 @@ export default function Friends() {
               </div>
             ) : (
               /* No Team: Onboarding Hub */
-              <div style={{ display: 'grid', gap: 24 }}>
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(15,23,42,0.1)',
+                padding: 32,
+                textAlign: 'center',
+              }}>
                 <div style={{
-                  background: '#ffffff',
-                  border: '1px solid rgba(15,23,42,0.1)',
-                  padding: 32,
-                  textAlign: 'center',
+                  width: 64,
+                  height: 64,
+                  background: 'rgba(56,189,248,0.1)',
+                  color: '#0284c7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto',
                 }}>
-                  <div style={{
-                    width: 64,
-                    height: 64,
-                    background: 'rgba(56,189,248,0.1)',
-                    color: '#0284c7',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px auto',
-                  }}>
-                    <Shield size={32} />
-                  </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-                    Bạn Chưa Thuộc Đội Nhóm Nào
-                  </h2>
-                  <p style={{ fontSize: 14, color: '#64748b', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
-                    {isAdmin
-                      ? 'Bạn là Quản trị viên (Admin). Bạn có thể tạo đội nhóm mới, phân bổ nhân sự và thiết lập danh hiệu thi đua.'
-                      : 'Đội nhóm được khởi tạo và phân bổ bởi Quản trị viên (Admin). Hãy liên hệ Admin để được thêm vào đội hoặc gia nhập bằng mã mời từ trưởng nhóm.'}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={() => setShowCreateTeamModal(true)}
-                        style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-                      >
-                        <Plus size={16} />
-                        Tạo đội mới (Quản trị viên)
-                      </button>
-                    )}
+                  <Shield size={32} />
+                </div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+                  Bạn Chưa Thuộc Đội Nhóm Nào
+                </h2>
+                <p style={{ fontSize: 14, color: '#64748b', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
+                  {isAdmin
+                    ? 'Bạn là Quản trị viên (Admin). Bạn có thể tạo đội nhóm mới, phân bổ nhân sự và thiết lập danh hiệu thi đua.'
+                    : 'Đội nhóm được khởi tạo và phân bổ bởi Quản trị viên (Admin). Hãy liên hệ Admin để được thêm vào đội hoặc gia nhập bằng mã mời từ trưởng nhóm.'}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  {isAdmin && (
                     <button
                       type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowJoinModal(true)}
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setNewTeamName('');
+                        setNewTeamDesc('');
+                        setNewTeamLeaderId('');
+                        setNewTeamMemberIds([]);
+                        setNewTeamAssignSelf(false);
+                        setNewTeamMemberSearch('');
+                        setShowCreateTeamModal(true);
+                      }}
                       style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
                     >
-                      <KeyRoundIcon size={16} />
-                      Gia nhập bằng mã mời
+                      <Plus size={16} />
+                      Tạo đội mới (Quản trị viên)
                     </button>
-                  </div>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowJoinModal(true)}
+                    style={{ minHeight: 40, padding: '0 20px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <KeyRoundIcon size={16} />
+                    Gia nhập bằng mã mời
+                  </button>
                 </div>
+              </div>
+            )}
 
-                {/* Company Teams Showcase */}
-                <div style={{
-                  background: '#ffffff',
-                  border: '1px solid rgba(15,23,42,0.1)',
-                  padding: 24,
-                }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>
+            {/* Company Teams Showcase - ALWAYS VISIBLE TO ALL USERS & ADMIN */}
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid rgba(15,23,42,0.1)',
+              padding: 24,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                     Các Đội Nhóm Trong Công Ty ({allTeams.length})
                   </h3>
-                  {allTeams.length === 0 ? (
-                    <EmptyState
-                      icon={Shield}
-                      title="Chưa có đội nhóm nào"
-                      description="Hãy là người đầu tiên tạo đội nhóm cho phòng ban của bạn!"
+                  <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+                    {isAdmin
+                      ? 'Quản trị viên có thể tạo thêm đội nhóm mới và chỉ định nhân sự bất kỳ lúc nào mà không làm ảnh hưởng đến đội nhóm hiện tại của mình.'
+                      : 'Mạng lưới các đội nhóm thi đua và sản xuất trong toàn bộ hệ thống.'}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', width: 220 }}>
+                    <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input
+                      type="text"
+                      value={allTeamsSearchQuery}
+                      onChange={(e) => setAllTeamsSearchQuery(e.target.value)}
+                      placeholder="Tìm kiếm đội nhóm..."
+                      style={{ ...INPUT_STYLE, paddingLeft: 30, fontSize: 12, height: 34 }}
                     />
-                  ) : (
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                      gap: 14,
-                    }}>
-                      {allTeams.map((team) => (
+                  </div>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setNewTeamName('');
+                        setNewTeamDesc('');
+                        setNewTeamLeaderId('');
+                        setNewTeamMemberIds([]);
+                        setNewTeamAssignSelf(false);
+                        setNewTeamMemberSearch('');
+                        setShowCreateTeamModal(true);
+                      }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, minHeight: 34 }}
+                    >
+                      <Plus size={14} />
+                      Tạo đội mới
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {allTeams.length === 0 ? (
+                <EmptyState
+                  icon={Shield}
+                  title="Chưa có đội nhóm nào"
+                  description="Hãy là người đầu tiên tạo đội nhóm cho phòng ban của bạn!"
+                />
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: 14,
+                }}>
+                  {allTeams
+                    .filter((team) => {
+                      if (!allTeamsSearchQuery.trim()) return true;
+                      const q = allTeamsSearchQuery.toLowerCase();
+                      return (
+                        (team.name && team.name.toLowerCase().includes(q)) ||
+                        (team.description && team.description.toLowerCase().includes(q)) ||
+                        (team.owner?.name && team.owner.name.toLowerCase().includes(q))
+                      );
+                    })
+                    .map((team) => {
+                      const isCurrentTeam = String(myTeam?.id || '') === String(team.id);
+                      return (
                         <div
                           key={team.id}
                           style={{
-                            border: '1px solid rgba(15,23,42,0.08)',
+                            border: isCurrentTeam ? '2px solid #0284c7' : '1px solid rgba(15,23,42,0.08)',
                             padding: 16,
-                            background: '#ffffff',
+                            background: isCurrentTeam ? '#f0f9ff' : '#ffffff',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'space-between',
@@ -1502,9 +1583,16 @@ export default function Friends() {
                         >
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                              <strong style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
-                                {team.name}
-                              </strong>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <strong style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+                                  {team.name}
+                                </strong>
+                                {isCurrentTeam && (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 6px' }}>
+                                    Đội của bạn
+                                  </span>
+                                )}
+                              </div>
                               <span style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', background: 'rgba(2,132,199,0.08)', padding: '2px 8px' }}>
                                 {team.memberCount || 0} thành viên
                               </span>
@@ -1520,15 +1608,42 @@ export default function Friends() {
                               </div>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', borderTop: '1px dashed rgba(15,23,42,0.08)', paddingTop: 8 }}>
-                            Liên hệ Trưởng nhóm để nhận mã mời gia nhập
+                          
+                          <div style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#64748b',
+                            borderTop: '1px dashed rgba(15,23,42,0.08)',
+                            paddingTop: 8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}>
+                            {isAdmin && team.inviteCode ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ color: '#0284c7' }}>Mã: {team.inviteCode}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(team.inviteCode);
+                                    toast.success(`Đã sao chép mã mời của đội "${team.name}"!`);
+                                  }}
+                                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#0284c7', padding: 0 }}
+                                  title="Sao chép mã mời"
+                                >
+                                  <Copy size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <span>Liên hệ Trưởng nhóm để nhận mã mời</span>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    })}
                 </div>
-              </div>
+              )}
+            </div>
             )}
           </div>
         )}
@@ -1701,48 +1816,165 @@ export default function Friends() {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <label style={LABEL_STYLE}>
-                  Chỉ Định Trưởng Nhóm (Leader)
-                </label>
-                <select
-                  value={newTeamLeaderId}
-                  onChange={(e) => setNewTeamLeaderId(e.target.value)}
-                  style={{ ...INPUT_STYLE, background: '#ffffff', cursor: 'pointer' }}
-                >
-                  <option value="">-- Chưa chỉ định (Để trống) --</option>
-                  {memberList.map((m) => {
-                    const uId = userIdOf(m) || String(m.id || '');
-                    const teamLabel = m.team?.name || m.teamName || (typeof m.team === 'string' ? m.team : null);
-                    return (
-                      <option key={uId} value={uId}>
-                        #{uId} · {m.name} ({m.jobTitle || 'Nhân viên'}) {teamLabel ? `[Đang ở ${teamLabel}]` : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
                 <label style={LABEL_STYLE}>Mô Tả Đội (Không bắt buộc)</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={newTeamDesc}
                   onChange={(e) => setNewTeamDesc(e.target.value)}
                   placeholder="Mục tiêu sản xuất, phương châm hoạt động của đội..."
-                  style={{ ...INPUT_STYLE, height: 'auto', padding: '10px 12px' }}
+                  style={{ ...INPUT_STYLE, height: 'auto', padding: '8px 12px' }}
                   maxLength={1000}
                 />
               </div>
 
+              {/* Chỉ định Trưởng nhóm */}
+              <div style={{ marginBottom: 16, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', padding: 12 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={newTeamAssignSelf}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setNewTeamAssignSelf(checked);
+                        if (checked && authUser?.id) {
+                          setNewTeamLeaderId(String(authUser.id));
+                        } else {
+                          setNewTeamLeaderId('');
+                        }
+                      }}
+                    />
+                    <span>👑 Tôi muốn gia nhập và làm Trưởng nhóm của đội này</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label style={{ ...LABEL_STYLE, marginBottom: 4 }}>
+                    {newTeamAssignSelf ? 'Trưởng nhóm được chọn: Chính bạn' : 'Chỉ Định Trưởng Nhóm Khác (Leader)'}
+                  </label>
+                  <select
+                    value={newTeamLeaderId}
+                    disabled={newTeamAssignSelf}
+                    onChange={(e) => setNewTeamLeaderId(e.target.value)}
+                    style={{ ...INPUT_STYLE, background: newTeamAssignSelf ? '#e2e8f0' : '#ffffff', cursor: newTeamAssignSelf ? 'not-allowed' : 'pointer' }}
+                  >
+                    <option value="">-- {newTeamAssignSelf ? 'Chính bạn (Admin)' : 'Chưa chỉ định (Để trống)'} --</option>
+                    {memberList.map((m) => {
+                      const uId = userIdOf(m) || String(m.id || '');
+                      const teamLabel = m.team?.name || m.teamName || (typeof m.team === 'string' ? m.team : null);
+                      return (
+                        <option key={uId} value={uId}>
+                          #{uId} · {m.name} ({m.jobTitle || 'Nhân viên'}) {teamLabel ? `[Đang ở ${teamLabel}]` : '[Chưa có đội]'}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              {/* Thêm thành viên ban đầu vào đội */}
+              <div style={{ marginBottom: 16, border: '1px solid rgba(15,23,42,0.08)', padding: 12, background: '#ffffff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ ...LABEL_STYLE, margin: 0 }}>
+                    Chỉ Định Thành Viên Ban Đầu Vào Đội (Tùy chọn)
+                  </label>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#0284c7' }}>
+                    Đã chọn: {newTeamMemberIds.length} người
+                  </span>
+                </div>
+
+                <div style={{ position: 'relative', marginBottom: 8 }}>
+                  <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input
+                    type="text"
+                    value={newTeamMemberSearch}
+                    onChange={(e) => setNewTeamMemberSearch(e.target.value)}
+                    placeholder="Tìm theo tên, email, chức danh..."
+                    style={{ ...INPUT_STYLE, paddingLeft: 30, fontSize: 12, height: 32 }}
+                  />
+                </div>
+
+                <div style={{
+                  maxHeight: 140,
+                  overflowY: 'auto',
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  background: '#f8fafc',
+                  padding: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}>
+                  {memberList
+                    .filter((m) => {
+                      const uId = userIdOf(m) || String(m.id || '');
+                      if (newTeamLeaderId && String(newTeamLeaderId) === uId) return false;
+                      if (!newTeamMemberSearch.trim()) return true;
+                      const q = newTeamMemberSearch.toLowerCase();
+                      return (
+                        (m.name && m.name.toLowerCase().includes(q)) ||
+                        (m.email && m.email.toLowerCase().includes(q)) ||
+                        (m.jobTitle && m.jobTitle.toLowerCase().includes(q))
+                      );
+                    })
+                    .slice(0, 50)
+                    .map((m) => {
+                      const uId = userIdOf(m) || String(m.id || '');
+                      const isChecked = newTeamMemberIds.includes(uId);
+                      const teamLabel = m.team?.name || m.teamName || (typeof m.team === 'string' ? m.team : null);
+                      return (
+                        <label
+                          key={uId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            padding: '5px 8px',
+                            background: isChecked ? '#e0f2fe' : '#ffffff',
+                            border: '1px solid rgba(15,23,42,0.06)',
+                            fontSize: 12,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewTeamMemberIds([...newTeamMemberIds, uId]);
+                                } else {
+                                  setNewTeamMemberIds(newTeamMemberIds.filter((id) => id !== uId));
+                                }
+                              }}
+                            />
+                            <span style={{ fontWeight: 600, color: '#0f172a' }}>{m.name}</span>
+                            <span style={{ color: '#64748b', fontSize: 11 }}>({m.jobTitle || 'Nhân viên'})</span>
+                          </div>
+                          <span style={{ fontSize: 10, color: teamLabel ? '#b45309' : '#16a34a', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {teamLabel ? `[${teamLabel}]` : '[Chưa có đội]'}
+                          </span>
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Thông báo phân quyền rõ ràng */}
               <div style={{
-                background: '#f8fafc',
-                border: '1px solid rgba(15,23,42,0.08)',
+                background: myTeam && !newTeamAssignSelf ? '#eff6ff' : '#f8fafc',
+                border: '1px solid ' + (myTeam && !newTeamAssignSelf ? 'rgba(2,132,199,0.25)' : 'rgba(15,23,42,0.08)'),
                 padding: 12,
                 fontSize: 12,
-                color: '#64748b',
+                color: myTeam && !newTeamAssignSelf ? '#0369a1' : '#64748b',
                 marginBottom: 20,
               }}>
-                👑 <strong>Quản trị viên:</strong> Bạn có quyền thiết lập Trưởng nhóm, bổ nhiệm chức danh và trao danh hiệu thi đua (MVP / Champion) cho các thành viên trong đội.
+                👑 <strong>Quản trị viên (Admin):</strong>
+                {myTeam && !newTeamAssignSelf ? (
+                  <span> Bạn đang tạo đội cho các nhân viên khác. Đội nhóm hiện tại của bạn (<strong>{myTeam.name}</strong>) sẽ <u>không bị ảnh hưởng</u>. Bạn vẫn có thể tiếp tục tạo thêm bao nhiêu đội nhóm tùy thích.</span>
+                ) : (
+                  <span> Đội nhóm mới sẽ được tạo cùng mã mời và danh sách nhân sự bạn đã chỉ định.</span>
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>

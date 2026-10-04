@@ -172,6 +172,14 @@ async function create(user, payload) {
   if (ownerId && String(ownerId) !== String(user.id)) {
     await User.update({ teamId: team.id }, { where: { id: ownerId } });
   }
+  if (Array.isArray(payload.memberIds) && payload.memberIds.length > 0) {
+    const validMemberIds = payload.memberIds
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0 && (payload.assignToUser ? true : String(id) !== String(user.id)));
+    if (validMemberIds.length > 0) {
+      await User.update({ teamId: team.id }, { where: { id: validMemberIds } });
+    }
+  }
   return toGroupPayload(team, user.id);
 }
 
