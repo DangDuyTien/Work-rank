@@ -30,11 +30,11 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
           <RecognitionPortraitFrame key={`${type}-${data?.season?.id || 'none'}-${name || 'none'}`} type={type} record={record} loading={loading} />
         </figure>
         <div className="public-archive-content">
-          <div className="public-archive-row">
+          <div className={`public-archive-row ${!isMvp ? 'is-champion' : 'is-mvp'}`}>
             {isMvp ? <h3>{title}</h3> : record ? (
               <ul className="public-archive-members public-archive-member-names" aria-label="Thành viên đội nhóm">
                 {Array.isArray(record.members) && record.members.some((member) => member.name) ? record.members.filter((member) => member.name).map((member, index) => (
-                  <li key={member.userId ?? member.id ?? index}><h3>{member.name}</h3></li>
+                  <li key={member.userId ?? member.id ?? index}><h3 className="public-member-name">{member.name}</h3></li>
                 )) : <li className="public-archive-members-empty">Chưa có danh sách thành viên được công bố.</li>}
               </ul>
             ) : null}

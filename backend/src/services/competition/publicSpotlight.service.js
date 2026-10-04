@@ -9,6 +9,7 @@ const {
   UserRecognition,
   User,
   UserProfilePreference,
+  UserProfileImage,
   Team,
   SystemSetting,
   ScoreLedger,
@@ -358,6 +359,22 @@ async function getPublicSpotlight() {
       mvpScore = Number(summary?.totalScore || summary?.score || 0);
     }
 
+    // Load gallery images (6 profile secondary photos from UserProfileImage)
+    const galleryRows = await UserProfileImage.findAll({
+      where: { userId: mvpUser.id },
+      order: [['slot', 'ASC']],
+      attributes: ['slot', 'imageData'],
+    });
+    const galleryImages = galleryRows
+      .map((r) => r.imageData)
+      .filter((img) => Boolean(img) && typeof img === 'string');
+
+    const allImages = [];
+    if (pref?.avatarData) allImages.push(pref.avatarData);
+    for (const g of galleryImages) {
+      if (g && !allImages.includes(g)) allImages.push(g);
+    }
+
     mvp = {
       userId: mvpUser.id,
       name: mvpUser.name,
@@ -366,7 +383,9 @@ async function getPublicSpotlight() {
       isVerified: Boolean(mvpUser.isVerified),
       score: mvpScore,
       awardTitle: custom.mvpTitle || mvpRec?.title || 'MVP Mùa Giải',
-      avatarData: pref?.avatarData || null,
+      avatarData: pref?.avatarData || allImages[0] || null,
+      galleryImages,
+      images: allImages,
       reason: custom.mvpReason || mvpRec?.reason || 'Đóng góp xuất sắc cho sự phát triển của công ty',
     };
   }
