@@ -155,7 +155,7 @@ test('register switching and password visibility preserve the form and URL', asy
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('form', { name: 'Đăng nhập WorkRank' })).toBeVisible();
-  await expect(page.getByLabel('Họ và tên')).toHaveCount(0);
+  await expect(page.getByLabel('Họ và tên')).toBeDisabled();
   await page.getByRole('button', { name: 'Đăng ký', exact: true }).click();
   await expect(page).toHaveURL(/mode=register/);
   await expect(page.getByLabel('Xác nhận mật khẩu')).toBeVisible();

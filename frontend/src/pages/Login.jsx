@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   LogIn,
@@ -37,7 +37,7 @@ function MvpVisualAward({ data, loading, error, retry }) {
         <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
       </Link>
       <div className="public-auth-editorial-heading">
-        <h2>Vinh danh</h2>
+        <h2>Recipients</h2>
         <p>{data?.season?.name || (loading ? 'Đang tải mùa giải…' : error ? 'Chưa tải được mùa giải' : 'Chưa có mùa giải công bố')}</p>
       </div>
       <SpotlightFeedback loading={loading} error={error} retry={retry} />
@@ -68,35 +68,6 @@ export default function Login() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const passwordHelpRef = useRef(null);
-  const formContentRef = useRef(null);
-  const [formHeight, setFormHeight] = useState(null);
-  const fieldPositionsRef = useRef(new Map());
-
-  useLayoutEffect(() => {
-    const form = formContentRef.current;
-    const positions = new Map();
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      || document.documentElement.dataset.workrankReduceMotion === 'true';
-    for (const field of form.children) {
-      const key = field.querySelector('input')?.id || (field.type === 'submit' ? 'submit' : null);
-      if (!key) continue;
-      const top = field.offsetTop;
-      const previousTop = fieldPositionsRef.current.get(key);
-      if (!reduceMotion && previousTop !== undefined && previousTop !== top) {
-        field.animate([{ transform: `translateY(${previousTop - top}px)` }, { transform: 'translateY(0)' }],
-          { duration: 420, easing: 'cubic-bezier(.22, 1, .36, 1)' });
-      }
-      positions.set(key, top);
-    }
-    fieldPositionsRef.current = positions;
-  }, [isRegister]);
-
-  useEffect(() => {
-    const content = formContentRef.current;
-    const observer = new ResizeObserver(() => setFormHeight(content.getBoundingClientRect().height + 12));
-    observer.observe(content);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!showForgotPasswordModal) return undefined;
@@ -301,7 +272,7 @@ export default function Login() {
           )}
 
           {/* Mode Switcher Tabs */}
-          <div
+          <div className="public-auth-mode-tabs"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -316,6 +287,7 @@ export default function Login() {
               type="button"
               aria-pressed={!isRegister}
               onClick={() => switchMode(false)}
+              className="public-auth-mode-tab"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -324,13 +296,13 @@ export default function Login() {
                 padding: '9px',
                 background: !isRegister ? '#ffffff' : 'transparent',
                 color: !isRegister ? '#111111' : '#666666',
-                border: !isRegister ? '1px solid rgba(0,0,0,0.08)' : 'none',
+                border: `1px solid ${!isRegister ? 'rgba(0,0,0,0.08)' : 'transparent'}`,
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: !isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                transition: 'all 0.15s ease',
+                transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
               }}
             >
               <LogIn size={15} />
@@ -341,6 +313,7 @@ export default function Login() {
               type="button"
               aria-pressed={isRegister}
               onClick={() => switchMode(true)}
+              className="public-auth-mode-tab"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -349,13 +322,13 @@ export default function Login() {
                 padding: '9px',
                 background: isRegister ? '#ffffff' : 'transparent',
                 color: isRegister ? '#111111' : '#666666',
-                border: isRegister ? '1px solid rgba(0,0,0,0.08)' : 'none',
+                border: `1px solid ${isRegister ? 'rgba(0,0,0,0.08)' : 'transparent'}`,
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                transition: 'all 0.15s ease',
+                transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
               }}
             >
               <UserPlus size={15} />
@@ -364,7 +337,7 @@ export default function Login() {
           </div>
 
           {/* Form Header */}
-          <div className="public-auth-form-heading">
+          <div className="public-auth-form-heading" aria-live="polite">
             <h1>
               {isRegister ? 'Tham gia WorkRank.' : 'Chào mừng trở lại.'}
             </h1>
@@ -425,11 +398,10 @@ export default function Login() {
           )}
 
           {/* Auth Form */}
-          <div className="public-auth-form-resize" style={{ height: formHeight === null ? 'auto' : formHeight }}>
-          <form ref={formContentRef} aria-label={isRegister ? 'Đăng ký thành viên' : 'Đăng nhập WorkRank'} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form className="public-auth-fields" aria-label={isRegister ? 'Đăng ký thành viên' : 'Đăng nhập WorkRank'} onSubmit={handleSubmit}>
             {/* Name Field (Register only) */}
-            {isRegister && (
-              <div className="public-auth-field-enter">
+            <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
+              <fieldset disabled={!isRegister} className="public-auth-field-inner">
                 <label htmlFor="auth-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Họ và tên *
                 </label>
@@ -456,8 +428,8 @@ export default function Login() {
                     }}
                   />
                 </div>
-              </div>
-            )}
+              </fieldset>
+            </div>
 
             {/* Email / Identifier Field */}
             <div>
@@ -560,8 +532,8 @@ export default function Login() {
             </div>
 
             {/* Confirm Password Field (Register only) */}
-            {isRegister && (
-              <div className="public-auth-field-enter">
+            <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
+              <fieldset disabled={!isRegister} className="public-auth-field-inner">
                 <label htmlFor="auth-confirm-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
                   Xác nhận mật khẩu *
                 </label>
@@ -607,8 +579,8 @@ export default function Login() {
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-              </div>
-            )}
+              </fieldset>
+            </div>
 
             {/* Submit Button */}
             <button
@@ -652,7 +624,6 @@ export default function Login() {
               )}
             </button>
           </form>
-          </div>
 
           {/* Switch Prompt */}
           <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: '#666666' }}>

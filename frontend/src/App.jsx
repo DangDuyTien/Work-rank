@@ -87,6 +87,12 @@ class AppErrorBoundary extends React.Component {
     return { error };
   }
 
+  componentDidUpdate(previousProps) {
+    if (this.state.error && previousProps.resetKey !== this.props.resetKey) {
+      this.setState({ error: null });
+    }
+  }
+
   componentDidCatch(error, info) {
     console.error('WorkRank UI crashed:', error, info);
   }
@@ -138,7 +144,7 @@ function RouteErrorBoundary({ children }) {
   const location = useLocation();
   const resetKey = `${location.key}:${location.pathname}:${location.search}`;
   return (
-    <AppErrorBoundary key={resetKey}>
+    <AppErrorBoundary key={location.pathname === '/login' ? '/login' : resetKey} resetKey={resetKey}>
       {children}
     </AppErrorBoundary>
   );
