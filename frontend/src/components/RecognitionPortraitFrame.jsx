@@ -7,7 +7,6 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState('pending');
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [clientGallery, setClientGallery] = useState([]);
 
@@ -107,7 +106,14 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   }, [slides]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.2 });
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+      }
+    }, {
+      threshold: 0.05,
+      rootMargin: '120px 0px 120px 0px',
+    });
     if (frameRef.current) observer.observe(frameRef.current);
     return () => observer.disconnect();
   }, []);
@@ -123,22 +129,32 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && visible) setPhase((current) => reducedMotion ? 'open' : current === 'pending' ? 'opening' : current);
-  }, [loading, visible, reducedMotion]);
+    if (!loading && visible && phase === 'pending') {
+      setPhase(reducedMotion ? 'open' : 'opening');
+    }
+  }, [loading, visible, reducedMotion, phase]);
 
+  // Guaranteed transition from opening -> open (so it never gets stuck on opening)
   useEffect(() => {
-    if (phase !== 'open' || !visible || paused || reducedMotion || !rotationEnabled) return;
-    const timer = window.setTimeout(() => setPhase('closing'), 2000);
+    if (phase !== 'opening') return;
+    const timer = window.setTimeout(() => setPhase('open'), 720);
     return () => window.clearTimeout(timer);
-  }, [phase, visible, paused, reducedMotion, rotationEnabled]);
+  }, [phase]);
 
-  // Fallback safety timer: in case CSS animationend is delayed or throttled
+  // 3-second display interval between photo changes
+  useEffect(() => {
+    if (phase !== 'open' || !visible || reducedMotion || !rotationEnabled) return;
+    const timer = window.setTimeout(() => setPhase('closing'), 3000);
+    return () => window.clearTimeout(timer);
+  }, [phase, visible, reducedMotion, rotationEnabled]);
+
+  // Guaranteed transition from closing -> next slide opening
   useEffect(() => {
     if (phase !== 'closing') return;
     const timer = window.setTimeout(() => {
       setIndex((current) => (current + 1) % slides.length);
       setPhase('opening');
-    }, 650);
+    }, 550);
     return () => window.clearTimeout(timer);
   }, [phase, slides.length]);
 
@@ -152,16 +168,22 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
     }
   }
 
-  return <>
-    <div ref={frameRef} className={`public-featured-frame ${phase === 'pending' ? 'is-pending' : phase === 'closing' ? 'is-shutting' : 'is-ready'}`} onAnimationEnd={handleAnimationEnd}>
+  function handleFrameClick() {
+    if (!rotationEnabled || phase !== 'open') return;
+    setPhase('closing');
+  }
+
+  return (
+    <div
+      ref={frameRef}
+      className={`public-featured-frame ${phase === 'pending' ? 'is-pending' : phase === 'closing' ? 'is-shutting' : 'is-ready'} ${rotationEnabled ? 'is-interactive' : ''}`}
+      onAnimationEnd={handleAnimationEnd}
+      onClick={handleFrameClick}
+      title={rotationEnabled ? 'Nhấn để chuyển sang ảnh tiếp theo' : undefined}
+    >
       <svg className="public-frame-quote is-opening" viewBox="0 0 100 175" aria-hidden="true" focusable="false"><path d="M0 0H100V100L52 175H0L48 100H0Z" /></svg>
       <svg className="public-frame-quote is-closing" viewBox="0 0 100 175" aria-hidden="true" focusable="false"><path d="M0 0H100V100L52 175H0L48 100H0Z" /></svg>
       <RecognitionPortrait name={slide.name} image={slide.image} type={slide.portraitType || type} imageOnly />
     </div>
-    {rotationEnabled && !reducedMotion && (
-      <button className="public-portrait-pause" type="button" aria-pressed={paused} onClick={() => setPaused((current) => !current)}>
-        {paused ? 'Tiếp tục hiệu ứng' : 'Tạm dừng hiệu ứng'}
-      </button>
-    )}
-  </>;
+  );
 }

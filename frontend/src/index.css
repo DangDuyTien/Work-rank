@@ -127,15 +127,38 @@
 .public-archive-member-names li:last-child { border-bottom: 0; }
 .public-archive-member-names h3,
 .public-archive-member-names .public-member-name {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-weight: 800;
-  font-size: clamp(20px, 2.2vw, 32px);
-  line-height: 1.25;
-  letter-spacing: -.025em;
+  font-family: 'RuderPlakatLLVar', sans-serif;
+  font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100;
+  font-weight: 400;
+  font-size: clamp(26px, 2.8vw, 42px);
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: var(--foreground);
   white-space: nowrap;
   width: max-content;
   max-width: 100%;
   margin: 0;
+}
+
+.public-archive-row.is-mvp h3 {
+  font-family: 'RuderPlakatLLVar', sans-serif;
+  font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100;
+  font-weight: 400;
+  font-size: clamp(38px, 4.2vw, 56px);
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.public-archive-row.is-mvp .public-archive-name {
+  font-family: 'RuderPlakatLLVar', sans-serif;
+  font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100;
+  font-weight: 400;
+  font-size: clamp(26px, 2.8vw, 42px);
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: var(--foreground);
 }
 
 
@@ -145,6 +168,7 @@
 .public-recognition-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; gap: clamp(28px, 4vw, 64px); }
 .public-featured-person { margin: 0; min-width: 0; }
 .public-featured-frame { position: relative; display: grid; grid-template-columns: 22% 56% 22%; width: 100%; max-width: 520px; --quote-open-duration: 700ms; --quote-close-duration: 500ms; }
+.public-featured-frame.is-interactive { cursor: pointer; user-select: none; }
 .public-featured-frame > .public-recognition-portrait { grid-column: 2; }
 .public-featured-frame .public-recognition-initials { font-size: clamp(40px, 4.5vw, 72px); }
 .public-frame-quote {
@@ -179,7 +203,7 @@
 }
 @keyframes publicQuoteCloseLeft { from { transform: translateX(0); } to { transform: translateX(127.2727%); } }
 @keyframes publicQuoteCloseRight { from { transform: translateX(0); } to { transform: translateX(-127.2727%); } }
-.public-portrait-pause { background: transparent; border: 0; color: var(--text-secondary); font-size: 11px; padding: 10px 0; cursor: pointer; }
+
 @media (prefers-reduced-motion: reduce) {
   .public-featured-frame.is-ready .public-frame-quote,
   .public-featured-frame.is-shutting .public-frame-quote { transform: none; animation: none; }
