@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Bell, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { resolveCurrentTitle } from '../config/navigation';
@@ -69,6 +69,9 @@ export default function Layout() {
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
+  const mainRef = useRef(null);
+  const scrollPositionsRef = useRef(new Map());
 
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileDrawerClosing, setMobileDrawerClosing] = useState(false);
@@ -204,6 +207,42 @@ export default function Layout() {
     if (notifOpen && !notifClosing) closeNotif();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  useEffect(() => {
+    const savedScrollTop = navigationType === 'POP'
+      ? scrollPositionsRef.current.get(location.key)
+      : undefined;
+    let hashTargetId = '';
+    if (location.hash) {
+      try {
+        hashTargetId = decodeURIComponent(location.hash.slice(1));
+      } catch {
+        hashTargetId = location.hash.slice(1);
+      }
+    }
+    const frame = requestAnimationFrame(() => {
+      if (hashTargetId) {
+        const target = document.getElementById(hashTargetId);
+        if (target) {
+          const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+            || document.documentElement.dataset.workrankReduceMotion === 'true';
+          target.scrollIntoView({
+            block: 'start',
+            inline: 'nearest',
+            behavior: reduceMotion ? 'auto' : 'smooth',
+          });
+          return;
+        }
+      }
+      mainRef.current?.scrollTo({ top: savedScrollTop ?? 0, behavior: 'auto' });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (mainRef.current) {
+        scrollPositionsRef.current.set(location.key, mainRef.current.scrollTop);
+      }
+    };
+  }, [location.hash, location.key, location.pathname, location.search, navigationType]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const pageTitle = resolveCurrentTitle(location.pathname)
@@ -636,6 +675,7 @@ export default function Layout() {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <main
+            ref={mainRef}
             className="app-main"
             style={{
               flex: 1,

@@ -25,10 +25,12 @@ export default function QuizRoundResultModal({
   // Sub-phase: 'outcome' -> 'leaderboard'
   const [subPhase, setSubPhase] = useState('outcome');
   const [rollScore, setRollScore] = useState(0);
+  const rafRef = useRef(null);
 
   // Auto transition to mini leaderboard after 1.8s
   useEffect(() => {
     setSubPhase('outcome');
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (isMyCorrect && myScore > 0) {
       // Animate score rolling from 0 to myScore
@@ -40,12 +42,12 @@ export default function QuizRoundResultModal({
         const current = Math.round(myScore * progress);
         setRollScore(current);
         if (progress < 1) {
-          requestAnimationFrame(step);
+          rafRef.current = requestAnimationFrame(step);
         } else {
           setRollScore(myScore);
         }
       };
-      requestAnimationFrame(step);
+      rafRef.current = requestAnimationFrame(step);
       quizSound.playScoreRoll();
     } else {
       setRollScore(0);
@@ -55,7 +57,10 @@ export default function QuizRoundResultModal({
       setSubPhase('leaderboard');
     }, 1800);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [isMyCorrect, myScore]);
 
   // Sort leaderboard for round review

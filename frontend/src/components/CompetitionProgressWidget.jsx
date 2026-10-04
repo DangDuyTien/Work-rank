@@ -75,12 +75,13 @@ export default function CompetitionProgressWidget() {
 
     socket.on('competition:dashboard_updated', handleDashboardUpdated);
     socket.on('competition:activity_created', handleActivityCreated);
-    socket.on('competition:score_awarded', () => fetchDashboard(true));
+    const handleScoreAwarded = () => fetchDashboard(true);
+    socket.on('competition:score_awarded', handleScoreAwarded);
 
     return () => {
       socket.off('competition:dashboard_updated', handleDashboardUpdated);
       socket.off('competition:activity_created', handleActivityCreated);
-      socket.off('competition:score_awarded');
+      socket.off('competition:score_awarded', handleScoreAwarded);
     };
   }, [socket, user?.id, user?.teamId, fetchDashboard]);
 

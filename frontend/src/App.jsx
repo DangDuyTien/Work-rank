@@ -158,19 +158,27 @@ function AnimatedAppRoutes() {
   useEffect(() => {
     // Cinematic exit/enter transitions
     const isFullscreenGame = (p) => ['/games/2048', '/games/capital-board', '/games/quiz', '/games/sam'].some((base) => p.startsWith(base));
-    const isToOrFromHome = location.pathname === '/' || displayLocation.pathname === '/';
+    const isPublicPage = (p) => p === '/' || p === '/login';
+    const isToOrFromPublic = isPublicPage(location.pathname) || isPublicPage(displayLocation.pathname);
     const isEnteringGame = !isFullscreenGame(displayLocation.pathname) && isFullscreenGame(location.pathname);
     const isExitingGame = isFullscreenGame(displayLocation.pathname) && !isFullscreenGame(location.pathname);
 
     if (location.pathname !== displayLocation.pathname) {
-      if (isToOrFromHome) {
+      if (isToOrFromPublic) {
         setTransitionStage('fadeOut');
+        let enterTimer;
         const timer = setTimeout(() => {
           setDisplayLocation(location);
           setTransitionStage('fadeIn');
           window.scrollTo(0, 0);
+          enterTimer = setTimeout(() => {
+            setTransitionStage('none');
+          }, 350);
         }, 240);
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(timer);
+          if (enterTimer) clearTimeout(enterTimer);
+        };
       } else if (isEnteringGame) {
         // App contents & navigation slide/fade out into full viewport game surface
         setTransitionStage('appToGameExit');

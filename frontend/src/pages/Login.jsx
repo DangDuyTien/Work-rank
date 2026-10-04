@@ -20,6 +20,7 @@ import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
 import { RecognitionStatus, SpotlightFeedback, displayScore, recognitionState } from '../components/PublicRecognition';
 import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
+import { Reveal } from '../components/ui';
 import { auth } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,7 +33,7 @@ function MvpVisualAward({ data, loading, error, retry }) {
   const state = type === 'mvp' ? mvpState : championState;
   const name = type === 'mvp' ? mvp?.name : team?.teamName;
   return (
-    <aside className="public-auth-recognition" aria-label="Ghi nhận mùa giải" aria-busy={loading}>
+    <Reveal as="aside" delay={200} className="public-auth-recognition" aria-label="Ghi nhận mùa giải" aria-busy={loading}>
       <Link to="/" className="public-editorial-brand" aria-label="WorkRank — Trang chủ">
         <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
       </Link>
@@ -48,7 +49,7 @@ function MvpVisualAward({ data, loading, error, retry }) {
       </div>
       {mvp?.reason && <p className="public-auth-reason">{mvp.reason}</p>}
       <Link className="public-editorial-link" to="/">Khám phá vinh danh <ArrowRight size={17} /></Link>
-    </aside>
+    </Reveal>
   );
 }
 
@@ -191,7 +192,7 @@ export default function Login() {
   return (
     <main className="login-page-wrapper public-auth-page">
       <div className="public-auth-shell">
-        <div className={`public-auth-form-panel ${isRegister ? 'is-register' : ''}`}>
+        <Reveal delay={0} className={`public-auth-form-panel ${isRegister ? 'is-register' : ''}`}>
           <Link className="public-auth-mobile-brand public-editorial-brand" to="/" aria-label="WorkRank — Trang chủ">
             <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
           </Link>
@@ -274,6 +275,7 @@ export default function Login() {
           {/* Mode Switcher Tabs */}
           <div className="public-auth-mode-tabs"
             style={{
+              position: 'relative',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               background: '#f4f3ef',
@@ -283,26 +285,45 @@ export default function Login() {
               border: '1px solid rgba(0,0,0,0.06)',
             }}
           >
+            {/* Sliding Pill Indicator */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: 4,
+                bottom: 4,
+                left: 4,
+                width: 'calc(50% - 4px)',
+                background: '#ffffff',
+                borderRadius: 6,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                transform: `translateX(${isRegister ? '100%' : '0%'})`,
+                transition: 'transform var(--motion-normal) var(--ease-spring)',
+                pointerEvents: 'none',
+              }}
+            />
+
             <button
               type="button"
               aria-pressed={!isRegister}
               onClick={() => switchMode(false)}
               className="public-auth-mode-tab"
               style={{
+                position: 'relative',
+                zIndex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
                 padding: '9px',
-                background: !isRegister ? '#ffffff' : 'transparent',
+                background: 'transparent',
                 color: !isRegister ? '#111111' : '#666666',
-                border: `1px solid ${!isRegister ? 'rgba(0,0,0,0.08)' : 'transparent'}`,
+                border: 'none',
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: !isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+                transition: 'color var(--motion-fast) ease',
               }}
             >
               <LogIn size={15} />
@@ -315,20 +336,21 @@ export default function Login() {
               onClick={() => switchMode(true)}
               className="public-auth-mode-tab"
               style={{
+                position: 'relative',
+                zIndex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
                 padding: '9px',
-                background: isRegister ? '#ffffff' : 'transparent',
+                background: 'transparent',
                 color: isRegister ? '#111111' : '#666666',
-                border: `1px solid ${isRegister ? 'rgba(0,0,0,0.08)' : 'transparent'}`,
+                border: 'none',
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: isRegister ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+                transition: 'color var(--motion-fast) ease',
               }}
             >
               <UserPlus size={15} />
@@ -336,16 +358,57 @@ export default function Login() {
             </button>
           </div>
 
-          {/* Form Header */}
-          <div className="public-auth-form-heading" aria-live="polite">
-            <h1>
-              {isRegister ? 'Tham gia WorkRank.' : 'Chào mừng trở lại.'}
-            </h1>
-            <p>
-              {isRegister
-                ? 'Tạo tài khoản để cùng đội ghi dấu những thành tích mới.'
-                : 'Đăng nhập để tiếp tục hành trình cùng đội của bạn.'}
-            </p>
+          {/* Form Header with Smooth Crossfade */}
+          <div className="public-auth-form-heading" aria-live="polite" style={{ position: 'relative' }}>
+            <div
+              style={{
+                gridRow: '1',
+                gridColumn: '1',
+                opacity: !isRegister ? 1 : 0,
+                transform: !isRegister ? 'none' : 'translateY(-6px)',
+                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
+                pointerEvents: !isRegister ? 'auto' : 'none',
+              }}
+            >
+              <h1>Chào mừng trở lại.</h1>
+            </div>
+            <div
+              style={{
+                gridRow: '1',
+                gridColumn: '1',
+                opacity: isRegister ? 1 : 0,
+                transform: isRegister ? 'none' : 'translateY(6px)',
+                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
+                pointerEvents: isRegister ? 'auto' : 'none',
+              }}
+            >
+              <h1>Tham gia WorkRank.</h1>
+            </div>
+
+            <div
+              style={{
+                gridRow: '2',
+                gridColumn: '1',
+                opacity: !isRegister ? 1 : 0,
+                transform: !isRegister ? 'none' : 'translateY(-4px)',
+                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
+                pointerEvents: !isRegister ? 'auto' : 'none',
+              }}
+            >
+              <p>Đăng nhập để tiếp tục hành trình cùng đội của bạn.</p>
+            </div>
+            <div
+              style={{
+                gridRow: '2',
+                gridColumn: '1',
+                opacity: isRegister ? 1 : 0,
+                transform: isRegister ? 'none' : 'translateY(4px)',
+                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
+                pointerEvents: isRegister ? 'auto' : 'none',
+              }}
+            >
+              <p>Tạo tài khoản để cùng đội ghi dấu những thành tích mới.</p>
+            </div>
           </div>
 
           {/* Flash Notice */}
@@ -644,7 +707,7 @@ export default function Login() {
               {isRegister ? 'Đăng nhập ngay' : 'Đăng ký tài khoản'}
             </button>
           </div>
-        </div>
+        </Reveal>
         <MvpVisualAward {...spotlight} />
       </div>
 

@@ -44,7 +44,7 @@ export default function PlayerCard({
           ? `0 0 16px ${seatColor}33, 0 4px 12px rgba(15,23,42,0.08)`
           : '0 2px 6px rgba(15,23,42,0.04)',
         opacity: isBankrupt ? 0.6 : 1,
-        transition: 'all 0.2s ease',
+        transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,

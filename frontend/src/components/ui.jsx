@@ -208,6 +208,7 @@ export function AnimatedNumber({ value, duration = 650, formatFn, className = ''
   const targetValRef = useRef(numVal);
   const startTimeRef = useRef(null);
   const animFrameRef = useRef(null);
+  const lastRenderedValueRef = useRef(numVal);
 
   useEffect(() => {
     const target = typeof value === 'number' ? value : (parseFloat(String(value).replace(/,/g, '')) || 0);
@@ -221,6 +222,7 @@ export function AnimatedNumber({ value, duration = 650, formatFn, className = ''
 
     if (prefersReducedMotion) {
       targetValRef.current = target;
+      lastRenderedValueRef.current = target;
       setDisplayValue(target);
       return;
     }
@@ -241,7 +243,10 @@ export function AnimatedNumber({ value, duration = 650, formatFn, className = ''
         ? targetValRef.current
         : (Number.isInteger(targetValRef.current) ? Math.round(current) : Math.round(current * 10) / 10);
 
-      setDisplayValue(nextVal);
+      if (nextVal !== lastRenderedValueRef.current) {
+        lastRenderedValueRef.current = nextVal;
+        setDisplayValue(nextVal);
+      }
 
       if (progress < 1) {
         animFrameRef.current = requestAnimationFrame(animate);
@@ -369,6 +374,54 @@ export function AnimatedListItem({ index = 0, children, className = '', style })
   );
 }
 
+/**
+ * Reveal — nội dung hiện dần (fade + trượt lên) khi mount hoặc khi cuộn tới.
+ *   mode="load":   chạy khi mount, sau `delay` ms (dùng để xếp lớp lần lượt trên trang).
+ *   mode="scroll": hiện theo vị trí cuộn (CSS scroll-driven, không JS listener).
+ *   since:         mốc performance.now() lúc trang mount. Truyền vào cho nội dung đến muộn
+ *                  (dữ liệu API) để không phải chờ thêm `delay` khi dữ liệu về sau.
+ * Đổi `key` của Reveal để chạy lại hiệu ứng (vd: key={record ? 'ready' : 'loading'}).
+ * Usage: <Reveal as="h2" delay={360} className="x">…</Reveal>
+ */
+export function Reveal({ as: Tag = 'div', mode = 'load', delay = 0, since, className = '', style, children, ...props }) {
+  const [frozenDelay] = useState(() => (
+    since == null ? delay : Math.max(0, delay - (performance.now() - since))
+  ));
+  if (mode === 'scroll') {
+    return <Tag className={cx('motion-scroll-reveal', className)} style={style} {...props}>{children}</Tag>;
+  }
+  return (
+    <Tag className={cx('motion-reveal', className)} style={{ ...style, '--reveal-delay': `${frozenDelay}ms` }} {...props}>
+      {children}
+    </Tag>
+  );
+}
+
+/**
+ * RevealText — chữ chạy hiện ra lần lượt từng ký tự (tiêu đề lớn, hero).
+ * Screen reader đọc nguyên câu qua aria-label; ký tự tách lẻ bị ẩn khỏi a11y tree.
+ * Usage: <RevealText as="h1" text="Recipients" delay={120} step={45} className="title" />
+ */
+export function RevealText({ as: Tag = 'span', text = '', delay = 0, step = 45, className = '', style, ...props }) {
+  let charIndex = 0;
+  const words = String(text).split(' ');
+  return (
+    <Tag className={className} style={{ ...style, '--reveal-delay': `${delay}ms`, '--char-step': `${step}ms` }} aria-label={text} {...props}>
+      {words.map((word, wordIndex) => (
+        <React.Fragment key={wordIndex}>
+          {wordIndex > 0 && ' '}
+          <span className="motion-reveal-word" aria-hidden="true">
+            {Array.from(word).map((char) => {
+              const i = charIndex++;
+              return <span key={i} className="motion-reveal-char" style={{ '--char-i': i }}>{char}</span>;
+            })}
+          </span>
+        </React.Fragment>
+      ))}
+    </Tag>
+  );
+}
+
 export function Skeleton({ width, height = 18, radius = 4, className = '', style, variant = 'rect' }) {
   const isCircle = variant === 'circle' || variant === 'avatar';
   return (
@@ -430,7 +483,7 @@ export function TableSkeleton({ rows = 6, cols = 4, minHeight = 320 }) {
 
 export function PageTransitionSkeleton() {
   return (
-    <div className="page-transition" style={{ maxWidth: 1680, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="page-transition-skeleton" style={{ maxWidth: 1680, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '50%' }}>
           <Skeleton height={24} width="60%" />
@@ -446,4 +499,3 @@ export function PageTransitionSkeleton() {
 
 export { default as Icon, ICON_SIZES, ICON_TONES } from './Icon';
 export { FlipTableBody, FlipList } from './FlipTableBody';
-

@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
 import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
+import { Reveal, RevealText } from '../components/ui';
 import {
   RecognitionLink, RecognitionName, RecognitionStatus,
   SpotlightFeedback, displayScore, recognitionState,
 } from '../components/PublicRecognition';
 
-function RecognitionArchiveSection({ type, data, year, seasonName, loading, error, to }) {
+function RecognitionArchiveSection({ type, data, year, seasonName, loading, error, to, delay, since }) {
   const isMvp = type === 'mvp';
   const record = isMvp ? data?.mvp : data?.championTeam;
   const name = isMvp ? record?.name : record?.teamName;
@@ -19,7 +20,7 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
   const title = isMvp ? 'MVP' : state === 'official' ? 'Quán quân' : state === 'projected' ? 'Dẫn đầu' : category;
   const displayYear = year || new Date().getFullYear();
   return (
-    <section className="public-season-section public-archive-section" aria-labelledby={`archive-${type}-title`} aria-busy={loading}>
+    <Reveal as="section" delay={delay} since={since} className="public-season-section public-archive-section" aria-labelledby={`archive-${type}-title`} aria-busy={loading}>
       <div className="public-season-heading">
         <h2 id={`archive-${type}-title`}><b className="public-archive-year">{displayYear}</b><span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
         <div><p>{seasonName}</p>{data?.season?.frozenAt && <span>Chốt ngày {new Date(data.season.frozenAt).toLocaleDateString('vi-VN')}</span>}</div>
@@ -45,13 +46,14 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
 
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 export default function Home() {
   const { user } = useAuth();
   const { data, loading, error, retry } = usePublicSpotlight();
+  const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
   const year = Number.isFinite(startYear) ? startYear : null;
@@ -62,10 +64,11 @@ export default function Home() {
   return (
     <div className="public-editorial-page">
       <a className="public-skip-link" href="#recognition-main">Đến nội dung chính</a>
-      <header className="public-editorial-header">
+
+      {/* Header — nhẹ nhàng trượt lên đầu tiên */}
+      <Reveal as="header" delay={0} className="public-editorial-header">
         <Link className="public-editorial-brand" to="/" aria-label="WorkRank — Trang chủ">
-          <BrandMark size={28} showLabel={false} />
-          <span>WORKRANK<small>3WIN MEDIA</small></span>
+          <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
         </Link>
         <div className="public-editorial-entry">
           {user ? <Link className="public-entry-button" to="/dashboard">Vào Dashboard <ArrowRight size={16} /></Link> : <>
@@ -73,29 +76,35 @@ export default function Home() {
             <Link className="public-entry-button" to="/login">Đăng nhập <ArrowUpRight size={16} /></Link>
           </>}
         </div>
-      </header>
+      </Reveal>
 
       <main id="recognition-main" className="public-editorial-main" tabIndex={-1}>
+        {/* Hero title — từng ký tự chạy lần lượt */}
         <div className="public-editorial-intro">
-          <h1 className="public-editorial-title">Recipients</h1>
+          <RevealText as="h1" text="Recipients" delay={180} step={50} className="public-editorial-title" />
         </div>
 
         <SpotlightFeedback loading={loading} error={error} retry={retry} />
+
+        {/* 2 khối vinh danh — lần lượt hiện sau hero */}
         <div id="season-recognition">
-          <RecognitionArchiveSection type="champion" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={teamResult} />
-          <RecognitionArchiveSection type="mvp" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={mvpProfile} />
+          <RecognitionArchiveSection type="champion" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={teamResult} delay={700} since={mountTime} />
+          <RecognitionArchiveSection type="mvp" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={mvpProfile} delay={900} since={mountTime} />
         </div>
-        <section className="public-explore-section" aria-labelledby="public-explore-title">
+
+        {/* Section cuối — hiện khi cuộn tới */}
+        <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">
           <div><span className="public-editorial-kicker">THÀNH TÍCH CÒN TIẾP NỐI</span><h2 id="public-explore-title">Mỗi mùa giải.<br />Một dấu ấn.</h2></div>
           <div className="public-explore-links">
             <RecognitionLink to="/leaderboard?mode=hall-of-fame">Lịch sử vinh danh</RecognitionLink>
-            <RecognitionLink to="/arena">Mùa giải & hoạt động</RecognitionLink>
+            <RecognitionLink to="/arena">Mùa giải &amp; hoạt động</RecognitionLink>
             <RecognitionLink to="/leaderboard?mode=teams">Khám phá đội nhóm</RecognitionLink>
           </div>
-        </section>
+        </Reveal>
       </main>
 
-      <footer className="public-editorial-footer">
+      {/* Footer — hiện khi cuộn tới */}
+      <Reveal as="footer" mode="scroll" className="public-editorial-footer">
         <nav aria-label="Khám phá WorkRank">
           <Link to="/leaderboard?mode=teams">Bảng xếp hạng</Link>
           <Link to="/arena">Mùa giải</Link>
@@ -104,7 +113,7 @@ export default function Home() {
           <Link to={user ? '/dashboard' : '/login'}>{user ? 'Dashboard' : 'Đăng nhập'}</Link>
         </nav>
         <div className="public-footer-body"><p className="public-footer-wordmark" aria-label="WorkRank">Work<br />Rank<span aria-hidden="true">↗</span></p><div><BrandMark size={40} showLabel={false} /><p>Công sức → Thành tích<br />Tiến bộ → Ghi nhận</p><small>© {new Date().getFullYear()} WorkRank · 3WIN MEDIA</small></div></div>
-      </footer>
+      </Reveal>
     </div>
   );
 }

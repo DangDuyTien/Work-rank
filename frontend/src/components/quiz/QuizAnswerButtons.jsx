@@ -110,7 +110,7 @@ export default function QuizAnswerButtons({
               boxShadow: shadow,
               opacity,
               cursor: disabled || selectedOption ? 'default' : 'pointer',
-              transition: 'all 0.15s ease',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.15s ease',
               textAlign: 'left',
               position: 'relative',
               userSelect: 'none',
@@ -147,7 +147,7 @@ export default function QuizAnswerButtons({
                   fontSize: 14,
                   fontWeight: 700,
                   flexShrink: 0,
-                  transition: 'all 0.15s ease',
+                  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
                 }}
               >
                 {key}

@@ -273,7 +273,7 @@ export default function YouTubeTrendChart({
           <span style={{ fontSize: 11, color: '#94a3b8' }}>Dữ liệu sẽ hiển thị khi hệ thống ghi nhận snapshot theo chu kỳ</span>
         </div>
       ) : (
-        <div key={`${selectedMetric}-${period}`} className="motion-fade-in" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+        <div className="motion-fade-in" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             role="img"

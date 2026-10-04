@@ -199,7 +199,7 @@ export default function QuizTopBar({
             color: soundMuted ? '#dc2626' : '#141414',
             border: soundMuted ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = soundMuted ? '#fee2e2' : '#f4f3ef';

@@ -850,7 +850,7 @@ export default function CapitalBoardGame() {
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
                   }}
                 >
                   <Icon size={15} />

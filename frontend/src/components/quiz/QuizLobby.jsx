@@ -343,7 +343,7 @@ export default function QuizLobby({
               background: activeTab === 'ROOMS' ? '#141414' : 'transparent',
               color: activeTab === 'ROOMS' ? '#ffffff' : '#666666',
               cursor: 'pointer',
-              transition: 'all 0.15s ease',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
             }}
           >
             Sảnh Phòng Đấu ({rooms.length})
@@ -363,7 +363,7 @@ export default function QuizLobby({
               background: activeTab === 'LEADERBOARD' ? '#141414' : 'transparent',
               color: activeTab === 'LEADERBOARD' ? '#ffffff' : '#666666',
               cursor: 'pointer',
-              transition: 'all 0.15s ease',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
             }}
           >
             <span>Bảng Xếp Hạng</span>
@@ -396,7 +396,7 @@ export default function QuizLobby({
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
                 }}
               >
                 <f.icon size={13} />
@@ -753,7 +753,7 @@ export default function QuizLobby({
                         flexDirection: 'column',
                         alignItems: 'center',
                         gap: 4,
-                        transition: 'all 0.15s ease',
+                        transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
                       }}
                     >
                       <m.icon size={15} />

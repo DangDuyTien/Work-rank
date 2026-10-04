@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Tv,
   Eye,
@@ -137,6 +137,7 @@ export default function YouTubeOverview() {
   const [selectedTeamId, setSelectedTeamId] = useState(userTeamId || null);
   const [teamDetails, setTeamDetails] = useState(null);
   const [teamDetailsLoading, setTeamDetailsLoading] = useState(false);
+  const initialLoadCompleteRef = useRef(false);
 
   // Admin state
   const [adminChannels, setAdminChannels] = useState([]);
@@ -255,28 +256,35 @@ export default function YouTubeOverview() {
   const loadAll = async () => {
     if (!hasInitialCache) setLoading(true);
     else setRefreshing(true);
-    await Promise.all([
-      fetchOverviewData(),
-      fetchMyTeamData(),
-      fetchChannelLeaderboardData(),
-      fetchTeamLeaderboardData(),
-      fetchTeams(),
-      fetchAdminChannelsData(),
-    ]);
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      await Promise.all([
+        fetchOverviewData(),
+        fetchMyTeamData(),
+        fetchChannelLeaderboardData(),
+        fetchTeamLeaderboardData(),
+        fetchTeams(),
+        fetchAdminChannelsData(),
+      ]);
+    } finally {
+      initialLoadCompleteRef.current = true;
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
+    initialLoadCompleteRef.current = false;
     loadAll();
   }, [isAdmin, userTeamId]);
 
   useEffect(() => {
+    if (!initialLoadCompleteRef.current) return;
     fetchChannelLeaderboardData();
   }, [channelSortBy, channelTeamFilter]);
 
   // Debounced channel search
   useEffect(() => {
+    if (!initialLoadCompleteRef.current) return;
     const timer = setTimeout(() => {
       fetchChannelLeaderboardData();
     }, 250);
@@ -284,6 +292,7 @@ export default function YouTubeOverview() {
   }, [channelSearch]);
 
   useEffect(() => {
+    if (!initialLoadCompleteRef.current) return;
     fetchTeamLeaderboardData();
   }, [teamSortBy]);
 
@@ -472,18 +481,20 @@ export default function YouTubeOverview() {
   const unassignedViews = overview?.kpis?.unassignedViews || overview?.unassignedSummary?.totalViews || 0;
 
   return (
-    <div style={{ width: '100%', maxWidth: 1680, margin: '0 auto', padding: '24px 16px' }}>
+    <div className="youtube-overview-page" style={{ width: '100%', maxWidth: 1680, margin: '0 auto', padding: '24px 16px' }}>
       {/* HEADER & BREADCRUMB */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+      <div className="youtube-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
         <div>
           {/* Breadcrumb Hierarchy */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748b', marginBottom: 6 }}>
-            <span
+            <button
+              type="button"
+              className="youtube-breadcrumb"
               onClick={() => setActiveTab('overview')}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontWeight: activeTab === 'overview' ? 700 : 500, color: activeTab === 'overview' ? '#0f172a' : '#64748b' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: activeTab === 'overview' ? 700 : 500, color: activeTab === 'overview' ? '#0f172a' : '#64748b' }}
             >
               <Building2 size={14} /> Toàn Công Ty
-            </span>
+            </button>
             {activeTab === 'team_detail' && (
               <>
                 <ChevronRight size={14} />
@@ -506,13 +517,13 @@ export default function YouTubeOverview() {
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="youtube-page-title-block" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ padding: 8, background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Tv size={24} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+                <h1 className="youtube-page-title" style={{ margin: 0, fontSize: 24, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
                   YouTube Hub — {activeTab === 'team_detail' ? (teamDetails?.team?.name || myTeamData?.team?.name || 'Chi Tiết Đội') : 'Toàn Công Ty'}
                 </h1>
                 <span
@@ -529,7 +540,7 @@ export default function YouTubeOverview() {
                   {isAdmin ? 'Admin Scope (Toàn công ty)' : 'Member Scope'}
                 </span>
               </div>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
+              <p className="youtube-page-description" style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
                 Theo dõi hiệu suất thực tế của toàn bộ kênh YouTube (thuộc Team hoặc độc lập), bảng xếp hạng lượt xem và người đăng ký.
               </p>
             </div>
@@ -537,8 +548,9 @@ export default function YouTubeOverview() {
         </div>
 
         {/* Freshness Badge, Central Hub & Refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div className="youtube-page-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <div
+            className="youtube-freshness-badge"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -563,6 +575,7 @@ export default function YouTubeOverview() {
 
           <a
             href="/rankings?scope=youtube"
+            className="youtube-primary-action"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -581,6 +594,7 @@ export default function YouTubeOverview() {
 
           <button
             type="button"
+            className="youtube-refresh-action"
             onClick={handleRefresh}
             disabled={refreshing}
             style={{
@@ -604,6 +618,7 @@ export default function YouTubeOverview() {
 
       {/* KPI METRIC CARDS (Always shows Company totals, including unassigned channels) */}
       <div
+        className="youtube-metric-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -611,7 +626,7 @@ export default function YouTubeOverview() {
           marginBottom: 20,
         }}
       >
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+        <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
             <span>Tổng Lượt Xem (Toàn Công Ty)</span>
             <Eye size={18} color="#3b82f6" />
@@ -624,7 +639,7 @@ export default function YouTubeOverview() {
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+        <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
             <span>Tổng Người Đăng Ký</span>
             <Users size={18} color="#8b5cf6" />
@@ -637,7 +652,7 @@ export default function YouTubeOverview() {
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+        <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
             <span>Số Kênh Hoạt Động</span>
             <TrendingUp size={18} color="#f59e0b" />
@@ -655,9 +670,12 @@ export default function YouTubeOverview() {
       </div>
 
       {/* NAVIGATION TABS */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', gap: 6, marginBottom: 24, overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div className="youtube-tab-list" role="tablist" aria-label="Các khu vực YouTube" style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', gap: 6, marginBottom: 24, overflowX: 'auto', scrollbarWidth: 'none' }}>
         <button
           type="button"
+          className={`youtube-tab${activeTab === 'overview' ? ' is-active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'overview'}
           onClick={() => setActiveTab('overview')}
           style={{
             padding: '12px 16px',
@@ -672,15 +690,18 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
-            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Building2 size={16} />
-          <span>Tổng Quan Công Ty</span>
+          <span>Tổng quan</span>
         </button>
 
         <button
           type="button"
+          className={`youtube-tab${activeTab === 'channel_leaderboard' ? ' is-active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'channel_leaderboard'}
           onClick={() => setActiveTab('channel_leaderboard')}
           style={{
             padding: '12px 16px',
@@ -695,15 +716,18 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
-            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Tv size={16} />
-          <span>BXH Kênh YouTube ({channelLeaderboard.length})</span>
+          <span>BXH kênh ({channelLeaderboard.length})</span>
         </button>
 
         <button
           type="button"
+          className={`youtube-tab${activeTab === 'team_leaderboard' ? ' is-active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'team_leaderboard'}
           onClick={() => setActiveTab('team_leaderboard')}
           style={{
             padding: '12px 16px',
@@ -718,15 +742,18 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
-            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Award size={16} />
-          <span>BXH Đội Tuyển</span>
+          <span>BXH đội</span>
         </button>
 
         <button
           type="button"
+          className={`youtube-tab${activeTab === 'team_detail' ? ' is-active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'team_detail'}
           onClick={() => {
             setActiveTab('team_detail');
             if (userTeamId && !teamDetails) {
@@ -746,16 +773,19 @@ export default function YouTubeOverview() {
             alignItems: 'center',
             gap: 8,
             whiteSpace: 'nowrap',
-            transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <Layers size={16} />
-          <span>{isAdmin ? 'Chi Tiết Kênh Theo Đội' : 'Kênh Của Đội Bạn'}</span>
+          <span>{isAdmin ? 'Kênh theo đội' : 'Kênh đội bạn'}</span>
         </button>
 
         {isAdmin && (
           <button
             type="button"
+            className={`youtube-tab${activeTab === 'compare' ? ' is-active' : ''}`}
+            role="tab"
+            aria-selected={activeTab === 'compare'}
             onClick={() => setActiveTab('compare')}
             style={{
               padding: '12px 16px',
@@ -770,17 +800,20 @@ export default function YouTubeOverview() {
               alignItems: 'center',
               gap: 8,
               whiteSpace: 'nowrap',
-              transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             <Swords size={16} />
-            <span>So Sánh Teams</span>
+            <span>So sánh</span>
           </button>
         )}
 
         {isAdmin && (
           <button
             type="button"
+            className={`youtube-tab${activeTab === 'admin' ? ' is-active' : ''}`}
+            role="tab"
+            aria-selected={activeTab === 'admin'}
             onClick={() => setActiveTab('admin')}
             style={{
               padding: '12px 16px',
@@ -795,11 +828,11 @@ export default function YouTubeOverview() {
               alignItems: 'center',
               gap: 8,
               whiteSpace: 'nowrap',
-              transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             <Shield size={16} />
-            <span>Quản Lý Kênh & Sync</span>
+            <span>Quản trị</span>
           </button>
         )}
       </div>
@@ -810,7 +843,7 @@ export default function YouTubeOverview() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Unassigned channels alert notice if any */}
             {unassignedCount > 0 && (
-              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div className="youtube-unassigned-alert" style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Info size={18} color="#d97706" />
                   <span style={{ fontSize: 13, color: '#92400e' }}>
@@ -819,6 +852,7 @@ export default function YouTubeOverview() {
                 </div>
                 <button
                   type="button"
+                  className="youtube-alert-action"
                   onClick={() => {
                     setChannelTeamFilter('unassigned');
                     setActiveTab('channel_leaderboard');
@@ -839,7 +873,7 @@ export default function YouTubeOverview() {
             )}
 
             {/* Top teams breakdown */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+            <div className="youtube-overview-panels" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
               {/* Top Teams by Views */}
               <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -945,12 +979,12 @@ export default function YouTubeOverview() {
 
         {/* ================= TAB 2: CHANNEL LEADERBOARD (All channels, assigned & unassigned) ================= */}
         {activeTab === 'channel_leaderboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="youtube-tab-panel youtube-channel-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Filter and Search Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div className="youtube-channel-filters" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>Xếp hạng theo:</span>
-                <div style={{ display: 'inline-flex', border: '1px solid #cbd5e1' }}>
+                <div className="youtube-sort-control" style={{ display: 'inline-flex', border: '1px solid #cbd5e1' }}>
                   <button
                     type="button"
                     onClick={() => setChannelSortBy('views')}
@@ -1015,7 +1049,7 @@ export default function YouTubeOverview() {
               </div>
 
               {/* Search input */}
-              <div style={{ position: 'relative', minWidth: 240 }}>
+              <div className="youtube-channel-search" style={{ position: 'relative', minWidth: 240 }}>
                 <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                 <input
                   type="text"
@@ -1034,8 +1068,8 @@ export default function YouTubeOverview() {
             </div>
 
             {/* Channels Table */}
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div className="youtube-data-table-wrap" style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+              <table className="youtube-data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b' }}>
                     <th style={{ padding: '12px 16px' }}>Hạng</th>
@@ -1206,9 +1240,9 @@ export default function YouTubeOverview() {
 
         {/* ================= TAB 3: TEAM LEADERBOARD ================= */}
         {activeTab === 'team_leaderboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="youtube-tab-panel youtube-team-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Sort Tabs */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div className="youtube-team-filters" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>Xếp hạng theo:</span>
                 <button
@@ -1260,8 +1294,8 @@ export default function YouTubeOverview() {
             </div>
 
             {/* Team Leaderboard Table */}
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div className="youtube-data-table-wrap" style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+              <table className="youtube-data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b' }}>
                     <th style={{ padding: '12px 16px' }}>Hạng</th>
@@ -1360,7 +1394,7 @@ export default function YouTubeOverview() {
 
         {/* ================= TAB 4: TEAM CHANNELS & DETAIL ================= */}
         {activeTab === 'team_detail' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="youtube-tab-panel youtube-team-detail-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Team Drilldown Header & Back Button */}
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1556,7 +1590,7 @@ export default function YouTubeOverview() {
 
         {/* ================= TAB: COMPARE TEAMS (Admin only) ================= */}
         {isAdmin && activeTab === 'compare' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="youtube-tab-panel youtube-compare-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Team Selectors */}
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 200 }}>
@@ -1653,9 +1687,9 @@ export default function YouTubeOverview() {
 
         {/* ================= TAB 7: ADMIN CHANNEL MANAGEMENT & SYNC ================= */}
         {isAdmin && activeTab === 'admin' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="youtube-tab-panel youtube-admin-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Actions Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div className="youtube-admin-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Danh Sách & Quản Trị Kênh YouTube ({adminChannels.length})
@@ -1711,7 +1745,7 @@ export default function YouTubeOverview() {
 
             {/* Add Channel Form */}
             {showAddChannel && (
-              <form onSubmit={handleCreateChannel} style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+              <form className="youtube-admin-form" onSubmit={handleCreateChannel} style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
                 <h4 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700 }}>Đăng Ký Kênh YouTube Mới</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 16 }}>
                   <div>
@@ -1778,8 +1812,8 @@ export default function YouTubeOverview() {
             )}
 
             {/* Admin Channels Table */}
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div className="youtube-data-table-wrap" style={{ background: '#ffffff', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+              <table className="youtube-data-table youtube-admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b' }}>
                     <th style={{ padding: '12px 14px' }}>Kênh</th>

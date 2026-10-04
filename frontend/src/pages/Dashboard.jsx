@@ -364,12 +364,13 @@ export default function Dashboard() {
       }
     };
 
+    const handleScoreAwarded = () => fetchData(range, ytPeriod, { background: true });
     socket.on('competition:dashboard_updated', handleDashboardUpdated);
-    socket.on('competition:score_awarded', () => fetchData(range, ytPeriod, { background: true }));
+    socket.on('competition:score_awarded', handleScoreAwarded);
 
     return () => {
       socket.off('competition:dashboard_updated', handleDashboardUpdated);
-      socket.off('competition:score_awarded');
+      socket.off('competition:score_awarded', handleScoreAwarded);
     };
   }, [socket, user?.id, user?.teamId, fetchData, range, ytPeriod]);
 
@@ -572,6 +573,14 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <nav className="dashboard-section-nav" aria-label="Đi nhanh trong dashboard">
+        <span className="dashboard-section-nav__label">Đi nhanh</span>
+        <a href="#dashboard-personal">Cá nhân</a>
+        <a href="#dashboard-team">Đội nhóm</a>
+        <a href="#dashboard-youtube">YouTube</a>
+        <a href="#dashboard-community">BXH &amp; online</a>
+      </nav>
+
       {/* ── ERROR ALERT ──────────────────────────────────────────────────────── */}
       {error && (
         <div className="dashboard-error" role="alert" style={{ marginBottom: 20 }}>
@@ -586,7 +595,7 @@ export default function Dashboard() {
       {/* ======================================================================= */}
       {/* ── SECTION 1 — KPI CÁ NHÂN ("HIỆU SUẤT CỦA TÔI") ──────────────────── */}
       {/* ======================================================================= */}
-      <section className="dashboard-section dashboard-section--personal" style={{ marginBottom: 32 }} data-tour="personal-kpis">
+      <section id="dashboard-personal" className="dashboard-section dashboard-section--personal" style={{ marginBottom: 32 }} data-tour="personal-kpis">
         <div
           style={{
             display: 'flex',
@@ -788,39 +797,19 @@ export default function Dashboard() {
         </div>
 
         {/* CHI TIẾT CÁC CHỈ SỐ KPI PHÒNG BAN CỦA CÁ NHÂN */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 18 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 12,
-              flexWrap: 'wrap',
-              gap: 8,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <details className="dashboard-details">
+          <summary className="dashboard-details__summary">
+            <span className="dashboard-details__title">
               <Target size={16} color="#0f172a" />
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                Chi Tiết Chỉ Số KPI Phòng Ban ({myKpis?.period?.name || 'Kỳ hiện tại'})
-              </h3>
-            </div>
-            {myKpis?.department?.name && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  background: '#f1f5f9',
-                  color: '#334155',
-                  padding: '3px 8px',
-                  borderRadius: 3,
-                }}
-              >
-                {myKpis.department.name}
-              </span>
-            )}
-          </div>
-
+              <span>Chi tiết KPI phòng ban</span>
+              <span className="dashboard-details__context">{myKpis?.period?.name || 'Kỳ hiện tại'}</span>
+            </span>
+            <span className="dashboard-details__meta">
+              {myKpis?.department?.name && <span className="dashboard-details__badge">{myKpis.department.name}</span>}
+              <ChevronRight size={16} aria-hidden="true" />
+            </span>
+          </summary>
+          <div className="dashboard-details__body">
           {myKpis.kpis.length === 0 ? (
             <div
               style={{
@@ -907,13 +896,14 @@ export default function Dashboard() {
               </table>
             </div>
           )}
-        </div>
+          </div>
+        </details>
       </section>
 
       {/* ======================================================================= */}
       {/* ── SECTION 2 — KPI PHÒNG BAN / TEAM ("HIỆU SUẤT ĐỘI NHÓM") ─────────── */}
       {/* ======================================================================= */}
-      <section className="dashboard-section dashboard-section--team" style={{ marginBottom: 32 }} data-tour="team-kpis">
+      <section id="dashboard-team" className="dashboard-section dashboard-section--team" style={{ marginBottom: 32 }} data-tour="team-kpis">
         <div
           style={{
             display: 'flex',
@@ -1138,7 +1128,7 @@ export default function Dashboard() {
       {/* ======================================================================= */}
       {/* ── SECTION 3 — KPI YOUTUBE ─────────────────────────────────────────── */}
       {/* ======================================================================= */}
-      <section className="dashboard-section dashboard-section--youtube" style={{ marginBottom: 32 }} data-tour="youtube-kpis">
+      <section id="dashboard-youtube" className="dashboard-section dashboard-section--youtube" style={{ marginBottom: 32 }} data-tour="youtube-kpis">
         <div
           style={{
             display: 'flex',
@@ -2008,7 +1998,7 @@ export default function Dashboard() {
       {/* ======================================================================= */}
       {/* ── SECTION 4 — BXH, VỊ TRÍ & CỘNG ĐỒNG REALTIME ───────────────────── */}
       {/* ======================================================================= */}
-      <section style={{ marginBottom: 30 }} data-tour="ranking-and-presence">
+      <section id="dashboard-community" className="dashboard-section dashboard-section--community" style={{ marginBottom: 30 }} data-tour="ranking-and-presence">
         <div className="analytics-two-columns-grid">
           {/* CỘT 1: TÓM TẮT VỊ THẾ THI ĐUA & HOẠT ĐỘNG */}
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>

@@ -754,7 +754,7 @@ export default function Friends() {
             alignItems: 'center',
             gap: 8,
             marginBottom: -2,
-            transition: 'all 0.15s ease',
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
           }}
         >
           <Users size={16} />
@@ -786,7 +786,7 @@ export default function Friends() {
             alignItems: 'center',
             gap: 8,
             marginBottom: -2,
-            transition: 'all 0.15s ease',
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
           }}
         >
           <Shield size={16} />
@@ -820,7 +820,7 @@ export default function Friends() {
             alignItems: 'center',
             gap: 8,
             marginBottom: -2,
-            transition: 'all 0.15s ease',
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
           }}
         >
           <Trophy size={16} />
@@ -829,7 +829,7 @@ export default function Friends() {
       </div>
 
       {/* Main Tab Content */}
-      <TabTransition tabKey={activeTab}>
+      <TabTransition key={activeTab} minHeight={420}>
         {/* =========================================================================
             TAB 1: MEMBER DIRECTORY (DANH BẠ ĐỒNG NGHIỆP)
             ========================================================================= */}

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
 /**
  * FlipTableBody — Zero-dependency FLIP (First, Last, Invert, Play) animated <tbody>.
@@ -20,6 +20,12 @@ export function FlipTableBody({
   const tbodyRef = useRef(null);
   const prevPositionsRef = useRef(new Map());
   const prevResetKeyRef = useRef(resetKey);
+  const pendingCleanupRef = useRef(new Map());
+
+  useEffect(() => () => {
+    pendingCleanupRef.current.forEach((cleanup) => cleanup());
+    pendingCleanupRef.current.clear();
+  }, []);
 
   useLayoutEffect(() => {
     // If major view/tab/scope reset key changed, clear recorded positions
@@ -71,6 +77,8 @@ export function FlipTableBody({
 
           // Only animate if position actually shifted
           if (Math.abs(deltaY) > 1 || Math.abs(deltaX) > 1) {
+            pendingCleanupRef.current.get(row)?.();
+
             // INVERT: snap back to old position instantaneously
             row.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
             row.style.transition = 'transform 0s';
@@ -88,6 +96,7 @@ export function FlipTableBody({
                 row.style.transition = `transform ${duration}ms ${easing}`;
                 row.style.transform = 'translate3d(0, 0, 0)';
 
+                let timeoutId;
                 const cleanup = () => {
                   row.style.transform = '';
                   row.style.transition = '';
@@ -95,10 +104,13 @@ export function FlipTableBody({
                   row.classList.remove('ranking-overtake-up');
                   row.classList.remove('ranking-overtake-down');
                   row.removeEventListener('transitionend', cleanup);
+                  if (timeoutId) clearTimeout(timeoutId);
+                  if (pendingCleanupRef.current.get(row) === cleanup) pendingCleanupRef.current.delete(row);
                 };
 
+                pendingCleanupRef.current.set(row, cleanup);
                 row.addEventListener('transitionend', cleanup, { once: true });
-                setTimeout(cleanup, duration + 60);
+                timeoutId = setTimeout(cleanup, duration + 60);
               });
             });
           }
@@ -134,6 +146,12 @@ export function FlipList({
   const containerRef = useRef(null);
   const prevPositionsRef = useRef(new Map());
   const prevResetKeyRef = useRef(resetKey);
+  const pendingCleanupRef = useRef(new Map());
+
+  useEffect(() => () => {
+    pendingCleanupRef.current.forEach((cleanup) => cleanup());
+    pendingCleanupRef.current.clear();
+  }, []);
 
   useLayoutEffect(() => {
     if (prevResetKeyRef.current !== resetKey) {
@@ -178,6 +196,8 @@ export function FlipList({
           const deltaX = prevRect.left - newRect.left;
 
           if (Math.abs(deltaY) > 1 || Math.abs(deltaX) > 1) {
+            pendingCleanupRef.current.get(item)?.();
+
             item.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
             item.style.transition = 'transform 0s';
             item.style.zIndex = deltaY > 0 ? '12' : '6';
@@ -193,6 +213,7 @@ export function FlipList({
                 item.style.transition = `transform ${duration}ms ${easing}`;
                 item.style.transform = 'translate3d(0, 0, 0)';
 
+                let timeoutId;
                 const cleanup = () => {
                   item.style.transform = '';
                   item.style.transition = '';
@@ -200,10 +221,13 @@ export function FlipList({
                   item.classList.remove('ranking-overtake-up');
                   item.classList.remove('ranking-overtake-down');
                   item.removeEventListener('transitionend', cleanup);
+                  if (timeoutId) clearTimeout(timeoutId);
+                  if (pendingCleanupRef.current.get(item) === cleanup) pendingCleanupRef.current.delete(item);
                 };
 
+                pendingCleanupRef.current.set(item, cleanup);
                 item.addEventListener('transitionend', cleanup, { once: true });
-                setTimeout(cleanup, duration + 60);
+                timeoutId = setTimeout(cleanup, duration + 60);
               });
             });
           }

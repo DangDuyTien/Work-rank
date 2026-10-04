@@ -754,7 +754,7 @@ function OpponentSeat({ player, isTurn, timeLeft, position, samPhase, samDeclare
         alignItems: 'center',
         gap: 6,
         position: 'relative',
-        transition: 'all 200ms ease',
+        transition: 'opacity 200ms ease, transform 200ms ease',
       }}
     >
       {/* Avatar Container with Active Turn Glow */}
@@ -775,7 +775,7 @@ function OpponentSeat({ player, isTurn, timeLeft, position, samPhase, samDeclare
               : isSamDeclarer
               ? '0 0 20px rgba(245, 158, 11, 0.7)'
               : 'none',
-            transition: 'all 200ms ease',
+            transition: 'background-color 200ms ease, box-shadow 200ms ease, opacity 200ms ease',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1790,7 +1790,7 @@ export default function SamGame() {
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
                 }}
               >
                 <ArrowLeft size={16} /> Rời bàn
@@ -2658,7 +2658,7 @@ export default function SamGame() {
                       textAlign: 'center',
                       background: p.isReady ? 'rgba(240, 253, 244, 0.7)' : '#fafafa',
                       position: 'relative',
-                      transition: 'all 0.2s ease',
+                      transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
                     }}
                   >
                     {p.isHost && (
@@ -3248,4 +3248,3 @@ export default function SamGame() {
     </div>
   );
 }
-

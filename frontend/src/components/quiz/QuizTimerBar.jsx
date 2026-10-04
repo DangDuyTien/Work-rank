@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clock, Zap, Lock } from 'lucide-react';
 import quizSound from './quizSound';
 
@@ -17,19 +17,34 @@ export default function QuizTimerBar({
   lockedPoints = null,
   onExpire = null,
 }) {
-  const [pointPot, setPointPot] = useState(maxPoints);
-  const [secondsRemaining, setSecondsRemaining] = useState((durationMs / 1000).toFixed(1));
-  const [progressPercent, setProgressPercent] = useState(100);
   const [isUrgent, setIsUrgent] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
 
+  const pointPotRef = useRef(null);
+  const secondsRef = useRef(null);
+  const progressRef = useRef(null);
   const rafRef = useRef(null);
   const lastTickSecondRef = useRef(null);
+  const lastSecondTextRef = useRef('');
+  const lastPointPotRef = useRef(null);
+  const progressRatioRef = useRef(1);
+  const urgentRef = useRef(false);
   const hasExpiredFiredRef = useRef(false);
+  const onExpireRef = useRef(onExpire);
+  const lockedRef = useRef(isLocked);
+
+  onExpireRef.current = onExpire;
+  lockedRef.current = isLocked;
 
   useEffect(() => {
     hasExpiredFiredRef.current = false;
     lastTickSecondRef.current = null;
+    lastSecondTextRef.current = '';
+    lastPointPotRef.current = null;
+    progressRatioRef.current = 1;
+    urgentRef.current = false;
+    setIsUrgent(false);
+    setIsExpired(false);
 
     const start = Number(startTimeMs) || Date.now();
     const duration = Number(durationMs) || 10000;
@@ -38,22 +53,33 @@ export default function QuizTimerBar({
 
     const updateFrame = () => {
       const now = Date.now();
-      const elapsed = Math.max(0, now - start);
       const remainingMs = Math.max(0, deadline - now);
       const ratio = Math.max(0, Math.min(1, remainingMs / duration));
+      progressRatioRef.current = ratio;
 
       const calculatedPot = Math.round(maxPts * ratio);
       const secs = (remainingMs / 1000).toFixed(1);
       const wholeSecs = Math.ceil(remainingMs / 1000);
-      const percent = ratio * 100;
 
-      // Update Point Pot (if user locked, display their locked point or local pot)
-      setPointPot(calculatedPot);
-      setSecondsRemaining(secs);
-      setProgressPercent(percent);
+      // Keep the 60Hz clock on the DOM. React state on every RAF frame made
+      // the whole quiz surface render roughly 180 times per second.
+      if (!lockedRef.current && pointPotRef.current && calculatedPot !== lastPointPotRef.current) {
+        pointPotRef.current.textContent = `${calculatedPot.toLocaleString()}đ`;
+        lastPointPotRef.current = calculatedPot;
+      }
+      if (secondsRef.current && secs !== lastSecondTextRef.current) {
+        secondsRef.current.textContent = `${secs}s`;
+        lastSecondTextRef.current = secs;
+      }
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${ratio})`;
+      }
 
       const urgent = remainingMs <= 3200 && remainingMs > 0;
-      setIsUrgent(urgent);
+      if (urgent !== urgentRef.current) {
+        urgentRef.current = urgent;
+        setIsUrgent(urgent);
+      }
 
       // Sound tick on integer boundaries in urgent zone
       if (urgent && wholeSecs !== lastTickSecondRef.current && wholeSecs > 0) {
@@ -63,13 +89,13 @@ export default function QuizTimerBar({
 
       if (remainingMs <= 0) {
         setIsExpired(true);
-        setPointPot(0);
-        setSecondsRemaining('0.0');
-        setProgressPercent(0);
+        if (pointPotRef.current && !lockedRef.current) pointPotRef.current.textContent = '0đ';
+        if (secondsRef.current) secondsRef.current.textContent = '0.0s';
+        if (progressRef.current) progressRef.current.style.transform = 'scaleX(0)';
 
         if (!hasExpiredFiredRef.current) {
           hasExpiredFiredRef.current = true;
-          if (typeof onExpire === 'function') onExpire();
+          if (typeof onExpireRef.current === 'function') onExpireRef.current();
         }
         return; // stop RAF loop
       }
@@ -84,10 +110,7 @@ export default function QuizTimerBar({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [startTimeMs, durationMs, maxPoints, onExpire]);
-
-  // If user has submitted answer, display their locked score value while game continues
-  const displayPot = isLocked && lockedPoints !== null ? lockedPoints : pointPot;
+  }, [startTimeMs, durationMs, maxPoints]);
 
   return (
     <div
@@ -157,7 +180,13 @@ export default function QuizTimerBar({
               letterSpacing: '-0.3px',
             }}
           >
-            {displayPot.toLocaleString()}đ
+            <span ref={pointPotRef}>
+              {isExpired
+                ? '0'
+                : isLocked && lockedPoints !== null
+                  ? Number(lockedPoints).toLocaleString()
+                  : Number(lastPointPotRef.current ?? maxPoints).toLocaleString()}đ
+            </span>
           </span>
         </div>
 
@@ -174,7 +203,7 @@ export default function QuizTimerBar({
           }}
         >
           <Clock size={15} style={{ opacity: 0.7 }} />
-          <span>{secondsRemaining}s</span>
+          <span ref={secondsRef}>{isExpired ? '0.0s' : (lastSecondTextRef.current || `${(Number(durationMs) / 1000).toFixed(1)}s`)}</span>
         </div>
       </div>
 
@@ -192,7 +221,9 @@ export default function QuizTimerBar({
         <div
           style={{
             height: '100%',
-            width: `${progressPercent}%`,
+            width: '100%',
+            transform: `scaleX(${isExpired ? 0 : progressRatioRef.current})`,
+            transformOrigin: 'left center',
             borderRadius: 4,
             background: isExpired
               ? '#94a3b8'
@@ -203,6 +234,7 @@ export default function QuizTimerBar({
               : '#b45309',
             transition: 'background-color 0.2s ease',
           }}
+          ref={progressRef}
         />
       </div>
     </div>

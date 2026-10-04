@@ -92,20 +92,20 @@ export default function QuizAnswererSpotlight({
   // Calculate dynamic transform & opacity styles based on state
   let transform = 'translate(-50%, -50%) scale(0.75) translateY(25px)';
   let opacity = 0;
-  let transition = 'all 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
+  let transition = 'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
 
   if (animationState === 'entering') {
     transform = 'translate(-50%, -50%) scale(1.05) translateY(0px)';
     opacity = 1;
-    transition = 'all 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
+    transition = 'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
   } else if (animationState === 'active') {
     transform = 'translate(-50%, -50%) scale(1) translateY(0px)';
     opacity = 1;
-    transition = 'all 0.2s ease-out';
+    transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
   } else if (animationState === 'exiting') {
     transform = 'translate(-50%, -50%) scale(0.9) translateY(45px)';
     opacity = 0;
-    transition = 'all 0.28s cubic-bezier(0.4, 0, 1, 1)';
+    transition = 'opacity 0.28s cubic-bezier(0.4, 0, 1, 1), transform 0.28s cubic-bezier(0.4, 0, 1, 1)';
   }
 
   return (
@@ -137,7 +137,6 @@ export default function QuizAnswererSpotlight({
           gap: 10,
           minWidth: 200,
           maxWidth: 320,
-          backdropFilter: 'blur(10px)',
           textAlign: 'center',
         }}
       >

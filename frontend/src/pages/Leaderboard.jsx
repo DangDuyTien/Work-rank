@@ -1019,7 +1019,7 @@ export default function Leaderboard() {
             padding: '5px 6px',
             borderRadius: 6,
             boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           {/* LEVEL 1: VIEW MODES (LEFT SIDE) */}
@@ -1089,7 +1089,7 @@ export default function Leaderboard() {
               marginLeft: 'auto',
               flexShrink: 0,
               flexWrap: 'nowrap',
-              transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             {scopeMode !== 'youtube' && scopeMode !== 'hall-of-fame' && (
@@ -1112,7 +1112,7 @@ export default function Leaderboard() {
                       cursor: 'pointer',
                       borderRadius: 3,
                       whiteSpace: 'nowrap',
-                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      transition: 'background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     {p.label}
@@ -1141,7 +1141,7 @@ export default function Leaderboard() {
                       cursor: 'pointer',
                       borderRadius: 3,
                       whiteSpace: 'nowrap',
-                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      transition: 'background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     {m.label}
@@ -1190,7 +1190,7 @@ export default function Leaderboard() {
             padding: '5px 6px',
             borderRadius: 6,
             boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -1209,7 +1209,7 @@ export default function Leaderboard() {
                 fontWeight: 600,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 transform: teamSubView === 'members' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
@@ -1231,7 +1231,7 @@ export default function Leaderboard() {
                 fontWeight: 600,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 transform: teamSubView === 'youtube' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
@@ -1261,7 +1261,7 @@ export default function Leaderboard() {
                     cursor: 'pointer',
                     borderRadius: 3,
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                    transition: 'background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   {p.label}

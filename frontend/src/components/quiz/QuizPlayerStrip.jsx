@@ -8,12 +8,15 @@ import quizSound from './quizSound';
  */
 function AnimatedScore({ targetScore = 0 }) {
   const [displayScore, setDisplayScore] = useState(targetScore);
-  const prevScoreRef = useRef(targetScore);
+  const displayScoreRef = useRef(targetScore);
+  const rafRef = useRef(null);
 
   useEffect(() => {
-    if (targetScore === prevScoreRef.current) return;
+    if (targetScore === displayScoreRef.current) return undefined;
 
-    const start = prevScoreRef.current;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    const start = displayScoreRef.current;
     const end = targetScore;
     const diff = end - start;
     const duration = 600; // ms
@@ -26,17 +29,20 @@ function AnimatedScore({ targetScore = 0 }) {
       const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       const current = Math.round(start + diff * eased);
 
-      setDisplayScore(current);
+      if (current !== displayScoreRef.current) {
+        displayScoreRef.current = current;
+        setDisplayScore(current);
+      }
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        prevScoreRef.current = end;
+        rafRef.current = requestAnimationFrame(animate);
       }
     };
 
-    requestAnimationFrame(animate);
-    prevScoreRef.current = targetScore;
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [targetScore]);
 
   return <span>{displayScore.toLocaleString()}</span>;
