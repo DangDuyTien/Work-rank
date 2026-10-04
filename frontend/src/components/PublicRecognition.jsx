@@ -39,8 +39,18 @@ export function RecognitionPortrait({ name, image, type, imageOnly = false }) {
   );
 }
 
+export function removeVietnameseDiacritics(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+}
+
 export function RecognitionName({ name, verified }) {
-  return <span className="public-recognition-name">{name}{verified && <VerifiedBadge size={18} />}</span>;
+  const displayName = removeVietnameseDiacritics(name);
+  return <span className="public-recognition-name">{displayName}{verified && <VerifiedBadge size={18} />}</span>;
 }
 
 export function RecognitionLink({ to, children, className = '' }) {

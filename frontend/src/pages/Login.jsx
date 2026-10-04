@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
-import { RecognitionStatus, SpotlightFeedback, displayScore, recognitionState } from '../components/PublicRecognition';
+import { RecognitionStatus, SpotlightFeedback, displayScore, recognitionState, removeVietnameseDiacritics } from '../components/PublicRecognition';
 import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
 import { Reveal } from '../components/ui';
 import { auth } from '../services/api';
@@ -31,7 +31,8 @@ function MvpVisualAward({ data, loading, error, retry }) {
   const championState = recognitionState(data, 'champion');
   const mvpState = recognitionState(data, 'mvp');
   const state = type === 'mvp' ? mvpState : championState;
-  const name = type === 'mvp' ? mvp?.name : team?.teamName;
+  const rawName = type === 'mvp' ? mvp?.name : team?.teamName;
+  const name = removeVietnameseDiacritics(rawName);
   return (
     <Reveal as="aside" delay={200} className="public-auth-recognition" aria-label="Ghi nhận mùa giải" aria-busy={loading}>
       <Link to="/" className="public-editorial-brand" aria-label="WorkRank — Trang chủ">

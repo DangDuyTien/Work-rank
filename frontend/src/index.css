@@ -169,7 +169,11 @@
 .public-featured-person { margin: 0; min-width: 0; }
 .public-featured-frame { position: relative; display: grid; grid-template-columns: 22% 56% 22%; width: 100%; max-width: 520px; --quote-open-duration: 700ms; --quote-close-duration: 500ms; }
 .public-featured-frame.is-interactive { cursor: pointer; user-select: none; }
-.public-featured-frame > .public-recognition-portrait { grid-column: 2; }
+.public-featured-frame > .public-recognition-portrait {
+  grid-column: 2;
+  margin: 0 clamp(14px, 2.2vw, 22px);
+  width: auto;
+}
 .public-featured-frame .public-recognition-initials { font-size: clamp(40px, 4.5vw, 72px); }
 .public-frame-quote {
   position: absolute;

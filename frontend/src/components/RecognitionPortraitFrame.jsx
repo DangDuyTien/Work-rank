@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { RecognitionPortrait } from './PublicRecognition';
+import { RecognitionPortrait, removeVietnameseDiacritics } from './PublicRecognition';
 import { users as usersApi } from '../services/api';
 
 export default function RecognitionPortraitFrame({ type, record, loading }) {
@@ -39,13 +39,13 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
     if (isChampion) {
       if (members.length > 0) {
         return members.map((m) => ({
-          name: m.name,
+          name: removeVietnameseDiacritics(m.name),
           image: m.avatarData || m.avatarUrl,
           portraitType: 'member',
         }));
       }
       return [{
-        name: record?.teamName || 'Đội nhóm',
+        name: removeVietnameseDiacritics(record?.teamName) || 'Doi nhom',
         image: record?.avatarUrl || null,
         portraitType: 'champion',
       }];
@@ -72,20 +72,20 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
 
       if (photos.length > 0) {
         return photos.map((img) => ({
-          name: record?.name || 'Cá nhân MVP',
+          name: removeVietnameseDiacritics(record?.name) || 'Ca nhan MVP',
           image: img,
           portraitType: 'mvp',
         }));
       }
       return [{
-        name: record?.name || 'Cá nhân MVP',
+        name: removeVietnameseDiacritics(record?.name) || 'Ca nhan MVP',
         image: null,
         portraitType: 'mvp',
       }];
     }
 
     return [{
-      name: record?.name || record?.teamName || '',
+      name: removeVietnameseDiacritics(record?.name || record?.teamName) || '',
       image: record?.avatarData || record?.avatarUrl || null,
       portraitType: type,
     }];
