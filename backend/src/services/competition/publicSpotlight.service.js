@@ -404,6 +404,7 @@ async function getPublicSpotlight() {
     },
     championTeam,
     mvp,
+    archives: await getPublicArchives(),
     provenance: {
       resultState: frozenResult ? 'official' : championTeam || mvp ? 'projected' : 'none',
       champion: {
@@ -420,8 +421,99 @@ async function getPublicSpotlight() {
   };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// HISTORICAL ARCHIVE — Admin-managed list of past season winners
+// Stored in SystemSetting key: public_spotlight_archives
+// Schema: Array of { id, year, label, championTeam, mvp, frozenAt }
+// ══════════════════════════════════════════════════════════════════════════
+
+const ARCHIVE_KEY = 'public_spotlight_archives';
+
+/**
+ * Get all archived seasons (public, sanitized).
+ * Returns sorted descending by year.
+ */
+async function getPublicArchives() {
+  const setting = await SystemSetting.findOne({ where: { settingKey: ARCHIVE_KEY } });
+  const list = Array.isArray(setting?.settingValue) ? setting.settingValue : [];
+  // Sort newest first, remove internal-only fields
+  return list
+    .slice()
+    .sort((a, b) => Number(b.year) - Number(a.year))
+    .map(sanitizeArchiveEntry);
+}
+
+/**
+ * Get all archived seasons for admin (unsanitized).
+ */
+async function adminGetArchives() {
+  const setting = await SystemSetting.findOne({ where: { settingKey: ARCHIVE_KEY } });
+  const list = Array.isArray(setting?.settingValue) ? setting.settingValue : [];
+  return list.slice().sort((a, b) => Number(b.year) - Number(a.year));
+}
+
+/**
+ * Save (upsert) a single archive entry.
+ * @param {object} entry  Must include { year } at minimum.
+ */
+async function adminSaveArchiveEntry(entry) {
+  if (!entry || !entry.year) throw new Error('year là bắt buộc');
+  const year = Number(entry.year);
+
+  const setting = await SystemSetting.findOne({ where: { settingKey: ARCHIVE_KEY } });
+  let list = Array.isArray(setting?.settingValue) ? [...setting.settingValue] : [];
+
+  const idx = list.findIndex((e) => Number(e.year) === year);
+  const normalized = { ...entry, year, updatedAt: new Date().toISOString() };
+  if (!normalized.id) normalized.id = `archive-${year}-${Date.now()}`;
+
+  if (idx >= 0) {
+    list[idx] = normalized;
+  } else {
+    list.push(normalized);
+  }
+
+  if (setting) {
+    setting.settingValue = list;
+    await setting.save();
+  } else {
+    await SystemSetting.create({
+      settingKey: ARCHIVE_KEY,
+      settingValue: list,
+      description: 'Danh sách vinh danh lịch sử theo năm — hiển thị trên Trang Chủ',
+    });
+  }
+  return normalized;
+}
+
+/**
+ * Delete an archive entry by year.
+ */
+async function adminDeleteArchiveEntry(year) {
+  const yr = Number(year);
+  const setting = await SystemSetting.findOne({ where: { settingKey: ARCHIVE_KEY } });
+  if (!setting) return false;
+  const list = Array.isArray(setting.settingValue) ? setting.settingValue : [];
+  const newList = list.filter((e) => Number(e.year) !== yr);
+  setting.settingValue = newList;
+  await setting.save();
+  return true;
+}
+
+/**
+ * Strip internal IDs / updatedAt before sending to public endpoint.
+ */
+function sanitizeArchiveEntry(entry) {
+  const { id: _id, updatedAt: _upd, ...rest } = entry;
+  return rest;
+}
+
 module.exports = {
   getPublicSpotlight,
   getSpotlightConfig,
   setSpotlightConfig,
+  getPublicArchives,
+  adminGetArchives,
+  adminSaveArchiveEntry,
+  adminDeleteArchiveEntry,
 };

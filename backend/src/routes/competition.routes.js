@@ -9,6 +9,7 @@ const router = express.Router();
 
 // ─── Public routes (unauthenticated) ───────────────────────────────────────
 router.get('/public/spotlight', asyncHandler(ctrl.getPublicSpotlight));
+router.get('/public/spotlight/archives', asyncHandler(ctrl.getPublicSpotlightArchives));
 
 // ─── User routes (authenticated) ─────────────────────────────────────────────
 router.get('/my-state', auth, asyncHandler(ctrl.getMyState));
@@ -44,6 +45,12 @@ router.post('/admin/mvp/award', auth, requireRole('admin'), asyncHandler(ctrl.ad
 // Public Homepage Spotlight Admin Routes
 router.get('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminGetSpotlightConfig));
 router.post('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminSetSpotlightConfig));
+
+// Historical Archive Admin Routes
+router.get('/admin/spotlight/archives', auth, requireRole('admin'), asyncHandler(ctrl.adminGetSpotlightArchives));
+router.post('/admin/spotlight/archives', auth, requireRole('admin'), asyncHandler(ctrl.adminSaveSpotlightArchive));
+router.delete('/admin/spotlight/archives/:year', auth, requireRole('admin'), asyncHandler(ctrl.adminDeleteSpotlightArchive));
+
 
 // Phase 4 & Phase 7 Rule Sets & Visual Rule Builder Routes
 router.get('/admin/rules', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));

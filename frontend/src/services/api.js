@@ -811,6 +811,22 @@ export const competition = {
     const res = await api.post('/api/competition/admin/spotlight', data);
     return res.data;
   },
+  getPublicSpotlightArchives: async () => {
+    const res = await api.get('/api/competition/public/spotlight/archives');
+    return res.data?.archives || [];
+  },
+  adminGetSpotlightArchives: async () => {
+    const res = await api.get('/api/competition/admin/spotlight/archives');
+    return res.data?.archives || [];
+  },
+  adminSaveSpotlightArchive: async (data) => {
+    const res = await api.post('/api/competition/admin/spotlight/archives', data);
+    return res.data;
+  },
+  adminDeleteSpotlightArchive: async (year) => {
+    const res = await api.delete(`/api/competition/admin/spotlight/archives/${year}`);
+    return res.data;
+  },
 };
 
 export const youtube = {

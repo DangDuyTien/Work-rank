@@ -25,5 +25,7 @@ export default function usePublicSpotlight() {
     return () => { current = false; };
   }, [attempt]);
 
-  return { data, loading, error, retry: () => setAttempt((value) => value + 1) };
+  const archives = Array.isArray(data?.archives) ? data.archives : [];
+  return { data, archives, loading, error, retry: () => setAttempt((value) => value + 1) };
 }
+

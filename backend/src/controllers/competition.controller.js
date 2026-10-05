@@ -825,6 +825,10 @@ module.exports = {
   adminAwardMvpCup,
   adminGetSpotlightConfig,
   adminSetSpotlightConfig,
+  getPublicSpotlightArchives,
+  adminGetSpotlightArchives,
+  adminSaveSpotlightArchive,
+  adminDeleteSpotlightArchive,
 };
 
 async function getPublicSpotlight(req, res) {
@@ -879,3 +883,47 @@ async function adminAwardMvpCup(req, res) {
   });
 }
 
+// ─── Archive endpoints ────────────────────────────────────────────────────────
+
+/**
+ * GET /api/competition/public/spotlight/archives
+ * Public list of admin-managed historical season winners.
+ */
+async function getPublicSpotlightArchives(req, res) {
+  const svc = require('../services/competition/publicSpotlight.service');
+  const archives = await svc.getPublicArchives();
+  return res.json({ archives });
+}
+
+/**
+ * GET /api/competition/admin/spotlight/archives
+ * Admin: list all archive entries (unsanitized).
+ */
+async function adminGetSpotlightArchives(req, res) {
+  const svc = require('../services/competition/publicSpotlight.service');
+  const archives = await svc.adminGetArchives();
+  return res.json({ archives });
+}
+
+/**
+ * POST /api/competition/admin/spotlight/archives
+ * Admin: upsert a single archive entry by year.
+ * Body: { year, label?, championTeam?: { teamName, members[], title? }, mvp?: { name, jobTitle?, awardTitle?, reason?, avatarData? }, frozenAt? }
+ */
+async function adminSaveSpotlightArchive(req, res) {
+  const svc = require('../services/competition/publicSpotlight.service');
+  const entry = await svc.adminSaveArchiveEntry(req.body);
+  return res.json({ message: 'Lưu vinh danh lịch sử thành công', entry });
+}
+
+/**
+ * DELETE /api/competition/admin/spotlight/archives/:year
+ * Admin: remove an archive entry by year.
+ */
+async function adminDeleteSpotlightArchive(req, res) {
+  const svc = require('../services/competition/publicSpotlight.service');
+  const year = Number(req.params.year);
+  if (!year) return res.status(400).json({ message: 'year không hợp lệ' });
+  await svc.adminDeleteArchiveEntry(year);
+  return res.json({ message: `Đã xoá vinh danh năm ${year}` });
+}

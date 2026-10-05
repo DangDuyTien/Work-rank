@@ -20,10 +20,12 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
   const category = isMvp ? 'Cá nhân' : 'Đội nhóm';
   const title = isMvp ? 'MVP' : state === 'official' ? 'Quán quân' : state === 'projected' ? 'Dẫn đầu' : category;
   const displayYear = year || new Date().getFullYear();
+  const titleId = `archive-${displayYear}-${type}-title`;
+
   return (
-    <Reveal as="section" delay={delay} since={since} className="public-season-section public-archive-section" aria-labelledby={`archive-${type}-title`} aria-busy={loading}>
+    <Reveal as="section" delay={delay} since={since} className="public-season-section public-archive-section" aria-labelledby={titleId} aria-busy={loading}>
       <div className="public-season-heading">
-        <h2 id={`archive-${type}-title`}><b className="public-archive-year">{displayYear}</b><span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
+        <h2 id={titleId}><b className="public-archive-year">{displayYear}</b><span>{category}{!year && !loading ? ' · Năm hiện tại' : ''}</span></h2>
         <div><p>{seasonName}</p>{data?.season?.frozenAt && <span>Chốt ngày {new Date(data.season.frozenAt).toLocaleDateString('vi-VN')}</span>}</div>
       </div>
       <div className="public-recognition-grid">
@@ -53,7 +55,7 @@ function RecognitionArchiveSection({ type, data, year, seasonName, loading, erro
 
 export default function Home() {
   const { user } = useAuth();
-  const { data, loading, error, retry } = usePublicSpotlight();
+  const { data, archives, loading, error, retry } = usePublicSpotlight();
   const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
@@ -61,6 +63,8 @@ export default function Home() {
   const teamResult = `/leaderboard?mode=teams&period=season${season?.id ? `&seasonId=${encodeURIComponent(season.id)}` : ''}`;
   const mvpProfile = data?.mvp?.userId ? `/users/${data.mvp.userId}` : '/arena';
   const seasonName = loading ? 'Đang tải mùa giải…' : error ? 'Chưa tải được mùa giải' : season?.name || 'Chưa có mùa giải công bố';
+
+  const historicalArchives = (archives || []).filter((a) => Number(a.year) !== year);
 
   return (
     <div className="public-editorial-page">
@@ -87,11 +91,59 @@ export default function Home() {
 
         <SpotlightFeedback loading={loading} error={error} retry={retry} />
 
-        {/* 2 khối vinh danh — lần lượt hiện sau hero */}
+        {/* 2 khối vinh danh năm hiện tại */}
         <div id="season-recognition">
           <RecognitionArchiveSection type="champion" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={teamResult} delay={700} since={mountTime} />
           <RecognitionArchiveSection type="mvp" data={data} year={year} seasonName={seasonName} loading={loading} error={error} to={mvpProfile} delay={900} since={mountTime} />
         </div>
+
+        {/* Các mùa giải lịch sử (ví dụ: 2025) */}
+        {historicalArchives.map((arch, archIdx) => {
+          const archData = {
+            season: {
+              id: `archive-${arch.year}`,
+              name: arch.label || `Mùa Giải ${arch.year}`,
+              frozenAt: arch.frozenAt,
+            },
+            championTeam: arch.championTeam,
+            mvp: arch.mvp,
+            provenance: {
+              resultState: 'official',
+              champion: { state: 'official', source: 'HistoricalArchive' },
+              mvp: { state: 'official', source: 'HistoricalArchive' },
+            },
+          };
+          const archTeamTo = arch.championTeam?.teamId ? `/leaderboard?mode=teams&teamId=${arch.championTeam.teamId}` : '/leaderboard?mode=hall-of-fame';
+          const archMvpTo = arch.mvp?.userId ? `/users/${arch.mvp.userId}` : '/leaderboard?mode=hall-of-fame';
+          const archSeasonName = arch.label || `Vinh Danh Mùa Giải ${arch.year}`;
+
+          return (
+            <div key={`archive-${arch.year}`} className="public-season-recognition-group public-historical-archive" id={`archive-${arch.year}`}>
+              <RecognitionArchiveSection
+                type="champion"
+                data={archData}
+                year={arch.year}
+                seasonName={archSeasonName}
+                loading={false}
+                error={false}
+                to={archTeamTo}
+                delay={200 + archIdx * 150}
+                since={mountTime}
+              />
+              <RecognitionArchiveSection
+                type="mvp"
+                data={archData}
+                year={arch.year}
+                seasonName={archSeasonName}
+                loading={false}
+                error={false}
+                to={archMvpTo}
+                delay={350 + archIdx * 150}
+                since={mountTime}
+              />
+            </div>
+          );
+        })}
 
         {/* Section cuối — hiện khi cuộn tới */}
         <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">

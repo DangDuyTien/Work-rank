@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trophy, Plus, Play, Pause, CheckCircle, Archive, Shield, Users, RefreshCw, Calendar, Target, AlertTriangle, Clock } from 'lucide-react';
-import { competition, groups } from '../services/api';
+import {
+  Trophy, Plus, Play, Pause, CheckCircle, Archive, Shield, Users, RefreshCw,
+  Calendar, Target, AlertTriangle, Clock, Sparkles, Star, Trash2, Edit3, Save,
+  History, RotateCcw,
+} from 'lucide-react';
+import { competition, groups, users as usersApi } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { Card, EmptyState, PageState, Button, SegmentedControl } from '../components/ui';
+import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, AnimatedModal } from '../components/ui';
 import MvpCupAwardModal from '../components/MvpCupAwardModal';
+
 
 export default function AdminSeasons() {
   const toast = useToast();
@@ -35,8 +40,43 @@ export default function AdminSeasons() {
   // Add Team Modal State
   const [selectedSeasonForTeam, setSelectedSeasonForTeam] = useState(null);
   const [availableTeams, setAvailableTeams] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [teamColor, setTeamColor] = useState('#b45309');
+
+  // Main Tab State: 'seasons' | 'spotlight'
+  const [mainTab, setMainTab] = useState('seasons');
+
+  // Spotlight State
+  const [spotlightConfig, setSpotlightConfig] = useState({
+    teamId: '',
+    userId: '',
+    teamTitle: '',
+    mvpTitle: '',
+    mvpReason: '',
+  });
+  const [loadingSpotlight, setLoadingSpotlight] = useState(false);
+  const [savingSpotlight, setSavingSpotlight] = useState(false);
+
+  // Historical Archives State
+  const [archives, setArchives] = useState([]);
+  const [loadingArchives, setLoadingArchives] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [editingArchive, setEditingArchive] = useState(null);
+  const [savingArchive, setSavingArchive] = useState(false);
+  const [archiveForm, setArchiveForm] = useState({
+    year: 2025,
+    label: '',
+    teamName: '',
+    teamTitle: '',
+    membersText: '',
+    mvpName: '',
+    mvpJobTitle: '',
+    mvpAwardTitle: '',
+    mvpScore: '',
+    mvpReason: '',
+    mvpIsVerified: true,
+  });
 
   const fetchSeasons = useCallback(async () => {
     try {
@@ -62,10 +102,53 @@ export default function AdminSeasons() {
     }
   };
 
+  const fetchAvailableUsers = async () => {
+    try {
+      const res = await usersApi.list({ limit: 100 });
+      setAvailableUsers(res.data || []);
+    } catch {
+      // fallback
+    }
+  };
+
+  const fetchSpotlightAndArchives = useCallback(async () => {
+    try {
+      setLoadingSpotlight(true);
+      setLoadingArchives(true);
+      const [spotlightData, archivesData] = await Promise.all([
+        competition.adminGetSpotlight().catch(() => null),
+        competition.adminGetSpotlightArchives().catch(() => []),
+      ]);
+      if (spotlightData) {
+        setSpotlightConfig({
+          teamId: spotlightData.teamId || '',
+          userId: spotlightData.userId || '',
+          teamTitle: spotlightData.teamTitle || '',
+          mvpTitle: spotlightData.mvpTitle || '',
+          mvpReason: spotlightData.mvpReason || '',
+        });
+      }
+      setArchives(archivesData || []);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể tải dữ liệu Spotlight'));
+    } finally {
+      setLoadingSpotlight(false);
+      setLoadingArchives(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     fetchSeasons();
     fetchAvailableTeams();
+    fetchAvailableUsers();
   }, [fetchSeasons]);
+
+  useEffect(() => {
+    if (mainTab === 'spotlight') {
+      fetchSpotlightAndArchives();
+    }
+  }, [mainTab, fetchSpotlightAndArchives]);
+
 
   const handleStatusChange = async (seasonId, newStatus) => {
     const ok = await confirm({
@@ -138,6 +221,148 @@ export default function AdminSeasons() {
     }
   };
 
+  const handleOpenAddArchive = () => {
+    setEditingArchive(null);
+    setArchiveForm({
+      year: 2025,
+      label: 'Mùa Giải Vinh Danh 2025',
+      teamName: '',
+      teamTitle: 'Nhà Vô Địch Mùa Giải 2025',
+      membersText: '',
+      mvpName: '',
+      mvpJobTitle: 'Nhân viên',
+      mvpAwardTitle: 'MVP Mùa Giải 2025',
+      mvpScore: 0,
+      mvpReason: 'Đóng góp xuất sắc trong năm 2025',
+      mvpIsVerified: true,
+    });
+    setShowArchiveModal(true);
+  };
+
+  const handleOpenEditArchive = (item) => {
+    setEditingArchive(item);
+    const membersText = Array.isArray(item.championTeam?.members)
+      ? item.championTeam.members.map((m) => (typeof m === 'string' ? m : m.name || '')).filter(Boolean).join(', ')
+      : '';
+    setArchiveForm({
+      year: item.year,
+      label: item.label || '',
+      teamName: item.championTeam?.teamName || '',
+      teamTitle: item.championTeam?.title || '',
+      membersText,
+      mvpName: item.mvp?.name || '',
+      mvpJobTitle: item.mvp?.jobTitle || '',
+      mvpAwardTitle: item.mvp?.awardTitle || '',
+      mvpScore: item.mvp?.score || 0,
+      mvpReason: item.mvp?.reason || '',
+      mvpIsVerified: Boolean(item.mvp?.isVerified),
+    });
+    setShowArchiveModal(true);
+  };
+
+  const handleSaveArchive = async (e) => {
+    e.preventDefault();
+    if (!archiveForm.year) {
+      toast.warning('Năm là bắt buộc.');
+      return;
+    }
+    setSavingArchive(true);
+    try {
+      const members = archiveForm.membersText
+        ? archiveForm.membersText.split(',').map((s) => ({ name: s.trim() })).filter((m) => m.name)
+        : [];
+
+      const payload = {
+        year: Number(archiveForm.year),
+        label: archiveForm.label || `Mùa Giải Vinh Danh ${archiveForm.year}`,
+        championTeam: {
+          teamName: archiveForm.teamName || `Đội Quán Quân ${archiveForm.year}`,
+          title: archiveForm.teamTitle || `Nhà Vô Địch Mùa Giải ${archiveForm.year}`,
+          members,
+        },
+        mvp: {
+          name: archiveForm.mvpName || `Cá nhân MVP ${archiveForm.year}`,
+          jobTitle: archiveForm.mvpJobTitle || 'Nhân viên',
+          awardTitle: archiveForm.mvpAwardTitle || `MVP Mùa Giải ${archiveForm.year}`,
+          score: Number(archiveForm.mvpScore || 0),
+          reason: archiveForm.mvpReason || 'Đóng góp xuất sắc trong mùa giải',
+          isVerified: Boolean(archiveForm.mvpIsVerified),
+        },
+      };
+
+      await competition.adminSaveSpotlightArchive(payload);
+      toast.success(`Đã lưu vinh danh năm ${archiveForm.year} thành công!`);
+      setShowArchiveModal(false);
+      await fetchSpotlightAndArchives();
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể lưu vinh danh lịch sử'));
+    } finally {
+      setSavingArchive(false);
+    }
+  };
+
+  const handleDeleteArchive = async (year) => {
+    const ok = await confirm({
+      title: `Xoá vinh danh năm ${year}`,
+      message: `Bạn có chắc muốn xoá toàn bộ thông tin vinh danh lịch sử của năm ${year} khỏi trang chủ không?`,
+      confirmText: 'Xoá vinh danh',
+      cancelText: 'Huỷ',
+      type: 'danger',
+    });
+    if (!ok) return;
+
+    try {
+      await competition.adminDeleteSpotlightArchive(year);
+      toast.success(`Đã xoá vinh danh năm ${year}`);
+      await fetchSpotlightAndArchives();
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể xoá vinh danh'));
+    }
+  };
+
+  const handleSaveCustomSpotlight = async (e) => {
+    e.preventDefault();
+    setSavingSpotlight(true);
+    try {
+      await competition.adminSetSpotlight({
+        teamId: spotlightConfig.teamId ? Number(spotlightConfig.teamId) : null,
+        userId: spotlightConfig.userId ? Number(spotlightConfig.userId) : null,
+        teamTitle: spotlightConfig.teamTitle || null,
+        mvpTitle: spotlightConfig.mvpTitle || null,
+        mvpReason: spotlightConfig.mvpReason || null,
+      });
+      toast.success('Đã lưu cấu hình vinh danh trang chủ!');
+      await fetchSpotlightAndArchives();
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể lưu cấu hình'));
+    } finally {
+      setSavingSpotlight(false);
+    }
+  };
+
+  const handleResetCustomSpotlight = async () => {
+    const ok = await confirm({
+      title: 'Khôi phục tự động',
+      message: 'Hệ thống sẽ tự động xác định Đội Quán quân và MVP từ mùa giải chốt gần nhất. Tiếp tục?',
+      confirmText: 'Khôi phục tự động',
+      cancelText: 'Huỷ',
+    });
+    if (!ok) return;
+
+    setSavingSpotlight(true);
+    try {
+      await competition.adminSetSpotlight({ clear: true });
+      toast.success('Đã chuyển về chế độ tự động từ mùa giải gần nhất!');
+      setSpotlightConfig({ teamId: '', userId: '', teamTitle: '', mvpTitle: '', mvpReason: '' });
+      await fetchSpotlightAndArchives();
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể khôi phục tự động'));
+    } finally {
+      setSavingSpotlight(false);
+    }
+  };
+
+
   const filteredSeasons = filterStatus === 'ALL'
     ? seasons
     : seasons.filter((s) => s.status === filterStatus);
@@ -149,57 +374,84 @@ export default function AdminSeasons() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy size={22} color="#f97316" />
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Mùa Giải (Seasons)</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Mùa Giải & Vinh Danh</h1>
           </div>
           <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0 0' }}>
-            Thiết lập lịch trình, đội tham gia, kích hoạt, tạm dừng, và đóng băng kết quả giải đấu.
+            Thiết lập lịch trình, đội tham gia, đóng băng kết quả, và quản lý vinh danh trang chủ các năm.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => {
-              setSelectedSeasonForMvp(null);
-              setShowMvpModal(true);
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#7c3aed',
-              borderColor: 'rgba(124,58,237,0.3)',
-              background: 'rgba(124,58,237,0.06)',
-            }}
-          >
-            <Trophy size={16} /> Trao Cúp MVP
-          </Button>
-          <Button variant="primary" size="md" onClick={() => setShowCreateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Plus size={16} /> Tạo Mùa Giải Mới
-          </Button>
-          <Button variant="secondary" size="md" onClick={fetchSeasons}>
-            <RefreshCw size={14} />
-          </Button>
-        </div>
+        {mainTab === 'seasons' ? (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setSelectedSeasonForMvp(null);
+                setShowMvpModal(true);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                color: '#7c3aed',
+                borderColor: 'rgba(124,58,237,0.3)',
+                background: 'rgba(124,58,237,0.06)',
+              }}
+            >
+              <Trophy size={16} /> Trao Cúp MVP
+            </Button>
+            <Button variant="primary" size="md" onClick={() => setShowCreateModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={16} /> Tạo Mùa Giải Mới
+            </Button>
+            <Button variant="secondary" size="md" onClick={fetchSeasons}>
+              <RefreshCw size={14} />
+            </Button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button variant="primary" size="md" onClick={handleOpenAddArchive} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={16} /> Thêm Vinh Danh Năm
+            </Button>
+            <Button variant="secondary" size="md" onClick={fetchSpotlightAndArchives}>
+              <RefreshCw size={14} />
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ marginBottom: 16 }}>
+      {/* Main Mode Navigation */}
+      <div style={{ marginBottom: 20 }}>
         <SegmentedControl
-          ariaLabel="Status Filter"
+          ariaLabel="Phân hệ Quản trị"
           options={[
-            { key: 'ALL', label: `Tất cả (${seasons.length})` },
-            { key: 'ACTIVE', label: 'Đang diễn ra' },
-            { key: 'SCHEDULED', label: 'Sắp diễn ra' },
-            { key: 'PAUSED', label: 'Tạm dừng' },
-            { key: 'FINISHED', label: 'Đã hoàn thành' },
-            { key: 'DRAFT', label: 'Bản nháp' },
+            { key: 'seasons', label: `Quản Lý Mùa Giải (${seasons.length})` },
+            { key: 'spotlight', label: `Vinh Danh Trang Chủ & Lịch Sử (${archives.length})` },
           ]}
-          value={filterStatus}
-          onChange={setFilterStatus}
+          value={mainTab}
+          onChange={setMainTab}
         />
       </div>
+
+      <TabTransition key={mainTab} minHeight={420}>
+        {mainTab === 'seasons' ? (
+          <div>
+            {/* Filter Tabs */}
+            <div style={{ marginBottom: 16 }}>
+              <SegmentedControl
+                ariaLabel="Status Filter"
+                options={[
+                  { key: 'ALL', label: `Tất cả (${seasons.length})` },
+                  { key: 'ACTIVE', label: 'Đang diễn ra' },
+                  { key: 'SCHEDULED', label: 'Sắp diễn ra' },
+                  { key: 'PAUSED', label: 'Tạm dừng' },
+                  { key: 'FINISHED', label: 'Đã hoàn thành' },
+                  { key: 'DRAFT', label: 'Bản nháp' },
+                ]}
+                value={filterStatus}
+                onChange={setFilterStatus}
+              />
+            </div>
 
       {loading ? (
         <PageState type="loading" title="Đang tải danh sách mùa giải..." />
@@ -387,6 +639,226 @@ export default function AdminSeasons() {
           ))}
         </div>
       )}
+    </div>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* CARD 1: Lịch Sử Vinh Danh Các Năm */}
+      <Card style={{ padding: 24, border: '1px solid rgba(15,23,42,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <History size={18} className="text-amber-600" />
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                Lịch Sử Vinh Danh Các Năm (Historical Archives)
+              </h2>
+            </div>
+            <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+              Các mùa giải đã lưu (như 2025, 2024...) sẽ được hiển thị ngay bên dưới mùa hiện tại trên Trang Chủ.
+            </p>
+          </div>
+          <Button variant="primary" size="sm" onClick={handleOpenAddArchive} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Plus size={14} /> Thêm Năm Mới
+          </Button>
+        </div>
+
+        {loadingArchives ? (
+          <PageState type="loading" title="Đang tải danh sách lịch sử..." />
+        ) : archives.length === 0 ? (
+          <EmptyState
+            icon={History}
+            compact
+            title="Chưa có dữ liệu vinh danh lịch sử"
+            description="Bấm nút Thêm Năm Mới ở trên để nhập thông tin Đội Quán quân và MVP năm 2025."
+            action={
+              <Button variant="secondary" size="sm" onClick={handleOpenAddArchive} style={{ marginTop: 8 }}>
+                + Thêm Vinh Danh Năm 2025
+              </Button>
+            }
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {archives.map((item) => (
+              <div
+                key={item.year}
+                style={{
+                  border: '1px solid rgba(15,23,42,0.08)',
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  background: '#fafafa',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 16,
+                }}
+              >
+                <div style={{ minWidth: 260, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#b45309', fontFamily: 'monospace' }}>
+                      {item.year}
+                    </span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+                      {item.label || `Mùa Giải ${item.year}`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: '#475569' }}>
+                    <div>
+                      <strong style={{ color: '#0f172a' }}>🏆 Quán quân:</strong>{' '}
+                      {item.championTeam?.teamName || '—'}{' '}
+                      {Array.isArray(item.championTeam?.members) && item.championTeam.members.length > 0 && (
+                        <span style={{ color: '#64748b' }}>
+                          ({item.championTeam.members.length} thành viên)
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <strong style={{ color: '#0f172a' }}>⭐ MVP:</strong>{' '}
+                      {item.mvp?.name || '—'}{' '}
+                      {item.mvp?.jobTitle && <span style={{ color: '#64748b' }}>({item.mvp.jobTitle})</span>}{' '}
+                      {item.mvp?.score > 0 && <span style={{ color: '#7c3aed', fontWeight: 600 }}>· {item.mvp.score.toLocaleString()} pts</span>}
+                    </div>
+                  </div>
+                  {item.mvp?.reason && (
+                    <p style={{ fontSize: 11, color: '#64748b', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                      “{item.mvp.reason}”
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleOpenEditArchive(item)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                  >
+                    <Edit3 size={13} /> Sửa
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleDeleteArchive(item.year)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#dc2626', borderColor: 'rgba(220,38,38,0.2)' }}
+                  >
+                    <Trash2 size={13} /> Xoá
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* CARD 2: Cấu hình Đè Thủ Công Mùa Hiện Tại */}
+      <Card style={{ padding: 24, border: '1px solid rgba(15,23,42,0.08)' }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Sparkles size={18} className="text-purple-600" />
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              Cấu Hình Vinh Danh Mùa Hiện Tại (Tùy Chọn Đè Thủ Công)
+            </h2>
+          </div>
+          <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+            Mặc định hệ thống tự động chọn Đội Quán quân và MVP từ mùa giải chốt gần nhất. Nếu muốn chỉ định thủ công đội/cá nhân trên Trang Chủ, điền vào form bên dưới.
+          </p>
+        </div>
+
+        <form onSubmit={handleSaveCustomSpotlight} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-3 bg-amber-50/40 rounded-xl border border-amber-200/50 flex flex-col gap-3">
+              <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Trophy size={14} className="text-amber-600" /> Đội Nhóm Quán Quân
+              </h4>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Chọn Đội (Team)</label>
+                <select
+                  value={spotlightConfig.teamId}
+                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, teamId: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">-- Tự động từ mùa giải gần nhất --</option>
+                  {availableTeams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Tiêu đề vinh danh Đội (Tuỳ chỉnh)</label>
+                <input
+                  type="text"
+                  placeholder="Mặc định: Nhà Vô Địch Mùa Giải"
+                  value={spotlightConfig.teamTitle}
+                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, teamTitle: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-purple-50/40 rounded-xl border border-purple-200/50 flex flex-col gap-3">
+              <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Star size={14} className="text-purple-600" /> Cá Nhân MVP
+              </h4>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Chọn Cá nhân (User)</label>
+                <select
+                  value={spotlightConfig.userId}
+                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, userId: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">-- Tự động từ mùa giải gần nhất --</option>
+                  {availableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.jobTitle || 'Nhân viên'})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Tiêu đề vinh danh MVP (Tuỳ chỉnh)</label>
+                <input
+                  type="text"
+                  placeholder="Mặc định: MVP Mùa Giải"
+                  value={spotlightConfig.mvpTitle}
+                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, mvpTitle: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Lý do vinh danh (Tuỳ chỉnh)</label>
+                <textarea
+                  rows={2}
+                  placeholder="Lý do vinh danh xuất hiện trên Trang Chủ"
+                  value={spotlightConfig.mvpReason}
+                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, mvpReason: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={handleResetCustomSpotlight}
+              disabled={savingSpotlight}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <RotateCcw size={14} /> Khôi phục Tự Động
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={savingSpotlight}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <Save size={14} /> {savingSpotlight ? 'Đang lưu...' : 'Lưu Cấu Hình'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
+  )}
+</TabTransition>
+
 
       {/* CREATE SEASON MODAL */}
       {showCreateModal && (
@@ -513,6 +985,160 @@ export default function AdminSeasons() {
         defaultSeasonId={selectedSeasonForMvp}
         onSuccess={fetchSeasons}
       />
+
+      {/* HISTORICAL ARCHIVE MODAL */}
+      <AnimatedModal
+        isOpen={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        title={editingArchive ? `Chỉnh Sửa Vinh Danh Năm ${archiveForm.year}` : 'Thêm Mới Vinh Danh Năm Lịch Sử'}
+        maxWidth={640}
+      >
+        <form onSubmit={handleSaveArchive} className="flex flex-col gap-4 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Năm vinh danh *</label>
+              <input
+                type="number"
+                required
+                min={2000}
+                max={2100}
+                placeholder="2025"
+                value={archiveForm.year}
+                onChange={(e) => setArchiveForm({ ...archiveForm, year: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Tên mùa giải hiển thị</label>
+              <input
+                type="text"
+                placeholder="Ví dụ: Mùa Giải Vinh Danh 2025"
+                value={archiveForm.label}
+                onChange={(e) => setArchiveForm({ ...archiveForm, label: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/60 flex flex-col gap-3">
+            <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Trophy size={14} className="text-amber-600" /> Đội Nhóm Quán Quân
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Tên Đội / Squad</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Team Sáng Tạo 2025"
+                  value={archiveForm.teamName}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, teamName: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Danh hiệu đội</label>
+                <input
+                  type="text"
+                  placeholder="Nhà Vô Địch Mùa Giải 2025"
+                  value={archiveForm.teamTitle}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, teamTitle: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Thành viên đội (phân cách bằng dấu phẩy)</label>
+              <input
+                type="text"
+                placeholder="Trần Văn A, Lê Thị B, Phạm Văn C"
+                value={archiveForm.membersText}
+                onChange={(e) => setArchiveForm({ ...archiveForm, membersText: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+              />
+              <span className="text-[11px] text-slate-500 mt-1 block">Tên thành viên sẽ được hiển thị trên danh sách vinh danh trang chủ.</span>
+            </div>
+          </div>
+
+          <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-200/60 flex flex-col gap-3">
+            <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Star size={14} className="text-purple-600" /> Cá Nhân MVP
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Tên cá nhân MVP</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Nguyễn Văn C"
+                  value={archiveForm.mvpName}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, mvpName: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Chức danh / Vị trí</label>
+                <input
+                  type="text"
+                  placeholder="Ví dụ: Video Editor & Producer"
+                  value={archiveForm.mvpJobTitle}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, mvpJobTitle: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Danh hiệu MVP</label>
+                <input
+                  type="text"
+                  placeholder="MVP Mùa Giải 2025"
+                  value={archiveForm.mvpAwardTitle}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, mvpAwardTitle: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Điểm số mùa giải</label>
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="12500"
+                  value={archiveForm.mvpScore}
+                  onChange={(e) => setArchiveForm({ ...archiveForm, mvpScore: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Lý do vinh danh</label>
+              <textarea
+                rows={2}
+                placeholder="Đóng góp vượt bậc cho sự phát triển của công ty trong năm 2025"
+                value={archiveForm.mvpReason}
+                onChange={(e) => setArchiveForm({ ...archiveForm, mvpReason: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={archiveForm.mvpIsVerified}
+                onChange={(e) => setArchiveForm({ ...archiveForm, mvpIsVerified: e.target.checked })}
+                className="rounded text-purple-600 focus:ring-purple-500"
+              />
+              Hiển thị tích xanh xác minh (Verified Badge)
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2.5 mt-2">
+            <Button variant="secondary" type="button" onClick={() => setShowArchiveModal(false)}>Huỷ</Button>
+            <Button variant="primary" type="submit" disabled={savingArchive}>
+              {savingArchive ? 'Đang lưu...' : 'Lưu Vinh Danh'}
+            </Button>
+          </div>
+        </form>
+      </AnimatedModal>
     </div>
   );
 }

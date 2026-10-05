@@ -108,6 +108,7 @@
 .public-season-heading h2 > span { font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; margin-top: 10px; }
 .public-archive-section { padding-bottom: 28px; }
 .public-archive-section + .public-archive-section { padding-top: 24px; }
+.public-historical-archive { border-top: 1px solid var(--accent-border); padding-top: 28px; margin-top: 16px; }
 .public-archive-content { min-width: 0; }
 .public-archive-row { display: grid; grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr); gap: clamp(24px, 3.5vw, 56px); padding: 0 0 22px; border-bottom: 1px solid var(--accent-border); }
 .public-archive-row.is-champion { grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr); gap: clamp(24px, 3.5vw, 56px); }
