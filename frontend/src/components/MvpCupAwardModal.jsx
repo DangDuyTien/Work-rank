@@ -28,6 +28,31 @@ const CARD = {
   boxShadow: '0 4px 16px rgba(15,23,42,0.06)',
 };
 
+const SEASON_STATUS_LABELS = {
+  DRAFT: 'Bản nháp',
+  SCHEDULED: 'Đã lên lịch',
+  ACTIVE: 'Đang diễn ra',
+  PAUSED: 'Tạm dừng',
+  CALCULATING: 'Đang chốt',
+  FINISHED: 'Đã kết thúc',
+  ARCHIVED: 'Lưu trữ',
+};
+
+function seasonOptionLabel(season = {}) {
+  const source = season.startAt || season.start_at || season.endAt || season.end_at;
+  const parsedYear = source ? new Date(source).getFullYear() : NaN;
+  const year = Number.isFinite(parsedYear)
+    ? parsedYear
+    : String(season.name || '').match(/\b(20\d{2})\b/)?.[1];
+  const status = SEASON_STATUS_LABELS[season.status] || season.status || 'Chưa xác định';
+  return [
+    year ? `Năm ${year}` : null,
+    season.name || `Mùa #${season.id}`,
+    `Mùa #${season.id}`,
+    status,
+  ].filter(Boolean).join(' · ');
+}
+
 export default function MvpCupAwardModal({
   isOpen,
   onClose,
@@ -58,8 +83,10 @@ export default function MvpCupAwardModal({
       const list = await competition.adminListMvpSeasons();
       setSeasons(list);
       if (!selectedSeasonId && list.length > 0) {
-        // Default to first active or finished season
-        const bestSeason = list.find((s) => s.status === 'FINISHED') || list.find((s) => s.status === 'ACTIVE') || list[0];
+        // Default to the current season so a new award is not attached to an old archive.
+        const bestSeason = list.find((s) => ['ACTIVE', 'PAUSED', 'CALCULATING', 'SCHEDULED'].includes(s.status))
+          || list.find((s) => s.status === 'FINISHED')
+          || list[0];
         setSelectedSeasonId(String(bestSeason.id));
       }
     } catch (err) {
@@ -321,7 +348,7 @@ export default function MvpCupAwardModal({
               >
                 {seasons.map((s) => (
                   <option key={s.id} value={s.id}>
-                    Mùa #{s.id} — {s.name} ({s.status}) {s.hasMvpAwarded ? `[ĐÃ TRAO: ${s.mvpAward?.userName}]` : '[CHƯA TRAO]'}
+                    {seasonOptionLabel(s)} {s.hasMvpAwarded ? `[ĐÃ TRAO: ${s.mvpAward?.userName}]` : '[CHƯA TRAO]'}
                   </option>
                 ))}
               </select>

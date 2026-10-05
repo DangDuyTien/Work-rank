@@ -106,9 +106,73 @@
 .public-season-heading p { font-size: 15px; font-weight: 500; }
 .public-season-heading span { display: block; color: var(--text-secondary); font-size: 11px; margin-top: 4px; }
 .public-season-heading h2 > span { font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; margin-top: 10px; }
+.public-year-timeline { --public-year-rail-width: 128px; }
+.public-year-group {
+  display: grid;
+  grid-template-columns: var(--public-year-rail-width) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  position: relative;
+  padding: 0 0 64px;
+}
+.public-year-group + .public-year-group { padding-top: 32px; }
+.public-year-group::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--public-year-rail-width) / 2);
+  width: 1px;
+  background: var(--accent-border);
+  content: '';
+  pointer-events: none;
+}
+.public-year-group:last-child::before {
+  bottom: auto;
+  height: 96px;
+}
+.public-year-rail,
+.public-year-content { min-width: 0; position: relative; z-index: 1; }
+.public-year-marker {
+  position: sticky;
+  top: 104px;
+  z-index: 2;
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 14px 14px 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'RuderPlakatLLVar', Arial, sans-serif;
+  font-size: 72px;
+  font-weight: 400;
+  font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100;
+  letter-spacing: 0;
+  line-height: .9;
+  white-space: nowrap;
+}
+.public-season-heading.is-detail { align-items: center; gap: 18px; margin-bottom: 18px; }
+.public-season-heading.is-detail h2 {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.public-season-heading.is-detail h2 > span {
+  display: inline;
+  margin-top: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+.public-season-heading.is-detail > div { min-width: 0; }
+.public-season-heading.is-detail > div p { font-size: 13px; }
 .public-archive-section { padding-bottom: 28px; }
 .public-archive-section + .public-archive-section { padding-top: 24px; }
-.public-historical-archive { border-top: 1px solid var(--accent-border); padding-top: 28px; margin-top: 16px; }
 .public-archive-content { min-width: 0; }
 .public-archive-row { display: grid; grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr); gap: clamp(24px, 3.5vw, 56px); padding: 0 0 22px; border-bottom: 1px solid var(--accent-border); }
 .public-archive-row.is-champion { grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr); gap: clamp(24px, 3.5vw, 56px); }
@@ -347,6 +411,11 @@ html[data-workrank-reduce-motion="true"] :is(.public-auth-field-collapse, .publi
   .public-auth-form-panel { padding: 48px 28px; }
 }
 @media (max-width: 700px) {
+  .public-year-timeline { --public-year-rail-width: 60px; }
+  .public-year-group { gap: 14px; padding-bottom: 44px; }
+  .public-year-group + .public-year-group { padding-top: 24px; }
+  .public-year-marker { top: 82px; font-size: 44px; padding-right: 8px; }
+  .public-year-group:last-child::before { height: 66px; }
   .public-archive-name-line { gap: 12px; flex-wrap: wrap; }
   .public-archive-inline-score strong { font-size: 20px; }
   .public-editorial-header { padding: 16px 20px; gap: 12px; }
@@ -362,6 +431,8 @@ html[data-workrank-reduce-motion="true"] :is(.public-auth-field-collapse, .publi
   .public-season-heading { flex-wrap: wrap; gap: 6px 18px; margin-bottom: 22px; }
   .public-season-heading h2 { font-size: 56px; }
   .public-season-heading p { font-size: 12px; }
+  .public-season-heading.is-detail { gap: 8px 16px; margin-bottom: 18px; }
+  .public-season-heading.is-detail h2 { font-size: 11px; }
   .public-recognition-grid { grid-template-columns: 1fr; gap: 32px; }
   .public-featured-frame { width: 100%; max-width: 320px; margin: 0 auto; }
   .public-featured-person figcaption { padding-top: 18px; }

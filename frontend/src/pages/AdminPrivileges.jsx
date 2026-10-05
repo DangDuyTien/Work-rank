@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
-import { users as usersApi, groups as groupsApi } from '../services/api';
+import { users as usersApi, groups as groupsApi, competition } from '../services/api';
 import { compressImage, getUserAvatar, initialsFromName, removeStoredAvatar, setStoredAvatar } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 import { useAuth } from '../context/AuthContext';
@@ -65,6 +65,35 @@ const CARD = {
   borderRadius: 0,
   boxShadow: 'none',
 };
+
+const SEASON_STATUS_LABELS = {
+  DRAFT: 'Bản nháp',
+  SCHEDULED: 'Đã lên lịch',
+  ACTIVE: 'Đang diễn ra',
+  PAUSED: 'Tạm dừng',
+  CALCULATING: 'Đang chốt',
+  FINISHED: 'Đã kết thúc',
+  ARCHIVED: 'Lưu trữ',
+};
+
+function seasonYear(season = {}) {
+  const source = season.startAt || season.start_at || season.endAt || season.end_at;
+  const parsedYear = source ? new Date(source).getFullYear() : NaN;
+  if (Number.isFinite(parsedYear)) return parsedYear;
+  const match = String(season.name || '').match(/\b(20\d{2})\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function seasonOptionLabel(season = {}) {
+  const year = seasonYear(season);
+  const status = SEASON_STATUS_LABELS[season.status] || season.status || 'Chưa xác định';
+  return [
+    year ? `Năm ${year}` : null,
+    season.name || `Mùa #${season.id}`,
+    `Mùa #${season.id}`,
+    status,
+  ].filter(Boolean).join(' · ');
+}
 
 function isVerified(user = {}) {
   return user.isVerified === true || user.verified === true || user.isVerified === 1 || user.verified === 1 || user.isVerified === '1' || user.verified === '1';
@@ -150,6 +179,8 @@ export default function AdminPrivileges() {
   const [awardModalUser, setAwardModalUser] = useState(null);
   const [awardType, setAwardType] = useState('MVP');
   const [awardForm, setAwardForm] = useState({ seasonId: '', title: '', reason: '' });
+  const [awardSeasons, setAwardSeasons] = useState([]);
+  const [awardSeasonsLoading, setAwardSeasonsLoading] = useState(false);
   const [awarding, setAwarding] = useState(false);
   const [mvpModalOpen, setMvpModalOpen] = useState(false);
 
@@ -174,8 +205,26 @@ export default function AdminPrivileges() {
   };
 
   useEffect(() => {
+    let cancelled = false;
     loadData('', 1);
     groupsApi.listAll().then((res) => setTeamsList(res.data || [])).catch(() => {});
+
+    setAwardSeasonsLoading(true);
+    competition.adminListSeasons()
+      .then((list) => {
+        if (!cancelled) setAwardSeasons(Array.isArray(list) ? list : []);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setAwardSeasons([]);
+          toast.error(parseApiError(err, 'Không tải được danh sách mùa giải.'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAwardSeasonsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -491,6 +540,10 @@ export default function AdminPrivileges() {
   const submitAward = async (e) => {
     e.preventDefault();
     if (!awardModalUser) return;
+    if (!awardForm.seasonId) {
+      toast.warning('Vui lòng chọn đúng năm và mùa giải trước khi trao thưởng.');
+      return;
+    }
     if (!awardForm.reason.trim()) {
       toast.warning('Hãy nhập lý do vinh danh.');
       return;
@@ -501,7 +554,7 @@ export default function AdminPrivileges() {
       if (awardType === 'MVP') {
         await usersApi.adminAwardMVP({
           userId: awardModalUser.id,
-          seasonId: awardForm.seasonId ? Number(awardForm.seasonId) : null,
+          seasonId: Number(awardForm.seasonId),
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
@@ -509,7 +562,7 @@ export default function AdminPrivileges() {
       } else {
         await usersApi.adminAwardChampion({
           userId: awardModalUser.id,
-          seasonId: awardForm.seasonId ? Number(awardForm.seasonId) : null,
+          seasonId: Number(awardForm.seasonId),
           title: awardForm.title.trim() || undefined,
           reason: awardForm.reason.trim(),
         });
@@ -1242,65 +1295,70 @@ export default function AdminPrivileges() {
       </AnimatedModal>
 
       {/* ── MODAL TRAO GIẢI THƯỞNG ── */}
-      {awardModalUser && (
-        <div className="modal-backdrop-enter" style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {awardType === 'MVP' ? <Star size={18} color="#7c3aed" /> : <Trophy size={18} color="#d97706" />}
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
-                  {awardType === 'MVP' ? 'Trao Thưởng Danh Hiệu MVP' : 'Trao Cúp Vô Địch (Champion)'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAwardModalUser(null)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
+      <AnimatedModal
+        isOpen={Boolean(awardModalUser)}
+        onClose={() => {
+          if (!awarding) setAwardModalUser(null);
+        }}
+        title={awardType === 'MVP' ? 'Trao Thưởng Danh Hiệu MVP' : 'Trao Cúp Vô Địch (Champion)'}
+        maxWidth={460}
+        dialogStyle={{ borderRadius: 8 }}
+      >
+        {awardModalUser && (
+          <>
             <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', marginBottom: 14, fontSize: 12 }}>
               Trao cho: <strong>{awardModalUser.name}</strong> (#{awardModalUser.id} · {awardModalUser.jobTitle || 'Nhân viên'})
             </div>
 
             <form onSubmit={submitAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Mã Mùa Giải (Season ID - Tùy chọn)
+                <label htmlFor="admin-award-season" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  Năm &amp; Mùa Giải *
                 </label>
-                <input
-                  type="number"
+                <select
+                  id="admin-award-season"
+                  required
                   value={awardForm.seasonId}
                   onChange={(e) => setAwardForm({ ...awardForm, seasonId: e.target.value })}
-                  placeholder="Ví dụ: 1"
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                />
+                  disabled={awardSeasonsLoading || awardSeasons.length === 0}
+                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' }}
+                >
+                  <option value="">
+                    {awardSeasonsLoading ? 'Đang tải danh sách mùa giải...' : '-- Chọn năm và tên mùa --'}
+                  </option>
+                  {awardSeasons.map((season) => (
+                    <option key={season.id} value={season.id}>
+                      {seasonOptionLabel(season)}
+                    </option>
+                  ))}
+                </select>
+                {!awardSeasonsLoading && awardSeasons.length === 0 && (
+                  <p style={{ margin: '5px 0 0', fontSize: 11, color: '#b91c1c' }}>
+                    Chưa có mùa giải để gắn danh hiệu.
+                  </p>
+                )}
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label htmlFor="admin-award-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                   Tiêu Đề Vinh Danh (Tùy chọn)
                 </label>
                 <input
+                  id="admin-award-title"
                   type="text"
                   value={awardForm.title}
                   onChange={(e) => setAwardForm({ ...awardForm, title: e.target.value })}
-                  placeholder={awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải #1' : 'Ví dụ: Quán Quân Mùa #1'}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                  placeholder={awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải 2026' : 'Ví dụ: Quán Quân Mùa 2026'}
+                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-                  Lý Do & Căn Cứ Vinh Danh *
+                <label htmlFor="admin-award-reason" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  Lý Do &amp; Căn Cứ Vinh Danh *
                 </label>
                 <textarea
+                  id="admin-award-reason"
                   rows={3}
                   required
                   value={awardForm.reason}
@@ -1314,13 +1372,14 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={() => setAwardModalUser(null)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  disabled={awarding}
+                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: awarding ? 'not-allowed' : 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  disabled={awarding}
+                  disabled={awarding || awardSeasonsLoading || awardSeasons.length === 0}
                   style={{
                     padding: '8px 18px',
                     background: awardType === 'MVP' ? '#7c3aed' : '#d97706',
@@ -1333,9 +1392,9 @@ export default function AdminPrivileges() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </AnimatedModal>
 
       {/* ── DRAWER CHI TIẾT NHÂN SỰ ── */}
       {detailDrawerUser && (

@@ -77,47 +77,53 @@ async function getPublicSpotlight() {
   });
   const custom = spotlightSetting?.settingValue || {};
 
-  // 1. Try to find the latest finished season with a frozen result
-  const frozenResult = await SeasonFrozenResult.findOne({
-    include: [
-      {
-        model: Season,
-        as: 'season',
-        where: {
-          status: { [Op.in]: ['FINISHED', 'ARCHIVED', 'CALCULATING', 'ACTIVE'] },
-        },
-        required: true,
-      },
-    ],
+  // 1. Resolve the season shown on the homepage.
+  // An active/calculating season always wins over a frozen historical season;
+  // otherwise an award from the past can leak into the current spotlight.
+  let season = await Season.findOne({
+    where: { status: { [Op.in]: ['ACTIVE', 'PAUSED', 'SCHEDULED', 'CALCULATING'] } },
     order: [
-      ['frozenAt', 'DESC'],
+      ['start_at', 'ASC'],
       ['id', 'DESC'],
     ],
   });
 
-  let season = frozenResult?.season;
-  let finalRankings = frozenResult?.finalRankings;
-  const metadata = frozenResult?.metadata || {};
-
-  if (!season) {
-    season = await Season.findOne({
+  let frozenResult = null;
+  if (season) {
+    frozenResult = await SeasonFrozenResult.findOne({
+      where: { seasonId: season.id },
+    });
+  } else {
+    // With no live season, show the newest completed season as the current view.
+    frozenResult = await SeasonFrozenResult.findOne({
+      include: [
+        {
+          model: Season,
+          as: 'season',
+          where: { status: { [Op.in]: ['FINISHED', 'ARCHIVED'] } },
+          required: true,
+        },
+      ],
+      order: [
+        ['frozenAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+    });
+    season = frozenResult?.season || await Season.findOne({
       where: { status: 'FINISHED' },
       order: [
         ['end_at', 'DESC'],
         ['id', 'DESC'],
       ],
     });
+
+    if (season && !frozenResult) {
+      frozenResult = await SeasonFrozenResult.findOne({ where: { seasonId: season.id } });
+    }
   }
 
-  if (!season) {
-    season = await Season.findOne({
-      where: { status: 'ACTIVE' },
-      order: [
-        ['start_at', 'DESC'],
-        ['id', 'DESC'],
-      ],
-    });
-  }
+  let finalRankings = frozenResult?.finalRankings;
+  const metadata = frozenResult?.metadata || {};
 
   if (!season) {
     season = {
@@ -131,6 +137,18 @@ async function getPublicSpotlight() {
       frozenAt: null,
     };
   }
+
+  const spotlightSeasonId = Number.isSafeInteger(Number(season.id)) ? Number(season.id) : null;
+  const currentSeasonAwardWhere = spotlightSeasonId
+    ? {
+        // New awards are always linked to a season. Keep recent legacy awards
+        // without seasonId visible until they are re-saved with a season.
+        [Op.or]: [
+          { seasonId: spotlightSeasonId },
+          ...(season.startAt ? [{ seasonId: null, awardedAt: { [Op.gte]: season.startAt } }] : []),
+        ],
+      }
+    : { seasonId: null };
 
   // ══════════════════════════════════════════════════════════════════════════
   // 2. Extract Champion Team
@@ -149,7 +167,7 @@ async function getPublicSpotlight() {
   // B. Priority 2: Admin-awarded Champion user's team
   if (!chosenTeam) {
     const latestChampRec = await UserRecognition.findOne({
-      where: { awardType: 'champion' },
+      where: { awardType: 'champion', ...currentSeasonAwardWhere },
       include: [
         {
           model: User,
@@ -278,7 +296,7 @@ async function getPublicSpotlight() {
   // B. Priority 2: Latest active user awarded MVP in UserRecognition
   if (!mvpUser) {
     mvpRec = await UserRecognition.findOne({
-      where: { awardType: 'mvp' },
+      where: { awardType: 'mvp', ...currentSeasonAwardWhere },
       include: [
         {
           model: User,
@@ -322,20 +340,22 @@ async function getPublicSpotlight() {
   // D. Priority 4: Active user with highest score in CompetitionUserSummary
   if (!mvpUser) {
     const topSummary = await CompetitionUserSummary.findOne({
+      where: spotlightSeasonId ? { currentSeasonId: spotlightSeasonId } : {},
       include: [
         {
           model: User,
+          as: 'user',
           where: { status: 'active' },
           required: true,
           attributes: ['id', 'name', 'jobTitle', 'department', 'teamId', 'isVerified'],
           include: [{ model: UserProfilePreference, attributes: ['avatarData'] }],
         },
       ],
-      order: [['totalScore', 'DESC'], ['id', 'DESC']],
+      order: [['currentSeasonScore', 'DESC'], ['userId', 'DESC']],
     });
-    if (topSummary?.User) {
-      mvpUser = topSummary.User;
-      mvpScore = Number(topSummary.totalScore || 0);
+    if (topSummary?.user) {
+      mvpUser = topSummary.user;
+      mvpScore = Number(topSummary.currentSeasonScore || topSummary.totalScore || 0);
       mvpSource = 'CompetitionUserSummary.topScore';
     }
   }
@@ -355,8 +375,13 @@ async function getPublicSpotlight() {
   if (mvpUser) {
     const pref = mvpUser.UserProfilePreference || mvpUser.userProfilePreference;
     if (!mvpScore) {
-      const summary = await CompetitionUserSummary.findOne({ where: { userId: mvpUser.id } });
-      mvpScore = Number(summary?.totalScore || summary?.score || 0);
+      const summary = await CompetitionUserSummary.findOne({
+        where: {
+          userId: mvpUser.id,
+          ...(spotlightSeasonId ? { currentSeasonId: spotlightSeasonId } : {}),
+        },
+      });
+      mvpScore = Number(summary?.currentSeasonScore || summary?.totalScore || summary?.score || 0);
     }
 
     // Load gallery images (6 profile secondary photos from UserProfileImage)
