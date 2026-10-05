@@ -1,146 +1,99 @@
-# 📊 WorkRank Realtime
+# WorkRank Realtime
 
-WorkRank là một hệ thống giám sát hiệu suất và theo dõi hoạt động làm việc thời gian thực (Real-time Activity Tracking) đa nền tảng. Hệ thống cho phép đo lường số lần gõ phím, click chuột, và thời gian làm việc để đánh giá năng suất của nhân viên một cách minh bạch.
+WorkRank quản lý KPI công việc, thi đua theo mùa và giải năm, số liệu YouTube, đội nhóm, hồ sơ nhân viên và trò chơi nội bộ. React/Vite cung cấp giao diện web; Express, Sequelize và Socket.IO xử lý API, dữ liệu và cập nhật thời gian thực.
 
-![WorkRank Overview](https://img.shields.io/badge/Status-Active-success)
-![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-blue)
+Activity Tracking, Desktop Tracker và Pomodoro đã được gỡ khỏi hệ thống. Các route tương thích còn lại chỉ chuyển hướng về các trang hiện hành. Không cần cài Electron hay phần mềm đếm phím/chuột để chạy dự án.
 
----
+## Kiến Trúc Và Trang Chính
 
-## 🏗 Kiến trúc Hệ thống
+| Nghiệp vụ | Trang sở hữu |
+|---|---|
+| KPI bản thân và tổng quan công việc | `/dashboard` |
+| BXH KPI, cá nhân, đội, YouTube và vinh danh | `/leaderboard` |
+| Phân tích YouTube, chi tiết đội và so sánh đội | `/youtube` |
+| Mùa giải: luật, thử thách, tiến độ | `/arena` |
+| Giải năm: Grand Points, timeline, hành trình đội | `/grand` |
+| Danh bạ và đội nhóm | `/friends` |
+| Hồ sơ, thành tích và gallery | `/users/:id` |
+| Hồ sơ bản thân, email, mật khẩu và tùy chọn | `/settings` |
+| Nhân sự, quyền và vinh danh thủ công | `/admin/privileges` |
+| Đội, thành viên đội và kênh YouTube | `/admin/teams-youtube` |
+| Phòng ban, kỳ, định nghĩa/kết quả và benchmark Production KPI | `/admin/kpi` |
+| Mùa giải, spotlight và archive | `/admin/competition/seasons` |
+| Quy tắc, phiên bản và mô phỏng tính điểm | `/admin/competition/rules` |
+| Quản trị giải năm | `/admin/competition/grand` |
+| Health, audit, sự kiện và dựng lại projections | `/admin/operations` |
+| Catalog và game nội bộ | `/games` và `/games/<game>` |
 
-Dự án được chia làm 3 thành phần chính hoạt động đồng bộ với nhau:
+Dashboard và trang giải chỉ giữ summary/preview và CTA tới trang sở hữu. BXH game và kết quả trận chơi có thước đo riêng, không phải BXH KPI hoặc điểm thi đua.
 
-1. **🌐 Web Frontend (`/frontend`)**: Giao diện quản lý, Dashboard, Leaderboard và màn hình điều khiển Tracker. Web không tự đếm phím/click để tránh đếm trùng.
-2. **🖥️ Desktop App (`/desktop-app`)**: Nguồn tracking duy nhất, theo dõi hoạt động toàn hệ thống (bắt phím/chuột trong cả trình duyệt và app khác). Xây dựng bằng Electron + uIOhook.
-3. **⚙️ Backend API (`/backend`)**: Xử lý logic, lưu trữ dữ liệu, và quản lý kết nối Socket.IO. Xây dựng bằng Node.js + Express + Sequelize (MySQL).
+Đọc [báo cáo kiến trúc thông tin](docs/ux/INFORMATION_ARCHITECTURE_AUDIT.md) để xem toàn bộ route/alias, phân loại page, ownership, bằng chứng code, cấu trúc menu và các rủi ro dữ liệu/quyền còn cần xử lý. Trước khi sửa UI, tuân theo [AGENTS.md](AGENTS.md) và [smooth-motion](.agents/skills/smooth-motion/SKILL.md).
 
----
+## Chạy Cục Bộ
 
-## ✨ Tính năng Nổi bật
+Yêu cầu Node.js 20 đến 25 và MySQL 8. Backend hỗ trợ SQLite trong các test được cấu hình cho SQLite.
 
-- **⚡ Real-time Sync**: Trạng thái người dùng (Online/Offline/Idle) và dữ liệu hoạt động được cập nhật theo thời gian thực trên toàn hệ thống thông qua Socket.IO.
-- **🔄 Desktop-only Tracking**: Web chỉ bật/tắt và hiển thị trạng thái, Desktop Tracker là nguồn duy nhất gửi activity lên backend.
-- **🚀 Auto-launch Desktop Tracker**: Web có khả năng nhận diện trạng thái của Desktop App. Khi bật tracking trên Web, Desktop App sẽ tự động khởi chạy và đồng bộ.
-- **🛡 Cơ Chế Chống Gian Lận (Anti-cheat)**: Activity batch từ Desktop được ký mã hóa bằng **HMAC SHA-256** để chống giả mạo payload, kết hợp với sequence number chống Replay Attack.
-- **🏆 Bảng Xếp Hạng (Leaderboard)**: Xếp hạng năng suất nhân viên theo ngày, tuần, tháng hoặc theo nhóm (Teams).
+Backend:
 
----
-
-## 🚀 Hướng dẫn Cài đặt & Chạy dự án
-
-### 1. Yêu cầu hệ thống
-- Node.js (v18 trở lên)
-- MySQL (v8.0 trở lên)
-- macOS/Windows/Linux (Để biên dịch Desktop App)
-
-### 2. Thiết lập Backend
 ```bash
 cd backend
 npm install
-
-# Đổi tên .env.example thành .env và cấu hình DB
 cp .env.example .env
-
-# Chạy Migration và Seed dữ liệu mẫu (Tạo tài khoản Admin)
-npx sequelize-cli db:migrate
+# Điền thông tin DB và thay các secret mặc định trong .env.
+npm run db:migrate
+# Tùy chọn: tạo dữ liệu mẫu và admin theo SEED_ADMIN_* trong .env.
 npm run db:seed
-
-# Khởi động Backend (Chạy tại http://localhost:5001)
 npm run dev
 ```
-Tài khoản Admin mặc định sau khi seed:
-- **Email:** `admin@workrank.local`
-- **Password:** `Admin@123456`
 
-### 3. Thiết lập Frontend
+Backend mặc định ở `http://localhost:5001`. Thông tin tài khoản seed lấy từ `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL` và `SEED_ADMIN_PASSWORD`; không coi ví dụ trong `.env.example` là cấu hình production.
+
+Frontend, trong terminal khác:
+
 ```bash
 cd frontend
 npm install
-
-# Đổi tên .env.example thành .env
 cp .env.example .env
-
-# Khởi động Frontend (Chạy tại http://localhost:5173)
 npm run dev
 ```
 
-### 4. Thiết lập Desktop App (Electron)
+Frontend mặc định ở `http://localhost:5173`. `VITE_API_URL` để trống sẽ dùng proxy Vite tới backend cục bộ; deployment tách frontend/backend cần cấu hình URL và CORS tương ứng.
+
+## Kiểm Tra
+
 ```bash
-cd desktop-app
-npm install
-
-# Đăng ký protocol workrank:// để web có thể mở Desktop App trên macOS
-npm run install-protocol:mac
-
-# Trên Windows, dùng lệnh này để web mở được Desktop App
-npm run install-protocol:win
-
-# Chạy thử Desktop App trong môi trường dev
-npm start
+cd frontend
+npm run check
+npm run build
+npm run test:routes
+npm run test:e2e
 ```
-*(Lưu ý: Trên macOS, bạn cần cấp quyền Accessibility cho Terminal hoặc ứng dụng để bắt được sự kiện phím/chuột toàn cầu. Trên Windows, nếu muốn đếm thao tác trong app chạy quyền Administrator thì Desktop App cũng cần chạy cùng quyền Administrator).*
 
----
+Playwright kiểm Chromium desktop và Pixel 5. Các test `information-architecture.spec.js`, `account-ownership.spec.js`, `operations-ownership.spec.js` và `public-data-ownership.spec.js` mock auth/API để xác minh route, query, ownership và bố cục mà không tạo/xóa dữ liệu thật. Có thể dùng `E2E_BASE_URL=http://127.0.0.1:5173` khi dev server đang chạy. Dùng `--output` ở ngoài repository để tránh ghi đè ảnh test đã được theo dõi trong Git.
 
-## 🔁 Flow Tracking Hiện Tại
+```bash
+cd backend
+npm test
+```
 
-1. Người dùng đăng nhập web và bấm **Bắt đầu** ở `/tracker`.
-2. Web mở `workrank://start` kèm access token hiện tại, đồng thời gửi socket command nếu Desktop Tracker đang online.
-3. Desktop Tracker nhận token, kết nối Socket.IO với `clientType: desktop`, mở session thiết bị và bắt phím/click toàn hệ thống bằng `uiohook-napi`.
-4. Desktop gửi activity qua `POST /api/activity/batch` bằng payload có HMAC + sequence.
-5. Backend validate thiết bị, chữ ký, sequence, anti-cheat rồi cộng vào `daily_stats`, `work_sessions`, `activity_events`.
-6. Backend phát `activity:user:update`, `desktop:status`, `dashboard:overview:update`, `leaderboard:update`; web chỉ nhận và hiển thị.
-7. Nếu một tab/build cũ cố gửi activity từ web (`appVersion: web` hoặc `deviceUuid` dạng `web-*`), backend trả `202 ignored` và không cộng số liệu.
+Đọc cấu hình từng test trước khi chạy với DB thực. Các test giao diện mock API không chứng minh công thức tính điểm hoặc quyền backend đã đúng; các vấn đề đó được ghi riêng trong báo cáo kiến trúc thông tin.
 
----
-
-## 🔌 Cấu trúc Thư mục
+## Cấu Trúc
 
 ```text
 workrank-realtime/
-├── backend/                  # REST API & Socket.IO Server
-│   ├── src/
-│   │   ├── controllers/      # Logic xử lý API
-│   │   ├── models/           # Database Schema (User, Activity, Device...)
-│   │   ├── routes/           # Định tuyến API
-│   │   ├── services/         # Logic nghiệp vụ (Anti-cheat, Desktop Status...)
-│   │   └── sockets/          # Socket.IO handlers
-│   └── package.json
-│
-├── frontend/                 # React UI
-│   ├── src/
-│   │   ├── components/       # Các UI Component dùng chung (Layout, Cards...)
-│   │   ├── context/          # State toàn cục (AuthContext, TrackingContext)
-│   │   ├── pages/            # Dashboard, Leaderboard, Tracker...
-│   │   └── services/         # Axios API & Socket client
-│   └── package.json
-│
-└── desktop-app/              # Electron App
-    ├── src/
-    │   ├── main/             # Tiến trình chính (lắng nghe phím chuột)
-    │   └── renderer/         # UI của Desktop App
-    └── package.json
+├── backend/
+│   ├── src/controllers, routes, services, models, sockets
+│   ├── migrations/
+│   └── test/
+├── frontend/
+│   ├── src/config/       # Navigation và query canonical
+│   ├── src/components/   # Layout và UI dùng chung
+│   ├── src/context/      # Auth và UI state
+│   ├── src/pages/        # Trang đang mount trong App.jsx
+│   ├── src/services/     # API, cache và Socket.IO
+│   └── e2e/
+└── docs/                 # Audit, cleanup và vận hành
 ```
 
----
-
-## 🔒 Bảo mật (Security)
-
-Hệ thống được thiết kế với cơ chế bảo mật cao cấp:
-1. **JWT Authentication**: Dùng cho mọi API. Có cơ chế Access Token và Refresh Token.
-2. **Device Secret & HMAC**: Mỗi thiết bị khi đăng ký tracking sẽ được cấp một `deviceSecret`. Mọi gói dữ liệu (batch) gửi lên đều phải kèm theo chữ ký HMAC được mã hóa từ payload + secret.
-3. **Sequence Validation**: Mỗi gói tin có một số thứ tự (sequence) tăng dần liên tục. Backend sẽ từ chối các gói tin có sequence cũ hoặc bị lặp lại.
-
----
-
-## 🛠 Công nghệ Sử dụng
-
-- **Backend:** Node.js, Express, Socket.IO, Sequelize ORM, Zod (Validation), JSON Web Token.
-- **Frontend:** React, Vite, React Router DOM, Socket.IO-client.
-- **Desktop:** Electron, `uiohook-napi` (để lắng nghe phím chuột cấp độ OS).
-- **Database:** MySQL.
-
----
-
-*Dự án được xây dựng với mục tiêu cung cấp giải pháp giám sát hiệu suất ổn định và bảo mật cao.*
+Tài liệu vận hành nằm trong `backend/docs/ops/`. Các tài liệu audit cũ phản ánh thời điểm viết; đối chiếu route đang mount và service hiện tại trước khi dùng chúng để thiết kế thêm chức năng.

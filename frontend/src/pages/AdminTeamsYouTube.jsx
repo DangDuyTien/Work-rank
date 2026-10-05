@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Building2,
   Tv,
@@ -19,14 +19,12 @@ import {
   TrendingUp,
   Eye,
   Flame,
-  Award,
   Filter,
   Check,
   X,
   Sparkles,
   Layers,
   ChevronRight,
-  Shield,
   HelpCircle,
   ThumbsUp,
   MessageSquare,
@@ -91,10 +89,16 @@ function formatRelativeTime(dateStr) {
 
 export default function AdminTeamsYouTube() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const confirm = useConfirm();
 
-  const [activeTab, setActiveTab] = useState('channels'); // 'channels' | 'teams' | 'insights'
+  const activeTab = searchParams.get('tab') === 'teams' ? 'teams' : 'channels';
+  const setActiveTab = (tab) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('tab', tab);
+    setSearchParams(nextParams);
+  };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -115,15 +119,6 @@ export default function AdminTeamsYouTube() {
   const [selectedUserIdToAdd, setSelectedUserIdToAdd] = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState(null);
-  const [memberTitleModalUser, setMemberTitleModalUser] = useState(null);
-  const [memberTitleForm, setMemberTitleForm] = useState({
-    jobTitle: '',
-    isLeader: false,
-    isVerified: false,
-    awardType: 'none',
-    awardReason: '',
-  });
-  const [savingMemberTitle, setSavingMemberTitle] = useState(false);
 
   // Channels State
   const [channels, setChannels] = useState([]);
@@ -149,7 +144,7 @@ export default function AdminTeamsYouTube() {
 
     try {
       const [groupsRes, channelsRes, overviewRes, usersRes] = await Promise.all([
-        groupsApi.list().catch(() => ({ data: [] })),
+        groupsApi.listAll().catch(() => ({ data: [] })),
         youtube.adminGetChannels().catch(() => ({ items: [], channels: [] })),
         youtube.adminGetOverview().catch(() => null),
         usersApi.list({ limit: 300 }).catch(() => ({ data: [] })),
@@ -328,18 +323,6 @@ export default function AdminTeamsYouTube() {
     }
   };
 
-  const openMemberTitleModal = (member) => {
-    const isMemberLeader = String(membersDrawerTeam?.ownerId || '') === String(member.id);
-    setMemberTitleModalUser(member);
-    setMemberTitleForm({
-      jobTitle: member.jobTitle || 'Nhân viên',
-      isLeader: isMemberLeader,
-      isVerified: Boolean(member.isVerified),
-      awardType: 'none',
-      awardReason: '',
-    });
-  };
-
   const handleSetTeamLeader = async (teamId, userId, userName) => {
     try {
       await groupsApi.update(teamId, { ownerId: Number(userId) });
@@ -348,62 +331,6 @@ export default function AdminTeamsYouTube() {
       setTeams((prev) => prev.map((t) => (t.id === teamId ? { ...t, ownerId: Number(userId) } : t)));
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể bổ nhiệm trưởng nhóm.'));
-    }
-  };
-
-  const handleSaveMemberTitle = async (e) => {
-    e?.preventDefault?.();
-    if (!memberTitleModalUser) return;
-    setSavingMemberTitle(true);
-    try {
-      const targetId = memberTitleModalUser.id;
-      // 1. Update Job Profile & Verified status
-      await usersApi.adminUpdateJobProfile(targetId, {
-        jobTitle: memberTitleForm.jobTitle.trim(),
-        isVerified: memberTitleForm.isVerified,
-        reason: 'Admin setup danh hiệu từ Quản lý Đội nhóm YouTube',
-      });
-
-      // 2. Set / update leader if changed in drawer team
-      if (membersDrawerTeam?.id) {
-        if (memberTitleForm.isLeader) {
-          await groupsApi.update(membersDrawerTeam.id, { ownerId: Number(targetId) });
-          setMembersDrawerTeam((prev) => (prev ? { ...prev, ownerId: Number(targetId) } : null));
-          setTeams((prev) => prev.map((t) => (t.id === membersDrawerTeam.id ? { ...t, ownerId: Number(targetId) } : t)));
-        } else {
-          const wasLeader = String(membersDrawerTeam.ownerId || '') === String(targetId);
-          if (wasLeader) {
-            await groupsApi.update(membersDrawerTeam.id, { ownerId: null });
-            setMembersDrawerTeam((prev) => (prev ? { ...prev, ownerId: null } : null));
-            setTeams((prev) => prev.map((t) => (t.id === membersDrawerTeam.id ? { ...t, ownerId: null } : t)));
-          }
-        }
-      }
-
-      // 3. Award MVP / Champion if selected
-      if (memberTitleForm.awardType === 'MVP') {
-        await usersApi.adminAwardMVP({
-          userId: Number(targetId),
-          title: `MVP - ${memberTitleForm.jobTitle || 'Xuất Sắc'}`,
-          reason: memberTitleForm.awardReason.trim() || 'Admin trao danh hiệu MVP xuất sắc',
-        });
-        toast.success(`Đã trao danh hiệu MVP cho ${memberTitleModalUser.name}!`);
-      } else if (memberTitleForm.awardType === 'Champion') {
-        await usersApi.adminAwardChampion({
-          userId: Number(targetId),
-          title: `Quán Quân - ${membersDrawerTeam?.name || 'Đội Nhóm'}`,
-          reason: memberTitleForm.awardReason.trim() || 'Admin trao cúp vô địch quán quân',
-        });
-        toast.success(`Đã trao cúp Quán Quân cho ${memberTitleModalUser.name}!`);
-      }
-
-      toast.success(`Đã cập nhật danh hiệu cho ${memberTitleModalUser.name}!`);
-      setMemberTitleModalUser(null);
-      await loadData(true);
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể cập nhật danh hiệu.'));
-    } finally {
-      setSavingMemberTitle(false);
     }
   };
 
@@ -1707,14 +1634,14 @@ export default function AdminTeamsYouTube() {
                       )}
                       <button
                         type="button"
-                        onClick={() => openMemberTitleModal(m)}
+                        onClick={() => navigate(`/admin/privileges?userId=${m.id}`)}
                         style={{
                           padding: '4px 8px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1',
-                          fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                          fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}
-                        title="Thiết lập danh hiệu & chức danh"
+                        title="Quản lý hồ sơ, chức danh & vinh danh nhân sự"
                       >
-                        🏷️ Danh hiệu
+                        <ExternalLink size={12} /> Hồ sơ nhân sự
                       </button>
                       <button
                         type="button"
@@ -1843,180 +1770,6 @@ export default function AdminTeamsYouTube() {
         document.body
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MODAL: THIẾT LẬP DANH HIỆU & CHỨC DANH THÀNH VIÊN
-         ══════════════════════════════════════════════════════════════════════ */}
-      {memberTitleModalUser && createPortal(
-        <div
-          className="modal-backdrop-enter"
-          onClick={(e) => { if (e.target === e.currentTarget) setMemberTitleModalUser(null); }}
-          style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }}
-        >
-          <div
-            className="modal-dialog-enter"
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: '#ffffff', width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', padding: 24, border: '1px solid rgba(15,23,42,0.15)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Award size={18} color="#b45309" /> Thiết Lập Danh Hiệu & Chức Danh
-              </h3>
-              <button
-                type="button"
-                onClick={() => setMemberTitleModalUser(null)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div style={{ background: '#f8fafc', padding: '10px 14px', border: '1px solid rgba(15,23,42,0.06)', marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>
-                {memberTitleModalUser.name} <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>(#{memberTitleModalUser.id})</span>
-              </div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                Đội hiện tại: <strong>{membersDrawerTeam?.name || 'Chưa gán đội'}</strong> · Email: {memberTitleModalUser.email}
-              </div>
-            </div>
-
-            <form onSubmit={handleSaveMemberTitle} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Chức danh */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: 6 }}>
-                  Chức Danh Công Việc *
-                </label>
-                <input
-                  type="text"
-                  required
-                  list="admin-teams-job-titles-list"
-                  value={memberTitleForm.jobTitle}
-                  onChange={(e) => setMemberTitleForm({ ...memberTitleForm, jobTitle: e.target.value })}
-                  placeholder="Ví dụ: Editor, Content Creator, Quản lý kênh..."
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1px solid #cbd5e1' }}
-                />
-                <datalist id="admin-teams-job-titles-list">
-                  <option value="Editor" />
-                  <option value="Content" />
-                  <option value="Content Creator" />
-                  <option value="Quản lý kênh" />
-                  <option value="Trưởng nhóm" />
-                  <option value="Trưởng phòng" />
-                  <option value="Phó phòng" />
-                  <option value="Phó giám đốc" />
-                  <option value="Giám đốc" />
-                  <option value="Kỹ sư hệ thống" />
-                  <option value="Chuyên viên truyền thông" />
-                </datalist>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                  {['Editor', 'Content', 'Quản lý kênh', 'Trưởng nhóm', 'Trưởng phòng'].map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setMemberTitleForm({ ...memberTitleForm, jobTitle: t })}
-                      style={{
-                        padding: '3px 8px',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        border: '1px solid rgba(15,23,42,0.12)',
-                        background: memberTitleForm.jobTitle === t ? '#0f172a' : '#ffffff',
-                        color: memberTitleForm.jobTitle === t ? '#ffffff' : '#334155',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Trưởng nhóm & Tích xanh */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: '#0f172a', cursor: 'pointer', background: '#fffbeb', border: '1px solid rgba(217,119,6,0.25)', padding: '8px 10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={memberTitleForm.isLeader}
-                    onChange={(e) => setMemberTitleForm({ ...memberTitleForm, isLeader: e.target.checked })}
-                  />
-                  <span>👑 Trưởng nhóm</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: '#0f172a', cursor: 'pointer', background: '#f0fdf4', border: '1px solid rgba(22,163,74,0.25)', padding: '8px 10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={memberTitleForm.isVerified}
-                    onChange={(e) => setMemberTitleForm({ ...memberTitleForm, isVerified: e.target.checked })}
-                  />
-                  <span>🛡️ Tích Xanh (Verified)</span>
-                </label>
-              </div>
-
-              {/* Trao danh hiệu vinh danh */}
-              <div style={{ border: '1px solid rgba(15,23,42,0.1)', padding: 12, background: '#fafafa' }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: 6 }}>
-                  Trao Danh Hiệu Vinh Danh (Tùy chọn)
-                </label>
-                <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="adminAwardType"
-                      checked={memberTitleForm.awardType === 'none'}
-                      onChange={() => setMemberTitleForm({ ...memberTitleForm, awardType: 'none' })}
-                    />
-                    <span>Không</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: '#7c3aed', fontWeight: 600 }}>
-                    <input
-                      type="radio"
-                      name="adminAwardType"
-                      checked={memberTitleForm.awardType === 'MVP'}
-                      onChange={() => setMemberTitleForm({ ...memberTitleForm, awardType: 'MVP' })}
-                    />
-                    <span>⭐ MVP</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: '#b45309', fontWeight: 600 }}>
-                    <input
-                      type="radio"
-                      name="adminAwardType"
-                      checked={memberTitleForm.awardType === 'Champion'}
-                      onChange={() => setMemberTitleForm({ ...memberTitleForm, awardType: 'Champion' })}
-                    />
-                    <span>🏆 Quán Quân</span>
-                  </label>
-                </div>
-                {memberTitleForm.awardType !== 'none' && (
-                  <input
-                    type="text"
-                    value={memberTitleForm.awardReason}
-                    onChange={(e) => setMemberTitleForm({ ...memberTitleForm, awardReason: e.target.value })}
-                    placeholder="Lý do khen thưởng / thành tích xuất sắc..."
-                    style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '1px solid #cbd5e1' }}
-                  />
-                )}
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-                <button
-                  type="button"
-                  onClick={() => setMemberTitleModalUser(null)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                  disabled={savingMemberTitle}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingMemberTitle || !memberTitleForm.jobTitle.trim()}
-                  style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: savingMemberTitle ? 'not-allowed' : 'pointer' }}
-                >
-                  {savingMemberTitle ? 'Đang lưu...' : 'Lưu Danh Hiệu'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }

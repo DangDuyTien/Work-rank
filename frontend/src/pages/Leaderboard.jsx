@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { rankings as rankingsApi, youtube as youtubeApi, kpiApi } from '../services/api';
+import { normalizeRankingParams } from '../config/ranking';
+import { rankings as rankingsApi, kpiApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import {
@@ -14,6 +15,7 @@ import {
   Sparkles,
   Search,
   ChevronRight,
+  ChevronLeft,
   ArrowRight,
   ArrowUp,
   ArrowDown,
@@ -549,58 +551,30 @@ export default function Leaderboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user: currentUser, socket } = useAuth();
+  const fetchId = useRef(0);
 
-  // Hierarchy Navigation States
-  // Level 1: scopeMode = 'teams' | 'members' | 'youtube' | 'hall-of-fame'
-  const rawMode = searchParams.get('mode');
-  const rawScope = searchParams.get('scope');
-  const rawRanking = searchParams.get('ranking');
-  const rawPeriod = searchParams.get('period');
-
-  // Normalize scopeMode
-  let scopeMode = 'kpi';
-  if (rawScope === 'kpi' || rawMode === 'kpi' || rawRanking === 'kpi') {
-    scopeMode = 'kpi';
-  } else if (rawMode) {
-    scopeMode = (rawMode === 'member' || rawMode === 'individual' || rawMode === 'individuals') ? 'members' : rawMode;
-  } else if (rawRanking === 'individual' || rawRanking === 'individuals' || rawRanking === 'member' || rawRanking === 'members') {
-    scopeMode = 'members';
-  } else if (rawScope === 'members' || rawScope === 'member' || rawScope === 'individual' || rawScope === 'individuals') {
-    scopeMode = 'members';
-  } else if (rawScope === 'youtube') {
-    scopeMode = 'youtube';
-  } else if (rawScope === 'hall-of-fame' || rawScope === 'hof') {
-    scopeMode = 'hall-of-fame';
-  } else if (rawScope === 'teams' || rawScope === 'team') {
-    scopeMode = 'teams';
-  }
-
-  // Level 2: selectedTeamId (if present, user is drilling down into a Team, supports teamId and groupId)
-  const selectedTeamId = searchParams.get('teamId') || searchParams.get('groupId') || null;
-  // Team sub-view: 'members' | 'youtube'
-  const teamSubView = searchParams.get('teamView') || 'members';
-
-  // Global Preserved Period: 'season' | 'grand' | 'all-time' | 'today' | '7d' | '30d'
-  // CANONICAL DEFAULT: When scopeMode is 'members', default period is 'all-time'.
-  let currentPeriod;
-  if (rawPeriod) {
-    currentPeriod = rawPeriod;
-  } else if (rawScope === 'season' || rawScope === 'grand' || rawScope === 'all-time' || rawScope === 'today' || rawScope === '7d' || rawScope === '30d') {
-    currentPeriod = rawScope;
-  } else if (scopeMode === 'members') {
-    currentPeriod = 'all-time';
-  } else {
-    currentPeriod = 'season';
-  }
-
-  const urlSeasonId = searchParams.get('seasonId') || '';
-  const urlGrandId = searchParams.get('grandId') || '';
-  const urlMetric = searchParams.get('metric') || 'views';
+  const canonicalParams = normalizeRankingParams(searchParams);
+  const canonicalSearch = canonicalParams.toString();
+  const scopeMode = canonicalParams.get('scope');
+  const selectedTeamId = canonicalParams.get('teamId') || null;
+  const teamSubView = canonicalParams.get('teamView') || 'members';
+  const currentPeriod = canonicalParams.get('period') || 'season';
+  const urlSeasonId = canonicalParams.get('seasonId') || '';
+  const urlGrandId = canonicalParams.get('grandId') || '';
+  const urlKpiPeriodId = canonicalParams.get('periodId') || '';
+  const urlMetric = canonicalParams.get('metric') || 'views';
+  const youtubeView = canonicalParams.get('view') || 'channels';
+  const channelTeam = canonicalParams.get('channelTeam') || '';
+  const rankingPage = Number(canonicalParams.get('page') || 1);
   const urlSearch = searchParams.get('search') || '';
 
+  useEffect(() => {
+    if (searchParams.toString() !== canonicalSearch) setSearchParams(canonicalSearch, { replace: true });
+  }, [canonicalSearch, searchParams, setSearchParams]);
+
   const initialCacheKey = selectedTeamId
-    ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, period: currentPeriod, search: urlSearch, metric: urlMetric })
-    : CACHE_KEYS.RANKINGS(scopeMode, { period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, search: urlSearch });
+    ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, teamSubView, page: rankingPage, period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, search: urlSearch, metric: urlMetric })
+    : CACHE_KEYS.RANKINGS(scopeMode, { page: rankingPage, period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, view: youtubeView, channelTeam, search: urlSearch });
   const initialCached = getCached(initialCacheKey);
 
   const [loading, setLoading] = useState(!initialCached);
@@ -609,19 +583,30 @@ export default function Leaderboard() {
   const [searchKeyword, setSearchKeyword] = useState(urlSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
 
+  useEffect(() => {
+    setSearchKeyword(urlSearch);
+    setDebouncedSearch(urlSearch);
+  }, [urlSearch]);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchKeyword);
+      const params = new URLSearchParams(searchParams);
+      if (searchKeyword !== (params.get('search') || '')) params.delete('page');
+      if (searchKeyword) params.set('search', searchKeyword);
+      else params.delete('search');
+      if (params.toString() !== searchParams.toString()) setSearchParams(params, { replace: true });
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchKeyword]);
+  }, [searchKeyword, searchParams, setSearchParams]);
 
   // Helper to normalize ranking responses/cache into { items: [], total: 0 }
   const normalizeRankingObj = (val) => {
     if (!val) return { items: [], total: 0 };
     if (Array.isArray(val)) return { items: val, total: val.length };
     return {
+      ...val,
       items: Array.isArray(val.items) ? val.items : (Array.isArray(val.data) ? val.data : []),
       total: Number(val.total || val.count || 0),
     };
@@ -634,8 +619,11 @@ export default function Leaderboard() {
   const [hallOfFameData, setHallOfFameData] = useState(() => (scopeMode === 'hall-of-fame' && initialCached ? initialCached : { seasonMvps: [], championTeams: [] }));
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
   const [teamChannels, setTeamChannels] = useState([]);
+  const [teamChannelRanking, setTeamChannelRanking] = useState({ items: [], total: 0 });
   const [kpiResults, setKpiResults] = useState([]);
   const [kpiDepartments, setKpiDepartments] = useState([]);
+  const [kpiPeriods, setKpiPeriods] = useState([]);
+  const [kpiPeriod, setKpiPeriod] = useState(null);
   const [selectedKpiDeptCode, setSelectedKpiDeptCode] = useState('CONTENT');
 
   const filteredKpiDepartment = useMemo(() => {
@@ -694,7 +682,8 @@ export default function Leaderboard() {
     const params = new URLSearchParams(searchParams);
     if (value === null || value === undefined) params.delete(key);
     else params.set(key, value);
-    setSearchParams(params, { replace: true });
+    if (key !== 'page') params.delete('page');
+    setSearchParams(normalizeRankingParams(params), { replace: true });
   }, [searchParams, setSearchParams]);
 
   // Load Seasons & Grands once
@@ -719,15 +708,19 @@ export default function Leaderboard() {
 
   // Fetch ranking data
   const fetchData = useCallback(async (isManual = false) => {
+    const requestId = ++fetchId.current;
     const cacheKey = selectedTeamId
-      ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, period: currentPeriod, search: debouncedSearch, metric: urlMetric })
-      : CACHE_KEYS.RANKINGS(scopeMode, { period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, search: debouncedSearch });
+      ? CACHE_KEYS.RANKINGS('team_drilldown', { teamId: selectedTeamId, teamSubView, page: rankingPage, period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, search: debouncedSearch, metric: urlMetric })
+      : CACHE_KEYS.RANKINGS(scopeMode, { page: rankingPage, period: currentPeriod, seasonId: urlSeasonId, grandId: urlGrandId, metric: urlMetric, view: youtubeView, channelTeam, search: debouncedSearch });
     const cachedData = getCached(cacheKey);
 
     if (cachedData) {
       if (selectedTeamId) {
         if (cachedData.teamMembers) setMemberRankings((prev) => (isDeepEqual(prev, cachedData.teamMembers) ? prev : cachedData.teamMembers));
-        if (cachedData.teamChannels) setTeamChannels((prev) => (isDeepEqual(prev, cachedData.teamChannels) ? prev : cachedData.teamChannels));
+        if (cachedData.teamChannels) {
+          setTeamChannels(cachedData.teamChannels.items || []);
+          setTeamChannelRanking(cachedData.teamChannels);
+        }
       } else if (scopeMode === 'teams') {
         setTeamRankings((prev) => (isDeepEqual(prev, cachedData) ? prev : cachedData));
       } else if (scopeMode === 'members') {
@@ -750,44 +743,36 @@ export default function Leaderboard() {
       if (selectedTeamId) {
         // LEVEL 2: DRILL-DOWN INTO SPECIFIC TEAM
         const numTeamId = Number(selectedTeamId);
-        const [teamMembersRes, teamYtRes] = await Promise.all([
-          fetchWithCache(
-            CACHE_KEYS.RANKINGS('team_members', { teamId: numTeamId, period: currentPeriod, search: debouncedSearch }),
-            () => rankingsApi.getIndividuals({
+        const data = await fetchWithCache(cacheKey, () => teamSubView === 'members'
+          ? rankingsApi.getIndividuals({
               scope: currentPeriod,
+              seasonId: urlSeasonId || undefined,
+              grandId: urlGrandId || undefined,
               teamId: numTeamId,
               search: debouncedSearch || undefined,
+              page: rankingPage,
               limit: 100,
-            }),
-            { ttl: CACHE_TTL.MEDIUM, force: isManual }
-          ),
-          fetchWithCache(
-            CACHE_KEYS.RANKINGS('team_channels', { teamId: numTeamId, metric: urlMetric }),
-            () => youtubeApi.getLeaderboard({
+            }).then((teamMembers) => ({ teamMembers }))
+          : rankingsApi.getYouTube({
               view: 'channels',
               teamId: numTeamId,
               sortBy: urlMetric,
+              page: rankingPage,
               limit: 100,
-            }).catch(() => ({ items: [] })),
-            { ttl: CACHE_TTL.MEDIUM, force: isManual }
-          ),
-        ]);
+            }).then((teamChannels) => ({ teamChannels })),
+          { ttl: CACHE_TTL.MEDIUM, force: isManual });
+        if (requestId !== fetchId.current) return;
 
-        const drilldownData = { teamMembers: teamMembersRes, teamChannels: teamYtRes.items || [] };
-        setCached(cacheKey, drilldownData, { ttl: CACHE_TTL.MEDIUM });
-
-        setMemberRankings((prev) => (isDeepEqual(prev, teamMembersRes) ? prev : teamMembersRes));
-        setTeamChannels((prev) => (isDeepEqual(prev, teamYtRes.items || []) ? prev : (teamYtRes.items || [])));
+        if (data.teamMembers) setMemberRankings(data.teamMembers);
+        if (data.teamChannels) {
+          setTeamChannels(data.teamChannels.items || []);
+          setTeamChannelRanking(data.teamChannels);
+        }
 
         setSelectedTeamDetails((prev) => {
-          if (prev && Number(prev.teamId || prev.id) === numTeamId && prev.teamName && !prev.teamName.startsWith('Team #')) {
-            return prev;
-          }
-          const foundName = teamMembersRes.items?.[0]?.teamName;
-          return {
-            teamId: numTeamId,
-            teamName: foundName || prev?.teamName || `Team #${numTeamId}`,
-          };
+          if (prev && Number(prev.teamId || prev.id) === numTeamId && prev.teamName) return prev;
+          const foundName = data.teamMembers?.items?.[0]?.teamName || data.teamChannels?.items?.[0]?.teamName;
+          return { teamId: numTeamId, teamName: foundName || `Đội #${numTeamId}` };
         });
       } else {
         // LEVEL 1: COMPANY / ALL
@@ -798,10 +783,12 @@ export default function Leaderboard() {
               scope: currentPeriod,
               seasonId: urlSeasonId || undefined,
               grandId: urlGrandId || undefined,
+              page: rankingPage,
               limit: 100,
             }),
             { ttl: CACHE_TTL.MEDIUM, force: isManual }
           );
+          if (requestId !== fetchId.current) return;
           setTeamRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'members') {
           const res = await fetchWithCache(
@@ -811,52 +798,80 @@ export default function Leaderboard() {
               seasonId: urlSeasonId || undefined,
               grandId: urlGrandId || undefined,
               search: debouncedSearch || undefined,
+              page: rankingPage,
               limit: 100,
             }),
             { ttl: CACHE_TTL.MEDIUM, force: isManual }
           );
+          if (requestId !== fetchId.current) return;
           setMemberRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'youtube') {
           const res = await fetchWithCache(
             cacheKey,
             () => rankingsApi.getYouTube({
-              view: 'channels',
+              view: youtubeView,
+              teamId: channelTeam || undefined,
               sortBy: urlMetric,
               search: debouncedSearch || undefined,
+              page: rankingPage,
               limit: 100,
             }),
             { ttl: CACHE_TTL.MEDIUM, force: isManual }
           );
-          setYoutubeRankings((prev) => (isDeepEqual(prev, res) ? prev : res));
+          if (requestId !== fetchId.current) return;
+          const data = youtubeView === 'teams' ? {
+            ...res,
+            items: (res.items || []).map((team) => ({ ...team, id: team.teamId, title: team.teamName, views: team.totalViews, subscribers: team.totalSubscribers })),
+          } : res;
+          setCached(cacheKey, data, { ttl: CACHE_TTL.MEDIUM });
+          setYoutubeRankings((prev) => (isDeepEqual(prev, data) ? prev : data));
         } else if (scopeMode === 'hall-of-fame') {
           const res = await fetchWithCache(
             cacheKey,
             () => rankingsApi.getTopPerformers(),
             { ttl: CACHE_TTL.MEDIUM, force: isManual }
           );
+          if (requestId !== fetchId.current) return;
           setHallOfFameData((prev) => (isDeepEqual(prev, res) ? prev : res));
         } else if (scopeMode === 'kpi') {
-          const [deptsRes, resultsRes] = await Promise.all([
+          const [deptsRes, periodsRes] = await Promise.all([
             fetchWithCache(CACHE_KEYS.KPI_DEPARTMENTS(), () => kpiApi.getDepartments(), { ttl: CACHE_TTL.STATIC, force: isManual }),
-            fetchWithCache(CACHE_KEYS.KPI_RESULTS(), () => kpiApi.getResults(), { ttl: CACHE_TTL.SHORT, force: isManual }),
+            fetchWithCache('kpi:periods', () => kpiApi.getPeriods(), { ttl: CACHE_TTL.SHORT, force: isManual }),
           ]);
+          if (requestId !== fetchId.current) return;
+          const periods = periodsRes?.data || [];
+          const now = new Date();
+          const currentCode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const selectedPeriod = urlKpiPeriodId
+            ? periods.find((entry) => String(entry.id) === urlKpiPeriodId)
+            : periods.find((entry) => entry.code === currentCode);
+          const resultsRes = selectedPeriod
+            ? await fetchWithCache(CACHE_KEYS.KPI_RESULTS({ periodId: selectedPeriod.id }), () => kpiApi.getResults({ periodId: selectedPeriod.id }), { ttl: CACHE_TTL.SHORT, force: isManual })
+            : { data: [] };
+          if (requestId !== fetchId.current) return;
           const depts = deptsRes?.data || deptsRes || [];
           const resList = resultsRes?.data || resultsRes || [];
           setKpiDepartments(depts);
+          setKpiPeriods(periods);
+          setKpiPeriod(selectedPeriod || null);
           setKpiResults(resList);
         }
       }
     } catch (err) {
+      if (requestId !== fetchId.current) return;
       console.error('Error fetching rankings:', err);
       setError(err?.response?.data?.message || err?.message || 'Không thể tải dữ liệu bảng xếp hạng');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === fetchId.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, [scopeMode, selectedTeamId, currentPeriod, urlSeasonId, urlGrandId, urlMetric, debouncedSearch]);
+  }, [scopeMode, selectedTeamId, teamSubView, rankingPage, currentPeriod, urlSeasonId, urlGrandId, urlKpiPeriodId, urlMetric, youtubeView, channelTeam, debouncedSearch]);
 
   useEffect(() => {
     fetchData();
+    return () => { fetchId.current += 1; };
   }, [fetchData]);
 
   // Drill-down handlers
@@ -865,6 +880,8 @@ export default function Leaderboard() {
     setSelectedTeamDetails(team);
     const params = new URLSearchParams(searchParams);
     params.set('teamId', String(tId));
+    params.delete('page');
+    if (scopeMode === 'youtube') params.set('teamView', 'youtube');
     params.delete('search');
     setSearchKeyword('');
     setSearchParams(params, { replace: true });
@@ -875,6 +892,7 @@ export default function Leaderboard() {
     params.delete('teamId');
     params.delete('groupId');
     params.delete('teamView');
+    params.delete('page');
     params.delete('search');
     setSearchKeyword('');
     setSearchParams(params, { replace: true });
@@ -883,11 +901,15 @@ export default function Leaderboard() {
   const handleScopeChange = (mode) => {
     const params = new URLSearchParams(searchParams);
     params.set('scope', mode);
+    params.delete('page');
     params.delete('mode');
     params.delete('ranking');
     params.delete('teamId');
     params.delete('groupId');
     params.delete('search');
+    params.delete('seasonId');
+    params.delete('grandId');
+    params.delete('teamView');
     if (mode === 'members') {
       params.set('period', 'all-time');
     } else if (mode === 'teams') {
@@ -900,14 +922,19 @@ export default function Leaderboard() {
       params.delete('metric');
     }
     setSearchKeyword('');
-    setSearchParams(params, { replace: true });
+    setSearchParams(normalizeRankingParams(params), { replace: true });
   };
 
   const handlePeriodChange = (period) => {
     const params = new URLSearchParams(searchParams);
     params.set('period', period);
-    setSearchParams(params, { replace: true });
+    params.delete('page');
+    setSearchParams(normalizeRankingParams(params), { replace: true });
   };
+
+  const displayedRanking = selectedTeamId
+    ? teamSubView === 'youtube' ? teamChannelRanking : memberRankings
+    : scopeMode === 'youtube' ? youtubeRankings : scopeMode === 'teams' ? teamRankings : memberRankings;
 
   return (
     <div className="leaderboard-page" style={{ maxWidth: 1160, margin: '0 auto', padding: '16px 16px 48px', fontFamily: "'JetBrains Mono', monospace" }}>
@@ -946,11 +973,8 @@ export default function Leaderboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Trophy size={22} color="#b45309" />
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#ffffff', lineHeight: 1.25 }}>
-              {selectedTeamId ? `Xếp Hạng Nội Bộ · ${selectedTeamDetails?.teamName}` : 'Bảng Xếp Hạng Toàn Công Ty'}
+              {selectedTeamId ? `Xếp Hạng Nội Bộ · ${selectedTeamDetails?.teamName || `Đội #${selectedTeamId}`}` : 'Bảng Xếp Hạng Toàn Công Ty'}
             </h1>
-            <span style={{ background: 'rgba(180,83,9,0.2)', color: '#b45309', fontSize: 10, fontWeight: 700, padding: '2px 8px', textTransform: 'uppercase' }}>
-              Canonical V3.3
-            </span>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>
             {selectedTeamId
@@ -1039,7 +1063,7 @@ export default function Leaderboard() {
               { id: 'kpi', label: 'BXH KPI', icon: Target },
               { id: 'teams', label: 'BXH Đội Nhóm', icon: Users },
               { id: 'members', label: 'BXH Thành Viên', icon: User },
-              { id: 'youtube', label: 'BXH Kênh YouTube', icon: Tv },
+              { id: 'youtube', label: 'BXH YouTube', icon: Tv },
               { id: 'hall-of-fame', label: 'Bảng Vinh Danh', icon: Award },
             ].map((tab) => {
               const isActive = scopeMode === tab.id;
@@ -1088,16 +1112,17 @@ export default function Leaderboard() {
               gap: 6,
               marginLeft: 'auto',
               flexShrink: 0,
-              flexWrap: 'nowrap',
-              transition: 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              flexWrap: 'wrap',
+              maxWidth: '100%',
+              transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
             }}
           >
-            {scopeMode !== 'youtube' && scopeMode !== 'hall-of-fame' && (
-              <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
+            {(scopeMode === 'teams' || scopeMode === 'members') && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
                 {[
                   { id: 'season', label: 'Mùa Giải' },
                   { id: 'grand', label: 'Vô Địch Năm (Grand)' },
-                  { id: 'all-time', label: 'Toàn Thời Gian' },
+                  { id: 'all-time', label: 'Điểm hiện tại' },
                 ].map((p) => (
                   <button
                     key={p.id}
@@ -1112,7 +1137,7 @@ export default function Leaderboard() {
                       cursor: 'pointer',
                       borderRadius: 3,
                       whiteSpace: 'nowrap',
-                      transition: 'background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
                     }}
                   >
                     {p.label}
@@ -1121,6 +1146,19 @@ export default function Leaderboard() {
               </div>
             )}
 
+            {scopeMode === 'youtube' && (
+              <select aria-label="Loại BXH YouTube" value={youtubeView} onChange={(event) => setParam('view', event.target.value)} style={{ maxWidth: '100%', padding: '5px 8px', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 4, fontSize: 12 }}>
+                <option value="channels">Kênh YouTube</option>
+                <option value="teams">Đội nhóm YouTube</option>
+              </select>
+            )}
+            {scopeMode === 'youtube' && youtubeView === 'channels' && (
+              <select aria-label="Phân bổ kênh" value={channelTeam} onChange={(event) => setParam('channelTeam', event.target.value || null)} style={{ maxWidth: '100%', padding: '5px 8px', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 4, fontSize: 12 }}>
+                <option value="">Tất cả kênh</option>
+                <option value="unassigned">Chưa gán đội</option>
+                {channelTeam && channelTeam !== 'unassigned' && <option value={channelTeam}>{youtubeRankings.items?.find((channel) => String(channel.teamId) === channelTeam)?.teamName || `Đội #${channelTeam}`}</option>}
+              </select>
+            )}
             {scopeMode === 'youtube' && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(15,23,42,0.04)', padding: 2, borderRadius: 4, border: '1px solid rgba(15,23,42,0.06)' }}>
                 {[
@@ -1141,7 +1179,7 @@ export default function Leaderboard() {
                       cursor: 'pointer',
                       borderRadius: 3,
                       whiteSpace: 'nowrap',
-                      transition: 'background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
                     }}
                   >
                     {m.label}
@@ -1157,19 +1195,20 @@ export default function Leaderboard() {
                 <input
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder={scopeMode === 'youtube' ? 'Tìm kênh...' : 'Tìm thành viên...'}
+                  placeholder={scopeMode === 'youtube' ? (youtubeView === 'teams' ? 'Tìm đội...' : 'Tìm kênh...') : 'Tìm thành viên...'}
                   style={{
                     background: '#ffffff',
                     border: '1px solid rgba(15,23,42,0.12)',
                     padding: '5px 8px 5px 24px',
                     fontSize: 11.5,
                     outline: 'none',
-                    width: 130,
+                    width: 170,
+                    maxWidth: '100%',
                     borderRadius: 3,
-                    transition: 'width 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease',
+                    transition: 'border-color var(--motion-fast) var(--ease-standard)',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.width = '170px'; e.currentTarget.style.borderColor = '#b45309'; }}
-                  onBlur={(e) => { if (!searchKeyword) e.currentTarget.style.width = '130px'; e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)'; }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#b45309'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)'; }}
                 />
               </div>
             )}
@@ -1246,7 +1285,7 @@ export default function Leaderboard() {
               {[
                 { id: 'season', label: 'Mùa Giải' },
                 { id: 'grand', label: 'Grand' },
-                { id: 'all-time', label: 'Toàn Thời Gian' },
+                { id: 'all-time', label: 'Điểm hiện tại' },
               ].map((p) => (
                 <button
                   key={p.id}
@@ -1273,6 +1312,23 @@ export default function Leaderboard() {
       )}
 
       {/* ── BODY CONTENT ── */}
+      {scopeMode === 'kpi' && (
+        <select aria-label="Chọn kỳ KPI" value={urlKpiPeriodId} onChange={(event) => setParam('periodId', event.target.value || null)} style={{ maxWidth: '100%', marginBottom: 16, padding: '8px 12px', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 4 }}>
+          <option value="">Kỳ KPI tháng hiện tại</option>
+          {kpiPeriods.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+        </select>
+      )}
+      {(scopeMode === 'teams' || scopeMode === 'members') && currentPeriod !== 'all-time' && teamSubView !== 'youtube' && (
+        <select
+          aria-label={currentPeriod === 'grand' ? 'Chọn giải vô địch năm' : 'Chọn mùa giải'}
+          value={currentPeriod === 'grand' ? urlGrandId : urlSeasonId}
+          onChange={(event) => setParam(currentPeriod === 'grand' ? 'grandId' : 'seasonId', event.target.value || null)}
+          style={{ maxWidth: '100%', marginBottom: 16, padding: '8px 12px', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 4 }}
+        >
+          <option value="">{currentPeriod === 'grand' ? 'Giải năm hiện tại' : 'Mùa giải hiện tại'}</option>
+          {(currentPeriod === 'grand' ? grandList : seasonList).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}{entry.year ? ` (${entry.year})` : ''}</option>)}
+        </select>
+      )}
       {loading ? (
         <TableSkeleton rows={8} cols={5} minHeight={420} />
       ) : error ? (
@@ -1304,7 +1360,7 @@ export default function Leaderboard() {
                     onOpenProfile={(u) => navigate(`/users/${u.id || u.userId}`)}
                   />
 
-                  {memberRankings.items?.length >= 1 && !searchKeyword && (
+                  {rankingPage === 1 && memberRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={memberRankings.items}
                       nameKey="userName"
@@ -1315,7 +1371,7 @@ export default function Leaderboard() {
                   )}
 
                   {/* Members Table */}
-                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                  <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                         Thành Viên Thuộc Đội ({memberRankings.items?.length || 0} người)
@@ -1335,7 +1391,7 @@ export default function Leaderboard() {
                           <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Đội này chưa có thành viên tham gia thi đấu</td></tr>
                         ) : (
                           memberRankings.items.map((m, idx) => {
-                            const rank = m.rank || idx + 1;
+                            const rank = m.rank || (rankingPage - 1) * 100 + idx + 1;
                             const isMe = Number(m.userId || m.id) === Number(currentUser?.id);
                             return (
                               <tr
@@ -1386,7 +1442,7 @@ export default function Leaderboard() {
                 </div>
               ) : (
                 /* Team YouTube Channels */
-                <div style={{ ...CARD, overflow: 'hidden' }}>
+                <div style={{ ...CARD, overflowX: 'auto' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                       Kênh YouTube Thuộc Quyền Sở Hữu ({teamChannels.length} kênh)
@@ -1414,7 +1470,7 @@ export default function Leaderboard() {
                           >
                             <td style={{ padding: '12px 16px' }}>
                               <span style={{ width: 24, height: 24, background: idx === 0 ? '#dc2626' : 'rgba(15,23,42,0.06)', color: idx === 0 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
-                                {idx + 1}
+                                {c.rank || (rankingPage - 1) * 100 + idx + 1}
                               </span>
                             </td>
                             <td style={{ padding: '12px 16px' }}>
@@ -1456,7 +1512,7 @@ export default function Leaderboard() {
                     <div>
                       <div className="leaderboard-kpi-kicker"><Target size={15} /> Theo dõi tiến độ KPI</div>
                       <h2>Bảng xếp hạng hiệu suất KPI</h2>
-                      <p>So sánh tiến độ hoàn thành chỉ tiêu theo từng phòng ban trong kỳ hiện tại.</p>
+                      <p>{kpiPeriod?.name || 'Chưa có kỳ KPI tháng hiện tại'}</p>
                     </div>
                     <div className="leaderboard-kpi-summary" aria-label="Tổng quan KPI">
                       <div><strong>{kpiUserLeaderboard.length}</strong><span>thành viên</span></div>
@@ -1487,7 +1543,7 @@ export default function Leaderboard() {
                         <strong>{filteredKpiDepartment?.name || 'Tất cả phòng ban'}</strong>
                         <span>{kpiUserLeaderboard.length ? `${kpiUserLeaderboard.length} thành viên có dữ liệu KPI` : 'Chưa có dữ liệu trong kỳ này'}</span>
                       </div>
-                      <span className="leaderboard-kpi-period">Kỳ hiện tại</span>
+                      <span className="leaderboard-kpi-period">{kpiPeriod?.name || 'Chưa có kỳ KPI'}</span>
                     </div>
                     {kpiUserLeaderboard.length === 0 ? (
                       <div className="leaderboard-kpi-empty">
@@ -1561,7 +1617,7 @@ export default function Leaderboard() {
                     isTeam
                   />
 
-                  {teamRankings.items?.length >= 1 && (
+                  {rankingPage === 1 && teamRankings.items?.length >= 1 && (
                     <DynamicPodium
                       items={teamRankings.items}
                       nameKey="teamName"
@@ -1571,7 +1627,7 @@ export default function Leaderboard() {
                     />
                   )}
 
-                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                  <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                         Danh Sách Thứ Hạng Đội Nhóm ({teamRankings.items?.length || 0} đội)
@@ -1602,14 +1658,14 @@ export default function Leaderboard() {
                                   onClick={() => handlePeriodChange('all-time')}
                                   style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
-                                  Xem Toàn Thời Gian
+                                  Xem điểm hiện tại
                                 </button>
                               )}
                             </td>
                           </tr>
                         ) : (
                           teamRankings.items.map((row, idx) => {
-                            const rank = row.rank || idx + 1;
+                            const rank = row.rank || (rankingPage - 1) * 100 + idx + 1;
                             const isMyTeam = Number(row.teamId) === Number(currentUser?.teamId);
                             const scoreVal = row[currentPeriod === 'grand' ? 'grandPoints' : 'totalScore'] ?? row.score ?? 0;
                             return (
@@ -1682,7 +1738,7 @@ export default function Leaderboard() {
                     onOpenProfile={(u) => navigate(`/users/${u.id || u.userId}`)}
                   />
 
-                  {memberRankings.items?.length >= 1 && !searchKeyword && (
+                  {rankingPage === 1 && memberRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={memberRankings.items}
                       nameKey="userName"
@@ -1692,7 +1748,7 @@ export default function Leaderboard() {
                     />
                   )}
 
-                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                  <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                         Toàn Bộ Thành Viên ({memberRankings.items?.length || 0} người)
@@ -1728,14 +1784,14 @@ export default function Leaderboard() {
                                   onClick={() => handlePeriodChange('all-time')}
                                   style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
-                                  Xem Toàn Thời Gian
+                                  Xem điểm hiện tại
                                 </button>
                               )}
                             </td>
                           </tr>
                         ) : (
                           memberRankings.items.map((u, i) => {
-                            const rank = u.rank || i + 1;
+                            const rank = u.rank || (rankingPage - 1) * 100 + i + 1;
                             const isMe = currentUser && (Number(u.userId || u.id) === Number(currentUser.id) || u.userName === currentUser.name);
                             const scoreVal = u[currentPeriod === 'all-time' ? 'lifetimeScore' : 'score'] ?? 0;
                             return (
@@ -1812,7 +1868,7 @@ export default function Leaderboard() {
               {/* 3. BXH KÊNH YOUTUBE (CÔNG TY - BAO GỒM CẢ CHƯA GÁN TEAM) */}
               {scopeMode === 'youtube' && (
                 <div>
-                  {youtubeRankings.items?.length >= 1 && !searchKeyword && (
+                  {rankingPage === 1 && youtubeRankings.items?.length >= 1 && !searchKeyword && (
                     <DynamicPodium
                       items={youtubeRankings.items}
                       nameKey="title"
@@ -1822,19 +1878,19 @@ export default function Leaderboard() {
                     />
                   )}
 
-                  <div style={{ ...CARD, overflow: 'hidden' }}>
+                  <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
-                        Toàn Bộ Kênh YouTube ({youtubeRankings.items?.length || 0} kênh)
+                        {youtubeView === 'teams' ? 'Đội nhóm YouTube' : 'Kênh YouTube'} ({youtubeRankings.total || youtubeRankings.items?.length || 0})
                       </span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>Bao gồm tất cả kênh có team & kênh chưa gán team</span>
+                      <span style={{ fontSize: 11, color: '#64748b' }}>{youtubeView === 'teams' ? 'Tổng số liệu các kênh thuộc đội' : channelTeam === 'unassigned' ? 'Kênh chưa gán đội' : 'Kênh có đội và kênh chưa gán đội'}</span>
                     </div>
                     <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
                           <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Kênh YouTube</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Sở Hữu</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Đội nhóm' : 'Kênh YouTube'}</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Số kênh' : 'Đội sở hữu'}</th>
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Lượt Xem</th>
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</th>
                           <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Tăng Trưởng (30D)</th>
@@ -1846,7 +1902,7 @@ export default function Leaderboard() {
                             <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
                               <Tv size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
                               <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
-                                {searchKeyword ? `Không tìm thấy kênh YouTube phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu kênh YouTube'}
+                                {searchKeyword ? `Không tìm thấy ${youtubeView === 'teams' ? 'đội' : 'kênh'} phù hợp với "${searchKeyword}"` : `Chưa có dữ liệu ${youtubeView === 'teams' ? 'đội nhóm' : 'kênh YouTube'}`}
                               </div>
                               {searchKeyword && (
                                 <button
@@ -1860,7 +1916,7 @@ export default function Leaderboard() {
                           </tr>
                         ) : (
                           youtubeRankings.items.map((c, idx) => {
-                            const rank = c.rank || idx + 1;
+                            const rank = c.rank || (rankingPage - 1) * 100 + idx + 1;
                             return (
                               <tr
                                 key={c.id || c.channelId || idx}
@@ -1885,7 +1941,9 @@ export default function Leaderboard() {
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px' }}>
-                                  {c.isUnassigned || !c.teamId ? (
+                                  {youtubeView === 'teams' ? (
+                                    <button type="button" onClick={() => handleDrillDownTeam({ ...c, teamView: 'youtube' })} style={{ border: 0, background: 'transparent', color: '#0f172a', cursor: 'pointer' }}>{c.channelsCount || 0} kênh <ChevronRight size={12} /></button>
+                                  ) : c.isUnassigned || !c.teamId ? (
                                     <span style={{ padding: '2px 6px', fontSize: 10, fontWeight: 600, background: '#f1f5f9', color: '#64748b', borderRadius: 4 }}>
                                       Chưa gán đội
                                     </span>
@@ -2026,6 +2084,13 @@ export default function Leaderboard() {
             </div>
           )}
         </TabTransition>
+      )}
+      {!loading && !error && ['teams', 'members', 'youtube'].includes(scopeMode) && Number(displayedRanking.totalPages || Math.ceil(Number(displayedRanking.total || 0) / 100)) > 1 && (
+        <nav aria-label="Phân trang bảng xếp hạng" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 16 }}>
+          <button type="button" aria-label="Trang trước" title="Trang trước" disabled={rankingPage <= 1} onClick={() => setParam('page', rankingPage - 1)}><ChevronLeft size={18} /></button>
+          <span style={{ fontSize: 13 }}>Trang {rankingPage} / {displayedRanking.totalPages || Math.ceil(displayedRanking.total / 100)}</span>
+          <button type="button" aria-label="Trang sau" title="Trang sau" disabled={rankingPage >= Number(displayedRanking.totalPages || Math.ceil(displayedRanking.total / 100))} onClick={() => setParam('page', rankingPage + 1)}><ChevronRight size={18} /></button>
+        </nav>
       )}
     </div>
   );

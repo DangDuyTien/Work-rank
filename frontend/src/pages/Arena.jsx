@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Flame, Clock, Users, BookOpen, RefreshCw, CheckCircle2, Tv, ExternalLink, Crown, Sparkles, ArrowUp, ArrowDown, Minus, Search, Swords, Target, Zap } from 'lucide-react';
-import { competition, youtube } from '../services/api';
+import { Trophy, Flame, Clock, Users, BookOpen, RefreshCw, CheckCircle2, Tv, ExternalLink, Crown, Sparkles, ArrowUp, ArrowDown, Minus, Swords, Target } from 'lucide-react';
+import { competition } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
+import { PageShell, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatCountdown(endAt) {
@@ -44,12 +44,8 @@ export default function Arena() {
   const [myTeam, setMyTeam] = useState(() => cachedDetails?.myTeam || null);
   const [leaderboard, setLeaderboard] = useState(() => Array.isArray(cachedDetails?.leaderboard) ? cachedDetails.leaderboard : []);
   const [individualLeaderboard, setIndividualLeaderboard] = useState(() => Array.isArray(cachedDetails?.individualLeaderboard) ? cachedDetails.individualLeaderboard : []);
-  const [individualChampion, setIndividualChampion] = useState(() => cachedDetails?.individualChampion || null);
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [challenges, setChallenges] = useState(() => Array.isArray(cachedDetails?.challenges) ? cachedDetails.challenges : []);
   const [seasonRules, setSeasonRules] = useState(() => cachedDetails?.seasonRules || null);
-  const [youtubeLeaderboard, setYoutubeLeaderboard] = useState(() => Array.isArray(cachedDetails?.youtubeLeaderboard) ? cachedDetails.youtubeLeaderboard : []);
   const [activeTab, setActiveTab] = useState('leaderboard');
   const [loading, setLoading] = useState(!cachedDetails && !cachedActive);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,13 +67,12 @@ export default function Arena() {
 
       const cacheKey = CACHE_KEYS.ARENA_SEASON_DETAILS(active.id);
 
-      const [detailRes, lbRes, indRes, chRes, rulesRes, ytRes] = await Promise.all([
+      const [detailRes, lbRes, indRes, chRes, rulesRes] = await Promise.all([
         fetchWithCache(`${cacheKey}:detail`, () => competition.getSeasonDetail(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:lb`, () => competition.getSeasonLeaderboard(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:ind`, () => competition.getSeasonIndividualLeaderboard(active.id).catch(() => ({ rankings: [], individualChampion: null })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:ch`, () => competition.getSeasonChallenges(active.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:rules`, () => competition.getSeasonRules(active.id).catch(() => null), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
-        fetchWithCache(`${cacheKey}:yt`, () => youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
       ]);
 
       const bundle = {
@@ -85,10 +80,8 @@ export default function Arena() {
         myTeam: detailRes.myTeam || null,
         leaderboard: lbRes.rankings || [],
         individualLeaderboard: indRes.rankings || [],
-        individualChampion: indRes.individualChampion || (indRes.rankings?.[0] || null),
         challenges: chRes || [],
         seasonRules: rulesRes,
-        youtubeLeaderboard: ytRes.items || [],
       };
 
       setCached(cacheKey, bundle, { ttl: CACHE_TTL.MEDIUM });
@@ -97,10 +90,8 @@ export default function Arena() {
       setMyTeam((prev) => (isDeepEqual(prev, bundle.myTeam) ? prev : bundle.myTeam));
       setLeaderboard((prev) => (isDeepEqual(prev, bundle.leaderboard) ? prev : bundle.leaderboard));
       setIndividualLeaderboard((prev) => (isDeepEqual(prev, bundle.individualLeaderboard) ? prev : bundle.individualLeaderboard));
-      setIndividualChampion((prev) => (isDeepEqual(prev, bundle.individualChampion) ? prev : bundle.individualChampion));
       setChallenges((prev) => (isDeepEqual(prev, bundle.challenges) ? prev : bundle.challenges));
       setSeasonRules((prev) => (isDeepEqual(prev, bundle.seasonRules) ? prev : bundle.seasonRules));
-      setYoutubeLeaderboard((prev) => (isDeepEqual(prev, bundle.youtubeLeaderboard) ? prev : bundle.youtubeLeaderboard));
     } catch (err) {
       setError(err?.response?.data?.message || 'Không thể tải dữ liệu Đấu Trường Arena');
     } finally {
@@ -167,6 +158,8 @@ export default function Arena() {
 
   const activeChallenges = challenges.filter((c) => c.status !== 'COMPLETED').length;
   const completedChallenges = challenges.filter((c) => c.status === 'COMPLETED').length;
+  const teamPreview = leaderboard.filter((team, index) => index < 5 || (myTeam && Number(team.teamId) === Number(myTeam.teamId)));
+  const individualPreview = individualLeaderboard.filter((individual, index) => index < 5 || Number(individual.userId || individual.id) === Number(user?.id));
 
   return (
     <PageShell>
@@ -281,11 +274,10 @@ export default function Arena() {
       </section>
 
       {/* QUICK STATS */}
-      <div className="arena-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
+      <div className="arena-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
         <StatCard icon={Users} label="Đội thi đấu" value={leaderboard.length} color="#b45309" />
         <StatCard icon={Swords} label="Cá nhân tranh tài" value={individualLeaderboard.length} color="#141414" />
         <StatCard icon={Target} label="Thử thách đang mở" value={activeChallenges} detail={completedChallenges > 0 ? `${completedChallenges} đã hoàn thành` : undefined} color="#b45309" />
-        <StatCard icon={Tv} label="Kênh YouTube" value={youtubeLeaderboard.length} color="#b91c1c" />
       </div>
 
       {/* TABS */}
@@ -295,7 +287,6 @@ export default function Arena() {
           options={[
             { key: 'leaderboard', label: `BXH Đội (${leaderboard.length})` },
             { key: 'individual', label: `BXH Cá Nhân (${individualLeaderboard.length})` },
-            { key: 'youtube', label: `YouTube (${youtubeLeaderboard.length})` },
             { key: 'challenges', label: `Thử Thách (${challenges.length})` },
             { key: 'rules', label: 'Luật Chơi' },
           ]}
@@ -317,7 +308,7 @@ export default function Arena() {
             actions={
               season?.id && (
                 <Link
-                  to={`/rankings?scope=season&seasonId=${season.id}&ranking=team`}
+                  to={`/leaderboard?scope=teams&period=season&seasonId=${season.id}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -339,7 +330,7 @@ export default function Arena() {
               <EmptyState title="Chưa có điểm thi đấu" description="Chưa có đội nào ghi nhận điểm số trong mùa giải này." />
             ) : (
               <FlipList resetKey={`arena-teams:${season?.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {leaderboard.map((team) => {
+                {teamPreview.map((team) => {
                   const isTop1 = team.rank === 1;
                   const isMyTeam = myTeam && Number(team.teamId) === Number(myTeam.teamId);
                   return (
@@ -438,7 +429,7 @@ export default function Arena() {
             actions={
               season?.id && (
                 <Link
-                  to={`/rankings?scope=season&seasonId=${season.id}&ranking=individual`}
+                  to={`/leaderboard?scope=members&period=season&seasonId=${season.id}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -456,58 +447,11 @@ export default function Arena() {
               )
             }
           >
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: '1 1 200px', display: 'flex', alignItems: 'center' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, color: '#777777', pointerEvents: 'none' }} />
-                <input
-                  type="text"
-                  placeholder="Tìm nhân viên..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px 8px 32px',
-                    border: '1px solid var(--border)',
-                    fontSize: 13,
-                    fontWeight: 400,
-                    outline: 'none',
-                    background: '#ffffff',
-                  }}
-                />
-              </div>
-              <select
-                value={selectedTeamFilter}
-                onChange={(e) => setSelectedTeamFilter(e.target.value)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid var(--border)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  background: '#fff',
-                }}
-              >
-                <option value="all">Tất cả đội</option>
-                {leaderboard.map((t) => (
-                  <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
-                ))}
-              </select>
-            </div>
-
             {(() => {
-              const filtered = individualLeaderboard.filter((u) => {
-                if (selectedTeamFilter !== 'all' && String(u.teamId) !== String(selectedTeamFilter)) return false;
-                if (searchQuery.trim()) {
-                  const q = searchQuery.toLowerCase();
-                  const nameStr = u.userName || u.name || '';
-                  const emailStr = u.userEmail || u.email || '';
-                  return nameStr.toLowerCase().includes(q) || emailStr.toLowerCase().includes(q);
-                }
-                return true;
-              });
+              const filtered = individualPreview;
 
               if (filtered.length === 0) {
-                return <EmptyState title="Không tìm thấy nhân viên" description="Chưa có dữ liệu cá nhân phù hợp với bộ lọc hiện tại." />;
+                return <EmptyState title="Chưa có điểm cá nhân" description="Chưa có dữ liệu cá nhân trong mùa giải này." />;
               }
 
               return (
@@ -592,105 +536,6 @@ export default function Arena() {
                 </FlipList>
               );
             })()}
-          </Section>
-        )}
-
-        {/* TAB: YOUTUBE PREVIEW */}
-        {activeTab === 'youtube' && (
-          <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Tv size={18} color="#b91c1c" /> BXH YouTube Teams</span>}
-            description="Xếp hạng sản lượng thực tế (Views, Subscribers, Growth) từ các kênh YouTube"
-            actions={
-              <Link
-                to="/leaderboard"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  padding: '7px 14px',
-                  background: '#141414',
-                  color: '#ffffff',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
-              >
-                Xem toàn bộ BXH <ExternalLink size={12} />
-              </Link>
-            }
-          >
-            <Notice type="info" icon={Zap}>
-              <strong>Tách biệt hệ thống:</strong> YouTube Views & Subscribers phản ánh thành tích kinh doanh. Điểm XP Mùa Giải chỉ được cộng thông qua Luật Mùa Giải (Rule Engine).
-            </Notice>
-
-            <div style={{ marginTop: 16 }}>
-              {youtubeLeaderboard.length === 0 ? (
-                <EmptyState title="Chưa có dữ liệu YouTube" description="Chưa có kênh YouTube nào được liên kết và đồng bộ số liệu." />
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {youtubeLeaderboard.map((team, idx) => {
-                    const isPodium = idx < 3;
-                    const isMyTeam = myTeam && Number(team.teamId) === Number(myTeam.teamId);
-                    return (
-                      <div
-                        key={team.teamId}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '12px 16px',
-                          border: isMyTeam ? '1.5px solid rgba(185, 28, 28, 0.35)' : '1px solid var(--border)',
-                          background: '#ffffff',
-                          gap: 12,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                          <div
-                            style={{
-                              width: 30,
-                              height: 30,
-                              background: idx === 0 ? '#b45309' : idx === 1 ? '#78716c' : idx === 2 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                              color: idx < 3 ? '#ffffff' : '#111111',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: 13,
-                              flexShrink: 0,
-                            }}
-                          >
-                            #{idx + 1}
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
-                              {isMyTeam && (
-                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 600, textTransform: 'uppercase' }}>
-                                  Đội của bạn
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 400 }}>
-                              {team.channelsCount} kênh
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
-                            {(team.totalViews || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>views</span>
-                          </div>
-                          <div style={{ fontSize: 11, color: team.viewsGrowth30dPct !== null ? '#15803d' : '#64748b', fontWeight: 500, marginTop: 2 }}>
-                            {(team.totalSubscribers || 0).toLocaleString()} subs • {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `+${Number(team.viewsGrowth30dPct).toFixed(1)}% 30D` : '—'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </Section>
         )}
 
@@ -810,6 +655,10 @@ export default function Arena() {
           </Section>
         )}
       </TabTransition>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '12px 0' }}>
+        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
+        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
+      </div>
     </PageShell>
   );
 }

@@ -137,7 +137,7 @@ export default function CompetitionProgressWidget() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button variant="outline" size="sm" onClick={() => navigate('/rankings')} style={{ fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, color: '#111111', border: '1px solid rgba(0,0,0,0.12)' }}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/leaderboard?scope=members&period=season')} style={{ fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, color: '#111111', border: '1px solid rgba(0,0,0,0.12)' }}>
             <Trophy size={13} color="#b45309" /> Trung Tâm BXH <ArrowUpRight size={14} />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate('/arena')} style={{ fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, color: '#555555' }}>
@@ -154,7 +154,7 @@ export default function CompetitionProgressWidget() {
         {/* 1. MY SEASON SCORE */}
         <Card
           className="motion-hover-lift"
-          onClick={() => navigate('/rankings?scope=individual')}
+          onClick={() => navigate('/leaderboard?scope=members&period=season')}
           title="Bấm để xem Bảng Xếp Hạng Cá Nhân"
           style={{
             padding: 16,
@@ -192,7 +192,7 @@ export default function CompetitionProgressWidget() {
         {/* 2. MY TEAM SEASON */}
         <Card
           className="motion-hover-lift"
-          onClick={() => navigate('/rankings?scope=team')}
+          onClick={() => navigate('/leaderboard?scope=teams&period=season')}
           title="Bấm để xem Bảng Xếp Hạng Đội"
           style={{
             padding: 16,
@@ -226,7 +226,7 @@ export default function CompetitionProgressWidget() {
         {/* 3. GRAND CHAMPIONSHIP */}
         <Card
           className="motion-hover-lift"
-          onClick={() => navigate('/rankings?scope=grand')}
+          onClick={() => navigate('/leaderboard?scope=members&period=grand')}
           title="Bấm để xem Bảng Xếp Hạng Grand Championship"
           style={{
             padding: 16,

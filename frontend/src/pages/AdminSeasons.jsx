@@ -69,8 +69,9 @@ export default function AdminSeasons() {
     label: '',
     teamName: '',
     teamTitle: '',
-    membersText: '',
-    mvpName: '',
+    memberIds: [],
+    legacyMembers: [],
+    mvpUserId: '',
     mvpJobTitle: '',
     mvpAwardTitle: '',
     mvpScore: '',
@@ -104,10 +105,14 @@ export default function AdminSeasons() {
 
   const fetchAvailableUsers = async () => {
     try {
-      const res = await usersApi.list({ limit: 100 });
-      setAvailableUsers(res.data || []);
-    } catch {
-      // fallback
+      const first = await usersApi.list({ limit: 100 });
+      const remaining = await Promise.all(Array.from(
+        { length: Math.max(0, (first.pagination?.totalPages || 1) - 1) },
+        (_, index) => usersApi.list({ limit: 100, page: index + 2 }),
+      ));
+      setAvailableUsers([...(first.data || []), ...remaining.flatMap((res) => res.data || [])]);
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể tải danh sách thành viên'));
     }
   };
 
@@ -228,8 +233,9 @@ export default function AdminSeasons() {
       label: 'Mùa Giải Vinh Danh 2025',
       teamName: '',
       teamTitle: 'Nhà Vô Địch Mùa Giải 2025',
-      membersText: '',
-      mvpName: '',
+      memberIds: [],
+      legacyMembers: [],
+      mvpUserId: '',
       mvpJobTitle: 'Nhân viên',
       mvpAwardTitle: 'MVP Mùa Giải 2025',
       mvpScore: 0,
@@ -241,16 +247,15 @@ export default function AdminSeasons() {
 
   const handleOpenEditArchive = (item) => {
     setEditingArchive(item);
-    const membersText = Array.isArray(item.championTeam?.members)
-      ? item.championTeam.members.map((m) => (typeof m === 'string' ? m : m.name || '')).filter(Boolean).join(', ')
-      : '';
+    const members = Array.isArray(item.championTeam?.members) ? item.championTeam.members : [];
     setArchiveForm({
       year: item.year,
       label: item.label || '',
       teamName: item.championTeam?.teamName || '',
       teamTitle: item.championTeam?.title || '',
-      membersText,
-      mvpName: item.mvp?.name || '',
+      memberIds: members.filter((m) => m.userId || m.id).map((m) => String(m.userId || m.id)),
+      legacyMembers: members.filter((m) => !m.userId && !m.id),
+      mvpUserId: item.mvp?.userId ? String(item.mvp.userId) : '',
       mvpJobTitle: item.mvp?.jobTitle || '',
       mvpAwardTitle: item.mvp?.awardTitle || '',
       mvpScore: item.mvp?.score || 0,
@@ -266,11 +271,16 @@ export default function AdminSeasons() {
       toast.warning('Năm là bắt buộc.');
       return;
     }
+    if (!archiveForm.mvpUserId) {
+      toast.warning('Vui lòng chọn tài khoản MVP.');
+      return;
+    }
     setSavingArchive(true);
     try {
-      const members = archiveForm.membersText
-        ? archiveForm.membersText.split(',').map((s) => ({ name: s.trim() })).filter((m) => m.name)
-        : [];
+      const members = [
+        ...archiveForm.memberIds.map((id) => ({ userId: Number(id) })),
+        ...archiveForm.legacyMembers,
+      ];
 
       const payload = {
         year: Number(archiveForm.year),
@@ -281,7 +291,7 @@ export default function AdminSeasons() {
           members,
         },
         mvp: {
-          name: archiveForm.mvpName || `Cá nhân MVP ${archiveForm.year}`,
+          userId: Number(archiveForm.mvpUserId),
           jobTitle: archiveForm.mvpJobTitle || 'Nhân viên',
           awardTitle: archiveForm.mvpAwardTitle || `MVP Mùa Giải ${archiveForm.year}`,
           score: Number(archiveForm.mvpScore || 0),
@@ -1048,15 +1058,48 @@ export default function AdminSeasons() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Thành viên đội (phân cách bằng dấu phẩy)</label>
-              <input
-                type="text"
-                placeholder="Trần Văn A, Lê Thị B, Phạm Văn C"
-                value={archiveForm.membersText}
-                onChange={(e) => setArchiveForm({ ...archiveForm, membersText: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500"
-              />
-              <span className="text-[11px] text-slate-500 mt-1 block">Tên thành viên sẽ được hiển thị trên danh sách vinh danh trang chủ.</span>
+              <span id="archive-members-label" className="text-xs font-semibold text-slate-700 block mb-1">Thành viên đội ({archiveForm.memberIds.length} đã chọn)</span>
+              <div role="group" aria-labelledby="archive-members-label" className="max-h-48 overflow-y-auto bg-white border border-slate-300 rounded-lg p-2">
+                {availableUsers.map((user) => (
+                  <label key={user.id} className="flex items-center gap-2 p-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={archiveForm.memberIds.includes(String(user.id))}
+                      onChange={(e) => setArchiveForm((form) => ({
+                        ...form,
+                        memberIds: e.target.checked
+                          ? [...form.memberIds, String(user.id)]
+                          : form.memberIds.filter((id) => id !== String(user.id)),
+                      }))}
+                    />
+                    <span className="min-w-0 break-words">{user.name} · #{user.id}{user.teamName ? ` · ${user.teamName}` : ''}</span>
+                  </label>
+                ))}
+                {archiveForm.memberIds.filter((id) => !availableUsers.some((user) => String(user.id) === id)).map((id) => (
+                  <label key={id} className="flex items-center gap-2 p-2 text-sm">
+                    <input type="checkbox" checked onChange={() => setArchiveForm((form) => ({
+                      ...form, memberIds: form.memberIds.filter((memberId) => memberId !== id),
+                    }))} />
+                    <span className="min-w-0 break-words">
+                      {editingArchive?.championTeam?.members?.find((m) => String(m.userId || m.id) === id)?.name || `Thành viên #${id}`} (không có trong danh sách hiện tại)
+                    </span>
+                  </label>
+                ))}
+                {availableUsers.length === 0 && <p className="text-xs text-slate-500 p-2">Chưa tải được danh sách thành viên.</p>}
+              </div>
+              {archiveForm.legacyMembers.length > 0 && (
+                <div className="mt-2 text-xs text-amber-800">
+                  <p>Thành viên cũ chưa liên kết tài khoản:</p>
+                  {archiveForm.legacyMembers.map((member, index) => (
+                    <label key={index} className="flex items-center gap-2 py-1">
+                      <input type="checkbox" checked onChange={() => setArchiveForm((form) => ({
+                        ...form, legacyMembers: form.legacyMembers.filter((_, i) => i !== index),
+                      }))} />
+                      {typeof member === 'string' ? member : member.name}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1066,15 +1109,27 @@ export default function AdminSeasons() {
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Tên cá nhân MVP</label>
-                <input
-                  type="text"
+                <label htmlFor="archive-mvp-user" className="text-xs font-semibold text-slate-700 block mb-1">Cá nhân MVP *</label>
+                <select
+                  id="archive-mvp-user"
                   required
-                  placeholder="Ví dụ: Nguyễn Văn C"
-                  value={archiveForm.mvpName}
-                  onChange={(e) => setArchiveForm({ ...archiveForm, mvpName: e.target.value })}
+                  value={archiveForm.mvpUserId}
+                  onChange={(e) => {
+                    const user = availableUsers.find((u) => String(u.id) === e.target.value);
+                    setArchiveForm({ ...archiveForm, mvpUserId: e.target.value,
+                      mvpJobTitle: user?.jobTitle || '', mvpIsVerified: Boolean(user?.isVerified) });
+                  }}
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-                />
+                >
+                  <option value="">-- Chọn thành viên --</option>
+                  {availableUsers.map((user) => <option key={user.id} value={user.id}>{user.name} · #{user.id}</option>)}
+                  {archiveForm.mvpUserId && !availableUsers.some((u) => String(u.id) === archiveForm.mvpUserId) && (
+                    <option value={archiveForm.mvpUserId}>{editingArchive?.mvp?.name} · #{archiveForm.mvpUserId}</option>
+                  )}
+                </select>
+                {editingArchive?.mvp?.name && !editingArchive.mvp.userId && (
+                  <p className="text-xs text-amber-800 mt-1">MVP cũ: {editingArchive.mvp.name} (chưa liên kết tài khoản)</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">Chức danh / Vị trí</label>

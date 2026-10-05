@@ -60,7 +60,7 @@ export default function Home() {
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
   const year = Number.isFinite(startYear) ? startYear : null;
-  const teamResult = `/leaderboard?mode=teams&period=season${season?.id ? `&seasonId=${encodeURIComponent(season.id)}` : ''}`;
+  const teamResult = `/leaderboard?scope=teams&period=season${season?.id ? `&seasonId=${encodeURIComponent(season.id)}` : ''}`;
   const mvpProfile = data?.mvp?.userId ? `/users/${data.mvp.userId}` : '/arena';
   const seasonName = loading ? 'Đang tải mùa giải…' : error ? 'Chưa tải được mùa giải' : season?.name || 'Chưa có mùa giải công bố';
 
@@ -113,8 +113,8 @@ export default function Home() {
               mvp: { state: 'official', source: 'HistoricalArchive' },
             },
           };
-          const archTeamTo = arch.championTeam?.teamId ? `/leaderboard?mode=teams&teamId=${arch.championTeam.teamId}` : '/leaderboard?mode=hall-of-fame';
-          const archMvpTo = arch.mvp?.userId ? `/users/${arch.mvp.userId}` : '/leaderboard?mode=hall-of-fame';
+          const archTeamTo = arch.championTeam?.teamId ? `/leaderboard?scope=teams&period=season&teamId=${arch.championTeam.teamId}${arch.season?.id ? `&seasonId=${arch.season.id}` : ''}` : '/leaderboard?scope=hall-of-fame';
+          const archMvpTo = arch.mvp?.userId ? `/users/${arch.mvp.userId}` : '/leaderboard?scope=hall-of-fame';
           const archSeasonName = arch.label || `Vinh Danh Mùa Giải ${arch.year}`;
 
           return (
@@ -149,9 +149,9 @@ export default function Home() {
         <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">
           <div><span className="public-editorial-kicker">THÀNH TÍCH CÒN TIẾP NỐI</span><h2 id="public-explore-title">Mỗi mùa giải.<br />Một dấu ấn.</h2></div>
           <div className="public-explore-links">
-            <RecognitionLink to="/leaderboard?mode=hall-of-fame">Lịch sử vinh danh</RecognitionLink>
+            <RecognitionLink to="/leaderboard?scope=hall-of-fame">Lịch sử vinh danh</RecognitionLink>
             <RecognitionLink to="/arena">Mùa giải &amp; hoạt động</RecognitionLink>
-            <RecognitionLink to="/leaderboard?mode=teams">Khám phá đội nhóm</RecognitionLink>
+            <RecognitionLink to="/leaderboard?scope=teams">Khám phá đội nhóm</RecognitionLink>
           </div>
         </Reveal>
       </main>
@@ -159,7 +159,7 @@ export default function Home() {
       {/* Footer — hiện khi cuộn tới */}
       <Reveal as="footer" mode="scroll" className="public-editorial-footer">
         <nav aria-label="Khám phá WorkRank">
-          <Link to="/leaderboard?mode=teams">Bảng xếp hạng</Link>
+          <Link to="/leaderboard?scope=teams">Bảng xếp hạng</Link>
           <Link to="/arena">Mùa giải</Link>
           <Link to="/youtube">YouTube</Link>
           <Link to="/games">Trò chơi</Link>

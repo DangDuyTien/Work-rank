@@ -1,8 +1,9 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
+import { normalizeRankingParams } from './config/ranking';
 
 const CHUNK_RELOAD_KEY = 'workrank:chunk-reload-attempted';
 
@@ -70,6 +71,12 @@ const AdminRoute = ({ children }) => {
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 };
+
+function CanonicalRedirect({ to, ranking = false }) {
+  const location = useLocation();
+  const search = ranking ? `?${normalizeRankingParams(location.search)}` : location.search;
+  return <Navigate to={{ pathname: to, search, hash: location.hash }} replace state={location.state} />;
+}
 
 const PageFallback = ({ text = 'Đang tải...' }) => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#64748b', fontSize: 14 }}>
@@ -150,79 +157,11 @@ function RouteErrorBoundary({ children }) {
   );
 }
 
-function AnimatedAppRoutes() {
-  const location = useLocation();
-  const [displayLocation, setDisplayLocation] = useState(location);
-  const [transitionStage, setTransitionStage] = useState('none'); // 'none' | 'fadeIn' | 'fadeOut'
-
-  useEffect(() => {
-    // Cinematic exit/enter transitions
-    const isFullscreenGame = (p) => ['/games/2048', '/games/capital-board', '/games/quiz', '/games/sam'].some((base) => p.startsWith(base));
-    const isPublicPage = (p) => p === '/' || p === '/login';
-    const isToOrFromPublic = isPublicPage(location.pathname) || isPublicPage(displayLocation.pathname);
-    const isEnteringGame = !isFullscreenGame(displayLocation.pathname) && isFullscreenGame(location.pathname);
-    const isExitingGame = isFullscreenGame(displayLocation.pathname) && !isFullscreenGame(location.pathname);
-
-    if (location.pathname !== displayLocation.pathname) {
-      if (isToOrFromPublic) {
-        setTransitionStage('fadeOut');
-        let enterTimer;
-        const timer = setTimeout(() => {
-          setDisplayLocation(location);
-          setTransitionStage('fadeIn');
-          window.scrollTo(0, 0);
-          enterTimer = setTimeout(() => {
-            setTransitionStage('none');
-          }, 350);
-        }, 240);
-        return () => {
-          clearTimeout(timer);
-          if (enterTimer) clearTimeout(enterTimer);
-        };
-      } else if (isEnteringGame) {
-        // App contents & navigation slide/fade out into full viewport game surface
-        setTransitionStage('appToGameExit');
-        const timer = setTimeout(() => {
-          setDisplayLocation(location);
-          setTransitionStage('none');
-          window.scrollTo(0, 0);
-        }, 280);
-        return () => clearTimeout(timer);
-      } else if (isExitingGame) {
-        // Navigation slides back in and app content expands smoothly
-        setDisplayLocation(location);
-        setTransitionStage('appFromGameEnter');
-        const timer = setTimeout(() => {
-          setTransitionStage('none');
-        }, 360);
-        return () => clearTimeout(timer);
-      } else {
-        // Internal page navigation (inside dashboard / authenticated app): instant switch with NO flicker
-        setDisplayLocation(location);
-        setTransitionStage('none');
-      }
-    } else if (location.search !== displayLocation.search) {
-      setDisplayLocation(location);
-    }
-  }, [location, displayLocation]);
-
-  const transitionClass =
-    transitionStage === 'fadeOut'
-      ? 'wr-page-exit'
-      : transitionStage === 'fadeIn'
-      ? 'wr-page-enter'
-      : transitionStage === 'appToGameExit'
-      ? 'wr-app-to-game-exit'
-      : transitionStage === 'appFromGameEnter'
-      ? 'wr-app-from-game-enter'
-      : '';
-
+function AppRoutes() {
   return (
-    <div
-      className={`wr-route-transition-container ${transitionClass}`}
-    >
+    <div className="wr-route-transition-container">
       <Suspense fallback={<PageFallback />}>
-        <Routes location={displayLocation}>
+        <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route
@@ -233,17 +172,17 @@ function AnimatedAppRoutes() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/kpi" element={<Dashboard />} />
+            <Route path="/kpi" element={<CanonicalRedirect to="/dashboard" />} />
             <Route path="/activity" element={<Navigate to="/dashboard" replace />} />
             <Route path="/tracking" element={<Navigate to="/dashboard" replace />} />
             <Route path="/productivity" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/activity-ranking" element={<Navigate to="/leaderboard?mode=kpi" replace />} />
-            <Route path="/activity-leaderboard" element={<Navigate to="/leaderboard?mode=kpi" replace />} />
+            <Route path="/activity-ranking" element={<CanonicalRedirect to="/leaderboard" ranking />} />
+            <Route path="/activity-leaderboard" element={<CanonicalRedirect to="/leaderboard" ranking />} />
             <Route path="/youtube" element={<YouTubeOverview />} />
             <Route path="/arena" element={<Arena />} />
             <Route path="/grand" element={<GrandHub />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/rankings" element={<Leaderboard />} />
+            <Route path="/rankings" element={<CanonicalRedirect to="/leaderboard" ranking />} />
             <Route path="/admin/kpi" element={<AdminRoute><AdminKpi /></AdminRoute>} />
             <Route path="/admin/departments" element={<Navigate to="/admin/kpi" replace />} />
 
@@ -333,7 +272,7 @@ export default function App() {
       <UiProvider>
         <AuthProvider>
           <RouteErrorBoundary>
-            <AnimatedAppRoutes />
+            <AppRoutes />
           </RouteErrorBoundary>
         </AuthProvider>
       </UiProvider>

@@ -10249,7 +10249,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
   border: 1px solid var(--border) !important;
   border-bottom: 1px solid var(--border) !important;
   border-radius: var(--radius-content);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 

@@ -281,6 +281,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               <div
                 className={`animated-collapse${isExpanded ? ' is-open' : ''}`}
                 aria-hidden={!isExpanded}
+                inert={!isExpanded ? '' : undefined}
               >
                 <div
                   className="animated-collapse__inner workrank-nav-subitems"

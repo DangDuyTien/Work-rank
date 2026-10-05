@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Award,
   BadgeCheck,
@@ -20,17 +20,19 @@ import {
   UserCheck,
   UserPlus,
   UserRound,
+  Upload,
   Users,
   X,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
 import { users as usersApi, groups as groupsApi } from '../services/api';
-import { getUserAvatar, initialsFromName } from '../utils/avatar';
+import { compressImage, getUserAvatar, initialsFromName, removeStoredAvatar, setStoredAvatar } from '../utils/avatar';
 import { useToast } from '../context/UiContext';
 import { useAuth } from '../context/AuthContext';
 import { parseApiError } from '../utils/errors';
 import MvpCupAwardModal from '../components/MvpCupAwardModal';
+import { AnimatedModal } from '../components/ui';
 
 const PAGE_SIZE = 50;
 
@@ -96,8 +98,10 @@ function Avatar({ user, size = 40 }) {
 
 export default function AdminPrivileges() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedUserId = searchParams.get('userId');
   const toast = useToast();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
@@ -107,6 +111,7 @@ export default function AdminPrivileges() {
   const [pagination, setPagination] = useState(null);
   const searchTimerRef = useRef(null);
   const loadIdRef = useRef(0);
+  const avatarUploadIdRef = useRef(0);
 
   // Modal States
   const [teamsList, setTeamsList] = useState([]);
@@ -128,6 +133,9 @@ export default function AdminPrivileges() {
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
+    phone: '',
+    bio: '',
+    avatarData: '',
     role: 'user',
     jobTitle: 'Nhân viên',
     department: 'Media & Content',
@@ -137,6 +145,7 @@ export default function AdminPrivileges() {
     isDev: false,
   });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [processingAvatar, setProcessingAvatar] = useState(false);
 
   const [awardModalUser, setAwardModalUser] = useState(null);
   const [awardType, setAwardType] = useState('MVP');
@@ -326,24 +335,76 @@ export default function AdminPrivileges() {
     }
   };
 
-  const openEditModal = (user) => {
+  const openEditModal = useCallback((user) => {
+    avatarUploadIdRef.current += 1;
+    setProcessingAvatar(false);
     setEditModalUser(user);
     setEditForm({
       name: user.name || '',
       email: user.email || '',
+      phone: user.phone || '',
+      bio: user.bio || '',
+      avatarData: user.avatarData || '',
       role: user.role || 'user',
       jobTitle: user.jobTitle || 'Nhân viên',
       department: user.department || 'Media & Content',
       teamId: user.teamId ? String(user.teamId) : '',
-      status: user.status || 'active',
+      status: user.accountStatus || user.status || 'active',
       isVerified: isVerified(user),
       isDev: isDev(user),
     });
+  }, []);
+
+  useEffect(() => {
+    if (!requestedUserId) {
+      setEditModalUser(null);
+      return;
+    }
+    const targetId = Number(requestedUserId);
+    if (!Number.isInteger(targetId) || targetId <= 0) {
+      toast.error('Mã nhân sự không hợp lệ.');
+      return;
+    }
+    let cancelled = false;
+    usersApi.get(targetId).then((res) => {
+      if (!cancelled) openEditModal(res.data);
+    }).catch((err) => {
+      if (!cancelled) toast.error(parseApiError(err, 'Không tải được hồ sơ nhân sự.'));
+    });
+    return () => { cancelled = true; };
+  }, [openEditModal, requestedUserId, toast]);
+
+  const closeEditModal = () => {
+    avatarUploadIdRef.current += 1;
+    setProcessingAvatar(false);
+    setEditModalUser(null);
+    if (!requestedUserId) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('userId');
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const handleAvatarFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const uploadId = ++avatarUploadIdRef.current;
+    setProcessingAvatar(true);
+    try {
+      const avatarData = await compressImage(file, 400, 400, 0.85);
+      if (uploadId === avatarUploadIdRef.current) {
+        setEditForm((prev) => ({ ...prev, avatarData }));
+      }
+    } catch (err) {
+      if (uploadId === avatarUploadIdRef.current) toast.error(parseApiError(err, 'Không thể xử lý ảnh đại diện.'));
+    } finally {
+      if (uploadId === avatarUploadIdRef.current) setProcessingAvatar(false);
+    }
   };
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
-    if (!editModalUser) return;
+    if (!editModalUser || processingAvatar) return;
     if (!editForm.name.trim() || !editForm.email.trim()) {
       toast.warning('Tên và email không được để trống.');
       return;
@@ -353,6 +414,9 @@ export default function AdminPrivileges() {
       const res = await usersApi.update(editModalUser.id, {
         name: editForm.name.trim(),
         email: editForm.email.trim(),
+        phone: editForm.phone.trim(),
+        bio: editForm.bio.trim(),
+        avatarData: editForm.avatarData || null,
         role: editForm.role,
         jobTitle: editForm.jobTitle.trim(),
         department: editForm.department.trim(),
@@ -361,7 +425,12 @@ export default function AdminPrivileges() {
         isVerified: editForm.isVerified,
         isDev: editForm.isDev,
       });
-      const updated = res.data || {};
+      const updated = { ...(res.data || {}), avatarData: editForm.avatarData || null };
+      if (updated.avatarData) setStoredAvatar(editModalUser.id, updated.avatarData);
+      else removeStoredAvatar(editModalUser.id);
+      if (String(currentUser?.id) === String(editModalUser.id)) {
+        setUser((prev) => ({ ...prev, ...updated }));
+      }
       const matchedTeam = teamsList.find((t) => String(t.id) === String(editForm.teamId));
       setUsers((current) => current.map((item) => (
         item.id === editModalUser.id ? {
@@ -382,7 +451,7 @@ export default function AdminPrivileges() {
         }));
       }
       toast.success(`Đã cập nhật hồ sơ của ${editForm.name}!`);
-      setEditModalUser(null);
+      closeEditModal();
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể cập nhật hồ sơ.'));
     } finally {
@@ -981,31 +1050,29 @@ export default function AdminPrivileges() {
       )}
 
       {/* ── MODAL CHỈNH SỬA TOÀN BỘ HỒ SƠ ── */}
-      {editModalUser && (
-        <div className="modal-backdrop-enter" style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
-                  Chỉnh Sửa Hồ Sơ Nhân Sự #{editModalUser.id}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditModalUser(null)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
+      <AnimatedModal
+        isOpen={Boolean(editModalUser)}
+        onClose={closeEditModal}
+        title={editModalUser ? `Chỉnh Sửa Hồ Sơ Nhân Sự #${editModalUser.id}` : 'Chỉnh Sửa Hồ Sơ Nhân Sự'}
+        maxWidth={500}
+      >
+        {editModalUser && (
             <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                <Avatar user={{ ...editModalUser, name: editForm.name, avatarData: editForm.avatarData || null }} size={52} />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: '#f8fafc', border: '1px solid #cbd5e1', fontSize: 12, color: '#334155', cursor: savingEdit || processingAvatar ? 'wait' : 'pointer' }}>
+                    <Upload size={14} /> {processingAvatar ? 'Đang xử lý ảnh...' : 'Đổi ảnh đại diện'}
+                    <input type="file" accept="image/*" aria-label="Ảnh đại diện nhân sự" onChange={handleAvatarFile} disabled={savingEdit || processingAvatar} style={{ display: 'none' }} />
+                  </label>
+                  {editForm.avatarData && (
+                    <button type="button" onClick={() => setEditForm((prev) => ({ ...prev, avatarData: '' }))} disabled={savingEdit || processingAvatar} title="Xóa ảnh đại diện" aria-label="Xóa ảnh đại diện" style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}>
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Họ và Tên *
@@ -1032,43 +1099,54 @@ export default function AdminPrivileges() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: '#475569' }}>
+                Số điện thoại liên hệ
+                <input type="tel" value={editForm.phone} onChange={(event) => setEditForm((prev) => ({ ...prev, phone: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #cbd5e1' }} />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: '#475569' }}>
+                Giới thiệu / Trách nhiệm chuyên môn
+                <textarea rows={3} value={editForm.bio} onChange={(event) => setEditForm((prev) => ({ ...prev, bio: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }} />
+              </label>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-job-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Chức Danh & Bậc Huy Hiệu
                   </label>
-                  <select
+                  <input
+                    id="person-edit-job-title"
+                    list="person-edit-job-titles"
                     value={editForm.jobTitle}
                     onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
-                  >
-                    {CATEGORIZED_JOB_TITLES.map((group) => (
-                      <optgroup key={group.category} label={group.category}>
-                        {group.titles.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    maxLength={120}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                  />
+                  <datalist id="person-edit-job-titles">
+                    {CATEGORIZED_JOB_TITLES.flatMap((group) => group.titles.map((title) => (
+                      <option key={`${group.category}-${title}`} value={title} />
+                    )))}
+                  </datalist>
                   <div style={{ marginTop: 6 }}>
                     <JobTitleBadge jobTitle={editForm.jobTitle} size="xs" />
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-department" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Phòng Ban Trực Thuộc
                   </label>
-                  <select
+                  <input
+                    id="person-edit-department"
+                    list="person-edit-departments"
                     value={editForm.department}
                     onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
-                  >
-                    <optgroup label="Phòng ban chính thức">
-                      {CATEGORIZED_DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </optgroup>
-                  </select>
+                    maxLength={120}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                  />
+                  <datalist id="person-edit-departments">
+                    {CATEGORIZED_DEPARTMENTS.map((department) => (
+                      <option key={department} value={department} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 
@@ -1088,31 +1166,34 @@ export default function AdminPrivileges() {
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-role" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Phân Quyền Hệ Thống
                   </label>
                   <select
+                    id="person-edit-role"
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
                   >
                     <option value="user">Nhân Viên (User)</option>
+                    <option value="manager">Quản Lý (Manager)</option>
                     <option value="admin">Quản Trị Viên (Admin)</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-status" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
                     Trạng Thái Tài Khoản
                   </label>
                   <select
+                    id="person-edit-status"
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                     style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
                   >
                     <option value="active">Hoạt động (Active)</option>
-                    <option value="suspended">Tạm khóa (Suspended)</option>
+                    <option value="inactive">Tạm khóa (Inactive)</option>
                   </select>
                 </div>
               </div>
@@ -1139,14 +1220,14 @@ export default function AdminPrivileges() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
                 <button
                   type="button"
-                  onClick={() => setEditModalUser(null)}
+                  onClick={closeEditModal}
                   style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  disabled={savingEdit}
+                  disabled={savingEdit || processingAvatar}
                   style={{
                     padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
                     fontSize: 12, fontWeight: 600, cursor: savingEdit ? 'not-allowed' : 'pointer',
@@ -1157,9 +1238,8 @@ export default function AdminPrivileges() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+        )}
+      </AnimatedModal>
 
       {/* ── MODAL TRAO GIẢI THƯỞNG ── */}
       {awardModalUser && (
@@ -1315,8 +1395,8 @@ export default function AdminPrivileges() {
               </div>
               <div>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TRẠNG THÁI:</span>
-                <div style={{ fontSize: 13, fontWeight: 600, color: detailDrawerUser.status === 'suspended' ? '#dc2626' : '#16a34a', marginTop: 2 }}>
-                  {detailDrawerUser.status === 'suspended' ? 'Tạm khóa (Suspended)' : 'Hoạt động (Active)'}
+                <div style={{ fontSize: 13, fontWeight: 600, color: (detailDrawerUser.accountStatus || detailDrawerUser.status) === 'inactive' ? '#dc2626' : '#16a34a', marginTop: 2 }}>
+                  {(detailDrawerUser.accountStatus || detailDrawerUser.status) === 'inactive' ? 'Tạm khóa (Inactive)' : 'Hoạt động (Active)'}
                 </div>
               </div>
             </div>

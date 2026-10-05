@@ -26,7 +26,8 @@ import {
  *
  * Groups all active platform routes into clean, logical parent-child categories:
  * - Overview (Dashboard, YouTube Analytics, Leaderboard)
- * - Competition (Arena, Grand Championship, Friends / Teams)
+ * - Competition (Arena, Grand Championship)
+ * - Collaboration (Members / Teams)
  * - Games (Capital Board Game, 2048, Guess Quiz)
  * - Admin (People & Privileges, Teams & YouTube, Seasons, Grand Championship, Operations & Logs)
  * - Account (Profile, Settings)
@@ -34,33 +35,33 @@ import {
 export const NAVIGATION_CONFIG = [
   {
     id: 'overview',
-    label: 'Tổng Quan & Sản Lượng',
+    label: 'Công việc',
     icon: Target,
     collapsible: false,
     items: [
       {
         to: '/dashboard',
-        label: 'KPI Của Bạn',
-        shortLabel: 'KPI',
+        label: 'Tổng quan',
+        shortLabel: 'Tổng quan',
         icon: Target,
         tourTarget: 'nav-dashboard',
         description: 'Theo dõi kết quả công việc và chỉ tiêu KPI theo bộ phận',
       },
       {
         to: '/youtube',
-        label: 'Số Liệu YouTube & Đội Nhóm',
+        label: 'Số liệu YouTube',
         shortLabel: 'YouTube',
         icon: Tv,
         tourTarget: 'nav-youtube',
-        description: 'Thành tích kênh, BXH lượt xem và người đăng ký các đội',
+        description: 'Phân tích hiệu suất kênh và đội nhóm',
       },
       {
         to: '/leaderboard',
-        label: 'BXH KPI & Phòng Ban',
-        shortLabel: 'BXH KPI',
+        label: 'Bảng xếp hạng',
+        shortLabel: 'BXH',
         icon: Trophy,
         tourTarget: 'nav-leaderboard',
-        description: 'Bảng xếp hạng tiến độ hoàn thành chỉ tiêu KPI phòng CONTENT & EDIT',
+        description: 'Xếp hạng KPI, đội nhóm, thành viên, YouTube và vinh danh',
       },
     ],
   },
@@ -88,12 +89,20 @@ export const NAVIGATION_CONFIG = [
         tourTarget: 'nav-grand',
         description: 'Cuộc đua vô địch năm và bảng xếp hạng điểm tích lũy',
       },
+    ],
+  },
+  {
+    id: 'collaboration',
+    label: 'Cộng tác',
+    icon: Users,
+    collapsible: true,
+    items: [
       {
         to: '/friends',
         label: 'Thành Viên & Đội Nhóm',
         shortLabel: 'Thành viên',
         icon: Users,
-        description: 'Mạng lưới đồng nghiệp, quản lý đội nhóm và bảng xếp hạng thành viên',
+        description: 'Danh bạ đồng nghiệp, kết nối và thành viên đội nhóm',
       },
     ],
   },
@@ -104,6 +113,13 @@ export const NAVIGATION_CONFIG = [
     collapsible: true,
     badge: 'Giải Trí',
     items: [
+      {
+        to: '/games',
+        label: 'Danh mục trò chơi',
+        shortLabel: 'Trò chơi',
+        icon: Gamepad2,
+        description: 'Danh sách trò chơi và trạng thái mở chơi',
+      },
       {
         to: '/games/capital-board',
         label: 'Cờ Tỷ Phú',
@@ -231,7 +247,7 @@ export const NAVIGATION_CONFIG = [
       },
       {
         to: '/settings',
-        label: 'Cài Đặt Hệ Thống',
+        label: 'Cài đặt tài khoản',
         shortLabel: 'Cài đặt',
         icon: SettingsIcon,
         description: 'Tùy chỉnh thông báo, âm thanh và đổi mật khẩu bảo mật',
@@ -245,6 +261,7 @@ export const NAVIGATION_CONFIG = [
  */
 export function isRouteActive(currentPath, targetPath) {
   if (!targetPath || typeof targetPath !== 'string') return false;
+  if (targetPath === '/games') return currentPath === '/games';
   if (targetPath === '/dashboard') return currentPath === '/dashboard' || currentPath === '/kpi';
   if (targetPath === '/leaderboard' || targetPath === '/rankings') {
     return currentPath === '/leaderboard' || currentPath.startsWith('/leaderboard/') ||
@@ -268,9 +285,9 @@ export function resolveItemPath(item, userId) {
  */
 export function resolveCurrentTitle(pathname) {
   if (!pathname) return 'WorkRank';
-  if (pathname === '/dashboard' || pathname === '/kpi') return 'KPI Của Bạn';
+  if (pathname === '/dashboard' || pathname === '/kpi') return 'Tổng quan';
   if (pathname.startsWith('/leaderboard') || pathname.startsWith('/rankings')) return 'Bảng Xếp Hạng';
-  if (pathname.startsWith('/youtube')) return 'Số Liệu YouTube & Đội Nhóm';
+  if (pathname.startsWith('/youtube')) return 'Số liệu YouTube';
   if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
@@ -286,7 +303,7 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/admin/competition/grand')) return 'Quản Lý Giải Vô Địch Năm';
   if (pathname.startsWith('/admin/operations')) return 'Giám Sát & Nhật Ký Kiểm Toán';
   if (pathname.startsWith('/users')) return 'Hồ Sơ Cá Nhân';
-  if (pathname.startsWith('/settings')) return 'Cài Đặt Hệ Thống';
+  if (pathname.startsWith('/settings')) return 'Cài đặt tài khoản';
 
   for (const group of NAVIGATION_CONFIG) {
     for (const item of group.items) {

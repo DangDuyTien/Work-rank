@@ -437,10 +437,70 @@ async function getPublicArchives() {
   const setting = await SystemSetting.findOne({ where: { settingKey: ARCHIVE_KEY } });
   const list = Array.isArray(setting?.settingValue) ? setting.settingValue : [];
   // Sort newest first, remove internal-only fields
-  return list
+  const entries = list
     .slice()
     .sort((a, b) => Number(b.year) - Number(a.year))
     .map(sanitizeArchiveEntry);
+  return resolveArchiveUsers(entries);
+}
+
+// Keep historical titles/scores while resolving portraits from linked accounts.
+async function resolveArchiveUsers(entries, { includeImages = true, validate = false } = {}) {
+  const linkedRecords = entries.flatMap((entry) => [
+    ...(Array.isArray(entry.championTeam?.members) ? entry.championTeam.members : []),
+    entry.mvp,
+  ]).filter((record) => record?.userId != null);
+  const ids = [...new Set(linkedRecords.map((record) => Number(record.userId)))];
+  if (!ids.length) return entries;
+  if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+    const err = new Error('ID thành viên không hợp lệ');
+    err.status = 400;
+    throw err;
+  }
+  const users = await User.findAll({
+    where: { id: { [Op.in]: ids } },
+    attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified'],
+    ...(includeImages ? { include: [{ model: UserProfilePreference, attributes: ['avatarData'] }] } : {}),
+  });
+  const byId = new Map(users.map((user) => [Number(user.id), user]));
+  if (validate && ids.some((id) => !byId.has(id))) {
+    const err = new Error('Thành viên được chọn không còn tồn tại');
+    err.status = 400;
+    throw err;
+  }
+  const mvpIds = [...new Set(entries.map((entry) => Number(entry.mvp?.userId)).filter((id) => byId.has(id)))];
+  const gallery = includeImages && mvpIds.length ? await UserProfileImage.findAll({
+    where: { userId: { [Op.in]: mvpIds } },
+    attributes: ['userId', 'slot', 'imageData'],
+    order: [['slot', 'ASC']],
+  }) : [];
+  const galleries = new Map();
+  for (const image of gallery) {
+    if (!image.imageData) continue;
+    const id = Number(image.userId);
+    if (!galleries.has(id)) galleries.set(id, []);
+    galleries.get(id).push(image.imageData);
+  }
+  const resolve = (record, isMvp = false) => {
+    const user = byId.get(Number(record?.userId));
+    if (!user) return record;
+    const pref = user.UserProfilePreference || user.userProfilePreference;
+    const resolved = { ...record, userId: user.id, name: user.name,
+      jobTitle: record.jobTitle || user.jobTitle, department: record.department || user.department,
+      isVerified: record.isVerified ?? Boolean(user.isVerified) };
+    if (includeImages) {
+      resolved.avatarData = pref?.avatarData || null;
+      resolved.avatarUrl = resolved.avatarData;
+      if (isMvp) resolved.galleryImages = galleries.get(Number(user.id)) || [];
+    }
+    return resolved;
+  };
+  return entries.map((entry) => ({
+    ...entry,
+    ...(entry.championTeam ? { championTeam: { ...entry.championTeam,
+      members: (entry.championTeam.members || []).map((member) => resolve(member)) } } : {}),
+    ...(entry.mvp ? { mvp: resolve(entry.mvp, true) } : {}),
+  }));
 }
 
 /**
@@ -464,7 +524,8 @@ async function adminSaveArchiveEntry(entry) {
   let list = Array.isArray(setting?.settingValue) ? [...setting.settingValue] : [];
 
   const idx = list.findIndex((e) => Number(e.year) === year);
-  const normalized = { ...entry, year, updatedAt: new Date().toISOString() };
+  const [resolved] = await resolveArchiveUsers([entry], { includeImages: false, validate: true });
+  const normalized = { ...resolved, year, updatedAt: new Date().toISOString() };
   if (!normalized.id) normalized.id = `archive-${year}-${Date.now()}`;
 
   if (idx >= 0) {

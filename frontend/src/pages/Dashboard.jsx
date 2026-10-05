@@ -1,20 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dashboard, leaderboard, youtube, kpiApi, competition, users as usersApi } from '../services/api';
+import { dashboard, youtube, kpiApi, competition, users as usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_UPDATED_EVENT, getUserAvatar, initialsFromName } from '../utils/avatar';
 import {
   Activity,
   AlertCircle,
-  Clock3,
   Monitor,
   RefreshCw,
   Users,
   Tv,
   ChevronRight,
   Building2,
-  Search,
-  ArrowLeft,
   ArrowRight,
   ExternalLink,
   Trophy,
@@ -24,7 +21,6 @@ import {
   Sparkles,
   ShieldAlert,
   CheckCircle2,
-  Clock,
   UserCheck,
   Medal,
 } from 'lucide-react';
@@ -32,9 +28,6 @@ import {
 import VerifiedBadge from '../components/VerifiedBadge';
 import JobTitleBadge from '../components/JobTitleBadge';
 import usePageVisibility from '../hooks/usePageVisibility';
-import YouTubeTrendChart from '../components/YouTubeTrendChart';
-import TeamComparisonBar from '../components/TeamComparisonBar';
-import ChannelDetailModal from '../components/ChannelDetailModal';
 import { AnimatedNumber, FlipList } from '../components/ui';
 import { getCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
@@ -79,15 +72,9 @@ const STATUS_CONFIG = {
   },
 };
 
-const RANGES = [
-  { key: 'today', label: 'Hôm nay' },
-  { key: 'week', label: 'Tuần này' },
-  { key: 'month', label: 'Tháng này' },
-];
-
 const ONLINE_STATUSES = ['active', 'online', 'idle'];
 const STATUS_PRIORITY = { active: 0, online: 1, idle: 2, offline: 3 };
-const DASHBOARD_LEADERBOARD_LIMIT = 24;
+const YOUTUBE_SUMMARY_PERIOD = '30d';
 
 function formatNum(value) {
   const n = Number(value) || 0;
@@ -95,17 +82,6 @@ function formatNum(value) {
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
   if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   return n.toLocaleString();
-}
-
-function formatRelativeTime(dateStr) {
-  if (!dateStr) return 'Chưa đồng bộ';
-  const ms = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return 'Vừa xong';
-  if (mins < 60) return `${mins} phút trước`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${Math.floor(hours / 24)} ngày trước`;
 }
 
 function statusConfig(status) {
@@ -126,13 +102,6 @@ function normalizeUserList(raw) {
   return [];
 }
 
-function normalizeChannelList(raw) {
-  if (Array.isArray(raw)) return raw;
-  if (Array.isArray(raw?.items)) return raw.items;
-  if (Array.isArray(raw?.channels)) return raw.channels;
-  return [];
-}
-
 function normalizeKpiSummary(raw) {
   if (!raw || typeof raw !== 'object') return { department: null, period: null, kpis: [] };
   const kpis = Array.isArray(raw.kpis) ? raw.kpis : [];
@@ -150,13 +119,12 @@ export default function Dashboard() {
 
   // Cached initial states for Instant Render (Stale-While-Revalidate)
   const cachedTotals = normalizeTotals(getCached(CACHE_KEYS.DASHBOARD_TOTALS('today')));
-  const cachedUsers = normalizeUserList(getCached(CACHE_KEYS.DASHBOARD_USERS('today')));
+  const cachedUsers = normalizeUserList(getCached(CACHE_KEYS.DASHBOARD_USERS('realtime')));
   const cachedMyKpis = normalizeKpiSummary(getCached(CACHE_KEYS.DASHBOARD_KPI_MY_SUMMARY(user?.id)));
   const cachedCompetition = getCached(CACHE_KEYS.COMPETITION_DASHBOARD(user?.id, user?.teamId));
   const cachedRecognitions = user?.id ? getCached(CACHE_KEYS.USER_PROFILE(`${user.id}:recognitions`)) : null;
   const cachedCompanyYt = isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_COMPANY('30d')) : null;
   const cachedMemberYt = !isAdmin ? getCached(CACHE_KEYS.DASHBOARD_YT_MEMBER('30d', user?.id)) : null;
-  const cachedChannels = isAdmin ? normalizeChannelList(getCached(CACHE_KEYS.DASHBOARD_YT_CHANNELS())) : [];
 
   const hasInitialCache = Boolean(
     (cachedTotals && cachedTotals.online > 0) ||
@@ -164,12 +132,11 @@ export default function Dashboard() {
     cachedMyKpis.kpis.length > 0 ||
     cachedCompetition ||
     cachedCompanyYt ||
-    cachedMemberYt ||
-    cachedChannels.length > 0
+    cachedMemberYt
   );
 
   // Range and master state
-  const [range, setRange] = useState('today');
+  const range = 'today';
   const [totals, setTotals] = useState(() => cachedTotals);
   const [users, setUsers] = useState(() => cachedUsers);
   const [myKpis, setMyKpis] = useState(() => cachedMyKpis);
@@ -181,21 +148,9 @@ export default function Dashboard() {
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
 
   // YouTube module states
-  const [ytPeriod, setYtPeriod] = useState('30d');
+  const ytPeriod = YOUTUBE_SUMMARY_PERIOD;
   const [companyOverview, setCompanyOverview] = useState(() => cachedCompanyYt || null);
   const [memberOverview, setMemberOverview] = useState(() => cachedMemberYt || null);
-  const [allChannels, setAllChannels] = useState(() => cachedChannels);
-
-  // Admin Drill-down & Comparison states
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const [drilldownTeamDetails, setDrilldownTeamDetails] = useState(null);
-  const [drilldownLoading, setDrilldownLoading] = useState(false);
-  const [compareMetric, setCompareMetric] = useState('views'); // 'views' | 'subscribers'
-  const [channelFilter, setChannelFilter] = useState('all'); // 'all' | 'assigned' | 'unassigned'
-  const [channelSearch, setChannelSearch] = useState('');
-
-  // Modal state
-  const [activeModalChannelId, setActiveModalChannelId] = useState(null);
 
   const requestIdRef = useRef(0);
 
@@ -207,7 +162,7 @@ export default function Dashboard() {
       const background = options.background === true;
 
       const cachedRangeTotals = getCached(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange));
-      const cachedRangeUsers = getCached(CACHE_KEYS.DASHBOARD_USERS(selectedRange));
+      const cachedRangeUsers = getCached(CACHE_KEYS.DASHBOARD_USERS('realtime'));
       const safeRangeTotals = cachedRangeTotals ? normalizeTotals(cachedRangeTotals) : null;
       const safeRangeUsers = cachedRangeUsers ? normalizeUserList(cachedRangeUsers) : [];
       const hasCachedRange = Boolean(safeRangeTotals || safeRangeUsers.length > 0);
@@ -226,10 +181,10 @@ export default function Dashboard() {
 
       try {
         const calls = [
-          // 1. Leaderboard users (online rows)
-          fetchWithCache(CACHE_KEYS.DASHBOARD_USERS(selectedRange), async () => {
-            const res = await leaderboard.get(selectedRange, { limit: DASHBOARD_LEADERBOARD_LIMIT });
-            return normalizeUserList(res);
+          // Presence is independent of score rankings and reporting periods.
+          fetchWithCache(CACHE_KEYS.DASHBOARD_USERS('realtime'), async () => {
+            const res = await dashboard.realtimeUsers();
+            return normalizeUserList(res.data).map((onlineUser) => ({ ...onlineUser, presence: 'online' }));
           }),
           // 2. Realtime presence overview
           fetchWithCache(CACHE_KEYS.DASHBOARD_TOTALS(selectedRange), async () => {
@@ -272,12 +227,6 @@ export default function Dashboard() {
           calls.push(
             fetchWithCache(CACHE_KEYS.DASHBOARD_YT_COMPANY(period), () => youtube.getOverview({ period })).catch(() => null)
           );
-          calls.push(
-            fetchWithCache(CACHE_KEYS.DASHBOARD_YT_CHANNELS(), async () => {
-              const res = await youtube.getLeaderboard({ view: 'channels', limit: 200 });
-              return normalizeChannelList(res);
-            }).catch(() => [])
-          );
         } else {
           calls.push(
             fetchWithCache(CACHE_KEYS.DASHBOARD_YT_MEMBER(period, user?.id), () => youtube.getMyOverview({ period })).catch(() => null)
@@ -287,10 +236,10 @@ export default function Dashboard() {
         const results = await Promise.all(calls);
         if (requestId !== requestIdRef.current) return;
 
-        const [leaderboardRes, overviewData, myKpiRes, competitionRes, recognitionsRes, ytDataRes, channelsRes] = results;
+        const [presenceRes, overviewData, myKpiRes, competitionRes, recognitionsRes, ytDataRes] = results;
 
         const newTotals = normalizeTotals(overviewData);
-        const newUsersList = normalizeUserList(leaderboardRes);
+        const newUsersList = normalizeUserList(presenceRes);
         const safeKpis = normalizeKpiSummary(myKpiRes);
 
         setTotals((prev) => (isDeepEqual(prev, newTotals) ? prev : newTotals));
@@ -301,8 +250,6 @@ export default function Dashboard() {
 
         if (isAdmin) {
           if (ytDataRes) setCompanyOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
-          const chItems = normalizeChannelList(channelsRes);
-          setAllChannels((prev) => (isDeepEqual(prev, chItems) ? prev : chItems));
         } else {
           if (ytDataRes) setMemberOverview((prev) => (isDeepEqual(prev, ytDataRes) ? prev : ytDataRes));
         }
@@ -319,29 +266,6 @@ export default function Dashboard() {
     },
     [isAdmin, user?.id, user?.teamId, ytPeriod]
   );
-
-  // Load team drilldown if selected
-  const fetchTeamDrilldown = useCallback(async (teamId, period) => {
-    if (!teamId) {
-      setDrilldownTeamDetails(null);
-      return;
-    }
-    setDrilldownLoading(true);
-    try {
-      const data = await youtube.getTeamDetails(teamId, { period });
-      setDrilldownTeamDetails(data);
-    } catch {
-      setDrilldownTeamDetails(null);
-    } finally {
-      setDrilldownLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedTeamId) {
-      fetchTeamDrilldown(selectedTeamId, ytPeriod);
-    }
-  }, [selectedTeamId, ytPeriod, fetchTeamDrilldown]);
 
   useEffect(() => {
     if (pageVisible) fetchData(range, ytPeriod);
@@ -377,23 +301,6 @@ export default function Dashboard() {
     return () => window.removeEventListener(AVATAR_UPDATED_EVENT, refreshAvatars);
   }, []);
 
-  // Filtered channels list for admin
-  const filteredChannels = useMemo(() => {
-    const safeChannels = normalizeChannelList(allChannels);
-    let list = [...safeChannels];
-    if (channelFilter === 'assigned') {
-      list = list.filter((c) => Boolean(c?.teamId));
-    } else if (channelFilter === 'unassigned') {
-      list = list.filter((c) => !c?.teamId);
-    }
-
-    if (channelSearch.trim()) {
-      const q = channelSearch.trim().toLowerCase();
-      list = list.filter((c) => (c?.title || '').toLowerCase().includes(q) || (c?.customUrl || '').toLowerCase().includes(q));
-    }
-    return list;
-  }, [allChannels, channelFilter, channelSearch]);
-
   const activeUsers = useMemo(
     () => normalizeUserList(users).filter((u) => ONLINE_STATUSES.includes(String(u?.status || u?.presence || '').toLowerCase())).length,
     [users]
@@ -408,9 +315,9 @@ export default function Dashboard() {
         const aStatus = STATUS_PRIORITY[String(a?.status || a?.presence || '').toLowerCase()] ?? 9;
         const bStatus = STATUS_PRIORITY[String(b?.status || b?.presence || '').toLowerCase()] ?? 9;
         if (aStatus !== bStatus) return aStatus - bStatus;
-        return Number(b?.score || 0) - Number(a?.score || 0);
+        return String(a?.name || '').localeCompare(String(b?.name || ''), 'vi');
       })
-      .slice(0, 12);
+      .slice(0, 6);
   }, [users]);
 
   // ── LAYER 1 COMPUTATIONS: Personal KPI stats ──
@@ -432,10 +339,8 @@ export default function Dashboard() {
 
   const personalInfo = useMemo(() => {
     const uSum = competitionData?.userSummary;
-    const rk = memberOverview?.ranking;
-    const score = Number(uSum?.currentSeasonScore ?? rk?.score ?? 0);
-    const rank = uSum?.currentSeasonRank || rk?.rank || 1;
-    const totalUsers = rk?.totalUsers || normalizeUserList(users).length || 1;
+    const score = Number(uSum?.currentSeasonScore || 0);
+    const rank = uSum?.currentSeasonRank || null;
     const streak = Number(uSum?.currentStreak || 0);
     const recentScoreDelta = Number(uSum?.recentScoreDelta || 0);
     const seasonWins = Number(uSum?.seasonWins || 0);
@@ -450,7 +355,6 @@ export default function Dashboard() {
     return {
       score,
       rank,
-      totalUsers,
       streak,
       recentScoreDelta,
       seasonWins,
@@ -475,13 +379,20 @@ export default function Dashboard() {
       teamId,
       teamName,
       score: Number(tComp?.currentSeasonScore || 0),
-      rank: tComp?.currentSeasonRank || tYt?.rankByViews || null,
+      rank: tComp?.currentSeasonRank || null,
       membersCount: Number(tComp?.membersCount || 1),
       totalViews: Number(tYt?.totalViews || 0),
       totalSubs: Number(tYt?.totalSubscribers || 0),
-      growthPct: tYt?.viewsGrowthPct ?? null,
+      growthPct: tYt?.viewsGrowth30dPct ?? null,
     };
   }, [competitionData, memberOverview, user]);
+
+  const youtubeSummary = {
+    views: isAdmin ? Number(companyOverview?.kpis?.totalViews || 0) : personalInfo.myChannelViews,
+    subscribers: isAdmin ? Number(companyOverview?.kpis?.totalSubscribers || 0) : personalInfo.myChannelSubs,
+    channels: isAdmin ? Number(companyOverview?.kpis?.totalChannels || 0) : personalInfo.assignedChannelsCount,
+    growth: isAdmin ? companyOverview?.kpis?.viewsGrowthPct ?? null : null,
+  };
 
   return (
     <div className="dashboard-page">
@@ -545,19 +456,6 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-hero-actions">
-          <div className="dashboard-range-control" role="group" aria-label="Khoảng thời gian dashboard">
-            {RANGES.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={range === key}
-                onClick={() => setRange(key)}
-                className={range === key ? 'active' : ''}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             className="dashboard-refresh-button"
@@ -629,7 +527,7 @@ export default function Dashboard() {
 
           <button
             type="button"
-            onClick={() => navigate('/rankings?scope=members')}
+            onClick={() => navigate('/leaderboard?scope=members&period=season')}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -658,14 +556,14 @@ export default function Dashboard() {
               padding: '16px 18px',
               cursor: 'pointer',
             }}
-            onClick={() => navigate('/rankings?scope=members')}
+            onClick={() => navigate('/leaderboard?scope=members&period=season')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
                 ĐIỂM & XP CÁ NHÂN
               </span>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '1px 6px' }}>
-                Hạng #{personalInfo.rank}
+                {personalInfo.rank ? `Hạng #${personalInfo.rank}` : 'Chưa xếp hạng'}
               </span>
             </div>
             <div
@@ -735,7 +633,7 @@ export default function Dashboard() {
               padding: '16px 18px',
               cursor: 'pointer',
             }}
-            onClick={() => navigate('/rankings?scope=members')}
+            onClick={() => navigate('/leaderboard?scope=members&period=season')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
@@ -751,10 +649,7 @@ export default function Dashboard() {
                 color: '#0f172a',
               }}
             >
-              #{personalInfo.rank}{' '}
-              <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>
-                / {personalInfo.totalUsers} thành viên
-              </span>
+              {personalInfo.rank ? `#${personalInfo.rank}` : 'Chưa xếp hạng'}
             </div>
             <div style={{ marginTop: 8, fontSize: 11, color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
               <span>Xem vị trí cá nhân</span>
@@ -937,7 +832,7 @@ export default function Dashboard() {
 
           <button
             type="button"
-            onClick={() => navigate('/rankings?scope=teams')}
+            onClick={() => navigate('/leaderboard?scope=teams&period=season')}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -968,7 +863,7 @@ export default function Dashboard() {
                   padding: '16px 18px',
                   cursor: 'pointer',
                 }}
-                onClick={() => navigate('/rankings?scope=teams')}
+                onClick={() => navigate('/leaderboard?scope=teams&period=season')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
@@ -1004,7 +899,7 @@ export default function Dashboard() {
                   padding: '16px 18px',
                   cursor: 'pointer',
                 }}
-                onClick={() => navigate('/rankings?scope=teams')}
+                onClick={() => navigate('/leaderboard?scope=teams&period=season')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
@@ -1101,7 +996,7 @@ export default function Dashboard() {
             </div>
             <button
               type="button"
-              onClick={() => navigate('/rankings?scope=teams')}
+              onClick={() => navigate('/leaderboard?scope=teams&period=season')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1179,12 +1074,12 @@ export default function Dashboard() {
                 cursor: 'pointer',
               }}
             >
-              <span>Studio Hub</span>
+              <span>YouTube</span>
               <ExternalLink size={13} />
             </button>
             <button
               type="button"
-              onClick={() => navigate('/rankings?scope=youtube')}
+              onClick={() => navigate('/leaderboard?scope=youtube')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1204,792 +1099,23 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── 3A. ADMIN DASHBOARD VIEW (COMPANY -> TEAM -> CHANNEL DRILL-DOWN) ─── */}
-        {isAdmin && (
-          <div>
-            {/* KPI CARDS GRID */}
-            {companyOverview?.kpis && (
-              <div className="youtube-kpis-grid" style={{ marginBottom: 16 }}>
-                {/* Total Views */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                    TỔNG LƯỢT XEM
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      marginTop: 4,
-                    }}
-                  >
-                    {formatNum(companyOverview.kpis.totalViews)}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Tích lũy toàn hệ thống</div>
-                </div>
-
-                {/* Total Subscribers */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                    SUBSCRIBERS
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      marginTop: 4,
-                    }}
-                  >
-                    {formatNum(companyOverview.kpis.totalSubscribers)}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Người đăng ký thực tế</div>
-                </div>
-
-                {/* Growth % */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                    TĂNG TRƯỞNG KỲ ({ytPeriod.toUpperCase()})
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color:
-                        companyOverview.kpis.viewsGrowthPct !== null
-                          ? companyOverview.kpis.viewsGrowthPct >= 0
-                            ? '#10b981'
-                            : '#ef4444'
-                          : '#64748b',
-                      marginTop: 4,
-                    }}
-                  >
-                    {companyOverview.kpis.viewsGrowthPct !== null
-                      ? `${companyOverview.kpis.viewsGrowthPct >= 0 ? '+' : ''}${Number(companyOverview.kpis.viewsGrowthPct).toFixed(1)}%`
-                      : 'Chưa đủ dữ liệu'}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Đối chiếu baseline chuẩn</div>
-                </div>
-
-                {/* Channels & Teams Count */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                    KÊNH & ĐỘI NHÓM
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      marginTop: 4,
-                    }}
-                  >
-                    {companyOverview.kpis.totalChannels}{' '}
-                    <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b' }}>kênh /</span>{' '}
-                    {companyOverview.kpis.totalTeams}{' '}
-                    <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b' }}>đội</span>
-                  </div>
-                  <div style={{ marginTop: 4 }}>
-                    {companyOverview.kpis.unassignedChannelsCount > 0 ? (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: '#fef3c7',
-                          color: '#b45309',
-                          padding: '2px 6px',
-                          border: '1px solid #fde68a',
-                        }}
-                      >
-                        {companyOverview.kpis.unassignedChannelsCount} kênh chưa gán đội
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>100% kênh đã gán đội</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sync Status */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                    ĐỒNG BỘ MỚI NHẤT
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      marginTop: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    <Clock3 size={16} color="#64748b" />
-                    <span>{formatRelativeTime(companyOverview.kpis.lastSyncedAt)}</span>
-                  </div>
-                  <div style={{ marginTop: 6 }}>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        padding: '2px 6px',
-                        background: companyOverview.kpis.freshnessStatus === 'FRESH' ? '#ecfdf5' : '#fffbeb',
-                        color: companyOverview.kpis.freshnessStatus === 'FRESH' ? '#047857' : '#b45309',
-                        border: `1px solid ${companyOverview.kpis.freshnessStatus === 'FRESH' ? '#a7f3d0' : '#fde68a'}`,
-                      }}
-                    >
-                      {companyOverview.kpis.freshnessStatus === 'FRESH' ? 'Tín hiệu chuẩn' : 'Cần cập nhật'}
-                    </span>
-                  </div>
-                </div>
+        <div className="youtube-kpis-grid">
+          {[
+            { label: isAdmin ? 'Lượt xem toàn công ty' : 'Lượt xem kênh phụ trách', value: youtubeSummary.views },
+            { label: 'Người đăng ký', value: youtubeSummary.subscribers },
+            { label: isAdmin ? 'Kênh trong hệ thống' : 'Kênh phụ trách', value: youtubeSummary.channels },
+            ...(isAdmin ? [{ label: 'Tăng trưởng 30 ngày', value: youtubeSummary.growth, growth: true }] : []),
+          ].map((metric) => (
+            <div key={metric.label} style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{metric.label}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
+                {metric.growth
+                  ? metric.value === null ? 'Chưa đủ dữ liệu' : `${metric.value >= 0 ? '+' : ''}${Number(metric.value).toFixed(1)}%`
+                  : <AnimatedNumber value={metric.value} formatFn={formatNum} duration={700} />}
               </div>
-            )}
-
-            {/* IF ADMIN DRILLED DOWN INTO A SPECIFIC TEAM */}
-            {selectedTeamId && (
-              <div style={{ marginBottom: 20, background: '#f8fafc', border: '1px solid #cbd5e1', padding: 18 }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 14,
-                    flexWrap: 'wrap',
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTeamId(null)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '5px 10px',
-                        background: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        color: '#0f172a',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <ArrowLeft size={14} />
-                      <span>Quay lại Toàn Công Ty</span>
-                    </button>
-                    <span style={{ color: '#94a3b8' }}>/</span>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
-                      Chi tiết Đội: {drilldownTeamDetails?.team?.name || `Đội #${selectedTeamId}`}
-                    </span>
-                  </div>
-                </div>
-
-                {drilldownLoading ? (
-                  <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-                    <RefreshCw size={20} className="spin" style={{ marginBottom: 8 }} />
-                    <div>Đang tải thông tin đội nhóm...</div>
-                  </div>
-                ) : drilldownTeamDetails ? (
-                  <div>
-                    {/* Team Trend Chart */}
-                    <div style={{ marginBottom: 16 }}>
-                      <YouTubeTrendChart
-                        data={drilldownTeamDetails.history || []}
-                        period={ytPeriod}
-                        onPeriodChange={(newPeriod) => setYtPeriod(newPeriod)}
-                        title={`Tăng trưởng Đội: ${drilldownTeamDetails.team?.name}`}
-                      />
-                    </div>
-
-                    {/* Team Channels Table */}
-                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 16 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
-                        Các kênh thuộc đội ({drilldownTeamDetails.channels?.length || 0})
-                      </div>
-                      {drilldownTeamDetails.channels?.length === 0 ? (
-                        <div style={{ padding: 20, textAlign: 'center', color: '#64748b', fontSize: 12 }}>
-                          Đội này chưa có kênh YouTube nào được gán.
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                            gap: 10,
-                          }}
-                        >
-                          {(drilldownTeamDetails.channels || []).map((c) => (
-                            <div
-                              key={c.id}
-                              onClick={() => setActiveModalChannelId(c.id)}
-                              style={{
-                                padding: '10px 12px',
-                                background: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                {c.thumbnailUrl ? (
-                                  <img
-                                    src={c.thumbnailUrl}
-                                    alt={c.title}
-                                    style={{ width: 32, height: 32, borderRadius: 16 }}
-                                  />
-                                ) : (
-                                  <div
-                                    style={{
-                                      width: 32,
-                                      height: 32,
-                                      background: '#fee2e2',
-                                      color: '#ef4444',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                    }}
-                                  >
-                                    <Tv size={16} />
-                                  </div>
-                                )}
-                                <div>
-                                  <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{c.title}</div>
-                                  <div style={{ fontSize: 11, color: '#64748b' }}>{formatNum(c.views)} views</div>
-                                </div>
-                              </div>
-                              <ChevronRight size={14} color="#94a3b8" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            )}
-
-            {/* IF IN COMPANY VIEW (NOT DRILLED DOWN) */}
-            {!selectedTeamId && (
-              <div>
-                {/* COMPANY TREND CHART */}
-                <div style={{ marginBottom: 20 }}>
-                  <YouTubeTrendChart
-                    data={companyOverview?.history || []}
-                    period={ytPeriod}
-                    onPeriodChange={(newPeriod) => setYtPeriod(newPeriod)}
-                    title="Biểu đồ tăng trưởng YouTube toàn công ty"
-                  />
-                </div>
-
-                {/* TWO-COLUMN ANALYTICS: TEAMS PERFORMANCE & CHANNELS PERFORMANCE */}
-                <div className="analytics-two-columns-grid">
-                  {/* COLUMN 1: TEAM PERFORMANCE & COMPARISON */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 18 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 14,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Building2 size={16} color="#0f172a" />
-                        <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          Hiệu suất theo Đội nhóm (Cấp 2)
-                        </h3>
-                      </div>
-                      {/* Metric switcher for comparison */}
-                      <div style={{ display: 'flex', background: '#f1f5f9', padding: 2 }}>
-                        <button
-                          type="button"
-                          onClick={() => setCompareMetric('views')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: 10,
-                            fontWeight: 700,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: compareMetric === 'views' ? '#ffffff' : 'transparent',
-                            color: compareMetric === 'views' ? '#0f172a' : '#64748b',
-                          }}
-                        >
-                          Views
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCompareMetric('subscribers')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: 10,
-                            fontWeight: 700,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: compareMetric === 'subscribers' ? '#ffffff' : 'transparent',
-                            color: compareMetric === 'subscribers' ? '#0f172a' : '#64748b',
-                          }}
-                        >
-                          Subs
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Horizontal Bar Chart */}
-                    <div style={{ marginBottom: 16 }}>
-                      <TeamComparisonBar
-                        teams={companyOverview?.allTeams || []}
-                        metric={compareMetric}
-                        onSelectTeam={(teamId) => setSelectedTeamId(teamId)}
-                        limit={5}
-                      />
-                    </div>
-
-                    {/* Teams Mini Table */}
-                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 12 }}>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: '#64748b',
-                          textTransform: 'uppercase',
-                          marginBottom: 8,
-                        }}
-                      >
-                        Tất cả các đội ({companyOverview?.allTeams?.length || 0}) — Bấm để drill-down
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 6,
-                          maxHeight: 220,
-                          overflowY: 'auto',
-                        }}
-                      >
-                        {(companyOverview?.allTeams || []).map((t) => (
-                          <div
-                            key={t.teamId}
-                            onClick={() => setSelectedTeamId(t.teamId)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '6px 10px',
-                              background: '#f8fafc',
-                              cursor: 'pointer',
-                              fontSize: 12,
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontWeight: 700, color: '#0f172a' }}>{t.teamName}</span>
-                              <span style={{ fontSize: 11, color: '#64748b' }}>({t.channelsCount} kênh)</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span
-                                style={{
-                                  fontFamily: "'JetBrains Mono', monospace",
-                                  fontWeight: 700,
-                                  color: '#0f172a',
-                                }}
-                              >
-                                {formatNum(t.totalViews)}
-                              </span>
-                              <ChevronRight size={13} color="#94a3b8" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* COLUMN 2: CHANNEL PERFORMANCE LIST */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 18 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 12,
-                        flexWrap: 'wrap',
-                        gap: 8,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Tv size={16} color="#0f172a" />
-                        <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          Danh Sách Kênh Toàn Công Ty ({normalizeChannelList(allChannels).length})
-                        </h3>
-                      </div>
-
-                      {/* Filter tabs */}
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => setChannelFilter('all')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: channelFilter === 'all' ? '#0f172a' : '#f1f5f9',
-                            color: channelFilter === 'all' ? '#ffffff' : '#64748b',
-                          }}
-                        >
-                          Tất cả
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setChannelFilter('assigned')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: channelFilter === 'assigned' ? '#0f172a' : '#f1f5f9',
-                            color: channelFilter === 'assigned' ? '#ffffff' : '#64748b',
-                          }}
-                        >
-                          Đã gán
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setChannelFilter('unassigned')}
-                          style={{
-                            padding: '3px 8px',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: channelFilter === 'unassigned' ? '#b45309' : '#fef3c7',
-                            color: channelFilter === 'unassigned' ? '#ffffff' : '#b45309',
-                          }}
-                        >
-                          Chưa gán
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Search box */}
-                    <div style={{ marginBottom: 12, position: 'relative' }}>
-                      <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 9 }} />
-                      <input
-                        type="text"
-                        placeholder="Tìm kiếm kênh theo tên hoặc handle..."
-                        value={channelSearch}
-                        onChange={(e) => setChannelSearch(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '6px 10px 6px 30px',
-                          fontSize: 12,
-                          border: '1px solid #cbd5e1',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-
-                    {/* Channel List */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 8,
-                        maxHeight: 340,
-                        overflowY: 'auto',
-                      }}
-                    >
-                      {filteredChannels.length === 0 ? (
-                        <div style={{ padding: 20, textAlign: 'center', color: '#64748b', fontSize: 12 }}>
-                          Không tìm thấy kênh phù hợp với bộ lọc.
-                        </div>
-                      ) : (
-                        filteredChannels.map((c) => (
-                          <div
-                            key={c.id}
-                            onClick={() => setActiveModalChannelId(c.id)}
-                            style={{
-                              padding: '8px 10px',
-                              background: '#f8fafc',
-                              border: '1px solid #e2e8f0',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              cursor: 'pointer',
-                              transition: 'background 0.15s ease',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              {c.thumbnailUrl ? (
-                                <img
-                                  src={c.thumbnailUrl}
-                                  alt={c.title}
-                                  style={{ width: 28, height: 28, borderRadius: 14 }}
-                                />
-                              ) : (
-                                <div
-                                  style={{
-                                    width: 28,
-                                    height: 28,
-                                    background: '#fee2e2',
-                                    color: '#ef4444',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                >
-                                  <Tv size={14} />
-                                </div>
-                              )}
-                              <div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{c.title}</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                                  {c.team?.name ? (
-                                    <span style={{ fontSize: 10, background: '#e0e7ff', color: '#4338ca', padding: '1px 5px' }}>
-                                      {c.team.name}
-                                    </span>
-                                  ) : (
-                                    <span
-                                      style={{
-                                        fontSize: 10,
-                                        background: '#fef3c7',
-                                        color: '#b45309',
-                                        padding: '1px 5px',
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      Chưa gán đội
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div style={{ textAlign: 'right' }}>
-                              <div
-                                style={{
-                                  fontFamily: "'JetBrains Mono', monospace",
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  color: '#0f172a',
-                                }}
-                              >
-                                {formatNum(c.views)} views
-                              </div>
-                              <div style={{ fontSize: 10, color: '#64748b' }}>{formatNum(c.subscribers)} subs</div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── 3B. MEMBER DASHBOARD VIEW ("CỦA TÔI" - PERSONAL SCOPE) ───────────── */}
-        {!isAdmin && (
-          <div>
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 16,
-                  flexWrap: 'wrap',
-                  gap: 10,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
-                    Kênh YouTube Phụ Trách ({memberOverview?.channels?.length || 0})
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                    Bao gồm các kênh được gán trực tiếp cho bạn hoặc thuộc đội của bạn
-                  </div>
-                </div>
-
-                {memberOverview?.channels && memberOverview.channels.length > 0 && (
-                  <div style={{ display: 'flex', gap: 14 }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
-                      <div
-                        style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 16,
-                          fontWeight: 700,
-                          color: '#0f172a',
-                        }}
-                      >
-                        {formatNum(memberOverview.kpis?.totalViews || 0)}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>SUBSCRIBERS</div>
-                      <div
-                        style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 16,
-                          fontWeight: 700,
-                          color: '#0f172a',
-                        }}
-                      >
-                        {formatNum(memberOverview.kpis?.totalSubscribers || 0)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Empty State vs Content */}
-              {!memberOverview?.channels || memberOverview.channels.length === 0 ? (
-                <div
-                  style={{
-                    padding: '36px 20px',
-                    textAlign: 'center',
-                    background: '#f8fafc',
-                    border: '1px dashed #cbd5e1',
-                    color: '#64748b',
-                  }}
-                >
-                  <Tv size={28} color="#94a3b8" style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                    Bạn chưa được gán kênh YouTube nào
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: '#64748b',
-                      marginTop: 4,
-                      maxWidth: 420,
-                      margin: '4px auto 0',
-                    }}
-                  >
-                    Khi bạn được Quản trị viên phân công phụ trách kênh hoặc gia nhập đội nhóm, dữ liệu hiệu suất và
-                    biểu đồ tăng trưởng sẽ hiển thị tại đây.
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {/* Personal Growth Chart */}
-                  <div style={{ marginBottom: 18 }}>
-                    <YouTubeTrendChart
-                      data={memberOverview.history || []}
-                      period={ytPeriod}
-                      onPeriodChange={(newPeriod) => setYtPeriod(newPeriod)}
-                      title="Biểu đồ tăng trưởng các kênh của tôi"
-                    />
-                  </div>
-
-                  {/* Channels Cards Grid */}
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      marginBottom: 10,
-                    }}
-                  >
-                    Danh sách kênh chi tiết (Bấm để xem lịch sử)
-                  </div>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                      gap: 10,
-                    }}
-                  >
-                    {(memberOverview.channels || []).map((c) => (
-                      <div
-                        key={c.id}
-                        onClick={() => setActiveModalChannelId(c.id)}
-                        style={{
-                          padding: '12px 14px',
-                          background: '#f8fafc',
-                          border: '1px solid #e2e8f0',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          {c.thumbnailUrl ? (
-                            <img
-                              src={c.thumbnailUrl}
-                              alt={c.title}
-                              style={{ width: 36, height: 36, borderRadius: 18 }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: 36,
-                                height: 36,
-                                background: '#fee2e2',
-                                color: '#ef4444',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <Tv size={18} />
-                            </div>
-                          )}
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{c.title}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                              {c.isDirectlyAssigned && (
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    background: '#dcfce7',
-                                    color: '#15803d',
-                                    padding: '1px 5px',
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  Phụ trách chính
-                                </span>
-                              )}
-                              <span style={{ fontSize: 10, color: '#64748b' }}>{c.teamName}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                          <div
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: '#0f172a',
-                            }}
-                          >
-                            {formatNum(c.views)}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>{formatNum(c.subscribers)} subs</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </section>
 
       {/* ======================================================================= */}
@@ -2022,7 +1148,7 @@ export default function Dashboard() {
                 <div>
                   <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>CÁ NHÂN (SEASON)</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
-                    Hạng #{personalInfo.rank} / {personalInfo.totalUsers}
+                    {personalInfo.rank ? `Hạng #${personalInfo.rank}` : 'Chưa xếp hạng'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -2031,7 +1157,7 @@ export default function Dashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate('/rankings?scope=members')}
+                    onClick={() => navigate('/leaderboard?scope=members&period=season')}
                     style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
                   >
                     <span>Xem BXH</span>
@@ -2054,7 +1180,7 @@ export default function Dashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate('/rankings?scope=teams')}
+                    onClick={() => navigate('/leaderboard?scope=teams&period=season')}
                     style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
                   >
                     <span>Xem BXH Đội</span>
@@ -2159,7 +1285,7 @@ export default function Dashboard() {
               ) : (
                 <FlipList resetKey="dashboard-online" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {onlineRows.map((u) => {
-                    const sc = statusConfig(u.status);
+                    const sc = statusConfig(u.presence);
                     const avatarUrl = getUserAvatar(u);
                     const initials = initialsFromName(u.name || `User #${u.id}`);
                     return (
@@ -2207,9 +1333,6 @@ export default function Dashboard() {
                               <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{u.name}</span>
                               {isVerifiedUser(u) && <VerifiedBadge size={12} />}
                             </div>
-                            <div style={{ fontSize: 10, color: '#64748b' }}>
-                              <AnimatedNumber value={Number(u.score || 0)} duration={700} /> XP
-                            </div>
                           </div>
                         </div>
                         <span
@@ -2230,16 +1353,13 @@ export default function Dashboard() {
                 </FlipList>
               )}
             </div>
+            <button type="button" onClick={() => navigate('/friends')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 12, background: 'transparent', border: 0, padding: 0, color: '#334155', fontSize: 12, cursor: 'pointer' }}>
+              Bạn bè <ChevronRight size={13} />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* ── CHANNEL DETAIL DRILLDOWN MODAL ──────────────────────────────────── */}
-      <ChannelDetailModal
-        channelId={activeModalChannelId}
-        isOpen={Boolean(activeModalChannelId)}
-        onClose={() => setActiveModalChannelId(null)}
-      />
     </div>
   );
 }

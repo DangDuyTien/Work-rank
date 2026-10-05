@@ -8,8 +8,6 @@ import {
   avatarHue,
   initialsFromName,
   getUserAvatar,
-  setStoredAvatar,
-  removeStoredAvatar,
   compressImage,
 } from '../utils/avatar';
 import {
@@ -30,7 +28,6 @@ import {
   Medal,
   Phone,
   RefreshCw,
-  Save,
   Shield,
   ShieldCheck,
   Sparkles,
@@ -47,7 +44,7 @@ import {
   Zap,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
-import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
+import JobTitleBadge from '../components/JobTitleBadge';
 import ProfileErrorBoundary from '../components/ProfileErrorBoundary';
 import usePageVisibility from '../hooks/usePageVisibility';
 import { TabTransition, PageTransitionSkeleton } from '../components/ui';
@@ -132,7 +129,7 @@ function fmtDate(d) {
 export default function UserDetail() {
   const { id: routeUserId } = useParams();
   const navigate = useNavigate();
-  const { user: authUser, setUser: setAuthUser, isAdmin } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
   const toast = useToast();
   const pageVisible = usePageVisibility();
 
@@ -159,26 +156,6 @@ export default function UserDetail() {
   const [avatarImgError, setAvatarImgError] = useState(false);
   const [imgErrors, setImgErrors] = useState({});
   const galleryInputRef = useRef(null);
-
-  // Edit modal state
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    email: '',
-    jobTitle: '',
-    department: '',
-    teamId: '',
-    role: '',
-    status: '',
-    bio: '',
-    phone: '',
-    isVerified: false,
-    isDev: false,
-    avatarData: '',
-  });
-  const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState('');
-  const [saveError, setSaveError] = useState('');
 
   // Handle Gallery Upload & Delete
   const handleTriggerUpload = (slotIndex) => {
@@ -273,23 +250,6 @@ export default function UserDetail() {
         // Silent fail
       }
 
-      // Populate edit form
-      const u = res.data || {};
-      const userAvatar = getUserAvatar(u, targetUserId) || u.avatarData || '';
-      setEditForm({
-        name: u.name || '',
-        email: u.email || '',
-        jobTitle: u.jobTitle || u.job_title || 'Nhân viên',
-        department: u.department || 'Media & Content',
-        teamId: u.teamId ? String(u.teamId) : '',
-        role: u.role || 'user',
-        status: u.status || 'active',
-        bio: u.bio || '',
-        phone: u.phone || '',
-        isVerified: Boolean(u.isVerified || u.verified),
-        isDev: Boolean(u.isDev),
-        avatarData: userAvatar,
-      });
     } catch (err) {
       const errMsg = parseApiError(err, 'Không tải được hồ sơ nhân viên');
       setError(errMsg);
@@ -329,76 +289,6 @@ export default function UserDetail() {
       toast.error(parseApiError(err, 'Không thể cập nhật lượt yêu thích'));
     } finally {
       setLiking(false);
-    }
-  };
-
-  // Handle Save Profile
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setSaveSuccess('');
-    setSaveError('');
-
-    try {
-      const payload = {
-        name: editForm.name,
-        bio: editForm.bio,
-        phone: editForm.phone,
-      };
-
-      // Nếu là Admin thì gửi thêm các trường nhân sự
-      if (isAdmin) {
-        payload.jobTitle = editForm.jobTitle;
-        payload.department = editForm.department;
-        payload.teamId = editForm.teamId ? Number(editForm.teamId) : null;
-        payload.role = editForm.role;
-        payload.status = editForm.status;
-        payload.isVerified = editForm.isVerified;
-        payload.isDev = editForm.isDev;
-        if (editForm.email) payload.email = editForm.email;
-      }
-
-      await usersApi.update(targetUserId, payload);
-
-      // Cập nhật avatar nếu có thay đổi
-      if (editForm.avatarData !== undefined) {
-        await usersApi.updateProfilePreferences(targetUserId, { avatarData: editForm.avatarData || null });
-        if (isSelf) {
-          if (editForm.avatarData) setStoredAvatar(targetUserId, editForm.avatarData);
-          else removeStoredAvatar(targetUserId);
-          if (setAuthUser) {
-            setAuthUser((prev) => (prev ? { ...prev, avatarData: editForm.avatarData || null } : prev));
-          }
-        }
-        setAvatarImgError(false);
-      }
-
-      toast.success('Cập nhật hồ sơ thành công!');
-      setSaveSuccess('Cập nhật hồ sơ thành công!');
-      setTimeout(() => {
-        setShowEditModal(false);
-        setSaveSuccess('');
-        loadProfile(true);
-      }, 700);
-    } catch (err) {
-      const errMsg = parseApiError(err, 'Không thể lưu hồ sơ.');
-      setSaveError(errMsg);
-      toast.error(errMsg);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Avatar file upload handler with automatic client-side compression
-  const handleAvatarFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setSaveError('');
-      const base64 = await compressImage(file, 400, 400, 0.85);
-      setEditForm((prev) => ({ ...prev, avatarData: base64 }));
-    } catch (err) {
-      toast.error(err.message || 'Lỗi khi xử lý hình ảnh avatar');
     }
   };
 
@@ -684,7 +574,7 @@ export default function UserDetail() {
               {canEdit && (
                 <button
                   type="button"
-                  onClick={() => setShowEditModal(true)}
+                  onClick={() => navigate(isSelf ? '/settings?tab=profile' : `/admin/privileges?userId=${targetUserId}`)}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -700,7 +590,7 @@ export default function UserDetail() {
                   }}
                 >
                   <Edit3 size={12} />
-                  Chỉnh Sửa Hồ Sơ
+                  {isSelf ? 'Chỉnh sửa hồ sơ' : 'Quản lý nhân sự'}
                 </button>
               )}
             </div>
@@ -1125,7 +1015,7 @@ export default function UserDetail() {
               <div style={{ fontSize: 11, color: '#64748b' }}>So sánh điểm số cùng đồng đội trong Đội và toàn thể công ty</div>
             </div>
             <Link
-              to="/leaderboard?scope=individual"
+              to="/leaderboard?scope=members&period=season"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '8px 16px', background: '#0f172a', color: '#fff',
@@ -1279,304 +1169,6 @@ export default function UserDetail() {
         </div>
       )}
       </TabTransition>
-
-      {/* ── MODAL CHỈNH SỬA HỒ SƠ ── */}
-      {showEditModal && (
-        <div
-          className="modal-backdrop-enter"
-          style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
-            background: 'rgba(15,23,42,0.7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-          }}
-          onClick={() => setShowEditModal(false)}
-        >
-          <div
-            className="modal-dialog-enter"
-            style={{
-              ...CARD,
-              width: '100%', maxWidth: 540,
-              maxHeight: '90vh', overflowY: 'auto',
-              padding: 24, background: '#ffffff',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color="#b45309" />
-                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
-                  {isAdmin ? 'Quản Trị Hồ Sơ Nhân Sự (Admin)' : 'Cập Nhật Thông Tin Cá Nhân'}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowEditModal(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {saveSuccess && (
-              <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
-                {saveSuccess}
-              </div>
-            )}
-            {saveError && (
-              <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
-                {saveError}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Tên hiển thị */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Họ và Tên Nhân Viên *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.15)', outline: 'none' }}
-                />
-              </div>
-
-              {/* Vị trí công tác (Job Title) */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Vị Trí Công Tác / Chức Danh {!isAdmin && <span style={{ color: '#94a3b8' }}>(Admin quản lý)</span>}
-                </label>
-                {isAdmin ? (
-                  <select
-                    value={editForm.jobTitle}
-                    onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.15)', outline: 'none', background: '#fff', cursor: 'pointer' }}
-                  >
-                    {CATEGORIZED_JOB_TITLES.map((group) => (
-                      <optgroup key={group.category} label={group.category}>
-                        {group.titles.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    disabled
-                    value={editForm.jobTitle}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', color: '#64748b' }}
-                  />
-                )}
-                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 11, color: '#64748b' }}>Huy hiệu:</span>
-                  <JobTitleBadge jobTitle={editForm.jobTitle} size="xs" />
-                </div>
-              </div>
-
-              {/* Phòng ban (Department) */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Phòng Ban {!isAdmin && <span style={{ color: '#94a3b8' }}>(Admin quản lý)</span>}
-                </label>
-                {isAdmin ? (
-                  <select
-                    value={editForm.department}
-                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.15)', outline: 'none', background: '#fff', cursor: 'pointer' }}
-                  >
-                    <optgroup label="Phòng ban chính thức">
-                      {CATEGORIZED_DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    disabled
-                    value={editForm.department}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: 12, background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', color: '#64748b' }}
-                  />
-                )}
-              </div>
-
-              {/* Số điện thoại */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Số Điện Thoại Liên Hệ
-                </label>
-                <input
-                  type="text"
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  placeholder="09..."
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.15)', outline: 'none' }}
-                />
-              </div>
-
-              {/* Bio */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4, textTransform: 'uppercase' }}>
-                  Tiểu Sử & Trách Nhiệm Công Việc
-                </label>
-                <textarea
-                  rows={3}
-                  value={editForm.bio}
-                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                  placeholder="Mô tả tóm tắt kinh nghiệm và trách nhiệm chuyên môn..."
-                  style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.15)', outline: 'none', resize: 'vertical' }}
-                />
-              </div>
-
-              {/* Ảnh đại diện Avatar */}
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
-                  Ảnh Đại Diện
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div
-                    style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      border: '2px solid #b45309',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#e0f2fe',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {editForm.avatarData ? (
-                      <img
-                        src={editForm.avatarData}
-                        alt="Avatar Preview"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>
-                        {initialsFromName(editForm.name || user.name)}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarFile}
-                      style={{ fontSize: 11, color: '#64748b' }}
-                    />
-                    {editForm.avatarData && (
-                      <button
-                        type="button"
-                        onClick={() => setEditForm((prev) => ({ ...prev, avatarData: '' }))}
-                        style={{
-                          alignSelf: 'flex-start',
-                          padding: '2px 8px',
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: '#dc2626',
-                          background: '#fee2e2',
-                          border: '1px solid #fecaca',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Xóa ảnh đại diện (dùng chữ cái đầu)
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Các trường quản trị chỉ Admin mới có */}
-              {isAdmin && (
-                <div style={{ marginTop: 8, padding: 12, background: 'rgba(15,23,42,0.03)', border: '1px solid rgba(15,23,42,0.1)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase' }}>
-                    Quyền Quản Trị Hệ Thống (Admin Only)
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 2 }}>Phân Quyền (Role)</label>
-                      <select
-                        value={editForm.role}
-                        onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                        style={{ width: '100%', padding: '6px', fontSize: 11, border: '1px solid #cbd5e1' }}
-                      >
-                        <option value="user">User</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 2 }}>Trạng Thái</label>
-                      <select
-                        value={editForm.status}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                        style={{ width: '100%', padding: '6px', fontSize: 11, border: '1px solid #cbd5e1' }}
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        type="checkbox"
-                        id="isVerifiedCheck"
-                        checked={editForm.isVerified}
-                        onChange={(e) => setEditForm({ ...editForm, isVerified: e.target.checked })}
-                      />
-                      <label htmlFor="isVerifiedCheck" style={{ fontSize: 12, fontWeight: 600, color: '#b45309', cursor: 'pointer' }}>
-                        Cấp Tích Xanh Chính Thức (Verified Badge)
-                      </label>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        type="checkbox"
-                        id="isDevCheck"
-                        checked={editForm.isDev}
-                        onChange={(e) => setEditForm({ ...editForm, isDev: e.target.checked })}
-                      />
-                      <label htmlFor="isDevCheck" style={{ fontSize: 12, fontWeight: 600, color: '#0891b2', cursor: 'pointer' }}>
-                        Cấp Huy Hiệu Kỹ Thuật (Developer Badge)
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  style={{ padding: '8px 16px', background: 'transparent', border: '1px solid rgba(15,23,42,0.15)', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: '8px 20px', background: '#b45309', color: '#fff', border: 'none',
-                    fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}
-                >
-                  <Save size={14} />
-                  {saving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Hidden File Input for 6-Slot Gallery Upload */}
       <input

@@ -1,17 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import {
   Shield,
-  Activity,
-  Search,
-  RefreshCw,
-  Layers,
-  CheckCircle,
-  Clock,
   AlertTriangle,
-  Eye,
   Database,
-  RotateCcw,
-  BarChart3,
   Trophy,
   Zap,
   CheckCircle2,
@@ -23,17 +16,9 @@ import {
   Trash2,
   Copy,
   Save,
-  FileText,
   Sliders,
-  Edit,
   ArrowRight,
-  Radio,
-  Tv,
   Video,
-  Share2,
-  HeartHandshake,
-  Terminal,
-  Filter,
   Crown,
   X,
   Sparkles,
@@ -86,7 +71,14 @@ const FIELD_SUGGESTIONS = [
 
 export default function CompetitionAdmin() {
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' | 'rules' | 'projections' | 'states' | 'inspector'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab') || 'rules';
+  const activeTab = ['rules', 'analytics', 'states', 'inspector'].includes(requestedTab) ? requestedTab : 'rules';
+  const setActiveTab = (tab) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    setSearchParams(params, { replace: true });
+  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -128,14 +120,6 @@ export default function CompetitionAdmin() {
   const [diffResult, setDiffResult] = useState(null);
   const [diffLoading, setDiffLoading] = useState(false);
 
-  // Tab 3: Projections Data
-  const [projStatus, setProjStatus] = useState(null);
-  const [consistencyReport, setConsistencyReport] = useState(null);
-  const [rebuildModalOpen, setRebuildModalOpen] = useState(false);
-  const [rebuildReason, setRebuildReason] = useState('');
-  const [rebuildLoading, setRebuildLoading] = useState(false);
-  const [rebuildSuccessMsg, setRebuildSuccessMsg] = useState(null);
-
   // Tab 4: States Data
   const [states, setStates] = useState([]);
   const [totalStates, setTotalStates] = useState(0);
@@ -146,30 +130,18 @@ export default function CompetitionAdmin() {
   const [inspectLoading, setInspectLoading] = useState(false);
   const [inspectResult, setInspectResult] = useState(null);
 
-  // Tab 6: Integration Monitor & Event Tracing (Phase 8)
-  const [integrationHealth, setIntegrationHealth] = useState(null);
-  const [integrationEvents, setIntegrationEvents] = useState([]);
-  const [integrationTotal, setIntegrationTotal] = useState(0);
-  const [integrationSourceFilter, setIntegrationSourceFilter] = useState('all');
-  const [integrationStatusFilter, setIntegrationStatusFilter] = useState('all');
-  const [integrationSearch, setIntegrationSearch] = useState('');
-  const [traceModalOpen, setTraceModalOpen] = useState(false);
-  const [traceData, setTraceData] = useState(null);
-  const [traceLoading, setTraceLoading] = useState(false);
-  const [retryModalOpen, setRetryModalOpen] = useState(false);
-  const [retryEventId, setRetryEventId] = useState(null);
-  const [retryReason, setRetryReason] = useState('');
-  const [retryLoading, setRetryLoading] = useState(false);
-  const [simEventModalOpen, setSimEventModalOpen] = useState(false);
-  const [simModuleType, setSimModuleType] = useState('production');
-  const [simActionType, setSimActionType] = useState('video_approved');
-  const [simVideoId, setSimVideoId] = useState(101);
-  const [simTitle, setSimTitle] = useState('Demo Video Production');
-  const [simViews, setSimViews] = useState(100000);
-  const [simKudosRecipientId, setSimKudosRecipientId] = useState(2);
-  const [simKudosReason, setSimKudosReason] = useState('Tuyệt vời trong phối hợp làm việc!');
-  const [simActionLoading, setSimActionLoading] = useState(false);
-  const [simActionSuccess, setSimActionSuccess] = useState(null);
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      if (publishModalOpen) setPublishModalOpen(false);
+      else if (diffModalOpen) setDiffModalOpen(false);
+      else if (simulatorModalOpen) setSimulatorModalOpen(false);
+      else if (builderModalOpen) setBuilderModalOpen(false);
+      else setCreateRuleSetModalOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [builderModalOpen, createRuleSetModalOpen, diffModalOpen, publishModalOpen, simulatorModalOpen]);
 
   const fetchAnalytics = useCallback(async () => {
     try {
@@ -197,23 +169,6 @@ export default function CompetitionAdmin() {
     }
   }, []);
 
-  const fetchProjections = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [statusRes, consistencyRes] = await Promise.all([
-        competition.adminGetProjectionsStatus(),
-        competition.adminCheckProjectionsConsistency(),
-      ]);
-      setProjStatus(statusRes);
-      setConsistencyReport(consistencyRes);
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.response?.data?.error || 'Không thể tải trạng thái Projections');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const fetchStates = useCallback(async () => {
     try {
       setLoading(true);
@@ -230,119 +185,11 @@ export default function CompetitionAdmin() {
     }
   }, [entityFilter]);
 
-  const fetchIntegrationData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [healthRes, eventsRes] = await Promise.all([
-        competition.adminGetIntegrationHealth(),
-        competition.adminListIntegrationEvents({
-          sourceModule: integrationSourceFilter !== 'all' ? integrationSourceFilter : undefined,
-          status: integrationStatusFilter !== 'all' ? integrationStatusFilter : undefined,
-        }),
-      ]);
-      setIntegrationHealth(healthRes);
-      setIntegrationEvents(eventsRes.events || []);
-      setIntegrationTotal(eventsRes.totalEvents || 0);
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Không thể tải dữ liệu Integration Monitor');
-    } finally {
-      setLoading(false);
-    }
-  }, [integrationSourceFilter, integrationStatusFilter]);
-
   useEffect(() => {
     if (activeTab === 'analytics') fetchAnalytics();
     else if (activeTab === 'rules') fetchRuleSets();
-    else if (activeTab === 'integration') fetchIntegrationData();
-    else if (activeTab === 'projections') fetchProjections();
     else if (activeTab === 'states') fetchStates();
-  }, [activeTab, fetchAnalytics, fetchRuleSets, fetchIntegrationData, fetchProjections, fetchStates]);
-
-  const handleOpenTrace = async (eventId) => {
-    try {
-      setTraceLoading(true);
-      setTraceData(null);
-      setTraceModalOpen(true);
-      const trace = await competition.getEventTrace(eventId);
-      setTraceData(trace);
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể tải Event Trace'));
-      setTraceModalOpen(false);
-    } finally {
-      setTraceLoading(false);
-    }
-  };
-
-  const handleOpenRetry = (eventId) => {
-    setRetryEventId(eventId);
-    setRetryReason('');
-    setRetryModalOpen(true);
-  };
-
-  const handleSubmitRetry = async (e) => {
-    e?.preventDefault();
-    if (!retryReason.trim()) {
-      toast.warning('Vui lòng nhập lý do Audit bắt buộc');
-      return;
-    }
-    try {
-      setRetryLoading(true);
-      await competition.adminRetryIntegrationEvent(retryEventId, retryReason.trim());
-      setRetryModalOpen(false);
-      fetchIntegrationData();
-      toast.success('Đã thiết lập lại trạng thái PENDING cho sự kiện. Worker sẽ đánh giá lại trong lượt kế tiếp.');
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể retry sự kiện'));
-    } finally {
-      setRetryLoading(false);
-    }
-  };
-
-  const handleTriggerSimAction = async () => {
-    try {
-      setSimActionLoading(true);
-      setSimActionSuccess(null);
-      let res;
-      if (simModuleType === 'production') {
-        res = await competition.triggerProductionAction({
-          action: simActionType,
-          videoId: simVideoId,
-          title: simTitle,
-          actorId: 1,
-          teamId: 1,
-          duration: 120,
-          qualityScore: 95,
-          score: 100,
-        });
-      } else if (simModuleType === 'youtube') {
-        res = await competition.triggerYouTubeMilestone({
-          type: simActionType,
-          youtubeVideoId: `yt_${simVideoId}`,
-          channelId: 'channel_main_01',
-          title: simTitle,
-          views: simViews,
-          subscribers: 50000,
-          actorId: 1,
-          teamId: 1,
-        });
-      } else {
-        res = await competition.triggerCommunityKudos({
-          senderId: 1,
-          recipientId: simKudosRecipientId,
-          reason: simKudosReason,
-          kudosType: 'recognition',
-        });
-      }
-      setSimActionSuccess('Bắn sự kiện thành công! Sự kiện đã được lưu vào Event Store và đưa vào luồng chấm điểm.');
-      toast.success('Bắn sự kiện mô phỏng thành công!');
-      fetchIntegrationData();
-    } catch (err) {
-      toast.error(parseApiError(err, 'Bắn sự kiện thất bại'));
-    } finally {
-      setSimActionLoading(false);
-    }
-  };
+  }, [activeTab, fetchAnalytics, fetchRuleSets, fetchStates]);
 
   // Open Visual Builder for a version
   const handleOpenBuilder = async (ruleSetId, version = null) => {
@@ -546,26 +393,6 @@ export default function CompetitionAdmin() {
     }
   };
 
-  const handleRebuildProjections = async () => {
-    if (!rebuildReason.trim()) {
-      toast.warning('Vui lòng nhập lý do audit bắt buộc trước khi trigger rebuild');
-      return;
-    }
-    try {
-      setRebuildLoading(true);
-      const res = await competition.adminRebuildProjections(rebuildReason.trim());
-      setRebuildSuccessMsg(`Rebuild thành công trong ${res.durationMs}ms: ${res.usersRebuilt} users, ${res.teamsRebuilt} teams, ${res.seasonsRebuilt} seasons, ${res.grandsRebuilt} grands.`);
-      toast.success('Đã rebuild projections thành công!');
-      setRebuildModalOpen(false);
-      setRebuildReason('');
-      fetchProjections();
-    } catch (err) {
-      toast.error(parseApiError(err, 'Rebuild thất bại'));
-    } finally {
-      setRebuildLoading(false);
-    }
-  };
-
   const handleInspect = async (e) => {
     e?.preventDefault();
     if (!inspectUserId.trim()) return;
@@ -581,6 +408,10 @@ export default function CompetitionAdmin() {
     }
   };
 
+  if (requestedTab === 'integration' || requestedTab === 'projections') {
+    return <Navigate to={`/admin/operations?tab=${requestedTab === 'integration' ? 'events' : 'projections'}`} replace />;
+  }
+
   return (
     <div style={{ padding: '20px 0', maxWidth: 1100, margin: '0 auto' }}>
       {/* Header */}
@@ -589,21 +420,22 @@ export default function CompetitionAdmin() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Shield size={22} color="#0284c7" />
             <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', margin: 0 }}>
-              Quản Trị Thi Đấu & Visual Rule Builder
+              Quy tắc thi đấu
             </h1>
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.55, color: '#64748b', margin: '4px 0 0 0' }}>
-            Visual Rule Builder, Trình mô phỏng tính điểm, Versioning, Read Models & Score Drill-down.
+            Bộ quy tắc, phiên bản và mô phỏng tính điểm.
           </p>
         </div>
 
+        <Link to="/admin/operations" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0284c7', fontSize: 13 }}>
+          Vận hành hệ thống <ArrowRight size={14} />
+        </Link>
         <SegmentedControl
           ariaLabel="Admin Competition Tabs"
           options={[
             { key: 'analytics', label: 'Company Analytics' },
             { key: 'rules', label: `Rule Sets (${ruleSets.length})` },
-            { key: 'integration', label: `Tích hợp & Events (${integrationTotal})` },
-            { key: 'projections', label: 'Read Models' },
             { key: 'states', label: `State Monitor (${totalStates})` },
             { key: 'inspector', label: 'Score Inspector' },
           ]}
@@ -748,342 +580,6 @@ export default function CompetitionAdmin() {
         </div>
       )}
 
-      {/* TAB 2.5: INTEGRATION MONITOR & EVENT TRACE (PHASE 8) */}
-      {activeTab === 'integration' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Header & Quick Action */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Radio size={18} color="#0284c7" />
-                <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
-                  Giám Sát Tích Hợp & Truy Vết Sự Kiện (Integration Monitor & Event Trace)
-                </h2>
-              </div>
-              <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0 0' }}>
-                Truy vết toàn bộ luồng sự kiện từ Production, YouTube, Community đến Rule Engine và Score Ledger.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="outline" onClick={() => fetchIntegrationData()}>
-                <RefreshCw size={15} /> Làm Mới
-              </Button>
-              <Button variant="primary" onClick={() => { setSimActionSuccess(null); setSimEventModalOpen(true); }}>
-                <Zap size={15} /> Bắn Sự Kiện Thử Nghiệm
-              </Button>
-            </div>
-          </div>
-
-          {/* Health Metrics Cards */}
-          {integrationHealth && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              <Card style={{ padding: 16, border: `1px solid ${integrationHealth.status === 'HEALTHY' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, background: integrationHealth.status === 'HEALTHY' ? 'rgba(34,197,94,0.04)' : 'rgba(239,68,68,0.04)' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: integrationHealth.status === 'HEALTHY' ? '#16a34a' : '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>
-                  TRẠNG THÁI HỆ THỐNG
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a' }}>
-                  {integrationHealth.status === 'HEALTHY' ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a' }}>
-                      <CheckCircle2 size={18} color="#16a34a" /> HEALTHY
-                    </span>
-                  ) : (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#ea580c' }}>
-                      <AlertTriangle size={18} color="#ea580c" /> DEGRADED
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  Tỷ lệ lỗi: <strong>{integrationHealth.summary?.failureRate}</strong>
-                </div>
-              </Card>
-
-              <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
-                  TỔNG SỐ SỰ KIỆN
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', fontFamily: "'JetBrains Mono',monospace" }}>
-                  {integrationHealth.summary?.totalEvents || 0}
-                </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  24h qua: <strong>{integrationHealth.summary?.volume24h || 0}</strong> events
-                </div>
-              </Card>
-
-              <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
-                  ĐÃ XỬ LÝ (PROCESSED)
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>
-                  {integrationHealth.summary?.processedCount || 0}
-                </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  Đang chờ: <strong>{integrationHealth.summary?.pendingCount || 0}</strong> pending
-                </div>
-              </Card>
-
-              <Card style={{ padding: 16, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
-                  SỰ KIỆN THẤT BẠI (FAILED)
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2, color: integrationHealth.summary?.failedCount > 0 ? '#ef4444' : '#64748b', fontFamily: "'JetBrains Mono',monospace" }}>
-                  {integrationHealth.summary?.failedCount || 0}
-                </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  Bỏ qua: <strong>{integrationHealth.summary?.ignoredCount || 0}</strong> ignored
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {/* Module Breakdown Badges */}
-          {integrationHealth?.bySourceModule && (
-            <Card style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: '#f8fafc' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Phân Bổ Nguồn:</div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(2,132,199,0.1)', color: '#0284c7', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Video size={13} /> Production: {integrationHealth.bySourceModule.production || 0}
-                </span>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Tv size={13} /> YouTube: {integrationHealth.bySourceModule.youtube || 0}
-                </span>
-                <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'rgba(168,85,247,0.1)', color: '#a855f7', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Share2 size={13} /> Community: {integrationHealth.bySourceModule.community || 0}
-                </span>
-              </div>
-            </Card>
-          )}
-
-          {/* Filter Bar */}
-          <Card style={{ padding: 16 }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 220 }}>
-                <Search size={16} color="#64748b" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm Event Type hoặc ID..."
-                  value={integrationSearch}
-                  onChange={(e) => setIntegrationSearch(e.target.value)}
-                  style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Filter size={15} color="#64748b" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Nguồn:</span>
-                <select
-                  value={integrationSourceFilter}
-                  onChange={(e) => setIntegrationSourceFilter(e.target.value)}
-                  style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                >
-                  <option value="all">Tất cả nguồn</option>
-                  <option value="production">Production</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="community">Community</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Trạng thái:</span>
-                <select
-                  value={integrationStatusFilter}
-                  onChange={(e) => setIntegrationStatusFilter(e.target.value)}
-                  style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="PROCESSED">PROCESSED (Đã chấm)</option>
-                  <option value="PENDING">PENDING (Đang chờ)</option>
-                  <option value="FAILED">FAILED (Lỗi)</option>
-                  <option value="IGNORED">IGNORED (Bỏ qua)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Events Table */}
-            {loading && integrationEvents.length === 0 ? (
-              <PageState type="loading" title="Đang tải danh sách sự kiện..." />
-            ) : integrationEvents.length === 0 ? (
-              <EmptyState title="Không tìm thấy sự kiện nào" description="Chưa có sự kiện nào phù hợp với bộ lọc được ghi nhận trong Event Store." />
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>
-                      <th style={{ padding: '10px 8px' }}>Event ID</th>
-                      <th style={{ padding: '10px 8px' }}>Loại Sự Kiện</th>
-                      <th style={{ padding: '10px 8px' }}>Nguồn</th>
-                      <th style={{ padding: '10px 8px' }}>Đối Tượng</th>
-                      <th style={{ padding: '10px 8px' }}>Actor / Team</th>
-                      <th style={{ padding: '10px 8px' }}>Trạng Thái</th>
-                      <th style={{ padding: '10px 8px' }}>Thời Gian</th>
-                      <th style={{ padding: '10px 8px', textAlign: 'right' }}>Thao Tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {integrationEvents
-                      .filter((ev) => {
-                        if (!integrationSearch.trim()) return true;
-                        const s = integrationSearch.toLowerCase();
-                        return (
-                          ev.eventType?.toLowerCase().includes(s) ||
-                          ev.eventId?.toLowerCase().includes(s) ||
-                          ev.sourceModule?.toLowerCase().includes(s)
-                        );
-                      })
-                      .map((ev) => (
-                        <tr key={ev.eventId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s' }}>
-                          <td style={{ padding: '10px 8px', fontFamily: 'monospace', color: '#64748b' }}>
-                            {ev.eventId?.slice(0, 8)}...
-                          </td>
-                          <td style={{ padding: '10px 8px', fontWeight: 600, color: '#0f172a' }}>
-                            {ev.eventType}
-                          </td>
-                          <td style={{ padding: '10px 8px' }}>
-                            <span
-                              style={{
-                                padding: '2px 8px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                background:
-                                  ev.sourceModule === 'production'
-                                    ? 'rgba(2,132,199,0.1)'
-                                    : ev.sourceModule === 'youtube'
-                                    ? 'rgba(239,68,68,0.1)'
-                                    : 'rgba(168,85,247,0.1)',
-                                color:
-                                  ev.sourceModule === 'production'
-                                    ? '#0284c7'
-                                    : ev.sourceModule === 'youtube'
-                                    ? '#ef4444'
-                                    : '#a855f7',
-                              }}
-                            >
-                              {ev.sourceModule}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 8px', color: '#475569' }}>
-                            {ev.aggregateType ? `${ev.aggregateType} #${ev.aggregateId || '—'}` : '—'}
-                          </td>
-                          <td style={{ padding: '10px 8px', color: '#475569' }}>
-                            {ev.actorId ? `User #${ev.actorId}` : ''} {ev.teamId ? `(Team #${ev.teamId})` : ''}
-                          </td>
-                          <td style={{ padding: '10px 8px' }}>
-                            <span
-                              style={{
-                                padding: '3px 8px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                background:
-                                  ev.status === 'PROCESSED'
-                                    ? 'rgba(34,197,94,0.12)'
-                                    : ev.status === 'PENDING'
-                                    ? 'rgba(234,179,8,0.15)'
-                                    : ev.status === 'FAILED'
-                                    ? 'rgba(239,68,68,0.15)'
-                                    : '#f1f5f9',
-                                color:
-                                  ev.status === 'PROCESSED'
-                                    ? '#16a34a'
-                                    : ev.status === 'PENDING'
-                                    ? '#ca8a04'
-                                    : ev.status === 'FAILED'
-                                    ? '#dc2626'
-                                    : '#64748b',
-                              }}
-                            >
-                              {ev.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 8px', color: '#94a3b8', fontSize: 11 }}>
-                            {ev.occurredAt ? new Date(ev.occurredAt).toLocaleString('vi-VN') : '—'}
-                          </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                              <Button variant="outline" size="sm" onClick={() => handleOpenTrace(ev.eventId)}>
-                                <Eye size={13} /> Trace
-                              </Button>
-                              {ev.status === 'FAILED' && (
-                                <Button variant="danger" size="sm" onClick={() => handleOpenRetry(ev.eventId)}>
-                                  <RotateCcw size={13} /> Retry
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* TAB 3: PROJECTIONS */}
-      {activeTab === 'projections' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {rebuildSuccessMsg && (
-            <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 13, fontWeight: 600 }}>
-              {rebuildSuccessMsg}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
-                Giám Sát & Rebuild Read Model Projections
-              </h2>
-              <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0 0' }}>
-                Projections là bản sao tối ưu truy vấn derived từ Source of Truth.
-              </p>
-            </div>
-            <Button variant="danger" onClick={() => setRebuildModalOpen(true)}>
-              <RotateCcw size={16} /> Rebuild Toàn Bộ Read Models
-            </Button>
-          </div>
-
-          <Card style={{ padding: 18 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', marginBottom: 12 }}>
-              Trạng Thái Drift Detection & Consistency
-            </h3>
-            {consistencyReport ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                <div style={{ padding: 12, borderRadius: 8, background: consistencyReport.overallConsistent ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${consistencyReport.overallConsistent ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: consistencyReport.overallConsistent ? '#16a34a' : '#ef4444' }}>TỔNG THỂ</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>
-                    {consistencyReport.overallConsistent ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#16a34a' }}>
-                        <CheckCircle2 size={16} color="#16a34a" /> 100% ĐỒNG BỘ
-                      </span>
-                    ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#ea580c' }}>
-                        <AlertTriangle size={16} color="#ea580c" /> PHÁT HIỆN LỆCH DỮ LIỆU
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ padding: 12, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>SEASON LEADERBOARD</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginTop: 4 }}>
-                    {consistencyReport.seasonLeaderboardDrift ? `Lệch: ${consistencyReport.seasonLeaderboardDrift.driftCount} mục` : 'Khớp 100%'}
-                  </div>
-                </div>
-                <div style={{ padding: 12, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>GRAND CHAMPIONSHIP</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginTop: 4 }}>
-                    {consistencyReport.grandLeaderboardDrift ? `Lệch: ${consistencyReport.grandLeaderboardDrift.driftCount} mục` : 'Khớp 100%'}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p style={{ fontSize: 12, color: '#94a3b8' }}>Chưa có báo cáo drift detection.</p>
-            )}
-          </Card>
-        </div>
-      )}
-
       {/* TAB 4: STATE MONITOR */}
       {activeTab === 'states' && (
         <Card style={{ padding: 20 }}>
@@ -1180,10 +676,12 @@ export default function CompetitionAdmin() {
       )}
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
+      </TabTransition>
+      {createPortal(<>
       {/* MODAL 1: CREATE RULE SET */}
       {createRuleSetModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setCreateRuleSetModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: '#fff' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 14px 0' }}>
               Tạo Rule Set Mới
             </h2>
@@ -1233,12 +731,11 @@ export default function CompetitionAdmin() {
           </Card>
         </div>
       )}
-      </TabTransition>
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* MODAL 2: VISUAL RULE BUILDER STUDIO */}
       {builderModalOpen && selectedRuleSet && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setBuilderModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <div style={{ width: '100%', maxWidth: 1000, maxHeight: '90vh', background: '#fff', borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             {/* Header */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
@@ -1569,7 +1066,7 @@ export default function CompetitionAdmin() {
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* MODAL 3: RULE SIMULATOR */}
       {simulatorModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setSimulatorModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 700, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Play size={20} color="#0284c7" /> Trình Mô Phỏng Điểm (Rule Simulator)
@@ -1647,7 +1144,7 @@ export default function CompetitionAdmin() {
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* MODAL 4: VERSION DIFF VIEWER */}
       {diffModalOpen && selectedRuleSet && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setDiffModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
           <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <GitCompare size={20} color="#0284c7" /> So Sánh Phiên Bản (Version Diff)
@@ -1722,8 +1219,8 @@ export default function CompetitionAdmin() {
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* MODAL 5: PUBLISH VERSION CONFIRMATION */}
       {publishModalOpen && selectedVersion && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setPublishModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
+          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: '#fff' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0' }}>
               Xác Nhận Xuất Bản Version #{selectedVersion.versionNumber}
             </h2>
@@ -1757,344 +1254,7 @@ export default function CompetitionAdmin() {
       )}
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* MODAL 6: REBUILD PROJECTIONS */}
-      {rebuildModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0' }}>
-              Rebuild Toàn Bộ Read Models
-            </h2>
-            <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>
-              Quá trình này sẽ tính toán lại toàn bộ bảng Projections từ Source of Truth.
-            </p>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
-                Lý do Audit bắt buộc (Audit Reason)
-              </label>
-              <textarea
-                rows={3}
-                required
-                placeholder="Ví dụ: Định kỳ đồng bộ hoặc xử lý sự cố lệch số liệu..."
-                value={rebuildReason}
-                onChange={(e) => setRebuildReason(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="ghost" onClick={() => setRebuildModalOpen(false)}>Hủy</Button>
-              <Button variant="danger" onClick={handleRebuildProjections} disabled={rebuildLoading}>
-                {rebuildLoading ? 'Đang Rebuild...' : 'Bắt đầu Rebuild'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* MODAL 7: EVENT TRACE MODAL (PHASE 8) */}
-      {traceModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Eye size={20} color="#0284c7" /> Truy Vết Toàn Bộ Sự Kiện (Event Trace)
-              </h2>
-              <Button variant="ghost" size="sm" onClick={() => setTraceModalOpen(false)} aria-label="Đóng"><X size={15} /></Button>
-            </div>
-
-            {traceLoading || !traceData ? (
-              <PageState type="loading" title="Đang tải dữ liệu truy vết..." />
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* 1. Ingestion Overview */}
-                <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
-                    1. THÔNG TIN TIẾP NHẬN (INGESTION)
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, fontSize: 12 }}>
-                    <div><strong>Event ID:</strong> <span style={{ fontFamily: 'monospace' }}>{traceData.eventId}</span></div>
-                    <div><strong>Loại Sự Kiện:</strong> <span style={{ fontWeight: 600, color: '#0284c7' }}>{traceData.eventType}</span></div>
-                    <div><strong>Nguồn:</strong> <span style={{ fontWeight: 600 }}>{traceData.sourceModule}</span></div>
-                    <div><strong>Đối Tượng:</strong> {traceData.aggregateType} #{traceData.aggregateId || '—'}</div>
-                    <div><strong>Actor:</strong> {traceData.actor ? `${traceData.actor.name} (#${traceData.actor.id})` : '—'}</div>
-                    <div><strong>Team:</strong> {traceData.team ? `${traceData.team.name} (#${traceData.team.id})` : '—'}</div>
-                    <div><strong>Thời Gian Phát Sinh:</strong> {new Date(traceData.occurredAt).toLocaleString('vi-VN')}</div>
-                    <div><strong>Idempotency Key:</strong> <span style={{ fontFamily: 'monospace', fontSize: 11 }}>{traceData.idempotencyKey?.slice(0, 16)}...</span></div>
-                  </div>
-                </div>
-
-                {/* 2. Payload */}
-                <div style={{ padding: 14, borderRadius: 8, background: '#0f172a', color: '#38bdf8', fontFamily: 'monospace', fontSize: 12, overflowX: 'auto' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>2. BUSINESS PAYLOAD (IMMUTABLE)</div>
-                  <pre style={{ margin: 0 }}>{JSON.stringify(traceData.payload, null, 2)}</pre>
-                </div>
-
-                {/* 3. Rule Evaluation */}
-                <div style={{ padding: 14, borderRadius: 8, background: 'rgba(2,132,199,0.05)', border: '1px solid rgba(2,132,199,0.2)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
-                    3. ĐÁNH GIÁ QUY TẮC (RULE EVALUATION)
-                  </div>
-                  <div style={{ fontSize: 13 }}>
-                    <div>Bộ luật áp dụng: <strong>{traceData.ruleEvaluation?.ruleVersion?.ruleSetName || 'Mặc định'} (v{traceData.ruleEvaluation?.ruleVersion?.versionNumber || 1})</strong></div>
-                    <div>
-                      Kết quả khớp:{' '}
-                      <strong style={{ color: traceData.ruleEvaluation?.matched ? '#16a34a' : '#ca8a04' }}>
-                        {traceData.ruleEvaluation?.matched ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <CheckCircle2 size={13} color="#16a34a" /> KHỚP ĐIỀU KIỆN
-                          </span>
-                        ) : (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <XCircle size={13} color="#ca8a04" /> KHÔNG KHỚP (0 điểm)
-                          </span>
-                        )}
-                      </strong>
-                    </div>
-                    <div>Tổng điểm phát sinh: <strong style={{ color: '#16a34a', fontSize: 15 }}>+{traceData.ruleEvaluation?.totalPointsAwarded || 0} XP</strong></div>
-                  </div>
-                </div>
-
-                {/* 4. Score Ledger Entries */}
-                <div style={{ padding: 14, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>
-                    4. BẢN GHI SỔ CÁI ĐIỂM (SCORE LEDGER ENTRIES)
-                  </div>
-                  {traceData.ledgerEntries?.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>Không có dòng điểm nào được ghi vào sổ cái (0 effect).</div>
-                  ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
-                          <th style={{ padding: '6px 4px' }}>Target</th>
-                          <th style={{ padding: '6px 4px' }}>Loại Effect</th>
-                          <th style={{ padding: '6px 4px' }}>Điểm (+/-)</th>
-                          <th style={{ padding: '6px 4px' }}>Số Dư Sau</th>
-                          <th style={{ padding: '6px 4px' }}>Lý Do</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {traceData.ledgerEntries.map((l) => (
-                          <tr key={l.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '6px 4px' }}>{l.targetType} #{l.targetId}</td>
-                            <td style={{ padding: '6px 4px', fontWeight: 600 }}>{l.effectType}</td>
-                            <td style={{ padding: '6px 4px', fontWeight: 700, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>+{l.delta}</td>
-                            <td style={{ padding: '6px 4px' }}>{l.balanceAfter}</td>
-                            <td style={{ padding: '6px 4px', color: '#64748b' }}>{l.reason}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                {/* 5. Processing Status */}
-                <div style={{ padding: 14, borderRadius: 8, background: traceData.processing?.status === 'FAILED' ? 'rgba(239,68,68,0.06)' : '#f8fafc', border: `1px solid ${traceData.processing?.status === 'FAILED' ? 'rgba(239,68,68,0.2)' : '#e2e8f0'}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
-                    5. TRẠNG THÁI XỬ LÝ
-                  </div>
-                  <div style={{ fontSize: 12 }}>
-                    <div>Trạng thái: <strong>{traceData.processing?.status}</strong></div>
-                    <div>Số lần thử: <strong>{traceData.processing?.attemptCount}</strong></div>
-                    {traceData.processing?.lastError && (
-                      <div style={{ color: '#dc2626', marginTop: 4 }}>
-                        Lỗi: <strong>{traceData.processing.lastError}</strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                  <Button variant="ghost" onClick={() => setTraceModalOpen(false)}>Đóng</Button>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* MODAL 8: MANUAL RETRY MODAL (PHASE 8) */}
-      {retryModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <RotateCcw size={20} color="#dc2626" /> Thử Lại Sự Kiện Thất Bại
-            </h2>
-            <div style={{ padding: 12, borderRadius: 8, background: 'rgba(239,68,68,0.06)', color: '#991b1b', fontSize: 12, marginBottom: 14 }}>
-              Hành động này sẽ đặt lại trạng thái <strong>PENDING</strong> cho sự kiện <code style={{ fontWeight: 600 }}>{retryEventId?.slice(0, 8)}...</code>. Worker sẽ tự động đánh giá lại trong lượt quét kế tiếp.
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
-                Lý Do Audit Bắt Buộc (Audit Reason)
-              </label>
-              <textarea
-                rows={3}
-                required
-                placeholder="Ví dụ: Đã sửa lỗi DSL rule và trigger retry thủ công..."
-                value={retryReason}
-                onChange={(e) => setRetryReason(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="ghost" onClick={() => setRetryModalOpen(false)}>Hủy</Button>
-              <Button variant="danger" onClick={handleSubmitRetry} disabled={retryLoading}>
-                {retryLoading ? 'Đang Retry...' : 'Xác Nhận Thử Lại'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* MODAL 9: SIMULATE LIVE EVENT MODAL (PHASE 8) */}
-      {simEventModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 520, padding: 24, background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Zap size={20} color="#0284c7" /> Bắn Sự Kiện Thử Nghiệm (Product Simulation)
-            </h2>
-            <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>
-              Tạo sự kiện thật từ các Module để kiểm tra luồng tính điểm từ Event Store vào Score Ledger.
-            </p>
-
-            {simActionSuccess && (
-              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(34,197,94,0.1)', color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
-                {simActionSuccess}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
-                  Chọn Nguồn Sự Kiện (Source Module)
-                </label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <Button
-                    variant={simModuleType === 'production' ? 'primary' : 'outline'}
-                    size="sm"
-                    onClick={() => { setSimModuleType('production'); setSimActionType('video_approved'); }}
-                  >
-                    <Video size={14} /> Production
-                  </Button>
-                  <Button
-                    variant={simModuleType === 'youtube' ? 'primary' : 'outline'}
-                    size="sm"
-                    onClick={() => { setSimModuleType('youtube'); setSimActionType('views'); }}
-                  >
-                    <Tv size={14} /> YouTube
-                  </Button>
-                  <Button
-                    variant={simModuleType === 'community' ? 'primary' : 'outline'}
-                    size="sm"
-                    onClick={() => { setSimModuleType('community'); setSimActionType('kudos'); }}
-                  >
-                    <Share2 size={14} /> Community
-                  </Button>
-                </div>
-              </div>
-
-              {simModuleType === 'production' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Loại Hành Động</label>
-                    <select
-                      value={simActionType}
-                      onChange={(e) => setSimActionType(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                    >
-                      <option value="video_approved">VIDEO_APPROVED (Duyệt Video)</option>
-                      <option value="video_published">VIDEO_PUBLISHED (Xuất bản Video)</option>
-                      <option value="script_approved">SCRIPT_APPROVED (Duyệt Kịch bản)</option>
-                      <option value="edit_approved">EDIT_APPROVED (Duyệt Dựng)</option>
-                      <option value="qc_passed">VIDEO_QC_PASSED (Đạt chuẩn QC)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Video ID & Tiêu Đề</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        type="number"
-                        value={simVideoId}
-                        onChange={(e) => setSimVideoId(e.target.value)}
-                        placeholder="Video ID"
-                        style={{ width: 100, padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                      />
-                      <input
-                        type="text"
-                        value={simTitle}
-                        onChange={(e) => setSimTitle(e.target.value)}
-                        placeholder="Tiêu đề video"
-                        style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {simModuleType === 'youtube' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Cột Mốc (Milestone)</label>
-                    <select
-                      value={simActionType}
-                      onChange={(e) => setSimActionType(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                    >
-                      <option value="views">VIDEO_VIEW_MILESTONE (Cột mốc lượt xem)</option>
-                      <option value="subscriber">SUBSCRIBER_MILESTONE (Cột mốc người đăng ký)</option>
-                      <option value="performance">PERFORMANCE_MILESTONE (Hiệu suất video)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Lượt xem (Views)</label>
-                    <input
-                      type="number"
-                      value={simViews}
-                      onChange={(e) => setSimViews(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                    />
-                  </div>
-                </>
-              )}
-
-              {simModuleType === 'community' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Người Nhận Kudos (Recipient User ID)</label>
-                    <input
-                      type="number"
-                      value={simKudosRecipientId}
-                      onChange={(e) => setSimKudosRecipientId(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Lý Do Tặng Kudos</label>
-                    <input
-                      type="text"
-                      value={simKudosReason}
-                      onChange={(e) => setSimKudosReason(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 }}>
-              <Button variant="ghost" onClick={() => setSimEventModalOpen(false)}>Đóng</Button>
-              <Button variant="primary" onClick={handleTriggerSimAction} disabled={simActionLoading}>
-                {simActionLoading ? 'Đang bắn sự kiện...' : 'Bắn Sự Kiện Ngay'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      </>, document.body)}
     </div>
   );
 }

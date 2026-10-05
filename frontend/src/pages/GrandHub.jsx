@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trophy, Crown, Flame, Award, Calendar, ChevronRight, RefreshCw, Clock, Star, Zap, Sparkles, Tv, ExternalLink, CheckCircle2, Search } from 'lucide-react';
-import { competition, youtube } from '../services/api';
+import { Trophy, Crown, Flame, Award, Calendar, ChevronRight, RefreshCw, Clock, Star, Sparkles, Tv, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { competition } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PageShell, PageHeader, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, Notice, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
+import { PageShell, Section, Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, StatCard, PageTransitionSkeleton, AnimatedNumber, FlipList } from '../components/ui';
 import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 function formatDaysRemaining(endAt) {
@@ -33,12 +33,8 @@ export default function GrandHub() {
   const [grand, setGrand] = useState(() => cachedStandings?.grand || cachedCurrentGrand || null);
   const [standings, setStandings] = useState(() => Array.isArray(cachedStandings?.standings) ? cachedStandings.standings : []);
   const [individualStandings, setIndividualStandings] = useState(() => Array.isArray(cachedStandings?.individualStandings) ? cachedStandings.individualStandings : []);
-  const [individualChampion, setIndividualChampion] = useState(() => cachedStandings?.individualChampion || null);
-  const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [timeline, setTimeline] = useState(() => Array.isArray(cachedStandings?.timeline) ? cachedStandings.timeline : []);
   const [myTeamJourney, setMyTeamJourney] = useState(() => cachedStandings?.myTeamJourney || null);
-  const [youtubeStandings, setYoutubeStandings] = useState(() => Array.isArray(cachedStandings?.youtubeStandings) ? cachedStandings.youtubeStandings : []);
   const [activeTab, setActiveTab] = useState('standings');
   const [loading, setLoading] = useState(!cachedStandings && !cachedCurrentGrand);
   const [refreshing, setRefreshing] = useState(false);
@@ -60,11 +56,10 @@ export default function GrandHub() {
 
       const cacheKey = CACHE_KEYS.GRAND_STANDINGS(currentGrand.id);
 
-      const [standingsRes, indRes, timelineRes, ytRes] = await Promise.all([
+      const [standingsRes, indRes, timelineRes] = await Promise.all([
         fetchWithCache(`${cacheKey}:standings`, () => competition.getGrandStandings(currentGrand.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:ind`, () => competition.getGrandIndividualStandings(currentGrand.id).catch(() => ({ standings: [], grandIndividualChampion: null })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
         fetchWithCache(`${cacheKey}:timeline`, () => competition.getGrandTimeline(currentGrand.id), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
-        fetchWithCache(`${cacheKey}:yt`, () => youtube.getLeaderboard({ sortBy: 'views', limit: 20 }).catch(() => ({ items: [] })), { ttl: CACHE_TTL.MEDIUM, force: isManual }),
       ]);
 
       let journeyRes = null;
@@ -76,9 +71,7 @@ export default function GrandHub() {
         grand: currentGrand,
         standings: standingsRes.standings || [],
         individualStandings: indRes.standings || [],
-        individualChampion: indRes.grandIndividualChampion || (indRes.standings?.[0] || null),
         timeline: timelineRes || [],
-        youtubeStandings: ytRes.items || [],
         myTeamJourney: journeyRes || null,
       };
 
@@ -87,9 +80,7 @@ export default function GrandHub() {
       setGrand((prev) => (isDeepEqual(prev, currentGrand) ? prev : currentGrand));
       setStandings((prev) => (isDeepEqual(prev, bundle.standings) ? prev : bundle.standings));
       setIndividualStandings((prev) => (isDeepEqual(prev, bundle.individualStandings) ? prev : bundle.individualStandings));
-      setIndividualChampion((prev) => (isDeepEqual(prev, bundle.individualChampion) ? prev : bundle.individualChampion));
       setTimeline((prev) => (isDeepEqual(prev, bundle.timeline) ? prev : bundle.timeline));
-      setYoutubeStandings((prev) => (isDeepEqual(prev, bundle.youtubeStandings) ? prev : bundle.youtubeStandings));
       if (journeyRes) setMyTeamJourney((prev) => (isDeepEqual(prev, journeyRes) ? prev : journeyRes));
     } catch (err) {
       setError(err?.response?.data?.message || 'Không thể tải dữ liệu Grand Championship');
@@ -128,6 +119,8 @@ export default function GrandHub() {
 
   const activeSeasons = useMemo(() => timeline.filter((s) => s.status === 'ACTIVE').length, [timeline]);
   const finishedSeasons = useMemo(() => timeline.filter((s) => s.status === 'FINISHED').length, [timeline]);
+  const teamPreview = standings.filter((team, index) => index < 5 || Number(team.teamId) === Number(user?.teamId));
+  const individualPreview = individualStandings.filter((individual, index) => index < 5 || Number(individual.userId || individual.id) === Number(user?.id));
 
   if (loading) {
     return (
@@ -275,11 +268,10 @@ export default function GrandHub() {
       </section>
 
       {/* QUICK STATS */}
-      <div className="grand-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
+      <div className="grand-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
         <StatCard icon={Trophy} label="Đội tranh tài" value={standings.length} color="#b45309" />
         <StatCard icon={Star} label="Cá nhân xếp hạng" value={individualStandings.length} color="#141414" />
         <StatCard icon={Calendar} label="Mùa giải trong năm" value={timeline.length} detail={activeSeasons > 0 ? `${activeSeasons} đang diễn ra` : `${finishedSeasons} đã kết thúc`} color="#15803d" />
-        <StatCard icon={Tv} label="Kênh YouTube" value={youtubeStandings.length} color="#b91c1c" />
       </div>
 
       {/* TABS */}
@@ -289,7 +281,6 @@ export default function GrandHub() {
           options={[
             { key: 'standings', label: `BXH Đội (${standings.length})` },
             { key: 'individual', label: `BXH Cá Nhân (${individualStandings.length})` },
-            { key: 'youtube', label: `YouTube (${youtubeStandings.length})` },
             { key: 'timeline', label: `Dòng Thời Gian (${timeline.length})` },
             { key: 'journey', label: 'Hành Trình Đội' },
             { key: 'milestones', label: 'Vinh Danh' },
@@ -312,7 +303,7 @@ export default function GrandHub() {
             actions={
               grand?.id && (
                 <Link
-                  to={`/rankings?scope=grand&grandId=${grand.id}&ranking=team`}
+                  to={`/leaderboard?scope=teams&period=grand&grandId=${grand.id}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -334,7 +325,7 @@ export default function GrandHub() {
               <EmptyState title="Chưa có điểm Grand Points" description="Các đội sẽ nhận Grand Points sau khi các Season trong năm được kết thúc." />
             ) : (
               <FlipList resetKey={`grand-standings-${grand?.id || 'default'}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {standings.map((team) => {
+                {teamPreview.map((team) => {
                   const isTop1 = team.rank === 1;
                   const isMyTeam = user?.teamId && Number(team.teamId) === Number(user.teamId);
                   return (
@@ -420,7 +411,7 @@ export default function GrandHub() {
             actions={
               grand?.id && (
                 <Link
-                  to={`/rankings?scope=grand&grandId=${grand.id}&ranking=individual`}
+                  to={`/leaderboard?scope=members&period=grand&grandId=${grand.id}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -438,54 +429,15 @@ export default function GrandHub() {
               )
             }
           >
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: '1 1 200px', display: 'flex', alignItems: 'center' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, color: '#777777', pointerEvents: 'none' }} />
-                <input
-                  type="text"
-                  placeholder="Tìm nhân viên..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px 8px 32px',
-                    border: '1px solid var(--border)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    outline: 'none',
-                    background: '#ffffff',
-                  }}
-                />
-              </div>
-              <select
-                value={selectedTeamFilter}
-                onChange={(e) => setSelectedTeamFilter(e.target.value)}
-                style={{ padding: '8px 12px', border: '1px solid var(--border)', fontSize: 13, fontWeight: 500, background: '#fff' }}
-              >
-                <option value="all">Tất cả đội</option>
-                {standings.map((t) => (
-                  <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
-                ))}
-              </select>
-            </div>
-
             {(() => {
-              const filtered = individualStandings.filter((u) => {
-                if (selectedTeamFilter !== 'all' && String(u.teamId) !== String(selectedTeamFilter)) return false;
-                if (searchQuery.trim()) {
-                  const q = searchQuery.toLowerCase();
-                  return (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
-                }
-                return true;
-              });
+              const filtered = individualPreview;
 
               if (filtered.length === 0) {
                 return <EmptyState title="Không tìm thấy nhân viên" description="Chưa có dữ liệu cá nhân nào được tích lũy trong Grand Championship này." />;
               }
 
               return (
-                <FlipList resetKey={`grand-indiv-${grand?.id || 'default'}:${selectedTeamFilter}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <FlipList resetKey={`grand-indiv-${grand?.id || 'default'}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {filtered.map((emp) => {
                     const isTop1 = emp.rank === 1;
                     const isMe = user && (Number(emp.userId) === Number(user.id) || Number(emp.id) === Number(user.id));
@@ -558,93 +510,6 @@ export default function GrandHub() {
                 </FlipList>
               );
             })()}
-          </Section>
-        )}
-
-        {/* TAB: YOUTUBE YEARLY PERFORMANCE */}
-        {activeTab === 'youtube' && (
-          <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Tv size={18} color="#b91c1c" /> Thành Tích YouTube Toàn Năm {grand.year}</span>}
-            description="Tổng hợp sản lượng lượt xem, người theo dõi và video của các Team"
-            actions={
-              <Button variant="secondary" size="sm" onClick={() => navigate('/youtube')}>
-                Mở YouTube Studio <ChevronRight size={14} />
-              </Button>
-            }
-          >
-            <Notice type="info" icon={Zap}>
-              <strong>Chỉ số kinh doanh độc lập:</strong> Thành tích YouTube thể hiện sức ảnh hưởng truyền thông. Điểm Grand Points chỉ được kết toán thông qua thứ hạng chung cuộc của các Mùa Giải.
-            </Notice>
-
-            <div style={{ marginTop: 16 }}>
-              {youtubeStandings.length === 0 ? (
-                <EmptyState title="Chưa có dữ liệu YouTube" description="Chưa có kênh YouTube nào được liên kết và đồng bộ số liệu." />
-              ) : (
-                <FlipList resetKey={`grand-youtube-${grand?.id || 'default'}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {youtubeStandings.map((team, idx) => {
-                    const isMyTeam = myTeamStandings && Number(team.teamId) === Number(myTeamStandings.teamId);
-                    return (
-                      <div
-                        key={team.teamId}
-                        data-flip-id={team.teamId}
-                        className="ranking-flip-row"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '12px 16px',
-                          border: isMyTeam ? '1.5px solid rgba(185, 28, 28, 0.35)' : '1px solid var(--border)',
-                          background: '#ffffff',
-                          gap: 12,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                          <div
-                            style={{
-                              width: 32,
-                              height: 32,
-                              background: idx === 0 ? '#b45309' : idx === 1 ? '#78716c' : idx === 2 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                              color: idx < 3 ? '#ffffff' : '#111111',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: 13,
-                              flexShrink: 0,
-                            }}
-                          >
-                            #{idx + 1}
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
-                              {isMyTeam && (
-                                <span style={{ padding: '2px 6px', background: 'rgba(185, 28, 28, 0.1)', color: '#b91c1c', fontSize: 9, fontWeight: 600, textTransform: 'uppercase' }}>
-                                  Đội của bạn
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
-                              {team.channelsCount} kênh
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: '#b91c1c', fontFamily: "'JetBrains Mono', monospace" }}>
-                            <AnimatedNumber value={team.totalViews || 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777' }}>views</span>
-                          </div>
-                          <div style={{ fontSize: 11, color: team.viewsGrowth30dPct !== null ? '#15803d' : '#64748b', fontWeight: 600, marginTop: 2 }}>
-                            {(team.totalSubscribers || 0).toLocaleString()} subs • {team.viewsGrowth30dPct !== null && team.viewsGrowth30dPct !== undefined ? `+${Number(team.viewsGrowth30dPct).toFixed(1)}% 30D` : '—'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </FlipList>
-              )}
-            </div>
           </Section>
         )}
 
@@ -728,8 +593,8 @@ export default function GrandHub() {
                           </div>
                         )}
 
-                        <Button variant="secondary" size="sm" onClick={() => navigate('/arena')}>
-                          Arena
+                        <Button variant="secondary" size="sm" onClick={() => navigate(`/leaderboard?scope=teams&period=season&seasonId=${s.seasonId}`)}>
+                          BXH mùa
                         </Button>
                       </div>
                     </div>
@@ -842,6 +707,10 @@ export default function GrandHub() {
           </div>
         )}
       </TabTransition>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '12px 0' }}>
+        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
+        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
+      </div>
     </PageShell>
   );
 }

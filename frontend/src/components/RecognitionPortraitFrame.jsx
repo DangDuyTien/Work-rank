@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { RecognitionPortrait, removeVietnameseDiacritics } from './PublicRecognition';
-import { users as usersApi } from '../services/api';
 
 export default function RecognitionPortraitFrame({ type, record, loading }) {
   const frameRef = useRef(null);
@@ -8,7 +7,6 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
   const [phase, setPhase] = useState('pending');
   const [index, setIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [clientGallery, setClientGallery] = useState([]);
 
   const isChampion = type === 'champion';
   const isMvp = type === 'mvp';
@@ -19,20 +17,6 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
       ? record.members.filter((member) => member.name && (member.avatarData || member.avatarUrl))
       : [];
   }, [isChampion, record?.members]);
-
-  // Fallback: If MVP record does not have galleryImages yet, fetch user's 6 gallery photos
-  useEffect(() => {
-    if (!isMvp || !record?.userId || (Array.isArray(record?.galleryImages) && record.galleryImages.length > 0)) {
-      return;
-    }
-    let active = true;
-    usersApi.gallery(record.userId).then((res) => {
-      if (!active) return;
-      const list = (res?.data || []).map((x) => x?.imageData).filter(Boolean);
-      if (list.length > 0) setClientGallery(list);
-    }).catch(() => {});
-    return () => { active = false; };
-  }, [isMvp, record?.userId, record?.galleryImages]);
 
   // Build slides for rotation
   const slides = useMemo(() => {
@@ -56,12 +40,12 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
       const mainImg = record?.avatarData || record?.avatarUrl;
       if (mainImg) photos.push(mainImg);
 
-      // Collect 6 secondary gallery photos
+      // Public portraits only use photos supplied by the public spotlight DTO.
       const gallerySource = Array.isArray(record?.galleryImages) && record.galleryImages.length > 0
         ? record.galleryImages
         : Array.isArray(record?.images) && record.images.length > 0
         ? record.images
-        : clientGallery;
+        : [];
 
       gallerySource.forEach((item) => {
         const src = typeof item === 'string' ? item : item?.imageData || item?.url;
@@ -89,7 +73,7 @@ export default function RecognitionPortraitFrame({ type, record, loading }) {
       image: record?.avatarData || record?.avatarUrl || null,
       portraitType: type,
     }];
-  }, [isChampion, isMvp, members, record, clientGallery, type]);
+  }, [isChampion, isMvp, members, record, type]);
 
   const slide = slides[index % slides.length] || { name: '', image: null, portraitType: type };
   // Enable 2-second rotation whenever there are multiple photos

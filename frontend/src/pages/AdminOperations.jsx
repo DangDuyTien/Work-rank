@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   Activity,
   Flame,
@@ -28,11 +30,12 @@ import {
   Sliders,
   Check,
   X,
+  Eye,
 } from 'lucide-react';
 import { competition, youtube } from '../services/api';
 import { useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, CardSkeleton, TableSkeleton } from '../components/ui';
+import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, CardSkeleton, TableSkeleton, AnimatedModal } from '../components/ui';
 
 const CARD = {
   background: '#ffffff',
@@ -59,7 +62,14 @@ function fmtDate(d) {
 export default function AdminOperations() {
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState('health'); // 'health' | 'audit' | 'events' | 'projections'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab') || 'health';
+  const activeTab = ['health', 'audit', 'events', 'projections'].includes(requestedTab) ? requestedTab : 'health';
+  const setActiveTab = (tab) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    setSearchParams(params, { replace: true });
+  };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -82,6 +92,10 @@ export default function AdminOperations() {
   const [retryModalEvent, setRetryModalEvent] = useState(null);
   const [retryReason, setRetryReason] = useState('');
   const [submittingRetry, setSubmittingRetry] = useState(false);
+  const [traceEventId, setTraceEventId] = useState(null);
+  const [traceData, setTraceData] = useState(null);
+  const [traceLoading, setTraceLoading] = useState(false);
+  const [traceError, setTraceError] = useState('');
 
   // Tab 4: Projections Rebuild Modal
   const [rebuildModalOpen, setRebuildModalOpen] = useState(false);
@@ -89,6 +103,17 @@ export default function AdminOperations() {
   const [rebuildLoading, setRebuildLoading] = useState(false);
   const [checkingConsistency, setCheckingConsistency] = useState(false);
   const [consistencyResult, setConsistencyResult] = useState(null);
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      setSelectedAuditLog(null);
+      setRetryModalEvent(null);
+      setRebuildModalOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   // Fetch Operations Data
   const loadOperationsData = useCallback(async (isSilent = false) => {
@@ -121,6 +146,19 @@ export default function AdminOperations() {
     loadOperationsData();
   }, [loadOperationsData]);
 
+  useEffect(() => {
+    if (!traceEventId) return;
+    let current = true;
+    setTraceData(null);
+    setTraceError('');
+    setTraceLoading(true);
+    competition.getEventTrace(traceEventId)
+      .then((data) => { if (current) setTraceData(data); })
+      .catch((error) => { if (current) setTraceError(parseApiError(error, 'Không thể tải truy vết sự kiện.')); })
+      .finally(() => { if (current) setTraceLoading(false); });
+    return () => { current = false; };
+  }, [traceEventId]);
+
   // ─── AUDIT FILTERING ────────────────────────────────────────────────────────
 
   const filteredAuditLogs = useMemo(() => {
@@ -146,7 +184,7 @@ export default function AdminOperations() {
     const q = eventSearch.trim().toLowerCase();
     return events.filter((ev) => {
       if (q) {
-        const text = `${ev.contractKey || ''} ${ev.aggregateType || ''} ${ev.idempotencyKey || ''} ${ev.actorId || ''}`.toLowerCase();
+        const text = `${ev.eventType || ev.contractKey || ''} ${ev.eventId || ev.id || ''} ${ev.aggregateType || ''} ${ev.idempotencyKey || ''} ${ev.actorId || ''}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
       if (eventStatusFilter !== 'all' && ev.status !== eventStatusFilter) return false;
@@ -166,8 +204,8 @@ export default function AdminOperations() {
 
     setSubmittingRetry(true);
     try {
-      await competition.adminRetryIntegrationEvent(retryModalEvent.id, retryReason.trim());
-      toast.success(`Đã kích hoạt thử lại sự kiện ${retryModalEvent.contractKey}!`);
+      await competition.adminRetryIntegrationEvent(retryModalEvent.eventId || retryModalEvent.id, retryReason.trim());
+      toast.success(`Đã kích hoạt thử lại sự kiện ${retryModalEvent.eventType || retryModalEvent.contractKey}!`);
       setRetryModalEvent(null);
       setRetryReason('');
       await loadOperationsData(true);
@@ -525,7 +563,7 @@ export default function AdminOperations() {
             </div>
 
             {/* Audit Logs Table */}
-            <div style={{ ...CARD, overflow: 'hidden' }}>
+            <div style={{ ...CARD, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
@@ -631,7 +669,7 @@ export default function AdminOperations() {
             </div>
 
             {/* Events Table */}
-            <div style={{ ...CARD, overflow: 'hidden' }}>
+            <div style={{ ...CARD, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
@@ -651,12 +689,12 @@ export default function AdminOperations() {
                     </tr>
                   ) : (
                     filteredEvents.map((ev) => (
-                      <tr key={ev.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
+                      <tr key={ev.eventId || ev.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
                         <td style={{ padding: '10px 14px', color: '#64748b', fontSize: 11 }}>
                           {fmtDate(ev.occurredAt || ev.createdAt)}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
-                          <strong style={{ color: '#0f172a', fontSize: 12 }}>{ev.contractKey}</strong>
+                          <strong style={{ color: '#0f172a', fontSize: 12 }}>{ev.eventType || ev.contractKey}</strong>
                           <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
                             Idempotency: {ev.idempotencyKey || '—'}
                           </div>
@@ -674,6 +712,15 @@ export default function AdminOperations() {
                           </span>
                         </td>
                         <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            onClick={() => setTraceEventId(ev.eventId || ev.id)}
+                            aria-label={`Truy vết sự kiện ${ev.eventId || ev.id}`}
+                            title="Truy vết sự kiện"
+                            style={{ padding: 6, border: '1px solid rgba(15,23,42,0.1)', background: '#f8fafc', color: '#b45309', cursor: 'pointer', marginRight: 6 }}
+                          >
+                            <Eye size={14} />
+                          </button>
                           {ev.status === 'FAILED' ? (
                             <button
                               type="button"
@@ -685,9 +732,7 @@ export default function AdminOperations() {
                             >
                               Thử lại (Retry)
                             </button>
-                          ) : (
-                            <span style={{ fontSize: 11, color: '#94a3b8' }}>—</span>
-                          )}
+                          ) : null}
                         </td>
                       </tr>
                     ))
@@ -750,13 +795,48 @@ export default function AdminOperations() {
           </div>
         )}
       </TabTransition>
+      <AnimatedModal isOpen={Boolean(traceEventId)} onClose={() => setTraceEventId(null)} title="Truy vết sự kiện" maxWidth={760}>
+        {traceLoading && <TableSkeleton rows={5} cols={2} minHeight={320} />}
+        {traceError && <div role="alert" className="motion-slide-down">{traceError}</div>}
+        {!traceLoading && !traceError && traceData && (
+          <div style={{ display: 'grid', gap: 20, fontSize: 13, overflowWrap: 'anywhere' }}>
+            <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 2fr)', gap: '8px 16px', margin: 0 }}>
+              {[
+                ['Event ID', traceData.eventId], ['Loại sự kiện', traceData.eventType], ['Nguồn', traceData.sourceModule],
+                ['Đối tượng', `${traceData.aggregateType || '—'} #${traceData.aggregateId || '—'}`],
+                ['Người thực hiện', traceData.actor?.name], ['Đội', traceData.team?.name],
+                ['Thời điểm', fmtDate(traceData.occurredAt)], ['Trạng thái', traceData.processing?.status],
+                ['Số lần thử', traceData.processing?.attemptCount],
+                ['Bộ luật', traceData.ruleEvaluation?.ruleVersion ? `${traceData.ruleEvaluation.ruleVersion.ruleSetName} (v${traceData.ruleEvaluation.ruleVersion.versionNumber})` : 'Không có phiên bản được ghi nhận'],
+                ['Số hiệu ứng', traceData.ruleEvaluation?.totalEffects], ['Điểm phát sinh', fmtNum(traceData.ruleEvaluation?.totalPointsAwarded)],
+              ].map(([label, value]) => <React.Fragment key={label}><dt style={{ color: '#64748b' }}>{label}</dt><dd style={{ margin: 0, fontWeight: 600 }}>{value ?? '—'}</dd></React.Fragment>)}
+            </dl>
+            {traceData.processing?.lastError && <div role="alert" style={{ color: '#dc2626' }}>{traceData.processing.lastError}</div>}
+            <section>
+              <h4 style={{ margin: '0 0 8px', fontSize: 14 }}>Sổ cái điểm</h4>
+              {traceData.ledgerEntries?.length ? (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 12 }}>
+                    <thead><tr>{['Đối tượng', 'Hiệu ứng', 'Điểm', 'Lý do'].map((label) => <th key={label} style={{ padding: 8 }}>{label}</th>)}</tr></thead>
+                    <tbody>{traceData.ledgerEntries.map((entry) => <tr key={entry.id} style={{ borderTop: '1px solid #e2e8f0' }}><td style={{ padding: 8 }}>{entry.targetType} #{entry.targetId}</td><td style={{ padding: 8 }}>{entry.effectType}</td><td style={{ padding: 8 }}>{fmtNum(entry.pointsDelta ?? entry.delta)}</td><td style={{ padding: 8 }}>{entry.reason || '—'}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              ) : <p style={{ margin: 0, color: '#64748b' }}>Không có bản ghi điểm.</p>}
+            </section>
+            {[
+              ['Payload', traceData.payload], ['Projection', traceData.projections],
+            ].map(([label, value]) => <section key={label}><h4 style={{ margin: '0 0 8px', fontSize: 14 }}>{label}</h4><pre style={{ margin: 0, padding: 12, background: '#f8fafc', fontSize: 11, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(value ?? {}, null, 2)}</pre></section>)}
+          </div>
+        )}
+      </AnimatedModal>
+      {createPortal(<>
 
       {/* ══════════════════════════════════════════════════════════════════════
           MODAL: CHI TIẾT AUDIT LOG
          ══════════════════════════════════════════════════════════════════════ */}
       {selectedAuditLog && (
-        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setSelectedAuditLog(null); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FileText size={18} color="#b45309" /> Chi Tiết Nhật Ký Kiểm Toán
@@ -810,8 +890,8 @@ export default function AdminOperations() {
           MODAL: THỬ LẠI SỰ KIỆN LỖI (RETRY EVENT)
          ══════════════════════════════════════════════════════════════════════ */}
       {retryModalEvent && (
-        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setRetryModalEvent(null); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} color="#b45309" /> Thử Lại Sự Kiện
@@ -823,7 +903,7 @@ export default function AdminOperations() {
 
             <form onSubmit={handleRetryEvent} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12 }}>
-                Sự kiện: <strong>{retryModalEvent.contractKey}</strong> (ID: #{retryModalEvent.id})
+                Sự kiện: <strong>{retryModalEvent.eventType || retryModalEvent.contractKey}</strong> (ID: #{retryModalEvent.eventId || retryModalEvent.id})
               </div>
 
               <div>
@@ -857,8 +937,8 @@ export default function AdminOperations() {
           MODAL: REBUILD PROJECTIONS
          ══════════════════════════════════════════════════════════════════════ */}
       {rebuildModalOpen && (
-        <div className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+        <div onClick={(event) => { if (event.target === event.currentTarget) setRebuildModalOpen(false); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} /> Xác Nhận Rebuild Bảng Xếp Hạng
@@ -899,6 +979,7 @@ export default function AdminOperations() {
           </div>
         </div>
       )}
+      </>, document.body)}
     </div>
   );
 }

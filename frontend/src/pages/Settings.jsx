@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
   BadgeCheck,
@@ -7,13 +7,11 @@ import {
   CheckCircle2,
   Code,
   Database,
-  Edit3,
   ExternalLink,
   KeyRound,
   Mail,
   Palette,
   Phone,
-  PlusCircle,
   RefreshCw,
   RotateCcw,
   Save,
@@ -25,10 +23,8 @@ import {
   Trophy,
   UserCheck,
   UserRound,
-  Users,
   Volume2,
   X,
-  Building2,
   Lightbulb,
   Check,
   Wrench,
@@ -41,10 +37,10 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { auth, users as usersApi, competition as compApi, gameCatalogApi } from '../services/api';
+import { auth, users as usersApi, gameCatalogApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
-import { AnimatedModal, PageTransition, TabTransition, AnimatedCollapse } from '../components/ui';
-import JobTitleBadge, { CATEGORIZED_JOB_TITLES, CATEGORIZED_DEPARTMENTS } from '../components/JobTitleBadge';
+import { AnimatedModal } from '../components/ui';
+import JobTitleBadge from '../components/JobTitleBadge';
 import {
   getUserAvatar,
   getStoredAvatar,
@@ -62,29 +58,6 @@ import {
 
 const NOTIFICATIONS_CLEARED_EVENT = 'workrank:notifications-cleared';
 
-const JOB_TITLE_SUGGESTIONS = [
-  'Nhân viên',
-  'Editor',
-  'Content Creator',
-  'Quản lý kênh',
-  'Trưởng phòng',
-  'Phó phòng',
-  'Phó giám đốc',
-  'Giám đốc',
-  'Kỹ sư hệ thống',
-  'Chuyên viên truyền thông',
-];
-
-const DEPARTMENT_SUGGESTIONS = [
-  'Media & Content',
-  'Engineering Core',
-  'Community & Growth',
-  'Phòng Sản Xuất Video',
-  'Phòng Truyền Thông',
-  'Phòng Kỹ Thuật',
-  'Ban Giám Đốc',
-];
-
 function roleLabel(role) {
   if (role === 'admin') return 'Quản trị viên';
   if (role === 'manager') return 'Quản lý';
@@ -99,9 +72,9 @@ function settingValue(settings, section, key) {
   return settings?.[section]?.[key];
 }
 
-function SettingSection({ icon: Icon, title, desc, children, className = '', action = null }) {
+function SettingSection({ id, icon: Icon, title, desc, children, className = '', action = null }) {
   return (
-    <section className={`settings-card ${className}`}>
+    <section id={id} className={`settings-card ${className}`} style={id ? { scrollMarginTop: 80 } : undefined}>
       <div className="settings-card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div className="settings-card-icon">
@@ -141,9 +114,31 @@ function ToggleRow({ icon: Icon, title, desc, checked, onChange }) {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { user, setUser, isAdmin, logout } = useAuth();
   const [settings, setSettings] = useState(getAppSettings);
+
+  const requestedSection = new URLSearchParams(location.search).get('tab');
+  useEffect(() => {
+    const targetId = requestedSection === 'profile'
+      ? 'settings-profile'
+      : requestedSection === 'games' && isAdmin ? 'settings-games' : null;
+    if (!targetId) return;
+    if (location.hash !== `#${targetId}`) {
+      navigate({ pathname: location.pathname, search: location.search, hash: `#${targetId}` }, { replace: true, state: location.state });
+      return;
+    }
+    // The lazy page can mount after Layout's initial hash scroll.
+    const frame = requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        || document.documentElement.dataset.workrankReduceMotion === 'true';
+      document.getElementById(targetId)?.scrollIntoView({
+        block: 'start', inline: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isAdmin, location.hash, location.pathname, location.search, location.state, navigate, requestedSection]);
 
   // Self-delete account states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -174,31 +169,6 @@ export default function Settings() {
   const [recognitions, setRecognitions] = useState(null);
   const [loadingRecognitions, setLoadingRecognitions] = useState(false);
 
-  // Admin Job Title Form state (Select any employee in the company)
-  const [adminJobForm, setAdminJobForm] = useState({
-    targetUserId: user?.id || '',
-    jobTitle: user?.jobTitle || 'Nhân viên',
-    department: user?.department || 'Media & Content',
-    role: user?.role || 'user',
-    isCustomTitle: false,
-    customTitle: '',
-    isCustomDept: false,
-    customDept: '',
-  });
-  const [savingJobProfile, setSavingJobProfile] = useState(false);
-
-  // Admin Award Modal state
-  const [showAwardModal, setShowAwardModal] = useState(false);
-  const [awardForm, setAwardForm] = useState({
-    awardType: 'MVP', // MVP | CHAMPION
-    targetUserId: '',
-    seasonId: '',
-    title: '',
-    reason: '',
-  });
-  const [awarding, setAwarding] = useState(false);
-  const [userList, setUserList] = useState([]);
-
   useEffect(() => subscribeAppSettings(setSettings), []);
 
   useEffect(() => {
@@ -209,14 +179,7 @@ export default function Settings() {
       bio: user?.bio || '',
       avatarData: user?.avatarData || getStoredAvatar(user?.id) || '',
     });
-    setAdminJobForm((prev) => ({
-      ...prev,
-      targetUserId: prev.targetUserId || user?.id || '',
-      jobTitle: prev.targetUserId && prev.targetUserId !== user?.id ? prev.jobTitle : (user?.jobTitle || 'Nhân viên'),
-      department: prev.targetUserId && prev.targetUserId !== user?.id ? prev.department : (user?.department || 'Media & Content'),
-      role: prev.targetUserId && prev.targetUserId !== user?.id ? prev.role : (user?.role || 'user'),
-    }));
-  }, [user?.avatarData, user?.bio, user?.department, user?.email, user?.id, user?.jobTitle, user?.name, user?.phone, user?.role]);
+  }, [user?.avatarData, user?.bio, user?.email, user?.id, user?.name, user?.phone]);
 
   // Load user recognitions
   const loadRecognitions = async () => {
@@ -235,15 +198,6 @@ export default function Settings() {
   useEffect(() => {
     loadRecognitions();
   }, [user?.id]);
-
-  // Load user list for admin dropdowns (employee picker & awards)
-  useEffect(() => {
-    if (isAdmin && userList.length === 0) {
-      usersApi.list({ limit: 200 }).then((res) => {
-        setUserList(res.data || []);
-      }).catch((e) => console.error(e));
-    }
-  }, [isAdmin, userList.length]);
 
   // ── Game Catalog Admin State ──
   const [gameCatalog, setGameCatalog] = useState([]);
@@ -284,22 +238,6 @@ export default function Settings() {
     } finally {
       setUpdatingGameKey(null);
     }
-  };
-
-  const handleSelectEmployee = (targetId) => {
-    const tId = Number(targetId);
-    const selected = userList.find((u) => Number(u.id) === tId) || (tId === Number(user?.id) ? user : null);
-    if (!selected) return;
-    setAdminJobForm({
-      targetUserId: selected.id,
-      jobTitle: selected.jobTitle || 'Nhân viên',
-      department: selected.department || 'Media & Content',
-      role: selected.role || 'user',
-      isCustomTitle: false,
-      customTitle: '',
-      isCustomDept: false,
-      customDept: '',
-    });
   };
 
   const handleAvatarFile = async (e) => {
@@ -406,89 +344,6 @@ export default function Settings() {
     }
   };
 
-  const saveAdminJobProfile = async (event) => {
-    event.preventDefault();
-    const finalJobTitle = (adminJobForm.isCustomTitle ? adminJobForm.customTitle : adminJobForm.jobTitle).trim();
-    const finalDept = (adminJobForm.isCustomDept ? adminJobForm.customDept : adminJobForm.department).trim();
-    
-    if (!finalJobTitle) {
-      toast.warning('Chức danh công tác không được để trống.');
-      return;
-    }
-
-    const targetId = adminJobForm.targetUserId || user?.id;
-    setSavingJobProfile(true);
-    try {
-      let updatedUser = await usersApi.adminUpdateJobProfile(targetId, {
-        jobTitle: finalJobTitle,
-        department: finalDept,
-      });
-
-      if (adminJobForm.role) {
-        try {
-          const res = await usersApi.update(targetId, { role: adminJobForm.role });
-          if (res?.data) {
-            updatedUser = { ...updatedUser, ...res.data };
-          }
-        } catch (e) {
-          console.warn('Role update notice:', e);
-        }
-      }
-
-      if (Number(targetId) === Number(user?.id)) {
-        setUser((prev) => ({ ...prev, ...updatedUser }));
-      }
-      setUserList((prev) => prev.map((u) => (Number(u.id) === Number(targetId) ? { ...u, ...updatedUser } : u)));
-      toast.success(`Đã cập nhật chức danh, phòng ban & huy hiệu cho nhân sự #${targetId}.`);
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể cập nhật chức danh.'));
-    } finally {
-      setSavingJobProfile(false);
-    }
-  };
-
-  const handleAdminAward = async (event) => {
-    event.preventDefault();
-    const targetId = Number(awardForm.targetUserId) || user?.id;
-    if (!targetId) {
-      toast.warning('Hãy chọn nhân viên nhận giải thưởng.');
-      return;
-    }
-    if (!awardForm.reason.trim()) {
-      toast.warning('Hãy nhập lý do và căn cứ vinh danh.');
-      return;
-    }
-
-    setAwarding(true);
-    try {
-      if (awardForm.awardType === 'MVP') {
-        await usersApi.adminAwardMVP({
-          userId: targetId,
-          seasonId: awardForm.seasonId ? Number(awardForm.seasonId) : null,
-          title: awardForm.title.trim() || undefined,
-          reason: awardForm.reason.trim(),
-        });
-        toast.success('Đã trao giải thưởng MVP thành công!');
-      } else {
-        await usersApi.adminAwardChampion({
-          userId: targetId,
-          seasonId: awardForm.seasonId ? Number(awardForm.seasonId) : null,
-          title: awardForm.title.trim() || undefined,
-          reason: awardForm.reason.trim(),
-        });
-        toast.success('Đã trao danh hiệu Vô Địch (Champion) thành công!');
-      }
-
-      setShowAwardModal(false);
-      setAwardForm({ awardType: 'MVP', targetUserId: '', seasonId: '', title: '', reason: '' });
-      loadRecognitions();
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể trao giải thưởng.'));
-    } finally {
-      setAwarding(false);
-    }
-  };
-
   const savePassword = async (event) => {
     event.preventDefault();
     if (!password.currentPassword || !password.newPassword) {
@@ -571,10 +426,10 @@ export default function Settings() {
       {/* ── HEADER / HERO ── */}
       <header className="settings-hero">
         <div>
-          <div className="settings-kicker">Cài đặt tài khoản & Hồ sơ nhân sự</div>
-          <h1>Trung tâm thông tin cá nhân và định danh</h1>
+          <div className="settings-kicker">Cài đặt cá nhân</div>
+          <h1>Cài đặt tài khoản</h1>
           <p style={{ margin: '6px 0 0', fontSize: 13, color: '#64748b' }}>
-            Quản lý thông tin liên hệ, chức danh công tác, xem huy hiệu chính thức và bảo mật tài khoản.
+            Hồ sơ cá nhân, bảo mật và tùy chọn trình duyệt.
           </p>
         </div>
         <div className="settings-account-card">
@@ -607,6 +462,7 @@ export default function Settings() {
       <div className="settings-grid">
         {/* KHỐI 1: THÔNG TIN CÁ NHÂN */}
         <SettingSection
+          id="settings-profile"
           icon={UserRound}
           title="Thông tin cá nhân & Liên hệ"
           desc="Thông tin cơ bản hiển thị trên hồ sơ làm việc nội bộ của bạn."
@@ -800,180 +656,11 @@ export default function Settings() {
           </div>
 
           {isAdmin ? (
-            <form onSubmit={saveAdminJobProfile} style={{ padding: 16, background: 'rgba(180,83,9,0.04)', border: '1px solid rgba(180,83,9,0.25)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Edit3 size={15} /> Điều chỉnh Chức danh & Huy hiệu (Dành cho Quản trị viên)
-                </div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>
-                  Chọn nhân viên từ danh sách để phân bổ chức vụ & huy hiệu
-                </span>
-              </div>
-
-              {/* 1. DROP DOWN CHỌN NHÂN VIÊN */}
-              <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
-                <label style={{ display: 'block', marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Users size={13} color="#b45309" /> Trỏ xuống chọn nhân viên cần gán chức vụ:
-                  </span>
-                </label>
-                <select
-                  value={adminJobForm.targetUserId}
-                  onChange={(e) => handleSelectEmployee(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#0f172a',
-                    background: '#f8fafc',
-                    border: '1px solid #cbd5e1',
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">-- Bấm để chọn nhân viên trong công ty --</option>
-                  {userList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      #{u.id} - {u.name} [{u.jobTitle || 'Nhân viên'} • {u.department || 'Chưa phân phòng'} • {u.role === 'admin' ? 'ADMIN' : 'USER'}]
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 2. CHỌN CHỨC DANH (CATEGORIZED TIERS) & PHÒNG BAN & QUYỀN HẠN */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
-                {/* Dropdown Chức danh */}
-                <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
-                  <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Award size={13} color="#f59e0b" /> Chức danh & Bậc huy hiệu:
-                    </span>
-                  </label>
-                  <select
-                    value={adminJobForm.jobTitle}
-                    onChange={(e) => setAdminJobForm({ ...adminJobForm, jobTitle: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      background: '#f8fafc',
-                      border: '1px solid #cbd5e1',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {CATEGORIZED_JOB_TITLES.map((group) => (
-                      <optgroup key={group.category} label={group.category}>
-                        {group.titles.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-
-                  {/* Live Badge Preview */}
-                  <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>Huy hiệu hiển thị:</span>
-                    <JobTitleBadge
-                      jobTitle={adminJobForm.jobTitle}
-                      size="sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Dropdown Phòng ban */}
-                <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
-                  <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Building2 size={13} color="#b45309" /> Phòng ban công tác:
-                    </span>
-                  </label>
-                  <select
-                    value={adminJobForm.isCustomDept ? '__custom__' : adminJobForm.department}
-                    onChange={(e) => {
-                      if (e.target.value === '__custom__') {
-                        setAdminJobForm({ ...adminJobForm, isCustomDept: true, customDept: adminJobForm.department || '' });
-                      } else {
-                        setAdminJobForm({ ...adminJobForm, isCustomDept: false, department: e.target.value });
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      background: '#f8fafc',
-                      border: '1px solid #cbd5e1',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <optgroup label="Phòng ban chính thức">
-                      {CATEGORIZED_DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Tùy chọn khác">
-                      <option value="__custom__">Nhập phòng ban tùy chỉnh...</option>
-                    </optgroup>
-                  </select>
-
-                  {adminJobForm.isCustomDept && (
-                    <input
-                      value={adminJobForm.customDept}
-                      onChange={(e) => setAdminJobForm({ ...adminJobForm, customDept: e.target.value, department: e.target.value })}
-                      placeholder="Nhập tên phòng ban mới..."
-                      style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #cbd5e1', marginTop: 8, outline: 'none' }}
-                    />
-                  )}
-
-                  <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Building2 size={13} color="#b45309" />
-                    <span>Phòng ban: <strong style={{ color: '#0f172a', fontWeight: 600 }}>{adminJobForm.isCustomDept ? (adminJobForm.customDept || 'Chưa đặt') : adminJobForm.department}</strong></span>
-                  </div>
-                </div>
-
-                {/* Dropdown Quyền hệ thống */}
-                <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', padding: '10px 12px' }}>
-                  <label style={{ display: 'block', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <KeyRound size={13} color="#dc2626" /> Quyền hệ thống (RBAC):
-                    </span>
-                  </label>
-                  <select
-                    value={adminJobForm.role}
-                    onChange={(e) => setAdminJobForm({ ...adminJobForm, role: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      background: '#f8fafc',
-                      border: '1px solid #cbd5e1',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="user">Nhân Viên (User)</option>
-                    <option value="manager">Quản Lý Bộ Phận (Manager)</option>
-                    <option value="admin">Quản Trị Viên Tối Cao (Admin)</option>
-                  </select>
-
-                  <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(15,23,42,0.03)', border: '1px dashed rgba(15,23,42,0.15)', fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Shield size={13} color="#dc2626" />
-                    <span>Phân quyền: <strong style={{ color: adminJobForm.role === 'admin' ? '#dc2626' : '#b45309', fontWeight: 600 }}>{roleLabel(adminJobForm.role)}</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-                <button type="submit" disabled={savingJobProfile} className="settings-primary-button">
-                  <Save size={14} /> {savingJobProfile ? 'Đang lưu...' : 'Lưu Thay Đổi Chức Vụ & Huy Hiệu'}
-                </button>
-              </div>
-            </form>
+            <div className="settings-actions">
+              <button type="button" className="settings-secondary-button" onClick={() => navigate('/admin/privileges')}>
+                <ExternalLink size={14} /> Quản lý hồ sơ & phân quyền nhân sự
+              </button>
+            </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
               <Lightbulb size={14} color="#b45309" />
@@ -992,11 +679,11 @@ export default function Settings() {
             isAdmin && (
               <button
                 type="button"
-                onClick={() => setShowAwardModal(true)}
+                onClick={() => navigate('/admin/privileges')}
                 className="settings-primary-button"
                 style={{ fontSize: 11, padding: '0 10px', minHeight: 30 }}
               >
-                <PlusCircle size={13} /> Trao giải MVP / Champion
+                <ExternalLink size={13} /> Quản lý vinh danh
               </button>
             )
           }
@@ -1380,6 +1067,7 @@ export default function Settings() {
         {/* KHỐI 9: QUẢN LÝ TRẠNG THÁI TRÒ CHƠI (ADMIN ONLY) */}
         {isAdmin && (
           <SettingSection
+            id="settings-games"
             icon={Gamepad2}
             title="Quản Lý Trạng Thái Trò Chơi"
             desc="Cấu hình chế độ phát hành toàn cục cho tất cả trò chơi (Đang hoạt động / Sắp ra mắt). Non-admin không thể vào chơi khi game ở trạng thái Sắp ra mắt."
@@ -1636,105 +1324,6 @@ export default function Settings() {
         </form>
       </AnimatedModal>
 
-      {/* ── MODAL TRAO GIẢI THƯỞNG CHO ADMIN ── */}
-      <AnimatedModal
-        isOpen={showAwardModal}
-        onClose={() => setShowAwardModal(false)}
-        title="Trao Thưởng Danh Hiệu Chính Thức"
-        maxWidth={480}
-      >
-        <form onSubmit={handleAdminAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Loại Danh Hiệu / Giải Thưởng *
-            </label>
-            <select
-              value={awardForm.awardType}
-              onChange={(e) => setAwardForm({ ...awardForm, awardType: e.target.value })}
-              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
-            >
-              <option value="MVP">MVP — Nhân Viên Xuất Sắc</option>
-              <option value="CHAMPION">CHAMPION — Vô Địch Giải Đấu</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Nhân Viên Nhận Giải *
-            </label>
-            <select
-              value={awardForm.targetUserId}
-              onChange={(e) => setAwardForm({ ...awardForm, targetUserId: e.target.value })}
-              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
-            >
-              <option value="">-- Chọn nhân viên --</option>
-              {userList.map((u) => (
-                <option key={u.id} value={u.id}>
-                  #{u.id} - {u.name} ({u.jobTitle || 'Nhân viên'})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Mã Mùa Giải (Season ID - Tùy chọn)
-            </label>
-            <input
-              type="number"
-              value={awardForm.seasonId}
-              onChange={(e) => setAwardForm({ ...awardForm, seasonId: e.target.value })}
-              placeholder="Ví dụ: 1"
-              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Tiêu Đề Vinh Danh (Tùy chọn)
-            </label>
-            <input
-              type="text"
-              value={awardForm.title}
-              onChange={(e) => setAwardForm({ ...awardForm, title: e.target.value })}
-              placeholder={awardForm.awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải #1' : 'Ví dụ: Quán Quân Mùa #1'}
-              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', borderRadius: 4 }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
-              Lý Do & Căn Cứ Vinh Danh *
-            </label>
-            <textarea
-              rows={3}
-              required
-              value={awardForm.reason}
-              onChange={(e) => setAwardForm({ ...awardForm, reason: e.target.value })}
-              placeholder="Ghi rõ thành tích, đóng góp nổi bật hoặc chỉ số đạt được..."
-              style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical', borderRadius: 4 }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-            <button
-              type="button"
-              onClick={() => setShowAwardModal(false)}
-              style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={awarding}
-              className="settings-primary-button"
-              style={{ padding: '8px 18px', borderRadius: 4 }}
-            >
-              <Award size={14} /> {awarding ? 'Đang trao giải...' : 'Xác Nhận Trao Giải'}
-            </button>
-          </div>
-        </form>
-      </AnimatedModal>
     </div>
   );
 }
