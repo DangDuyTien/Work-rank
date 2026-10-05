@@ -487,7 +487,9 @@ async function resolveArchiveUsers(entries, { includeImages = true, validate = f
     const pref = user.UserProfilePreference || user.userProfilePreference;
     const resolved = { ...record, userId: user.id, name: user.name,
       jobTitle: record.jobTitle || user.jobTitle, department: record.department || user.department,
-      isVerified: record.isVerified ?? Boolean(user.isVerified) };
+      // Linked archive entries follow the user's current verification status.
+      // This keeps historical MVP entries in sync when an admin grants or revokes the badge later.
+      isVerified: record.userId != null ? Boolean(user.isVerified) : Boolean(record.isVerified) };
     if (includeImages) {
       resolved.avatarData = pref?.avatarData || null;
       resolved.avatarUrl = resolved.avatarData;

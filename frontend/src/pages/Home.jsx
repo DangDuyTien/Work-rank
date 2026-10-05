@@ -165,7 +165,7 @@ export default function Home() {
           <Link to="/games">Trò chơi</Link>
           <Link to={user ? '/dashboard' : '/login'}>{user ? 'Dashboard' : 'Đăng nhập'}</Link>
         </nav>
-        <div className="public-footer-body"><p className="public-footer-wordmark" aria-label="WorkRank">Work<br />Rank</p><div><BrandMark size={40} showLabel={false} /><p>Công sức → Thành tích<br />Tiến bộ → Ghi nhận</p><small>© {new Date().getFullYear()} WorkRank · 3WIN MEDIA</small></div></div>
+        <div className="public-footer-body"><p className="public-footer-wordmark" aria-label="WorkRank">Work<br />Rank</p><div><Link to="/" aria-label="3WIN MEDIA — Trang chủ vinh danh" style={{ display: 'inline-flex', textDecoration: 'none' }}><BrandMark size={40} showLabel={false} /></Link><p>Công sức → Thành tích<br />Tiến bộ → Ghi nhận</p><small>© {new Date().getFullYear()} WorkRank · 3WIN MEDIA</small></div></div>
       </Reveal>
     </div>
   );

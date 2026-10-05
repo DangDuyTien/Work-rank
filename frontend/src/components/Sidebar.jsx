@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { NAVIGATION_CONFIG, isRouteActive, resolveItemPath } from '../config/navigation';
 import BrandMark from './BrandMark';
@@ -139,12 +139,25 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
           flexShrink: 0,
         }}
       >
-        <BrandMark
-          size={28}
-          showLabel
-          label="3WIN MEDIA"
-          labelStyle={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: '#111111' }}
-        />
+        <Link
+          to="/"
+          onClick={handleLinkClick}
+          aria-label="3WIN MEDIA — Trang chủ vinh danh"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minWidth: 0,
+            color: 'inherit',
+            textDecoration: 'none',
+          }}
+        >
+          <BrandMark
+            size={28}
+            showLabel
+            label="3WIN MEDIA"
+            labelStyle={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: '#111111' }}
+          />
+        </Link>
         {isAdmin && (
           <span
             style={{

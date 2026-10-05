@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Bell, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { resolveCurrentTitle } from '../config/navigation';
@@ -377,9 +377,14 @@ export default function Layout() {
               <Menu size={18} />
             </button>
 
-            <div className="mobile-brand-mark">
+            <Link
+              className="mobile-brand-mark"
+              to="/"
+              aria-label="3WIN MEDIA — Trang chủ vinh danh"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
               <BrandMark size={24} showLabel={false} />
-            </div>
+            </Link>
 
             <div
               className="app-header-title"
