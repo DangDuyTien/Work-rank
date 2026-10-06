@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 const routes = require('./routes');
 const tradingViewController = require('./controllers/tradingView.controller');
@@ -14,6 +15,7 @@ const asyncHandler = require('./utils/asyncHandler');
 const healthController = require('./controllers/health.controller');
 
 const app = express();
+app.use(compression());
 
 app.use(helmet({
   contentSecurityPolicy: {

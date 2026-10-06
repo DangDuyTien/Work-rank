@@ -12,7 +12,7 @@ import {
   removeVietnameseDiacritics,
 } from '../components/PublicRecognition';
 
-function WeeklyLeaderboard({ items, loading }) {
+function WeeklyLeaderboard({ items, loading, error, retry }) {
   const leaders = (items || []).slice(0, 3);
   const members = leaders.flatMap((item) => {
     const photos = [...new Set([item.avatarData, ...(item.galleryImages || [])].filter(Boolean))];
@@ -40,7 +40,7 @@ function WeeklyLeaderboard({ items, loading }) {
             </div>
           </li>)}
         </ol>
-        {!leaders.length && <p className="public-honoree-empty">{loading ? 'Đang tải bảng xếp hạng…' : 'Chưa có người dùng trong bảng xếp hạng.'}</p>}
+        {error ? <div className="public-recognition-feedback" role="alert"><span>Chưa tải được BXH tuần.</span><button type="button" onClick={retry}>Thử lại <ArrowUpRight size={15} /></button></div> : !leaders.length && <p className="public-honoree-empty">{loading ? 'Đang tải bảng xếp hạng…' : 'Chưa có người dùng trong bảng xếp hạng.'}</p>}
       </div>
     </div>
   </Reveal>;
@@ -204,7 +204,7 @@ function RecognitionYearGroup({
 
 export default function Home() {
   const { user } = useAuth();
-  const { data, archives, weekly, youtube, youtubeLoading, youtubeError, loading, error, retry } = usePublicSpotlight();
+  const { data, archives, weekly, weeklyLoading, weeklyError, youtube, youtubeLoading, youtubeError, loading, error, retry } = usePublicSpotlight({ includeRankings: true });
   const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
@@ -254,8 +254,8 @@ export default function Home() {
             error={error}
             teamTo={teamResult}
             mvpTo={mvpProfile}
-            championDelay={700}
-            mvpDelay={900}
+            championDelay={120}
+            mvpDelay={180}
             since={mountTime}
           />
 
@@ -298,7 +298,7 @@ export default function Home() {
           })}
         </div>
 
-        <WeeklyLeaderboard items={weekly} loading={loading} />
+        <WeeklyLeaderboard items={weekly} loading={weeklyLoading} error={weeklyError} retry={retry} />
         <YouTubeLeaderboard items={youtube} loading={youtubeLoading} error={youtubeError} retry={retry} />
 
         {/* Section cuối — hiện khi cuộn tới */}

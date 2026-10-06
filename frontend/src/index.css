@@ -97,7 +97,7 @@
 .public-weekly-honoree.rank-3 .public-weekly-place { color:#a3674c; }
 .public-weekly-honoree .public-archive-name { overflow-wrap:anywhere; }
 .public-weekly-honoree .public-recognition-facts { margin-top:12px; }
-.public-youtube-recognition .public-recognition-portrait img { object-fit:contain; }
+.public-youtube-recognition .public-recognition-portrait img { object-fit:cover; object-position:center; padding:0; }
 .public-editorial-intro { padding: clamp(24px, 3vw, 44px) 0 20px; }
 .public-editorial-kicker { display: block; font-size: 10px; font-weight: 600; letter-spacing: .14em; line-height: 1.6; }
 .public-editorial-title {
