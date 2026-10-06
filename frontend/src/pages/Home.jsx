@@ -46,6 +46,34 @@ function WeeklyLeaderboard({ items, loading }) {
   </Reveal>;
 }
 
+function YouTubeLeaderboard({ items, loading, error, retry }) {
+  const leaders = items.slice(0, 3);
+  const members = leaders.map((channel) => ({ name: channel.title, avatarUrl: channel.thumbnailUrl }));
+  return <Reveal as="section" delay={500} className="public-season-section public-archive-section public-weekly-recognition public-youtube-recognition" aria-labelledby="youtube-ranking-title" aria-busy={loading}>
+    <div className="public-season-heading is-detail"><h2 id="youtube-ranking-title"><span>YouTube · Kênh dẫn đầu</span></h2></div>
+    <div className="public-recognition-grid">
+      <figure className="public-featured-person" aria-label="Avatar các kênh YouTube đứng đầu">
+        <RecognitionPortraitFrame type="champion" record={{ teamName: 'YouTube', members }} loading={loading} />
+      </figure>
+      <div className="public-archive-content">
+        <ol className="public-weekly-honorees">
+          {leaders.map((channel, index) => <li key={channel.channelId} className={`public-weekly-honoree rank-${index + 1}`}>
+            <h3 className="public-weekly-place"><Medal size={22} aria-hidden="true" />Top {index + 1}</h3>
+            <div className="public-archive-person">
+              <a className="public-archive-name" href={`https://www.youtube.com/channel/${encodeURIComponent(channel.channelId)}`} target="_blank" rel="noopener noreferrer"><span className="public-recognition-name">{channel.title}</span><ArrowUpRight size={20} aria-hidden="true" /></a>
+              <dl className="public-recognition-facts public-weekly-facts" aria-label={`Thông số ${channel.title}`}>
+                <div><dt>Lượt xem</dt><dd>{displayScore(channel.views)}</dd></div>
+                <div><dt>Người đăng ký</dt><dd>{displayScore(channel.subscribers)}</dd></div>
+              </dl>
+            </div>
+          </li>)}
+        </ol>
+        {error ? <div className="public-recognition-feedback" role="alert"><span>Chưa tải được BXH YouTube.</span><button type="button" onClick={retry}>Thử lại <ArrowUpRight size={15} /></button></div> : !leaders.length && <p className="public-honoree-empty">{loading ? 'Đang tải BXH YouTube…' : 'Chưa có kênh YouTube được công bố.'}</p>}
+      </div>
+    </div>
+  </Reveal>;
+}
+
 function RecognitionArchiveSection({ type, data, year, seasonName, loading, error, to, delay, since, showYear = true }) {
   const isMvp = type === 'mvp';
   const record = isMvp ? data?.mvp : data?.championTeam;
@@ -176,7 +204,7 @@ function RecognitionYearGroup({
 
 export default function Home() {
   const { user } = useAuth();
-  const { data, archives, weekly, loading, error, retry } = usePublicSpotlight();
+  const { data, archives, weekly, youtube, youtubeLoading, youtubeError, loading, error, retry } = usePublicSpotlight();
   const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
@@ -271,6 +299,7 @@ export default function Home() {
         </div>
 
         <WeeklyLeaderboard items={weekly} loading={loading} />
+        <YouTubeLeaderboard items={youtube} loading={youtubeLoading} error={youtubeError} retry={retry} />
 
         {/* Section cuối — hiện khi cuộn tới */}
         <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">

@@ -529,6 +529,10 @@ export const users = {
 };
 
 export const competition = {
+  getPublicYouTubeLeaderboard: async () => {
+    const res = await api.get('/api/youtube/public/leaderboard');
+    return res.data || { items: [] };
+  },
   getPublicWeeklyLeaderboard: async () => {
     const res = await api.get('/api/leaderboard/public/weekly');
     return res.data || { items: [] };

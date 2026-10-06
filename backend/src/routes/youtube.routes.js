@@ -4,6 +4,21 @@ const express = require('express');
 const router = express.Router();
 const youtubeController = require('../controllers/youtube.controller');
 const { auth, requireRole } = require('../middlewares/auth.middleware');
+const asyncHandler = require('../utils/asyncHandler');
+
+router.get('/public/leaderboard', asyncHandler(async (req, res) => {
+  const service = require('../services/youtube/youtubeAggregation.service');
+  const result = await service.getYouTubeChannelLeaderboard({ sortBy: 'views', limit: 3, page: 1 });
+  res.json({ items: result.items.map((channel) => ({
+    id: channel.id,
+    channelId: channel.channelId,
+    title: channel.title,
+    thumbnailUrl: channel.thumbnailUrl,
+    rank: channel.rank,
+    views: channel.views,
+    subscribers: channel.subscribers,
+  })) });
+}));
 
 // Public / Shared Ranking Endpoint (Authenticated)
 router.get('/leaderboard', auth, youtubeController.getLeaderboard);

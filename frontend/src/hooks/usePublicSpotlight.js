@@ -8,6 +8,23 @@ export default function usePublicSpotlight() {
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [weekly, setWeekly] = useState([]);
+  const [youtube, setYoutube] = useState([]);
+  const [youtubeLoading, setYoutubeLoading] = useState(true);
+  const [youtubeError, setYoutubeError] = useState(false);
+
+  useEffect(() => {
+    let current = true;
+    setYoutubeLoading(true);
+    setYoutubeError(false);
+    competition.getPublicYouTubeLeaderboard().then((result) => {
+      if (current) setYoutube(Array.isArray(result?.items) ? result.items.filter((item) => item?.channelId && typeof item.title === 'string').slice(0, 3) : []);
+    }).catch(() => {
+      if (current) setYoutubeError(true);
+    }).finally(() => {
+      if (current) setYoutubeLoading(false);
+    });
+    return () => { current = false; };
+  }, [attempt]);
 
   useEffect(() => {
     let current = true;
@@ -28,5 +45,5 @@ export default function usePublicSpotlight() {
   }, [attempt]);
 
   const archives = Array.isArray(data?.archives) ? data.archives : [];
-  return { data, archives, weekly, loading, error, retry: () => setAttempt((value) => value + 1) };
+  return { data, archives, weekly, youtube, youtubeLoading, youtubeError, loading, error, retry: () => setAttempt((value) => value + 1) };
 }
