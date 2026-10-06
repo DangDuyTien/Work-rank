@@ -826,6 +826,7 @@ module.exports = {
   adminGetSpotlightConfig,
   adminSetSpotlightConfig,
   getPublicSpotlightArchives,
+  getPublicMembers,
   adminGetSpotlightArchives,
   adminSaveSpotlightArchive,
   adminDeleteSpotlightArchive,
@@ -936,4 +937,14 @@ async function adminDeleteSpotlightArchive(req, res) {
   if (!year) return res.status(400).json({ message: 'year không hợp lệ' });
   await svc.adminDeleteArchiveEntry(year);
   return res.json({ message: `Đã xoá vinh danh năm ${year}` });
+}
+
+/**
+ * GET /api/competition/public/members
+ * Public list of company members for homepage showcase marquee.
+ */
+async function getPublicMembers(req, res) {
+  const svc = require('../services/competition/publicSpotlight.service');
+  const items = await svc.getPublicMembers({ limit: req.query.limit });
+  return res.json({ items });
 }

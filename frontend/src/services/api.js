@@ -537,6 +537,10 @@ export const competition = {
     const res = await api.get('/api/leaderboard/public/weekly');
     return res.data || { items: [] };
   },
+  getPublicMembers: async () => {
+    const res = await api.get('/api/competition/public/members');
+    return res.data || { items: [] };
+  },
   getPublicSpotlight: async () => {
     const res = await api.get('/api/competition/public/spotlight');
     return res.data || { hasSpotlight: false, season: null, championTeam: null, mvp: null };

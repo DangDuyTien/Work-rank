@@ -339,6 +339,49 @@ html[data-workrank-reduce-motion="true"] .public-featured-frame.is-shutting > .p
 .public-recognition-feedback { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-bottom: 22px; }
 .public-recognition-feedback button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border-strong); background: var(--surface); padding: 8px 12px; color: var(--foreground); cursor: pointer; }
 .public-recognition-loader { width: 12px; height: 12px; border: 1px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Public Company Members Rotating Showcase (Quotation Frame + Animated Facts)
+   ══════════════════════════════════════════════════════════════════════════ */
+.public-company-members-section {
+  position: relative;
+  margin-top: 8px;
+  padding-bottom: 28px;
+}
+.public-member-kicker-title {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(32px, 3vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -.035em;
+  text-transform: uppercase;
+}
+.public-member-animated-info {
+  transition: opacity var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard);
+  will-change: opacity, transform;
+}
+.public-member-animated-info.is-fading {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.public-member-animated-info.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-member-animated-info {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+html[data-workrank-reduce-motion="true"] .public-member-animated-info {
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
 .public-explore-section { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 42px 0 56px; border-top: 1px solid var(--border-strong); }
 .public-explore-section h2 { font-size: clamp(30px, 3.5vw, 52px); line-height: 1.25; font-weight: 500; letter-spacing: -.04em; margin-top: 14px; }
 .public-explore-links { align-self: center; display: grid; }

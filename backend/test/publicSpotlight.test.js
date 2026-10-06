@@ -22,6 +22,7 @@ describe('Public Spotlight API Test Suite', () => {
   before(async () => {
     // Clean up any stale test-generated seasons so this test runs in clean isolation
     await Season.destroy({ where: { slug: { [Op.like]: 'test-%' } } }).catch(() => {});
+    await Season.update({ status: 'ARCHIVED' }, { where: { status: { [Op.in]: ['ACTIVE', 'PAUSED', 'SCHEDULED', 'CALCULATING'] } } }).catch(() => {});
 
     // Create test user, team, and season with true historical FINISHED semantics
     testUser = await User.create({
@@ -127,5 +128,20 @@ describe('Public Spotlight API Test Suite', () => {
     assert.equal(res.body.mvp.name, testUser.name);
     assert.equal(res.body.mvp.jobTitle, testUser.jobTitle);
     assert.equal(res.body.mvp.isVerified, true);
+  });
+
+  it('GET /api/competition/public/members returns public active company members list', async () => {
+    const res = await request(app)
+      .get('/api/competition/public/members')
+      .expect(200);
+
+    assert.ok(Array.isArray(res.body.items), 'items should be an array');
+    assert.ok(res.body.items.length > 0, 'should return active members');
+    const found = res.body.items.find((m) => m.id === testUser.id || m.userId === testUser.id);
+    assert.ok(found, 'should find testUser in public members list');
+    assert.equal(found.name, testUser.name);
+    assert.equal(found.jobTitle, testUser.jobTitle);
+    assert.equal(found.isVerified, true);
+    assert.equal(found.mvpCount, 1);
   });
 });

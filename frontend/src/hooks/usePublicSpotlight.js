@@ -15,11 +15,15 @@ export default function usePublicSpotlight({ includeRankings = false } = {}) {
   const youtube = useCachedData('public:youtube', competition.getPublicYouTubeLeaderboard, {
     ttl: CACHE_TTL.MEDIUM, enabled: includeRankings,
   });
+  const members = useCachedData('public:members', competition.getPublicMembers, {
+    ttl: CACHE_TTL.MEDIUM, enabled: includeRankings,
+  });
   const retry = () => {
     spotlight.refetch();
     if (includeRankings) {
       weekly.refetch();
       youtube.refetch();
+      members.refetch();
     }
   };
   return {
@@ -33,6 +37,9 @@ export default function usePublicSpotlight({ includeRankings = false } = {}) {
     youtube: Array.isArray(youtube.data?.items) ? youtube.data.items.filter((item) => item?.channelId && typeof item.title === 'string').slice(0, 3) : [],
     youtubeLoading: youtube.loading,
     youtubeError: Boolean(youtube.error),
+    members: Array.isArray(members.data?.items) ? members.data.items : [],
+    membersLoading: members.loading,
+    membersError: Boolean(members.error),
     retry,
   };
 }

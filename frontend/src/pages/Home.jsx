@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
 import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
+import CompanyMembersSection from '../components/CompanyMembersSection';
 import { Reveal, RevealText } from '../components/ui';
 import {
   RecognitionLink, RecognitionName, RecognitionStatus,
@@ -204,7 +205,22 @@ function RecognitionYearGroup({
 
 export default function Home() {
   const { user } = useAuth();
-  const { data, archives, weekly, weeklyLoading, weeklyError, youtube, youtubeLoading, youtubeError, loading, error, retry } = usePublicSpotlight({ includeRankings: true });
+  const {
+    data,
+    archives,
+    weekly,
+    weeklyLoading,
+    weeklyError,
+    youtube,
+    youtubeLoading,
+    youtubeError,
+    members,
+    membersLoading,
+    membersError,
+    loading,
+    error,
+    retry,
+  } = usePublicSpotlight({ includeRankings: true });
   const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
@@ -300,6 +316,7 @@ export default function Home() {
 
         <WeeklyLeaderboard items={weekly} loading={weeklyLoading} error={weeklyError} retry={retry} />
         <YouTubeLeaderboard items={youtube} loading={youtubeLoading} error={youtubeError} retry={retry} />
+        <CompanyMembersSection items={members} loading={membersLoading} error={membersError} retry={retry} />
 
         {/* Section cuối — hiện khi cuộn tới */}
         <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">

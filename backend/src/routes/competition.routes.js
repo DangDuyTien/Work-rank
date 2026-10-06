@@ -10,6 +10,7 @@ const router = express.Router();
 // ─── Public routes (unauthenticated) ───────────────────────────────────────
 router.get('/public/spotlight', asyncHandler(ctrl.getPublicSpotlight));
 router.get('/public/spotlight/archives', asyncHandler(ctrl.getPublicSpotlightArchives));
+router.get('/public/members', asyncHandler(ctrl.getPublicMembers));
 
 // ─── User routes (authenticated) ─────────────────────────────────────────────
 router.get('/my-state', auth, asyncHandler(ctrl.getMyState));

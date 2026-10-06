@@ -589,6 +589,92 @@ async function adminDeleteArchiveEntry(year) {
 }
 
 /**
+ * Get all active company members for public showcase marquee.
+ */
+async function getPublicMembers(options = {}) {
+  const limit = Math.min(100, Math.max(1, Number(options.limit || 80)));
+  const users = await User.findAll({
+    where: {
+      status: 'active',
+      isSimulated: { [Op.ne]: true },
+    },
+    attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'role'],
+    include: [
+      {
+        model: Team,
+        attributes: ['id', 'name'],
+        required: false,
+      },
+      {
+        model: UserProfilePreference,
+        attributes: ['avatarData', 'featuredBadges'],
+        required: false,
+      },
+      {
+        model: CompetitionUserSummary,
+        as: 'competitionSummary',
+        attributes: ['currentSeasonScore', 'grandPoints', 'seasonWins', 'metadata'],
+        required: false,
+      },
+    ],
+    order: [
+      ['isVerified', 'DESC'],
+      ['id', 'DESC'],
+    ],
+    limit: limit * 2,
+  });
+
+  const userIds = users.map((u) => u.id);
+  const mvpAwards = userIds.length > 0 ? await UserRecognition.findAll({
+    where: {
+      userId: { [Op.in]: userIds },
+      awardType: 'mvp',
+    },
+    attributes: ['userId'],
+    raw: true,
+  }) : [];
+
+  const mvpMap = new Map();
+  for (const award of mvpAwards) {
+    const id = Number(award.userId);
+    mvpMap.set(id, (mvpMap.get(id) || 0) + 1);
+  }
+
+  const seenNames = new Set();
+  const distinctUsers = [];
+  for (const user of users) {
+    const clean = String(user.name || '').trim().toLowerCase();
+    if (!clean || seenNames.has(clean)) continue;
+    seenNames.add(clean);
+    distinctUsers.push(user);
+    if (distinctUsers.length >= limit) break;
+  }
+  const listToMap = distinctUsers.length >= 5 ? distinctUsers : users.slice(0, limit);
+
+  return listToMap.map((u) => {
+    const pref = u.UserProfilePreference || u.userProfilePreference;
+    const summary = u.competitionSummary || u.CompetitionUserSummary;
+    const mvpCountFromRec = mvpMap.get(Number(u.id)) || 0;
+    const mvpCountFromSummary = Number(summary?.metadata?.mvpCount || 0);
+    const score = Number(summary?.currentSeasonScore || 0);
+
+    return {
+      userId: u.id,
+      id: u.id,
+      name: u.name,
+      jobTitle: u.jobTitle || 'Nhân viên',
+      department: u.department || 'Media & Content',
+      teamName: u.Team?.name || null,
+      isVerified: Boolean(u.isVerified),
+      avatarData: pref?.avatarData || null,
+      score,
+      mvpCount: Math.max(mvpCountFromRec, mvpCountFromSummary),
+      role: u.role || 'user',
+    };
+  });
+}
+
+/**
  * Strip internal IDs / updatedAt before sending to public endpoint.
  */
 function sanitizeArchiveEntry(entry) {
@@ -601,6 +687,7 @@ module.exports = {
   getSpotlightConfig,
   setSpotlightConfig,
   getPublicArchives,
+  getPublicMembers,
   adminGetArchives,
   adminSaveArchiveEntry,
   adminDeleteArchiveEntry,
