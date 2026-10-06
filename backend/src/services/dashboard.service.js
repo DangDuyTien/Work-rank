@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { Op } = require('sequelize');
-const { User, UserProfilePreference, Friendship, CompetitionUserSummary, ScoreLedger, CompetitionEvent } = require('../models');
+const { User, UserProfilePreference, Friendship, CompetitionUserSummary, ScoreLedger, CompetitionEvent, UserRecognition } = require('../models');
+const { weekBounds, scoreHistory, compareWeekly } = require('./ranking/weeklyRanking');
 const { resolveUserPresence } = require('./userPresence.service');
 const presence = require('./presence.service');
 const cache = require('./cache.service');
@@ -117,6 +118,8 @@ function mapLeaderboardUser(user, index) {
     featuredBadges,
     accountStatus: plain.status || 'active',
     score,
+    createdAt: plain.createdAt,
+    mvpCount: Number(summary.metadata?.mvpCount || 0),
     level: levelFromScore(score),
     rankPosition: index + 1,
     presence: userPresence,
@@ -144,6 +147,7 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
   const cleanSearch = String(search || '').trim();
 
   const where = { status: 'active' };
+  if (normalizedRange === 'week') where.isSimulated = { [Op.ne]: true };
   if (teamId) where.teamId = teamId;
   if (Array.isArray(userIds) && userIds.length > 0) where.id = { [Op.in]: userIds };
   if (cleanSearch) {
@@ -161,10 +165,37 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
     ],
   });
 
-  // Sort by score DESC
+  let weeklyScores = new Map();
+  let mvpCounts = new Map();
+  if (normalizedRange === 'week') {
+    const { start, end } = weekBounds();
+    const entries = await ScoreLedger.findAll({
+      where: { userId: { [Op.in]: allUsers.map((u) => u.id) }, createdAt: { [Op.gte]: start, [Op.lt]: end } },
+      attributes: ['userId', 'pointsDelta', 'createdAt'],
+      order: [['createdAt', 'ASC'], ['id', 'ASC']],
+      raw: true,
+    });
+    const histories = new Map();
+    for (const entry of entries) {
+      const id = String(entry.userId);
+      if (!histories.has(id)) histories.set(id, []);
+      histories.get(id).push(entry);
+    }
+    weeklyScores = new Map([...histories].map(([id, history]) => [id, scoreHistory(history)]));
+    const awards = await UserRecognition.findAll({ where: { awardType: 'mvp' }, attributes: ['userId'], raw: true });
+    for (const award of awards) {
+      const id = String(award.userId);
+      mvpCounts.set(id, (mvpCounts.get(id) || 0) + 1);
+    }
+  }
+
   const rankedAll = allUsers
     .map((u, i) => mapLeaderboardUser(u, i))
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .map((u) => normalizedRange === 'week' ? {
+      ...u, ...(weeklyScores.get(String(u.id)) || { score: 0, reachedAt: Infinity }),
+      mvpCount: mvpCounts.get(String(u.id)) || 0,
+    } : u)
+    .sort(normalizedRange === 'week' ? compareWeekly : (a, b) => b.score - a.score || a.name.localeCompare(b.name))
     .map((item, idx) => ({ ...item, rankPosition: idx + 1 }));
 
   const totalRanked = rankedAll.length;

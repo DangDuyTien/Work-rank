@@ -529,6 +529,10 @@ export const users = {
 };
 
 export const competition = {
+  getPublicWeeklyLeaderboard: async () => {
+    const res = await api.get('/api/leaderboard/public/weekly');
+    return res.data || { items: [] };
+  },
   getPublicSpotlight: async () => {
     const res = await api.get('/api/competition/public/spotlight');
     return res.data || { hasSpotlight: false, season: null, championTeam: null, mvp: null };
@@ -1352,4 +1356,3 @@ export const gameCatalogApi = {
 
 export { storeAuth, refreshStoredAuth as refreshSession };
 export default api;
-

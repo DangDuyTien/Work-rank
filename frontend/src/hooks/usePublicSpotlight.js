@@ -7,16 +7,18 @@ export default function usePublicSpotlight() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [weekly, setWeekly] = useState([]);
 
   useEffect(() => {
     let current = true;
     setLoading(true);
     setError(false);
-    competition.getPublicSpotlight().then((result) => {
+    Promise.all([competition.getPublicSpotlight(), competition.getPublicWeeklyLeaderboard()]).then(([result, weeklyResult]) => {
       if (!result || typeof result !== 'object' || Array.isArray(result)) {
         throw new Error('Invalid public spotlight response');
       }
       if (current) setData(result);
+      if (current) setWeekly(Array.isArray(weeklyResult?.items) ? weeklyResult.items : []);
     }).catch(() => {
       if (current) setError(true);
     }).finally(() => {
@@ -26,6 +28,5 @@ export default function usePublicSpotlight() {
   }, [attempt]);
 
   const archives = Array.isArray(data?.archives) ? data.archives : [];
-  return { data, archives, loading, error, retry: () => setAttempt((value) => value + 1) };
+  return { data, archives, weekly, loading, error, retry: () => setAttempt((value) => value + 1) };
 }
-

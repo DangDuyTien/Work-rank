@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Medal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
@@ -11,6 +11,40 @@ import {
   SpotlightFeedback, displayScore, recognitionState,
   removeVietnameseDiacritics,
 } from '../components/PublicRecognition';
+
+function WeeklyLeaderboard({ items, loading }) {
+  const leaders = (items || []).slice(0, 3);
+  const members = leaders.flatMap((item) => {
+    const photos = [...new Set([item.avatarData, ...(item.galleryImages || [])].filter(Boolean))];
+    return photos.map((avatarData) => ({ name: item.name, avatarData }));
+  });
+  return <Reveal as="section" delay={500} className="public-season-section public-archive-section public-weekly-recognition" aria-labelledby="weekly-ranking-title" aria-busy={loading}>
+    <div className="public-season-heading is-detail"><h2 id="weekly-ranking-title"><span>Cá nhân · BXH tuần</span></h2></div>
+    <div className="public-recognition-grid">
+      <figure className="public-featured-person" aria-label="Ảnh vinh danh ba cá nhân dẫn đầu tuần">
+        <RecognitionPortraitFrame type="champion" record={{ teamName: 'Top 3 tuần', members }} loading={loading} />
+      </figure>
+      <div className="public-archive-content">
+        <ol className="public-weekly-honorees">
+          {leaders.map((item, index) => <li key={item.userId} className={`public-weekly-honoree rank-${index + 1}`}>
+            <h3 className="public-weekly-place"><Medal size={22} aria-hidden="true" />Top {index + 1}</h3>
+            <div className="public-archive-person">
+              <Link className="public-archive-name" to={`/users/${item.userId}`}><RecognitionName name={item.name} verified={item.isVerified} /><ArrowUpRight size={20} aria-hidden="true" /></Link>
+              <dl className="public-recognition-facts public-weekly-facts" aria-label={`Thông tin ${item.name}`}>
+                <div><dt>Điểm tuần</dt><dd>{displayScore(item.score)}</dd></div>
+                <div><dt>Danh hiệu MVP</dt><dd>{item.mvpCount || 0}</dd></div>
+                <div><dt>Chức danh</dt><dd className="is-text">{item.jobTitle || 'Chưa cập nhật'}</dd></div>
+                <div><dt>Phòng ban</dt><dd className="is-text">{item.department || 'Chưa cập nhật'}</dd></div>
+                <div><dt>Đội nhóm</dt><dd className="is-text">{item.teamName || 'Chưa tham gia đội nhóm'}</dd></div>
+              </dl>
+            </div>
+          </li>)}
+        </ol>
+        {!leaders.length && <p className="public-honoree-empty">{loading ? 'Đang tải bảng xếp hạng…' : 'Chưa có người dùng trong bảng xếp hạng.'}</p>}
+      </div>
+    </div>
+  </Reveal>;
+}
 
 function RecognitionArchiveSection({ type, data, year, seasonName, loading, error, to, delay, since, showYear = true }) {
   const isMvp = type === 'mvp';
@@ -142,7 +176,7 @@ function RecognitionYearGroup({
 
 export default function Home() {
   const { user } = useAuth();
-  const { data, archives, loading, error, retry } = usePublicSpotlight();
+  const { data, archives, weekly, loading, error, retry } = usePublicSpotlight();
   const [mountTime] = useState(() => performance.now());
   const season = data?.season;
   const startYear = season?.startAt ? new Date(season.startAt).getFullYear() : null;
@@ -235,6 +269,8 @@ export default function Home() {
             );
           })}
         </div>
+
+        <WeeklyLeaderboard items={weekly} loading={loading} />
 
         {/* Section cuối — hiện khi cuộn tới */}
         <Reveal as="section" mode="scroll" className="public-explore-section" aria-labelledby="public-explore-title">

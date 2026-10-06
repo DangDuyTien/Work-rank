@@ -87,6 +87,16 @@
 }
 .public-entry-button:hover { background: var(--primary-hover); }
 .public-editorial-main { max-width: 1600px; margin: 0 auto; padding: 0 clamp(20px, 4.5vw, 72px); scroll-margin-top: 110px; }
+.public-weekly-recognition { margin-bottom: 40px; }
+.public-weekly-honorees { list-style:none; margin:0; padding:0; }
+.public-weekly-honoree { padding:20px 0; border-bottom:1px solid #d8d8d8; }
+.public-weekly-honoree:first-child { padding-top:0; }
+.public-weekly-place { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:22px; letter-spacing:0; }
+.public-weekly-honoree.rank-1 .public-weekly-place { color:#a78021; }
+.public-weekly-honoree.rank-2 .public-weekly-place { color:#727f87; }
+.public-weekly-honoree.rank-3 .public-weekly-place { color:#a3674c; }
+.public-weekly-honoree .public-archive-name { overflow-wrap:anywhere; }
+.public-weekly-honoree .public-recognition-facts { margin-top:12px; }
 .public-editorial-intro { padding: clamp(24px, 3vw, 44px) 0 20px; }
 .public-editorial-kicker { display: block; font-size: 10px; font-weight: 600; letter-spacing: .14em; line-height: 1.6; }
 .public-editorial-title {
@@ -216,7 +226,8 @@
   margin: 0;
 }
 
-.public-archive-row.is-mvp .public-archive-name {
+.public-archive-row.is-mvp .public-archive-name,
+.public-weekly-honoree .public-archive-name {
   font-family: 'RuderPlakatLLVar', sans-serif;
   font-variation-settings: 'YTUC' 100, 'YTLC' 900, 'YTDE' 100;
   font-weight: 400;
@@ -225,6 +236,11 @@
   letter-spacing: 0;
   color: var(--foreground);
 }
+.public-weekly-honoree .public-archive-name { font-size:36px; }
+.public-weekly-facts > div { min-width:80px; max-width:100%; }
+.public-weekly-facts dd { overflow-wrap:anywhere; letter-spacing:0; }
+.public-weekly-facts dd.is-text { font-weight:600; }
+@media (max-width:480px) { .public-weekly-honoree .public-archive-name { font-size:28px; } }
 
 
 .public-archive-name { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; text-decoration: none; color: var(--foreground); font-size: clamp(16px, 1.25vw, 20px); line-height: 1.5; padding: 0 0 14px; }
