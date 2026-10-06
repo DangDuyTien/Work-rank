@@ -250,8 +250,20 @@ export default function QuizWaitingRoom({
                   >
                     {p.user?.name || `Người chơi ${p.userId}`}
                   </div>
-                  <div style={{ fontSize: 11, color: isPlayerHost ? 'var(--accent)' : isMe ? 'var(--accent)' : 'var(--success)', fontWeight: 500, marginTop: 1 }}>
-                    {isPlayerHost ? '👑 Chủ phòng' : isMe ? '✨ Bạn' : '✓ Sẵn sàng'}
+                  <div style={{ fontSize: 11, color: isPlayerHost ? 'var(--accent)' : isMe ? 'var(--accent)' : 'var(--success)', fontWeight: 500, marginTop: 1, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    {isPlayerHost ? (
+                      <>
+                        <Crown size={12} color="#d97706" /> Chủ phòng
+                      </>
+                    ) : isMe ? (
+                      <>
+                        <Sparkles size={12} color="#d97706" /> Bạn
+                      </>
+                    ) : (
+                      <>
+                        <Check size={12} color="var(--success)" /> Sẵn sàng
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

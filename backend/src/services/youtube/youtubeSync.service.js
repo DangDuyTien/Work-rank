@@ -99,8 +99,8 @@ async function syncChannel(channelIdentifier, options = {}) {
       }
     }
 
-    // 2. Test Environment Mock Adapter (used when running tests or when API key is absent)
-    if (!channelStats && (process.env.NODE_ENV === 'test' || !process.env.NODE_ENV || !process.env.YOUTUBE_API_KEY)) {
+    // 2. Test / Non-production Environment Mock Adapter (used when API key is absent during tests or local dev)
+    if (!channelStats && process.env.NODE_ENV !== 'production' && !process.env.YOUTUBE_API_KEY) {
       channelStats = {
         title: channel.title,
         description: channel.description,

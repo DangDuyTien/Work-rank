@@ -713,7 +713,9 @@ export default function AdminSeasons() {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
                     <div>
-                      <strong style={{ color: 'var(--text-primary)' }}>🏆 Quán quân:</strong>{' '}
+                      <strong style={{ color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Trophy size={13} color="#d97706" /> Quán quân:
+                      </strong>{' '}
                       {item.championTeam?.teamName || '—'}{' '}
                       {Array.isArray(item.championTeam?.members) && item.championTeam.members.length > 0 && (
                         <span style={{ color: 'var(--text-secondary)' }}>
@@ -722,7 +724,9 @@ export default function AdminSeasons() {
                       )}
                     </div>
                     <div>
-                      <strong style={{ color: 'var(--text-primary)' }}>⭐ MVP:</strong>{' '}
+                      <strong style={{ color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Star size={13} color="#eab308" /> MVP:
+                      </strong>{' '}
                       {item.mvp?.name || '—'}{' '}
                       {item.mvp?.jobTitle && <span style={{ color: 'var(--text-secondary)' }}>({item.mvp.jobTitle})</span>}{' '}
                       {item.mvp?.score > 0 && <span style={{ color: '#7c3aed', fontWeight: 600 }}>· {item.mvp.score.toLocaleString()} pts</span>}

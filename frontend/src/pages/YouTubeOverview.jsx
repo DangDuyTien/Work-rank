@@ -33,8 +33,11 @@ function formatNumber(num) {
 }
 
 function formatGrowth(value) {
-  if (value === null || value === undefined) return 'Chưa đủ dữ liệu';
-  return (Number(value) >= 0 ? '+' : '') + Number(value).toFixed(1) + '%';
+  if (value === null || value === undefined || value === '') return 'Chưa đủ dữ liệu';
+  const num = Number(value);
+  if (isNaN(num) || num > 5000 || num < -100) return 'Chưa đủ dữ liệu';
+  if (num > 999.9) return '> +999.9%';
+  return (num >= 0 ? '+' : '') + num.toFixed(1) + '%';
 }
 
 function formatRelativeTime(dateStr) {

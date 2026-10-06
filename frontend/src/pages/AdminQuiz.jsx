@@ -1976,12 +1976,12 @@ export default function AdminQuiz() {
                   <div className="flex items-center justify-between text-xs font-bold">
                     <span className="text-slate-700">Kết quả phân tích:</span>
                     <div className="flex gap-2">
-                      <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                        ✓ {importPreviewData.validCount} hợp lệ
+                      <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                        <Check size={12} /> {importPreviewData.validCount} hợp lệ
                       </span>
                       {importPreviewData.errorCount > 0 && (
-                        <span className="text-red-700 bg-red-100 px-2 py-0.5 rounded">
-                          ⚠ {importPreviewData.errorCount} lỗi
+                        <span className="text-red-700 bg-red-100 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                          <AlertTriangle size={12} /> {importPreviewData.errorCount} lỗi
                         </span>
                       )}
                     </div>
@@ -1997,8 +1997,8 @@ export default function AdminQuiz() {
                           }`}
                         >
                           <span className="truncate">#{i + 1}. {item.data?.question || item.error}</span>
-                          <span className="shrink-0 font-bold">
-                            {item.isValid ? '✓ OK' : '✕ Lỗi'}
+                          <span className="shrink-0 font-bold inline-flex items-center gap-1">
+                            {item.isValid ? <><Check size={12} /> OK</> : <><X size={12} /> Lỗi</>}
                           </span>
                         </div>
                       ))}

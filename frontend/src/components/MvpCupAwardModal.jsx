@@ -15,6 +15,8 @@ import {
   Shield,
   Loader2,
   Trash2,
+  Zap,
+  Info,
 } from 'lucide-react';
 import { competition, users as usersApi } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
@@ -165,7 +167,7 @@ export default function MvpCupAwardModal({
       });
 
       toast.success(
-        `🏆 ĐÃ TRAO MVP CUP THÀNH CÔNG cho ${previewData.candidate.name} (Mùa #${selectedSeasonId})!`
+        `Đã trao MVP Cup thành công cho ${previewData.candidate.name} (Mùa #${selectedSeasonId})!`
       );
 
       // Invalidate relevant client caches
@@ -468,11 +470,11 @@ export default function MvpCupAwardModal({
 
                     {/* Stats pills */}
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: 'var(--accent)', padding: '2px 8px', borderRadius: 4 }}>
-                        🏆 {previewData.candidate.score.toLocaleString()} XP
+                      <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: 'var(--accent)', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Trophy size={12} color="#d97706" /> {previewData.candidate.score.toLocaleString()} XP
                       </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-secondary)', padding: '2px 8px', borderRadius: 4 }}>
-                        ⚡ {previewData.candidate.eventsCount} hoạt động
+                      <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-secondary)', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Zap size={12} color="#f59e0b" /> {previewData.candidate.eventsCount} hoạt động
                       </span>
                       {previewData.candidate.lastScoredAt && (
                         <span style={{ fontSize: 10, color: 'var(--text-muted)', alignSelf: 'center' }}>
@@ -484,8 +486,8 @@ export default function MvpCupAwardModal({
                 </div>
 
                 {previewData.isTied && (
-                  <div style={{ fontSize: 11, color: 'var(--accent)', background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', borderRadius: 4, marginTop: 8 }}>
-                    ℹ️ Có {previewData.tiedCount} ứng viên đạt mức điểm bằng nhau. Ứng viên trên được xếp Hạng #1 do đạt điểm sớm hơn theo quy tắc tie-break chính thức.
+                  <div style={{ fontSize: 11, color: 'var(--accent)', background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', borderRadius: 4, marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Info size={14} style={{ flexShrink: 0 }} /> Có {previewData.tiedCount} ứng viên đạt mức điểm bằng nhau. Ứng viên trên được xếp Hạng #1 do đạt điểm sớm hơn theo quy tắc tie-break chính thức.
                   </div>
                 )}
               </div>

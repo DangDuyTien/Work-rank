@@ -579,8 +579,8 @@ export default function AdminTeamsYouTube() {
           <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginTop: 6 }}>
             {fmtNum(overview?.kpis?.totalViews || 0)}
           </div>
-          <div style={{ fontSize: 11, color: overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined ? '#16a34a' : 'var(--text-muted)', fontWeight: 600, marginTop: 4 }}>
-            {overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined
+          <div style={{ fontSize: 11, color: overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined && Number(overview?.kpis?.viewsGrowth30dPct) <= 999.9 ? '#16a34a' : 'var(--text-muted)', fontWeight: 600, marginTop: 4 }}>
+            {overview?.kpis?.viewsGrowth30dPct !== null && overview?.kpis?.viewsGrowth30dPct !== undefined && Number(overview?.kpis?.viewsGrowth30dPct) <= 999.9
               ? `${Number(overview?.kpis?.viewsGrowth30dPct) >= 0 ? '+' : ''}${Number(overview?.kpis?.viewsGrowth30dPct).toFixed(1)}% tăng trưởng 30D`
               : 'Chưa đủ dữ liệu tăng trưởng'}
           </div>
@@ -1610,7 +1610,7 @@ export default function AdminTeamsYouTube() {
                         {m.isVerified && <VerifiedBadge size={13} />}
                         {Number(membersDrawerTeam.ownerId) === Number(m.id) && (
                           <span style={{ fontSize: 10, background: '#fef3c7', color: 'var(--accent)', border: '1px solid rgba(217,119,6,0.3)', padding: '1px 6px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            👑 Trưởng nhóm
+                            <Crown size={11} color="#d97706" /> Trưởng nhóm
                           </span>
                         )}
                       </div>
@@ -1625,11 +1625,11 @@ export default function AdminTeamsYouTube() {
                           onClick={() => handleSetTeamLeader(membersDrawerTeam.id, m.id, m.name)}
                           style={{
                             padding: '4px 8px', background: '#fffbeb', color: 'var(--accent)', border: '1px solid rgba(217,119,6,0.3)',
-                            fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                            fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,
                           }}
                           title="Bổ nhiệm làm trưởng nhóm"
                         >
-                          👑 Trưởng nhóm
+                          <Crown size={12} /> Trưởng nhóm
                         </button>
                       )}
                       <button

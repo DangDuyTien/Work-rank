@@ -1965,7 +1965,7 @@ export default function Leaderboard() {
                                   {fmtNum(c.subscribers)}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  {c.viewsGrowth30dPct !== null && c.viewsGrowth30dPct !== undefined ? (
+                                  {c.viewsGrowth30dPct !== null && c.viewsGrowth30dPct !== undefined && Number(c.viewsGrowth30dPct) <= 999.9 ? (
                                     <span style={{
                                       padding: '2px 6px',
                                       fontSize: 11,

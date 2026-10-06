@@ -113,8 +113,18 @@ function calculateGrowth(current, baseline) {
   const base = Number(baseline);
   const diff = cur - base;
   const rawPercent = (diff / base) * 100;
-  // Clamped safe float rounded to 1 decimal place (e.g. 18.4, -2.5)
-  const growthPercent = Number(Math.min(999999.9, Math.max(-999999.9, rawPercent)).toFixed(1));
+
+  // Filter out anomalous baseline jumps (> 5000% indicating dummy placeholder baseline transition)
+  if (rawPercent > 5000.0) {
+    return {
+      growthPercent: null,
+      growthStatus: 'INSUFFICIENT_DATA',
+      growthContext: 'ANOMALOUS_BASELINE',
+    };
+  }
+
+  // Clamped safe float rounded to 1 decimal place (max 999.9%, min -100.0%)
+  const growthPercent = Number(Math.min(999.9, Math.max(-100.0, rawPercent)).toFixed(1));
   return {
     growthPercent,
     growthStatus: 'AVAILABLE',
@@ -165,8 +175,14 @@ async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
   const currentViews = Number(latestMetric.views || 0);
   const currentSubscribers = Number(latestMetric.subscribers || 0);
 
+  // Helper to detect dummy mock snapshots (exact signature views=1000, subs=100 created when API key was absent)
+  const isDummyMock = (metric) => {
+    if (!metric) return false;
+    return Number(metric.views) === 1000 && Number(metric.subscribers) === 100 && currentViews >= 50000;
+  };
+
   // 2. Query for snapshot <= lookbackDate
-  const priorMetric = await YouTubeChannelMetric.findOne({
+  let priorMetric = await YouTubeChannelMetric.findOne({
     where: {
       channelId,
       capturedAt: { [Op.lte]: lookbackDate },
@@ -174,6 +190,19 @@ async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
     order: [['capturedAt', 'DESC']],
     transaction: options.transaction,
   });
+
+  if (isDummyMock(priorMetric)) {
+    const realPrior = await YouTubeChannelMetric.findOne({
+      where: {
+        channelId,
+        capturedAt: { [Op.lte]: lookbackDate },
+        views: { [Op.gt]: 1000 },
+      },
+      order: [['capturedAt', 'DESC']],
+      transaction: options.transaction,
+    });
+    priorMetric = realPrior || null;
+  }
 
   let baselineMetric = null;
   let hasElapsedMeasurement = false;
@@ -186,11 +215,25 @@ async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
   } else {
     // Channel onboarded after lookbackDate (Case 1 / Case 3)
     // Find the earliest / onboarding snapshot
-    const earliestMetric = await YouTubeChannelMetric.findOne({
+    let earliestMetric = await YouTubeChannelMetric.findOne({
       where: { channelId },
       order: [['capturedAt', 'ASC']],
       transaction: options.transaction,
     });
+
+    if (isDummyMock(earliestMetric)) {
+      const realEarliest = await YouTubeChannelMetric.findOne({
+        where: {
+          channelId,
+          views: { [Op.gt]: 1000 },
+        },
+        order: [['capturedAt', 'ASC']],
+        transaction: options.transaction,
+      });
+      if (realEarliest) {
+        earliestMetric = realEarliest;
+      }
+    }
 
     if (earliestMetric) {
       baselineMetric = earliestMetric;
@@ -220,10 +263,16 @@ async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
     const growthRes = calculateGrowth(currentViews, baselineViews);
     viewsGrowthPct = growthRes.growthPercent;
     viewsGrowthStatus = growthRes.growthStatus;
+    if (viewsGrowthStatus === 'INSUFFICIENT_DATA') {
+      viewsDelta = 0;
+    }
   } else if (!hasElapsedMeasurement) {
     viewsDelta = 0;
     viewsGrowthPct = null;
     viewsGrowthStatus = 'INSUFFICIENT_DATA';
+    if (baselineViews === null || baselineViews <= 0) {
+      growthContext = 'NO_VALID_BASELINE';
+    }
   } else {
     // baselineViews <= 0
     viewsDelta = 0;
@@ -243,6 +292,9 @@ async function resolveChannelBaseline(channelId, lookbackDate, options = {}) {
     const subRes = calculateGrowth(currentSubscribers, baselineSubscribers);
     subGrowthPct = subRes.growthPercent;
     subGrowthStatus = subRes.growthStatus;
+    if (subGrowthStatus === 'INSUFFICIENT_DATA') {
+      subDelta = 0;
+    }
   } else if (!hasElapsedMeasurement) {
     subDelta = 0;
     subGrowthPct = null;

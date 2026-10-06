@@ -518,8 +518,8 @@ export default function Friends() {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Vai trò trong đội
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: isTeamLeader ? '#d97706' : 'var(--text-primary)', marginTop: 2 }}>
-              {isTeamLeader ? '👑 Trưởng nhóm' : myTeam ? 'Thành viên' : 'Chưa có đội'}
+            <div style={{ fontSize: 16, fontWeight: 700, color: isTeamLeader ? '#d97706' : 'var(--text-primary)', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {isTeamLeader ? <><Crown size={16} /> Trưởng nhóm</> : myTeam ? 'Thành viên' : 'Chưa có đội'}
             </div>
           </div>
         </div>
@@ -808,9 +808,12 @@ export default function Friends() {
                                 background: memberIsLeader ? 'var(--accent-soft)' : 'var(--info-soft)',
                                 border: memberIsLeader ? '1px solid var(--accent-border)' : '1px solid var(--info-border)',
                                 padding: '2px 8px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
                               }}>
                                 <Shield size={12} />
-                                {memberTeamName} {memberIsLeader && '👑 Trưởng nhóm'}
+                                {memberTeamName} {memberIsLeader && <><Crown size={12} /> Trưởng nhóm</>}
                               </span>
                             </div>
                           ) : (
@@ -893,8 +896,11 @@ export default function Friends() {
                             padding: '3px 8px',
                             background: isTeamLeader ? 'var(--accent)' : 'var(--info)',
                             color: 'var(--accent-foreground)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
                           }}>
-                            {isTeamLeader ? '👑 Bạn là Trưởng nhóm' : 'Thành viên'}
+                            {isTeamLeader ? <><Crown size={13} /> Bạn là Trưởng nhóm</> : 'Thành viên'}
                           </span>
                         </div>
                         {myTeam.description && (
@@ -903,9 +909,13 @@ export default function Friends() {
                           </p>
                         )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>
-                          <span>👥 {myTeam.memberCount || myTeam.members?.length || 0} thành viên</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <Users size={14} /> {myTeam.memberCount || myTeam.members?.length || 0} thành viên
+                          </span>
                           {myTeam.owner && (
-                            <span>👑 Trưởng nhóm: <strong style={{ color: 'var(--text-primary)' }}>{myTeam.owner.name || myTeam.owner.email}</strong></span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                              <Crown size={14} color="#d97706" /> Trưởng nhóm: <strong style={{ color: 'var(--text-primary)' }}>{myTeam.owner.name || myTeam.owner.email}</strong>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1020,8 +1030,11 @@ export default function Friends() {
                                     background: 'rgba(217,119,6,0.12)',
                                     color: 'var(--accent)',
                                     border: '1px solid rgba(217,119,6,0.3)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 3,
                                   }}>
-                                    👑 Trưởng nhóm
+                                    <Crown size={11} /> Trưởng nhóm
                                   </span>
                                 )}
                               </div>
@@ -1262,8 +1275,8 @@ export default function Friends() {
                               </p>
                             )}
                             {team.owner && (
-                              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginTop: 8 }}>
-                                👑 Trưởng nhóm: <strong style={{ color: 'var(--text-secondary)' }}>{team.owner.name || team.owner.email}</strong>
+                              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Crown size={12} color="#d97706" /> Trưởng nhóm: <strong style={{ color: 'var(--text-secondary)' }}>{team.owner.name || team.owner.email}</strong>
                               </div>
                             )}
                           </div>

@@ -153,25 +153,25 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
       }
 
       // 30 days / lookback baseline
-      if (baseRes.hasElapsedMeasurement && baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
+      if (baseRes.hasElapsedMeasurement && baseRes.growthStatus === 'AVAILABLE' && baseRes.baselineViews !== null && baseRes.baselineViews > 0 && baseRes.viewsGrowthPct !== null) {
         hasAnyElapsedMeasurement = true;
         teamBaselineViews += baseRes.baselineViews;
         const cDelta = Math.max(0, baseRes.currentViews - baseRes.baselineViews);
         teamViewsDelta += cDelta;
         views30d += cDelta;
       } else if (baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
-        // Channel onboarded recently with 1 snapshot:
-        // Its baseline for this period is its onboarding views, delta is 0!
-        teamBaselineViews += baseRes.baselineViews;
+        // Channel onboarded recently with 1 snapshot or insufficient data:
+        // Its baseline for this period is its current views, delta is 0!
+        teamBaselineViews += baseRes.currentViews;
       }
 
-      if (baseRes.hasElapsedMeasurement && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+      if (baseRes.hasElapsedMeasurement && baseRes.subGrowthStatus === 'AVAILABLE' && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0 && baseRes.subGrowthPct !== null) {
         teamBaselineSubs += baseRes.baselineSubscribers;
         const sDelta = (baseRes.currentSubscribers - baseRes.baselineSubscribers);
         teamSubsDelta += sDelta;
         subscriberGrowth30d += sDelta;
       } else if (baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
-        teamBaselineSubs += baseRes.baselineSubscribers;
+        teamBaselineSubs += baseRes.currentSubscribers;
       }
     }
   }
@@ -181,13 +181,17 @@ async function aggregateTeamYouTubeSummary(teamId, options = {}) {
   let viewsGrowth30dPct = null;
   if (hasAnyElapsedMeasurement && teamBaselineViews > 0) {
     const rawViewsGrowth = (teamViewsDelta / teamBaselineViews) * 100;
-    viewsGrowth30dPct = Number(Math.min(999999.9, Math.max(-999999.9, rawViewsGrowth)).toFixed(1));
+    if (rawViewsGrowth <= 5000.0) {
+      viewsGrowth30dPct = Number(Math.min(999.9, Math.max(-100.0, rawViewsGrowth)).toFixed(1));
+    }
   }
 
   let subGrowth30dPct = null;
   if (hasAnyElapsedMeasurement && teamBaselineSubs > 0) {
     const rawSubGrowth = (teamSubsDelta / teamBaselineSubs) * 100;
-    subGrowth30dPct = Number(Math.min(999999.9, Math.max(-999999.9, rawSubGrowth)).toFixed(1));
+    if (rawSubGrowth <= 5000.0) {
+      subGrowth30dPct = Number(Math.min(999.9, Math.max(-100.0, rawSubGrowth)).toFixed(1));
+    }
   }
 
   // Freshness status calculation
@@ -463,19 +467,19 @@ async function getCompanyYouTubeOverview(options = {}) {
         period,
       });
 
-      if (baseRes.hasElapsedMeasurement && baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
+      if (baseRes.hasElapsedMeasurement && baseRes.growthStatus === 'AVAILABLE' && baseRes.baselineViews !== null && baseRes.baselineViews > 0 && baseRes.viewsGrowthPct !== null) {
         hasValidBaseline = true;
         totalBaselineViews += baseRes.baselineViews;
         companyViewsPeriodDelta += Math.max(0, cViews - baseRes.baselineViews);
       } else if (baseRes.baselineViews !== null && baseRes.baselineViews > 0) {
-        totalBaselineViews += baseRes.baselineViews;
+        totalBaselineViews += cViews;
       }
 
-      if (baseRes.hasElapsedMeasurement && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
+      if (baseRes.hasElapsedMeasurement && baseRes.subGrowthStatus === 'AVAILABLE' && baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0 && baseRes.subGrowthPct !== null) {
         totalBaselineSubs += baseRes.baselineSubscribers;
         companySubsPeriodDelta += (cSubs - baseRes.baselineSubscribers);
       } else if (baseRes.baselineSubscribers !== null && baseRes.baselineSubscribers > 0) {
-        totalBaselineSubs += baseRes.baselineSubscribers;
+        totalBaselineSubs += cSubs;
       }
     }
   }
@@ -485,11 +489,15 @@ async function getCompanyYouTubeOverview(options = {}) {
   let subGrowthPct = null;
   if (hasValidBaseline && totalBaselineViews > 0) {
     const rawGrowth = (companyViewsPeriodDelta / totalBaselineViews) * 100;
-    viewsGrowthPct = Number(Math.min(999999.9, Math.max(-999999.9, rawGrowth)).toFixed(1));
+    if (rawGrowth <= 5000.0) {
+      viewsGrowthPct = Number(Math.min(999.9, Math.max(-100.0, rawGrowth)).toFixed(1));
+    }
   }
   if (hasValidBaseline && totalBaselineSubs > 0) {
     const rawSubGrowth = (companySubsPeriodDelta / totalBaselineSubs) * 100;
-    subGrowthPct = Number(Math.min(999999.9, Math.max(-999999.9, rawSubGrowth)).toFixed(1));
+    if (rawSubGrowth <= 5000.0) {
+      subGrowthPct = Number(Math.min(999.9, Math.max(-100.0, rawSubGrowth)).toFixed(1));
+    }
   }
 
   // Company freshness status
@@ -878,11 +886,11 @@ async function getYouTubeTeamLeaderboard(params = {}) {
     totalSubscribers: Number(s.totalSubscribers || 0),
     views30d: Number(s.views30d || 0),
     subscriberGrowth30d: Number(s.subscriberGrowth30d || 0),
-    viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
-    growthPercent: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
-    growthStatus: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined ? 'AVAILABLE' : 'INSUFFICIENT_DATA',
-    subGrowth30dPct: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
-    subGrowthPercent: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
+    viewsGrowth30dPct: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined && Number(s.viewsGrowth30dPct) <= 999.9 ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
+    growthPercent: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined && Number(s.viewsGrowth30dPct) <= 999.9 ? Number(Number(s.viewsGrowth30dPct).toFixed(1)) : null,
+    growthStatus: s.viewsGrowth30dPct !== null && s.viewsGrowth30dPct !== undefined && Number(s.viewsGrowth30dPct) <= 999.9 ? 'AVAILABLE' : 'INSUFFICIENT_DATA',
+    subGrowth30dPct: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined && Number(s.subGrowth30dPct) <= 999.9 ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
+    subGrowthPercent: s.subGrowth30dPct !== null && s.subGrowth30dPct !== undefined && Number(s.subGrowth30dPct) <= 999.9 ? Number(Number(s.subGrowth30dPct).toFixed(1)) : null,
     lastSyncedAt: s.lastSyncedAt,
   }));
 

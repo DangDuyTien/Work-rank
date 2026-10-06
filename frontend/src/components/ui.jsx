@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Inbox, RotateCcw } from 'lucide-react';
+import { Inbox, RotateCcw, X } from 'lucide-react';
 
 function cx(...values) {
   return values.filter(Boolean).join(' ');
@@ -335,9 +335,9 @@ export function AnimatedModal({
                 type="button"
                 onClick={handleClose}
                 aria-label="Đóng"
-                style={{ marginLeft: 'auto', border: 'none', background: 'var(--surface-hover)', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, transition: 'background var(--motion-fast) var(--ease-standard)' }}
+                style={{ marginLeft: 'auto', border: 'none', background: 'var(--surface-hover)', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', transition: 'background var(--motion-fast) var(--ease-standard)' }}
               >
-                ✕
+                <X size={15} />
               </button>
             )}
           </div>
