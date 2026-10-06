@@ -89,9 +89,13 @@ async function projectUserSummary(userId, options = {}) {
   let currentSeasonRank = 0;
 
   if (currentSeasonId) {
-    // User total score in season
+    // User total score in season (excluding pure team scores)
     const scoreSum = await ScoreLedger.sum('points_delta', {
-      where: { userId, seasonId: currentSeasonId },
+      where: {
+        userId,
+        seasonId: currentSeasonId,
+        effectType: { [Op.ne]: 'TEAM_SCORE' },
+      },
       transaction,
     });
     currentSeasonScore = Number(scoreSum || 0);
@@ -102,7 +106,11 @@ async function projectUserSummary(userId, options = {}) {
         'user_id',
         [sequelize.fn('SUM', sequelize.col('points_delta')), 'userTotal'],
       ],
-      where: { seasonId: currentSeasonId, userId: { [Op.ne]: null } },
+      where: {
+        seasonId: currentSeasonId,
+        userId: { [Op.ne]: null },
+        effectType: { [Op.ne]: 'TEAM_SCORE' },
+      },
       group: ['user_id'],
       having: sequelize.literal(`SUM(points_delta) > ${currentSeasonScore}`),
       raw: true,
@@ -233,7 +241,11 @@ async function projectTeamSummary(teamId, options = {}) {
       currentSeasonRank = seasonProj.rank;
     } else {
       const scoreSum = await ScoreLedger.sum('points_delta', {
-        where: { teamId, seasonId: currentSeasonId },
+        where: {
+          teamId,
+          seasonId: currentSeasonId,
+          effectType: { [Op.ne]: 'INDIVIDUAL_XP' },
+        },
         transaction,
       });
       currentSeasonScore = Number(scoreSum || 0);

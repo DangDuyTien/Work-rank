@@ -42,7 +42,7 @@ export default function AdminSeasons() {
   const [availableTeams, setAvailableTeams] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
-  const [teamColor, setTeamColor] = useState('#b45309');
+  const [teamColor, setTeamColor] = useState('var(--accent)');
 
   // Main Tab State: 'seasons' | 'spotlight'
   const [mainTab, setMainTab] = useState('seasons');
@@ -378,15 +378,15 @@ export default function AdminSeasons() {
     : seasons.filter((s) => s.status === filterStatus);
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 0' }}>
+    <div className="admin-data-page" style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 0' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy size={22} color="#f97316" />
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Mùa Giải & Vinh Danh</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Quản Lý Mùa Giải & Vinh Danh</h1>
           </div>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
             Thiết lập lịch trình, đội tham gia, đóng băng kết quả, và quản lý vinh danh trang chủ các năm.
           </p>
         </div>
@@ -485,30 +485,30 @@ export default function AdminSeasons() {
                         fontSize: 11,
                         fontWeight: 600,
                         background: s.status === 'ACTIVE' ? 'rgba(34,197,94,0.15)' : s.status === 'PAUSED' ? 'rgba(234,179,8,0.15)' : 'rgba(15,23,42,0.08)',
-                        color: s.status === 'ACTIVE' ? '#16a34a' : s.status === 'PAUSED' ? '#ca8a04' : '#475569',
+                        color: s.status === 'ACTIVE' ? '#16a34a' : s.status === 'PAUSED' ? '#ca8a04' : 'var(--text-secondary)',
                       }}
                     >
                       {s.status}
                     </span>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>{s.seasonType}</span>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>• Slug: <code>{s.slug}</code></span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{s.seasonType}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>• Slug: <code>{s.slug}</code></span>
                   </div>
 
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>{s.name}</h3>
-                  <p style={{ fontSize: 13, color: '#475569', margin: '0 0 10px 0' }}>{s.description || 'Chưa có mô tả'}</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>{s.name}</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 10px 0' }}>{s.description || 'Chưa có mô tả'}</p>
 
-                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#64748b', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Calendar size={13} color="#64748b" /> Bắt đầu: <strong>{new Date(s.startAt).toLocaleString()}</strong>
+                      <Calendar size={13} color="var(--text-secondary)" /> Bắt đầu: <strong>{new Date(s.startAt).toLocaleString()}</strong>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Clock size={13} color="#64748b" /> Kết thúc: <strong>{new Date(s.endAt).toLocaleString()}</strong>
+                      <Clock size={13} color="var(--text-secondary)" /> Kết thúc: <strong>{new Date(s.endAt).toLocaleString()}</strong>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Clock size={13} color="#64748b" /> Grace: <strong>{s.gracePeriodHours} giờ</strong>
+                      <Clock size={13} color="var(--text-secondary)" /> Grace: <strong>{s.gracePeriodHours} giờ</strong>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Users size={13} color="#64748b" /> Đội tham gia: <strong>{s.teams?.length || 0} đội</strong>
+                      <Users size={13} color="var(--text-secondary)" /> Đội tham gia: <strong>{s.teams?.length || 0} đội</strong>
                     </span>
                   </div>
                 </div>
@@ -658,11 +658,11 @@ export default function AdminSeasons() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <History size={18} className="text-amber-600" />
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 Lịch Sử Vinh Danh Các Năm (Historical Archives)
               </h2>
             </div>
-            <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
               Các mùa giải đã lưu (như 2025, 2024...) sẽ được hiển thị ngay bên dưới mùa hiện tại trên Trang Chủ.
             </p>
           </div>
@@ -704,32 +704,32 @@ export default function AdminSeasons() {
               >
                 <div style={{ minWidth: 260, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: '#b45309', fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', fontFamily: 'monospace' }}>
                       {item.year}
                     </span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                       {item.label || `Mùa Giải ${item.year}`}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: '#475569' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
                     <div>
-                      <strong style={{ color: '#0f172a' }}>🏆 Quán quân:</strong>{' '}
+                      <strong style={{ color: 'var(--text-primary)' }}>🏆 Quán quân:</strong>{' '}
                       {item.championTeam?.teamName || '—'}{' '}
                       {Array.isArray(item.championTeam?.members) && item.championTeam.members.length > 0 && (
-                        <span style={{ color: '#64748b' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
                           ({item.championTeam.members.length} thành viên)
                         </span>
                       )}
                     </div>
                     <div>
-                      <strong style={{ color: '#0f172a' }}>⭐ MVP:</strong>{' '}
+                      <strong style={{ color: 'var(--text-primary)' }}>⭐ MVP:</strong>{' '}
                       {item.mvp?.name || '—'}{' '}
-                      {item.mvp?.jobTitle && <span style={{ color: '#64748b' }}>({item.mvp.jobTitle})</span>}{' '}
+                      {item.mvp?.jobTitle && <span style={{ color: 'var(--text-secondary)' }}>({item.mvp.jobTitle})</span>}{' '}
                       {item.mvp?.score > 0 && <span style={{ color: '#7c3aed', fontWeight: 600 }}>· {item.mvp.score.toLocaleString()} pts</span>}
                     </div>
                   </div>
                   {item.mvp?.reason && (
-                    <p style={{ fontSize: 11, color: '#64748b', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                    <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '4px 0 0 0', fontStyle: 'italic' }}>
                       “{item.mvp.reason}”
                     </p>
                   )}
@@ -764,11 +764,11 @@ export default function AdminSeasons() {
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Sparkles size={18} className="text-purple-600" />
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
               Cấu Hình Vinh Danh Mùa Hiện Tại (Tùy Chọn Đè Thủ Công)
             </h2>
           </div>
-          <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
             Mặc định hệ thống tự động chọn Đội Quán quân và MVP từ mùa giải chốt gần nhất. Nếu muốn chỉ định thủ công đội/cá nhân trên Trang Chủ, điền vào form bên dưới.
           </p>
         </div>

@@ -13,6 +13,13 @@ const {
 const samEngine = require('../utils/samEngine');
 const samBotAI = require('../utils/samBotAI');
 const samRealtime = require('./samRealtime.service');
+const {
+  ValidationError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} = require('../utils/errors');
 
 /**
  * Sam Lốc Game Service (Server Authoritative)
@@ -25,6 +32,9 @@ const botTimers = new Map();
 
 // In-memory start countdown timer tracker (5s server authoritative countdown)
 const startCountdownTimers = new Map();
+
+// In-memory sam phase timer tracker
+const samPhaseTimers = new Map();
 
 function scheduleStartCountdown(roomId) {
   const numId = Number(roomId);
@@ -168,7 +178,7 @@ async function createRoom(data, requestingUser = null) {
 
   const actualUserId = userId || (requestingUser ? requestingUser.id : null);
   if (!actualUserId) {
-    throw new Error('Yêu cầu xác thực người dùng để tạo phòng');
+    throw new UnauthorizedError('Yêu cầu xác thực người dùng để tạo phòng');
   }
 
   const validMax = Math.min(4, Math.max(2, Number(maxPlayers) || 4));
@@ -220,9 +230,7 @@ async function createRoom(data, requestingUser = null) {
 
 async function createBotTestRoom(data, adminUser) {
   if (!adminUser || adminUser.role !== 'admin') {
-    const error = new Error('Chỉ Quản trị viên (Admin) mới có quyền tạo phòng Bot Test');
-    error.status = 403;
-    throw error;
+    throw new ForbiddenError('Chỉ Quản trị viên (Admin) mới có quyền tạo phòng Bot Test');
   }
 
   const {
@@ -309,7 +317,7 @@ async function createBotTestRoom(data, adminUser) {
 
 async function joinRoom(roomId, userId, requestingUser = null) {
   if (!roomId || !userId) {
-    throw new Error('Thiếu roomId hoặc userId');
+    throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
   const room = await SamRoom.findByPk(roomId, {
@@ -317,15 +325,13 @@ async function joinRoom(roomId, userId, requestingUser = null) {
   });
 
   if (!room) {
-    throw new Error('Phòng chơi không tồn tại');
+    throw new NotFoundError('Phòng chơi không tồn tại');
   }
 
   // If this is a test room, verify admin role
   const userRole = requestingUser ? requestingUser.role : (await User.findByPk(userId))?.role;
   if (room.isTest && userRole !== 'admin') {
-    const error = new Error('Bạn không có quyền tham gia phòng thử nghiệm này');
-    error.status = 403;
-    throw error;
+    throw new ForbiddenError('Bạn không có quyền tham gia phòng thử nghiệm này');
   }
 
   if (room.status !== 'WAITING') {
@@ -345,7 +351,7 @@ async function joinRoom(roomId, userId, requestingUser = null) {
   }
 
   if (room.players.length >= room.maxPlayers) {
-    throw new Error('Phòng chơi đã đủ người');
+    throw new ConflictError('Phòng chơi đã đủ người');
   }
 
   // Find next available seat index
@@ -466,16 +472,16 @@ async function toggleReady(roomId, userId, isReady) {
   });
 
   if (!room) {
-    throw new Error('Phòng chơi không tồn tại');
+    throw new NotFoundError('Phòng chơi không tồn tại');
   }
 
   if (room.status === 'PLAYING') {
-    throw new Error('Phòng đang trong trận đấu');
+    throw new ConflictError('Phòng đang trong trận đấu');
   }
 
   const player = room.players.find((p) => isPlayerMatch(p, userId));
   if (!player) {
-    throw new Error('Người chơi không tồn tại trong phòng');
+    throw new NotFoundError('Người chơi không tồn tại trong phòng');
   }
 
   const readyVal = Boolean(isReady);
@@ -570,22 +576,22 @@ async function startMatch(roomId, hostUserId, isAdmin = false) {
   });
 
   if (!room) {
-    throw new Error('Phòng chơi không tồn tại');
+    throw new NotFoundError('Phòng chơi không tồn tại');
   }
 
   clearStartCountdown(roomId);
 
   if (!isAdmin && Number(room.hostUserId) !== Number(hostUserId)) {
-    throw new Error('Chỉ có chủ phòng mới có quyền bắt đầu trận đấu');
+    throw new ForbiddenError('Chỉ có chủ phòng mới có quyền bắt đầu trận đấu');
   }
 
   if (room.status !== 'WAITING' && room.status !== 'STARTING' && room.status !== 'FINISHED' && !isAdmin && !room.isTest) {
-    throw new Error('Phòng đang trong trận đấu');
+    throw new ConflictError('Phòng đang trong trận đấu');
   }
 
   const players = room.players;
   if (players.length < 2) {
-    throw new Error('Cần ít nhất 2 người chơi để bắt đầu Đánh Sâm');
+    throw new ValidationError('Cần ít nhất 2 người chơi để bắt đầu Đánh Sâm');
   }
 
   // 1. Deal 10 cards to each player using Server Authority
@@ -689,9 +695,14 @@ function findSmallestCardPlayer(players) {
 }
 
 function scheduleSamPhaseTimer(roomId) {
-  setTimeout(async () => {
+  const numId = Number(roomId);
+  if (samPhaseTimers.has(numId)) {
+    clearTimeout(samPhaseTimers.get(numId));
+  }
+  const timer = setTimeout(async () => {
+    samPhaseTimers.delete(numId);
     try {
-      const room = await SamRoom.findByPk(roomId, {
+      const room = await SamRoom.findByPk(numId, {
         include: [{ model: SamPlayer, as: 'players', include: [{ model: User, as: 'user' }] }],
       });
       if (!room || room.status !== 'PLAYING' || room.samPhase !== 'SAM_DECLARING') {
@@ -741,6 +752,15 @@ function scheduleSamPhaseTimer(roomId) {
       console.error('scheduleSamPhaseTimer error:', err);
     }
   }, process.env.NODE_ENV === 'test' ? 400 : 10500);
+  samPhaseTimers.set(numId, timer);
+}
+
+function clearSamPhaseTimer(roomId) {
+  const numId = Number(roomId);
+  if (samPhaseTimers.has(numId)) {
+    clearTimeout(samPhaseTimers.get(numId));
+    samPhaseTimers.delete(numId);
+  }
 }
 
 async function declareSam(roomId, userOrBotId, declare = true) {
@@ -755,16 +775,16 @@ async function declareSam(roomId, userOrBotId, declare = true) {
   });
 
   if (!room || room.status !== 'PLAYING') {
-    throw new Error('Trận đấu không tồn tại hoặc chưa bắt đầu');
+    throw new ConflictError('Trận đấu không tồn tại hoặc chưa bắt đầu');
   }
 
   if (room.samPhase !== 'SAM_DECLARING') {
-    throw new Error('Đã qua thời gian báo Sâm');
+    throw new ValidationError('Đã qua thời gian báo Sâm');
   }
 
   const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
   if (!player) {
-    throw new Error('Người chơi không ở trong phòng này');
+    throw new NotFoundError('Người chơi không ở trong phòng này');
   }
 
   player.hasDeclaredSam = !!declare;
@@ -869,7 +889,7 @@ async function declareSam(roomId, userOrBotId, declare = true) {
 
 async function playCards(roomId, userOrBotId, cardIds) {
   if (!Array.isArray(cardIds) || cardIds.length === 0) {
-    throw new Error('Vui lòng chọn ít nhất 1 lá bài để đánh');
+    throw new ValidationError('Vui lòng chọn ít nhất 1 lá bài để đánh');
   }
 
   const room = await SamRoom.findByPk(roomId, {
@@ -883,7 +903,7 @@ async function playCards(roomId, userOrBotId, cardIds) {
   });
 
   if (!room || room.status !== 'PLAYING') {
-    throw new Error('Trận đấu chưa bắt đầu hoặc đã kết thúc');
+    throw new ConflictError('Trận đấu chưa bắt đầu hoặc đã kết thúc');
   }
 
   // Auto-transition from SAM_DECLARING to PLAYING if timer expired
@@ -894,25 +914,25 @@ async function playCards(roomId, userOrBotId, cardIds) {
 
   const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
   if (!player) {
-    throw new Error('Người chơi không tồn tại trong phòng');
+    throw new NotFoundError('Người chơi không tồn tại trong phòng');
   }
 
   if (room.currentTurnSeat !== player.seatIndex && (!player.userId || Number(room.currentTurnUserId) !== Number(player.userId))) {
-    throw new Error('Chưa đến lượt của bạn');
+    throw new ValidationError('Chưa đến lượt của bạn');
   }
 
   // 1. Verify card ownership
   const hand = player.handCards || [];
   const hasAllCards = cardIds.every((c) => hand.includes(c));
   if (!hasAllCards) {
-    throw new Error('Bài đánh ra chứa lá bài không có trên tay bạn');
+    throw new ValidationError('Bài đánh ra chứa lá bài không có trên tay bạn');
   }
 
   // 2. Validate move against current board state
   const prevCards = room.lastPlayedCards ? room.lastPlayedCards.cards : null;
   const beatCheck = samEngine.canBeat(cardIds, prevCards);
   if (!beatCheck.canBeat) {
-    throw new Error(beatCheck.reason || 'Nước đi không hợp lệ');
+    throw new ValidationError(beatCheck.reason || 'Nước đi không hợp lệ');
   }
 
   // 3. Remove played cards from player's hand
@@ -1031,20 +1051,20 @@ async function passTurn(roomId, userOrBotId) {
   });
 
   if (!room || room.status !== 'PLAYING') {
-    throw new Error('Trận đấu chưa bắt đầu hoặc đã kết thúc');
+    throw new ConflictError('Trận đấu chưa bắt đầu hoặc đã kết thúc');
   }
 
   const player = room.players.find((p) => isPlayerMatch(p, userOrBotId));
   if (!player) {
-    throw new Error('Người chơi không tồn tại');
+    throw new NotFoundError('Người chơi không tồn tại');
   }
 
   if (room.currentTurnSeat !== player.seatIndex && (!player.userId || Number(room.currentTurnUserId) !== Number(player.userId))) {
-    throw new Error('Chưa đến lượt của bạn để bỏ lượt');
+    throw new ValidationError('Chưa đến lượt của bạn để bỏ lượt');
   }
 
   if (!room.lastPlayedCards) {
-    throw new Error('Bạn đang là người đánh đầu vòng, không thể bỏ lượt');
+    throw new ValidationError('Bạn đang là người đánh đầu vòng, không thể bỏ lượt');
   }
 
   const playerId = player.userId ? Number(player.userId) : player.id;
@@ -1754,6 +1774,8 @@ module.exports = {
   toggleReady,
   startMatch,
   clearStartCountdown,
+  clearBotTimers,
+  clearSamPhaseTimer,
   declareSam,
   playCards,
   passTurn,

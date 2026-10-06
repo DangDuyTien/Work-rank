@@ -104,16 +104,16 @@ export const ICON_SIZES = {
  * Standardized Semantic Color Tones
  */
 export const ICON_TONES = {
-  default: '#0f172a',
-  muted: '#94a3b8',
-  primary: '#0284c7',
+  default: 'var(--text-primary)',
+  muted: 'var(--text-muted)',
+  primary: 'var(--info)',
   success: '#16a34a',
   warning: '#f59e0b',
   danger: '#dc2626',
   accent: '#ea580c',
   gold: '#f59e0b',
-  silver: '#94a3b8',
-  bronze: '#b45309',
+  silver: 'var(--text-muted)',
+  bronze: 'var(--accent)',
   inherit: 'currentColor',
 };
 

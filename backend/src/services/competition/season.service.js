@@ -291,15 +291,24 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
   }
 
   const scoreLedgerRows = await ScoreLedger.findAll({
-    where: { seasonId },
-    attributes: ['userId', 'teamId', 'pointsDelta'],
+    where: {
+      seasonId,
+      [Op.or]: [
+        { effectType: { [Op.ne]: 'INDIVIDUAL_XP' } },
+        { effectType: 'TEAM_SCORE' },
+      ],
+    },
+    attributes: ['userId', 'teamId', 'pointsDelta', 'effectType'],
     raw: true,
     transaction,
   });
 
   const scoreMap = new Map();
   for (const row of scoreLedgerRows) {
-    const tId = Number(row.teamId) || userToTeam.get(Number(row.userId));
+    if (row.effectType === 'INDIVIDUAL_XP') {
+      continue;
+    }
+    const tId = Number(row.teamId) || (row.userId ? userToTeam.get(Number(row.userId)) : null);
     if (tId) {
       scoreMap.set(tId, (scoreMap.get(tId) || 0) + Number(row.pointsDelta || 0));
     }
@@ -424,6 +433,7 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
     where: {
       seasonId,
       userId: { [Op.ne]: null },
+      effectType: { [Op.ne]: 'TEAM_SCORE' },
     },
     group: ['user_id'],
     raw: true,

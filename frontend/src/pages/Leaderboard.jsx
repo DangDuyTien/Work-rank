@@ -46,19 +46,19 @@ import { getCached, setCached, fetchWithCache, CACHE_KEYS, CACHE_TTL, isDeepEqua
  * ========================================================================= */
 
 const CARD = {
-  background: '#ffffff',
-  border: '1px solid rgba(0,0,0,0.08)',
-  borderRadius: 6,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-content)',
+  boxShadow: 'var(--shadow-card)',
 };
 
 const AVATAR_GRADS = [
-  '#b45309',
-  '#555555',
-  '#15803d',
-  '#141414',
-  '#777777',
-  '#0369a1',
+  'var(--accent)',
+  'var(--text-secondary)',
+  'var(--success)',
+  'var(--primary)',
+  'var(--text-muted)',
+  'var(--info)',
 ];
 
 function fmtNum(n) {
@@ -129,7 +129,7 @@ function AvatarBox({ user, userId, name, size = 36, idx = 0 }) {
           justifyContent: 'center',
           fontSize: Math.max(10, Math.floor(size * 0.35)),
           fontWeight: 600,
-          color: '#fff',
+          color: 'var(--surface)',
           letterSpacing: 0,
           overflow: 'hidden',
         }}
@@ -164,7 +164,7 @@ function TrendIndicator({ trend, delta }) {
     if (d > 0) return <span style={{ color: '#16a34a', fontSize: 11, fontWeight: 600 }}>+{d}</span>;
     return <span style={{ color: '#dc2626', fontSize: 11, fontWeight: 600 }}>{d}</span>;
   }
-  return <span style={{ color: '#cbd5e1', fontSize: 11, fontWeight: 500 }}>—</span>;
+  return <span style={{ color: 'var(--border-2)', fontSize: 11, fontWeight: 500 }}>—</span>;
 }
 
 /* =========================================================================
@@ -219,7 +219,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
           >
             <div style={{ position: 'relative' }}>
               {isYouTube ? (
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', overflow: 'hidden' }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--surface)', overflow: 'hidden' }}>
                   {top2.thumbnailUrl ? <img src={top2.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={20} />}
                 </div>
               ) : (
@@ -227,19 +227,19 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               )}
               <div style={{
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
-                borderRadius: '50%', background: '#64748b', display: 'flex',
+                borderRadius: '50%', background: 'var(--text-secondary)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 700, color: '#f8fafc', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: 'var(--surface-soft)', border: '1.5px solid var(--surface)',
               }}>
                 2
               </div>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 95 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 95 }}>
               {getName(top2).split(' ').pop().toUpperCase()}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
               <AnimatedNumber value={getScore(top2)} duration={700} formatFn={fmtNum} />
-              <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{scoreSuffix}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
             <div
               className="podium-step-transition"
@@ -251,7 +251,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#64748b' }}>2</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)' }}>2</span>
             </div>
           </div>
         )}
@@ -273,7 +273,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
             <Crown size={24} color="#f59e0b" strokeWidth={2.5} style={{ marginBottom: 2 }} />
             <div style={{ position: 'relative' }}>
               {isYouTube ? (
-                <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', overflow: 'hidden' }}>
+                <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--surface)', overflow: 'hidden' }}>
                   {top1.thumbnailUrl ? <img src={top1.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={24} />}
                 </div>
               ) : (
@@ -283,7 +283,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                 position: 'absolute', bottom: -6, left: -6, width: 22, height: 22,
                 borderRadius: '50%', background: '#f59e0b', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 11,
-                fontWeight: 700, color: '#000', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: '#000', border: '1.5px solid var(--surface)',
               }}>
                 1
               </div>
@@ -325,7 +325,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
           >
             <div style={{ position: 'relative' }}>
               {isYouTube ? (
-                <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', overflow: 'hidden' }}>
+                <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--surface)', overflow: 'hidden' }}>
                   {top3.thumbnailUrl ? <img src={top3.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={18} />}
                 </div>
               ) : (
@@ -333,9 +333,9 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
               )}
               <div style={{
                 position: 'absolute', bottom: -5, left: -5, width: 18, height: 18,
-                borderRadius: '50%', background: '#b45309', display: 'flex',
+                borderRadius: '50%', background: 'var(--accent)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', fontSize: 10,
-                fontWeight: 700, color: '#fff', border: '1.5px solid #ffffff',
+                fontWeight: 700, color: 'var(--surface)', border: '1.5px solid var(--surface)',
               }}>
                 3
               </div>
@@ -345,7 +345,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', gap: 3 }}>
               <AnimatedNumber value={getScore(top3)} duration={700} formatFn={fmtNum} />
-              <span style={{ fontSize: 10, color: '#b45309', fontWeight: 500 }}>{scoreSuffix}</span>
+              <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 500 }}>{scoreSuffix}</span>
             </div>
             <div
               className="podium-step-transition"
@@ -357,7 +357,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>3</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>3</span>
             </div>
           </div>
         )}
@@ -366,7 +366,7 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
       {/* TOP 4 - TOP 8 */}
       {runnerUps.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
             Nhóm Bám Đuổi (Top 4 — Top 8)
           </div>
           {runnerUps.map((u, i) => {
@@ -399,14 +399,14 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                     justifyContent: 'center',
                     fontSize: 11,
                     fontWeight: 700,
-                    color: '#64748b',
+                    color: 'var(--text-secondary)',
                     flexShrink: 0,
                   }}
                 >
                   {rank}
                 </div>
                 {isYouTube ? (
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#e2e8f0', overflow: 'hidden', flexShrink: 0 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--border)', overflow: 'hidden', flexShrink: 0 }}>
                     {u.thumbnailUrl ? <img src={u.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={14} />}
                   </div>
                 ) : (
@@ -418,8 +418,8 @@ function DynamicPodium({ items = [], nameKey = 'name', scoreKey = 'score', score
                     {u.userLevel && <LevelText user={u} compact />}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
-                  <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} /> <span style={{ fontSize: 10, color: '#94a3b8' }}>{scoreSuffix}</span>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
+                  <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} /> <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{scoreSuffix}</span>
                 </div>
               </div>
             );
@@ -450,8 +450,8 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
 
   if (!myEntry) {
     return (
-      <div style={{ ...CARD, padding: '12px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, color: '#64748b', fontSize: 13 }}>
-        <Trophy size={16} color="#94a3b8" />
+      <div style={{ ...CARD, padding: '12px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-secondary)', fontSize: 13 }}>
+        <Trophy size={16} color="var(--text-muted)" />
         {isTeam ? 'Đội của bạn chưa có vị trí xếp hạng trong danh sách này.' : 'Bạn chưa có điểm trong bảng xếp hạng này.'}
       </div>
     );
@@ -483,8 +483,8 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
           style={{
             width: 40,
             height: 40,
-            background: '#b45309',
-            color: '#ffffff',
+            background: 'var(--accent)',
+            color: 'var(--surface)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -500,12 +500,12 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
         <AvatarBox user={myEntry || currentUser} name={myEntry.userName || myEntry.teamName || currentUser.name} userId={currentUser.id} size={36} idx={myRank - 1} />
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isTeam ? `Vị trí Đội của bạn · ${myEntry.teamName}` : `Vị trí của bạn · ${myEntry.userName || currentUser.name}`}
             </span>
             {!isTeam && <LevelText user={currentUser} compact />}
           </div>
-          <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: '#64748b', fontSize: 11 }}>
+          <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', color: 'var(--text-secondary)', fontSize: 11 }}>
             <span>{fmtNum(myScore)} {scoreSuffix}</span>
             {gap > 0 && <span style={{ color: '#dc2626' }}>(-{fmtNum(gap)} {scoreSuffix} so với #1)</span>}
             {gap === 0 && (
@@ -526,8 +526,8 @@ function MyRankBanner({ currentUser, items = [], isTeam = false, scoreKey = 'sco
             alignItems: 'center',
             gap: 6,
             border: '1px solid rgba(180,83,9,0.25)',
-            background: '#ffffff',
-            color: '#b45309',
+            background: 'var(--surface)',
+            color: 'var(--accent)',
             borderRadius: 4,
             padding: '6px 12px',
             fontSize: 12,
@@ -944,8 +944,8 @@ export default function Leaderboard() {
           ...CARD,
           padding: '20px 24px',
           marginBottom: 16,
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-          color: '#ffffff',
+          background: 'linear-gradient(135deg, var(--text-primary) 0%, #1e293b 100%)',
+          color: 'var(--surface)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -955,28 +955,28 @@ export default function Leaderboard() {
       >
         <div>
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
             <span
               onClick={handleBackToCompany}
-              style={{ color: '#cbd5e1', cursor: selectedTeamId ? 'pointer' : 'default', textDecoration: selectedTeamId ? 'underline' : 'none' }}
+              style={{ color: 'var(--border-2)', cursor: selectedTeamId ? 'pointer' : 'default', textDecoration: selectedTeamId ? 'underline' : 'none' }}
             >
               Công Ty (Tất cả)
             </span>
             {selectedTeamId && (
               <>
-                <ChevronRight size={13} color="#64748b" />
+                <ChevronRight size={13} color="var(--text-secondary)" />
                 <span style={{ color: '#f59e0b', fontWeight: 600 }}>{selectedTeamDetails?.teamName || `Team #${selectedTeamId}`}</span>
               </>
             )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Trophy size={22} color="#b45309" />
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#ffffff', lineHeight: 1.25 }}>
+            <Trophy size={22} color="var(--accent)" />
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--surface)', lineHeight: 1.25 }}>
               {selectedTeamId ? `Xếp Hạng Nội Bộ · ${selectedTeamDetails?.teamName || `Đội #${selectedTeamId}`}` : 'Bảng Xếp Hạng Toàn Công Ty'}
             </h1>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
             {selectedTeamId
               ? 'Phân cấp Đội Nhóm: Theo dõi thành viên thi đấu và danh sách kênh YouTube thuộc đội.'
               : 'Xếp hạng phân cấp: Cấp 1 Công ty → Cấp 2 Đội nhóm → Cấp 3 Cá nhân & Kênh YouTube.'}
@@ -992,7 +992,7 @@ export default function Leaderboard() {
                 alignItems: 'center',
                 gap: 6,
                 background: 'rgba(255,255,255,0.15)',
-                color: '#fff',
+                color: 'var(--surface)',
                 border: '1px solid rgba(255,255,255,0.25)',
                 padding: '7px 14px',
                 borderRadius: 4,
@@ -1013,7 +1013,7 @@ export default function Leaderboard() {
               alignItems: 'center',
               gap: 6,
               background: 'rgba(255,255,255,0.1)',
-              color: '#f8fafc',
+              color: 'var(--surface-soft)',
               border: '1px solid rgba(255,255,255,0.18)',
               padding: '7px 14px',
               borderRadius: 4,
@@ -1038,7 +1038,7 @@ export default function Leaderboard() {
             flexWrap: 'wrap',
             gap: '8px 10px',
             marginBottom: 16,
-            background: '#ffffff',
+            background: 'var(--surface)',
             border: '1px solid rgba(15,23,42,0.08)',
             padding: '5px 6px',
             borderRadius: 6,
@@ -1080,9 +1080,9 @@ export default function Leaderboard() {
                     borderRadius: 4,
                     border: 'none',
                     background: isActive
-                      ? (tab.id === 'youtube' ? '#dc2626' : '#b45309')
+                      ? (tab.id === 'youtube' ? '#dc2626' : 'var(--accent)')
                       : 'transparent',
-                    color: isActive ? '#ffffff' : '#64748b',
+                    color: isActive ? 'var(--surface)' : 'var(--text-secondary)',
                     fontSize: 12.5,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -1129,8 +1129,8 @@ export default function Leaderboard() {
                     onClick={() => handlePeriodChange(p.id)}
                     style={{
                       border: 'none',
-                      background: currentPeriod === p.id ? '#b45309' : 'transparent',
-                      color: currentPeriod === p.id ? '#ffffff' : '#64748b',
+                      background: currentPeriod === p.id ? 'var(--accent)' : 'transparent',
+                      color: currentPeriod === p.id ? 'var(--surface)' : 'var(--text-secondary)',
                       padding: '5px 9px',
                       fontSize: 11.5,
                       fontWeight: 600,
@@ -1172,7 +1172,7 @@ export default function Leaderboard() {
                     style={{
                       border: 'none',
                       background: urlMetric === m.id ? '#dc2626' : 'transparent',
-                      color: urlMetric === m.id ? '#ffffff' : '#64748b',
+                      color: urlMetric === m.id ? 'var(--surface)' : 'var(--text-secondary)',
                       padding: '5px 9px',
                       fontSize: 11.5,
                       fontWeight: 600,
@@ -1191,13 +1191,13 @@ export default function Leaderboard() {
             {/* INSTANT SEARCH */}
             {(scopeMode === 'members' || scopeMode === 'youtube') && (
               <div style={{ position: 'relative' }}>
-                <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   placeholder={scopeMode === 'youtube' ? (youtubeView === 'teams' ? 'Tìm đội...' : 'Tìm kênh...') : 'Tìm thành viên...'}
                   style={{
-                    background: '#ffffff',
+                    background: 'var(--surface)',
                     border: '1px solid rgba(15,23,42,0.12)',
                     padding: '5px 8px 5px 24px',
                     fontSize: 11.5,
@@ -1207,7 +1207,7 @@ export default function Leaderboard() {
                     borderRadius: 3,
                     transition: 'border-color var(--motion-fast) var(--ease-standard)',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#b45309'; }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)'; }}
                 />
               </div>
@@ -1224,7 +1224,7 @@ export default function Leaderboard() {
             flexWrap: 'wrap',
             gap: '8px 10px',
             marginBottom: 16,
-            background: '#ffffff',
+            background: 'var(--surface)',
             border: '1px solid rgba(15,23,42,0.08)',
             padding: '5px 6px',
             borderRadius: 6,
@@ -1242,13 +1242,13 @@ export default function Leaderboard() {
                 padding: '7px 12px',
                 borderRadius: 4,
                 border: 'none',
-                background: teamSubView === 'members' ? '#b45309' : 'transparent',
-                color: teamSubView === 'members' ? '#ffffff' : '#64748b',
+                background: teamSubView === 'members' ? 'var(--accent)' : 'transparent',
+                color: teamSubView === 'members' ? 'var(--surface)' : 'var(--text-secondary)',
                 fontSize: 12.5,
                 fontWeight: 600,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'background-color var(--motion-fast) var(--ease-spring), color var(--motion-fast) var(--ease-spring), transform var(--motion-fast) var(--ease-spring)',
                 transform: teamSubView === 'members' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
@@ -1265,12 +1265,12 @@ export default function Leaderboard() {
                 borderRadius: 4,
                 border: 'none',
                 background: teamSubView === 'youtube' ? '#dc2626' : 'transparent',
-                color: teamSubView === 'youtube' ? '#ffffff' : '#64748b',
+                color: teamSubView === 'youtube' ? 'var(--surface)' : 'var(--text-secondary)',
                 fontSize: 12.5,
                 fontWeight: 600,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'background-color var(--motion-fast) var(--ease-spring), color var(--motion-fast) var(--ease-spring), transform var(--motion-fast) var(--ease-spring)',
                 transform: teamSubView === 'youtube' ? 'scale(1.02)' : 'scale(1)',
               }}
             >
@@ -1292,8 +1292,8 @@ export default function Leaderboard() {
                   onClick={() => handlePeriodChange(p.id)}
                   style={{
                     border: 'none',
-                    background: currentPeriod === p.id ? '#b45309' : 'transparent',
-                    color: currentPeriod === p.id ? '#ffffff' : '#64748b',
+                    background: currentPeriod === p.id ? 'var(--accent)' : 'transparent',
+                    color: currentPeriod === p.id ? 'var(--surface)' : 'var(--text-secondary)',
                     padding: '5px 9px',
                     fontSize: 11.5,
                     fontWeight: 600,
@@ -1334,10 +1334,10 @@ export default function Leaderboard() {
       ) : error ? (
         <div style={{ ...CARD, padding: '40px 20px', textAlign: 'center' }}>
           <AlertCircle size={32} color="#dc2626" style={{ marginBottom: 10 }} />
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{error}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{error}</div>
           <button
             onClick={() => fetchData()}
-            style={{ marginTop: 12, background: '#0f172a', color: '#fff', border: 'none', padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
+            style={{ marginTop: 12, background: 'var(--text-primary)', color: 'var(--surface)', border: 'none', padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
           >
             Thử lại
           </button>
@@ -1373,22 +1373,22 @@ export default function Leaderboard() {
                   {/* Members Table */}
                   <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         Thành Viên Thuộc Đội ({memberRankings.items?.length || 0} người)
                       </span>
                     </div>
                     <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Cấp Độ</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Tích Lũy</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Thành Viên</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Cấp Độ</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Điểm Tích Lũy</th>
                         </tr>
                       </thead>
                       <FlipTableBody resetKey={`drilldown:${selectedTeamDetails?.teamId || ''}`}>
                         {memberRankings.items?.length === 0 ? (
-                          <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Đội này chưa có thành viên tham gia thi đấu</td></tr>
+                          <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Đội này chưa có thành viên tham gia thi đấu</td></tr>
                         ) : (
                           memberRankings.items.map((m, idx) => {
                             const rank = m.rank || (rankingPage - 1) * 100 + idx + 1;
@@ -1406,7 +1406,7 @@ export default function Leaderboard() {
                                 }}
                               >
                                 <td style={{ padding: '12px 16px' }}>
-                                  <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
+                                  <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? 'var(--text-secondary)' : rank === 3 ? 'var(--accent)' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? 'var(--surface)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                     {rank}
                                   </span>
                                 </td>
@@ -1415,11 +1415,11 @@ export default function Leaderboard() {
                                     <AvatarBox user={m} name={m.userName} userId={m.userId || m.id} size={30} idx={rank - 1} />
                                     <div>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{m.userName}</span>
+                                        <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{m.userName}</span>
                                         {m.jobTitle && <JobTitleBadge jobTitle={m.jobTitle} size="xs" />}
-                                        {isMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', background: '#b45309', color: '#fff', borderRadius: 2 }}>BẠN</span>}
+                                        {isMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', background: 'var(--accent)', color: 'var(--surface)', borderRadius: 2 }}>BẠN</span>}
                                       </div>
-                                      <div style={{ fontSize: 10, color: '#94a3b8' }}>{m.userEmail}</div>
+                                      <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{m.userEmail}</div>
                                     </div>
                                   </div>
                                 </td>
@@ -1427,10 +1427,10 @@ export default function Leaderboard() {
                                   <LevelText user={m} />
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)', fontFamily: "'JetBrains Mono',monospace" }}>
                                     <AnimatedNumber value={m.score ?? m.points ?? m.totalScore ?? 0} duration={700} formatFn={fmtNum} />
                                   </span>
-                                  <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 3 }}>XP</span>
+                                  <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 3 }}>XP</span>
                                 </td>
                               </tr>
                             );
@@ -1444,22 +1444,22 @@ export default function Leaderboard() {
                 /* Team YouTube Channels */
                 <div style={{ ...CARD, overflowX: 'auto' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                       Kênh YouTube Thuộc Quyền Sở Hữu ({teamChannels.length} kênh)
                     </span>
                   </div>
                   <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                        <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                        <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Kênh YouTube</th>
-                        <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Lượt Xem</th>
-                        <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</th>
+                        <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hạng</th>
+                        <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Kênh YouTube</th>
+                        <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Lượt Xem</th>
+                        <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Subscribers</th>
                       </tr>
                     </thead>
                     <FlipTableBody resetKey={`drilldown-yt:${selectedTeamDetails?.teamId || ''}`}>
                       {teamChannels.length === 0 ? (
-                        <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Đội này chưa liên kết kênh YouTube nào</td></tr>
+                        <tr><td colSpan={4} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Đội này chưa liên kết kênh YouTube nào</td></tr>
                       ) : (
                         teamChannels.map((c, idx) => (
                           <tr
@@ -1469,7 +1469,7 @@ export default function Leaderboard() {
                             style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}
                           >
                             <td style={{ padding: '12px 16px' }}>
-                              <span style={{ width: 24, height: 24, background: idx === 0 ? '#dc2626' : 'rgba(15,23,42,0.06)', color: idx === 0 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
+                              <span style={{ width: 24, height: 24, background: idx === 0 ? '#dc2626' : 'rgba(15,23,42,0.06)', color: idx === 0 ? 'var(--surface)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                 {c.rank || (rankingPage - 1) * 100 + idx + 1}
                               </span>
                             </td>
@@ -1479,8 +1479,8 @@ export default function Leaderboard() {
                                   {c.thumbnailUrl ? <img src={c.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={16} />}
                                 </div>
                                 <div>
-                                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{c.title}</div>
-                                  <div style={{ fontSize: 10, color: '#94a3b8' }}>{c.customUrl || c.channelId}</div>
+                                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{c.title}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{c.customUrl || c.channelId}</div>
                                 </div>
                               </div>
                             </td>
@@ -1489,7 +1489,7 @@ export default function Leaderboard() {
                                 <AnimatedNumber value={c.views || 0} duration={700} formatFn={fmtNum} />
                               </span>
                             </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
+                            <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--text-primary)' }}>
                               {fmtNum(c.subscribers)}
                             </td>
                           </tr>
@@ -1629,34 +1629,34 @@ export default function Leaderboard() {
 
                   <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         Danh Sách Thứ Hạng Đội Nhóm ({teamRankings.items?.length || 0} đội)
                       </span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>Click vào đội để xem thành viên & kênh</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Click vào đội để xem thành viên & kênh</span>
                     </div>
                     <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Tên Đội</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm Thi Đấu</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Mùa Vô Địch</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hành Động</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Tên Đội</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Điểm Thi Đấu</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Thành Viên</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Mùa Vô Địch</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hành Động</th>
                         </tr>
                       </thead>
                       <FlipTableBody resetKey={`teams:${currentPeriod}:${searchKeyword}`}>
                         {teamRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
-                              <Users size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
-                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                              <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 14 }}>
                                 Chưa có dữ liệu xếp hạng đội nhóm trong chu kỳ này
                               </div>
                               {currentPeriod !== 'all-time' && (
                                 <button
                                   onClick={() => handlePeriodChange('all-time')}
-                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                  style={{ marginTop: 12, background: 'var(--surface-muted)', border: '1px solid var(--border-2)', color: 'var(--accent)', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
                                   Xem điểm hiện tại
                                 </button>
@@ -1682,37 +1682,37 @@ export default function Leaderboard() {
                               >
                                 <td style={{ padding: '12px 16px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
+                                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? 'var(--text-secondary)' : rank === 3 ? 'var(--accent)' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? 'var(--surface)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                       {rank}
                                     </span>
                                     <TrendIndicator trend={row.trend} />
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px' }}>
-                                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
+                                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>
                                     {row.teamName}
-                                    {isMyTeam && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, padding: '1px 5px', background: '#b45309', color: '#fff', borderRadius: 2 }}>ĐỘI BẠN</span>}
+                                    {isMyTeam && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, padding: '1px 5px', background: 'var(--accent)', color: 'var(--surface)', borderRadius: 2 }}>ĐỘI BẠN</span>}
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono',monospace" }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)', fontFamily: "'JetBrains Mono',monospace" }}>
                                     <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} />
                                   </span>
                                 </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b' }}>
+                                <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                   {row.activeMembersCount || '—'}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                   {(row.seasonsWon || 0) > 0 ? (
-                                    <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 6px', fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 4 }}>
-                                      <Trophy size={11} color="#b45309" /> {row.seasonsWon}
+                                    <span style={{ background: '#fef3c7', color: 'var(--accent)', padding: '2px 6px', fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 4 }}>
+                                      <Trophy size={11} color="var(--accent)" /> {row.seasonsWon}
                                     </span>
                                   ) : (
-                                    <span style={{ color: '#cbd5e1' }}>—</span>
+                                    <span style={{ color: 'var(--border-2)' }}>—</span>
                                   )}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                  <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                  <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                                     Chi tiết <ChevronRight size={13} />
                                   </span>
                                 </td>
@@ -1750,39 +1750,39 @@ export default function Leaderboard() {
 
                   <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         Toàn Bộ Thành Viên ({memberRankings.items?.length || 0} người)
                       </span>
                     </div>
                     <table style={{ width: '100%', minWidth: 680, borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Thành Viên</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Đội Nhóm</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Cấp Độ</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Điểm XP</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Thành Viên</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Đội Nhóm</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Cấp Độ</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Điểm XP</th>
                         </tr>
                       </thead>
                       <FlipTableBody resetKey={`members:${currentPeriod}:${searchKeyword}`}>
                         {memberRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={5} style={{ padding: 48, textAlign: 'center' }}>
-                              <User size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
-                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                              <User size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 14 }}>
                                 {searchKeyword ? `Không tìm thấy thành viên phù hợp với "${searchKeyword}"` : 'Chưa có dữ liệu thành viên trong chu kỳ này'}
                               </div>
                               {searchKeyword ? (
                                 <button
                                   onClick={() => setSearchKeyword('')}
-                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                  style={{ marginTop: 12, background: 'var(--surface-muted)', border: '1px solid var(--border-2)', color: 'var(--text-secondary)', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
                                   Xóa tìm kiếm
                                 </button>
                               ) : currentPeriod !== 'all-time' && (
                                 <button
                                   onClick={() => handlePeriodChange('all-time')}
-                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#b45309', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                  style={{ marginTop: 12, background: 'var(--surface-muted)', border: '1px solid var(--border-2)', color: 'var(--accent)', fontWeight: 600, padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
                                   Xem điểm hiện tại
                                 </button>
@@ -1808,7 +1808,7 @@ export default function Leaderboard() {
                               >
                                 <td style={{ padding: '12px 16px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
+                                    <span style={{ width: 24, height: 24, background: rank === 1 ? '#f59e0b' : rank === 2 ? 'var(--text-secondary)' : rank === 3 ? 'var(--accent)' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? 'var(--surface)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                       {rank}
                                     </span>
                                     <TrendIndicator trend={u.trend} />
@@ -1819,15 +1819,15 @@ export default function Leaderboard() {
                                     <AvatarBox user={u} name={u.userName} userId={u.userId || u.id} size={30} idx={rank - 1} />
                                     <div>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                        <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{u.userName}</span>
+                                        <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{u.userName}</span>
                                         {u.jobTitle && <JobTitleBadge jobTitle={u.jobTitle} size="xs" />}
-                                        {isMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', background: '#b45309', color: '#fff', borderRadius: 2 }}>BẠN</span>}
+                                        {isMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 4px', background: 'var(--accent)', color: 'var(--surface)', borderRadius: 2 }}>BẠN</span>}
                                       </div>
-                                      <div style={{ fontSize: 10, color: '#94a3b8' }}>{u.userEmail}</div>
+                                      <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{u.userEmail}</div>
                                     </div>
                                   </div>
                                 </td>
-                                <td style={{ padding: '12px 16px', color: '#64748b', fontWeight: 500 }}>
+                                <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                   {u.teamName ? (
                                     <span
                                       onClick={(e) => {
@@ -1836,7 +1836,7 @@ export default function Leaderboard() {
                                       }}
                                       style={{
                                         cursor: u.teamId ? 'pointer' : 'default',
-                                        color: u.teamId ? '#0f172a' : '#64748b',
+                                        color: u.teamId ? 'var(--text-primary)' : 'var(--text-secondary)',
                                         textDecoration: u.teamId ? 'underline' : 'none',
                                       }}
                                     >
@@ -1853,7 +1853,7 @@ export default function Leaderboard() {
                                   <span style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono',monospace" }}>
                                     <AnimatedNumber value={scoreVal} duration={700} formatFn={fmtNum} />
                                   </span>
-                                  <span style={{ fontSize: 10, color: '#94a3b8', marginLeft: 3 }}>XP</span>
+                                  <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 3 }}>XP</span>
                                 </td>
                               </tr>
                             );
@@ -1880,34 +1880,34 @@ export default function Leaderboard() {
 
                   <div style={{ ...CARD, overflowX: 'auto' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         {youtubeView === 'teams' ? 'Đội nhóm YouTube' : 'Kênh YouTube'} ({youtubeRankings.total || youtubeRankings.items?.length || 0})
                       </span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>{youtubeView === 'teams' ? 'Tổng số liệu các kênh thuộc đội' : channelTeam === 'unassigned' ? 'Kênh chưa gán đội' : 'Kênh có đội và kênh chưa gán đội'}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{youtubeView === 'teams' ? 'Tổng số liệu các kênh thuộc đội' : channelTeam === 'unassigned' ? 'Kênh chưa gán đội' : 'Kênh có đội và kênh chưa gán đội'}</span>
                     </div>
                     <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', background: 'rgba(15,23,42,0.02)' }}>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Hạng</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Đội nhóm' : 'Kênh YouTube'}</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Số kênh' : 'Đội sở hữu'}</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Lượt Xem</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subscribers</th>
-                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Tăng Trưởng (30D)</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Hạng</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Đội nhóm' : 'Kênh YouTube'}</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{youtubeView === 'teams' ? 'Số kênh' : 'Đội sở hữu'}</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Lượt Xem</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Subscribers</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Tăng Trưởng (30D)</th>
                         </tr>
                       </thead>
                       <FlipTableBody resetKey={`youtube:${urlMetric}:${searchKeyword}`}>
                         {youtubeRankings.items?.length === 0 ? (
                           <tr>
                             <td colSpan={6} style={{ padding: 48, textAlign: 'center' }}>
-                              <Tv size={36} color="#94a3b8" style={{ margin: '0 auto 12px' }} />
-                              <div style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+                              <Tv size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                              <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 14 }}>
                                 {searchKeyword ? `Không tìm thấy ${youtubeView === 'teams' ? 'đội' : 'kênh'} phù hợp với "${searchKeyword}"` : `Chưa có dữ liệu ${youtubeView === 'teams' ? 'đội nhóm' : 'kênh YouTube'}`}
                               </div>
                               {searchKeyword && (
                                 <button
                                   onClick={() => setSearchKeyword('')}
-                                  style={{ marginTop: 12, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
+                                  style={{ marginTop: 12, background: 'var(--surface-muted)', border: '1px solid var(--border-2)', color: 'var(--text-secondary)', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}
                                 >
                                   Xóa tìm kiếm
                                 </button>
@@ -1925,7 +1925,7 @@ export default function Leaderboard() {
                                 style={{ borderBottom: '1px solid rgba(15,23,42,0.04)' }}
                               >
                                 <td style={{ padding: '12px 16px' }}>
-                                  <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? '#64748b' : rank === 3 ? '#b45309' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
+                                  <span style={{ width: 24, height: 24, background: rank === 1 ? '#dc2626' : rank === 2 ? 'var(--text-secondary)' : rank === 3 ? 'var(--accent)' : 'rgba(15,23,42,0.06)', color: rank <= 3 ? 'var(--surface)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>
                                     {rank}
                                   </span>
                                 </td>
@@ -1935,22 +1935,22 @@ export default function Leaderboard() {
                                       {c.thumbnailUrl ? <img src={c.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Tv size={16} />}
                                     </div>
                                     <div>
-                                      <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{c.title}</div>
-                                      <div style={{ fontSize: 10, color: '#94a3b8' }}>{c.customUrl || c.channelId}</div>
+                                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{c.title}</div>
+                                      <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{c.customUrl || c.channelId}</div>
                                     </div>
                                   </div>
                                 </td>
                                 <td style={{ padding: '12px 16px' }}>
                                   {youtubeView === 'teams' ? (
-                                    <button type="button" onClick={() => handleDrillDownTeam({ ...c, teamView: 'youtube' })} style={{ border: 0, background: 'transparent', color: '#0f172a', cursor: 'pointer' }}>{c.channelsCount || 0} kênh <ChevronRight size={12} /></button>
+                                    <button type="button" onClick={() => handleDrillDownTeam({ ...c, teamView: 'youtube' })} style={{ border: 0, background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>{c.channelsCount || 0} kênh <ChevronRight size={12} /></button>
                                   ) : c.isUnassigned || !c.teamId ? (
-                                    <span style={{ padding: '2px 6px', fontSize: 10, fontWeight: 600, background: '#f1f5f9', color: '#64748b', borderRadius: 4 }}>
+                                    <span style={{ padding: '2px 6px', fontSize: 10, fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-secondary)', borderRadius: 4 }}>
                                       Chưa gán đội
                                     </span>
                                   ) : (
                                     <span
                                       onClick={() => handleDrillDownTeam({ teamId: c.teamId, name: c.teamName })}
-                                      style={{ fontWeight: 600, color: '#0f172a', cursor: 'pointer', textDecoration: 'underline' }}
+                                      style={{ fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer', textDecoration: 'underline' }}
                                     >
                                       {c.teamName}
                                     </span>
@@ -1961,7 +1961,7 @@ export default function Leaderboard() {
                                     <AnimatedNumber value={c.views || 0} duration={700} formatFn={fmtNum} />
                                   </span>
                                 </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
+                                <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--text-primary)' }}>
                                   {fmtNum(c.subscribers)}
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right' }}>
@@ -1977,7 +1977,7 @@ export default function Leaderboard() {
                                       {Number(c.viewsGrowth30dPct) >= 0 ? '+' : ''}{Number(c.viewsGrowth30dPct).toFixed(1)}%
                                     </span>
                                   ) : (
-                                    <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 500 }}>
                                       —
                                     </span>
                                   )}
@@ -1999,7 +1999,7 @@ export default function Leaderboard() {
                   <div style={{ ...CARD, padding: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                       <Sparkles size={18} color="#f59e0b" />
-                      <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                      <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                         Ngôi Đền Danh Vọng — MVPs
                       </h2>
                     </div>
@@ -2020,20 +2020,20 @@ export default function Leaderboard() {
                               borderRadius: 4,
                             }}
                           >
-                            <div style={{ width: 36, height: 36, background: '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                              <Crown size={18} color="#fff" />
+                            <div style={{ width: 36, height: 36, background: '#f59e0b', color: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
+                              <Crown size={18} color="var(--surface)" />
                             </div>
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{mvp.userName}</div>
-                              <div style={{ fontSize: 10, color: '#64748b' }}>{mvp.teamName || 'Thành viên'}</div>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', marginTop: 2 }}>
+                              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{mvp.userName}</div>
+                              <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{mvp.teamName || 'Thành viên'}</div>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', marginTop: 2 }}>
                                 {mvp.mvpCount} Lần MVP · {fmtNum(mvp.lifetimeScore)} XP
                               </div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div style={{ color: '#94a3b8', fontSize: 12, padding: 16 }}>Chưa có danh hiệu MVP nào</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: 16 }}>Chưa có danh hiệu MVP nào</div>
                       )}
                     </div>
                   </div>
@@ -2041,8 +2041,8 @@ export default function Leaderboard() {
                   {/* CHAMPIONS */}
                   <div style={{ ...CARD, padding: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                      <Trophy size={18} color="#b45309" />
-                      <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                      <Trophy size={18} color="var(--accent)" />
+                      <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                         Đội Vô Địch Mùa Giải
                       </h2>
                     </div>
@@ -2063,19 +2063,19 @@ export default function Leaderboard() {
                               borderRadius: 4,
                             }}
                           >
-                            <div style={{ width: 36, height: 36, background: '#b45309', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                              <Trophy size={18} color="#fff" />
+                            <div style={{ width: 36, height: 36, background: 'var(--accent)', color: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
+                              <Trophy size={18} color="var(--surface)" />
                             </div>
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{t.teamName}</div>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', marginTop: 2 }}>
+                              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{t.teamName}</div>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', marginTop: 2 }}>
                                 {t.seasonsWon} Mùa Vô Địch · {fmtNum(t.grandPoints)} GP
                               </div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div style={{ color: '#94a3b8', fontSize: 12, padding: 16 }}>Chưa có đội nào vô địch</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: 16 }}>Chưa có đội nào vô địch</div>
                       )}
                     </div>
                   </div>

@@ -52,7 +52,7 @@ export default function YouTubeTrendChart({
   }, [data]);
 
   const metricLabel = selectedMetric === 'views' ? 'Lượt xem (Views)' : 'Người đăng ký (Subscribers)';
-  const metricColor = selectedMetric === 'views' ? '#b45309' : '#047857'; // Amber vs Emerald
+  const metricColor = selectedMetric === 'views' ? 'var(--accent)' : '#047857'; // Amber vs Emerald
   const gradientId = selectedMetric === 'views' ? 'chart-amber-grad' : 'chart-emerald-grad';
 
   const maxValue = useMemo(() => {
@@ -138,12 +138,12 @@ export default function YouTubeTrendChart({
   ];
 
   return (
-    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '18px 20px', borderRadius: 0 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '18px 20px', borderRadius: 0 }}>
       {/* Chart Topline Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{title}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</span>
             {deltaSummary && (
               <span
                 style={{
@@ -152,7 +152,7 @@ export default function YouTubeTrendChart({
                   gap: 3,
                   fontSize: 12,
                   fontWeight: 600,
-                  color: deltaSummary.isPositive ? '#047857' : '#b91c1c',
+                  color: deltaSummary.isPositive ? '#047857' : 'var(--danger)',
                   background: deltaSummary.isPositive ? '#ecfdf5' : '#fef2f2',
                   padding: '2px 7px',
                 }}
@@ -165,7 +165,7 @@ export default function YouTubeTrendChart({
               </span>
             )}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Đang hiển thị {metricLabel} theo thời gian thực
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function YouTubeTrendChart({
         {showControls && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {/* Metric Switcher */}
-            <div style={{ display: 'flex', background: '#f1f5f9', padding: 2 }}>
+            <div style={{ display: 'flex', background: 'var(--surface-muted)', padding: 2 }}>
               <button
                 type="button"
                 onClick={() => {
@@ -187,8 +187,8 @@ export default function YouTubeTrendChart({
                   fontWeight: 600,
                   cursor: 'pointer',
                   border: 'none',
-                  background: selectedMetric === 'views' ? '#ffffff' : 'transparent',
-                  color: selectedMetric === 'views' ? '#0f172a' : '#64748b',
+                  background: selectedMetric === 'views' ? 'var(--surface)' : 'transparent',
+                  color: selectedMetric === 'views' ? 'var(--text-primary)' : 'var(--text-secondary)',
                   boxShadow: selectedMetric === 'views' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   display: 'flex',
                   alignItems: 'center',
@@ -210,8 +210,8 @@ export default function YouTubeTrendChart({
                   fontWeight: 600,
                   cursor: 'pointer',
                   border: 'none',
-                  background: selectedMetric === 'subscribers' ? '#ffffff' : 'transparent',
-                  color: selectedMetric === 'subscribers' ? '#0f172a' : '#64748b',
+                  background: selectedMetric === 'subscribers' ? 'var(--surface)' : 'transparent',
+                  color: selectedMetric === 'subscribers' ? 'var(--text-primary)' : 'var(--text-secondary)',
                   boxShadow: selectedMetric === 'subscribers' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   display: 'flex',
                   alignItems: 'center',
@@ -225,7 +225,7 @@ export default function YouTubeTrendChart({
 
             {/* Period Selector */}
             {onPeriodChange && (
-              <div style={{ display: 'flex', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', background: 'var(--surface-soft)', border: '1px solid var(--border)' }}>
                 {PERIODS.map((p) => (
                   <button
                     key={p.key}
@@ -237,9 +237,9 @@ export default function YouTubeTrendChart({
                       fontWeight: 600,
                       cursor: 'pointer',
                       border: 'none',
-                      borderRight: '1px solid #e2e8f0',
-                      background: period === p.key ? '#0f172a' : '#ffffff',
-                      color: period === p.key ? '#ffffff' : '#475569',
+                      borderRight: '1px solid var(--border)',
+                      background: period === p.key ? 'var(--text-primary)' : 'var(--surface)',
+                      color: period === p.key ? 'var(--surface)' : 'var(--text-secondary)',
                     }}
                   >
                     {p.label}
@@ -262,15 +262,15 @@ export default function YouTubeTrendChart({
             alignItems: 'center',
             justifyContent: 'center',
             background: '#fafafa',
-            border: '1px dashed #cbd5e1',
-            color: '#64748b',
+            border: '1px dashed var(--border-2)',
+            color: 'var(--text-secondary)',
             fontSize: 13,
             gap: 6,
           }}
         >
-          <Calendar size={22} color="#94a3b8" />
+          <Calendar size={22} color="var(--text-muted)" />
           <span>Chưa đủ dữ liệu lịch sử để vẽ biểu đồ</span>
-          <span style={{ fontSize: 11, color: '#94a3b8' }}>Dữ liệu sẽ hiển thị khi hệ thống ghi nhận snapshot theo chu kỳ</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Dữ liệu sẽ hiển thị khi hệ thống ghi nhận snapshot theo chu kỳ</span>
         </div>
       ) : (
         <div className="motion-fade-in" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
@@ -282,8 +282,8 @@ export default function YouTubeTrendChart({
           >
             <defs>
               <linearGradient id="chart-amber-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#b45309" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#b45309" stopOpacity="0.0" />
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
               </linearGradient>
               <linearGradient id="chart-emerald-grad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#047857" stopOpacity="0.22" />
@@ -309,7 +309,7 @@ export default function YouTubeTrendChart({
                     x={PAD_X - 10}
                     y={y + 3}
                     textAnchor="end"
-                    fill="#64748b"
+                    fill="var(--text-secondary)"
                     fontSize="10"
                     fontFamily="'JetBrains Mono', monospace"
                     fontWeight="600"
@@ -347,8 +347,8 @@ export default function YouTubeTrendChart({
                   cx={p.x}
                   cy={p.y}
                   r={hoveredPoint?.index === idx ? 5 : points.length > 30 ? 2 : 3.5}
-                  fill={hoveredPoint?.index === idx ? '#0f172a' : metricColor}
-                  stroke="#ffffff"
+                  fill={hoveredPoint?.index === idx ? 'var(--text-primary)' : metricColor}
+                  stroke="var(--surface)"
                   strokeWidth="1.5"
                 />
                 <title>{`${p.row.date}: ${p.row[selectedMetric].toLocaleString()} ${selectedMetric === 'views' ? 'views' : 'subs'}`}</title>
@@ -362,7 +362,7 @@ export default function YouTubeTrendChart({
                 x={lbl.x}
                 y={HEIGHT - 12}
                 textAnchor={idx === 0 ? 'start' : idx === xLabels.length - 1 ? 'end' : 'middle'}
-                fill="#64748b"
+                fill="var(--text-secondary)"
                 fontSize="10"
                 fontFamily="'JetBrains Mono', monospace"
               >
@@ -378,8 +378,8 @@ export default function YouTubeTrendChart({
                 position: 'absolute',
                 top: Math.max(8, hoveredPoint.y - 48),
                 left: Math.min(WIDTH - 140, Math.max(10, hoveredPoint.x - 60)),
-                background: '#0f172a',
-                color: '#ffffff',
+                background: 'var(--text-primary)',
+                color: 'var(--surface)',
                 padding: '4px 8px',
                 fontSize: 11,
                 fontFamily: "'JetBrains Mono', monospace",

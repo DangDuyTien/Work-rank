@@ -7,6 +7,7 @@ const routes = require('./routes');
 const tradingViewController = require('./controllers/tradingView.controller');
 const corsOptions = require('./utils/corsOptions');
 const { notFound, errorHandler } = require('./middlewares/error.middleware');
+const { auth, requireRole } = require('./middlewares/auth.middleware');
 const { authLimiter, apiLimiter } = require('./middlewares/rateLimit.middleware');
 const asyncHandler = require('./utils/asyncHandler');
 
@@ -49,10 +50,14 @@ app.get('/api/health/live', asyncHandler(healthController.live));
 app.get('/api/health/ready', asyncHandler(healthController.ready));
 
 // Static files for uploads (Quiz images, user assets, etc.)
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.set('X-Content-Type-Options', 'nosniff');
+  },
+}));
 
 app.post('/webhook/tradingview', asyncHandler(tradingViewController.receiveWebhook));
-app.get('/debug/tradingview', asyncHandler(tradingViewController.debug));
+app.get('/debug/tradingview', auth, requireRole('admin'), asyncHandler(tradingViewController.debug));
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 app.use('/api', routes);

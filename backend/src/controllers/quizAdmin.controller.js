@@ -8,11 +8,16 @@ const { Op } = require('sequelize');
 const { QuizQuestion, QuizSet, User, sequelize } = require('../models');
 const quizImportParser = require('../utils/quizImportParser');
 
+const { validateFileSignature } = require('../utils/fileSignature');
+
 // Configure multer storage for quiz uploads
 const uploadDir = path.resolve(__dirname, '../../uploads/quiz');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+const ALLOWED_IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -20,17 +25,20 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
-    cb(null, `quiz-${uniqueSuffix}${ext}`);
+    const cleanExt = ALLOWED_IMAGE_EXTS.includes(ext) || ALLOWED_AUDIO_EXTS.includes(ext) ? ext : '.bin';
+    const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
+    cb(null, `quiz-${uniqueSuffix}${cleanExt}`);
   },
 });
 
+const { ValidationError } = require('../utils/errors');
+
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-  if (allowedTypes.includes(file.mimetype)) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ALLOWED_IMAGE_MIMES.includes(file.mimetype) && ALLOWED_IMAGE_EXTS.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ chấp nhận các định dạng ảnh: PNG, JPG, JPEG, WEBP, GIF, SVG'), false);
+    cb(new ValidationError('Chỉ chấp nhận các định dạng ảnh hợp lệ: PNG, JPG, JPEG, WEBP, GIF (không hỗ trợ SVG)'), false);
   }
 };
 
@@ -42,14 +50,44 @@ const upload = multer({
   },
 });
 
+const handleUploadError = (uploadMiddleware) => (req, res, next) => {
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      if (req.file?.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch {}
+      }
+      return res.status(err.statusCode || 400).json({
+        success: false,
+        message: err.message || 'Lỗi tải lên tệp tin',
+        code: err.code || 'VALIDATION_ERROR',
+      });
+    }
+    next();
+  });
+};
+
 /**
  * Handle single image upload
  */
 const uploadImage = [
-  upload.single('image'),
-  (req, res) => {
+  handleUploadError(upload.single('image')),
+  async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn tệp hình ảnh để tải lên' });
+    }
+
+    // Validate magic bytes
+    const isValidSignature = await validateFileSignature(req.file.path, 'image');
+    if (!isValidSignature) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch {}
+      return res.status(400).json({
+        success: false,
+        message: 'Tệp tải lên không phải hình ảnh hợp lệ hoặc đã bị thay đổi nội dung',
+      });
     }
 
     const publicUrl = `/uploads/quiz/${req.file.filename}`;
@@ -63,23 +101,26 @@ const uploadImage = [
   },
 ];
 
+const ALLOWED_AUDIO_EXTS = ['.mp3', '.ogg', '.wav', '.aac', '.m4a', '.webm', '.flac'];
+const ALLOWED_AUDIO_MIMES = [
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/ogg',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/aac',
+  'audio/x-m4a',
+  'audio/mp4',
+  'audio/webm',
+  'audio/flac',
+];
+
 const audioFileFilter = (req, file, cb) => {
-  const allowedAudioTypes = [
-    'audio/mpeg',
-    'audio/mp3',
-    'audio/ogg',
-    'audio/wav',
-    'audio/x-wav',
-    'audio/aac',
-    'audio/x-m4a',
-    'audio/mp4',
-    'audio/webm',
-    'audio/flac',
-  ];
-  if (allowedAudioTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ALLOWED_AUDIO_MIMES.includes(file.mimetype) && ALLOWED_AUDIO_EXTS.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ chấp nhận các định dạng âm thanh: MP3, OGG, WAV, AAC, M4A, WEBM, FLAC'), false);
+    cb(new ValidationError('Chỉ chấp nhận các định dạng âm thanh: MP3, OGG, WAV, AAC, M4A, WEBM, FLAC'), false);
   }
 };
 
@@ -95,10 +136,22 @@ const audioUpload = multer({
  * Handle single audio upload
  */
 const uploadAudio = [
-  audioUpload.single('audio'),
-  (req, res) => {
+  handleUploadError(audioUpload.single('audio')),
+  async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn tệp âm thanh để tải lên' });
+    }
+
+    // Validate magic bytes
+    const isValidSignature = await validateFileSignature(req.file.path, 'audio');
+    if (!isValidSignature) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch {}
+      return res.status(400).json({
+        success: false,
+        message: 'Tệp âm thanh không hợp lệ hoặc định dạng thực tế không khớp',
+      });
     }
 
     const publicUrl = `/uploads/quiz/${req.file.filename}`;

@@ -50,7 +50,7 @@ export default function QuizAvatar({
         alignItems: 'center',
         justifyContent: 'center',
         background: `hsl(${hue}, 65%, 45%)`,
-        color: '#ffffff',
+        color: 'var(--surface)',
         fontWeight: 700,
         fontSize: Math.max(10, Math.round(px * 0.38)),
         border: border || '1px solid rgba(0,0,0,0.1)',

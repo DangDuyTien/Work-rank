@@ -413,22 +413,22 @@ export default function CompetitionAdmin() {
   }
 
   return (
-    <div style={{ padding: '20px 0', maxWidth: 1100, margin: '0 auto' }}>
+    <div className="admin-data-page" style={{ padding: '20px 0', maxWidth: 1100, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Shield size={22} color="#0284c7" />
-            <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', margin: 0 }}>
+            <Shield size={22} color="var(--info)" />
+            <h1 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25, color: 'var(--text-primary)', margin: 0 }}>
               Quy tắc thi đấu
             </h1>
           </div>
-          <p style={{ fontSize: 13, lineHeight: 1.55, color: '#64748b', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
             Bộ quy tắc, phiên bản và mô phỏng tính điểm.
           </p>
         </div>
 
-        <Link to="/admin/operations" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0284c7', fontSize: 13 }}>
+        <Link to="/admin/operations" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--info)', fontSize: 13 }}>
           Vận hành hệ thống <ArrowRight size={14} />
         </Link>
         <SegmentedControl
@@ -455,18 +455,18 @@ export default function CompetitionAdmin() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-                <Card style={{ padding: 18, background: 'linear-gradient(135deg, rgba(2,132,199,0.06), rgba(99,102,241,0.03))', border: '1px solid rgba(2,132,199,0.2)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 6 }}>
+                <Card style={{ padding: 18, background: 'linear-gradient(135deg, var(--info-soft), rgba(99,102,241,0.03))', border: '1px solid var(--info-border)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase', marginBottom: 6 }}>
                     Mùa Giải Đang Diễn Ra
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', marginBottom: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: 'var(--text-primary)', marginBottom: 8 }}>
                     {adminDash?.seasonStats?.name || 'Không có mùa giải Active'}
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <span>Trạng thái: <strong>{adminDash?.seasonStats?.status || '—'}</strong></span>
                     <span>Đội tham gia: <strong>{adminDash?.seasonStats?.teamsCount || 0} teams</strong></span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Trophy size={13} color="#0284c7" /> Top 1 Đội: <strong>{adminDash?.seasonStats?.leaderTeam?.teamName || '—'}</strong> ({adminDash?.seasonStats?.leaderTeam?.score || 0} XP)
+                      <Trophy size={13} color="var(--info)" /> Top 1 Đội: <strong>{adminDash?.seasonStats?.leaderTeam?.teamName || '—'}</strong> ({adminDash?.seasonStats?.leaderTeam?.score || 0} XP)
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Crown size={13} color="#f59e0b" /> Top 1 Cá Nhân: <strong>{adminDash?.seasonStats?.individualLeader?.name || '—'}</strong> ({adminDash?.seasonStats?.individualLeader?.points || 0} XP)
@@ -478,10 +478,10 @@ export default function CompetitionAdmin() {
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#ea580c', textTransform: 'uppercase', marginBottom: 6 }}>
                     Grand Championship {adminDash?.grandStats?.year || '2026'}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: '#0f172a', marginBottom: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25, color: 'var(--text-primary)', marginBottom: 8 }}>
                     {adminDash?.grandStats?.name || 'Grand Championship 2026'}
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <span>Tổng GP đã trao: <strong style={{ color: '#ea580c' }}>{adminDash?.grandStats?.totalGrandPointsAwarded || 0} GP</strong></span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Trophy size={13} color="#ea580c" /> Top 1 Đội Grand: <strong>{adminDash?.grandStats?.leaderTeam?.teamName || '—'}</strong> ({adminDash?.grandStats?.leaderTeam?.grandPoints || 0} GP)
@@ -492,12 +492,12 @@ export default function CompetitionAdmin() {
                   </div>
                 </Card>
 
-                <Card style={{ padding: 18, background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>
+                <Card style={{ padding: 18, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.08)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 6 }}>
                     Vận Tốc Sự Kiện (Event Throughput)
                   </div>
-                  <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginBottom: 6, fontFamily: "'JetBrains Mono',monospace" }}>
-                    {adminDash?.eventsToday || 0} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>events/24h</span>
+                  <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2, color: 'var(--text-primary)', marginBottom: 6, fontFamily: "'JetBrains Mono',monospace" }}>
+                    {adminDash?.eventsToday || 0} <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>events/24h</span>
                   </div>
                   <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
                     Hàng đợi Outbox: {adminDash?.outboxQueueSize || 0} pending (Hoạt động ổn định)
@@ -513,7 +513,7 @@ export default function CompetitionAdmin() {
       {activeTab === 'rules' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: 0 }}>
               Danh Sách Bộ Quy Tắc (Rule Sets)
             </h2>
             <Button variant="primary" onClick={() => setCreateRuleSetModalOpen(true)}>
@@ -533,8 +533,8 @@ export default function CompetitionAdmin() {
                 <Card key={rs.id} style={{ padding: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{rs.name}</span>
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569' }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{rs.name}</span>
+                      <span style={{ fontSize: 11, fontFamily: 'monospace', padding: '2px 8px', borderRadius: 4, background: 'var(--surface-muted)', color: 'var(--text-secondary)' }}>
                         {rs.code}
                       </span>
                       {rs.publishedVersion ? (
@@ -547,8 +547,8 @@ export default function CompetitionAdmin() {
                         </span>
                       )}
                     </div>
-                    <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 6px 0' }}>{rs.description || 'Không có mô tả'}</p>
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 6px 0' }}>{rs.description || 'Không có mô tả'}</p>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       Tổng số phiên bản: <strong>{rs.totalVersions}</strong> | Đang dùng bởi: <strong>{rs.usedInSeasonsCount} mùa giải</strong>
                     </div>
                   </div>
@@ -585,10 +585,10 @@ export default function CompetitionAdmin() {
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: 0 }}>
                 Giám Sát Trạng Thái Thi Đấu (State Monitor)
               </h2>
-              <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0 0' }}>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
                 Tổng số bản ghi: <strong>{totalStates}</strong>
               </p>
             </div>
@@ -609,14 +609,14 @@ export default function CompetitionAdmin() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {states.map((st) => (
-                <div key={st.id} style={{ padding: 12, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={st.id} style={{ padding: 12, borderRadius: 6, background: 'var(--surface-soft)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>{st.stateKey}</span>
-                    <span style={{ fontSize: 11, color: '#64748b', marginLeft: 10 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{st.stateKey}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)', marginLeft: 10 }}>
                       Entity: {st.entityType} #{st.entityId}
                     </span>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--info)', fontFamily: "'JetBrains Mono',monospace" }}>
                     Count: {st.stateValue?.count ?? 0}
                   </div>
                 </div>
@@ -630,7 +630,7 @@ export default function CompetitionAdmin() {
       {activeTab === 'inspector' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card style={{ padding: 20 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 8px 0' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
               Tra Cứu Giao Dịch Điểm (Score Inspector)
             </h2>
             <form onSubmit={handleInspect} style={{ display: 'flex', gap: 10, maxWidth: 400 }}>
@@ -639,7 +639,7 @@ export default function CompetitionAdmin() {
                 placeholder="Nhập User ID..."
                 value={inspectUserId}
                 onChange={(e) => setInspectUserId(e.target.value)}
-                style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 13 }}
               />
               <Button type="submit" variant="primary" disabled={inspectLoading}>
                 {inspectLoading ? 'Đang tra cứu...' : 'Tra cứu'}
@@ -650,19 +650,19 @@ export default function CompetitionAdmin() {
           {inspectResult && (
             <Card style={{ padding: 20 }}>
               <div style={{ marginBottom: 14 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: 0 }}>
                   Kết Quả Tra Cứu Cho User #{inspectResult.userId}
                 </h3>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   Tổng điểm: <strong style={{ color: '#16a34a' }}>{inspectResult.totalScore} XP</strong> | Tổng giao dịch: <strong>{inspectResult.total}</strong>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {inspectResult.entries.map((ent) => (
-                  <div key={ent.id} style={{ padding: 10, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                  <div key={ent.id} style={{ padding: 10, borderRadius: 6, background: 'var(--surface-soft)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
                     <div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>{ent.reason || 'Event Scoring'}</span>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{new Date(ent.createdAt).toLocaleString()}</div>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{ent.reason || 'Event Scoring'}</span>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{new Date(ent.createdAt).toLocaleString()}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: ent.pointsDelta >= 0 ? '#16a34a' : '#ef4444', fontFamily: "'JetBrains Mono',monospace" }}>
                       {ent.pointsDelta >= 0 ? `+${ent.pointsDelta}` : ent.pointsDelta} XP
@@ -681,43 +681,43 @@ export default function CompetitionAdmin() {
       {/* MODAL 1: CREATE RULE SET */}
       {createRuleSetModalOpen && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setCreateRuleSetModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 14px 0' }}>
+          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: 'var(--surface)' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 14px 0' }}>
               Tạo Rule Set Mới
             </h2>
             <form onSubmit={handleCreateRuleSet} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Tên Rule Set</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Tên Rule Set</label>
                 <input
                   type="text"
                   required
                   placeholder="Ví dụ: Video Production Championship Rules"
                   value={newRsName}
                   onChange={(e) => setNewRsName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Mã Code (Unique)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Mã Code (Unique)</label>
                 <input
                   type="text"
                   required
                   placeholder="ví dụ: rs_video_production"
                   value={newRsCode}
                   onChange={(e) => setNewRsCode(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>Mô Tả</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Mô Tả</label>
                 <textarea
                   rows={3}
                   placeholder="Mô tả mục đích và phạm vi của bộ quy tắc..."
                   value={newRsDesc}
                   onChange={(e) => setNewRsDesc(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
@@ -736,21 +736,21 @@ export default function CompetitionAdmin() {
       {/* MODAL 2: VISUAL RULE BUILDER STUDIO */}
       {builderModalOpen && selectedRuleSet && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setBuilderModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ width: '100%', maxWidth: 1000, maxHeight: '90vh', background: '#fff', borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+          <div style={{ width: '100%', maxWidth: 1000, maxHeight: '90vh', background: 'var(--surface)', borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             {/* Header */}
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-soft)' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Sliders size={20} color="#0284c7" />
-                  <h2 style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: 0 }}>
+                  <Sliders size={20} color="var(--info)" />
+                  <h2 style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: 0 }}>
                     Visual Rule Builder — {selectedRuleSet.name}
                   </h2>
                   {selectedVersion ? (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: selectedVersion.status === 'PUBLISHED' ? '#dcfce7' : '#fef9c3', color: selectedVersion.status === 'PUBLISHED' ? '#15803d' : '#854d0e' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: selectedVersion.status === 'PUBLISHED' ? '#dcfce7' : '#fef9c3', color: selectedVersion.status === 'PUBLISHED' ? 'var(--success)' : '#854d0e' }}>
                       Version #{selectedVersion.versionNumber} ({selectedVersion.status})
                     </span>
                   ) : (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'var(--surface-muted)', color: 'var(--text-secondary)' }}>
                       Bản Nháp Mới
                     </span>
                   )}
@@ -774,25 +774,25 @@ export default function CompetitionAdmin() {
             {/* Body */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               {/* Version & Window Meta */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18, padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18, padding: 14, borderRadius: 8, background: 'var(--surface-soft)', border: '1px solid var(--border)' }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC TỪ (EFFECTIVE FROM)</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>HIỆU LỰC TỪ (EFFECTIVE FROM)</label>
                   <input
                     type="datetime-local"
                     value={builderEffectiveFrom}
                     disabled={selectedVersion?.status === 'PUBLISHED'}
                     onChange={(e) => setBuilderEffectiveFrom(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>HIỆU LỰC ĐẾN (EFFECTIVE TO - TÙY CHỌN)</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>HIỆU LỰC ĐẾN (EFFECTIVE TO - TÙY CHỌN)</label>
                   <input
                     type="datetime-local"
                     value={builderEffectiveTo}
                     disabled={selectedVersion?.status === 'PUBLISHED'}
                     onChange={(e) => setBuilderEffectiveTo(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                   />
                 </div>
               </div>
@@ -801,8 +801,8 @@ export default function CompetitionAdmin() {
               {builderTab === 'visual' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {builderRules.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, border: '2px dashed #cbd5e1', borderRadius: 8 }}>
-                      <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 12px 0' }}>Chưa có quy tắc nào trong phiên bản này.</p>
+                    <div style={{ textAlign: 'center', padding: 40, border: '2px dashed var(--border-2)', borderRadius: 8 }}>
+                      <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 12px 0' }}>Chưa có quy tắc nào trong phiên bản này.</p>
                       <Button variant="primary" onClick={handleAddRuleBlock} disabled={selectedVersion?.status === 'PUBLISHED'}>
                         <Plus size={16} /> Thêm Quy Tắc Đầu Tiên
                       </Button>
@@ -812,10 +812,10 @@ export default function CompetitionAdmin() {
                       const conditions = rule.condition_ast?.conditions || (rule.condition_ast ? [rule.condition_ast] : []);
 
                       return (
-                        <div key={rIdx} style={{ padding: 18, borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                        <div key={rIdx} style={{ padding: 18, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>
+                              <span style={{ width: 24, height: 24, borderRadius: 12, background: 'var(--info)', color: 'var(--accent-foreground)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>
                                 {rIdx + 1}
                               </span>
                               <input
@@ -827,7 +827,7 @@ export default function CompetitionAdmin() {
                                   updated[rIdx].name = e.target.value;
                                   setBuilderRules(updated);
                                 }}
-                                style={{ fontWeight: 600, fontSize: 14, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: 6, padding: '4px 8px' }}
+                                style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', border: '1px solid var(--border-2)', borderRadius: 6, padding: '4px 8px' }}
                               />
                             </div>
 
@@ -839,14 +839,14 @@ export default function CompetitionAdmin() {
                           </div>
 
                           {/* WHEN: Conditions Builder */}
-                          <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', marginBottom: 12 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', textTransform: 'uppercase', marginBottom: 8 }}>
+                          <div style={{ padding: 14, borderRadius: 8, background: 'var(--surface-soft)', marginBottom: 12 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase', marginBottom: 8 }}>
                               1. ĐIỀU KIỆN KÍCH HOẠT (WHEN)
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                               {conditions.map((c, cIdx) => (
                                 <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Trường:</span>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Trường:</span>
                                   <input
                                     type="text"
                                     value={c.field || ''}
@@ -862,7 +862,7 @@ export default function CompetitionAdmin() {
                                       setBuilderRules(updated);
                                     }}
                                     placeholder="event.payload.quality_score"
-                                    style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12, minWidth: 200 }}
+                                    style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12, minWidth: 200 }}
                                   />
 
                                   <select
@@ -877,7 +877,7 @@ export default function CompetitionAdmin() {
                                       }
                                       setBuilderRules(updated);
                                     }}
-                                    style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                                    style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                                   >
                                     {CONDITION_OPERATORS.map((op) => (
                                       <option key={op.value} value={op.value}>{op.label}</option>
@@ -900,7 +900,7 @@ export default function CompetitionAdmin() {
                                         setBuilderRules(updated);
                                       }}
                                       placeholder="Giá trị so sánh"
-                                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12, width: 140 }}
+                                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12, width: 140 }}
                                     />
                                   )}
                                 </div>
@@ -909,7 +909,7 @@ export default function CompetitionAdmin() {
                           </div>
 
                           {/* THEN: Actions Builder */}
-                          <div style={{ padding: 14, borderRadius: 8, background: '#f8fafc', marginBottom: 12 }}>
+                          <div style={{ padding: 14, borderRadius: 8, background: 'var(--surface-soft)', marginBottom: 12 }}>
                             <div style={{ fontSize: 11, fontWeight: 600, color: '#16a34a', textTransform: 'uppercase', marginBottom: 8 }}>
                               2. HÀNH ĐỘNG CỘNG / TRỪ ĐIỂM (THEN)
                             </div>
@@ -922,7 +922,7 @@ export default function CompetitionAdmin() {
                                   updated[rIdx].action_ast = { ...updated[rIdx].action_ast, type: e.target.value };
                                   setBuilderRules(updated);
                                 }}
-                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                               >
                                 {ACTION_TYPES.map((a) => (
                                   <option key={a.value} value={a.value}>{a.label}</option>
@@ -938,7 +938,7 @@ export default function CompetitionAdmin() {
                                   updated[rIdx].action_ast = { ...updated[rIdx].action_ast, value: Number(e.target.value) };
                                   setBuilderRules(updated);
                                 }}
-                                style={{ width: 100, padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                                style={{ width: 100, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                               />
 
                               <select
@@ -949,7 +949,7 @@ export default function CompetitionAdmin() {
                                   updated[rIdx].effect_type = e.target.value;
                                   setBuilderRules(updated);
                                 }}
-                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                               >
                                 {EFFECT_TYPES.map((ef) => (
                                   <option key={ef.value} value={ef.value}>{ef.label}</option>
@@ -957,7 +957,7 @@ export default function CompetitionAdmin() {
                               </select>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <span style={{ fontSize: 11, color: '#64748b' }}>Hệ số (Multiplier):</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Hệ số (Multiplier):</span>
                                 <input
                                   type="number"
                                   step="0.1"
@@ -968,15 +968,15 @@ export default function CompetitionAdmin() {
                                     updated[rIdx].multiplier = Number(e.target.value);
                                     setBuilderRules(updated);
                                   }}
-                                  style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                                  style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                                 />
                               </div>
                             </div>
                           </div>
 
                           {/* Sentence Summary Preview */}
-                          <div style={{ fontSize: 12, color: '#334155', fontStyle: 'italic', padding: '6px 10px', background: '#f1f5f9', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Sparkles size={13} color="#0284c7" style={{ flexShrink: 0 }} />
+                          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontStyle: 'italic', padding: '6px 10px', background: 'var(--surface-muted)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Sparkles size={13} color="var(--info)" style={{ flexShrink: 0 }} />
                             <span><strong>{rule.name}:</strong> Khi {conditions.map((c) => `${c.field || 'field'} ${c.op || '=='} ${c.value ?? ''}`).join(' VÀ ')} <ArrowRight size={12} style={{ display: 'inline', verticalAlign: 'middle', margin: '0 2px' }} /> {rule.action_ast?.type || 'ADD'} {rule.action_ast?.value || 0} ({rule.effect_type || 'XP'})</span>
                           </div>
                         </div>
@@ -994,7 +994,7 @@ export default function CompetitionAdmin() {
 
               {/* JSON AST PREVIEW */}
               {builderTab === 'json' && (
-                <div style={{ background: '#0f172a', color: '#38bdf8', padding: 16, borderRadius: 8, fontFamily: 'monospace', fontSize: 12, overflowX: 'auto' }}>
+                <div style={{ background: 'var(--text-primary)', color: 'var(--accent)', padding: 16, borderRadius: 8, fontFamily: 'monospace', fontSize: 12, overflowX: 'auto' }}>
                   <pre style={{ margin: 0 }}>{JSON.stringify(builderRules, null, 2)}</pre>
                 </div>
               )}
@@ -1023,7 +1023,7 @@ export default function CompetitionAdmin() {
             </div>
 
             {/* Footer Actions */}
-            <div style={{ padding: '14px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-soft)' }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button variant="outline" onClick={handleValidateAST} disabled={actionLoading}>
                   <CheckCircle2 size={16} /> Kiểm Tra AST (Validate)
@@ -1067,23 +1067,23 @@ export default function CompetitionAdmin() {
       {/* MODAL 3: RULE SIMULATOR */}
       {simulatorModalOpen && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setSimulatorModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 700, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Play size={20} color="#0284c7" /> Trình Mô Phỏng Điểm (Rule Simulator)
+          <Card style={{ width: '100%', maxWidth: 700, maxHeight: '85vh', padding: 24, background: 'var(--surface)', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Play size={20} color="var(--info)" /> Trình Mô Phỏng Điểm (Rule Simulator)
             </h2>
-            <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 14px 0' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 14px 0' }}>
               Mô phỏng chạy thuần trên Memory Engine. <strong>Đảm bảo 0 ghi đè vào Database production.</strong>
             </p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                 Sự Kiện Mẫu (Sample Event JSON)
               </label>
               <textarea
                 rows={6}
                 value={simEventPayload}
                 onChange={(e) => setSimEventPayload(e.target.value)}
-                style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', fontFamily: 'monospace', fontSize: 12 }}
+                style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid var(--border-2)', fontFamily: 'monospace', fontSize: 12 }}
               />
             </div>
 
@@ -1092,42 +1092,42 @@ export default function CompetitionAdmin() {
             </Button>
 
             {simResult && (
-              <div style={{ marginTop: 16, padding: 14, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 8px 0' }}>
+              <div style={{ marginTop: 16, padding: 14, borderRadius: 8, background: 'var(--surface-soft)', border: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
                   Kết Quả Đánh Giá Mô Phỏng
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
-                  <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>QUY TẮC KHỚP</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0284c7', fontFamily: "'JetBrains Mono',monospace" }}>
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>QUY TẮC KHỚP</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--info)', fontFamily: "'JetBrains Mono',monospace" }}>
                       {simResult.matchedRulesCount} / {simResult.rulesEvaluated}
                     </div>
                   </div>
-                  <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>ĐIỂM CÁ NHÂN (USER XP)</div>
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>ĐIỂM CÁ NHÂN (USER XP)</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a', fontFamily: "'JetBrains Mono',monospace" }}>
                       +{simResult.totalUserPoints} XP
                     </div>
                   </div>
-                  <div style={{ padding: 10, borderRadius: 6, background: '#fff', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>ĐIỂM ĐỘI (TEAM SCORE)</div>
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>ĐIỂM ĐỘI (TEAM SCORE)</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#ea580c', fontFamily: "'JetBrains Mono',monospace" }}>
                       +{simResult.totalTeamScore} XP
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Trace Thực Thi:</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>Trace Thực Thi:</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {simResult.executionTrace.map((tr, idx) => (
-                    <div key={idx} style={{ padding: 8, borderRadius: 6, background: tr.matched ? 'rgba(34,197,94,0.06)' : '#fff', border: `1px solid ${tr.matched ? '#86efac' : '#e2e8f0'}`, fontSize: 12 }}>
+                    <div key={idx} style={{ padding: 8, borderRadius: 6, background: tr.matched ? 'rgba(34,197,94,0.06)' : 'var(--surface)', border: `1px solid ${tr.matched ? '#86efac' : 'var(--border)'}`, fontSize: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <strong>{tr.ruleName}</strong>
-                        <span style={{ fontWeight: 600, color: tr.matched ? '#16a34a' : '#94a3b8' }}>
+                        <span style={{ fontWeight: 600, color: tr.matched ? '#16a34a' : 'var(--text-muted)' }}>
                           {tr.matched ? 'KHỚP (MATCHED)' : 'KHÔNG KHỚP'}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{tr.ruleSummary}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{tr.ruleSummary}</div>
                     </div>
                   ))}
                 </div>
@@ -1145,18 +1145,18 @@ export default function CompetitionAdmin() {
       {/* MODAL 4: VERSION DIFF VIEWER */}
       {diffModalOpen && selectedRuleSet && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setDiffModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: '#fff', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <GitCompare size={20} color="#0284c7" /> So Sánh Phiên Bản (Version Diff)
+          <Card style={{ width: '100%', maxWidth: 750, maxHeight: '85vh', padding: 24, background: 'var(--surface)', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <GitCompare size={20} color="var(--info)" /> So Sánh Phiên Bản (Version Diff)
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản cũ (A)</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Phiên bản cũ (A)</label>
                 <select
                   value={diffVersionA}
                   onChange={(e) => setDiffVersionA(e.target.value)}
-                  style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                 >
                   {selectedRuleSet.versions?.map((v) => (
                     <option key={v.id} value={v.id}>Version #{v.versionNumber} ({v.status})</option>
@@ -1165,11 +1165,11 @@ export default function CompetitionAdmin() {
               </div>
 
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Phiên bản mới (B)</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Phiên bản mới (B)</label>
                 <select
                   value={diffVersionB}
                   onChange={(e) => setDiffVersionB(e.target.value)}
-                  style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12 }}
+                  style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 12 }}
                 >
                   {selectedRuleSet.versions?.map((v) => (
                     <option key={v.id} value={v.id}>Version #{v.versionNumber} ({v.status})</option>
@@ -1184,9 +1184,9 @@ export default function CompetitionAdmin() {
 
             {diffResult && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ padding: 12, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: 16, fontSize: 12 }}>
+                <div style={{ padding: 12, borderRadius: 8, background: 'var(--surface-soft)', border: '1px solid var(--border)', display: 'flex', gap: 16, fontSize: 12 }}>
                   <span>Thêm mới: <strong style={{ color: '#16a34a' }}>+{diffResult.addedCount}</strong></span>
-                  <span>Chỉnh sửa: <strong style={{ color: '#0284c7' }}>{diffResult.modifiedCount}</strong></span>
+                  <span>Chỉnh sửa: <strong style={{ color: 'var(--info)' }}>{diffResult.modifiedCount}</strong></span>
                   <span>Xóa bỏ: <strong style={{ color: '#ef4444' }}>-{diffResult.removedCount}</strong></span>
                 </div>
 
@@ -1197,12 +1197,12 @@ export default function CompetitionAdmin() {
                       style={{
                         padding: 12,
                         borderRadius: 6,
-                        borderLeft: `4px solid ${ch.type === 'RULE_ADDED' ? '#16a34a' : ch.type === 'RULE_REMOVED' ? '#ef4444' : '#0284c7'}`,
-                        background: ch.type === 'RULE_ADDED' ? 'rgba(34,197,94,0.04)' : ch.type === 'RULE_REMOVED' ? 'rgba(239,68,68,0.04)' : 'rgba(2,132,199,0.04)',
+                        borderLeft: `4px solid ${ch.type === 'RULE_ADDED' ? 'var(--success)' : ch.type === 'RULE_REMOVED' ? 'var(--danger)' : 'var(--info)'}`,
+                        background: ch.type === 'RULE_ADDED' ? 'var(--success-soft)' : ch.type === 'RULE_REMOVED' ? 'var(--danger-soft)' : 'var(--info-soft)',
                         fontSize: 12,
                       }}
                     >
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{ch.description}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ch.description}</div>
                     </div>
                   ))}
                 </div>
@@ -1220,8 +1220,8 @@ export default function CompetitionAdmin() {
       {/* MODAL 5: PUBLISH VERSION CONFIRMATION */}
       {publishModalOpen && selectedVersion && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setPublishModalOpen(false); }} style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
-          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: '#fff' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a', margin: '0 0 10px 0' }}>
+          <Card style={{ width: '100%', maxWidth: 480, padding: 24, maxHeight: '90vh', overflowY: 'auto', background: 'var(--surface)' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)', margin: '0 0 10px 0' }}>
               Xác Nhận Xuất Bản Version #{selectedVersion.versionNumber}
             </h2>
             <div style={{ padding: 12, borderRadius: 8, background: 'rgba(234,179,8,0.1)', color: '#854d0e', fontSize: 12, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1230,7 +1230,7 @@ export default function CompetitionAdmin() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#334155', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                 Lý Do Audit Bắt Buộc (Audit Reason)
               </label>
               <textarea
@@ -1239,7 +1239,7 @@ export default function CompetitionAdmin() {
                 placeholder="Ví dụ: Xuất bản chính thức quy tắc thi đấu mùa Q1 2026..."
                 value={publishReason}
                 onChange={(e) => setPublishReason(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-2)', fontSize: 13 }}
               />
             </div>
 

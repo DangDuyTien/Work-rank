@@ -124,7 +124,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        background: '#ffffff',
+        background: 'var(--surface)',
         fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
@@ -155,7 +155,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
             size={28}
             showLabel
             label="3WIN MEDIA"
-            labelStyle={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: '#111111' }}
+            labelStyle={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text-primary)' }}
           />
         </Link>
         {isAdmin && (
@@ -167,7 +167,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               padding: '2px 6px',
               borderRadius: 4,
               background: 'rgba(180,83,9,0.08)',
-              color: '#b45309',
+              color: 'var(--accent)',
               border: '1px solid rgba(180,83,9,0.2)',
               letterSpacing: '0.4px',
               textTransform: 'uppercase',
@@ -216,7 +216,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     background: hasActiveChild && !isExpanded ? 'rgba(0,0,0,0.04)' : 'transparent',
                     border: 'none',
                     cursor: 'pointer',
-                    color: hasActiveChild ? '#111111' : '#555555',
+                    color: hasActiveChild ? 'var(--text-primary)' : 'var(--text-secondary)',
                     fontSize: 12,
                     fontWeight: 600,
                     letterSpacing: '0.2px',
@@ -231,12 +231,12 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-                    <GroupIcon size={15} strokeWidth={2.2} style={{ color: hasActiveChild ? '#111111' : '#777777' }} />
+                    <GroupIcon size={15} strokeWidth={2.2} style={{ color: hasActiveChild ? 'var(--text-primary)' : 'var(--text-muted)' }} />
                     <span
                       style={{
                         minWidth: 0,
                         overflow: 'hidden',
-                        color: hasActiveChild ? '#111111' : '#555555',
+                        color: hasActiveChild ? 'var(--text-primary)' : 'var(--text-secondary)',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}
@@ -251,7 +251,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           padding: '1px 5px',
                           borderRadius: 3,
                           background: group.adminOnly ? 'rgba(185,28,28,0.08)' : 'rgba(180,83,9,0.08)',
-                          color: group.adminOnly ? '#b91c1c' : '#b45309',
+                          color: group.adminOnly ? 'var(--danger)' : 'var(--accent)',
                           flexShrink: 0,
                         }}
                       >
@@ -263,7 +263,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      color: '#888888',
+                      color: 'var(--text-muted)',
                       flexShrink: 0,
                       transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
                       transition: 'transform var(--motion-normal) var(--ease-spring)',
@@ -278,7 +278,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                     padding: '4px 9px 6px',
                     fontSize: 11,
                     fontWeight: 600,
-                    color: '#888888',
+                    color: 'var(--text-muted)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
                     display: 'flex',
@@ -336,7 +336,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           borderRadius: 6,
                           fontSize: 13,
                           fontWeight: isActive ? 600 : 500,
-                          color: isActive ? '#111111' : '#555555',
+                          color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                           background: isActive ? 'rgba(0,0,0,0.06)' : 'transparent',
                           textDecoration: 'none',
                           lineHeight: 1.3,
@@ -354,7 +354,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           size={15}
                           strokeWidth={isActive ? 2.3 : 1.8}
                           style={{
-                            color: isActive ? '#111111' : '#777777',
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                             flexShrink: 0,
                           }}
                         />
@@ -374,7 +374,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                                 : isBadgeWarning
                                   ? 'rgba(180,83,9,0.08)'
                                   : 'rgba(0,0,0,0.06)',
-                              color: isGameComingSoon ? '#d97706' : isBadgeWarning ? '#b45309' : '#111111',
+                              color: isGameComingSoon ? '#d97706' : isBadgeWarning ? 'var(--accent)' : 'var(--text-primary)',
                               border: isGameComingSoon ? '1px solid rgba(217, 119, 6, 0.3)' : 'none',
                               letterSpacing: '0.2px',
                               flexShrink: 0,
@@ -391,7 +391,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                               width: 5,
                               height: 5,
                               borderRadius: '50%',
-                              background: '#b45309',
+                              background: 'var(--accent)',
                               flexShrink: 0,
                             }}
                           />
@@ -414,7 +414,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          background: '#fafaf8',
+          background: 'var(--surface-soft)',
           flexShrink: 0,
         }}
       >
@@ -436,11 +436,11 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               width: 34,
               height: 34,
               borderRadius: '50%',
-              background: '#141414',
+              background: 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
+              color: 'var(--surface)',
               fontSize: 13,
               fontWeight: 600,
               flexShrink: 0,
@@ -463,7 +463,7 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#111111',
+                color: 'var(--text-primary)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',

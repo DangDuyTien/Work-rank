@@ -13,6 +13,7 @@ const {
   GameTransaction,
   GameResult,
   GameLeaderboardProfile,
+  GameCatalog,
 } = require('../src/models');
 const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
@@ -24,6 +25,16 @@ test('Comprehensive Capital Board Game V1 E2E Test Suite', async (t) => {
   let testRoomId = null;
 
   before(async () => {
+    await GameCatalog.upsert({
+      gameKey: 'capital_board',
+      name: 'Cờ Tỷ Phú',
+      status: 'AVAILABLE',
+      enabled: true,
+      sortOrder: 1,
+      route: '/games/capital-board',
+      icon: 'Gamepad2',
+      description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.',
+    });
     const ts = Date.now();
     user1 = await User.create({
       name: `Player One ${ts}`,
@@ -163,23 +174,99 @@ test('Comprehensive Capital Board Game V1 E2E Test Suite', async (t) => {
     assert.equal(rollTwice.status, 400);
   });
 
-  await t.test('5. Property Purchase & End Turn: Player buys property, cash deducted, turn advances', async () => {
-    // Check if player landed on a buyable property
-    const roomState = await gameService.getRoomState(testRoomId, user1.id);
-    if (roomState.turnState.canBuy) {
-      const buyRes = await request(app)
-        .post(`/api/games/rooms/${testRoomId}/buy`)
-        .set('Authorization', `Bearer ${token1}`);
-      assert.equal(buyRes.status, 200);
-      assert.equal(buyRes.body.data.turnState.canBuy, false);
-    }
+  await t.test('5. Property Purchase & End Turn: Deterministic purchase verification and turn advance', async () => {
+    // 5.1 Set player 1 deterministically at Tile 1 (Property: Phòng Livestream, price: 100, rent: 15)
+    const propertyTile1 = await GameProperty.findOne({ where: { roomId: testRoomId, tileIndex: 1 } });
+    assert.ok(propertyTile1, 'Property at tile 1 must exist');
+    assert.equal(propertyTile1.ownerUserId, null, 'Property should initially be unowned');
 
-    // Player 1 ends turn
+    const player1Record = await GamePlayer.findOne({ where: { roomId: testRoomId, userId: user1.id } });
+    const initialCash = player1Record.cash;
+    assert.ok(initialCash >= propertyTile1.price, 'Player 1 should have enough starting cash');
+
+    // Deterministically configure turnState for Tile 1
+    const roomRecord = await GameRoom.findByPk(testRoomId);
+    roomRecord.turnState = {
+      rolled: true,
+      dice: [1, 0],
+      total: 1,
+      currentTileIndex: 1,
+      canBuy: true,
+      propertyId: propertyTile1.id,
+      eventResult: null,
+    };
+    await roomRecord.save();
+
+    player1Record.position = 1;
+    await player1Record.save();
+
+    // 5.2 Execute purchase API
+    const buyRes = await request(app)
+      .post(`/api/games/rooms/${testRoomId}/buy`)
+      .set('Authorization', `Bearer ${token1}`);
+
+    assert.equal(buyRes.status, 200);
+    assert.equal(buyRes.body.data.turnState.canBuy, false);
+
+    // Verify cash deducted
+    const player1AfterBuy = await GamePlayer.findOne({ where: { roomId: testRoomId, userId: user1.id } });
+    assert.equal(player1AfterBuy.cash, initialCash - propertyTile1.price);
+
+    // Verify property ownership updated
+    const propertyAfterBuy = await GameProperty.findOne({ where: { roomId: testRoomId, tileIndex: 1 } });
+    assert.equal(Number(propertyAfterBuy.ownerUserId), Number(user1.id));
+
+    // Verify transaction log created
+    const buyTx = await GameTransaction.findOne({
+      where: {
+        roomId: testRoomId,
+        userId: user1.id,
+        type: 'PROPERTY_BUY',
+        referenceId: String(propertyTile1.id),
+      },
+    });
+    assert.ok(buyTx, 'PROPERTY_BUY transaction record must be created');
+    assert.equal(buyTx.amount, -propertyTile1.price);
+    assert.equal(buyTx.balanceBefore, initialCash);
+    assert.equal(buyTx.balanceAfter, initialCash - propertyTile1.price);
+
+    // 5.3 Attempting to buy again in the same turn fails (canBuy is false)
+    const repeatBuyRes = await request(app)
+      .post(`/api/games/rooms/${testRoomId}/buy`)
+      .set('Authorization', `Bearer ${token1}`);
+    assert.equal(repeatBuyRes.status, 400);
+
+    // 5.4 Attempting to buy when player does not have enough cash fails
+    // Set up a mock scenario with another property (Tile 2) and 0 cash
+    const propertyTile2 = await GameProperty.findOne({ where: { roomId: testRoomId, tileIndex: 2 } });
+    assert.ok(propertyTile2);
+    roomRecord.turnState = {
+      rolled: true,
+      dice: [1, 1],
+      total: 2,
+      currentTileIndex: 2,
+      canBuy: true,
+      propertyId: propertyTile2.id,
+    };
+    await roomRecord.save();
+    player1AfterBuy.cash = 10; // Insufficient for price (120)
+    await player1AfterBuy.save();
+
+    const brokeBuyRes = await request(app)
+      .post(`/api/games/rooms/${testRoomId}/buy`)
+      .set('Authorization', `Bearer ${token1}`);
+    assert.equal(brokeBuyRes.status, 400);
+
+    // Restore player 1 cash
+    player1AfterBuy.cash = initialCash - propertyTile1.price;
+    await player1AfterBuy.save();
+
+    // 5.5 Player 1 ends turn
     const endTurnRes = await request(app)
       .post(`/api/games/rooms/${testRoomId}/end-turn`)
       .set('Authorization', `Bearer ${token1}`);
     assert.equal(endTurnRes.status, 200);
-    assert.equal(endTurnRes.body.data.currentTurnPlayerId, user2.id);
+    assert.equal(Number(endTurnRes.body.data.currentTurnPlayerId), Number(user2.id));
     assert.equal(endTurnRes.body.data.turnNumber, 2);
     assert.equal(endTurnRes.body.data.turnState.rolled, false);
   });
@@ -225,4 +312,42 @@ test('Comprehensive Capital Board Game V1 E2E Test Suite', async (t) => {
     assert.ok(histRes.body.data.length >= 1);
     assert.equal(histRes.body.data[0].roomId, testRoomId);
   });
+
+  await t.test('8. Room Code Join, Max Capacity & Lobby Leave', async () => {
+    // 1. Host creates a 2-player room
+    const createRes = await request(app)
+      .post('/api/games/rooms')
+      .set('Authorization', `Bearer ${token1}`)
+      .send({ title: 'Phòng 2 Người Test', maxPlayers: 2 });
+    assert.equal(createRes.status, 201);
+    const newRoom = createRes.body.data;
+    assert.ok(newRoom.code);
+
+    // 2. Join using Room Code (alphanumeric code)
+    const joinByCode = await request(app)
+      .post(`/api/games/rooms/${newRoom.code}/join`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(joinByCode.status, 200);
+    assert.equal(joinByCode.body.data.players.length, 2);
+
+    // 3. 3rd player tries to join full 2-player room (rejected)
+    const join3Full = await request(app)
+      .post(`/api/games/rooms/${newRoom.id}/join`)
+      .set('Authorization', `Bearer ${token3}`);
+    assert.equal(join3Full.status, 400);
+
+    // 4. Player 2 leaves room before match starts
+    const leaveRes = await request(app)
+      .post(`/api/games/rooms/${newRoom.id}/leave`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(leaveRes.status, 200);
+
+    const roomAfterLeave = await gameService.getRoomState(newRoom.id, user1.id);
+    assert.equal(roomAfterLeave.players.length, 1);
+
+    // Clean up
+    await GamePlayer.destroy({ where: { roomId: newRoom.id } }).catch(() => {});
+    await GameRoom.destroy({ where: { id: newRoom.id } }).catch(() => {});
+  });
 });
+

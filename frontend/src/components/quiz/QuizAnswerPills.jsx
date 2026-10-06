@@ -48,11 +48,11 @@ export default function QuizAnswerPills({
         const isCorrect = revealedCorrectOption === key;
         const isWrong = revealedCorrectOption && isSelected && !isCorrect;
 
-        let background = '#ffffff';
-        let textColor = '#141414';
+        let background = 'var(--surface)';
+        let textColor = 'var(--primary)';
         let borderColor = 'rgba(0, 0, 0, 0.12)';
-        let badgeBg = '#f4f3ef';
-        let badgeColor = '#666666';
+        let badgeBg = 'var(--background)';
+        let badgeColor = 'var(--text-secondary)';
         let boxShadow = '0 1px 2px rgba(0, 0, 0, 0.03)';
         let opacity = 1;
         let transform = 'translateY(0)';
@@ -60,17 +60,17 @@ export default function QuizAnswerPills({
         if (revealedCorrectOption) {
           if (isCorrect) {
             background = '#f0fdf4';
-            textColor = '#15803d';
+            textColor = 'var(--success)';
             borderColor = '#16a34a';
             badgeBg = '#16a34a';
-            badgeColor = '#ffffff';
+            badgeColor = 'var(--surface)';
             boxShadow = '0 2px 8px rgba(22, 163, 74, 0.15)';
           } else if (isWrong) {
             background = '#fef2f2';
             textColor = '#991b1b';
             borderColor = '#dc2626';
             badgeBg = '#dc2626';
-            badgeColor = '#ffffff';
+            badgeColor = 'var(--surface)';
             boxShadow = '0 1px 4px rgba(220, 38, 38, 0.1)';
           } else {
             opacity = 0.45;
@@ -78,10 +78,10 @@ export default function QuizAnswerPills({
           }
         } else if (isSelected) {
           background = '#fffbeb';
-          textColor = '#92400e';
-          borderColor = '#b45309';
-          badgeBg = '#b45309';
-          badgeColor = '#ffffff';
+          textColor = 'var(--accent-hover)';
+          borderColor = 'var(--accent)';
+          badgeBg = 'var(--accent)';
+          badgeColor = 'var(--surface)';
           boxShadow = '0 1px 4px rgba(180, 83, 9, 0.15)';
         } else if (disabled) {
           opacity = 0.6;
@@ -108,7 +108,7 @@ export default function QuizAnswerPills({
               opacity,
               transform,
               cursor: disabled || selectedOption ? 'default' : 'pointer',
-              transition: 'background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.15s ease',
+              transition: 'background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
               textAlign: 'left',
               position: 'relative',
               userSelect: 'none',
@@ -125,7 +125,7 @@ export default function QuizAnswerPills({
             onMouseLeave={(e) => {
               if (!disabled && !selectedOption && !revealedCorrectOption) {
                 e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.12)';
-                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.background = 'var(--surface)';
                 e.currentTarget.style.transform = 'translateY(0)';
               }
             }}
@@ -146,7 +146,7 @@ export default function QuizAnswerPills({
                   fontSize: 13,
                   fontWeight: 700,
                   flexShrink: 0,
-                  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
+                  transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
                 }}
               >
                 {key}
@@ -178,7 +178,7 @@ export default function QuizAnswerPills({
                       height: 24,
                       borderRadius: '50%',
                       background: '#16a34a',
-                      color: '#ffffff',
+                      color: 'var(--surface)',
                     }}
                   >
                     <Check size={15} strokeWidth={3} />
@@ -193,7 +193,7 @@ export default function QuizAnswerPills({
                       height: 24,
                       borderRadius: '50%',
                       background: '#dc2626',
-                      color: '#ffffff',
+                      color: 'var(--surface)',
                     }}
                   >
                     <X size={15} strokeWidth={3} />
@@ -206,7 +206,7 @@ export default function QuizAnswerPills({
                     fontWeight: 700,
                     fontFamily: 'JetBrains Mono, monospace',
                     background: 'rgba(180, 83, 9, 0.12)',
-                    color: '#b45309',
+                    color: 'var(--accent)',
                     padding: '2px 7px',
                     borderRadius: 4,
                   }}

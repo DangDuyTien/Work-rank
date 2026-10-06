@@ -8,8 +8,8 @@ import { BadgeCheck } from 'lucide-react';
  */
 export default function VerifiedBadge({
   size = 16,
-  color = '#0284c7',
-  fill = '#e0f2fe',
+  color = 'var(--info)',
+  fill = 'var(--info-soft)',
   className = '',
   style = {},
   title = 'Tài khoản đã xác thực',

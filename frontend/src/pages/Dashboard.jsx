@@ -46,28 +46,28 @@ const STATUS_CONFIG = {
     label: 'Đang hoạt động',
     bg: 'rgba(21,128,61,0.08)',
     border: 'rgba(21,128,61,0.25)',
-    color: '#15803d',
-    dot: '#15803d',
+    color: 'var(--success)',
+    dot: 'var(--success)',
   },
   online: {
     label: 'Trực tuyến',
     bg: 'rgba(180,83,9,0.08)',
     border: 'rgba(180,83,9,0.25)',
-    color: '#b45309',
-    dot: '#b45309',
+    color: 'var(--accent)',
+    dot: 'var(--accent)',
   },
   idle: {
     label: 'Không hoạt động',
     bg: 'rgba(217,119,6,0.08)',
     border: 'rgba(217,119,6,0.25)',
-    color: '#b45309',
+    color: 'var(--accent)',
     dot: '#d97706',
   },
   offline: {
     label: 'Ngoại tuyến',
     bg: 'rgba(0,0,0,0.04)',
     border: 'rgba(0,0,0,0.08)',
-    color: '#777777',
+    color: 'var(--text-muted)',
     dot: '#a3a3a3',
   },
 };
@@ -405,7 +405,7 @@ export default function Dashboard() {
           </div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span>Xin chào, {user?.name || 'Bạn'}</span>
-            <Sparkles size={22} color="#b45309" />
+            <Sparkles size={22} color="var(--accent)" />
           </h1>
           <div
             style={{
@@ -414,20 +414,20 @@ export default function Dashboard() {
               gap: 8,
               marginTop: 6,
               fontSize: 13,
-              color: '#64748b',
+              color: 'var(--text-secondary)',
               flexWrap: 'wrap',
             }}
           >
             {user?.jobTitle && <JobTitleBadge jobTitle={user.jobTitle} size="xs" />}
             <span>•</span>
-            <span style={{ fontWeight: 600, color: '#334155' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
               {user?.department || myKpis?.department?.name || 'Media & Content'}
             </span>
             <span>•</span>
             <span
               style={{
-                background: teamInfo.hasTeam ? '#f1f5f9' : '#fffbeb',
-                color: teamInfo.hasTeam ? '#0f172a' : '#b45309',
+                background: teamInfo.hasTeam ? 'var(--surface-muted)' : '#fffbeb',
+                color: teamInfo.hasTeam ? 'var(--text-primary)' : 'var(--accent)',
                 padding: '2px 8px',
                 borderRadius: 4,
                 fontWeight: 600,
@@ -440,8 +440,8 @@ export default function Dashboard() {
             {isAdmin && (
               <span
                 style={{
-                  background: '#0f172a',
-                  color: '#f8fafc',
+                  background: 'var(--text-primary)',
+                  color: 'var(--surface-soft)',
                   padding: '2px 6px',
                   borderRadius: 3,
                   fontSize: 10,
@@ -506,8 +506,8 @@ export default function Dashboard() {
               style={{
                 width: 28,
                 height: 28,
-                background: '#eff6ff',
-                color: '#2563eb',
+                background: 'var(--info-soft)',
+                color: 'var(--info)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -516,10 +516,10 @@ export default function Dashboard() {
               <UserCheck size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 1. Hiệu Suất & KPI Cá Nhân
               </h2>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                 Chỉ số hoàn thành công việc, điểm thi đua và tiến độ thực tế của bạn
               </span>
             </div>
@@ -533,9 +533,9 @@ export default function Dashboard() {
               alignItems: 'center',
               gap: 4,
               padding: '5px 10px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              color: '#334155',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-2)',
+              color: 'var(--text-secondary)',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
@@ -551,18 +551,18 @@ export default function Dashboard() {
           {/* CARD 1: Điểm & XP Cá Nhân */}
           <div
             style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               padding: '16px 18px',
               cursor: 'pointer',
             }}
             onClick={() => navigate('/leaderboard?scope=members&period=season')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                 ĐIỂM & XP CÁ NHÂN
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '1px 6px' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', background: '#fef3c7', padding: '1px 6px' }}>
                 {personalInfo.rank ? `Hạng #${personalInfo.rank}` : 'Chưa xếp hạng'}
               </span>
             </div>
@@ -571,14 +571,14 @@ export default function Dashboard() {
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 24,
                 fontWeight: 700,
-                color: '#0f172a',
+                color: 'var(--text-primary)',
               }}
             >
               {formatNum(personalInfo.score)}{' '}
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>XP</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>XP</span>
             </div>
-            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#64748b' }}>
-              <span>Streak: <strong style={{ color: '#0f172a' }}>{personalInfo.streak} ngày</strong></span>
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)' }}>
+              <span>Streak: <strong style={{ color: 'var(--text-primary)' }}>{personalInfo.streak} ngày</strong></span>
               {personalInfo.recentScoreDelta ? (
                 <span style={{ color: personalInfo.recentScoreDelta > 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
                   {personalInfo.recentScoreDelta > 0 ? `+${personalInfo.recentScoreDelta}` : personalInfo.recentScoreDelta} gần nhất
@@ -590,35 +590,35 @@ export default function Dashboard() {
           </div>
 
           {/* CARD 2: Tỷ Lệ Đạt KPI Công Việc */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                 TIẾN ĐỘ KPI CÔNG VIỆC
               </span>
-              <Target size={14} color="#2563eb" />
+              <Target size={14} color="var(--info)" />
             </div>
             <div
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 24,
                 fontWeight: 700,
-                color: '#0f172a',
+                color: 'var(--text-primary)',
               }}
             >
               {kpiStats.avgProgress}%
             </div>
             {/* Progress bar */}
-            <div style={{ height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', margin: '8px 0 6px 0' }}>
+            <div style={{ height: 6, background: 'var(--surface-muted)', borderRadius: 3, overflow: 'hidden', margin: '8px 0 6px 0' }}>
               <div
                 style={{
                   width: `${Math.min(100, Math.max(0, kpiStats.avgProgress))}%`,
                   height: '100%',
-                  background: kpiStats.avgProgress >= 100 ? '#10b981' : kpiStats.avgProgress > 0 ? '#2563eb' : '#94a3b8',
+                  background: kpiStats.avgProgress >= 100 ? 'var(--success)' : kpiStats.avgProgress > 0 ? 'var(--info)' : 'var(--text-muted)',
                   transition: 'width 0.4s ease',
                 }}
               />
             </div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
               {kpiStats.totalCount > 0
                 ? `${kpiStats.completedCount}/${kpiStats.totalCount} chỉ số đạt target kỳ này`
                 : 'Chưa có chỉ số giao trong kỳ'}
@@ -628,44 +628,44 @@ export default function Dashboard() {
           {/* CARD 3: Thứ Hạng Cá Nhân Toàn Hệ Thống */}
           <div
             style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               padding: '16px 18px',
               cursor: 'pointer',
             }}
             onClick={() => navigate('/leaderboard?scope=members&period=season')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                 VỊ TRÍ BẢNG XẾP HẠNG
               </span>
-              <Trophy size={14} color="#b45309" />
+              <Trophy size={14} color="var(--accent)" />
             </div>
             <div
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 24,
                 fontWeight: 700,
-                color: '#0f172a',
+                color: 'var(--text-primary)',
               }}
             >
               {personalInfo.rank ? `#${personalInfo.rank}` : 'Chưa xếp hạng'}
             </div>
-            <div style={{ marginTop: 8, fontSize: 11, color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--info)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
               <span>Xem vị trí cá nhân</span>
               <ArrowUpRight size={12} />
             </div>
           </div>
 
           {/* CARD 4: Danh Hiệu & Kênh YouTube Phụ Trách */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                 VINH DANH & PHÂN CÔNG
               </span>
               <Medal size={14} color="#059669" />
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
               {personalInfo.mvpCount > 0 || personalInfo.championCount > 0 ? (
                 <span>
                   {personalInfo.mvpCount > 0 && `${personalInfo.mvpCount} Danh hiệu MVP`}
@@ -678,7 +678,7 @@ export default function Dashboard() {
                 <span>Thành viên Tích cực</span>
               )}
             </div>
-            <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
               {personalInfo.myChannelViews > 0
                 ? `${formatNum(personalInfo.myChannelViews)} views trên kênh cá nhân`
                 : personalInfo.seasonWins > 0
@@ -692,7 +692,7 @@ export default function Dashboard() {
         <details className="dashboard-details">
           <summary className="dashboard-details__summary">
             <span className="dashboard-details__title">
-              <Target size={16} color="#0f172a" />
+              <Target size={16} color="var(--text-primary)" />
               <span>Chi tiết KPI phòng ban</span>
               <span className="dashboard-details__context">{myKpis?.period?.name || 'Kỳ hiện tại'}</span>
             </span>
@@ -707,14 +707,14 @@ export default function Dashboard() {
               style={{
                 padding: '24px 16px',
                 textAlign: 'center',
-                background: '#f8fafc',
-                border: '1px dashed #cbd5e1',
-                color: '#64748b',
+                background: 'var(--surface-soft)',
+                border: '1px dashed var(--border-2)',
+                color: 'var(--text-secondary)',
                 fontSize: 12,
               }}
             >
-              <Target size={22} color="#94a3b8" style={{ marginBottom: 6 }} />
-              <div style={{ fontWeight: 600, color: '#334155' }}>
+              <Target size={22} color="var(--text-muted)" style={{ marginBottom: 6 }} />
+              <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Chưa có chỉ số KPI phòng ban nào được giao trong kỳ này
               </div>
               <div style={{ fontSize: 11, marginTop: 4 }}>
@@ -725,7 +725,7 @@ export default function Dashboard() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 11, textTransform: 'uppercase' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-soft)', color: 'var(--text-secondary)', fontSize: 11, textTransform: 'uppercase' }}>
                     <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>Tên Chỉ Số / Nhiệm Vụ</th>
                     <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>Mục Tiêu</th>
                     <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>Đạt Được</th>
@@ -738,25 +738,25 @@ export default function Dashboard() {
                     const pct = Math.min(100, Math.max(0, Number(kpi.progressPct || kpi.progress || 0)));
                     const isCompleted = kpi.status === 'COMPLETED' || pct >= 100;
                     return (
-                      <tr key={kpi.id || kpi.kpiId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <tr key={kpi.id || kpi.kpiId} style={{ borderBottom: '1px solid var(--surface-muted)' }}>
                         <td style={{ padding: '10px 12px' }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.name}</div>
-                          <div style={{ fontSize: 10, color: '#64748b' }}>{kpi.code || kpi.description}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{kpi.name}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{kpi.code || kpi.description}</div>
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
                           {formatNum(kpi.targetValue ?? kpi.target)} {kpi.unit}
                         </td>
-                        <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: isCompleted ? '#10b981' : '#0f172a' }}>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: isCompleted ? '#10b981' : 'var(--text-primary)' }}>
                           {formatNum(kpi.actualValue ?? kpi.actual)} {kpi.unit}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center', width: 140 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ flex: 1, height: 6, background: 'var(--surface-muted)', borderRadius: 3, overflow: 'hidden' }}>
                               <div
                                 style={{
                                   width: `${pct}%`,
                                   height: '100%',
-                                  background: isCompleted ? '#10b981' : pct > 0 ? '#2563eb' : '#cbd5e1',
+                                  background: isCompleted ? 'var(--success)' : pct > 0 ? 'var(--info)' : 'var(--border-2)',
                                 }}
                               />
                             </div>
@@ -773,9 +773,9 @@ export default function Dashboard() {
                               textTransform: 'uppercase',
                               padding: '2px 6px',
                               borderRadius: 2,
-                              background: isCompleted ? '#ecfdf5' : pct > 0 ? '#eff6ff' : '#f8fafc',
-                              color: isCompleted ? '#047857' : pct > 0 ? '#1d4ed8' : '#64748b',
-                              border: `1px solid ${isCompleted ? '#a7f3d0' : pct > 0 ? '#bfdbfe' : '#e2e8f0'}`,
+                              background: isCompleted ? 'var(--success-soft)' : pct > 0 ? 'var(--info-soft)' : 'var(--surface-soft)',
+                              color: isCompleted ? 'var(--success)' : pct > 0 ? 'var(--info)' : 'var(--text-secondary)',
+                              border: `1px solid ${isCompleted ? 'var(--success-border)' : pct > 0 ? 'var(--info-border)' : 'var(--border)'}`,
                             }}
                           >
                             {isCompleted ? 'Hoàn thành' : pct > 0 ? 'Đang thực hiện' : 'Chưa có'}
@@ -812,7 +812,7 @@ export default function Dashboard() {
                 width: 28,
                 height: 28,
                 background: '#fef3c7',
-                color: '#b45309',
+                color: 'var(--accent)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -821,10 +821,10 @@ export default function Dashboard() {
               <Building2 size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 2. Hiệu Suất Đội Nhóm & Phòng Ban
               </h2>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                 Tiến độ thi đua tập thể, xếp hạng và đóng góp thực tế của đội nhóm
               </span>
             </div>
@@ -838,9 +838,9 @@ export default function Dashboard() {
               alignItems: 'center',
               gap: 4,
               padding: '5px 10px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              color: '#334155',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-2)',
+              color: 'var(--text-secondary)',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
@@ -858,19 +858,19 @@ export default function Dashboard() {
               {/* CARD 1: Điểm Thi Đua Team */}
               <div
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   padding: '16px 18px',
                   cursor: 'pointer',
                 }}
                 onClick={() => navigate('/leaderboard?scope=teams&period=season')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                     ĐIỂM THI ĐUA ĐỘI
                   </span>
                   {teamInfo.rank && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', background: '#f1f5f9', padding: '1px 6px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', background: 'var(--surface-muted)', padding: '1px 6px' }}>
                       Hạng #{teamInfo.rank}
                     </span>
                   )}
@@ -880,77 +880,77 @@ export default function Dashboard() {
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 24,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {formatNum(teamInfo.score)}{' '}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>XP</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>XP</span>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
-                  Đội: <strong style={{ color: '#0f172a' }}>{teamInfo.teamName}</strong>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
+                  Đội: <strong style={{ color: 'var(--text-primary)' }}>{teamInfo.teamName}</strong>
                 </div>
               </div>
 
               {/* CARD 2: Thứ Hạng Team */}
               <div
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   padding: '16px 18px',
                   cursor: 'pointer',
                 }}
                 onClick={() => navigate('/leaderboard?scope=teams&period=season')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                     THỨ HẠNG ĐỘI NHÓM
                   </span>
-                  <Trophy size={14} color="#b45309" />
+                  <Trophy size={14} color="var(--accent)" />
                 </div>
                 <div
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 24,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {teamInfo.rank ? `#${teamInfo.rank}` : 'Chưa xếp hạng'}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--info)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span>Xem vị trí đội nhóm</span>
                   <ArrowUpRight size={12} />
                 </div>
               </div>
 
               {/* CARD 3: Thành Viên Tham Gia */}
-              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '16px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                     QUY MÔ ĐỘI NHÓM
                   </span>
-                  <Users size={14} color="#64748b" />
+                  <Users size={14} color="var(--text-secondary)" />
                 </div>
                 <div
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 24,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {teamInfo.membersCount}{' '}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>thành viên</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>thành viên</span>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
                   Đang hoạt động trong đội
                 </div>
               </div>
 
               {/* CARD 4: Đóng Góp YouTube Của Team */}
-              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '16px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>
                     ĐÓNG GÓP YOUTUBE CỦA ĐỘI
                   </span>
                   <Tv size={14} color="#ef4444" />
@@ -960,13 +960,13 @@ export default function Dashboard() {
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 24,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {formatNum(teamInfo.totalViews)}{' '}
-                  <span style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>views</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>views</span>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b' }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
                   {formatNum(teamInfo.totalSubs)} subs
                   {teamInfo.growthPct !== null && (
                     <span style={{ marginLeft: 6, fontWeight: 600, color: teamInfo.growthPct >= 0 ? '#10b981' : '#ef4444' }}>
@@ -982,16 +982,16 @@ export default function Dashboard() {
             style={{
               padding: '30px 20px',
               textAlign: 'center',
-              background: '#ffffff',
-              border: '1px dashed #cbd5e1',
-              color: '#64748b',
+              background: 'var(--surface)',
+              border: '1px dashed var(--border-2)',
+              color: 'var(--text-secondary)',
             }}
           >
-            <Users size={30} color="#94a3b8" style={{ marginBottom: 8 }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+            <Users size={30} color="var(--text-muted)" style={{ marginBottom: 8 }} />
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
               Bạn chưa gia nhập đội nhóm nào
             </div>
-            <div style={{ fontSize: 12, color: '#64748b', maxWidth: 460, margin: '6px auto 14px' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 460, margin: '6px auto 14px' }}>
               Gia nhập đội nhóm để cùng đồng đội tích lũy điểm thi đua, đóng góp chỉ số KPI tập thể và tranh tài trên bảng xếp hạng.
             </div>
             <button
@@ -1002,8 +1002,8 @@ export default function Dashboard() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '7px 16px',
-                background: '#0f172a',
-                color: '#ffffff',
+                background: 'var(--text-primary)',
+                color: 'var(--surface)',
                 border: 'none',
                 fontSize: 12,
                 fontWeight: 600,
@@ -1046,10 +1046,10 @@ export default function Dashboard() {
               <Tv size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 3. Hiệu Suất YouTube
               </h2>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                 {isAdmin
                   ? 'Dữ liệu YouTube toàn công ty (Cấp 1 & Cấp 2)'
                   : 'Kênh YouTube phụ trách và hiệu suất tăng trưởng trong kỳ'}
@@ -1066,9 +1066,9 @@ export default function Dashboard() {
                 alignItems: 'center',
                 gap: 4,
                 padding: '5px 10px',
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
-                color: '#334155',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-2)',
+                color: 'var(--text-secondary)',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1085,9 +1085,9 @@ export default function Dashboard() {
                 alignItems: 'center',
                 gap: 4,
                 padding: '5px 10px',
-                background: '#0f172a',
+                background: 'var(--text-primary)',
                 border: 'none',
-                color: '#ffffff',
+                color: 'var(--surface)',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1106,9 +1106,9 @@ export default function Dashboard() {
             { label: isAdmin ? 'Kênh trong hệ thống' : 'Kênh phụ trách', value: youtubeSummary.channels },
             ...(isAdmin ? [{ label: 'Tăng trưởng 30 ngày', value: youtubeSummary.growth, growth: true }] : []),
           ].map((metric) => (
-            <div key={metric.label} style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '16px 18px' }}>
-              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{metric.label}</div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: '#0f172a', marginTop: 6 }}>
+            <div key={metric.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>{metric.label}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginTop: 6 }}>
                 {metric.growth
                   ? metric.value === null ? 'Chưa đủ dữ liệu' : `${metric.value >= 0 ? '+' : ''}${Number(metric.value).toFixed(1)}%`
                   : <AnimatedNumber value={metric.value} formatFn={formatNum} duration={700} />}
@@ -1124,7 +1124,7 @@ export default function Dashboard() {
       <section id="dashboard-community" className="dashboard-section dashboard-section--community" style={{ marginBottom: 30 }} data-tour="ranking-and-presence">
         <div className="analytics-two-columns-grid">
           {/* CỘT 1: TÓM TẮT VỊ THẾ THI ĐUA & HOẠT ĐỘNG */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 20 }}>
             <div
               style={{
                 display: 'flex',
@@ -1134,31 +1134,31 @@ export default function Dashboard() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Trophy size={16} color="#b45309" />
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                <Trophy size={16} color="var(--accent)" />
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Vị Thế Thi Đua & Bảng Xếp Hạng
                 </h3>
               </div>
-              <span style={{ fontSize: 11, color: '#64748b' }}>Season & Grand Race</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Season & Grand Race</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
               {/* Vị trí cá nhân */}
-              <div style={{ padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-soft)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>CÁ NHÂN (SEASON)</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>CÁ NHÂN (SEASON)</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
                     {personalInfo.rank ? `Hạng #${personalInfo.rank}` : 'Chưa xếp hạng'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--text-primary)' }}>
                     <AnimatedNumber value={personalInfo.score || 0} duration={700} formatFn={formatNum} /> XP
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('/leaderboard?scope=members&period=season')}
-                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--info)', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
                   >
                     <span>Xem BXH</span>
                     <ArrowRight size={11} />
@@ -1167,21 +1167,21 @@ export default function Dashboard() {
               </div>
 
               {/* Vị trí team */}
-              <div style={{ padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-soft)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>ĐỘI NHÓM (TEAM)</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>ĐỘI NHÓM (TEAM)</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
                     {teamInfo.hasTeam ? (teamInfo.rank ? `Hạng #${teamInfo.rank}` : 'Chưa xếp hạng') : 'Chưa vào đội'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--text-primary)' }}>
                     <AnimatedNumber value={teamInfo.score || 0} duration={700} formatFn={formatNum} /> XP
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('/leaderboard?scope=teams&period=season')}
-                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--info)', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}
                   >
                     <span>Xem BXH Đội</span>
                     <ArrowRight size={11} />
@@ -1198,9 +1198,9 @@ export default function Dashboard() {
                 style={{
                   flex: 1,
                   padding: '8px 12px',
-                  background: '#f8fafc',
-                  border: '1px solid #cbd5e1',
-                  color: '#0f172a',
+                  background: 'var(--surface-soft)',
+                  border: '1px solid var(--border-2)',
+                  color: 'var(--text-primary)',
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1221,7 +1221,7 @@ export default function Dashboard() {
                   padding: '8px 12px',
                   background: '#fef3c7',
                   border: '1px solid #fde68a',
-                  color: '#b45309',
+                  color: 'var(--accent)',
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1238,7 +1238,7 @@ export default function Dashboard() {
           </div>
 
           {/* CỘT 2: NGƯỜI ĐANG ONLINE (REALTIME COMMUNITY) */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 20 }}>
             <div
               style={{
                 display: 'flex',
@@ -1249,7 +1249,7 @@ export default function Dashboard() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span className="dashboard-live-dot" />
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Người Đang Trực Tuyến
                 </h3>
               </div>
@@ -1278,8 +1278,8 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : onlineRows.length === 0 ? (
-                <div style={{ padding: 24, textAlign: 'center', color: '#64748b', fontSize: 12 }}>
-                  <Monitor size={22} color="#94a3b8" style={{ marginBottom: 6 }} />
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12 }}>
+                  <Monitor size={22} color="var(--text-muted)" style={{ marginBottom: 6 }} />
                   <div>Chưa có người trực tuyến</div>
                 </div>
               ) : (
@@ -1300,8 +1300,8 @@ export default function Dashboard() {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '6px 10px',
-                          background: '#f8fafc',
-                          border: '1px solid #f1f5f9',
+                          background: 'var(--surface-soft)',
+                          border: '1px solid var(--surface-muted)',
                           cursor: 'pointer',
                           textAlign: 'left',
                         }}
@@ -1312,8 +1312,8 @@ export default function Dashboard() {
                               width: 28,
                               height: 28,
                               borderRadius: 14,
-                              background: '#0f172a',
-                              color: '#ffffff',
+                              background: 'var(--text-primary)',
+                              color: 'var(--surface)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1330,7 +1330,7 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{u.name}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{u.name}</span>
                               {isVerifiedUser(u) && <VerifiedBadge size={12} />}
                             </div>
                           </div>
@@ -1353,7 +1353,7 @@ export default function Dashboard() {
                 </FlipList>
               )}
             </div>
-            <button type="button" onClick={() => navigate('/friends')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 12, background: 'transparent', border: 0, padding: 0, color: '#334155', fontSize: 12, cursor: 'pointer' }}>
+            <button type="button" onClick={() => navigate('/friends')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 12, background: 'transparent', border: 0, padding: 0, color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer' }}>
               Bạn bè <ChevronRight size={13} />
             </button>
           </div>

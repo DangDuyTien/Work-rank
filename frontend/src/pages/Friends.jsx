@@ -31,10 +31,10 @@ import usePageVisibility from '../hooks/usePageVisibility';
 import { getCached, fetchWithCache, createCacheKey, CACHE_TTL, isDeepEqual } from '../services/cache';
 
 const STATUS_META = {
-  active: { label: 'Đang làm việc', color: '#16a34a', bg: 'rgba(22,163,74,0.1)', border: 'rgba(22,163,74,0.28)', dot: '#22c55e' },
-  online: { label: 'Trực tuyến', color: '#0891b2', bg: 'rgba(8,145,178,0.1)', border: 'rgba(8,145,178,0.25)', dot: '#06b6d4' },
-  idle: { label: 'Tạm nghỉ', color: '#ca8a04', bg: 'rgba(234,179,8,0.13)', border: 'rgba(234,179,8,0.3)', dot: '#eab308' },
-  offline: { label: 'Ngoại tuyến', color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.22)', dot: '#94a3b8' },
+  active: { label: 'Đang làm việc', color: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)', dot: 'var(--success)' },
+  online: { label: 'Trực tuyến', color: 'var(--info)', bg: 'var(--info-soft)', border: 'var(--info-border)', dot: 'var(--info)' },
+  idle: { label: 'Tạm nghỉ', color: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)', dot: 'var(--warning)' },
+  offline: { label: 'Ngoại tuyến', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', border: 'var(--border-2)', dot: 'var(--text-muted)' },
 };
 
 function statusMeta(status) {
@@ -62,8 +62,8 @@ function Avatar({ user, size = 42 }) {
       width: size,
       height: size,
       overflow: 'hidden',
-      background: '#0f172a',
-      color: '#ffffff',
+      background: 'var(--text-primary)',
+      color: 'var(--surface)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -405,7 +405,7 @@ export default function Friends() {
         marginBottom: 20,
       }}>
         <div style={{
-          background: '#ffffff',
+          background: 'var(--surface)',
           border: '1px solid rgba(15,23,42,0.08)',
           padding: '14px 16px',
           display: 'flex',
@@ -415,8 +415,8 @@ export default function Friends() {
           <div style={{
             width: 40,
             height: 40,
-            background: 'rgba(56,189,248,0.1)',
-            color: '#0284c7',
+            background: 'var(--info-soft)',
+            color: 'var(--info)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -425,17 +425,17 @@ export default function Friends() {
             <Users size={20} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Tổng nhân sự công ty
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
-              {memberPagination.total || memberList.length} <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>người</span>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+              {memberPagination.total || memberList.length} <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>người</span>
             </div>
           </div>
         </div>
 
         <div style={{
-          background: '#ffffff',
+          background: 'var(--surface)',
           border: '1px solid rgba(15,23,42,0.08)',
           padding: '14px 16px',
           display: 'flex',
@@ -455,17 +455,17 @@ export default function Friends() {
             <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }} />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Trực tuyến / Hoạt động
             </div>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a', marginTop: 2 }}>
-              {onlineCount} <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>đang online</span>
+              {onlineCount} <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>đang online</span>
             </div>
           </div>
         </div>
 
         <div style={{
-          background: '#ffffff',
+          background: 'var(--surface)',
           border: '1px solid rgba(15,23,42,0.08)',
           padding: '14px 16px',
           display: 'flex',
@@ -476,7 +476,7 @@ export default function Friends() {
             width: 40,
             height: 40,
             background: myTeam ? 'rgba(124,58,237,0.1)' : 'rgba(100,116,139,0.1)',
-            color: myTeam ? '#7c3aed' : '#64748b',
+            color: myTeam ? '#7c3aed' : 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -485,17 +485,17 @@ export default function Friends() {
             <Shield size={20} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Đội nhóm của bạn
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {myTeam ? myTeam.name : 'Chưa tham gia đội'}
             </div>
           </div>
         </div>
 
         <div style={{
-          background: '#ffffff',
+          background: 'var(--surface)',
           border: '1px solid rgba(15,23,42,0.08)',
           padding: '14px 16px',
           display: 'flex',
@@ -506,7 +506,7 @@ export default function Friends() {
             width: 40,
             height: 40,
             background: isTeamLeader ? 'rgba(217,119,6,0.1)' : 'rgba(15,23,42,0.06)',
-            color: isTeamLeader ? '#d97706' : '#0f172a',
+            color: isTeamLeader ? '#d97706' : 'var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -515,10 +515,10 @@ export default function Friends() {
             {isTeamLeader ? <Crown size={20} /> : <Award size={20} />}
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Vai trò trong đội
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: isTeamLeader ? '#d97706' : '#0f172a', marginTop: 2 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: isTeamLeader ? '#d97706' : 'var(--text-primary)', marginTop: 2 }}>
               {isTeamLeader ? '👑 Trưởng nhóm' : myTeam ? 'Thành viên' : 'Chưa có đội'}
             </div>
           </div>
@@ -541,9 +541,9 @@ export default function Friends() {
             fontSize: 14,
             fontWeight: 600,
             border: 'none',
-            borderBottom: activeTab === 'directory' ? '3px solid #0f172a' : '3px solid transparent',
+            borderBottom: activeTab === 'directory' ? '3px solid var(--text-primary)' : '3px solid transparent',
             background: 'transparent',
-            color: activeTab === 'directory' ? '#0f172a' : '#64748b',
+            color: activeTab === 'directory' ? 'var(--text-primary)' : 'var(--text-secondary)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -558,8 +558,8 @@ export default function Friends() {
             fontSize: 11,
             fontWeight: 600,
             padding: '2px 6px',
-            background: activeTab === 'directory' ? '#0f172a' : 'rgba(100,116,139,0.15)',
-            color: activeTab === 'directory' ? '#ffffff' : '#64748b',
+            background: activeTab === 'directory' ? 'var(--text-primary)' : 'rgba(100,116,139,0.15)',
+            color: activeTab === 'directory' ? 'var(--surface)' : 'var(--text-secondary)',
           }}>
             {memberPagination.total || memberList.length}
           </span>
@@ -573,9 +573,9 @@ export default function Friends() {
             fontSize: 14,
             fontWeight: 600,
             border: 'none',
-            borderBottom: activeTab === 'team' ? '3px solid #0f172a' : '3px solid transparent',
+            borderBottom: activeTab === 'team' ? '3px solid var(--text-primary)' : '3px solid transparent',
             background: 'transparent',
-            color: activeTab === 'team' ? '#0f172a' : '#64748b',
+            color: activeTab === 'team' ? 'var(--text-primary)' : 'var(--text-secondary)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -591,8 +591,8 @@ export default function Friends() {
               fontSize: 11,
               fontWeight: 600,
               padding: '2px 6px',
-              background: '#0284c7',
-              color: '#ffffff',
+              background: 'var(--info)',
+              color: 'var(--surface)',
             }}>
               {myTeam.name}
             </span>
@@ -609,7 +609,7 @@ export default function Friends() {
             border: 'none',
             borderBottom: '3px solid transparent',
             background: 'transparent',
-            color: '#64748b',
+            color: 'var(--text-secondary)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -632,7 +632,7 @@ export default function Friends() {
           <div>
             {/* Search & Filter Controls */}
             <div style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               border: '1px solid rgba(15,23,42,0.08)',
               padding: 16,
               marginBottom: 20,
@@ -642,7 +642,7 @@ export default function Friends() {
             }}>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 260, position: 'relative' }}>
-                  <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
                     type="text"
                     value={searchQuery}
@@ -654,7 +654,7 @@ export default function Friends() {
                       paddingLeft: 38,
                       paddingRight: 12,
                       border: '1px solid rgba(15,23,42,0.16)',
-                      background: '#ffffff',
+                      background: 'var(--surface)',
                       fontSize: 13,
                       fontWeight: 600,
                       outline: 'none',
@@ -669,10 +669,10 @@ export default function Friends() {
                     height: 40,
                     padding: '0 12px',
                     border: '1px solid rgba(15,23,42,0.16)',
-                    background: '#ffffff',
+                    background: 'var(--surface)',
                     fontSize: 13,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                     outline: 'none',
                     cursor: 'pointer',
                   }}
@@ -694,10 +694,10 @@ export default function Friends() {
                     height: 40,
                     padding: '0 12px',
                     border: '1px solid rgba(15,23,42,0.16)',
-                    background: '#ffffff',
+                    background: 'var(--surface)',
                     fontSize: 13,
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: 'var(--text-primary)',
                     outline: 'none',
                     cursor: 'pointer',
                   }}
@@ -734,8 +734,8 @@ export default function Friends() {
                     <article
                       key={mId}
                       style={{
-                        background: '#ffffff',
-                        border: isSelf ? '2px solid #0284c7' : '1px solid rgba(15,23,42,0.08)',
+                        background: 'var(--surface)',
+                        border: isSelf ? '2px solid var(--info)' : '1px solid var(--border)',
                         padding: 16,
                         display: 'flex',
                         flexDirection: 'column',
@@ -755,7 +755,7 @@ export default function Friends() {
                                 <strong style={{
                                   fontSize: 14,
                                   fontWeight: 600,
-                                  color: '#0f172a',
+                                  color: 'var(--text-primary)',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
@@ -764,8 +764,8 @@ export default function Friends() {
                                 </strong>
                                 {isVerified(member) && <VerifiedBadge size={14} />}
                               </div>
-                              <div style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8', marginTop: 2 }}>
-                                {formatMemberCode(member)} {isSelf && <span style={{ color: '#0284c7', fontWeight: 600 }}>· Bạn</span>}
+                              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
+                                {formatMemberCode(member)} {isSelf && <span style={{ color: 'var(--info)', fontWeight: 600 }}>· Bạn</span>}
                               </div>
                             </div>
                           </div>
@@ -782,11 +782,11 @@ export default function Friends() {
                               gap: 4,
                               minHeight: 22,
                               padding: '0 8px',
-                              background: '#f8fafc',
+                              background: 'var(--surface-soft)',
                               border: '1px solid rgba(15,23,42,0.1)',
                               fontSize: 11,
                               fontWeight: 600,
-                              color: '#475569',
+                              color: 'var(--text-secondary)',
                             }}>
                               <Building2 size={12} />
                               {member.department}
@@ -804,9 +804,9 @@ export default function Friends() {
                                 gap: 5,
                                 fontSize: 11,
                                 fontWeight: 600,
-                                color: memberIsLeader ? '#d97706' : '#0284c7',
-                                background: memberIsLeader ? 'rgba(217,119,6,0.08)' : 'rgba(2,132,199,0.08)',
-                                border: memberIsLeader ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(2,132,199,0.2)',
+                                color: memberIsLeader ? 'var(--accent)' : 'var(--info)',
+                                background: memberIsLeader ? 'var(--accent-soft)' : 'var(--info-soft)',
+                                border: memberIsLeader ? '1px solid var(--accent-border)' : '1px solid var(--info-border)',
                                 padding: '2px 8px',
                               }}>
                                 <Shield size={12} />
@@ -814,7 +814,7 @@ export default function Friends() {
                               </span>
                             </div>
                           ) : (
-                            <span style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8' }}>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>
                               Chưa tham gia đội nhóm nào
                             </span>
                           )}
@@ -858,7 +858,7 @@ export default function Friends() {
               <div style={{ display: 'grid', gap: 20 }}>
                 {/* Team Overview Banner */}
                 <div style={{
-                  background: '#ffffff',
+                  background: 'var(--surface)',
                   border: '1px solid rgba(15,23,42,0.1)',
                   padding: 24,
                 }}>
@@ -873,8 +873,8 @@ export default function Friends() {
                       <div style={{
                         width: 56,
                         height: 56,
-                        background: '#0f172a',
-                        color: '#38bdf8',
+                        background: 'var(--text-primary)',
+                        color: 'var(--info)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -884,28 +884,28 @@ export default function Friends() {
                       </div>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                          <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                             {myTeam.name}
                           </h2>
                           <span style={{
                             fontSize: 12,
                             fontWeight: 600,
                             padding: '3px 8px',
-                            background: isTeamLeader ? '#d97706' : '#0284c7',
-                            color: '#ffffff',
+                            background: isTeamLeader ? 'var(--accent)' : 'var(--info)',
+                            color: 'var(--accent-foreground)',
                           }}>
                             {isTeamLeader ? '👑 Bạn là Trưởng nhóm' : 'Thành viên'}
                           </span>
                         </div>
                         {myTeam.description && (
-                          <p style={{ fontSize: 13, color: '#475569', marginTop: 6, marginBottom: 0 }}>
+                          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
                             {myTeam.description}
                           </p>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, fontWeight: 500, color: '#64748b' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12, fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>
                           <span>👥 {myTeam.memberCount || myTeam.members?.length || 0} thành viên</span>
                           {myTeam.owner && (
-                            <span>👑 Trưởng nhóm: <strong style={{ color: '#0f172a' }}>{myTeam.owner.name || myTeam.owner.email}</strong></span>
+                            <span>👑 Trưởng nhóm: <strong style={{ color: 'var(--text-primary)' }}>{myTeam.owner.name || myTeam.owner.email}</strong></span>
                           )}
                         </div>
                       </div>
@@ -917,20 +917,20 @@ export default function Friends() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
-                        background: '#f8fafc',
+                        background: 'var(--surface-soft)',
                         border: '1px solid rgba(15,23,42,0.12)',
                         padding: '6px 12px',
                       }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                           Mã mời:
                         </span>
-                        <strong style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', letterSpacing: '0.05em' }}>
+                        <strong style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.05em' }}>
                           {myTeam.inviteCode || myTeam.invite_code}
                         </strong>
                         <button
                           type="button"
                           onClick={handleCopyInviteCode}
-                          style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#0284c7', padding: 2 }}
+                          style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--info)', padding: 2 }}
                           title="Sao chép mã mời"
                         >
                           <Copy size={15} />
@@ -974,12 +974,12 @@ export default function Friends() {
 
                 {/* Team Members List */}
                 <div style={{
-                  background: '#ffffff',
+                  background: 'var(--surface)',
                   border: '1px solid rgba(15,23,42,0.1)',
                   padding: 20,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                       Danh Sách Thành Viên ({myTeam.members?.length || 0})
                     </h3>
                   </div>
@@ -1000,7 +1000,7 @@ export default function Friends() {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: 12,
-                            background: isSelf ? '#f8fafc' : '#ffffff',
+                            background: isSelf ? 'var(--surface-soft)' : 'var(--surface)',
                             flexWrap: 'wrap',
                           }}
                         >
@@ -1008,7 +1008,7 @@ export default function Friends() {
                             <Avatar user={m} size={40} />
                             <div style={{ minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <strong style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                                <strong style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
                                   {m.name || m.email || `Thành viên #${memberId}`}
                                 </strong>
                                 {isVerified(m) && <VerifiedBadge size={14} />}
@@ -1018,7 +1018,7 @@ export default function Friends() {
                                     fontWeight: 600,
                                     padding: '1px 6px',
                                     background: 'rgba(217,119,6,0.12)',
-                                    color: '#b45309',
+                                    color: 'var(--accent)',
                                     border: '1px solid rgba(217,119,6,0.3)',
                                   }}>
                                     👑 Trưởng nhóm
@@ -1028,7 +1028,7 @@ export default function Friends() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                                 <JobTitleBadge title={m.jobTitle} size="sm" />
                                 {m.department && (
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
                                     · {m.department}
                                   </span>
                                 )}
@@ -1060,7 +1060,7 @@ export default function Friends() {
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   gap: 5,
-                                  color: '#b45309',
+                                  color: 'var(--accent)',
                                   borderColor: 'rgba(180,83,9,0.3)',
                                   background: 'rgba(180,83,9,0.04)',
                                 }}
@@ -1081,7 +1081,7 @@ export default function Friends() {
             ) : (
               /* No Team: Onboarding Hub */
               <div style={{
-                background: '#ffffff',
+                background: 'var(--surface)',
                 border: '1px solid rgba(15,23,42,0.1)',
                 padding: 32,
                 textAlign: 'center',
@@ -1089,8 +1089,8 @@ export default function Friends() {
                 <div style={{
                   width: 64,
                   height: 64,
-                  background: 'rgba(56,189,248,0.1)',
-                  color: '#0284c7',
+                  background: 'var(--info-soft)',
+                  color: 'var(--info)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1098,10 +1098,10 @@ export default function Friends() {
                 }}>
                   <Shield size={32} />
                 </div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
                   Bạn Chưa Thuộc Đội Nhóm Nào
                 </h2>
-                <p style={{ fontSize: 14, color: '#64748b', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 540, margin: '0 auto 24px auto', lineHeight: 1.5 }}>
                   {isAdmin
                     ? 'Bạn là Quản trị viên (Admin). Bạn có thể tạo đội nhóm mới, phân bổ nhân sự và thiết lập danh hiệu thi đua.'
                     : 'Đội nhóm được khởi tạo và phân bổ bởi Quản trị viên (Admin). Hãy liên hệ Admin để được thêm vào đội hoặc gia nhập bằng mã mời từ trưởng nhóm.'}
@@ -1133,16 +1133,16 @@ export default function Friends() {
 
             {/* Company Teams Showcase - ALWAYS VISIBLE TO ALL USERS & ADMIN */}
             <div style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               border: '1px solid rgba(15,23,42,0.1)',
               padding: 24,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     Các Đội Nhóm Trong Công Ty ({allTeams.length})
                   </h3>
-                  <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
                     {isAdmin
                       ? 'Các đội nhóm thi đua và sản xuất trong công ty.'
                       : 'Mạng lưới các đội nhóm thi đua và sản xuất trong toàn bộ hệ thống.'}
@@ -1151,7 +1151,7 @@ export default function Friends() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ position: 'relative', width: 220 }}>
-                    <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input
                       type="text"
                       value={allTeamsSearchQuery}
@@ -1174,13 +1174,13 @@ export default function Friends() {
                         fontWeight: 600,
                         background: '#fef3c7',
                         border: '1px solid #fde68a',
-                        color: '#92400e',
+                        color: 'var(--accent-hover)',
                         cursor: 'pointer',
                         borderRadius: 4,
                       }}
                       title="Quản lý đội nhóm & cá nhân MVP hiển thị trên Trang Chủ"
                     >
-                      <Trophy size={14} color="#b45309" />
+                      <Trophy size={14} color="var(--accent)" />
                       Vinh danh Trang Chủ
                     </button>
                   )}
@@ -1227,12 +1227,12 @@ export default function Friends() {
                           key={team.id}
                           style={{
                             border: isCurrentTeam
-                              ? '2px solid #0284c7'
-                              : '1px solid rgba(15,23,42,0.08)',
+                              ? '2px solid var(--info)'
+                              : '1px solid var(--border)',
                             padding: 16,
                             background: isCurrentTeam
-                              ? '#f0f9ff'
-                              : '#ffffff',
+                              ? 'var(--info-soft)'
+                              : 'var(--surface)',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'space-between',
@@ -1243,27 +1243,27 @@ export default function Friends() {
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <strong style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+                                <strong style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                                   {team.name}
                                 </strong>
                                 {isCurrentTeam && (
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 6px', borderRadius: 3 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--info)', background: 'var(--info-soft)', padding: '1px 6px', borderRadius: 3 }}>
                                     Đội của bạn
                                   </span>
                                 )}
                               </div>
-                              <span style={{ fontSize: 11, fontWeight: 600, color: '#0284c7', background: 'rgba(2,132,199,0.08)', padding: '2px 8px' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--info)', background: 'var(--info-soft)', padding: '2px 8px' }}>
                                 {team.memberCount || 0} thành viên
                               </span>
                             </div>
                             {team.description && (
-                              <p style={{ fontSize: 12, color: '#64748b', marginTop: 6, marginBottom: 0 }}>
+                              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
                                 {team.description}
                               </p>
                             )}
                             {team.owner && (
-                              <div style={{ fontSize: 11, fontWeight: 500, color: '#94a3b8', marginTop: 8 }}>
-                                👑 Trưởng nhóm: <strong style={{ color: '#475569' }}>{team.owner.name || team.owner.email}</strong>
+                              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginTop: 8 }}>
+                                👑 Trưởng nhóm: <strong style={{ color: 'var(--text-secondary)' }}>{team.owner.name || team.owner.email}</strong>
                               </div>
                             )}
                           </div>
@@ -1271,7 +1271,7 @@ export default function Friends() {
                           <div style={{
                             fontSize: 11,
                             fontWeight: 600,
-                            color: '#64748b',
+                            color: 'var(--text-secondary)',
                             borderTop: '1px dashed rgba(15,23,42,0.08)',
                             paddingTop: 8,
                             display: 'flex',
@@ -1282,14 +1282,14 @@ export default function Friends() {
                           }}>
                             {isAdmin && team.inviteCode ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ color: '#0284c7' }}>Mã: {team.inviteCode}</span>
+                                <span style={{ color: 'var(--info)' }}>Mã: {team.inviteCode}</span>
                                 <button
                                   type="button"
                                   onClick={() => {
                                     navigator.clipboard?.writeText(team.inviteCode);
                                     toast.success(`Đã sao chép mã mời của đội "${team.name}"!`);
                                   }}
-                                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#0284c7', padding: 0 }}
+                                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--info)', padding: 0 }}
                                   title="Sao chép mã mời"
                                 >
                                   <Copy size={13} />
@@ -1332,15 +1332,15 @@ export default function Friends() {
           >
             <div style={MODAL_HEADER}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <KeyRoundIcon size={18} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                <KeyRoundIcon size={18} color="var(--info)" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Gia Nhập Đội Bằng Mã Mời
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowJoinModal(false)}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={18} />
               </button>
@@ -1360,7 +1360,7 @@ export default function Friends() {
                   style={{ ...INPUT_STYLE, letterSpacing: '0.08em', fontWeight: 700 }}
                   maxLength={32}
                 />
-                <span style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
                   Hỏi Trưởng nhóm của bạn để lấy mã mời vào đội.
                 </span>
               </div>
@@ -1413,7 +1413,7 @@ const MODAL_BACKDROP = {
 };
 
 const MODAL_PANEL = {
-  background: '#ffffff',
+  background: 'var(--surface)',
   width: '100%',
   maxWidth: 480,
   maxHeight: '90vh',
@@ -1431,14 +1431,14 @@ const MODAL_HEADER = {
   justifyContent: 'space-between',
   padding: '16px 20px',
   borderBottom: '1px solid rgba(15,23,42,0.08)',
-  background: '#f8fafc',
+  background: 'var(--surface-soft)',
 };
 
 const LABEL_STYLE = {
   display: 'block',
   fontSize: 12,
   fontWeight: 600,
-  color: '#0f172a',
+  color: 'var(--text-primary)',
   marginBottom: 6,
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
@@ -1449,10 +1449,10 @@ const INPUT_STYLE = {
   height: 40,
   padding: '0 12px',
   border: '1px solid rgba(15,23,42,0.16)',
-  background: '#ffffff',
+  background: 'var(--surface)',
   fontSize: 13,
   fontWeight: 600,
-  color: '#0f172a',
+  color: 'var(--text-primary)',
   outline: 'none',
   borderRadius: 8,
 };

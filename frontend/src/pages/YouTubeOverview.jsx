@@ -21,7 +21,7 @@ const actionStyle = {
 const tabStyle = {
   display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px',
   fontSize: 14, fontWeight: 700, background: 'none', border: 'none',
-  color: '#64748b', cursor: 'pointer', whiteSpace: 'nowrap',
+  color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap',
   transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
 };
 
@@ -233,7 +233,7 @@ export default function YouTubeOverview() {
     <div className="youtube-overview-page" style={{ width: '100%', maxWidth: 1680, margin: '0 auto', padding: '24px 16px' }}>
       <div className="youtube-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
         <div>
-          <nav aria-label="Đường dẫn YouTube" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748b', marginBottom: 6 }}>
+          <nav aria-label="Đường dẫn YouTube" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
             <button type="button" className="youtube-breadcrumb" onClick={() => changeTab('overview')}>
               YouTube
             </button>
@@ -243,7 +243,7 @@ export default function YouTubeOverview() {
           </nav>
           <div className="youtube-page-title-block" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Tv size={24} color="#ef4444" />
-            <h1 className="youtube-page-title" style={{ margin: 0, fontSize: 24, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+            <h1 className="youtube-page-title" style={{ margin: 0, fontSize: 24, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)' }}>
               {activeTab === 'team_detail' ? 'YouTube · ' + teamName : activeTab === 'compare' ? 'YouTube · So sánh đội' : 'YouTube'}
             </h1>
           </div>
@@ -252,20 +252,20 @@ export default function YouTubeOverview() {
           <div className="youtube-freshness-badge" style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600,
             background: freshness === 'FRESH' ? '#ecfdf5' : '#fffbeb',
-            color: freshness === 'FRESH' ? '#059669' : '#92400e', border: '1px solid #e2e8f0',
+            color: freshness === 'FRESH' ? '#059669' : 'var(--accent-hover)', border: '1px solid var(--border)',
           }}>
             {freshness === 'FRESH' ? <CheckCircle2 size={14} /> : freshness === 'FAILED' ? <XCircle size={14} /> : <AlertTriangle size={14} />}
             {freshness === 'FAILED' ? 'Lỗi đồng bộ gần nhất' : formatRelativeTime(overview?.kpis?.lastSyncedAt)}
           </div>
-          <RouterLink to="/leaderboard?scope=youtube&view=channels&metric=views" className="youtube-primary-action" style={{ ...actionStyle, background: '#0f172a', color: '#ffffff' }}>
+          <RouterLink to="/leaderboard?scope=youtube&view=channels&metric=views" className="youtube-primary-action" style={{ ...actionStyle, background: 'var(--text-primary)', color: 'var(--surface)' }}>
             BXH YouTube <ChevronRight size={14} />
           </RouterLink>
           {isAdmin && (
-            <RouterLink to="/admin/teams-youtube" className="youtube-refresh-action" style={{ ...actionStyle, color: '#334155', border: '1px solid #cbd5e1' }}>
+            <RouterLink to="/admin/teams-youtube" className="youtube-refresh-action" style={{ ...actionStyle, color: 'var(--text-secondary)', border: '1px solid var(--border-2)' }}>
               <Shield size={14} /> Quản lý kênh
             </RouterLink>
           )}
-          <button type="button" className="youtube-refresh-action" onClick={handleRefresh} disabled={refreshing} style={{ ...actionStyle, background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer' }}>
+          <button type="button" className="youtube-refresh-action" onClick={handleRefresh} disabled={refreshing} style={{ ...actionStyle, background: 'var(--surface)', border: '1px solid var(--border-2)', color: 'var(--text-secondary)', cursor: 'pointer' }}>
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> Làm mới
           </button>
         </div>
@@ -292,29 +292,29 @@ export default function YouTubeOverview() {
             {loading && !overview ? <TableSkeleton rows={5} cols={3} minHeight={420} /> : (
               <>
                 <div className="youtube-metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-                  <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: 13, fontWeight: 600 }}><span>Lượt xem toàn công ty</span><Eye size={18} color="#3b82f6" /></div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: '#0f172a' }}><AnimatedNumber value={overview?.kpis?.totalViews || 0} formatFn={formatNumber} /></div>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>{overview?.kpis?.totalChannels || 0} kênh hoạt động</span>
+                  <div className="youtube-metric-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}><span>Lượt xem toàn công ty</span><Eye size={18} color="#3b82f6" /></div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}><AnimatedNumber value={overview?.kpis?.totalViews || 0} formatFn={formatNumber} /></div>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{overview?.kpis?.totalChannels || 0} kênh hoạt động</span>
                   </div>
-                  <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: 13, fontWeight: 600 }}><span>Người đăng ký</span><Users size={18} color="#8b5cf6" /></div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: '#0f172a' }}><AnimatedNumber value={overview?.kpis?.totalSubscribers || 0} formatFn={formatNumber} /></div>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>Toàn công ty</span>
+                  <div className="youtube-metric-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}><span>Người đăng ký</span><Users size={18} color="#8b5cf6" /></div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}><AnimatedNumber value={overview?.kpis?.totalSubscribers || 0} formatFn={formatNumber} /></div>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Toàn công ty</span>
                   </div>
-                  <div className="youtube-metric-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: 13, fontWeight: 600 }}><span>Đội có kênh YouTube</span><Layers size={18} color="#10b981" /></div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: '#0f172a' }}><AnimatedNumber value={overview?.kpis?.totalTeams || 0} /></div>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>{unassignedCount} kênh chưa gán đội</span>
+                  <div className="youtube-metric-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}><span>Đội có kênh YouTube</span><Layers size={18} color="#10b981" /></div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}><AnimatedNumber value={overview?.kpis?.totalTeams || 0} /></div>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{unassignedCount} kênh chưa gán đội</span>
                   </div>
                 </div>
                 <YouTubeTrendChart data={overview?.history || []} title="Lịch sử YouTube toàn công ty (30 ngày)" />
                 {unassignedCount > 0 && (
                   <div className="youtube-unassigned-alert" style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#92400e' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--accent-hover)' }}>
                       <Info size={18} style={{ flexShrink: 0 }} /><span><strong>{unassignedCount} kênh chưa gán đội</strong> · {formatNumber(unassignedViews)} lượt xem</span>
                     </div>
-                    <RouterLink to="/leaderboard?scope=youtube&view=channels&metric=views&channelTeam=unassigned" className="youtube-alert-action" style={{ ...actionStyle, color: '#b45309' }}>
+                    <RouterLink to="/leaderboard?scope=youtube&view=channels&metric=views&channelTeam=unassigned" className="youtube-alert-action" style={{ ...actionStyle, color: 'var(--accent)' }}>
                       Xem các kênh chưa gán <ChevronRight size={14} />
                     </RouterLink>
                   </div>
@@ -337,10 +337,10 @@ export default function YouTubeOverview() {
                           return (
                             <RouterLink key={team.teamId}
                               to={canViewTeam ? '/youtube?tab=team_detail&teamId=' + team.teamId : '/leaderboard?scope=youtube&view=teams&metric=' + metric}
-                              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#f8fafc', textDecoration: 'none', borderLeft: '4px solid ' + (index === 0 ? color : '#cbd5e1'), color: '#0f172a', minWidth: 0 }}>
+                              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--surface-soft)', textDecoration: 'none', borderLeft: '4px solid ' + (index === 0 ? color : 'var(--border-2)'), color: 'var(--text-primary)', minWidth: 0 }}>
                               <div style={{ minWidth: 0 }}>
                                 <div style={{ fontWeight: 700, fontSize: 14, overflowWrap: 'anywhere' }}>#{index + 1} {team.teamName}</div>
-                                <div style={{ fontSize: 12, color: '#64748b' }}>{formatNumber(metric === 'views' ? team.totalSubscribers : team.totalViews)} {metric === 'views' ? 'người đăng ký' : 'lượt xem'}</div>
+                                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{formatNumber(metric === 'views' ? team.totalSubscribers : team.totalViews)} {metric === 'views' ? 'người đăng ký' : 'lượt xem'}</div>
                               </div>
                               <div style={{ fontWeight: 700, fontSize: 16, color, whiteSpace: 'nowrap' }}>
                                 {metric === 'views' ? formatNumber(team.totalViews) : formatGrowth(team.viewsGrowth30dPct)}
@@ -348,7 +348,7 @@ export default function YouTubeOverview() {
                             </RouterLink>
                           );
                         })}
-                        {teams.length === 0 && <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Chưa có dữ liệu đội.</p>}
+                        {teams.length === 0 && <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Chưa có dữ liệu đội.</p>}
                       </div>
                     </section>
                   ))}
@@ -361,13 +361,13 @@ export default function YouTubeOverview() {
         {activeTab === 'team_detail' && (
           <div className="youtube-tab-panel youtube-team-detail-panel" style={panelStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <button type="button" onClick={() => changeTab('overview')} style={{ ...actionStyle, border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', cursor: 'pointer' }}>
+              <button type="button" onClick={() => changeTab('overview')} style={{ ...actionStyle, border: '1px solid var(--border-2)', background: 'var(--surface)', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                 <ArrowLeft size={14} /> Tổng quan YouTube
               </button>
               {isAdmin && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#64748b', maxWidth: '100%' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-secondary)', maxWidth: '100%' }}>
                   Đội
-                  <select value={selectedTeamId} onChange={(event) => changeTab('team_detail', event.target.value)} style={{ maxWidth: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                  <select value={selectedTeamId} onChange={(event) => changeTab('team_detail', event.target.value)} style={{ maxWidth: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid var(--border-2)', background: 'var(--surface)' }}>
                     <option value="">Chọn đội</option>
                     {teamsList.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
                   </select>
@@ -381,7 +381,7 @@ export default function YouTubeOverview() {
             )}
             {canViewSelectedTeam && detailError && <div role="alert" className="motion-slide-down" style={{ color: '#dc2626' }}>{detailError}</div>}
             {!selectedTeamId && (
-              <div style={{ padding: 24, color: '#64748b' }}>
+              <div style={{ padding: 24, color: 'var(--text-secondary)' }}>
                 <AlertTriangle size={24} />
                 <p>{isAdmin ? 'Chưa chọn đội.' : 'Bạn chưa được gán vào đội.'}</p>
                 {!isAdmin && <RouterLink to="/groups" style={{ ...actionStyle, color: '#3b82f6' }}>Đội nhóm <ChevronRight size={14} /></RouterLink>}
@@ -391,18 +391,18 @@ export default function YouTubeOverview() {
             {currentTeam && (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14 }}>
-                  <div style={{ padding: 16, borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Lượt xem của đội</div>
+                  <div style={{ padding: 16, borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Lượt xem của đội</div>
                     <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}><AnimatedNumber value={summary?.totalViews || 0} formatFn={formatNumber} /></div>
                     <div style={{ fontSize: 12, color: '#10b981' }}>+{formatNumber(summary?.views30d)} trong 30 ngày</div>
                   </div>
-                  <div style={{ padding: 16, borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Người đăng ký của đội</div>
+                  <div style={{ padding: 16, borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Người đăng ký của đội</div>
                     <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}><AnimatedNumber value={summary?.totalSubscribers || 0} formatFn={formatNumber} /></div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{channels.length} kênh</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{channels.length} kênh</div>
                   </div>
-                  <div style={{ padding: 16, borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Tăng trưởng 30 ngày</div>
+                  <div style={{ padding: 16, borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Tăng trưởng 30 ngày</div>
                     <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4, color: '#10b981' }}>{formatGrowth(summary?.viewsGrowth30dPct)}</div>
                     <RouterLink to="/leaderboard?scope=youtube&view=teams&metric=growth" style={{ fontSize: 12, color: '#3b82f6' }}>BXH tăng trưởng</RouterLink>
                   </div>
@@ -413,22 +413,22 @@ export default function YouTubeOverview() {
                     <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Kênh YouTube của {teamName} ({channels.length})</h2>
                     <RouterLink to={'/leaderboard?scope=youtube&view=channels&metric=views&channelTeam=' + selectedTeamId} style={{ ...actionStyle, padding: 0, color: '#3b82f6' }}>BXH kênh của đội <ChevronRight size={14} /></RouterLink>
                   </div>
-                  {channels.length === 0 ? <p style={{ color: '#64748b', fontSize: 13 }}>Đội chưa có kênh YouTube.</p> : (
+                  {channels.length === 0 ? <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Đội chưa có kênh YouTube.</p> : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 16 }}>
                       {channels.map((channel) => (
-                        <article key={channel.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 16, background: '#ffffff', display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+                        <article key={channel.id} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16, background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             {channel.thumbnailUrl ? <img src={channel.thumbnailUrl} alt="" width={44} height={44} style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} /> : <Tv size={28} color="#ef4444" style={{ flexShrink: 0 }} />}
                             <div style={{ minWidth: 0 }}>
                               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, overflowWrap: 'anywhere' }}>{channel.title}</h3>
-                              <div style={{ fontSize: 12, color: '#64748b', overflowWrap: 'anywhere' }}>{channel.customUrl || channel.channelId}</div>
+                              <div style={{ fontSize: 12, color: 'var(--text-secondary)', overflowWrap: 'anywhere' }}>{channel.customUrl || channel.channelId}</div>
                             </div>
                           </div>
                           <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, margin: 0 }}>
-                            <div><dt style={{ fontSize: 12, color: '#64748b' }}>Lượt xem</dt><dd style={{ margin: 0, fontWeight: 700 }}>{formatNumber(channel.views)}</dd></div>
-                            <div><dt style={{ fontSize: 12, color: '#64748b' }}>Người đăng ký</dt><dd style={{ margin: 0, fontWeight: 700 }}>{formatNumber(channel.subscribers)}</dd></div>
+                            <div><dt style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Lượt xem</dt><dd style={{ margin: 0, fontWeight: 700 }}>{formatNumber(channel.views)}</dd></div>
+                            <div><dt style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Người đăng ký</dt><dd style={{ margin: 0, fontWeight: 700 }}>{formatNumber(channel.subscribers)}</dd></div>
                           </dl>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
                             <span>{formatRelativeTime(channel.lastSyncedAt)}</span>
                             <a href={'https://youtube.com/channel/' + channel.channelId} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#ef4444', textDecoration: 'none', fontWeight: 600 }}>
                               Mở YouTube <ExternalLink size={12} />
@@ -447,30 +447,30 @@ export default function YouTubeOverview() {
         {isAdmin && activeTab === 'compare' && (
           <div className="youtube-tab-panel youtube-compare-panel" style={panelStyle}>
             <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-              <label style={{ flex: 1, minWidth: 'min(200px, 100%)', fontSize: 13, color: '#475569' }}>
+              <label style={{ flex: 1, minWidth: 'min(200px, 100%)', fontSize: 13, color: 'var(--text-secondary)' }}>
                 Đội A
-                <select value={teamAId} onChange={(event) => setTeamAId(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: '8px 12px', border: '1px solid #cbd5e1', fontSize: 14 }}>
+                <select value={teamAId} onChange={(event) => setTeamAId(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: '8px 12px', border: '1px solid var(--border-2)', fontSize: 14 }}>
                   <option value="">Chọn đội</option>
                   {teamsList.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
                 </select>
               </label>
               <Swords size={20} color="#ef4444" />
-              <label style={{ flex: 1, minWidth: 'min(200px, 100%)', fontSize: 13, color: '#475569' }}>
+              <label style={{ flex: 1, minWidth: 'min(200px, 100%)', fontSize: 13, color: 'var(--text-secondary)' }}>
                 Đội B
-                <select value={teamBId} onChange={(event) => setTeamBId(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: '8px 12px', border: '1px solid #cbd5e1', fontSize: 14 }}>
+                <select value={teamBId} onChange={(event) => setTeamBId(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: '8px 12px', border: '1px solid var(--border-2)', fontSize: 14 }}>
                   <option value="">Chọn đội</option>
                   {teamsList.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
                 </select>
               </label>
             </div>
             {compareError && <div role="alert" className="motion-slide-down" style={{ color: '#dc2626' }}>{compareError}</div>}
-            {teamAId && teamAId === teamBId && <p role="status" style={{ color: '#64748b' }}>Chọn hai đội khác nhau để so sánh.</p>}
+            {teamAId && teamAId === teamBId && <p role="status" style={{ color: 'var(--text-secondary)' }}>Chọn hai đội khác nhau để so sánh.</p>}
             {compareLoading && !visibleComparison && <TableSkeleton rows={4} cols={3} minHeight={320} />}
             {visibleComparison && teamAId !== teamBId && (
               <div className="youtube-data-table-wrap" style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', minWidth: 420, borderCollapse: 'collapse', fontSize: 14 }}>
                   <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
+                    <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
                       <th scope="col" style={{ padding: 14 }}>Chỉ số</th>
                       <th scope="col" style={{ padding: 14 }}>{visibleComparison.teamA.name}</th>
                       <th scope="col" style={{ padding: 14 }}>{visibleComparison.teamB.name}</th>
@@ -483,8 +483,8 @@ export default function YouTubeOverview() {
                       ['Tăng trưởng 30 ngày', 'viewsGrowth30dPct', formatGrowth],
                       ['Số kênh', 'channelsCount', formatNumber],
                     ].map(([label, field, formatter]) => (
-                      <tr key={field} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                        <th scope="row" style={{ padding: 14, textAlign: 'left', fontWeight: 500, color: '#64748b' }}>{label}</th>
+                      <tr key={field} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <th scope="row" style={{ padding: 14, textAlign: 'left', fontWeight: 500, color: 'var(--text-secondary)' }}>{label}</th>
                         <td style={{ padding: 14, fontWeight: 700 }}>{formatter(visibleComparison.teamA[field])}</td>
                         <td style={{ padding: 14, fontWeight: 700 }}>{formatter(visibleComparison.teamB[field])}</td>
                       </tr>

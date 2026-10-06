@@ -2,6 +2,22 @@
 
 const quizService = require('../services/quizGame.service');
 
+const { QuizRoom } = require('../models');
+
+async function resolveRoomId(param) {
+  if (!param) return null;
+  const str = String(param).trim().replace(/^#/, '');
+  if (!str) return null;
+  const num = Number(str);
+  if (!Number.isNaN(num) && num > 0 && /^\d+$/.test(str)) {
+    const room = await QuizRoom.findByPk(num);
+    return room ? room.id : null;
+  }
+  const cleanCode = str.toUpperCase();
+  const found = await QuizRoom.findOne({ where: { code: cleanCode } });
+  return found ? found.id : null;
+}
+
 async function listRooms(req, res) {
   const { mode, status, limit } = req.query || {};
   const rooms = await quizService.listRooms({ mode, status, limit });
@@ -14,8 +30,8 @@ async function getActiveRoom(req, res) {
 }
 
 async function getRoom(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const roomId = await resolveRoomId(req.params.id);
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng chơi' });
 
   const roomState = await quizService.getRoomState(roomId, req.user.id);
   if (!roomState) return res.status(404).json({ message: 'Không tìm thấy phòng chơi' });
@@ -57,8 +73,8 @@ async function listActiveSets(req, res) {
 }
 
 async function joinRoom(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const roomId = await resolveRoomId(req.params.id);
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy mã hoặc phòng chơi này' });
 
   try {
     const roomState = await quizService.joinRoom(roomId, req.user.id);
@@ -69,8 +85,8 @@ async function joinRoom(req, res) {
 }
 
 async function leaveRoom(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const roomId = await resolveRoomId(req.params.id);
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng chơi' });
 
   try {
     const result = await quizService.leaveRoom(roomId, req.user.id);
@@ -81,8 +97,8 @@ async function leaveRoom(req, res) {
 }
 
 async function startGame(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const roomId = await resolveRoomId(req.params.id);
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng chơi' });
 
   try {
     const roomState = await quizService.startGame(roomId, req.user.id);
@@ -93,9 +109,10 @@ async function startGame(req, res) {
 }
 
 async function submitAnswer(req, res) {
-  const roomId = Number(req.params.id);
+  const roomId = await resolveRoomId(req.params.id);
   const { questionId, selectedOption } = req.body || {};
-  if (!roomId || !questionId) return res.status(400).json({ message: 'Invalid parameters' });
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng chơi' });
+  if (!questionId) return res.status(400).json({ message: 'Thiếu questionId' });
 
   try {
     const result = await quizService.submitAnswer(

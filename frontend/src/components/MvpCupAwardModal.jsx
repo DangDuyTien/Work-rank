@@ -23,7 +23,7 @@ import { invalidateCache } from '../services/cache';
 import VerifiedBadge from './VerifiedBadge';
 
 const CARD = {
-  background: '#ffffff',
+  background: 'var(--surface)',
   border: '1px solid rgba(15,23,42,0.12)',
   boxShadow: '0 4px 16px rgba(15,23,42,0.06)',
 };
@@ -270,8 +270,8 @@ export default function MvpCupAwardModal({
         <div
           style={{
             padding: '16px 22px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            color: '#ffffff',
+            background: 'linear-gradient(135deg, var(--text-primary) 0%, #1e293b 100%)',
+            color: 'var(--surface)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -294,10 +294,10 @@ export default function MvpCupAwardModal({
               <Trophy size={18} color="#f59e0b" />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--surface)', letterSpacing: '-0.02em' }}>
                 Hệ Thống Trao MVP Cup Mùa Giải
               </h3>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 Xác định quán quân cá nhân xuất sắc & vinh danh bảng vàng
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function MvpCupAwardModal({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: 4,
               display: 'flex',
@@ -322,11 +322,11 @@ export default function MvpCupAwardModal({
         <div style={{ padding: 22, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Season Selector */}
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
               1. Chọn Mùa Giải Trao MVP:
             </label>
             {loadingSeasons ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
                 <Loader2 size={14} className="animate-spin" /> Đang tải danh sách mùa giải...
               </div>
             ) : (
@@ -338,10 +338,10 @@ export default function MvpCupAwardModal({
                   padding: '9px 12px',
                   fontSize: 12,
                   fontFamily: 'inherit',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-2)',
                   borderRadius: 4,
-                  background: '#ffffff',
-                  color: '#0f172a',
+                  background: 'var(--surface)',
+                  color: 'var(--text-primary)',
                   fontWeight: 600,
                   outline: 'none',
                 }}
@@ -356,21 +356,21 @@ export default function MvpCupAwardModal({
           </div>
 
           {/* Candidate / Award Status Section */}
-          <div style={{ border: '1px solid #e2e8f0', borderRadius: 6, background: '#f8fafc', padding: 16 }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 6, background: 'var(--surface-soft)', padding: 16 }}>
             {previewLoading ? (
-              <div style={{ padding: '24px 0', textAlign: 'center', color: '#64748b', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <Loader2 size={16} className="animate-spin" color="#f59e0b" />
                 Đang truy xuất bảng điểm & xác định ứng viên Rank #1...
               </div>
             ) : previewData?.status === 'ALREADY_AWARDED' ? (
               /* ALREADY AWARDED STATE */
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 4, color: '#b45309', fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
-                  <CheckCircle size={15} color="#b45309" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 4, color: 'var(--accent)', fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
+                  <CheckCircle size={15} color="var(--accent)" />
                   Mùa giải này ĐÃ ĐƯỢC TRAO MVP CUP thành công
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 6, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', border: '1px solid var(--border-2)', borderRadius: 6, padding: 14 }}>
                   <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fef3c7', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {previewData.existingAward.userAvatar ? (
                       <img src={previewData.existingAward.userAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -380,21 +380,21 @@ export default function MvpCupAwardModal({
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <strong style={{ fontSize: 14, color: '#0f172a' }}>{previewData.existingAward.userName}</strong>
-                      <span style={{ fontSize: 11, background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: 3, fontWeight: 700 }}>
+                      <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>{previewData.existingAward.userName}</strong>
+                      <span style={{ fontSize: 11, background: '#fef3c7', color: 'var(--accent)', padding: '1px 6px', borderRadius: 3, fontWeight: 700 }}>
                         MVP #1
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
                       {previewData.existingAward.jobTitle} • {previewData.existingAward.department}
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', marginTop: 4 }}>
                       {previewData.existingAward.title}
                     </div>
-                    <div style={{ fontSize: 11, color: '#475569', fontStyle: 'italic', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: 2 }}>
                       "{previewData.existingAward.reason}"
                     </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 6 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
                       Trao ngày: {new Date(previewData.existingAward.awardedAt).toLocaleString('vi-VN')}
                     </div>
                   </div>
@@ -425,9 +425,9 @@ export default function MvpCupAwardModal({
               </div>
             ) : previewData?.status === 'NO_CANDIDATE' ? (
               /* NO CANDIDATE STATE */
-              <div style={{ textAlign: 'center', padding: '16px 0', color: '#64748b' }}>
+              <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-secondary)' }}>
                 <AlertTriangle size={24} color="#f59e0b" style={{ margin: '0 auto 8px' }} />
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Chưa có ứng viên ghi điểm</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Chưa có ứng viên ghi điểm</div>
                 <div style={{ fontSize: 11, marginTop: 4 }}>
                   Mùa giải này chưa phát sinh điểm số từ các hoạt động thi đấu hoặc chưa có thành viên tham gia.
                 </div>
@@ -436,17 +436,17 @@ export default function MvpCupAwardModal({
               /* READY TO AWARD STATE */
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Sparkles size={13} color="#f59e0b" /> Ứng viên đoạt giải theo dữ liệu thực tế (Rank #1):
                   </div>
                   {previewData.isTied && (
-                    <span style={{ fontSize: 10, background: '#fee2e2', color: '#b91c1c', padding: '2px 6px', borderRadius: 3, fontWeight: 700 }}>
+                    <span style={{ fontSize: 10, background: '#fee2e2', color: 'var(--danger)', padding: '2px 6px', borderRadius: 3, fontWeight: 700 }}>
                       Đồng điểm ({previewData.tiedCount} người)
                     </span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#ffffff', border: '1px solid #fde68a', borderRadius: 6, padding: 14, boxShadow: '0 2px 8px rgba(245,158,11,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', border: '1px solid #fde68a', borderRadius: 6, padding: 14, boxShadow: '0 2px 8px rgba(245,158,11,0.08)' }}>
                   <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#fef3c7', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {previewData.candidate.avatarData ? (
                       <img src={previewData.candidate.avatarData} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -456,26 +456,26 @@ export default function MvpCupAwardModal({
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <strong style={{ fontSize: 15, color: '#0f172a' }}>{previewData.candidate.name}</strong>
+                      <strong style={{ fontSize: 15, color: 'var(--text-primary)' }}>{previewData.candidate.name}</strong>
                       {previewData.candidate.isVerified && <VerifiedBadge size={14} />}
-                      <span style={{ fontSize: 11, background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: 3, fontWeight: 700 }}>
+                      <span style={{ fontSize: 11, background: '#fef3c7', color: 'var(--accent)', padding: '1px 6px', borderRadius: 3, fontWeight: 700 }}>
                         Hạng #1 Toàn Mùa
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
                       {previewData.candidate.jobTitle} • {previewData.candidate.department} • Đội: <strong>{previewData.candidate.teamName}</strong>
                     </div>
 
                     {/* Stats pills */}
                     <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: '#b45309', padding: '2px 8px', borderRadius: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: 'var(--accent)', padding: '2px 8px', borderRadius: 4 }}>
                         🏆 {previewData.candidate.score.toLocaleString()} XP
                       </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-muted)', color: 'var(--text-secondary)', padding: '2px 8px', borderRadius: 4 }}>
                         ⚡ {previewData.candidate.eventsCount} hoạt động
                       </span>
                       {previewData.candidate.lastScoredAt && (
-                        <span style={{ fontSize: 10, color: '#94a3b8', alignSelf: 'center' }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)', alignSelf: 'center' }}>
                           Ghi điểm cuối: {new Date(previewData.candidate.lastScoredAt).toLocaleTimeString('vi-VN')}
                         </span>
                       )}
@@ -484,7 +484,7 @@ export default function MvpCupAwardModal({
                 </div>
 
                 {previewData.isTied && (
-                  <div style={{ fontSize: 11, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', borderRadius: 4, marginTop: 8 }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent)', background: '#fffbeb', border: '1px solid #fde68a', padding: '6px 10px', borderRadius: 4, marginTop: 8 }}>
                     ℹ️ Có {previewData.tiedCount} ứng viên đạt mức điểm bằng nhau. Ứng viên trên được xếp Hạng #1 do đạt điểm sớm hơn theo quy tắc tie-break chính thức.
                   </div>
                 )}
@@ -496,7 +496,7 @@ export default function MvpCupAwardModal({
           {previewData?.status === 'READY' && (
             <form onSubmit={handleAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   2. Tiêu Đề Vinh Danh MVP:
                 </label>
                 <input
@@ -509,20 +509,20 @@ export default function MvpCupAwardModal({
                     padding: '8px 10px',
                     fontSize: 12,
                     fontFamily: 'inherit',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid var(--border-2)',
                     borderRadius: 4,
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   3. Lý Do & Căn Cứ Trao Thưởng:
                 </label>
                 {previewData.suggestedReason && (
-                  <div style={{ marginBottom: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, color: '#92400e', fontSize: 11, lineHeight: 1.5 }}>
+                  <div style={{ marginBottom: 8, padding: '8px 10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 4, color: 'var(--accent-hover)', fontSize: 11, lineHeight: 1.5 }}>
                     <strong>Căn cứ từ dữ liệu:</strong> {previewData.suggestedReason}
-                    <button type="button" onClick={() => setReason(previewData.suggestedReason)} style={{ display: 'block', marginTop: 6, padding: 0, border: 0, background: 'transparent', color: '#b45309', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    <button type="button" onClick={() => setReason(previewData.suggestedReason)} style={{ display: 'block', marginTop: 6, padding: 0, border: 0, background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                       Dùng căn cứ này làm lý do
                     </button>
                   </div>
@@ -537,7 +537,7 @@ export default function MvpCupAwardModal({
                     padding: '8px 10px',
                     fontSize: 12,
                     fontFamily: 'inherit',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid var(--border-2)',
                     borderRadius: 4,
                     resize: 'vertical',
                   }}
@@ -551,13 +551,13 @@ export default function MvpCupAwardModal({
                   onClick={onClose}
                   style={{
                     padding: '8px 14px',
-                    background: '#ffffff',
-                    border: '1px solid #cbd5e1',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border-2)',
                     borderRadius: 4,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    color: '#64748b',
+                    color: 'var(--text-secondary)',
                   }}
                 >
                   Đóng
@@ -567,8 +567,8 @@ export default function MvpCupAwardModal({
                   disabled={submitting}
                   style={{
                     padding: '8px 20px',
-                    background: submitting ? '#94a3b8' : 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-                    color: '#ffffff',
+                    background: submitting ? 'var(--text-muted)' : 'linear-gradient(135deg, #d97706 0%, var(--accent) 100%)',
+                    color: 'var(--surface)',
                     border: 'none',
                     borderRadius: 4,
                     fontSize: 12,
@@ -580,7 +580,7 @@ export default function MvpCupAwardModal({
                     boxShadow: '0 2px 8px rgba(180,83,9,0.3)',
                   }}
                 >
-                  <Trophy size={14} color="#ffffff" />
+                  <Trophy size={14} color="var(--surface)" />
                   {submitting ? 'Đang xác nhận...' : 'Xác Nhận Trao MVP Cup'}
                 </button>
               </div>
@@ -594,13 +594,13 @@ export default function MvpCupAwardModal({
                 onClick={onClose}
                 style={{
                   padding: '8px 14px',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border-2)',
                   borderRadius: 4,
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  color: '#64748b',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 Đóng

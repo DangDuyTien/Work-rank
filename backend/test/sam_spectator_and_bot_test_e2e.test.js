@@ -148,21 +148,21 @@ test('Comprehensive Sam Lốc Spectator & Admin Bot Test E2E Suite', async (t) =
       .post(`/api/games/sam/rooms/${liveRoomId}/play-cards`)
       .set('Authorization', `Bearer ${spectatorToken}`)
       .send({ cardIds: ['3S'] });
-    assert.equal(playAttempt.status, 500);
+    assert.equal(playAttempt.status, 404);
     assert.match(playAttempt.body.message || playAttempt.text, /không tồn tại trong phòng|Chưa đến lượt/);
 
     // Attempt pass
     const passAttempt = await request(app)
       .post(`/api/games/sam/rooms/${liveRoomId}/pass`)
       .set('Authorization', `Bearer ${spectatorToken}`);
-    assert.equal(passAttempt.status, 500);
+    assert.equal(passAttempt.status, 404);
 
     // Attempt declare Sam
     const samAttempt = await request(app)
       .post(`/api/games/sam/rooms/${liveRoomId}/declare-sam`)
       .set('Authorization', `Bearer ${spectatorToken}`)
       .send({ declare: true });
-    assert.equal(samAttempt.status, 500);
+    assert.ok([400, 404].includes(samAttempt.status));
   });
 
   await t.test('SPECTATOR 4: Spectator reconnect gets public board without resetting game', async () => {

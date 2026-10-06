@@ -73,12 +73,12 @@ export default function QuizRoundResultModal({
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: '#ffffff',
+        background: 'var(--surface)',
         border: '1px solid rgba(0, 0, 0, 0.12)',
         borderRadius: 10,
         padding: '20px 24px',
         boxShadow: '0 16px 40px rgba(0, 0, 0, 0.18)',
-        color: '#141414',
+        color: 'var(--primary)',
         width: '92%',
         maxWidth: 440,
         zIndex: 100,
@@ -134,7 +134,7 @@ export default function QuizRoundResultModal({
                   height: 48,
                   borderRadius: '50%',
                   background: '#f8f7f4',
-                  color: '#64748b',
+                  color: 'var(--text-secondary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -151,7 +151,7 @@ export default function QuizRoundResultModal({
             style={{
               fontSize: 17,
               fontWeight: 800,
-              color: isMyCorrect ? '#15803d' : myAnswer ? '#dc2626' : '#64748b',
+              color: isMyCorrect ? 'var(--success)' : myAnswer ? '#dc2626' : 'var(--text-secondary)',
               marginBottom: 4,
             }}
           >
@@ -163,7 +163,7 @@ export default function QuizRoundResultModal({
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 22,
               fontWeight: 800,
-              color: isMyCorrect ? '#15803d' : '#64748b',
+              color: isMyCorrect ? 'var(--success)' : 'var(--text-secondary)',
               marginBottom: 10,
               letterSpacing: '-0.3px',
             }}
@@ -171,8 +171,8 @@ export default function QuizRoundResultModal({
             {isMyCorrect ? `+${rollScore.toLocaleString()} điểm` : '+0 điểm'}
           </div>
 
-          <div style={{ fontSize: 13, color: '#141414', marginBottom: 12 }}>
-            Đáp án đúng là: <strong style={{ color: '#b45309', fontSize: 15 }}>[{correctOption}]</strong>
+          <div style={{ fontSize: 13, color: 'var(--primary)', marginBottom: 12 }}>
+            Đáp án đúng là: <strong style={{ color: 'var(--accent)', fontSize: 15 }}>[{correctOption}]</strong>
           </div>
 
           {/* Explanation Snippet */}
@@ -187,13 +187,13 @@ export default function QuizRoundResultModal({
                 padding: '10px 12px',
                 borderRadius: 6,
                 fontSize: 12,
-                color: '#666666',
+                color: 'var(--text-secondary)',
                 textAlign: 'left',
                 marginBottom: 12,
                 lineHeight: 1.45,
               }}
             >
-              <Lightbulb size={14} color="#b45309" style={{ marginTop: 2, flexShrink: 0 }} />
+              <Lightbulb size={14} color="var(--accent)" style={{ marginTop: 2, flexShrink: 0 }} />
               <span>{explanation}</span>
             </div>
           )}
@@ -207,7 +207,7 @@ export default function QuizRoundResultModal({
               gap: 5,
               fontSize: 11,
               fontWeight: 600,
-              color: '#b45309',
+              color: 'var(--accent)',
               paddingTop: 8,
               borderTop: '1px solid rgba(0, 0, 0, 0.06)',
             }}
@@ -228,12 +228,12 @@ export default function QuizRoundResultModal({
               marginBottom: 12,
               fontSize: 14,
               fontWeight: 700,
-              color: '#141414',
+              color: 'var(--primary)',
               textTransform: 'uppercase',
               letterSpacing: '0.3px',
             }}
           >
-            <Trophy size={16} color="#b45309" />
+            <Trophy size={16} color="var(--accent)" />
             <span>Điểm Số Vòng Này</span>
           </div>
 
@@ -274,7 +274,7 @@ export default function QuizRoundResultModal({
                         fontFamily: 'JetBrains Mono, monospace',
                         fontWeight: 700,
                         fontSize: 12,
-                        color: rank === 1 ? '#b45309' : '#64748b',
+                        color: rank === 1 ? 'var(--accent)' : 'var(--text-secondary)',
                         width: 20,
                         textAlign: 'center',
                         flexShrink: 0,
@@ -290,7 +290,7 @@ export default function QuizRoundResultModal({
                         style={{
                           fontSize: 12,
                           fontWeight: isMe ? 700 : 600,
-                          color: isMe ? '#b45309' : '#141414',
+                          color: isMe ? 'var(--accent)' : 'var(--primary)',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -310,7 +310,7 @@ export default function QuizRoundResultModal({
                             padding: '1px 5px',
                             borderRadius: 3,
                             background: '#fef3c7',
-                            color: '#92400e',
+                            color: 'var(--accent-hover)',
                             border: '1px solid rgba(180, 83, 9, 0.25)',
                             fontSize: 10,
                             fontWeight: 700,
@@ -318,7 +318,7 @@ export default function QuizRoundResultModal({
                             flexShrink: 0,
                           }}
                         >
-                          <Zap size={9} fill="#b45309" color="#b45309" />
+                          <Zap size={9} fill="var(--accent)" color="var(--accent)" />
                           <span>Nhanh nhất</span>
                         </span>
                       )}
@@ -333,7 +333,7 @@ export default function QuizRoundResultModal({
                           fontFamily: 'JetBrains Mono, monospace',
                           fontSize: 11,
                           fontWeight: 700,
-                          color: '#15803d',
+                          color: 'var(--success)',
                         }}
                       >
                         +{roundScore}
@@ -345,7 +345,7 @@ export default function QuizRoundResultModal({
                         fontFamily: 'JetBrains Mono, monospace',
                         fontSize: 12,
                         fontWeight: 700,
-                        color: '#141414',
+                        color: 'var(--primary)',
                       }}
                     >
                       {Number(player.score || 0).toLocaleString()}đ
@@ -365,7 +365,7 @@ export default function QuizRoundResultModal({
               gap: 5,
               fontSize: 11,
               fontWeight: 600,
-              color: '#b45309',
+              color: 'var(--accent)',
               paddingTop: 8,
               borderTop: '1px solid rgba(0, 0, 0, 0.06)',
             }}

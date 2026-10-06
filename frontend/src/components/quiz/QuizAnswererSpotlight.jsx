@@ -147,8 +147,8 @@ export default function QuizAnswererSpotlight({
             padding: 3,
             borderRadius: '50%',
             background: isMe
-              ? 'linear-gradient(135deg, #b45309, #f59e0b)'
-              : 'linear-gradient(135deg, #141414, #666666)',
+              ? 'linear-gradient(135deg, var(--accent), #f59e0b)'
+              : 'linear-gradient(135deg, var(--primary), var(--text-secondary))',
             boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
           }}
         >
@@ -156,7 +156,7 @@ export default function QuizAnswererSpotlight({
             user={displayUser}
             userId={activeItem.userId}
             size="lg"
-            border="2px solid #ffffff"
+            border="2px solid var(--surface)"
           />
         </div>
 
@@ -165,7 +165,7 @@ export default function QuizAnswererSpotlight({
           style={{
             fontSize: 16,
             fontWeight: 700,
-            color: '#141414',
+            color: 'var(--primary)',
             maxWidth: 220,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -184,9 +184,9 @@ export default function QuizAnswererSpotlight({
             gap: 5,
             padding: '4px 12px',
             borderRadius: 9999,
-            background: isMe ? '#fffbeb' : '#f4f3ef',
+            background: isMe ? '#fffbeb' : 'var(--background)',
             border: isMe ? '1px solid rgba(180, 83, 9, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
-            color: isMe ? '#b45309' : '#141414',
+            color: isMe ? 'var(--accent)' : 'var(--primary)',
             fontSize: 12,
             fontWeight: 700,
             letterSpacing: '0.4px',
@@ -194,7 +194,7 @@ export default function QuizAnswererSpotlight({
             fontFamily: 'JetBrains Mono, monospace',
           }}
         >
-          <Zap size={13} color={isMe ? '#b45309' : '#141414'} />
+          <Zap size={13} color={isMe ? 'var(--accent)' : 'var(--primary)'} />
           <span>ĐÃ TRẢ LỜI</span>
         </div>
       </div>

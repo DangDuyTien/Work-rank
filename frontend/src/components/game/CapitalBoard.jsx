@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Flag,
   Coffee,
@@ -19,47 +19,49 @@ import {
   Dice5,
   Clock,
   X,
+  Info,
 } from 'lucide-react';
 import DiceRoller from './DiceRoller';
+import PropertyDetailModal from './PropertyDetailModal';
 import gameSound from './gameSound';
 
 // 28 Tiles definitions with exact board layout
-const BOARD_TILES = [
+export const BOARD_TILES = [
   // Bottom Row: 0 -> 7 (Left to Right) [row 8]
-  { index: 0, type: 'START', name: 'Khởi Hành', label: 'START', bonus: 200, row: 8, col: 1 },
+  { index: 0, type: 'START', name: 'Khởi Hành', label: 'START', bonus: 200, row: 8, col: 1, color: '#16a34a' },
   { index: 1, type: 'PROPERTY', name: 'Phòng Livestream', group: 'MEDIA', groupName: 'Media Hub', color: '#ec4899', price: 100, rent: 15, row: 8, col: 2 },
   { index: 2, type: 'PROPERTY', name: 'Studio Sáng Tạo', group: 'MEDIA', groupName: 'Media Hub', color: '#ec4899', price: 120, rent: 20, row: 8, col: 3 },
   { index: 3, type: 'PROPERTY', name: 'Đài Truyền Thông', group: 'MEDIA', groupName: 'Media Hub', color: '#ec4899', price: 140, rent: 25, row: 8, col: 4 },
-  { index: 4, type: 'EVENT', name: 'Cơ Hội Bứt Phá', label: 'CƠ HỘI', row: 8, col: 5 },
+  { index: 4, type: 'EVENT', name: 'Cơ Hội Bứt Phá', label: 'CƠ HỘI', row: 8, col: 5, color: '#9333ea' },
   { index: 5, type: 'PROPERTY', name: 'Trung Tâm Dữ Liệu', group: 'TECH', groupName: 'Công Nghệ', color: '#06b6d4', price: 160, rent: 30, row: 8, col: 6 },
-  { index: 6, type: 'PROPERTY', name: 'Phòng AI', group: 'TECH', groupName: 'Công Nghệ', color: '#06b6d4', price: 180, rent: 35, row: 8, col: 7 },
-  { index: 7, type: 'REST', name: 'Khu Nghỉ Dưỡng', label: 'NGHỈ DƯỠNG', row: 8, col: 8 },
+  { index: 6, type: 'PROPERTY', name: 'Phòng Nghiên Cứu AI', group: 'TECH', groupName: 'Công Nghệ', color: '#06b6d4', price: 180, rent: 35, row: 8, col: 7 },
+  { index: 7, type: 'REST', name: 'Khu Nghỉ Dưỡng', label: 'NGHỈ DƯỠNG', row: 8, col: 8, color: '#64748b' },
 
   // Right Column: 8 -> 14 (Bottom to Top) [col 8]
   { index: 8, type: 'PROPERTY', name: 'Trụ Sở Cloud Core', group: 'TECH', groupName: 'Công Nghệ', color: '#06b6d4', price: 200, rent: 40, row: 7, col: 8 },
   { index: 9, type: 'PROPERTY', name: 'Cảng Logistics', group: 'LOGISTICS', groupName: 'Hậu Cần', color: '#3b82f6', price: 220, rent: 45, row: 6, col: 8 },
   { index: 10, type: 'PROPERTY', name: 'Bến Du Thuyền', group: 'LOGISTICS', groupName: 'Hậu Cần', color: '#3b82f6', price: 240, rent: 50, row: 5, col: 8 },
-  { index: 11, type: 'TAX', name: 'Phí Hạ Tầng', label: 'PHÍ DỊCH VỤ', taxAmount: 80, row: 4, col: 8 },
+  { index: 11, type: 'TAX', name: 'Phí Hạ Tầng', label: 'PHÍ DỊCH VỤ', taxAmount: 80, row: 4, col: 8, color: '#ea580c' },
   { index: 12, type: 'PROPERTY', name: 'Đảo Hải Đăng', group: 'LOGISTICS', groupName: 'Hậu Cần', color: '#3b82f6', price: 260, rent: 55, row: 3, col: 8 },
-  { index: 13, type: 'EVENT', name: 'Vận May', label: 'CƠ HỘI', row: 2, col: 8 },
-  { index: 14, type: 'BONUS', name: 'Kho Báu Doanh Nghiệp', label: 'KHO BÁU', bonus: 150, row: 1, col: 8 },
+  { index: 13, type: 'EVENT', name: 'Vận May Khởi Nghiệp', label: 'CƠ HỘI', row: 2, col: 8, color: '#9333ea' },
+  { index: 14, type: 'BONUS', name: 'Kho Báu Doanh Nghiệp', label: 'KHO BÁU', bonus: 150, row: 1, col: 8, color: '#d97706' },
 
   // Top Row: 15 -> 21 (Right to Left) [row 1]
   { index: 15, type: 'PROPERTY', name: 'Công Viên Xanh', group: 'ECO', groupName: 'Sinh Thái', color: '#10b981', price: 280, rent: 60, row: 1, col: 7 },
   { index: 16, type: 'PROPERTY', name: 'Thung Lũng Sinh Thái', group: 'ECO', groupName: 'Sinh Thái', color: '#10b981', price: 300, rent: 65, row: 1, col: 6 },
   { index: 17, type: 'PROPERTY', name: 'Rừng Nguyên Sinh', group: 'ECO', groupName: 'Sinh Thái', color: '#10b981', price: 320, rent: 70, row: 1, col: 5 },
-  { index: 18, type: 'EVENT', name: 'Cơ Hội Đầu Tư', label: 'CƠ HỘI', row: 1, col: 4 },
+  { index: 18, type: 'EVENT', name: 'Cơ Hội Đầu Tư', label: 'CƠ HỘI', row: 1, col: 4, color: '#9333ea' },
   { index: 19, type: 'PROPERTY', name: 'Tháp Tài Chính', group: 'FINANCE', groupName: 'Tài Chính', color: '#f59e0b', price: 340, rent: 75, row: 1, col: 3 },
   { index: 20, type: 'PROPERTY', name: 'Tòa Nhà Chọc Trời', group: 'FINANCE', groupName: 'Tài Chính', color: '#f59e0b', price: 360, rent: 80, row: 1, col: 2 },
-  { index: 21, type: 'TAX', name: 'Thuế Doanh Nghiệp', label: 'THUẾ QUỸ', taxAmount: 100, row: 1, col: 1 },
+  { index: 21, type: 'TAX', name: 'Thuế Doanh Nghiệp', label: 'THUẾ QUỸ', taxAmount: 100, row: 1, col: 1, color: '#dc2626' },
 
   // Left Column: 22 -> 27 (Top to Bottom) [col 1]
   { index: 22, type: 'PROPERTY', name: 'Penthouse Hoàng Kim', group: 'FINANCE', groupName: 'Tài Chính', color: '#f59e0b', price: 380, rent: 85, row: 2, col: 1 },
   { index: 23, type: 'PROPERTY', name: 'Quảng Trường TT', group: 'CENTRAL', groupName: 'Trung Tâm', color: '#8b5cf6', price: 400, rent: 90, row: 3, col: 1 },
   { index: 24, type: 'PROPERTY', name: 'Đại Lộ Ngôi Sao', group: 'CENTRAL', groupName: 'Trung Tâm', color: '#8b5cf6', price: 420, rent: 95, row: 4, col: 1 },
-  { index: 25, type: 'EVENT', name: 'Sự Kiện Đặc Biệt', label: 'CƠ HỘI', row: 5, col: 1 },
+  { index: 25, type: 'EVENT', name: 'Sự Kiện Đặc Biệt', label: 'CƠ HỘI', row: 5, col: 1, color: '#9333ea' },
   { index: 26, type: 'PROPERTY', name: 'Tập Đoàn Quốc Tế', group: 'CENTRAL', groupName: 'Trung Tâm', color: '#8b5cf6', price: 450, rent: 110, row: 6, col: 1 },
-  { index: 27, type: 'BONUS', name: 'Thưởng Vượt Chỉ Số', label: 'THƯỞNG', bonus: 100, row: 7, col: 1 },
+  { index: 27, type: 'BONUS', name: 'Thưởng Vượt Chỉ Số', label: 'THƯỞNG', bonus: 100, row: 7, col: 1, color: '#d97706' },
 ];
 
 export default function CapitalBoard({
@@ -83,24 +85,130 @@ export default function CapitalBoard({
   const [selectedTileIndex, setSelectedTileIndex] = useState(null);
   const [soundMuted, setSoundMuted] = useState(gameSound.isMuted());
 
+  // Step-by-step animated position for smooth motion
+  const [animatedPositions, setAnimatedPositions] = useState({});
+  const currentAnimPositionsRef = useRef({});
+  const timersByPlayerRef = useRef({});
+  const isMountedRef = useRef(true);
+  const prevTargetPositionsRef = useRef({});
+
+  // Cleanup on component mount/unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      Object.values(timersByPlayerRef.current).forEach((timers) => {
+        if (Array.isArray(timers)) {
+          timers.forEach((t) => clearTimeout(t));
+        }
+      });
+      timersByPlayerRef.current = {};
+    };
+  }, []);
+
+  // Track position changes to animate tokens step-by-step per player
+  useEffect(() => {
+    const isReducedMotion =
+      typeof window !== 'undefined' &&
+      (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ||
+        document.documentElement?.dataset?.workrankReduceMotion === 'true');
+
+    const activePlayerIds = new Set(players.map((p) => p.id));
+
+    // Cleanup timers and state for players who left the room
+    Object.keys(timersByPlayerRef.current).forEach((pId) => {
+      if (!activePlayerIds.has(Number(pId)) && !activePlayerIds.has(String(pId))) {
+        if (Array.isArray(timersByPlayerRef.current[pId])) {
+          timersByPlayerRef.current[pId].forEach((t) => clearTimeout(t));
+        }
+        delete timersByPlayerRef.current[pId];
+        delete currentAnimPositionsRef.current[pId];
+        delete prevTargetPositionsRef.current[pId];
+      }
+    });
+
+    players.forEach((p) => {
+      const targetPos = Number(p.position || 0);
+      const currentAnimPos = currentAnimPositionsRef.current[p.id] ?? targetPos;
+      const prevTarget = prevTargetPositionsRef.current[p.id];
+
+      // Initial position registration for new player
+      if (prevTarget === undefined) {
+        currentAnimPositionsRef.current[p.id] = targetPos;
+        prevTargetPositionsRef.current[p.id] = targetPos;
+        if (animatedPositions[p.id] !== targetPos) {
+          setAnimatedPositions((prev) => ({ ...prev, [p.id]: targetPos }));
+        }
+        return;
+      }
+
+      // No change in position or already arrived
+      if (prevTarget === targetPos && currentAnimPos === targetPos) {
+        return;
+      }
+
+      prevTargetPositionsRef.current[p.id] = targetPos;
+
+      // Clear only this player's active timeouts without affecting other players
+      if (Array.isArray(timersByPlayerRef.current[p.id])) {
+        timersByPlayerRef.current[p.id].forEach((t) => clearTimeout(t));
+      }
+      timersByPlayerRef.current[p.id] = [];
+
+      // If user prefers reduced motion, snap immediately
+      if (isReducedMotion) {
+        currentAnimPositionsRef.current[p.id] = targetPos;
+        if (isMountedRef.current) {
+          setAnimatedPositions((prev) => ({ ...prev, [p.id]: targetPos }));
+        }
+        return;
+      }
+
+      // Compute clockwise step path (wrapping at 28)
+      let steps = targetPos >= currentAnimPos
+        ? targetPos - currentAnimPos
+        : 28 - currentAnimPos + targetPos;
+
+      if (steps > 0 && steps <= 12) {
+        // Animate step by step (120ms per tile step)
+        for (let step = 1; step <= steps; step++) {
+          const intermediatePos = (currentAnimPos + step) % 28;
+          const t = setTimeout(() => {
+            if (!isMountedRef.current) return;
+            currentAnimPositionsRef.current[p.id] = intermediatePos;
+            setAnimatedPositions((prev) => ({ ...prev, [p.id]: intermediatePos }));
+            gameSound.playMove();
+          }, step * 120);
+          timersByPlayerRef.current[p.id].push(t);
+        }
+      } else {
+        // Step distance exceeds normal roll threshold or large jump -> snap directly
+        currentAnimPositionsRef.current[p.id] = targetPos;
+        if (isMountedRef.current) {
+          setAnimatedPositions((prev) => ({ ...prev, [p.id]: targetPos }));
+        }
+      }
+    });
+  }, [players]);
+
   // Map properties by tileIndex
   const propertyMap = {};
   properties.forEach((p) => {
     propertyMap[p.tileIndex] = p;
   });
 
-  // Map players by their current position
+  // Map players by their display position (animated or static)
   const playersByTile = {};
   players.forEach((p) => {
     if (p.status !== 'BANKRUPT') {
-      const pos = p.position || 0;
+      const pos = animatedPositions[p.id] ?? (p.position || 0);
       if (!playersByTile[pos]) playersByTile[pos] = [];
       playersByTile[pos].push(p);
     }
   });
 
   // Current tile of the active player
-  const activePlayerPosition = currentTurnPlayer?.position ?? 0;
+  const activePlayerPosition = animatedPositions[currentTurnPlayer?.id] ?? (currentTurnPlayer?.position ?? 0);
   const currentTileOnBoard = BOARD_TILES[activePlayerPosition];
   const currentTileProperty = propertyMap[activePlayerPosition];
 
@@ -138,7 +246,7 @@ export default function CapitalBoard({
         userSelect: 'none',
       }}
     >
-      {/* Sound & Info Bar */}
+      {/* Sound & Match Info Bar */}
       <div
         style={{
           width: '100%',
@@ -147,37 +255,36 @@ export default function CapitalBoard({
           alignItems: 'center',
           marginBottom: 10,
           padding: '4px 8px',
+          fontSize: 13,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#64748b' }}>
-          <span style={{ fontWeight: 700, color: '#0f172a' }}>Phòng #{room?.code}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)' }}>
+          <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>Phòng #{room?.code || room?.id}</span>
           <span>•</span>
-          <span>Lượt: <strong style={{ color: '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>{room?.turnCount || 1}</strong></span>
+          <span>Lượt: <strong style={{ color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>{room?.turnNumber || room?.turnCount || 1}</strong></span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            type="button"
-            onClick={toggleSound}
-            title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 8px',
-              background: soundMuted ? 'rgba(239,68,68,0.1)' : 'rgba(15,23,42,0.05)',
-              color: soundMuted ? '#ef4444' : '#475569',
-              border: '1px solid rgba(15,23,42,0.1)',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            <span>{soundMuted ? 'Âm thanh: Tắt' : 'Âm thanh: Bật'}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={toggleSound}
+          title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '4px 8px',
+            background: soundMuted ? 'rgba(239,68,68,0.1)' : 'rgba(15,23,42,0.05)',
+            color: soundMuted ? '#ef4444' : 'var(--text-secondary)',
+            border: '1px solid rgba(15,23,42,0.1)',
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          <span>{soundMuted ? 'Âm thanh: Tắt' : 'Âm thanh: Bật'}</span>
+        </button>
       </div>
 
       {/* Main Board Container (8x8 Grid) */}
@@ -189,7 +296,7 @@ export default function CapitalBoard({
           gridTemplateColumns: 'repeat(8, 1fr)',
           gridTemplateRows: 'repeat(8, 1fr)',
           gap: 3,
-          background: '#cbd5e1',
+          background: 'var(--border-2)',
           padding: 4,
           borderRadius: 12,
           boxShadow: '0 12px 30px rgba(15,23,42,0.1), inset 0 2px 4px rgba(255,255,255,0.6)',
@@ -212,7 +319,7 @@ export default function CapitalBoard({
               style={{
                 gridRow: tile.row,
                 gridColumn: tile.col,
-                background: '#ffffff',
+                background: 'var(--surface)',
                 borderRadius: 4,
                 border: isSelected
                   ? '2px solid #38bdf8'
@@ -226,8 +333,8 @@ export default function CapitalBoard({
                 position: 'relative',
                 cursor: 'pointer',
                 overflow: 'hidden',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                boxShadow: isSelected ? '0 0 8px rgba(56,189,248,0.4)' : 'none',
+                transition: 'border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
+                boxShadow: isSelected ? '0 0 8px rgba(56,189,248,0.4)' : isCurrentActiveTile ? '0 0 8px rgba(245,158,11,0.3)' : 'none',
               }}
             >
               {/* Tile Type Header / Color Stripe */}
@@ -236,7 +343,7 @@ export default function CapitalBoard({
                   style={{
                     height: 5,
                     width: '100%',
-                    background: tile.color || '#94a3b8',
+                    background: tile.color || 'var(--text-muted)',
                     borderRadius: 2,
                     position: 'relative',
                   }}
@@ -251,8 +358,8 @@ export default function CapitalBoard({
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        background: owner.color || owner.seatColor || '#38bdf8',
-                        border: '1.5px solid #ffffff',
+                        background: owner.color || '#38bdf8',
+                        border: '1.5px solid var(--surface)',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
                       }}
                     />
@@ -279,7 +386,7 @@ export default function CapitalBoard({
                       tile.type === 'START'
                         ? '#16a34a'
                         : tile.type === 'REST'
-                        ? '#475569'
+                        ? 'var(--text-secondary)'
                         : tile.type === 'BONUS'
                         ? '#d97706'
                         : tile.type === 'TAX'
@@ -297,7 +404,7 @@ export default function CapitalBoard({
                 style={{
                   fontSize: 9,
                   fontWeight: 700,
-                  color: '#0f172a',
+                  color: 'var(--text-primary)',
                   textAlign: 'center',
                   lineHeight: 1.1,
                   padding: '1px 1px',
@@ -316,7 +423,7 @@ export default function CapitalBoard({
                   fontSize: 8,
                   fontWeight: 800,
                   textAlign: 'center',
-                  color: tile.type === 'PROPERTY' ? '#0284c7' : '#64748b',
+                  color: tile.type === 'PROPERTY' ? 'var(--info)' : 'var(--text-secondary)',
                   fontFamily: 'JetBrains Mono, monospace',
                 }}
               >
@@ -352,16 +459,17 @@ export default function CapitalBoard({
                         width: 14,
                         height: 14,
                         borderRadius: '50%',
-                        background: p.color || p.seatColor || '#38bdf8',
-                        border: '1.5px solid #ffffff',
+                        background: p.color || '#38bdf8',
+                        border: '1.5px solid var(--surface)',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.35)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#ffffff',
+                        color: 'var(--surface)',
                         fontSize: 8,
                         fontWeight: 900,
-                        animation: currentTurnPlayer?.id === p.id ? 'bounce 1s infinite' : 'none',
+                        transform: currentTurnPlayer?.id === p.id ? 'scale(1.15)' : 'scale(1)',
+                        transition: 'transform var(--motion-fast) var(--ease-spring)',
                       }}
                     >
                       {p.seatIndex + 1}
@@ -373,12 +481,12 @@ export default function CapitalBoard({
           );
         })}
 
-        {/* Central Game Center Console (Rows 2..7, Cols 2..7) */}
+        {/* Central Console (Rows 2..7, Cols 2..7) */}
         <div
           style={{
             gridRow: '2 / 8',
             gridColumn: '2 / 8',
-            background: '#ffffff',
+            background: 'var(--surface)',
             borderRadius: 8,
             border: '1px solid rgba(15,23,42,0.1)',
             boxShadow: 'inset 0 2px 6px rgba(15,23,42,0.04)',
@@ -408,21 +516,21 @@ export default function CapitalBoard({
                   width: 10,
                   height: 10,
                   borderRadius: '50%',
-                  background: currentTurnPlayer?.seatColor || '#94a3b8',
+                  background: currentTurnPlayer?.color || '#38bdf8',
                   boxShadow: '0 0 6px rgba(0,0,0,0.2)',
                 }}
               />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
                   {isMyTurn ? (
-                    <span style={{ color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ color: 'var(--info)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Gamepad2 size={14} /> LƯỢT CỦA BẠN!
                     </span>
                   ) : (
-                    <span>Lượt: {currentTurnPlayer?.user?.name || `Người chơi ${currentTurnPlayer?.seatIndex + 1}`}</span>
+                    <span>Lượt: {currentTurnPlayer?.user?.name || `Người chơi ${Number(currentTurnPlayer?.seatIndex || 0) + 1}`}</span>
                   )}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                   {turnPhase === 'ROLL_DICE' && 'Chờ gieo xúc xắc...'}
                   {turnPhase === 'ACTION_PENDING' && 'Đang lựa chọn mua tài sản / kết thúc lượt...'}
                   {turnPhase === 'TURN_DONE' && 'Đang chuyển lượt...'}
@@ -436,8 +544,8 @@ export default function CapitalBoard({
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: 16,
                 fontWeight: 900,
-                color: turnTimeRemaining <= 5 ? '#ef4444' : '#0f172a',
-                background: turnTimeRemaining <= 5 ? 'rgba(239,68,68,0.15)' : '#ffffff',
+                color: turnTimeRemaining <= 5 ? '#ef4444' : 'var(--text-primary)',
+                background: turnTimeRemaining <= 5 ? 'rgba(239,68,68,0.15)' : 'var(--surface)',
                 border: '1px solid rgba(15,23,42,0.1)',
                 padding: '2px 8px',
                 borderRadius: 4,
@@ -472,11 +580,11 @@ export default function CapitalBoard({
                   maxWidth: '90%',
                 }}
               >
-                <span style={{ fontSize: 11, color: '#64748b' }}>Đang ở ô: </span>
-                <strong style={{ fontSize: 12, color: '#0f172a' }}>{currentTileOnBoard.name}</strong>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Đang ở ô: </span>
+                <strong style={{ fontSize: 12, color: 'var(--text-primary)' }}>{currentTileOnBoard.name}</strong>
                 {currentTileProperty && (
-                  <span style={{ fontSize: 11, color: '#0284c7', marginLeft: 6 }}>
-                    (${currentTileProperty.purchasePrice})
+                  <span style={{ fontSize: 11, color: 'var(--info)', marginLeft: 6 }}>
+                    (${currentTileProperty.price || currentTileProperty.purchasePrice})
                   </span>
                 )}
               </div>
@@ -495,9 +603,8 @@ export default function CapitalBoard({
                   padding: '4px 10px',
                   borderRadius: 6,
                   fontSize: 11,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textAlign: 'center',
-                  animation: 'fadeIn 0.3s ease',
                   maxWidth: '95%',
                 }}
               >
@@ -518,8 +625,8 @@ export default function CapitalBoard({
                     disabled={actionLoading || isRolling}
                     style={{
                       flex: 1,
-                      background: '#0f172a',
-                      color: '#ffffff',
+                      background: 'var(--text-primary)',
+                      color: 'var(--surface)',
                       border: 'none',
                       borderRadius: 6,
                       padding: '10px 14px',
@@ -534,7 +641,7 @@ export default function CapitalBoard({
                     }}
                   >
                     <Dice5 size={16} />
-                    <span>Gieo Xúc Xắc</span>
+                    <span>{isRolling ? 'Đang Tung...' : 'Tung Xúc Xắc'}</span>
                   </button>
                 )}
 
@@ -548,7 +655,7 @@ export default function CapitalBoard({
                         style={{
                           flex: 1,
                           background: '#16a34a',
-                          color: '#ffffff',
+                          color: 'var(--surface)',
                           border: 'none',
                           borderRadius: 6,
                           padding: '10px 14px',
@@ -563,7 +670,7 @@ export default function CapitalBoard({
                         }}
                       >
                         <Building size={14} />
-                        <span>Mua (${currentTileProperty.purchasePrice})</span>
+                        <span>Mua (${currentTileProperty.price || currentTileProperty.purchasePrice})</span>
                       </button>
                     )}
 
@@ -573,9 +680,9 @@ export default function CapitalBoard({
                       disabled={actionLoading}
                       style={{
                         flex: canBuyCurrentTile ? 0.8 : 1,
-                        background: '#ffffff',
-                        color: '#0f172a',
-                        border: '1.5px solid #0f172a',
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        border: '1.5px solid var(--text-primary)',
                         borderRadius: 6,
                         padding: '10px 14px',
                         fontSize: 13,
@@ -587,7 +694,7 @@ export default function CapitalBoard({
                         gap: 4,
                       }}
                     >
-                      <span>Kết Thúc Lượt</span>
+                      <span>{canBuyCurrentTile ? 'Bỏ Qua' : 'Kết Thúc Lượt'}</span>
                       <ChevronRight size={14} />
                     </button>
                   </>
@@ -602,7 +709,7 @@ export default function CapitalBoard({
                   gap: 6,
                   textAlign: 'center',
                   fontSize: 12,
-                  color: '#64748b',
+                  color: 'var(--text-secondary)',
                   background: 'rgba(15,23,42,0.03)',
                   padding: '8px 12px',
                   borderRadius: 6,
@@ -610,109 +717,23 @@ export default function CapitalBoard({
                 }}
               >
                 <Clock size={13} />
-                <span>Đang chờ <strong>{currentTurnPlayer?.user?.name || `Người chơi ${currentTurnPlayer?.seatIndex + 1}`}</strong> thực hiện lượt...</span>
+                <span>Đang chờ <strong>{currentTurnPlayer?.user?.name || `Người chơi ${Number(currentTurnPlayer?.seatIndex || 0) + 1}`}</strong> thực hiện lượt...</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Selected Tile Inspector Modal / Footer Drawer */}
+      {/* Selected Tile Inspector Modal */}
       {selectedTile && (
-        <div
-          style={{
-            width: '100%',
-            marginTop: 12,
-            background: '#ffffff',
-            border: '1px solid rgba(15,23,42,0.1)',
-            borderRadius: 8,
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 2,
-                background: selectedTile.color || '#94a3b8',
-              }}
-            />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
-                Ô #{selectedTile.index}: {selectedTile.name}
-              </div>
-              <div style={{ fontSize: 11, color: '#64748b' }}>
-                {selectedTile.type === 'PROPERTY' && (
-                  <span>
-                    Nhóm: <strong>{selectedTile.groupName}</strong> | Giá mua: <strong>${selectedTile.price}</strong> | Tiền thuê:{' '}
-                    <strong>${selectedTile.rent}</strong>
-                  </span>
-                )}
-                {selectedTile.type === 'START' && 'Nhận +$200 khi đi qua hoặc dừng lại ô Khởi Hành'}
-                {selectedTile.type === 'REST' && 'Nghỉ ngơi thư giãn, không bị trừ tiền'}
-                {selectedTile.type === 'TAX' && `Đóng phí / thuế: $${selectedTile.taxAmount}`}
-                {selectedTile.type === 'BONUS' && `Nhận thưởng doanh nghiệp: +$${selectedTile.bonus}`}
-                {selectedTile.type === 'EVENT' && 'Rút ngẫu nhiên 1 Thẻ Cơ Hội / Vận May'}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {selectedProperty && (
-              <div style={{ fontSize: 12 }}>
-                {selectedOwner ? (
-                  <span
-                    style={{
-                      background: `${selectedOwner.color || selectedOwner.seatColor || '#38bdf8'}22`,
-                      color: selectedOwner.color || selectedOwner.seatColor || '#38bdf8',
-                      padding: '3px 8px',
-                      borderRadius: 4,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Chủ: {selectedOwner.user?.name || 'Người chơi'}
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      background: 'rgba(34,197,94,0.1)',
-                      color: '#16a34a',
-                      padding: '3px 8px',
-                      borderRadius: 4,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Đất trống (${selectedProperty.price || selectedProperty.purchasePrice})
-                  </span>
-                )}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setSelectedTileIndex(null)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'transparent',
-                border: 'none',
-                color: '#94a3b8',
-                fontSize: 12,
-                cursor: 'pointer',
-                padding: 4,
-              }}
-            >
-              <X size={13} />
-              <span>Đóng</span>
-            </button>
-          </div>
-        </div>
+        <PropertyDetailModal
+          isOpen={Boolean(selectedTile)}
+          onClose={() => setSelectedTileIndex(null)}
+          tile={selectedTile}
+          property={selectedProperty}
+          owner={selectedOwner}
+          players={players}
+        />
       )}
     </div>
   );

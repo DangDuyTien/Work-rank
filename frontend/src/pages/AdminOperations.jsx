@@ -38,10 +38,10 @@ import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, CardSkeleton, TableSkeleton, AnimatedModal } from '../components/ui';
 
 const CARD = {
-  background: '#ffffff',
-  border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 0,
-  boxShadow: 'none',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-content)',
+  boxShadow: 'var(--shadow-card)',
 };
 
 function fmtNum(n) {
@@ -252,7 +252,7 @@ export default function AdminOperations() {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
+      <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
         <CardSkeleton />
         <TableSkeleton rows={8} />
       </div>
@@ -262,38 +262,38 @@ export default function AdminOperations() {
   const isHealthy = integrationHealth?.outbox?.failedCount === 0 && ytHealth?.status !== 'ERROR';
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
+    <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
       {/* ── HEADER / OPERATIONS HERO ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: 'var(--accent)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <Activity size={14} />
             Trung tâm kiểm toán & Giám sát vận hành
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.25, color: '#0f172a', fontWeight: 700 }}>
+          <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.25, color: 'var(--text-primary)', fontWeight: 700 }}>
             Giám Sát Vận Hành & Nhật Ký Kiểm Toán
           </h1>
-          <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
             Theo dõi sức khỏe hệ thống, hàng đợi sự kiện YouTube/Production, độ trễ Bảng Xếp Hạng và tra cứu toàn bộ Audit Logs.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 130 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Trạng Thái Vận Hành</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Trạng Thái Vận Hành</div>
             <strong style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, fontSize: 16, color: isHealthy ? '#16a34a' : '#ea580c', fontWeight: 700 }}>
               {isHealthy ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
               {isHealthy ? 'Ổn Định' : 'Cần Chú Ý'}
             </strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Sự Kiện Xử Lý</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#b45309', fontWeight: 700 }}>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Sự Kiện Xử Lý</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: 'var(--accent)', fontWeight: 700 }}>
               {fmtNum(integrationHealth?.events?.totalProcessed || events.length)}
             </strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Nhật Ký Audit</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Nhật Ký Audit</div>
             <strong style={{ display: 'block', marginTop: 3, fontSize: 22, color: '#7c3aed', fontWeight: 700 }}>
               {fmtNum(auditLogs.length)}
             </strong>
@@ -321,7 +321,7 @@ export default function AdminOperations() {
               type="button"
               onClick={() => setRebuildModalOpen(true)}
               style={{
-                padding: '8px 16px', background: '#dc2626', color: '#ffffff', border: 'none',
+                padding: '8px 16px', background: '#dc2626', color: 'var(--surface)', border: 'none',
                 fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -334,7 +334,7 @@ export default function AdminOperations() {
             onClick={() => loadOperationsData(true)}
             disabled={refreshing}
             style={{
-              padding: '8px 12px', background: '#ffffff', color: '#64748b', border: '1px solid rgba(15,23,42,0.15)',
+              padding: '8px 12px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid rgba(15,23,42,0.15)',
               fontSize: 12, fontWeight: 600, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
             }}
             title="Làm mới dữ liệu"
@@ -355,14 +355,14 @@ export default function AdminOperations() {
               <div style={{ ...CARD, padding: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Activity size={18} color="#b45309" />
-                    <strong style={{ fontSize: 14, color: '#0f172a' }}>API & Competition Engine</strong>
+                    <Activity size={18} color="var(--accent)" />
+                    <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>API & Competition Engine</strong>
                   </div>
                   <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>
                     HOẠT ĐỘNG
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Trạng thái worker:</span>
                     <strong style={{ color: '#16a34a' }}>Sẵn sàng (Online)</strong>
@@ -383,18 +383,18 @@ export default function AdminOperations() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Database size={18} color="#7c3aed" />
-                    <strong style={{ fontSize: 14, color: '#0f172a' }}>Database & Outbox Queue</strong>
+                    <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>Database & Outbox Queue</strong>
                   </div>
                   <span style={{
                     fontSize: 10, padding: '2px 8px',
                     background: integrationHealth?.outbox?.pendingCount > 10 ? '#fef3c7' : '#dcfce7',
-                    color: integrationHealth?.outbox?.pendingCount > 10 ? '#b45309' : '#16a34a',
+                    color: integrationHealth?.outbox?.pendingCount > 10 ? 'var(--accent)' : '#16a34a',
                     fontWeight: 600,
                   }}>
                     {integrationHealth?.outbox?.pendingCount > 10 ? 'CÓ HÀNG ĐỢI' : 'TỐT'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Hàng đợi Outbox chờ xử lý:</span>
                     <strong>{fmtNum(integrationHealth?.outbox?.pendingCount || 0)}</strong>
@@ -417,13 +417,13 @@ export default function AdminOperations() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Tv size={18} color="#ef4444" />
-                    <strong style={{ fontSize: 14, color: '#0f172a' }}>YouTube Data API v3</strong>
+                    <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>YouTube Data API v3</strong>
                   </div>
                   <span style={{ fontSize: 10, padding: '2px 8px', background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>
                     KẾT NỐI
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Tỷ lệ thành công:</span>
                     <strong style={{ color: '#16a34a' }}>{ytHealth?.successRate || '100%'}</strong>
@@ -445,25 +445,25 @@ export default function AdminOperations() {
               <div style={{ ...CARD, padding: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Radio size={18} color="#0284c7" />
-                    <strong style={{ fontSize: 14, color: '#0f172a' }}>Web Service & Keep-Alive</strong>
+                    <Radio size={18} color="var(--info)" />
+                    <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>Web Service & Keep-Alive</strong>
                   </div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', background: '#e0f2fe', color: '#0284c7', fontWeight: 600 }}>
+                  <span style={{ fontSize: 10, padding: '2px 8px', background: 'var(--info-soft)', color: 'var(--info)', fontWeight: 600 }}>
                     {integrationHealth?.renderService || 'ONLINE'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Keep-alive gần nhất:</span>
                     <strong>{integrationHealth?.lastHealthPingAt ? fmtDate(integrationHealth.lastHealthPingAt) : 'Chưa có ping'}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Tổng lượt Ping nhận:</span>
-                    <strong style={{ color: '#0284c7' }}>{fmtNum(integrationHealth?.healthPingCount || 0)}</strong>
+                    <strong style={{ color: 'var(--info)' }}>{fmtNum(integrationHealth?.healthPingCount || 0)}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Tần suất khuyến nghị:</span>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>10 phút / lần</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>10 phút / lần</span>
                   </div>
                 </div>
               </div>
@@ -473,10 +473,10 @@ export default function AdminOperations() {
             <div style={{ ...CARD, padding: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <h3 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
+                  <h3 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Trạng Thái Bản Sao Bảng Xếp Hạng (Read Model Projections)
                   </h3>
-                  <span style={{ fontSize: 12, color: '#64748b' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                     Projections là bảng dữ liệu tối ưu đọc thời gian thực để người dùng xem bảng xếp hạng ngay lập tức.
                   </span>
                 </div>
@@ -484,8 +484,8 @@ export default function AdminOperations() {
                   type="button"
                   onClick={handleCheckConsistency}
                   style={{
-                    padding: '6px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.15)',
-                    fontSize: 11, fontWeight: 600, color: '#b45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    padding: '6px 12px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.15)',
+                    fontSize: 11, fontWeight: 600, color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}
                 >
                   <RefreshCw size={12} /> Kiểm tra độ lệch (Drift Check)
@@ -493,8 +493,8 @@ export default function AdminOperations() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Độ Lệch Dữ Liệu (Lag / Drift)</span>
+                <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Độ Lệch Dữ Liệu (Lag / Drift)</span>
                   <strong style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, fontSize: 16, color: consistencyResult?.isConsistent === false ? '#dc2626' : '#16a34a' }}>
                     {consistencyResult?.isConsistent === false ? (
                       <>
@@ -509,20 +509,20 @@ export default function AdminOperations() {
                     )}
                   </strong>
                 </div>
-                <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Đội (Season Projection)</span>
-                  <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#0f172a' }}>
+                <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bản ghi Đội (Season Projection)</span>
+                  <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: 'var(--text-primary)' }}>
                     {fmtNum(projectionsStatus?.seasonTeamsCount || 0)}
                   </strong>
                 </div>
-                <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Bản ghi Cá Nhân (Individual Projection)</span>
-                  <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#0f172a' }}>
+                <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bản ghi Cá Nhân (Individual Projection)</span>
+                  <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: 'var(--text-primary)' }}>
                     {fmtNum(projectionsStatus?.seasonIndividualsCount || 0)}
                   </strong>
                 </div>
-                <div style={{ padding: 12, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Sổ Cái Điểm Số (Score Ledger)</span>
+                <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Sổ Cái Điểm Số (Score Ledger)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: '#7c3aed' }}>
                     {fmtNum(projectionsStatus?.scoreLedgerCount || 0)} bản ghi
                   </strong>
@@ -540,7 +540,7 @@ export default function AdminOperations() {
             {/* Search & Filter Bar */}
             <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ position: 'relative', flex: '1 1 260px' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
@@ -550,11 +550,11 @@ export default function AdminOperations() {
               </div>
 
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Hành động:</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Hành động:</span>
                 <select
                   value={auditActionFilter}
                   onChange={(e) => setAuditActionFilter(e.target.value)}
-                  style={{ padding: '6px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.12)', background: '#fff' }}
+                  style={{ padding: '6px 10px', fontSize: 12, border: '1px solid rgba(15,23,42,0.12)', background: 'var(--surface)' }}
                 >
                   <option value="all">Tất cả hành động</option>
                   {uniqueAuditActions.map((act) => <option key={act} value={act}>{act}</option>)}
@@ -566,44 +566,44 @@ export default function AdminOperations() {
             <div style={{ ...CARD, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Gian</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Hành Động (Action)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Người Thực Hiện</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng (Target)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Lý Do & Ghi Chú</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Chi Tiết</th>
+                  <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Thời Gian</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Hành Động (Action)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Người Thực Hiện</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng (Target)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Lý Do & Ghi Chú</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Chi Tiết</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredAuditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                         Chưa có bản ghi nhật ký kiểm toán nào khớp với bộ lọc.
                       </td>
                     </tr>
                   ) : (
                     filteredAuditLogs.map((log) => (
                       <tr key={log.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: '#64748b', fontSize: 11 }}>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: 11 }}>
                           {fmtDate(log.createdAt || log.timestamp)}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{
                             fontSize: 10, fontWeight: 600, padding: '2px 8px',
                             background: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? 'rgba(124,58,237,0.1)' : 'rgba(180,83,9,0.12)',
-                            color: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? '#7c3aed' : '#b45309',
+                            color: log.action?.includes('MVP') || log.action?.includes('CHAMPION') ? '#7c3aed' : 'var(--accent)',
                           }}>
                             {log.action}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>
+                        <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-primary)' }}>
                           {log.actorName || `Admin #${log.actorId || '1'}`}
                         </td>
-                        <td style={{ padding: '10px 14px', color: '#334155' }}>
+                        <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>
                           {log.entityType ? `${log.entityType} #${log.entityId}` : `ID: #${log.targetUserId || log.entityId || '—'}`}
                         </td>
-                        <td style={{ padding: '10px 14px', color: '#64748b', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {log.reason || '—'}
                         </td>
                         <td style={{ padding: '10px 14px', textAlign: 'right' }}>
@@ -611,8 +611,8 @@ export default function AdminOperations() {
                             type="button"
                             onClick={() => setSelectedAuditLog(log)}
                             style={{
-                              padding: '4px 8px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.1)',
-                              fontSize: 11, fontWeight: 600, color: '#b45309', cursor: 'pointer',
+                              padding: '4px 8px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.1)',
+                              fontSize: 11, fontWeight: 600, color: 'var(--accent)', cursor: 'pointer',
                             }}
                           >
                             Xem
@@ -635,7 +635,7 @@ export default function AdminOperations() {
             {/* Search & Status Filter */}
             <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ position: 'relative', flex: '1 1 260px' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   value={eventSearch}
                   onChange={(e) => setEventSearch(e.target.value)}
@@ -657,9 +657,9 @@ export default function AdminOperations() {
                     onClick={() => setEventStatusFilter(val)}
                     style={{
                       padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                      border: eventStatusFilter === val ? '1px solid #0f172a' : '1px solid rgba(15,23,42,0.1)',
-                      background: eventStatusFilter === val ? '#0f172a' : '#ffffff',
-                      color: eventStatusFilter === val ? '#ffffff' : '#64748b',
+                      border: eventStatusFilter === val ? '1px solid var(--text-primary)' : '1px solid rgba(15,23,42,0.1)',
+                      background: eventStatusFilter === val ? 'var(--text-primary)' : 'var(--surface)',
+                      color: eventStatusFilter === val ? 'var(--surface)' : 'var(--text-secondary)',
                     }}
                   >
                     {label}
@@ -672,41 +672,41 @@ export default function AdminOperations() {
             <div style={{ ...CARD, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Thời Điểm</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Sự Kiện (Contract Key)</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng / Actor</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10 }}>Trạng Thái</th>
-                    <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Thao Tác</th>
+                  <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Thời Điểm</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Sự Kiện (Contract Key)</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Đối Tượng / Actor</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10 }}>Trạng Thái</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10, textAlign: 'right' }}>Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredEvents.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                         Không có sự kiện nào khớp với điều kiện tìm kiếm.
                       </td>
                     </tr>
                   ) : (
                     filteredEvents.map((ev) => (
                       <tr key={ev.eventId || ev.id} style={{ borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                        <td style={{ padding: '10px 14px', color: '#64748b', fontSize: 11 }}>
+                        <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 11 }}>
                           {fmtDate(ev.occurredAt || ev.createdAt)}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
-                          <strong style={{ color: '#0f172a', fontSize: 12 }}>{ev.eventType || ev.contractKey}</strong>
-                          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                          <strong style={{ color: 'var(--text-primary)', fontSize: 12 }}>{ev.eventType || ev.contractKey}</strong>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
                             Idempotency: {ev.idempotencyKey || '—'}
                           </div>
                         </td>
-                        <td style={{ padding: '10px 14px', color: '#334155' }}>
+                        <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>
                           {ev.actorId ? `User #${ev.actorId}` : ev.teamId ? `Team #${ev.teamId}` : 'System'}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           <span style={{
                             fontSize: 10, fontWeight: 600, padding: '2px 8px',
                             background: ev.status === 'PROCESSED' ? '#dcfce7' : ev.status === 'FAILED' ? '#fee2e2' : '#fef3c7',
-                            color: ev.status === 'PROCESSED' ? '#16a34a' : ev.status === 'FAILED' ? '#dc2626' : '#b45309',
+                            color: ev.status === 'PROCESSED' ? '#16a34a' : ev.status === 'FAILED' ? '#dc2626' : 'var(--accent)',
                           }}>
                             {ev.status || 'PROCESSED'}
                           </span>
@@ -717,7 +717,7 @@ export default function AdminOperations() {
                             onClick={() => setTraceEventId(ev.eventId || ev.id)}
                             aria-label={`Truy vết sự kiện ${ev.eventId || ev.id}`}
                             title="Truy vết sự kiện"
-                            style={{ padding: 6, border: '1px solid rgba(15,23,42,0.1)', background: '#f8fafc', color: '#b45309', cursor: 'pointer', marginRight: 6 }}
+                            style={{ padding: 6, border: '1px solid rgba(15,23,42,0.1)', background: 'var(--surface-soft)', color: 'var(--accent)', cursor: 'pointer', marginRight: 6 }}
                           >
                             <Eye size={14} />
                           </button>
@@ -751,12 +751,12 @@ export default function AdminOperations() {
             <div style={{ ...CARD, padding: 22 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <RotateCcw size={20} color="#dc2626" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Tính Toán Lại Bảng Xếp Hạng (Read Model Rebuild)
                 </h3>
               </div>
 
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                 Quá trình Rebuild sẽ đọc lại toàn bộ các sự kiện từ <strong>Source of Truth (Event Store & Score Ledger)</strong> để tính toán lại toàn bộ Bảng Xếp Hạng Đội nhóm và Cá nhân với độ chính xác tuyệt đối.
               </p>
 
@@ -772,7 +772,7 @@ export default function AdminOperations() {
                   type="button"
                   onClick={() => setRebuildModalOpen(true)}
                   style={{
-                    padding: '10px 20px', background: '#dc2626', color: '#ffffff', border: 'none',
+                    padding: '10px 20px', background: '#dc2626', color: 'var(--surface)', border: 'none',
                     fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -783,7 +783,7 @@ export default function AdminOperations() {
                   onClick={handleCheckConsistency}
                   disabled={checkingConsistency}
                   style={{
-                    padding: '10px 16px', background: '#ffffff', color: '#0f172a', border: '1px solid rgba(15,23,42,0.15)',
+                    padding: '10px 16px', background: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid rgba(15,23,42,0.15)',
                     fontSize: 13, fontWeight: 600, cursor: checkingConsistency ? 'not-allowed' : 'pointer',
                     opacity: checkingConsistency ? 0.6 : 1,
                   }}
@@ -809,7 +809,7 @@ export default function AdminOperations() {
                 ['Số lần thử', traceData.processing?.attemptCount],
                 ['Bộ luật', traceData.ruleEvaluation?.ruleVersion ? `${traceData.ruleEvaluation.ruleVersion.ruleSetName} (v${traceData.ruleEvaluation.ruleVersion.versionNumber})` : 'Không có phiên bản được ghi nhận'],
                 ['Số hiệu ứng', traceData.ruleEvaluation?.totalEffects], ['Điểm phát sinh', fmtNum(traceData.ruleEvaluation?.totalPointsAwarded)],
-              ].map(([label, value]) => <React.Fragment key={label}><dt style={{ color: '#64748b' }}>{label}</dt><dd style={{ margin: 0, fontWeight: 600 }}>{value ?? '—'}</dd></React.Fragment>)}
+              ].map(([label, value]) => <React.Fragment key={label}><dt style={{ color: 'var(--text-secondary)' }}>{label}</dt><dd style={{ margin: 0, fontWeight: 600 }}>{value ?? '—'}</dd></React.Fragment>)}
             </dl>
             {traceData.processing?.lastError && <div role="alert" style={{ color: '#dc2626' }}>{traceData.processing.lastError}</div>}
             <section>
@@ -818,14 +818,14 @@ export default function AdminOperations() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 12 }}>
                     <thead><tr>{['Đối tượng', 'Hiệu ứng', 'Điểm', 'Lý do'].map((label) => <th key={label} style={{ padding: 8 }}>{label}</th>)}</tr></thead>
-                    <tbody>{traceData.ledgerEntries.map((entry) => <tr key={entry.id} style={{ borderTop: '1px solid #e2e8f0' }}><td style={{ padding: 8 }}>{entry.targetType} #{entry.targetId}</td><td style={{ padding: 8 }}>{entry.effectType}</td><td style={{ padding: 8 }}>{fmtNum(entry.pointsDelta ?? entry.delta)}</td><td style={{ padding: 8 }}>{entry.reason || '—'}</td></tr>)}</tbody>
+                    <tbody>{traceData.ledgerEntries.map((entry) => <tr key={entry.id} style={{ borderTop: '1px solid var(--border)' }}><td style={{ padding: 8 }}>{entry.targetType} #{entry.targetId}</td><td style={{ padding: 8 }}>{entry.effectType}</td><td style={{ padding: 8 }}>{fmtNum(entry.pointsDelta ?? entry.delta)}</td><td style={{ padding: 8 }}>{entry.reason || '—'}</td></tr>)}</tbody>
                   </table>
                 </div>
-              ) : <p style={{ margin: 0, color: '#64748b' }}>Không có bản ghi điểm.</p>}
+              ) : <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Không có bản ghi điểm.</p>}
             </section>
             {[
               ['Payload', traceData.payload], ['Projection', traceData.projections],
-            ].map(([label, value]) => <section key={label}><h4 style={{ margin: '0 0 8px', fontSize: 14 }}>{label}</h4><pre style={{ margin: 0, padding: 12, background: '#f8fafc', fontSize: 11, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(value ?? {}, null, 2)}</pre></section>)}
+            ].map(([label, value]) => <section key={label}><h4 style={{ margin: '0 0 8px', fontSize: 14 }}>{label}</h4><pre style={{ margin: 0, padding: 12, background: 'var(--surface-soft)', fontSize: 11, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(value ?? {}, null, 2)}</pre></section>)}
           </div>
         )}
       </AnimatedModal>
@@ -836,37 +836,37 @@ export default function AdminOperations() {
          ══════════════════════════════════════════════════════════════════════ */}
       {selectedAuditLog && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setSelectedAuditLog(null); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 520, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+          <div className="modal-dialog-enter" style={{ background: 'var(--surface)', width: '100%', maxWidth: 520, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={18} color="#b45309" /> Chi Tiết Nhật Ký Kiểm Toán
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={18} color="var(--accent)" /> Chi Tiết Nhật Ký Kiểm Toán
               </h3>
-              <button type="button" onClick={() => setSelectedAuditLog(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button type="button" onClick={() => setSelectedAuditLog(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
                 <X size={18} />
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                <span style={{ color: '#64748b' }}>Hành động:</span>
-                <strong style={{ color: '#b45309' }}>{selectedAuditLog.action}</strong>
+                <span style={{ color: 'var(--text-secondary)' }}>Hành động:</span>
+                <strong style={{ color: 'var(--accent)' }}>{selectedAuditLog.action}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                <span style={{ color: '#64748b' }}>Thời gian:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Thời gian:</span>
                 <strong>{fmtDate(selectedAuditLog.createdAt || selectedAuditLog.timestamp)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                <span style={{ color: '#64748b' }}>Người thực hiện:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Người thực hiện:</span>
                 <strong>{selectedAuditLog.actorName || `Admin #${selectedAuditLog.actorId}`}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
-                <span style={{ color: '#64748b' }}>Lý do & Căn cứ:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Lý do & Căn cứ:</span>
                 <strong>{selectedAuditLog.reason || '—'}</strong>
               </div>
               {selectedAuditLog.details && (
                 <div style={{ marginTop: 6 }}>
-                  <span style={{ color: '#64748b', display: 'block', marginBottom: 4 }}>Dữ liệu chi tiết:</span>
-                  <pre style={{ padding: 10, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', fontSize: 11, overflowX: 'auto', maxHeight: 180 }}>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Dữ liệu chi tiết:</span>
+                  <pre style={{ padding: 10, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)', fontSize: 11, overflowX: 'auto', maxHeight: 180 }}>
                     {typeof selectedAuditLog.details === 'object' ? JSON.stringify(selectedAuditLog.details, null, 2) : String(selectedAuditLog.details)}
                   </pre>
                 </div>
@@ -877,7 +877,7 @@ export default function AdminOperations() {
               <button
                 type="button"
                 onClick={() => setSelectedAuditLog(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: 'var(--text-primary)', color: 'var(--surface)', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
               >
                 Đóng
               </button>
@@ -891,23 +891,23 @@ export default function AdminOperations() {
          ══════════════════════════════════════════════════════════════════════ */}
       {retryModalEvent && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setRetryModalEvent(null); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 440, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+          <div className="modal-dialog-enter" style={{ background: 'var(--surface)', width: '100%', maxWidth: 440, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <RotateCcw size={18} color="#b45309" /> Thử Lại Sự Kiện
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <RotateCcw size={18} color="var(--accent)" /> Thử Lại Sự Kiện
               </h3>
-              <button type="button" onClick={() => setRetryModalEvent(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button type="button" onClick={() => setRetryModalEvent(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleRetryEvent} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12 }}>
+              <div style={{ padding: '8px 12px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12 }}>
                 Sự kiện: <strong>{retryModalEvent.eventType || retryModalEvent.contractKey}</strong> (ID: #{retryModalEvent.eventId || retryModalEvent.id})
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Lý do thử lại sự kiện *
                 </label>
                 <textarea
@@ -916,15 +916,15 @@ export default function AdminOperations() {
                   value={retryReason}
                   onChange={(e) => setRetryReason(e.target.value)}
                   placeholder="Ghi rõ lý do thử lại (ví dụ: đã sửa lỗi kết nối YouTube API)..."
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', resize: 'vertical' }}
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setRetryModalEvent(null)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setRetryModalEvent(null)} style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={submittingRetry} style={{ padding: '8px 18px', background: 'var(--accent)', color: 'var(--surface)', border: 'none', fontSize: 12, fontWeight: 600, cursor: submittingRetry ? 'not-allowed' : 'pointer' }}>
                   {submittingRetry ? 'Đang gửi...' : 'Xác Nhận Thử Lại'}
                 </button>
               </div>
@@ -938,23 +938,23 @@ export default function AdminOperations() {
          ══════════════════════════════════════════════════════════════════════ */}
       {rebuildModalOpen && (
         <div onClick={(event) => { if (event.target === event.currentTarget) setRebuildModalOpen(false); }} className="modal-backdrop-enter" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 99999, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+          <div className="modal-dialog-enter" style={{ background: 'var(--surface)', width: '100%', maxWidth: 460, padding: 24, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RotateCcw size={18} /> Xác Nhận Rebuild Bảng Xếp Hạng
               </h3>
-              <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleRebuildProjections} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 Hệ thống sẽ đồng bộ lại toàn bộ Bảng Xếp Hạng Season và Grand từ Source of Truth.
               </p>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Lý do Rebuild (Bắt buộc) *
                 </label>
                 <textarea
@@ -963,15 +963,15 @@ export default function AdminOperations() {
                   value={rebuildReason}
                   onChange={(e) => setRebuildReason(e.target.value)}
                   placeholder="Ví dụ: Định kỳ đồng bộ sau cập nhật kênh YouTube..."
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', resize: 'vertical' }}
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setRebuildModalOpen(false)} style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Hủy
                 </button>
-                <button type="submit" disabled={rebuildLoading} style={{ padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none', fontSize: 12, fontWeight: 600, cursor: rebuildLoading ? 'not-allowed' : 'pointer' }}>
+                <button type="submit" disabled={rebuildLoading} style={{ padding: '8px 18px', background: '#dc2626', color: 'var(--surface)', border: 'none', fontSize: 12, fontWeight: 600, cursor: rebuildLoading ? 'not-allowed' : 'pointer' }}>
                   {rebuildLoading ? 'Đang Rebuild...' : 'Xác Nhận Rebuild'}
                 </button>
               </div>

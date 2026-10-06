@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { User, Trophy, Skull, WifiOff, Clock, Building, DollarSign, Wallet } from 'lucide-react';
+import { AnimatedNumber } from '../ui';
+
+const DEFAULT_SEAT_COLORS = ['#38bdf8', '#ef4444', '#10b981', '#f59e0b'];
 
 export default function PlayerCard({
   player,
@@ -18,10 +21,9 @@ export default function PlayerCard({
     user,
   } = player || {};
 
-  const seatColor = player?.color || player?.seatColor || '#38bdf8';
-
-  const displayName = user?.name || user?.username || `Người chơi ${seatIndex + 1}`;
-  const avatarUrl = user?.avatarUrl || user?.avatar;
+  const seatColor = player?.color || DEFAULT_SEAT_COLORS[seatIndex] || '#38bdf8';
+  const displayName = user?.name || `Người chơi ${seatIndex + 1}`;
+  const avatarUrl = user?.avatarUrl || user?.avatarData;
   const isBankrupt = status === 'BANKRUPT';
   const isWinner = status === 'WINNER';
 
@@ -31,11 +33,11 @@ export default function PlayerCard({
   return (
     <div
       style={{
-        background: isBankrupt ? '#f1f5f9' : '#ffffff',
+        background: isBankrupt ? 'var(--surface-muted)' : 'var(--surface)',
         border: isCurrentTurn
           ? `2px solid ${seatColor}`
           : isMe
-          ? '2px solid #0f172a'
+          ? '2px solid var(--text-primary)'
           : '1px solid rgba(15,23,42,0.1)',
         borderRadius: 8,
         padding: 12,
@@ -43,8 +45,8 @@ export default function PlayerCard({
         boxShadow: isCurrentTurn
           ? `0 0 16px ${seatColor}33, 0 4px 12px rgba(15,23,42,0.08)`
           : '0 2px 6px rgba(15,23,42,0.04)',
-        opacity: isBankrupt ? 0.6 : 1,
-        transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease',
+        opacity: isBankrupt ? 0.55 : 1,
+        transition: 'background-color var(--motion-normal) var(--ease-spring), border-color var(--motion-normal) var(--ease-spring), box-shadow var(--motion-normal) var(--ease-spring), opacity var(--motion-normal) var(--ease-spring)',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -78,21 +80,21 @@ export default function PlayerCard({
 
       {/* Header Info */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           {/* Avatar / Token */}
           <div
             style={{
-              width: 32,
-              height: 32,
+              width: 34,
+              height: 34,
               borderRadius: '50%',
               background: seatColor,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
+              color: 'var(--surface)',
               fontWeight: 800,
               fontSize: 13,
-              border: '2px solid #ffffff',
+              border: '2px solid var(--surface)',
               boxShadow: '0 2px 4px rgba(15,23,42,0.15)',
               overflow: 'hidden',
               flexShrink: 0,
@@ -111,7 +113,7 @@ export default function PlayerCard({
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
-                  color: isBankrupt ? '#94a3b8' : '#0f172a',
+                  color: isBankrupt ? 'var(--text-muted)' : 'var(--text-primary)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -126,10 +128,11 @@ export default function PlayerCard({
                   style={{
                     fontSize: 9,
                     fontWeight: 800,
-                    background: '#0f172a',
-                    color: '#ffffff',
+                    background: 'var(--text-primary)',
+                    color: 'var(--surface)',
                     padding: '1px 4px',
                     borderRadius: 3,
+                    flexShrink: 0,
                   }}
                 >
                   BẠN
@@ -141,7 +144,7 @@ export default function PlayerCard({
               <span
                 style={{
                   fontSize: 10,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: seatColor,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
@@ -149,9 +152,14 @@ export default function PlayerCard({
               >
                 Vị trí {seatIndex + 1}
               </span>
+              {propertiesOwnedCount > 0 && (
+                <span style={{ fontSize: 10, color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  <Building size={10} /> {propertiesOwnedCount} đất
+                </span>
+              )}
               {!isOnline && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, color: '#ef4444' }}>
-                  <WifiOff size={10} /> Mất kết nối
+                  <WifiOff size={10} />
                 </span>
               )}
             </div>
@@ -203,7 +211,6 @@ export default function PlayerCard({
               borderRadius: 4,
               fontSize: 10,
               fontWeight: 800,
-              animation: 'pulse 1.5s infinite',
             }}
           >
             <Clock size={11} /> {turnTimeRemaining}s
@@ -211,7 +218,7 @@ export default function PlayerCard({
         ) : null}
       </div>
 
-      {/* Financial Stats Grid */}
+      {/* Financial Stats Grid with AnimatedNumber */}
       <div
         style={{
           display: 'grid',
@@ -224,44 +231,44 @@ export default function PlayerCard({
         }}
       >
         <div>
-          <div style={{ fontSize: 9, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tiền mặt</div>
+          <div style={{ fontSize: 9, color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Tiền mặt</div>
           <div
             style={{
               fontSize: 12,
               fontWeight: 800,
-              color: isBankrupt ? '#94a3b8' : '#16a34a',
+              color: isBankrupt ? 'var(--text-muted)' : '#16a34a',
               fontFamily: 'JetBrains Mono, monospace',
             }}
           >
-            ${cash}
+            $<AnimatedNumber value={cash} duration={500} />
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 9, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tài sản</div>
+          <div style={{ fontSize: 9, color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Tài sản</div>
           <div
             style={{
               fontSize: 12,
               fontWeight: 800,
-              color: isBankrupt ? '#94a3b8' : '#0284c7',
+              color: isBankrupt ? 'var(--text-muted)' : 'var(--info)',
               fontFamily: 'JetBrains Mono, monospace',
             }}
           >
-            ${propertyValue}
+            $<AnimatedNumber value={propertyValue} duration={500} />
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 9, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tổng tài sản</div>
+          <div style={{ fontSize: 9, color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Tổng giá trị</div>
           <div
             style={{
               fontSize: 12,
               fontWeight: 800,
-              color: isBankrupt ? '#94a3b8' : '#7c3aed',
+              color: isBankrupt ? 'var(--text-muted)' : '#7c3aed',
               fontFamily: 'JetBrains Mono, monospace',
             }}
           >
-            ${netWorth}
+            $<AnimatedNumber value={netWorth} duration={500} />
           </div>
         </div>
       </div>

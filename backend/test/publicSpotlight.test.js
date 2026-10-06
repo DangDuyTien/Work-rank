@@ -4,6 +4,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const app = require('../src/app');
+const { Op } = require('sequelize');
 const {
   sequelize,
   Season,
@@ -18,9 +19,11 @@ describe('Public Spotlight API Test Suite', () => {
   let testSeason;
   let testTeam;
   let testUser;
-
   before(async () => {
-    // Create test user, team, and season
+    // Clean up any stale test-generated seasons so this test runs in clean isolation
+    await Season.destroy({ where: { slug: { [Op.like]: 'test-%' } } }).catch(() => {});
+
+    // Create test user, team, and season with true historical FINISHED semantics
     testUser = await User.create({
       name: 'Nguyễn Văn Test',
       email: `test_spotlight_${Date.now()}@workrank.local`,
@@ -39,7 +42,7 @@ describe('Public Spotlight API Test Suite', () => {
 
     testSeason = await Season.create({
       name: 'Season 05 — Championship',
-      slug: `season-05-champ-${Date.now()}`,
+      slug: `test-season-05-champ-${Date.now()}`,
       seasonType: 'MONTHLY',
       status: 'FINISHED',
       startAt: new Date(Date.now() - 30 * 86400000),
@@ -101,6 +104,13 @@ describe('Public Spotlight API Test Suite', () => {
     const res = await request(app)
       .get('/api/competition/public/spotlight')
       .expect(200);
+
+    assert.match(res.headers['cache-control'], /no-store/);
+    const revalidated = await request(app)
+      .get('/api/competition/public/spotlight')
+      .set('If-None-Match', res.headers.etag || 'stale-spotlight-etag')
+      .expect(200);
+    assert.ok(revalidated.body.hasSpotlight !== undefined);
 
     assert.equal(res.body.hasSpotlight, true);
     assert.ok(res.body.season);

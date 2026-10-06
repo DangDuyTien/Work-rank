@@ -118,13 +118,13 @@ export default function QuizTimerBar({
         width: '100%',
         marginTop: 12,
         padding: '12px 16px',
-        background: isUrgent ? '#fef2f2' : '#ffffff',
+        background: isUrgent ? '#fef2f2' : 'var(--surface)',
         border: isUrgent ? '1.5px solid rgba(220, 38, 38, 0.4)' : '1px solid rgba(0, 0, 0, 0.08)',
         borderRadius: 8,
         boxShadow: isUrgent
           ? '0 2px 10px rgba(220, 38, 38, 0.12)'
           : '0 1px 3px rgba(0, 0, 0, 0.03)',
-        transition: 'background-color 0.2s ease, border-color 0.2s ease',
+        transition: 'background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
         boxSizing: 'border-box',
         userSelect: 'none',
       }}
@@ -148,7 +148,7 @@ export default function QuizTimerBar({
               padding: '3px 8px',
               borderRadius: 4,
               background: isLocked ? '#fffbeb' : isUrgent ? '#fee2e2' : '#f8f7f4',
-              color: isLocked ? '#b45309' : isUrgent ? '#dc2626' : '#141414',
+              color: isLocked ? 'var(--accent)' : isUrgent ? '#dc2626' : 'var(--primary)',
               border: isLocked
                 ? '1px solid rgba(180, 83, 9, 0.3)'
                 : isUrgent
@@ -161,7 +161,7 @@ export default function QuizTimerBar({
               textTransform: 'uppercase',
             }}
           >
-            {isLocked ? <Lock size={12} /> : <Zap size={12} color={isUrgent ? '#dc2626' : '#b45309'} />}
+            {isLocked ? <Lock size={12} /> : <Zap size={12} color={isUrgent ? '#dc2626' : 'var(--accent)'} />}
             <span>{isLocked ? 'ĐIỂM ĐÃ KHÓA' : 'POINT POT'}</span>
           </div>
 
@@ -171,12 +171,12 @@ export default function QuizTimerBar({
               fontSize: 18,
               fontWeight: 800,
               color: isExpired
-                ? '#94a3b8'
+                ? 'var(--text-muted)'
                 : isLocked
-                ? '#b45309'
+                ? 'var(--accent)'
                 : isUrgent
                 ? '#dc2626'
-                : '#b45309',
+                : 'var(--accent)',
               letterSpacing: '-0.3px',
             }}
           >
@@ -199,7 +199,7 @@ export default function QuizTimerBar({
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 16,
             fontWeight: 700,
-            color: isExpired ? '#94a3b8' : isUrgent ? '#dc2626' : '#141414',
+            color: isExpired ? 'var(--text-muted)' : isUrgent ? '#dc2626' : 'var(--primary)',
           }}
         >
           <Clock size={15} style={{ opacity: 0.7 }} />
@@ -226,13 +226,13 @@ export default function QuizTimerBar({
             transformOrigin: 'left center',
             borderRadius: 4,
             background: isExpired
-              ? '#94a3b8'
+              ? 'var(--text-muted)'
               : isUrgent
               ? '#dc2626'
               : isLocked
               ? '#16a34a'
-              : '#b45309',
-            transition: 'background-color 0.2s ease',
+              : 'var(--accent)',
+            transition: 'background-color var(--motion-fast) var(--ease-standard)',
           }}
           ref={progressRef}
         />

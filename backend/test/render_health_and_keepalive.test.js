@@ -12,9 +12,7 @@ describe('Render Health & Keep-Alive Probe Test Suite', () => {
   let adminToken;
 
   before(async () => {
-    await sequelize.sync();
     adminUser = await User.create({
-      username: `admin_health_${Date.now()}`,
       name: 'Admin Health Tester',
       email: `admin_health_${Date.now()}@example.com`,
       passwordHash: '$2b$12$dummyHashForTestingPurposesOnly12345678901234567890',

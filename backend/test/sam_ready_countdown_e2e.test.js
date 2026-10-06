@@ -20,13 +20,14 @@ test('Sam Lốc Ready & 5-Second Server Authoritative Countdown E2E Suite', asyn
   let hostUser, player2, adminUser;
   let hostToken, token2, adminToken;
   let roomId = null;
+  let botRoomId = null;
 
   before(async () => {
-    await SamRoom.sync({ alter: true });
-    await SamPlayer.sync({ alter: true });
-    await SamAction.sync({ alter: true });
-    await SamResult.sync({ alter: true });
-    await SamUserStat.sync({ alter: true });
+    await SamRoom.sync();
+    await SamPlayer.sync();
+    await SamAction.sync();
+    await SamResult.sync();
+    await SamUserStat.sync();
 
     const ts = Date.now();
     hostUser = await User.create({
@@ -62,7 +63,16 @@ test('Sam Lốc Ready & 5-Second Server Authoritative Countdown E2E Suite', asyn
   });
 
   after(async () => {
-    samGameService.clearStartCountdown(roomId);
+    if (roomId) {
+      samGameService.clearStartCountdown(roomId);
+      samGameService.clearBotTimers(roomId);
+      samGameService.clearSamPhaseTimer(roomId);
+    }
+    if (botRoomId) {
+      samGameService.clearStartCountdown(botRoomId);
+      samGameService.clearBotTimers(botRoomId);
+      samGameService.clearSamPhaseTimer(botRoomId);
+    }
   });
 
   await t.test('1. Create Room: initial state is WAITING and player isReady defaults to false', async () => {
@@ -202,7 +212,7 @@ test('Sam Lốc Ready & 5-Second Server Authoritative Countdown E2E Suite', asyn
       });
 
     assert.equal(botRoomRes.status, 201);
-    const botRoomId = botRoomRes.body.room.id;
+    botRoomId = botRoomRes.body.room.id;
 
     // Verify bots are isReady = true, admin is isReady = false
     const bots = botRoomRes.body.players.filter((p) => p.isBot);

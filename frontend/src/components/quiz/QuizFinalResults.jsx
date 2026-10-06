@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Crown, Sparkles, Home, ArrowLeft } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Home, ArrowLeft, RotateCcw } from 'lucide-react';
 import QuizAvatar from './QuizAvatar';
 
 export default function QuizFinalResults({
@@ -28,7 +28,7 @@ export default function QuizFinalResults({
         maxWidth: 800,
         margin: '0 auto',
         padding: '16px 20px',
-        color: '#141414',
+        color: 'var(--primary)',
         gap: 16,
         boxSizing: 'border-box',
         userSelect: 'none',
@@ -38,7 +38,7 @@ export default function QuizFinalResults({
       <div
         style={{
           textAlign: 'center',
-          background: '#ffffff',
+          background: 'var(--surface)',
           padding: '16px 28px',
           borderRadius: 8,
           border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -55,7 +55,7 @@ export default function QuizFinalResults({
             gap: 5,
             background: 'rgba(180, 83, 9, 0.08)',
             border: '1px solid rgba(180, 83, 9, 0.2)',
-            color: '#b45309',
+            color: 'var(--accent)',
             padding: '3px 10px',
             borderRadius: 9999,
             fontSize: 11,
@@ -74,7 +74,7 @@ export default function QuizFinalResults({
             margin: 0,
             fontSize: 20,
             fontWeight: 700,
-            color: '#141414',
+            color: 'var(--primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -84,7 +84,7 @@ export default function QuizFinalResults({
           }}
         >
           <span>{winner ? `Chúc mừng ${winner.user?.name || 'Quán Quân'}!` : 'Trận Đấu Hoàn Tất!'}</span>
-          <Sparkles size={18} color="#b45309" />
+          <Sparkles size={18} color="var(--accent)" />
         </h1>
       </div>
 
@@ -109,9 +109,9 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1,
-                background: '#ffffff',
+                background: 'var(--surface)',
                 borderRadius: 8,
-                border: '1px solid #94a3b8',
+                border: '1px solid var(--text-muted)',
                 padding: '14px 10px',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
               }}
@@ -120,7 +120,7 @@ export default function QuizFinalResults({
                 user={secondPlace.user || { id: secondPlace.userId }}
                 userId={secondPlace.userId}
                 size="md"
-                border="2px solid #94a3b8"
+                border="2px solid var(--text-muted)"
                 style={{ marginBottom: 6 }}
               />
               <div
@@ -128,7 +128,7 @@ export default function QuizFinalResults({
                   fontSize: 12,
                   fontWeight: 600,
                   textAlign: 'center',
-                  color: '#141414',
+                  color: 'var(--primary)',
                   maxWidth: 120,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -137,7 +137,7 @@ export default function QuizFinalResults({
               >
                 {secondPlace.user?.name || 'Hạng 2'}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                 {Number(secondPlace.score || 0).toLocaleString()} pts
               </div>
               <div
@@ -145,11 +145,11 @@ export default function QuizFinalResults({
                   marginTop: 6,
                   fontSize: 10,
                   fontWeight: 700,
-                  background: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
+                  background: 'var(--surface-muted)',
+                  border: '1px solid var(--border-2)',
                   padding: '1px 8px',
                   borderRadius: 4,
-                  color: '#475569',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 HẠNG 2
@@ -165,9 +165,9 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1.15,
-                background: '#ffffff',
+                background: 'var(--surface)',
                 borderRadius: 8,
-                border: '2px solid #b45309',
+                border: '2px solid var(--accent)',
                 padding: '18px 12px',
                 boxShadow: '0 2px 8px rgba(180, 83, 9, 0.15)',
                 position: 'relative',
@@ -178,15 +178,15 @@ export default function QuizFinalResults({
                   user={firstPlace.user || { id: firstPlace.userId }}
                   userId={firstPlace.userId}
                   size="lg"
-                  border="2px solid #b45309"
+                  border="2px solid var(--accent)"
                 />
                 <div
                   style={{
                     position: 'absolute',
                     top: -8,
                     right: -4,
-                    background: '#b45309',
-                    color: '#ffffff',
+                    background: 'var(--accent)',
+                    color: 'var(--surface)',
                     borderRadius: '50%',
                     padding: 3,
                     display: 'flex',
@@ -203,7 +203,7 @@ export default function QuizFinalResults({
                   fontSize: 13,
                   fontWeight: 700,
                   textAlign: 'center',
-                  color: '#141414',
+                  color: 'var(--primary)',
                   maxWidth: 140,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -212,7 +212,7 @@ export default function QuizFinalResults({
               >
                 {firstPlace.user?.name || 'Quán Quân'}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#b45309', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                 {Number(firstPlace.score || 0).toLocaleString()} pts
               </div>
               <div
@@ -220,8 +220,8 @@ export default function QuizFinalResults({
                   marginTop: 6,
                   fontSize: 10,
                   fontWeight: 700,
-                  background: '#b45309',
-                  color: '#ffffff',
+                  background: 'var(--accent)',
+                  color: 'var(--surface)',
                   padding: '2px 10px',
                   borderRadius: 4,
                 }}
@@ -239,7 +239,7 @@ export default function QuizFinalResults({
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1,
-                background: '#ffffff',
+                background: 'var(--surface)',
                 borderRadius: 8,
                 border: '1px solid #d97706',
                 padding: '14px 10px',
@@ -258,7 +258,7 @@ export default function QuizFinalResults({
                   fontSize: 12,
                   fontWeight: 600,
                   textAlign: 'center',
-                  color: '#141414',
+                  color: 'var(--primary)',
                   maxWidth: 120,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -279,7 +279,7 @@ export default function QuizFinalResults({
                   border: '1px solid #fde68a',
                   padding: '1px 8px',
                   borderRadius: 4,
-                  color: '#92400e',
+                  color: 'var(--accent-hover)',
                 }}
               >
                 HẠNG 3
@@ -293,7 +293,7 @@ export default function QuizFinalResults({
       {myPlayer && (
         <div
           style={{
-            background: '#ffffff',
+            background: 'var(--surface)',
             border: '1px solid rgba(0, 0, 0, 0.08)',
             borderRadius: 8,
             padding: '14px 20px',
@@ -308,25 +308,25 @@ export default function QuizFinalResults({
           }}
         >
           <div>
-            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>THỨ HẠNG</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#b45309', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>THỨ HẠNG</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
               #{sortedPlayers.findIndex((p) => Number(p.userId) === Number(currentUserId)) + 1}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>TỔNG ĐIỂM</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#141414', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>TỔNG ĐIỂM</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {Number(myPlayer.score || 0).toLocaleString()}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>SỐ CÂU ĐÚNG</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>SỐ CÂU ĐÚNG</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--success)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
               {myPlayer.correctAnswers || 0}/{room?.totalQuestions || 10}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: '#666666', fontWeight: 600 }}>TỐC ĐỘ TB</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>TỐC ĐỘ TB</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
               {myPlayer.avgResponseTimeMs ? `${(myPlayer.avgResponseTimeMs / 1000).toFixed(1)}s` : 'N/A'}
             </div>
@@ -338,24 +338,49 @@ export default function QuizFinalResults({
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 4 }}>
         <button
           type="button"
+          onClick={onPlayAgain}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '9px 20px',
+            background: 'var(--accent)',
+            color: 'var(--surface)',
+            border: 'none',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 1px 3px rgba(180, 83, 9, 0.2)',
+            transition: 'background var(--motion-fast) var(--ease-standard)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-hover)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
+        >
+          <RotateCcw size={14} />
+          <span>Chơi Lại</span>
+        </button>
+
+        <button
+          type="button"
           onClick={onBackToLobby}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
             padding: '9px 20px',
-            background: '#141414',
-            color: '#ffffff',
-            border: 'none',
+            background: 'var(--surface)',
+            color: 'var(--primary)',
+            border: '1px solid rgba(0, 0, 0, 0.15)',
             borderRadius: 6,
             fontSize: 13,
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            transition: 'background 0.15s ease',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+            transition: 'background var(--motion-fast) var(--ease-standard)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#262626'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#141414'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-muted)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface)'; }}
         >
           <Home size={14} />
           <span>Về Sảnh Chờ</span>

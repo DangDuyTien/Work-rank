@@ -139,7 +139,7 @@ export function Notice({ type = 'info', icon: Icon, children }) {
   );
 }
 
-export function StatCard({ icon: Icon, label, value, detail, color = '#38bdf8' }) {
+export function StatCard({ icon: Icon, label, value, detail, color = 'var(--accent)' }) {
   return (
     <Card className="ui-stat-card" style={{ '--stat-color': color }}>
       <div className="ui-stat-card__top">
@@ -328,14 +328,14 @@ export function AnimatedModal({
         onClick={(e) => e.stopPropagation()}
       >
         {(title || !hideCloseButton) && (
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            {title && <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111111' }}>{title}</h3>}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            {title && <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h3>}
             {!hideCloseButton && (
               <button
                 type="button"
                 onClick={handleClose}
                 aria-label="Đóng"
-                style={{ marginLeft: 'auto', border: 'none', background: 'rgba(0,0,0,0.04)', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555555', fontSize: 13, transition: 'background var(--motion-fast) ease' }}
+                style={{ marginLeft: 'auto', border: 'none', background: 'var(--surface-hover)', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, transition: 'background var(--motion-fast) var(--ease-standard)' }}
               >
                 ✕
               </button>
@@ -346,7 +346,7 @@ export function AnimatedModal({
           {children}
         </div>
         {actions && (
-          <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.08)', background: '#fafaf8', display: 'flex', justifyContent: 'flex-end', gap: 10, flexShrink: 0 }}>
+          <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', background: 'var(--surface-soft)', display: 'flex', justifyContent: 'flex-end', gap: 10, flexShrink: 0 }}>
             {actions}
           </div>
         )}
@@ -445,7 +445,7 @@ export function CardSkeleton({ count = 3 }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 20 }}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: 18, borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 18, borderRadius: 'var(--radius-content)', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Skeleton height={12} width="40%" />
             <Skeleton height={20} width={20} radius={4} />
@@ -460,7 +460,7 @@ export function CardSkeleton({ count = 3 }) {
 
 export function TableSkeleton({ rows = 6, cols = 4, minHeight = 320 }) {
   return (
-    <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: 18, minHeight }}>
+    <div className="ui-table-shell" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 18, minHeight }}>
       <div style={{ display: 'flex', gap: 16, marginBottom: 18, borderBottom: '1px solid rgba(15,23,42,0.06)', paddingBottom: 12 }}>
         {Array.from({ length: cols }).map((_, i) => (
           <Skeleton key={i} height={14} width={i === 0 ? 40 : i === 1 ? '30%' : '20%'} />
@@ -487,7 +487,7 @@ export function TableSkeleton({ rows = 6, cols = 4, minHeight = 320 }) {
 export function PageTransitionSkeleton() {
   return (
     <div className="page-transition-skeleton" style={{ maxWidth: 1680, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="ui-card" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '50%' }}>
           <Skeleton height={24} width="60%" />
           <Skeleton height={12} width="90%" />

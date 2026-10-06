@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Music, Play, Pause, Disc3 } from 'lucide-react';
+import { Image as ImageIcon, Music, Play, Pause, Disc3, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function QuizMediaBox({
   question,
@@ -12,6 +12,20 @@ export default function QuizMediaBox({
   const mediaUrl = question.imageUrl || question.image_url;
   const audioUrl = question.audioUrl || question.audio_url;
   const videoUrl = question.videoUrl || question.video_url;
+
+  // Image loading & error state
+  const [imageLoading, setImageLoading] = useState(Boolean(mediaUrl));
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (mediaUrl) {
+      setImageLoading(true);
+      setImageError(false);
+    } else {
+      setImageLoading(false);
+      setImageError(false);
+    }
+  }, [mediaUrl]);
 
   // Audio state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -103,8 +117,8 @@ export default function QuizMediaBox({
       style={{
         width: '100%',
         height: '100%',
-        minHeight: 300,
-        background: '#ffffff',
+        minHeight: 280,
+        background: 'var(--surface)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
         borderRadius: 8,
         overflow: 'hidden',
@@ -129,7 +143,7 @@ export default function QuizMediaBox({
             padding: '24px 28px',
             background: '#f8f7f4',
             position: 'relative',
-            color: '#141414',
+            color: 'var(--primary)',
             boxSizing: 'border-box',
           }}
         >
@@ -140,7 +154,7 @@ export default function QuizMediaBox({
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: '#141414',
+              background: 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -149,15 +163,15 @@ export default function QuizMediaBox({
               animation: isPlaying ? 'spin 6s linear infinite' : 'none',
             }}
           >
-            <Disc3 size={40} color="#b45309" />
+            <Disc3 size={40} color="var(--accent)" />
             <div
               style={{
                 position: 'absolute',
                 width: 18,
                 height: 18,
                 borderRadius: '50%',
-                background: '#f4f3ef',
-                border: '2px solid #141414',
+                background: 'var(--background)',
+                border: '2px solid var(--primary)',
               }}
             />
           </div>
@@ -167,7 +181,7 @@ export default function QuizMediaBox({
             style={{
               fontSize: 14,
               fontWeight: 700,
-              color: '#141414',
+              color: 'var(--primary)',
               textAlign: 'center',
               marginBottom: 2,
               letterSpacing: '0.2px',
@@ -176,7 +190,7 @@ export default function QuizMediaBox({
           >
             Giai Điệu Bài Hát
           </div>
-          <div style={{ fontSize: 12, color: '#666666', marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
             Lắng nghe và chọn đáp án chính xác
           </div>
 
@@ -203,7 +217,7 @@ export default function QuizMediaBox({
                     maxWidth: 6,
                     height: isPlaying ? `${Math.max(8, h * 34)}px` : '6px',
                     borderRadius: 3,
-                    background: isPlaying ? (active ? '#b45309' : '#d1d5db') : '#dedad0',
+                    background: isPlaying ? (active ? 'var(--accent)' : '#d1d5db') : '#dedad0',
                     transition: isPlaying ? 'height 0.12s ease' : 'height 0.25s ease',
                   }}
                 />
@@ -222,8 +236,8 @@ export default function QuizMediaBox({
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
-                background: '#141414',
-                color: '#ffffff',
+                background: 'var(--primary)',
+                color: 'var(--surface)',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -231,7 +245,7 @@ export default function QuizMediaBox({
                 cursor: isLocked ? 'not-allowed' : 'pointer',
                 flexShrink: 0,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                transition: 'background 0.15s ease',
+                transition: 'background var(--motion-fast) var(--ease-standard)',
               }}
             >
               {isPlaying ? <Pause size={15} /> : <Play size={15} style={{ marginLeft: 2 }} />}
@@ -252,7 +266,7 @@ export default function QuizMediaBox({
                   style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: '#b45309',
+                    background: 'var(--accent)',
                     transition: 'width 0.1s linear',
                   }}
                 />
@@ -264,7 +278,7 @@ export default function QuizMediaBox({
                   justifyContent: 'space-between',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
-                  color: '#666666',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <span>{formatTime(currentTime)}</span>
@@ -295,20 +309,77 @@ export default function QuizMediaBox({
         </div>
       ) : (
         /* ── 3. IMAGE STAGE ── */
-        <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f7f4' }}>
-          {mediaUrl ? (
-            <img
-              src={mediaUrl}
-              alt="Quiz visual prompt"
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            minHeight: 280,
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f8f7f4',
+            overflow: 'hidden',
+          }}
+        >
+          {mediaUrl && !imageError ? (
+            <>
+              {imageLoading && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    background: 'rgba(248, 247, 244, 0.9)',
+                    zIndex: 2,
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  <RefreshCw size={24} className="spin" color="var(--accent)" />
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>Đang tải hình ảnh...</span>
+                </div>
+              )}
+              <img
+                src={mediaUrl}
+                alt="Quiz visual prompt"
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  maxHeight: 420,
+                  objectFit: 'contain',
+                  display: 'block',
+                  opacity: imageLoading ? 0 : 1,
+                  transition: 'opacity var(--motion-fast) var(--ease-standard)',
+                }}
+                loading="eager"
+              />
+            </>
+          ) : imageError ? (
+            <div
               style={{
-                width: '100%',
-                height: '100%',
-                maxHeight: 420,
-                objectFit: 'contain',
-                display: 'block',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                gap: 8,
+                padding: 24,
+                textAlign: 'center',
               }}
-              loading="eager"
-            />
+            >
+              <AlertCircle size={36} color="var(--danger)" />
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)' }}>Không thể tải hình ảnh</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Vui lòng chú ý câu hỏi và các lựa chọn đáp án</span>
+            </div>
           ) : (
             <div
               style={{
@@ -316,13 +387,13 @@ export default function QuizMediaBox({
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#94a3b8',
+                color: 'var(--text-muted)',
                 gap: 8,
                 padding: 24,
               }}
             >
               <ImageIcon size={40} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#666666' }}>Hình ảnh câu hỏi</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Hình ảnh câu hỏi</span>
             </div>
           )}
         </div>
@@ -330,3 +401,4 @@ export default function QuizMediaBox({
     </div>
   );
 }
+

@@ -205,15 +205,15 @@ export default function AdminGrand() {
     : grands.filter((g) => g.status === filterStatus);
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 0' }}>
+    <div className="admin-data-page" style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 0' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Award size={22} color="#eab308" />
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>Quản Lý Grand Championship</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Quản Lý Grand Championship</h1>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
             Hệ thống giải vô địch toàn năm, phân phối Grand Points từ các Seasons và bảng xếp hạng tổng kết.
           </p>
         </div>
@@ -226,13 +226,13 @@ export default function AdminGrand() {
               alignItems: 'center',
               gap: 6,
               padding: '8px 12px',
-              borderRadius: 0,
-              border: '1px solid #cbd5e1',
-              background: '#fff',
+              borderRadius: 'var(--radius-content)',
+              border: '1px solid var(--border-2)',
+              background: 'var(--surface)',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
-              color: '#475569',
+              color: 'var(--text-secondary)',
             }}
           >
             <RefreshCw size={14} /> Làm mới
@@ -245,7 +245,7 @@ export default function AdminGrand() {
               alignItems: 'center',
               gap: 6,
               padding: '8px 14px',
-              borderRadius: 0,
+              borderRadius: 'var(--radius-content)',
               border: 'none',
               background: '#eab308',
               color: '#000',
@@ -297,7 +297,7 @@ export default function AdminGrand() {
           {filteredGrands.map((g) => {
             const linkedSeasons = (seasons || []).filter((s) => s.grandChampionshipId === g.id);
             return (
-              <Card key={g.id} style={{ padding: 20, border: '1px solid #e2e8f0' }}>
+              <Card key={g.id} style={{ padding: 20, border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -311,21 +311,21 @@ export default function AdminGrand() {
                       }}>
                         NĂM {g.year}
                       </span>
-                      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                      <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                         {g.name}
                       </h2>
                       <span style={{
                         padding: '2px 8px',
                         fontSize: 11,
                         fontWeight: 600,
-                        background: g.status === 'ACTIVE' ? 'rgba(34,197,94,0.1)' : g.status === 'FINISHED' ? '#f1f5f9' : '#fffbeb',
-                        color: g.status === 'ACTIVE' ? '#16a34a' : g.status === 'FINISHED' ? '#475569' : '#d97706',
+                        background: g.status === 'ACTIVE' ? 'rgba(34,197,94,0.1)' : g.status === 'FINISHED' ? 'var(--surface-muted)' : '#fffbeb',
+                        color: g.status === 'ACTIVE' ? '#16a34a' : g.status === 'FINISHED' ? 'var(--text-secondary)' : '#d97706',
                         border: '1px solid currentColor',
                       }}>
                         {g.status}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748b', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                       <span><strong>Slug:</strong> {g.slug}</span>
                       <span><strong>Thời gian:</strong> {new Date(g.startAt).toLocaleDateString('vi-VN')} — {new Date(g.endAt).toLocaleDateString('vi-VN')}</span>
                       <span><strong>Ưu tiên Tiebreak:</strong> {g.tieBreakOrder}</span>
@@ -340,8 +340,8 @@ export default function AdminGrand() {
                         onClick={() => handleStatusChange(g.id, 'SCHEDULED')}
                         disabled={statusChangingId === g.id}
                         style={{
-                          border: '1px solid #cbd5e1',
-                          background: '#fff',
+                          border: '1px solid var(--border-2)',
+                          background: 'var(--surface)',
                           padding: '6px 10px',
                           fontSize: 11,
                           fontWeight: 600,
@@ -360,7 +360,7 @@ export default function AdminGrand() {
                         style={{
                           border: 'none',
                           background: '#16a34a',
-                          color: '#fff',
+                          color: 'var(--surface)',
                           padding: '6px 10px',
                           fontSize: 11,
                           fontWeight: 600,
@@ -396,8 +396,8 @@ export default function AdminGrand() {
                         onClick={() => handleStatusChange(g.id, 'ARCHIVED')}
                         disabled={statusChangingId === g.id}
                         style={{
-                          border: '1px solid #cbd5e1',
-                          background: '#fff',
+                          border: '1px solid var(--border-2)',
+                          background: 'var(--surface)',
                           padding: '6px 10px',
                           fontSize: 11,
                           fontWeight: 600,
@@ -411,7 +411,7 @@ export default function AdminGrand() {
                     <button
                       type="button"
                       onClick={() => setSelectedGrandForSeason(g)}
-                      style={{ border: '1px solid #b45309', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '6px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                      style={{ border: '1px solid var(--accent)', background: 'rgba(180,83,9,0.06)', color: 'var(--accent)', padding: '6px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                     >
                       + Ghép Season
                     </button>
@@ -426,24 +426,24 @@ export default function AdminGrand() {
                 </div>
 
                 {/* Linked Seasons List */}
-                <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Layers size={14} color="#b45309" />
+                <div style={{ marginTop: 16, borderTop: '1px solid var(--surface-muted)', paddingTop: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Layers size={14} color="var(--accent)" />
                     Các Mùa Giải Đã Ghép ({linkedSeasons.length}):
                   </div>
                   {linkedSeasons.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                       Chưa có Season nào được liên kết vào Grand Championship này.
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
                       {linkedSeasons.map((s) => (
-                        <div key={s.id} style={{ border: '1px solid #e2e8f0', padding: 10, background: '#f8fafc', fontSize: 12 }}>
+                        <div key={s.id} style={{ border: '1px solid var(--border)', padding: 10, background: 'var(--surface-soft)', fontSize: 12 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontWeight: 600, color: '#0f172a' }}>{s.name}</span>
-                            <span style={{ fontWeight: 600, color: s.status === 'FINISHED' ? '#16a34a' : '#64748b' }}>{s.status}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</span>
+                            <span style={{ fontWeight: 600, color: s.status === 'FINISHED' ? '#16a34a' : 'var(--text-secondary)' }}>{s.status}</span>
                           </div>
-                          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8 }}>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 11, marginBottom: 8 }}>
                             {new Date(s.startAt).toLocaleDateString('vi-VN')} - {new Date(s.endAt).toLocaleDateString('vi-VN')}
                           </div>
                           {s.status === 'FINISHED' && (
@@ -453,13 +453,13 @@ export default function AdminGrand() {
                               disabled={settlingSeasonId === s.id}
                               style={{
                                 width: '100%',
-                                border: '1px solid #cbd5e1',
-                                background: '#fff',
+                                border: '1px solid var(--border-2)',
+                                background: 'var(--surface)',
                                 padding: '4px 8px',
                                 fontSize: 11,
                                 fontWeight: 600,
                                 cursor: settlingSeasonId === s.id ? 'not-allowed' : 'pointer',
-                                color: '#b45309',
+                                color: 'var(--accent)',
                                 opacity: settlingSeasonId === s.id ? 0.6 : 1,
                               }}
                             >

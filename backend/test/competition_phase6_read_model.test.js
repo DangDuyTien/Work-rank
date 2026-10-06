@@ -84,20 +84,20 @@ describe('Phase 6 — Read Models & Competition Projections', () => {
 
     [teamAlpha] = await Team.findOrCreate({
       where: { name: 'P6 Team Alpha' },
-      defaults: { name: 'P6 Team Alpha', color: '#10b981' },
+      defaults: { name: 'P6 Team Alpha' },
     });
     [teamBeta] = await Team.findOrCreate({
       where: { name: 'P6 Team Beta' },
-      defaults: { name: 'P6 Team Beta', color: '#6366f1' },
+      defaults: { name: 'P6 Team Beta' },
     });
 
     [userAlice] = await User.findOrCreate({
       where: { email: 'alice_p6@workrank.test' },
-      defaults: { name: 'Alice P6', username: 'alice_p6', email: 'alice_p6@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamAlpha.id },
+      defaults: { name: 'Alice P6', email: 'alice_p6@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamAlpha.id },
     });
     [userBob] = await User.findOrCreate({
       where: { email: 'bob_p6@workrank.test' },
-      defaults: { name: 'Bob P6', username: 'bob_p6', email: 'bob_p6@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamBeta.id },
+      defaults: { name: 'Bob P6', email: 'bob_p6@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamBeta.id },
     });
 
     userAlice.teamId = teamAlpha.id;

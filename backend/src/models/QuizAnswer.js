@@ -22,7 +22,19 @@ QuizAnswer.init(
     score: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
     submittedAt: { type: DataTypes.BIGINT, allowNull: true, field: 'submitted_at' },
   },
-  { sequelize, modelName: 'QuizAnswer', tableName: 'quiz_answers', underscored: true }
+  {
+    sequelize,
+    modelName: 'QuizAnswer',
+    tableName: 'quiz_answers',
+    underscored: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['room_id', 'question_id', 'user_id'],
+        name: 'uniq_quiz_answer_room_question_user',
+      },
+    ],
+  }
 );
 
 module.exports = QuizAnswer;

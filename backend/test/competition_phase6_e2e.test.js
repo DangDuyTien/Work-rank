@@ -122,24 +122,24 @@ describe('Phase 6 E2E — Read Models & Company Competition Dashboard Flow', () 
     // Seed Teams
     [teamPhoenix] = await Team.findOrCreate({
       where: { name: 'E2E P6 Phoenix' },
-      defaults: { name: 'E2E P6 Phoenix', color: '#f97316' },
+      defaults: { name: 'E2E P6 Phoenix' },
     });
     [teamDragon] = await Team.findOrCreate({
       where: { name: 'E2E P6 Dragon' },
-      defaults: { name: 'E2E P6 Dragon', color: '#3b82f6' },
+      defaults: { name: 'E2E P6 Dragon' },
     });
 
     // Seed Users
     [adminUser] = await User.findOrCreate({
       where: { email: 'admin_p6_e2e@workrank.test' },
-      defaults: { name: 'Admin P6', username: 'admin_p6', email: 'admin_p6_e2e@workrank.test', passwordHash: 'dummy_hash', role: 'admin' },
+      defaults: { name: 'Admin P6', email: 'admin_p6_e2e@workrank.test', passwordHash: 'dummy_hash', role: 'admin' },
     });
     adminUser.role = 'admin';
     await adminUser.save();
 
     [memberUser] = await User.findOrCreate({
       where: { email: 'member_p6_e2e@workrank.test' },
-      defaults: { name: 'Member P6', username: 'member_p6', email: 'member_p6_e2e@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamPhoenix.id },
+      defaults: { name: 'Member P6', email: 'member_p6_e2e@workrank.test', passwordHash: 'dummy_hash', role: 'user', teamId: teamPhoenix.id },
     });
     memberUser.role = 'user';
     memberUser.teamId = teamPhoenix.id;

@@ -1,0 +1,759 @@
+/* ─────────────────────────────────────────────────────────────
+   WORKRANK SAM LỐC – AUTHENTIC VIETNAMESE CARD GAME THEME
+   Visual System: Deep Green Felt, Warm Wood, Ivory Paper, Amber Gold
+   Standardized to WorkRank Smooth Motion Principles
+   Uses CSS Tokens: --motion-*, --ease-*
+   ───────────────────────────────────────────────────────────── */
+
+/* ── GAME ARENA FULLSCREEN CONTAINER ── */
+.sam-arena-shell {
+  position: relative;
+  width: 100%;
+  min-height: max(620px, calc(100vh - 170px));
+  background: #111715;
+  background-image: 
+    radial-gradient(circle at 50% 30%, #1a2420 0%, #101614 70%, #0a0e0c 100%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f8fafc;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── TOP NAVIGATION BAR ── */
+.sam-top-bar {
+  height: 58px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(14, 20, 18, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+  z-index: 30;
+  gap: 10px;
+}
+
+.sam-top-bar__left,
+.sam-top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sam-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.sam-back-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.sam-back-btn:active {
+  transform: translateY(1px);
+}
+
+/* The game surface stays dark; its navigation follows the shared WorkRank chrome. */
+.sam-top-bar {
+  background: var(--surface);
+  border-bottom-color: var(--border, rgba(15, 23, 42, 0.1));
+  color: var(--text-primary);
+}
+
+.sam-back-btn {
+  background: var(--surface-muted, #f7f6f2);
+  border-color: var(--border, rgba(15, 23, 42, 0.12));
+  color: var(--text-primary);
+}
+
+.sam-back-btn:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.sam-room-title {
+  color: var(--text-primary);
+}
+
+.sam-room-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.sam-badge--code {
+  background: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  font-family: monospace;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sam-badge--test {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.sam-badge--spectator {
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+/* Announcement Center Chip */
+.sam-center-banner {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fef08a;
+  background: rgba(41, 28, 16, 0.85);
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── CENTRAL ARENA LAYOUT ── */
+.sam-board-layout {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px 12px;
+  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Opponent Seats Area */
+.sam-seat-top {
+  height: 68px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  flex-shrink: 0;
+}
+
+.sam-middle-row {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  min-height: 160px;
+}
+
+.sam-seat-side {
+  width: 110px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  flex-shrink: 0;
+}
+
+/* ── GREEN FELT CASINO TABLE ── */
+.sam-felt-table {
+  flex: 1;
+  max-width: 720px;
+  height: 94%;
+  min-height: 170px;
+  max-height: 350px;
+  border-radius: 36px;
+  background: #143e2b;
+  background-image: 
+    radial-gradient(ellipse at 50% 45%, #1d523b 0%, #143e2b 60%, #0d2a1d 100%);
+  border: 4px solid #2a2017;
+  outline: 1px solid rgba(217, 119, 6, 0.25);
+  box-shadow: 
+    inset 0 0 35px rgba(0, 0, 0, 0.65),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  position: relative;
+  transition: border-color var(--motion-normal) var(--ease-standard),
+              box-shadow var(--motion-normal) var(--ease-standard);
+}
+
+.sam-felt-table.is-my-turn {
+  border-color: #785338;
+  outline-color: rgba(245, 158, 11, 0.6);
+}
+
+.sam-felt-table__timer {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #e2e8f0;
+  background: rgba(10, 20, 15, 0.85);
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard);
+}
+
+.sam-felt-table__timer.is-urgent {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(45, 12, 12, 0.9);
+}
+
+.sam-felt-table__round {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(10, 20, 15, 0.7);
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sam-felt-table__round.is-sam {
+  color: #fbbf24;
+  background: rgba(60, 38, 10, 0.85);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ── TRICK PILE (BÀI VỪA ĐÁNH) ── */
+.sam-trick-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sam-trick-cards {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sam-trick-card-wrapper {
+  animation: sam-play-card-enter var(--motion-normal) var(--ease-spring) backwards;
+}
+
+.sam-trick-name-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fef08a;
+  background: rgba(20, 15, 10, 0.9);
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* ── OPPONENT SEAT COMPONENT ── */
+.sam-opponent-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.sam-opponent-seat.is-passed {
+  opacity: 0.45;
+}
+
+.sam-opponent-avatar-wrap {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.sam-opponent-avatar-wrap.is-turn {
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.4);
+}
+
+.sam-opponent-avatar-wrap.is-sam-declarer {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+}
+
+.sam-opponent-card-pill {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.sam-opponent-card-pill.is-bao-mot {
+  background: #b91c1c;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.sam-opponent-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f1f5f9;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  margin-top: 3px;
+}
+
+.sam-opponent-tags {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100px;
+}
+
+/* ── BOTTOM PLAYER AREA ── */
+.sam-bottom-area {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+/* ── ACTION BAR CONTROLS ── */
+.sam-action-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 38px;
+}
+
+.sam-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              opacity var(--motion-fast) var(--ease-standard);
+  user-select: none;
+}
+
+.sam-btn-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sam-btn-action:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.sam-btn-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Primary Play Button: Amber Gold */
+.sam-btn-action--play {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #b45309;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.sam-btn-action--play:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.sam-btn-action--play.is-disabled {
+  background: #334155;
+  color: #94a3b8;
+  border-color: #475569;
+  box-shadow: none;
+}
+
+/* Secondary Pass / Utility Button */
+.sam-btn-action--pass {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sam-btn-action--pass:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.sam-btn-action--secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.sam-btn-action--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sam-btn-action--sam-declare {
+  background: #b45309;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 7px 18px;
+  border-color: #d97706;
+  border-radius: 6px;
+}
+
+.sam-btn-action--sam-declare:hover:not(:disabled) {
+  background: #92400e;
+}
+
+/* ── PLAYER HAND HORIZONTAL TRAY ── */
+.sam-hand-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 104px;
+  padding: 0 6px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sam-hand-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.sam-hand-cards {
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  padding-bottom: 2px;
+  padding-top: 16px; /* space for lifted selected cards */
+}
+
+/* ── AUTHENTIC PLAYING CARD COMPONENT ── */
+.sam-card-item {
+  width: 62px;
+  height: 90px;
+  border-radius: 5px;
+  background: #faf8f5;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 5px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+  transform: translateY(0);
+  transition: transform var(--motion-fast) var(--ease-spring),
+              box-shadow var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard);
+}
+
+.sam-card-item:hover:not(.is-disabled) {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.sam-card-item.is-selected {
+  transform: translateY(-12px);
+  border: 2px solid #d97706;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), 0 0 0 1px #d97706;
+  z-index: 45 !important;
+}
+
+.sam-card-item.is-heo {
+  background: #fffdf5;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.sam-card-item.is-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Card Back Design */
+.sam-card-back {
+  width: 54px;
+  height: 78px;
+  border-radius: 5px;
+  background: #1a2228;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+/* Small Card for table / opponents */
+.sam-card-item--sm {
+  width: 44px;
+  height: 64px;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.sam-card-back--sm {
+  width: 36px;
+  height: 52px;
+  border-radius: 4px;
+}
+
+/* Self User Info Row */
+.sam-self-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #f1f5f9;
+}
+
+.sam-turn-pill {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fef08a;
+  background: rgba(180, 83, 9, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(217, 119, 6, 0.45);
+}
+
+/* ── KEYFRAME ANIMATIONS (LIGHT & PURPOSEFUL) ── */
+@keyframes sam-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sam-play-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media (max-width: 640px) {
+  .sam-top-bar {
+    padding: 0 8px;
+    height: 42px;
+  }
+
+  .sam-room-title {
+    max-width: 110px;
+    font-size: 12px;
+  }
+
+  .sam-center-banner {
+    display: none;
+  }
+
+  .sam-board-layout {
+    padding: 4px 6px 8px;
+  }
+
+  .sam-middle-row {
+    gap: 4px;
+    min-height: 140px;
+  }
+
+  .sam-seat-side {
+    width: 72px;
+  }
+
+  .sam-opponent-avatar-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .sam-opponent-name {
+    max-width: 68px;
+    font-size: 10px;
+  }
+
+  .sam-felt-table {
+    border-radius: 20px;
+    padding: 8px;
+    min-height: 140px;
+    border-width: 3px;
+  }
+
+  .sam-felt-table__timer {
+    top: 6px;
+    right: 8px;
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .sam-felt-table__round {
+    top: 6px;
+    left: 8px;
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .sam-card-item {
+    width: 48px;
+    height: 70px;
+    padding: 3px;
+    border-radius: 4px;
+  }
+
+  .sam-card-item.is-selected {
+    transform: translateY(-10px);
+  }
+
+  .sam-hand-wrapper {
+    height: 84px;
+    padding: 0 4px;
+  }
+
+  .sam-hand-cards {
+    padding-top: 12px;
+    padding-bottom: 2px;
+  }
+
+  .sam-btn-action {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .sam-btn-action--sam-declare {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}
+
+/* ── REDUCED MOTION OVERRIDE ── */
+@media (prefers-reduced-motion: reduce) {
+  .sam-arena-shell *,
+  .sam-arena-shell *::before,
+  .sam-arena-shell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html[data-workrank-reduce-motion="true"] .sam-arena-shell *,
+html[data-workrank-reduce-motion="true"] .sam-arena-shell *::before,
+html[data-workrank-reduce-motion="true"] .sam-arena-shell *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

@@ -103,7 +103,7 @@ export default function BrandMark({
         >
           <span
             style={{
-              color: '#0f172a',
+              color: 'var(--text-primary)',
               fontSize: Math.max(14, Math.round(size * 0.48)),
               fontWeight: 700,
               letterSpacing: '-0.3px',
@@ -119,7 +119,7 @@ export default function BrandMark({
               style={{
                 fontSize: Math.max(9, Math.round(size * 0.28)),
                 fontWeight: 600,
-                color: '#94a3b8',
+                color: 'var(--text-muted)',
                 letterSpacing: '0.4px',
                 textTransform: 'uppercase',
                 marginTop: 2,

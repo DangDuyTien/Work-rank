@@ -44,7 +44,7 @@ export default function GameComingSoon({
         style={{
           width: '100%',
           maxWidth: 520,
-          background: '#ffffff',
+          background: 'var(--surface)',
           border: '1px solid rgba(15,23,42,0.1)',
           padding: '40px 32px',
           textAlign: 'center',
@@ -57,13 +57,13 @@ export default function GameComingSoon({
             width: 72,
             height: 72,
             margin: '0 auto 20px',
-            background: 'linear-gradient(135deg, rgba(56,189,248,0.12), rgba(14,165,233,0.05))',
-            border: '1px solid rgba(56,189,248,0.3)',
+            background: 'linear-gradient(135deg, var(--info-soft), rgba(3,105,161,0.05))',
+            border: '1px solid var(--info-border)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#0284c7',
+            color: 'var(--info)',
           }}
         >
           <IconComponent size={34} strokeWidth={2.2} />
@@ -97,7 +97,7 @@ export default function GameComingSoon({
             margin: '0 0 10px',
             fontSize: 24,
             fontWeight: 800,
-            color: '#0f172a',
+            color: 'var(--text-primary)',
             letterSpacing: '-0.02em',
           }}
         >
@@ -110,7 +110,7 @@ export default function GameComingSoon({
             margin: '0 0 24px',
             fontSize: 14,
             lineHeight: 1.6,
-            color: '#64748b',
+            color: 'var(--text-secondary)',
           }}
         >
           {description ||
@@ -144,8 +144,8 @@ export default function GameComingSoon({
                 gap: 8,
                 padding: '10px 20px',
                 fontWeight: 600,
-                background: '#0284c7',
-                borderColor: '#0284c7',
+                background: 'var(--info)',
+                borderColor: 'var(--info)',
               }}
             >
               <Play size={16} />
@@ -160,10 +160,10 @@ export default function GameComingSoon({
             style={{
               marginTop: 24,
               padding: '12px 14px',
-              background: '#f8fafc',
+              background: 'var(--surface-soft)',
               border: '1px solid rgba(15,23,42,0.08)',
               fontSize: 12,
-              color: '#475569',
+              color: 'var(--text-secondary)',
               textAlign: 'left',
               display: 'flex',
               alignItems: 'center',
@@ -172,7 +172,7 @@ export default function GameComingSoon({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <ShieldCheck size={16} color="#0284c7" />
+              <ShieldCheck size={16} color="var(--info)" />
               <span>
                 <strong>Quản trị viên:</strong> Bạn có quyền xem trước và quản lý trạng thái trò chơi này.
               </span>
@@ -183,7 +183,7 @@ export default function GameComingSoon({
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#0284c7',
+                color: 'var(--info)',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',

@@ -53,15 +53,15 @@ function notificationTone(type) {
   switch (type) {
     case 'battle':
     case 'challenge':
-      return { bg: 'rgba(180,83,9,0.08)', dot: '#b45309' };
+      return { bg: 'rgba(180,83,9,0.08)', dot: 'var(--accent)' };
     case 'achievement':
     case 'level_up':
-      return { bg: 'rgba(21,128,61,0.08)', dot: '#15803d' };
+      return { bg: 'rgba(21,128,61,0.08)', dot: 'var(--success)' };
     case 'system':
     case 'alert':
-      return { bg: 'rgba(185,28,28,0.08)', dot: '#b91c1c' };
+      return { bg: 'rgba(185,28,28,0.08)', dot: 'var(--danger)' };
     default:
-      return { bg: 'rgba(0,0,0,0.06)', dot: '#141414' };
+      return { bg: 'rgba(0,0,0,0.06)', dot: 'var(--primary)' };
   }
 }
 
@@ -258,8 +258,8 @@ export default function Layout() {
         display: 'flex',
         height: '100vh',
         width: '100vw',
-        background: '#f4f3ef',
-        color: '#111111',
+        background: 'var(--background)',
+        color: 'var(--text-primary)',
         fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
         overflow: 'hidden',
       }}
@@ -290,7 +290,7 @@ export default function Layout() {
               width: 280,
               maxWidth: '85vw',
               height: '100%',
-              background: '#ffffff',
+              background: 'var(--surface)',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
               display: 'flex',
               flexDirection: 'column',
@@ -315,12 +315,12 @@ export default function Layout() {
                   height: 32,
                   borderRadius: 6,
                   border: '1px solid rgba(0,0,0,0.1)',
-                  background: '#f4f3ef',
+                  background: 'var(--background)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#555555',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <X size={16} />
@@ -343,7 +343,7 @@ export default function Layout() {
           style={{
             height: 56,
             flexShrink: 0,
-            background: '#ffffff',
+            background: 'var(--surface)',
             borderBottom: '1px solid rgba(0,0,0,0.08)',
             display: 'flex',
             alignItems: 'center',
@@ -366,11 +366,11 @@ export default function Layout() {
                 height: 34,
                 borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.1)',
-                background: '#f4f3ef',
+                background: 'var(--background)',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#111111',
+                color: 'var(--text-primary)',
                 flexShrink: 0,
               }}
             >
@@ -391,7 +391,7 @@ export default function Layout() {
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: '#111111',
+                color: 'var(--text-primary)',
                 letterSpacing: 0,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -427,7 +427,7 @@ export default function Layout() {
                   background: notifOpen ? 'rgba(0,0,0,0.06)' : 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: notifOpen ? '#111111' : '#666666',
+                  color: notifOpen ? 'var(--text-primary)' : 'var(--text-secondary)',
                   borderRadius: 6,
                   transition: 'background var(--motion-fast) ease, color var(--motion-fast) ease',
                 }}
@@ -442,9 +442,9 @@ export default function Layout() {
                     height: 15,
                     padding: '0 4px',
                     borderRadius: 9999,
-                    background: '#141414',
-                    color: '#ffffff',
-                    border: '2px solid #ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
+                    border: '2px solid var(--surface)',
                     fontSize: 9,
                     fontWeight: 600,
                     lineHeight: '11px',
@@ -464,7 +464,7 @@ export default function Layout() {
                   right: -42,
                   width: 340,
                   maxWidth: 'calc(100vw - 24px)',
-                  background: '#ffffff',
+                  background: 'var(--surface)',
                   border: '1px solid rgba(0,0,0,0.08)',
                   borderRadius: 10,
                   overflow: 'hidden',
@@ -479,8 +479,8 @@ export default function Layout() {
                     borderBottom: '1px solid rgba(0,0,0,0.08)',
                   }}>
                     <div>
-                      <div style={{ color: '#111111', fontSize: 13, fontWeight: 600 }}>Thông báo</div>
-                      <div style={{ color: '#777777', fontSize: 11, fontWeight: 400 }}>
+                      <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}>Thông báo</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 400 }}>
                         {notifications.length ? `${notifications.length} mục gần nhất` : 'Chưa có thông báo'}
                       </div>
                     </div>
@@ -490,8 +490,8 @@ export default function Layout() {
                         onClick={clearNotifications}
                         style={{
                           border: '1px solid rgba(0,0,0,0.1)',
-                          background: '#f4f3ef',
-                          color: '#555555',
+                          background: 'var(--background)',
+                          color: 'var(--text-secondary)',
                           borderRadius: 6,
                           padding: '5px 8px',
                           cursor: 'pointer',
@@ -506,7 +506,7 @@ export default function Layout() {
 
                   <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: 18, color: '#666666', fontSize: 13, lineHeight: 1.5, fontWeight: 400 }}>
+                      <div style={{ padding: 18, color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, fontWeight: 400 }}>
                         Các thông báo thi đấu, kết quả mùa giải và tin nhắn sẽ xuất hiện ở đây.
                       </div>
                     ) : notifications.map((notification) => {
@@ -527,7 +527,7 @@ export default function Layout() {
                             padding: '12px 14px',
                             border: 'none',
                             borderBottom: '1px solid rgba(0,0,0,0.06)',
-                            background: notification.read ? '#ffffff' : 'rgba(0,0,0,0.02)',
+                            background: notification.read ? 'var(--surface)' : 'rgba(0,0,0,0.02)',
                             cursor: notification.actionTo ? 'pointer' : 'default',
                             textAlign: 'left',
                             fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -548,18 +548,18 @@ export default function Layout() {
                           </span>
                           <span style={{ minWidth: 0, flex: 1 }}>
                             <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                              <strong style={{ color: '#111111', fontSize: 12, fontWeight: 600, lineHeight: 1.25 }}>
+                              <strong style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, lineHeight: 1.25 }}>
                                 {notification.title}
                               </strong>
-                              <span style={{ color: '#888888', fontSize: 11, fontWeight: 400, whiteSpace: 'nowrap' }}>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 400, whiteSpace: 'nowrap' }}>
                                 {formatNotificationTime(notification.createdAt)}
                               </span>
                             </span>
-                            <span style={{ display: 'block', marginTop: 3, color: '#555555', fontSize: 12, fontWeight: 400, lineHeight: 1.4 }}>
+                            <span style={{ display: 'block', marginTop: 3, color: 'var(--text-secondary)', fontSize: 12, fontWeight: 400, lineHeight: 1.4 }}>
                               {notification.message}
                             </span>
                             {notification.actionTo && (
-                              <span style={{ display: 'block', marginTop: 6, color: '#b45309', fontSize: 11, fontWeight: 600 }}>
+                              <span style={{ display: 'block', marginTop: 6, color: 'var(--accent)', fontSize: 11, fontWeight: 600 }}>
                                 {notification.actionLabel || 'Mở'}
                               </span>
                             )}
@@ -586,7 +586,7 @@ export default function Layout() {
                 background: location.pathname === '/settings' ? 'rgba(0,0,0,0.06)' : 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: location.pathname === '/settings' ? '#111111' : '#666666',
+                color: location.pathname === '/settings' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 borderRadius: 6,
               }}
             >
@@ -603,13 +603,13 @@ export default function Layout() {
                   height: 32,
                   borderRadius: 6,
                   position: 'relative',
-                  background: '#141414',
+                  background: 'var(--primary)',
                   border: '1px solid rgba(0,0,0,0.12)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#ffffff',
+                  color: 'var(--surface)',
                   fontSize: 12,
                   fontWeight: 600,
                 }}
@@ -627,7 +627,7 @@ export default function Layout() {
                 ) : accountInitials}
 
                 {accountVerified && (
-                  <div style={{ position: 'absolute', bottom: -5, right: -5, background: '#ffffff', borderRadius: '50%', padding: 2, display: 'flex' }}>
+                  <div style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--surface)', borderRadius: '50%', padding: 2, display: 'flex' }}>
                     <VerifiedBadge size={13} />
                   </div>
                 )}
@@ -639,7 +639,7 @@ export default function Layout() {
                   top: 'calc(100% + 8px)',
                   right: 0,
                   width: 180,
-                  background: '#ffffff',
+                  background: 'var(--surface)',
                   border: '1px solid rgba(0,0,0,0.08)',
                   borderRadius: 10,
                   overflow: 'hidden',
@@ -659,15 +659,15 @@ export default function Layout() {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      color: '#555555',
+                      color: 'var(--text-secondary)',
                       fontSize: 13,
                       fontWeight: 500,
                       fontFamily: "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
                       textAlign: 'left',
-                      transition: 'background 0.15s ease, color 0.15s ease',
+                      transition: 'background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = '#111111'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#555555'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                   >
                     <LogOut size={14} />
                     Đăng xuất
@@ -707,8 +707,8 @@ export default function Layout() {
               justifyContent: 'space-between',
               alignItems: 'center',
               fontSize: 11,
-              color: '#777777',
-              background: '#ffffff',
+              color: 'var(--text-muted)',
+              background: 'var(--surface)',
               flexShrink: 0,
             }}
           >

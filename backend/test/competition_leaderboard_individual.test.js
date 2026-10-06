@@ -237,12 +237,12 @@ describe('Competition — Team vs Individual Leaderboard Separation & Scopes', (
       createdAt: new Date(baseTime + 5000),
     });
 
-    // Team Leaderboard Check: Team Alpha is #1 (650 pts: 500 direct + 100 userA + 50 userB)
+    // Team Leaderboard Check: Team Alpha is #1 (500 direct points, isolated from individual XP)
     const teamLeaderboard = await seasonService.getSeasonLeaderboard(testSeason.id);
     assert.strictEqual(teamLeaderboard.rankings[0].teamId, Number(teamAlpha.id));
-    assert.strictEqual(teamLeaderboard.rankings[0].score, 650);
+    assert.strictEqual(teamLeaderboard.rankings[0].score, 500);
     assert.strictEqual(teamLeaderboard.rankings[1].teamId, Number(teamBeta.id));
-    assert.strictEqual(teamLeaderboard.rankings[1].score, 350);
+    assert.strictEqual(teamLeaderboard.rankings[1].score, 0);
 
     // Individual Leaderboard Check: User C is #1 (300 XP)
     const individualLeaderboard = await seasonService.getSeasonIndividualLeaderboard(testSeason.id);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workrank-static-v2';
+const CACHE_NAME = 'workrank-static-v3';
 const STATIC_DESTINATIONS = new Set(['script', 'style', 'font', 'image']);
 
 self.addEventListener('install', (event) => {
@@ -24,6 +24,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+  if (url.pathname.startsWith('/src/')
+    || url.pathname.startsWith('/@vite/')
+    || url.pathname.startsWith('/node_modules/.vite/')) return;
 
   const isNavigation = request.mode === 'navigate';
   const isStatic = STATIC_DESTINATIONS.has(request.destination) || url.pathname.startsWith('/assets/');

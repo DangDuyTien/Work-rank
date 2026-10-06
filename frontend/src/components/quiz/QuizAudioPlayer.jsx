@@ -125,7 +125,7 @@ export default function QuizAudioPlayer({
         maxWidth: 520,
         margin: '0 auto',
         padding: '20px 24px',
-        background: '#ffffff',
+        background: 'var(--surface)',
         borderRadius: 14,
         border: '1px solid rgba(15,23,42,0.1)',
         boxShadow: '0 4px 16px rgba(15,23,42,0.04)',
@@ -143,8 +143,8 @@ export default function QuizAudioPlayer({
           borderBottom: '1px solid rgba(15,23,42,0.06)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
-          <Music size={16} color="#0284c7" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+          <Music size={16} color="var(--info)" />
           <span>Đoạn Nhạc Thử Thách</span>
         </div>
         <div
@@ -152,7 +152,7 @@ export default function QuizAudioPlayer({
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 12,
             fontWeight: 700,
-            color: '#64748b',
+            color: 'var(--text-secondary)',
           }}
         >
           {formatTime(currentTime)} / {formatTime(duration || 15)}
@@ -186,8 +186,8 @@ export default function QuizAudioPlayer({
                 borderRadius: 3,
                 background: isPlaying
                   ? isActive
-                    ? '#0284c7'
-                    : '#94a3b8'
+                    ? 'var(--info)'
+                    : 'var(--text-muted)'
                   : 'rgba(15,23,42,0.15)',
                 transition: isPlaying ? 'height 0.12s ease' : 'height 0.3s ease',
               }}
@@ -207,8 +207,8 @@ export default function QuizAudioPlayer({
             width: 44,
             height: 44,
             borderRadius: '50%',
-            background: isPlaying ? '#0f172a' : '#0284c7',
-            color: '#ffffff',
+            background: isPlaying ? 'var(--text-primary)' : 'var(--info)',
+            color: 'var(--surface)',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
@@ -216,7 +216,7 @@ export default function QuizAudioPlayer({
             cursor: disabled ? 'not-allowed' : 'pointer',
             boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
             flexShrink: 0,
-            transition: 'transform 0.1s ease, background-color 0.2s ease',
+            transition: 'transform var(--motion-instant) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard)',
           }}
         >
           {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
@@ -237,17 +237,17 @@ export default function QuizAudioPlayer({
               style={{
                 height: '100%',
                 width: `${progress}%`,
-                background: '#0284c7',
+                background: 'var(--info)',
                 transition: 'width 0.1s linear',
               }}
             />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 11, color: '#64748b' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
               {isPlaying ? 'Đang phát âm thanh...' : disabled ? 'Đã khóa đoạn nhạc' : 'Nhấn nút để nghe lại'}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0284c7', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--info)', display: 'flex', alignItems: 'center', gap: 3 }}>
               <Volume2 size={12} />
               <span>Audio</span>
             </span>
@@ -256,7 +256,7 @@ export default function QuizAudioPlayer({
       </div>
 
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#b45309', marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--accent)', marginTop: 12 }}>
           <AlertCircle size={14} />
           <span>Không thể tải file âm thanh hoặc trình duyệt chặn tự động phát.</span>
         </div>

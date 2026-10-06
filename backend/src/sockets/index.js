@@ -4,6 +4,7 @@ const { User } = require('../models');
 const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
 const samRealtime = require('../services/samRealtime.service');
+const { canAccessGameRoom } = require('../services/gameRoomAuth.service');
 
 function emitPresence(io, user, status) {
   const payload = {
@@ -112,10 +113,28 @@ function registerSockets(io) {
     });
 
     // ── Capital Board Game Socket Rooms ──
-    socket.on('game:joinRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
-      if (roomId) {
-        socket.join(`game:${roomId}`);
+    socket.on('game:joinRoom', async (payload = {}, ack) => {
+      try {
+        const auth = await canAccessGameRoom({
+          userId: socket.user.id,
+          userRole: socket.user.role,
+          roomId: payload.roomId,
+          gameType: 'game',
+          clientSpectatorHint: !!payload.isSpectator,
+        });
+
+        if (!auth.allowed) {
+          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
+          socket.emit('error', { message: auth.error, code: auth.code });
+          return;
+        }
+
+        socket.join(`game:${auth.roomId}`);
+        if (typeof ack === 'function') {
+          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
+        }
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
       }
     });
 
@@ -127,29 +146,72 @@ function registerSockets(io) {
     });
 
     // ── Quiz Game Socket Rooms ──
-    socket.on('quiz:joinRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
-      if (roomId) {
-        socket.join(`quiz:${roomId}`);
+    socket.on('quiz:joinRoom', async (payload = {}, ack) => {
+      try {
+        const auth = await canAccessGameRoom({
+          userId: socket.user.id,
+          userRole: socket.user.role,
+          roomId: payload.roomId,
+          gameType: 'quiz',
+          clientSpectatorHint: !!payload.isSpectator,
+        });
+
+        if (!auth.allowed) {
+          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
+          socket.emit('error', { message: auth.error, code: auth.code });
+          return;
+        }
+
+        socket.join(`quiz:${auth.roomId}`);
+        if (typeof ack === 'function') {
+          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
+        }
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
       }
     });
 
-    socket.on('quiz:leaveRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
+    socket.on('quiz:leaveRoom', async (payload = {}) => {
+      let roomId = Number(payload.roomId);
+      if ((Number.isNaN(roomId) || !roomId) && payload.roomId) {
+        try {
+          const { QuizRoom } = require('../models');
+          const cleanCode = String(payload.roomId).trim().toUpperCase().replace(/^#/, '');
+          const room = await QuizRoom.findOne({ where: { code: cleanCode } });
+          if (room) roomId = room.id;
+        } catch {}
+      }
       if (roomId) {
         socket.leave(`quiz:${roomId}`);
       }
     });
 
     // ── Sam Lốc Game Socket Rooms ──
-    socket.on('sam:joinRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
-      const isSpectator = !!payload.isSpectator;
-      if (roomId) {
-        socket.join(`sam:${roomId}`);
-        if (isSpectator) {
-          samRealtime.addSpectator(roomId, socket.id);
+    socket.on('sam:joinRoom', async (payload = {}, ack) => {
+      try {
+        const auth = await canAccessGameRoom({
+          userId: socket.user.id,
+          userRole: socket.user.role,
+          roomId: payload.roomId,
+          gameType: 'sam',
+          clientSpectatorHint: !!payload.isSpectator,
+        });
+
+        if (!auth.allowed) {
+          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
+          socket.emit('error', { message: auth.error, code: auth.code });
+          return;
         }
+
+        socket.join(`sam:${auth.roomId}`);
+        if (auth.isSpectator) {
+          samRealtime.addSpectator(auth.roomId, socket.id);
+        }
+        if (typeof ack === 'function') {
+          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
+        }
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
       }
     });
 

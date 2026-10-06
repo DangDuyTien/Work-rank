@@ -42,12 +42,12 @@ export default function QuizTopBar({
         width: '100%',
         height: 52,
         padding: '0 20px',
-        color: '#141414',
+        color: 'var(--primary)',
         fontSize: 13,
         fontWeight: 600,
         zIndex: 50,
         flexShrink: 0,
-        background: '#ffffff',
+        background: 'var(--surface)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
         userSelect: 'none',
         boxSizing: 'border-box',
@@ -58,6 +58,7 @@ export default function QuizTopBar({
         {onLeaveRoom && (
           <button
             type="button"
+            className="wr-game-exit-control"
             onClick={onLeaveRoom}
             title={isLobby ? "Quay về WorkRank" : "Rời phòng chơi"}
             style={{
@@ -66,16 +67,16 @@ export default function QuizTopBar({
               gap: 5,
               padding: '5px 10px',
               borderRadius: 6,
-              background: '#f4f3ef',
-              color: '#141414',
+              background: 'var(--background)',
+              color: 'var(--primary)',
               border: '1px solid rgba(0, 0, 0, 0.1)',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'background 0.15s ease',
+              transition: 'background var(--motion-fast) var(--ease-standard)',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#eceae4'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#f4f3ef'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--background)'; }}
           >
             <ArrowLeft size={13} />
             <span>{isLobby ? 'Bảng Điều Khiển' : 'Rời Phòng'}</span>
@@ -89,7 +90,7 @@ export default function QuizTopBar({
             gap: 5,
             background: 'rgba(180, 83, 9, 0.08)',
             border: '1px solid rgba(180, 83, 9, 0.2)',
-            color: '#b45309',
+            color: 'var(--accent)',
             padding: '3px 8px',
             borderRadius: 4,
             fontSize: 11,
@@ -107,7 +108,7 @@ export default function QuizTopBar({
             <span
               style={{
                 fontWeight: 700,
-                color: '#141414',
+                color: 'var(--primary)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -126,13 +127,13 @@ export default function QuizTopBar({
                   padding: '2px 6px',
                   borderRadius: 4,
                   border: '1px solid rgba(0, 0, 0, 0.08)',
-                  color: '#b45309',
+                  color: 'var(--accent)',
                 }}
               >
                 #{room.code}
               </span>
             )}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#666666', fontSize: 12 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: 'var(--text-secondary)', fontSize: 12 }}>
               <Users size={12} />
               <span>{playerCount}</span>
             </span>
@@ -148,8 +149,8 @@ export default function QuizTopBar({
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 11,
               fontWeight: 700,
-              color: '#141414',
-              background: '#f4f3ef',
+              color: 'var(--primary)',
+              background: 'var(--background)',
               padding: '3px 10px',
               borderRadius: 4,
               border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -171,14 +172,14 @@ export default function QuizTopBar({
             width: 32,
             height: 32,
             borderRadius: 6,
-            background: isFullscreen ? '#f4f3ef' : '#ffffff',
-            color: '#141414',
+            background: isFullscreen ? 'var(--background)' : 'var(--surface)',
+            color: 'var(--primary)',
             border: '1px solid rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
-            transition: 'background 0.15s ease',
+            transition: 'background var(--motion-fast) var(--ease-standard)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#f4f3ef'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = isFullscreen ? '#f4f3ef' : '#ffffff'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--background)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = isFullscreen ? 'var(--background)' : 'var(--surface)'; }}
         >
           {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
         </button>
@@ -195,17 +196,17 @@ export default function QuizTopBar({
             width: 32,
             height: 32,
             borderRadius: 6,
-            background: soundMuted ? '#fef2f2' : '#ffffff',
-            color: soundMuted ? '#dc2626' : '#141414',
+            background: soundMuted ? '#fef2f2' : 'var(--surface)',
+            color: soundMuted ? '#dc2626' : 'var(--primary)',
             border: soundMuted ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
-            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
+            transition: 'background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = soundMuted ? '#fee2e2' : '#f4f3ef';
+            e.currentTarget.style.background = soundMuted ? '#fee2e2' : 'var(--background)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = soundMuted ? '#fef2f2' : '#ffffff';
+            e.currentTarget.style.background = soundMuted ? '#fef2f2' : 'var(--surface)';
           }}
         >
           {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
@@ -225,7 +226,7 @@ export default function QuizTopBar({
             }}
           >
             <QuizAvatar user={currentUser} size="xs" />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#141414', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {currentUser.name || 'Thành viên'}
             </span>
           </div>

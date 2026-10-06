@@ -71,7 +71,15 @@ export default function GameHub() {
       setError(null);
       const res = await gameCatalogApi.getCatalog();
       if (res && Array.isArray(res.games) && res.games.length > 0) {
-        setGames(res.games);
+        const merged = res.games.map((g) => {
+          const def = DEFAULT_GAMES.find((d) => d.gameKey === g.gameKey);
+          return {
+            ...def,
+            ...g,
+            route: g.route || def?.route || (g.gameKey === 'capital_board' ? '/games/capital-board' : `/games/${g.gameKey}`),
+          };
+        });
+        setGames(merged);
       }
     } catch (err) {
       // Keep defaults if fetch fails
@@ -138,15 +146,15 @@ export default function GameHub() {
                 display: 'inline-block',
               }}
             />
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
               ĐANG CÓ THỂ CHƠI
             </h2>
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#64748b',
-                background: '#f1f5f9',
+                color: 'var(--text-secondary)',
+                background: 'var(--surface-muted)',
                 padding: '2px 8px',
                 borderRadius: 2,
               }}
@@ -175,14 +183,14 @@ export default function GameHub() {
                 <div
                   key={game.gameKey}
                   style={{
-                    background: '#ffffff',
+                    background: 'var(--surface)',
                     border: '1px solid rgba(15,23,42,0.1)',
-                    borderRadius: 0,
+                    borderRadius: 'var(--radius-content)',
                     padding: 24,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                    transition: 'border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
                   }}
                   className="hover:border-slate-400 hover:shadow-sm"
                 >
@@ -199,12 +207,12 @@ export default function GameHub() {
                         style={{
                           width: 48,
                           height: 48,
-                          background: 'rgba(2,132,199,0.08)',
-                          border: '1px solid rgba(2,132,199,0.2)',
+                          background: 'var(--info-soft)',
+                          border: '1px solid var(--info-border)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#0284c7',
+                          color: 'var(--info)',
                         }}
                       >
                         <Icon size={24} strokeWidth={2.2} />
@@ -229,7 +237,7 @@ export default function GameHub() {
                         margin: '0 0 8px',
                         fontSize: 17,
                         fontWeight: 700,
-                        color: '#0f172a',
+                        color: 'var(--text-primary)',
                       }}
                     >
                       {game.name}
@@ -239,7 +247,7 @@ export default function GameHub() {
                         margin: '0 0 20px',
                         fontSize: 13,
                         lineHeight: 1.55,
-                        color: '#64748b',
+                        color: 'var(--text-secondary)',
                         minHeight: 40,
                       }}
                     >
@@ -292,15 +300,15 @@ export default function GameHub() {
                 display: 'inline-block',
               }}
             />
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
               SẮP RA MẮT
             </h2>
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#64748b',
-                background: '#f1f5f9',
+                color: 'var(--text-secondary)',
+                background: 'var(--surface-muted)',
                 padding: '2px 8px',
                 borderRadius: 2,
               }}
@@ -314,9 +322,9 @@ export default function GameHub() {
           <div
             style={{
               padding: 24,
-              background: '#f8fafc',
+              background: 'var(--surface-soft)',
               border: '1px dashed rgba(15,23,42,0.12)',
-              color: '#64748b',
+              color: 'var(--text-secondary)',
               fontSize: 13,
               textAlign: 'center',
             }}
@@ -339,7 +347,7 @@ export default function GameHub() {
                   style={{
                     background: '#fafafa',
                     border: '1px solid rgba(15,23,42,0.08)',
-                    borderRadius: 0,
+                    borderRadius: 'var(--radius-content)',
                     padding: 24,
                     display: 'flex',
                     flexDirection: 'column',
@@ -394,7 +402,7 @@ export default function GameHub() {
                         margin: '0 0 8px',
                         fontSize: 17,
                         fontWeight: 700,
-                        color: '#334155',
+                        color: 'var(--text-secondary)',
                       }}
                     >
                       {game.name}
@@ -404,7 +412,7 @@ export default function GameHub() {
                         margin: '0 0 20px',
                         fontSize: 13,
                         lineHeight: 1.55,
-                        color: '#64748b',
+                        color: 'var(--text-secondary)',
                         minHeight: 40,
                       }}
                     >
@@ -426,8 +434,8 @@ export default function GameHub() {
                         gap: 6,
                         fontWeight: 600,
                         padding: '10px 16px',
-                        background: '#ffffff',
-                        color: isAdmin ? '#0284c7' : '#94a3b8',
+                        background: 'var(--surface)',
+                        color: isAdmin ? 'var(--info)' : 'var(--text-muted)',
                         cursor: isAdmin ? 'pointer' : 'default',
                       }}
                     >

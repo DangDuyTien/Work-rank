@@ -428,7 +428,7 @@ export default function Settings() {
         <div>
           <div className="settings-kicker">Cài đặt cá nhân</div>
           <h1>Cài đặt tài khoản</h1>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#64748b' }}>
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
             Hồ sơ cá nhân, bảo mật và tùy chọn trình duyệt.
           </p>
         </div>
@@ -470,18 +470,18 @@ export default function Settings() {
         >
           <form className="settings-form" onSubmit={saveProfile}>
             {/* Ảnh đại diện Avatar */}
-            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 4 }}>
+            <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 4 }}>
               <div
                 style={{
                   width: 52,
                   height: 52,
                   borderRadius: '50%',
                   overflow: 'hidden',
-                  border: '2px solid #b45309',
+                  border: '2px solid var(--accent)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: '#e0f2fe',
+                  background: 'var(--info-soft)',
                   flexShrink: 0,
                 }}
               >
@@ -492,17 +492,17 @@ export default function Settings() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <span style={{ fontSize: 18, fontWeight: 700, color: '#b45309' }}>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
                     {initialsFromName(profile.name || user?.name || 'U')}
                   </span>
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                   Ảnh Đại Diện (Avatar)
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <label style={{ cursor: 'pointer', padding: '5px 12px', background: '#0f172a', color: '#ffffff', fontSize: 12, fontWeight: 600, borderRadius: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <label style={{ cursor: 'pointer', padding: '5px 12px', background: 'var(--text-primary)', color: 'var(--surface)', fontSize: 12, fontWeight: 600, borderRadius: 'var(--radius-interactive)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <input
                       type="file"
                       accept="image/*"
@@ -550,7 +550,7 @@ export default function Settings() {
                       e.preventDefault();
                       document.getElementById('sec-change-email')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    style={{ fontSize: 11, color: '#b45309', fontWeight: 600, textDecoration: 'none' }}
+                    style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}
                   >
                     Đổi email →
                   </a>
@@ -560,7 +560,7 @@ export default function Settings() {
                   value={profile.email}
                   disabled
                   readOnly
-                  style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
+                  style={{ background: 'var(--surface-soft)', color: 'var(--text-secondary)', cursor: 'not-allowed' }}
                 />
               </label>
             </div>
@@ -580,7 +580,7 @@ export default function Settings() {
                 <input
                   disabled
                   value={`WR-${String(user?.id || '').padStart(4, '0')} (ID: #${user?.id})`}
-                  style={{ background: '#f8fafc', color: '#64748b' }}
+                  style={{ background: 'var(--surface-soft)', color: 'var(--text-secondary)' }}
                 />
               </label>
             </div>
@@ -599,7 +599,7 @@ export default function Settings() {
                   fontWeight: 400,
                   lineHeight: 1.55,
                   border: '1px solid rgba(15,23,42,0.1)',
-                  borderRadius: 0,
+                  borderRadius: 'var(--radius-interactive)',
                   outline: 'none',
                   resize: 'vertical',
                 }}
@@ -626,29 +626,29 @@ export default function Settings() {
           className="settings-card-wide"
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 14 }}>
-            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Huy hiệu chức danh</span>
+            <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Huy hiệu chức danh</span>
               <div style={{ marginTop: 6 }}>
                 <JobTitleBadge jobTitle={user?.jobTitle} size="md" />
               </div>
             </div>
 
-            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Phòng ban trực thuộc</span>
-              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+            <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Phòng ban trực thuộc</span>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                 {user?.department || 'Media & Content'}
               </strong>
             </div>
 
-            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Quyền hệ thống (RBAC)</span>
-              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: user?.role === 'admin' ? '#dc2626' : '#0f172a' }}>
+            <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Quyền hệ thống (RBAC)</span>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: user?.role === 'admin' ? '#dc2626' : 'var(--text-primary)' }}>
                 {roleLabel(user?.role)}
               </strong>
             </div>
 
-            <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.08)' }}>
-              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Trạng thái tài khoản</span>
+            <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.08)' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Trạng thái tài khoản</span>
               <strong style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 600, color: '#16a34a' }}>
                 {statusLabel(user?.status)}
               </strong>
@@ -662,8 +662,8 @@ export default function Settings() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
-              <Lightbulb size={14} color="#b45309" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'rgba(15,23,42,0.02)', border: '1px solid rgba(15,23,42,0.06)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <Lightbulb size={14} color="var(--accent)" />
               <em>Chức danh công tác và phân bổ phòng ban được quản lý tập trung bởi Ban Quản Trị / Nhân sự để đảm bảo tính chuẩn hóa tổ chức.</em>
             </div>
           )}
@@ -700,15 +700,15 @@ export default function Settings() {
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isVerifiedBadge ? 'rgba(180,83,9,0.15)' : 'rgba(15,23,42,0.05)',
-                color: isVerifiedBadge ? '#b45309' : '#94a3b8',
+                color: isVerifiedBadge ? 'var(--accent)' : 'var(--text-muted)',
               }}>
                 <BadgeCheck size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isVerifiedBadge ? '#b45309' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isVerifiedBadge ? 'var(--accent)' : 'var(--text-primary)' }}>
                   Đã Xác Minh (Verified)
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 400 }}>
                   {isVerifiedBadge ? 'Tài khoản đã xác thực tích xanh chính thức' : 'Chưa cấp tích xanh'}
                 </div>
               </div>
@@ -717,22 +717,22 @@ export default function Settings() {
             {/* 2. Developer */}
             <div style={{
               padding: 14,
-              background: isDevBadge ? 'rgba(8,145,178,0.06)' : 'rgba(15,23,42,0.02)',
-              border: isDevBadge ? '1px solid rgba(8,145,178,0.3)' : '1px solid rgba(15,23,42,0.08)',
+              background: isDevBadge ? 'var(--info-soft)' : 'var(--surface-hover)',
+              border: isDevBadge ? '1px solid var(--info-border)' : '1px solid var(--border)',
               display: 'flex', gap: 12, alignItems: 'flex-start',
             }}>
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: isDevBadge ? 'rgba(8,145,178,0.15)' : 'rgba(15,23,42,0.05)',
-                color: isDevBadge ? '#0891b2' : '#94a3b8',
+                background: isDevBadge ? 'var(--info-border)' : 'var(--surface-active)',
+                color: isDevBadge ? 'var(--info)' : 'var(--text-muted)',
               }}>
                 <Code size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isDevBadge ? '#0891b2' : '#0f172a' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isDevBadge ? 'var(--info)' : 'var(--text-primary)' }}>
                   Developer (Kỹ Thuật)
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 400 }}>
                   {isDevBadge ? 'Đội ngũ phát triển hệ thống WorkRank' : 'Không thuộc Dev team'}
                 </div>
               </div>
@@ -748,15 +748,15 @@ export default function Settings() {
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isChampionBadge ? 'rgba(245,158,11,0.15)' : 'rgba(15,23,42,0.05)',
-                color: isChampionBadge ? '#d97706' : '#94a3b8',
+                color: isChampionBadge ? '#d97706' : 'var(--text-muted)',
               }}>
                 <Trophy size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isChampionBadge ? '#d97706' : '#64748b' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isChampionBadge ? '#d97706' : 'var(--text-secondary)' }}>
                   {isChampionBadge ? `Vô Địch Giải Đấu ${championCount > 1 ? `(x${championCount})` : ''}` : 'Chưa Có Cúp Vô Địch'}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 400 }}>
                   {isChampionBadge ? `Đạt ${championCount} cúp vô địch mùa giải` : 'Chưa tham gia hoặc chưa vô địch mùa giải'}
                 </div>
               </div>
@@ -772,15 +772,15 @@ export default function Settings() {
               <div style={{
                 width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isMvpBadge ? 'rgba(180,83,9,0.15)' : 'rgba(0,0,0,0.05)',
-                color: isMvpBadge ? '#b45309' : '#94a3b8',
+                color: isMvpBadge ? 'var(--accent)' : 'var(--text-muted)',
               }}>
                 <Star size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: isMvpBadge ? '#b45309' : '#64748b' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: isMvpBadge ? 'var(--accent)' : 'var(--text-secondary)' }}>
                   {isMvpBadge ? `Nhân Viên Xuất Sắc ${mvpCount > 1 ? `(x${mvpCount})` : ''}` : 'Chưa Có Danh Hiệu MVP'}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: 400 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 400 }}>
                   {isMvpBadge ? `Đã nhận ${mvpCount} danh hiệu MVP xuất sắc` : 'Chưa có danh hiệu vinh danh xuất sắc'}
                 </div>
               </div>
@@ -790,19 +790,19 @@ export default function Settings() {
           {/* Lịch sử giải thưởng & Vinh danh */}
           <div style={{ borderTop: '1px solid rgba(15,23,42,0.06)', paddingTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <strong style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Lịch sử vinh danh & Giải thưởng đạt được</strong>
+              <strong style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Lịch sử vinh danh & Giải thưởng đạt được</strong>
               <button
                 type="button"
                 onClick={loadRecognitions}
                 disabled={loadingRecognitions}
-                style={{ background: 'transparent', border: 'none', color: '#b45309', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
                 <RefreshCw size={12} className={loadingRecognitions ? 'spin' : ''} /> Làm mới
               </button>
             </div>
 
             {awardsList.length === 0 ? (
-              <div style={{ padding: '18px 14px', background: 'rgba(15,23,42,0.02)', textAlign: 'center', color: '#94a3b8', fontSize: 12, fontWeight: 400 }}>
+              <div style={{ padding: '18px 14px', background: 'rgba(15,23,42,0.02)', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontWeight: 400 }}>
                 Chưa ghi nhận giải thưởng vinh danh nào trong hồ sơ.
               </div>
             ) : (
@@ -824,20 +824,20 @@ export default function Settings() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {a.awardType === 'champion' ? <Trophy size={14} color="#d97706" /> : <Star size={14} color="#7c3aed" />}
-                        <strong style={{ fontSize: 12, fontWeight: 600, color: a.awardType === 'champion' ? '#b45309' : '#6d28d9' }}>
+                        <strong style={{ fontSize: 12, fontWeight: 600, color: a.awardType === 'champion' ? 'var(--accent)' : '#6d28d9' }}>
                           {a.title}
                         </strong>
                         {a.seasonName && (
-                          <span style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(15,23,42,0.06)', color: '#475569', fontWeight: 600 }}>
+                          <span style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(15,23,42,0.06)', color: 'var(--text-secondary)', fontWeight: 600 }}>
                             {a.seasonName}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: '#475569', marginTop: 2, fontWeight: 400 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 400 }}>
                         {a.reason}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right', fontWeight: 400 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', fontWeight: 400 }}>
                       {a.awardedAt ? new Date(a.awardedAt).toLocaleDateString('vi-VN') : ''}
                     </div>
                   </div>
@@ -908,7 +908,7 @@ export default function Settings() {
                   value={user?.email || ''}
                   disabled
                   readOnly
-                  style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
+                  style={{ background: 'var(--surface-soft)', color: 'var(--text-secondary)', cursor: 'not-allowed' }}
                 />
               </label>
               <label>
@@ -1074,7 +1074,7 @@ export default function Settings() {
             className="settings-card-wide"
           >
             {loadingGames ? (
-              <div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Đang tải danh mục game...</div>
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>Đang tải danh mục game...</div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                 {gameCatalog.map((game) => {
@@ -1086,7 +1086,7 @@ export default function Settings() {
                       key={game.gameKey}
                       style={{
                         padding: '16px 18px',
-                        background: '#f8fafc',
+                        background: 'var(--surface-soft)',
                         border: '1px solid rgba(15,23,42,0.08)',
                         display: 'flex',
                         flexDirection: 'column',
@@ -1096,12 +1096,12 @@ export default function Settings() {
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 36, height: 36, background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a' }}>
+                          <div style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                             <Icon size={18} />
                           </div>
                           <div>
-                            <strong style={{ fontSize: 14, color: '#0f172a' }}>{game.name}</strong>
-                            <div style={{ fontSize: 11, color: '#64748b' }}>key: {game.gameKey}</div>
+                            <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>{game.name}</strong>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>key: {game.gameKey}</div>
                           </div>
                         </div>
                         <span
@@ -1119,7 +1119,7 @@ export default function Settings() {
                         </span>
                       </div>
 
-                      <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                         {game.description}
                       </p>
 
@@ -1181,7 +1181,7 @@ export default function Settings() {
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#991b1b', marginBottom: 4 }}>
                   Hành động này không thể hoàn tác
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   Khi xóa tài khoản, tất cả phiên đăng nhập sẽ bị vô hiệu hóa ngay lập tức. Thông tin cá nhân (Email, Tên, Avatar) sẽ được ẩn danh. Bạn sẽ rời khỏi các đội nhóm đang tham gia và hủy quyền quản trị kênh YouTube liên kết (kênh YouTube và lịch sử điểm số/thứ hạng của các mùa giải trước vẫn được bảo toàn dữ liệu cho tập thể).
                 </div>
               </div>
@@ -1197,15 +1197,15 @@ export default function Settings() {
                   gap: 8,
                   padding: '9px 18px',
                   background: '#dc2626',
-                  color: '#ffffff',
+                  color: 'var(--surface)',
                   border: 'none',
                   borderRadius: 4,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  transition: 'background 0.2s',
+                  transition: 'background var(--motion-fast) var(--ease-standard)',
                 }}
-                onMouseOver={(e) => { e.currentTarget.style.background = '#b91c1c'; }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'var(--danger)'; }}
                 onMouseOut={(e) => { e.currentTarget.style.background = '#dc2626'; }}
               >
                 <Trash2 size={15} />
@@ -1226,7 +1226,7 @@ export default function Settings() {
       >
         <form onSubmit={handleSelfDeleteAccount}>
           <div style={{ marginBottom: 16 }}>
-            <p style={{ margin: '0 0 12px', fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               Bạn đang chuẩn bị xóa tài khoản <strong>{user?.name || user?.email}</strong> (WR ID: <code>{user?.id}</code>).
             </p>
 
@@ -1251,7 +1251,7 @@ export default function Settings() {
             </div>
 
             <div style={{ marginTop: 12, marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0f172a', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                 Nhập mật khẩu tài khoản hiện tại để xác nhận: *
               </label>
               <input
@@ -1265,15 +1265,15 @@ export default function Settings() {
                   width: '100%',
                   padding: '9px 12px',
                   fontSize: 13,
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-2)',
                   borderRadius: 4,
                   outline: 'none',
-                  background: '#ffffff',
+                  background: 'var(--surface)',
                 }}
               />
             </div>
 
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
               Bạn có chắc chắn muốn xóa tài khoản này không?
             </p>
           </div>
@@ -1288,12 +1288,12 @@ export default function Settings() {
               }}
               style={{
                 padding: '9px 16px',
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-2)',
                 borderRadius: 4,
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#475569',
+                color: 'var(--text-secondary)',
                 cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
               }}
             >
@@ -1312,7 +1312,7 @@ export default function Settings() {
                 borderRadius: 4,
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#ffffff',
+                color: 'var(--surface)',
                 cursor: isDeletingAccount || !deletePassword ? 'not-allowed' : 'pointer',
                 opacity: isDeletingAccount || !deletePassword ? 0.7 : 1,
               }}

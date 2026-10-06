@@ -2,7 +2,10 @@
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const http = require('http');
 const request = require('supertest');
+const { Server } = require('socket.io');
+const ioClient = require('../../frontend/node_modules/socket.io-client');
 const app = require('../src/app');
 const { Op } = require('sequelize');
 const {
@@ -18,15 +21,25 @@ const {
 const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
 const quizService = require('../src/services/quizGame.service');
+const quizRealtime = require('../src/services/quizRealtime.service');
+const registerSockets = require('../src/sockets');
 
-test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite', async (t) => {
+test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E & Realtime Test Suite', async (t) => {
   let hostUser, player2, player3;
   let hostToken, token2, token3;
   let testRoomId = null;
+  let testRoomCode = null;
   let question1Id = null;
 
+  // Real Socket.IO Test Server
+  let server;
+  let serverPort;
+  let socketIo;
+  let hostSocket;
+  let player2Socket;
+
   before(async () => {
-    // Sync tables if needed
+    // Sync tables
     await QuizRoom.sync();
     await QuizPlayer.sync();
     await QuizQuestion.sync();
@@ -102,15 +115,34 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     hostToken = jwt.sign({ sub: hostUser.id, role: hostUser.role }, env.jwtSecret);
     token2 = jwt.sign({ sub: player2.id, role: player2.role }, env.jwtSecret);
     token3 = jwt.sign({ sub: player3.id, role: player3.role }, env.jwtSecret);
+
+    // Initialize real HTTP + Socket.IO server on random port
+    server = http.createServer(app);
+    socketIo = new Server(server, { cors: { origin: '*' } });
+    registerSockets(socketIo);
+    quizRealtime.setIo(socketIo);
+
+    await new Promise((resolve) => {
+      server.listen(0, () => {
+        serverPort = server.address().port;
+        resolve();
+      });
+    });
   });
 
   after(async () => {
-    if (testRoomId) {
-      await QuizAnswer.destroy({ where: { roomId: testRoomId } });
-      await QuizPlayer.destroy({ where: { roomId: testRoomId } });
-      await QuizRoom.destroy({ where: { id: testRoomId } });
+    if (hostSocket && hostSocket.connected) hostSocket.disconnect();
+    if (player2Socket && player2Socket.connected) player2Socket.disconnect();
+    if (server) {
+      await new Promise((resolve) => server.close(resolve));
     }
-    await QuizQuestion.destroy({ where: { question: { [Op.like]: 'Test % Question %' } } });
+
+    await QuizAnswer.destroy({ where: {} }).catch(() => {});
+    if (testRoomId) {
+      await QuizPlayer.destroy({ where: { roomId: testRoomId } }).catch(() => {});
+      await QuizRoom.destroy({ where: { id: testRoomId } }).catch(() => {});
+    }
+    await QuizQuestion.destroy({ where: { question: { [Op.like]: 'Test % Question %' } } }).catch(() => {});
   });
 
   await t.test('1. Test Questions Verification: Image & Music questions exist', async () => {
@@ -135,6 +167,7 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
 
     assert.equal(res.status, 201);
     assert.ok(res.body.data.room.id);
+    assert.ok(res.body.data.room.code);
     assert.equal(res.body.data.room.title, 'Thử Thách Đoán Hình Đoán Nhạc Vui Nhộn');
     assert.equal(res.body.data.room.mode, 'ALL');
     assert.equal(res.body.data.room.status, 'WAITING');
@@ -142,19 +175,61 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.equal(res.body.data.players[0].userId, hostUser.id);
 
     testRoomId = res.body.data.room.id;
+    testRoomCode = res.body.data.room.code;
   });
 
-  await t.test('3. Room Joining: Multiple players join room', async () => {
-    // Player 2 joins
+  await t.test('3. Room Code Resolution & Endpoint Uniformity (QZXXXX, #QZXXXX, qzxxxx, 404s)', async () => {
+    // 1. GET with standard code 'QZXXXX'
+    const resCode = await request(app)
+      .get(`/api/games/quiz/rooms/${testRoomCode}`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resCode.status, 200);
+    assert.equal(resCode.body.data.room.id, testRoomId);
+
+    // 2. GET with hashtag '#QZXXXX'
+    const resHash = await request(app)
+      .get(`/api/games/quiz/rooms/%23${testRoomCode}`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resHash.status, 200);
+    assert.equal(resHash.body.data.room.id, testRoomId);
+
+    // 3. GET with lowercase 'qzxxxx'
+    const resLower = await request(app)
+      .get(`/api/games/quiz/rooms/${testRoomCode.toLowerCase()}`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resLower.status, 200);
+    assert.equal(resLower.body.data.room.id, testRoomId);
+
+    // 4. GET with non-existent code
+    const resNotFoundCode = await request(app)
+      .get('/api/games/quiz/rooms/QZ999999NOTFOUND')
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resNotFoundCode.status, 404);
+
+    // 5. GET with non-existent numeric ID
+    const resNotFoundId = await request(app)
+      .get('/api/games/quiz/rooms/999999999')
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resNotFoundId.status, 404);
+
+    // 6. GET with invalid random string
+    const resInvalidStr = await request(app)
+      .get('/api/games/quiz/rooms/invalid_room_string!')
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(resInvalidStr.status, 404);
+  });
+
+  await t.test('4. Room Joining: Multiple players join room via Code and ID', async () => {
+    // Player 2 joins using room code 'QZXXXX'
     const res2 = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/join`)
+      .post(`/api/games/quiz/rooms/${testRoomCode}/join`)
       .set('Authorization', `Bearer ${token2}`)
       .send();
 
     assert.equal(res2.status, 200);
     assert.equal(res2.body.data.players.length, 2);
 
-    // Player 3 joins
+    // Player 3 joins using numeric testRoomId
     const res3 = await request(app)
       .post(`/api/games/quiz/rooms/${testRoomId}/join`)
       .set('Authorization', `Bearer ${token3}`)
@@ -165,7 +240,7 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
 
     // Duplicate join by Player 2 should be idempotent
     const resDup = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/join`)
+      .post(`/api/games/quiz/rooms/${testRoomCode.toLowerCase()}/join`)
       .set('Authorization', `Bearer ${token2}`)
       .send();
 
@@ -173,9 +248,9 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.equal(resDup.body.data.players.length, 3);
   });
 
-  await t.test('4. Security: Non-host cannot start match', async () => {
+  await t.test('5. Security: Non-host cannot start match', async () => {
     const res = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/start`)
+      .post(`/api/games/quiz/rooms/${testRoomCode}/start`)
       .set('Authorization', `Bearer ${token2}`)
       .send();
 
@@ -183,9 +258,9 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.match(res.body.message, /Chỉ có chủ phòng/);
   });
 
-  await t.test('5. Host Starts Match: Random questions chosen & sanitized', async () => {
+  await t.test('6. Host Starts Match: Random questions chosen & sanitized against data leaks', async () => {
     const res = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/start`)
+      .post(`/api/games/quiz/rooms/${testRoomCode}/start`)
       .set('Authorization', `Bearer ${hostToken}`)
       .send();
 
@@ -195,15 +270,16 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.ok(roomState.currentQuestion);
     assert.ok(roomState.currentQuestion.id);
 
-    // CRITICAL SECURITY CHECK: correctOption must NOT be leaked during PLAYING
-    assert.equal(roomState.currentQuestion.correctOption, undefined);
-    assert.equal(roomState.currentQuestion.correct_option, undefined);
-    assert.equal(roomState.currentQuestion.explanation, undefined);
+    // CRITICAL SECURITY CHECKS: correctOption, correct_option, explanation, roundResults MUST NOT be leaked during PLAYING
+    assert.equal(roomState.currentQuestion.correctOption, undefined, 'Must not leak correctOption in PLAYING');
+    assert.equal(roomState.currentQuestion.correct_option, undefined, 'Must not leak correct_option in PLAYING');
+    assert.equal(roomState.currentQuestion.explanation, undefined, 'Must not leak explanation in PLAYING');
+    assert.equal(roomState.roundResults, null, 'Must not leak roundResults in PLAYING');
 
     question1Id = roomState.currentQuestion.id;
   });
 
-  await t.test('6. Answer Submission & Scoring: Fast correct vs Slow vs Wrong answers', async () => {
+  await t.test('7. Answer Submission & Scoring: Fast correct vs Slow vs Wrong answers', async () => {
     // Get actual correct option from DB to test scoring
     const rawQ = await QuizQuestion.findByPk(question1Id);
     const correctOpt = rawQ.correctOption;
@@ -211,7 +287,7 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
 
     // Player 2 answers correctly and quickly
     const resP2 = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/answer`)
+      .post(`/api/games/quiz/rooms/${testRoomCode}/answer`)
       .set('Authorization', `Bearer ${token2}`)
       .send({
         questionId: question1Id,
@@ -238,7 +314,7 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
 
     // Player 3 answers correctly with a deliberate slight delay
     const resP3 = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/answer`)
+      .post(`/api/games/quiz/rooms/${testRoomCode.toLowerCase()}/answer`)
       .set('Authorization', `Bearer ${token3}`)
       .send({
         questionId: question1Id,
@@ -251,11 +327,12 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.ok(resP2.body.data.answer.score >= resP3.body.data.answer.score, 'Earlier correct answer must get more or equal points than later correct answer');
   });
 
-  await t.test('7. Anti-Double Submit Idempotency: Player cannot submit twice', async () => {
+  await t.test('8. Anti-Double Submit & Concurrency Hardening: Promise.all race condition protection', async () => {
     const rawQ = await QuizQuestion.findByPk(question1Id);
 
+    // Sequential repeat submit -> idempotent 200 with alreadySubmitted = true
     const resRepeat = await request(app)
-      .post(`/api/games/quiz/rooms/${testRoomId}/answer`)
+      .post(`/api/games/quiz/rooms/${testRoomCode}/answer`)
       .set('Authorization', `Bearer ${token2}`)
       .send({
         questionId: question1Id,
@@ -264,9 +341,31 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
 
     assert.equal(resRepeat.status, 200);
     assert.equal(resRepeat.body.data.alreadySubmitted, true);
+
+    // Concurrent race condition test: 5 simultaneous HTTP requests for Player 2
+    const concurrentRequests = Array.from({ length: 5 }, () =>
+      request(app)
+        .post(`/api/games/quiz/rooms/${testRoomCode}/answer`)
+        .set('Authorization', `Bearer ${token2}`)
+        .send({
+          questionId: question1Id,
+          selectedOption: rawQ.correctOption,
+        })
+    );
+
+    const results = await Promise.all(concurrentRequests);
+    for (const r of results) {
+      assert.equal(r.status, 200, 'Concurrent answer requests must return 200 without throwing 500 error');
+    }
+
+    // Verify database integrity: exactly 1 QuizAnswer record for (roomId, question1Id, player2.id)
+    const answerRecords = await QuizAnswer.findAll({
+      where: { roomId: testRoomId, questionId: question1Id, userId: player2.id },
+    });
+    assert.equal(answerRecords.length, 1, 'Exactly one answer record must exist despite concurrent attempts');
   });
 
-  await t.test('8. Reconnection State: User reconnects and gets active room with answered status', async () => {
+  await t.test('9. Reconnection State: User reconnects and gets active room with answered status', async () => {
     const resActive = await request(app)
       .get('/api/games/quiz/active-room')
       .set('Authorization', `Bearer ${token2}`)
@@ -281,7 +380,7 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.equal(resActive.body.data.maxPoints, 1000);
   });
 
-  await t.test('9. Question Reveal & Progression: Reveal results & check leaderboard & fastest correct', async () => {
+  await t.test('10. Question Reveal & Progression: Reveal results & check leaderboard & fastest correct', async () => {
     await quizService.revealQuestionResult(testRoomId);
 
     const roomState = await quizService.getRoomState(testRoomId, hostUser.id);
@@ -293,7 +392,103 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.equal(roomState.players[0].userId, player2.id);
   });
 
-  await t.test('10. Game Finish & Stats: Finish match and verify career stats', async () => {
+  await t.test('11. Realtime Socket.IO Integration: Two real clients receive joined, started, answered, and results', async () => {
+    const socketUrl = `http://127.0.0.1:${serverPort}`;
+
+    // 1. Connect Host Socket
+    hostSocket = ioClient(socketUrl, {
+      auth: { token: hostToken },
+      transports: ['websocket'],
+      reconnection: false,
+    });
+
+    // 2. Connect Player 2 Socket
+    player2Socket = ioClient(socketUrl, {
+      auth: { token: token2 },
+      transports: ['websocket'],
+      reconnection: false,
+    });
+
+    await Promise.all([
+      new Promise((resolve) => hostSocket.on('connect', resolve)),
+      new Promise((resolve) => player2Socket.on('connect', resolve)),
+    ]);
+
+    assert.ok(hostSocket.connected, 'Host socket should connect');
+    assert.ok(player2Socket.connected, 'Player 2 socket should connect');
+
+    // Create a new fresh room for realtime testing
+    const rtRoomRes = await request(app)
+      .post('/api/games/quiz/rooms')
+      .set('Authorization', `Bearer ${hostToken}`)
+      .send({
+        title: 'Realtime Socket.IO Live Match',
+        mode: 'IMAGE',
+        maxPlayers: 4,
+        totalQuestions: 3,
+      });
+    const rtRoom = rtRoomRes.body.data.room;
+
+    // Host joins room channel
+    hostSocket.emit('quiz:joinRoom', { roomId: rtRoom.id });
+
+    // Listen for playerJoined on hostSocket
+    const joinedPromise = new Promise((resolve) => {
+      hostSocket.once('quiz:playerJoined', (data) => resolve(data));
+    });
+
+    // Player 2 joins room via API then connects to socket room
+    await request(app)
+      .post(`/api/games/quiz/rooms/${rtRoom.id}/join`)
+      .set('Authorization', `Bearer ${token2}`)
+      .send();
+    player2Socket.emit('quiz:joinRoom', { roomId: rtRoom.code });
+
+    const joinedData = await joinedPromise;
+    assert.ok(joinedData, 'Host must receive quiz:playerJoined event');
+    assert.equal(joinedData.players.length, 2);
+
+    // Listen for quiz:started on both sockets
+    const startPromiseHost = new Promise((resolve) => hostSocket.once('quiz:started', (d) => resolve(d)));
+    const startPromiseP2 = new Promise((resolve) => player2Socket.once('quiz:started', (d) => resolve(d)));
+
+    // Host starts game
+    await request(app)
+      .post(`/api/games/quiz/rooms/${rtRoom.id}/start`)
+      .set('Authorization', `Bearer ${hostToken}`)
+      .send();
+
+    const [startDataHost, startDataP2] = await Promise.all([startPromiseHost, startPromiseP2]);
+    assert.ok(startDataHost.question, 'Host must receive game question');
+    assert.ok(startDataP2.question, 'Player 2 must receive game question');
+    assert.equal(startDataHost.question.correctOption, undefined, 'Socket payload must not leak correctOption');
+
+    const rtQuestionId = startDataHost.question.id;
+
+    // Listen for quiz:player_answered on Host when Player 2 answers
+    const answeredPromise = new Promise((resolve) => {
+      hostSocket.once('quiz:player_answered', (d) => resolve(d));
+    });
+
+    await request(app)
+      .post(`/api/games/quiz/rooms/${rtRoom.id}/answer`)
+      .set('Authorization', `Bearer ${token2}`)
+      .send({
+        questionId: rtQuestionId,
+        selectedOption: 'A',
+      });
+
+    const answeredData = await answeredPromise;
+    assert.ok(answeredData, 'Host must receive player_answered event');
+    assert.equal(Number(answeredData.userId), Number(player2.id));
+
+    // Clean up realtime test room
+    await QuizAnswer.destroy({ where: { roomId: rtRoom.id } });
+    await QuizPlayer.destroy({ where: { roomId: rtRoom.id } });
+    await QuizRoom.destroy({ where: { id: rtRoom.id } });
+  });
+
+  await t.test('12. Game Finish & Stats: Finish match and verify career stats', async () => {
     await quizService.finishGame(testRoomId);
 
     const finishedState = await quizService.getRoomState(testRoomId);
@@ -317,7 +512,55 @@ test('Comprehensive Quiz Game V1 (Đoán Hình – Đoán Nhạc) E2E Test Suite
     assert.ok(lbRes.body.data.length >= 1);
   });
 
-  await t.test('11. Admin Quiz Management: Role guard, Set CRUD & Question CRUD', async () => {
+  await t.test('13. Game Modes: Create and verify IMAGE and MUSIC specific mode rooms', async () => {
+    // 1. Create IMAGE mode room
+    const imgRes = await request(app)
+      .post('/api/games/quiz/rooms')
+      .set('Authorization', `Bearer ${hostToken}`)
+      .send({
+        title: 'Phòng Thi Đoán Hình Ảnh',
+        mode: 'IMAGE',
+        maxPlayers: 8,
+        totalQuestions: 4,
+      });
+    assert.equal(imgRes.status, 201);
+    assert.equal(imgRes.body.data.room.mode, 'IMAGE');
+    const imgRoomId = imgRes.body.data.room.id;
+
+    // Start IMAGE room
+    const imgStartRes = await request(app)
+      .post(`/api/games/quiz/rooms/${imgRoomId}/start`)
+      .set('Authorization', `Bearer ${hostToken}`);
+    assert.equal(imgStartRes.status, 200);
+    assert.equal(imgStartRes.body.data.currentQuestion.type, 'IMAGE');
+
+    // 2. Create MUSIC mode room
+    const musicRes = await request(app)
+      .post('/api/games/quiz/rooms')
+      .set('Authorization', `Bearer ${hostToken}`)
+      .send({
+        title: 'Phòng Thi Đoán Giai Điệu Bài Hát',
+        mode: 'MUSIC',
+        maxPlayers: 8,
+        totalQuestions: 4,
+      });
+    assert.equal(musicRes.status, 201);
+    assert.equal(musicRes.body.data.room.mode, 'MUSIC');
+    const musicRoomId = musicRes.body.data.room.id;
+
+    // Start MUSIC room
+    const musicStartRes = await request(app)
+      .post(`/api/games/quiz/rooms/${musicRoomId}/start`)
+      .set('Authorization', `Bearer ${hostToken}`);
+    assert.equal(musicStartRes.status, 200);
+    assert.equal(musicStartRes.body.data.currentQuestion.type, 'MUSIC');
+
+    // Clean up
+    await QuizRoom.destroy({ where: { id: [imgRoomId, musicRoomId] } });
+    await QuizPlayer.destroy({ where: { roomId: [imgRoomId, musicRoomId] } });
+  });
+
+  await t.test('14. Admin Quiz Management: Role guard, Set CRUD & Question CRUD', async () => {
     const adminUser = await User.create({
       name: `Quiz Admin ${Date.now()}`,
       email: `quiz_admin_${Date.now()}@workrank.io`,

@@ -79,7 +79,7 @@ export default function QuizPlayerStrip({
         flexShrink: 0,
         userSelect: 'none',
         boxSizing: 'border-box',
-        background: '#ffffff',
+        background: 'var(--surface)',
         borderTop: '1px solid rgba(0, 0, 0, 0.08)',
       }}
     >
@@ -105,18 +105,18 @@ export default function QuizPlayerStrip({
               gap: 5,
               fontSize: 11,
               fontWeight: 500,
-              color: '#141414',
+              color: 'var(--primary)',
             }}
           >
-            <span style={{ fontWeight: 700, color: act.color || '#b45309' }}>
+            <span style={{ fontWeight: 700, color: act.color || 'var(--accent)' }}>
               {act.name}:
             </span>
-            <span style={{ color: '#666666' }}>{act.text}</span>
+            <span style={{ color: 'var(--text-secondary)' }}>{act.text}</span>
           </div>
         ))}
 
         {recentActivity.length === 0 && (
-          <div style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>
             Trận đấu đang diễn ra...
           </div>
         )}
@@ -135,7 +135,7 @@ export default function QuizPlayerStrip({
           flexShrink: 0,
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '0.2px' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.2px' }}>
           Đã trả lời ({answeredSet.size}/{players.length}):
         </div>
 
@@ -170,20 +170,20 @@ export default function QuizPlayerStrip({
                     height: 10,
                     borderRadius: '50%',
                     background: '#16a34a',
-                    border: '1px solid #ffffff',
+                    border: '1px solid var(--surface)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <CheckCircle2 size={8} color="#ffffff" />
+                  <CheckCircle2 size={8} color="var(--surface)" />
                 </div>
               </div>
             );
           })}
 
           {answeredSet.size === 0 && (
-            <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>
               Chưa ai chọn...
             </span>
           )}
@@ -207,9 +207,9 @@ export default function QuizPlayerStrip({
           const shortName = name.split(' ').slice(-2).join(' ');
 
           const borderColor = isMe
-            ? '#b45309'
+            ? 'var(--accent)'
             : rank === 1
-            ? '#b45309'
+            ? 'var(--accent)'
             : 'rgba(0, 0, 0, 0.12)';
 
           return (
@@ -228,8 +228,8 @@ export default function QuizPlayerStrip({
                 style={{
                   fontSize: 10,
                   fontWeight: 600,
-                  color: isMe ? '#b45309' : '#141414',
-                  background: isMe ? '#fffbeb' : '#ffffff',
+                  color: isMe ? 'var(--accent)' : 'var(--primary)',
+                  background: isMe ? '#fffbeb' : 'var(--surface)',
                   padding: '1px 5px',
                   borderRadius: 4,
                   border: isMe ? '1px solid rgba(180, 83, 9, 0.3)' : '1px solid rgba(0, 0, 0, 0.08)',
@@ -264,8 +264,8 @@ export default function QuizPlayerStrip({
                       position: 'absolute',
                       top: -6,
                       right: -3,
-                      background: '#b45309',
-                      color: '#ffffff',
+                      background: 'var(--accent)',
+                      color: 'var(--surface)',
                       borderRadius: '50%',
                       padding: 2,
                       display: 'flex',
@@ -285,7 +285,7 @@ export default function QuizPlayerStrip({
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
                   fontWeight: 700,
-                  color: isMe ? '#b45309' : '#141414',
+                  color: isMe ? 'var(--accent)' : 'var(--primary)',
                   marginTop: 2,
                   letterSpacing: '-0.2px',
                   display: 'flex',

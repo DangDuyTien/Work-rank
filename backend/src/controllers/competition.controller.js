@@ -834,6 +834,16 @@ module.exports = {
 async function getPublicSpotlight(req, res) {
   const publicSpotlightService = require('../services/competition/publicSpotlight.service');
   const spotlight = await publicSpotlightService.getPublicSpotlight();
+  // The public login/home panel must always receive a JSON payload. A browser
+  // revalidation can otherwise turn Express' ETag response into 304, which
+  // Axios treats as a failed request and renders the retry state.
+  delete req.headers['if-none-match'];
+  delete req.headers['if-modified-since'];
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+  });
   return res.json(spotlight);
 }
 

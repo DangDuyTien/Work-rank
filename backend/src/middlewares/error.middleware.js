@@ -19,7 +19,9 @@ function errorHandler(error, req, res, next) {
   }
 
   res.status(statusCode).json({
+    success: false,
     message,
+    code: error.code || undefined,
     correlationId,
     errors: error.errors || error.validationErrors || undefined,
   });

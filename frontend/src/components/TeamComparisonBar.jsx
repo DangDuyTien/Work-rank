@@ -28,7 +28,7 @@ export default function TeamComparisonBar({
 
   if (sorted.length === 0) {
     return (
-      <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748b', fontSize: 13, background: '#fafafa', border: '1px dashed #cbd5e1' }}>
+      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13, background: '#fafafa', border: '1px dashed var(--border-2)' }}>
         Chưa có dữ liệu đội nhóm để so sánh
       </div>
     );
@@ -47,10 +47,10 @@ export default function TeamComparisonBar({
             onClick={() => onSelectTeam && onSelectTeam(t.teamId)}
             style={{
               padding: '10px 14px',
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               cursor: onSelectTeam ? 'pointer' : 'default',
-              transition: 'background 0.15s ease, border-color 0.15s ease',
+              transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
             }}
             className="team-compare-row"
           >
@@ -66,39 +66,39 @@ export default function TeamComparisonBar({
                     height: 20,
                     fontSize: 11,
                     fontWeight: 700,
-                    background: rank === 1 ? '#fef3c7' : rank === 2 ? '#f1f5f9' : '#f8fafc',
-                    color: rank === 1 ? '#b45309' : rank === 2 ? '#475569' : '#64748b',
-                    border: `1px solid ${rank === 1 ? '#fde68a' : '#e2e8f0'}`,
+                    background: rank === 1 ? '#fef3c7' : rank === 2 ? 'var(--surface-muted)' : 'var(--surface-soft)',
+                    color: rank === 1 ? 'var(--accent)' : rank === 2 ? 'var(--text-secondary)' : 'var(--text-secondary)',
+                    border: `1px solid ${rank === 1 ? '#fde68a' : 'var(--border)'}`,
                   }}
                 >
                   {rank}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {t.teamName || `Đội ${t.teamId}`}
                 </span>
-                <span style={{ fontSize: 11, color: '#64748b', background: '#f1f5f9', padding: '1px 6px' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-muted)', padding: '1px 6px' }}>
                   {t.channelsCount || 0} kênh
                 </span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {formatNumber(val)}
                 </span>
-                <span style={{ fontSize: 11, color: '#64748b' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                   {metric === 'views' ? 'views' : 'subs'}
                 </span>
-                {onSelectTeam && <ChevronRight size={13} color="#94a3b8" />}
+                {onSelectTeam && <ChevronRight size={13} color="var(--text-muted)" />}
               </div>
             </div>
 
             {/* Horizontal Bar */}
-            <div style={{ width: '100%', height: 6, background: '#f1f5f9', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: 6, background: 'var(--surface-muted)', overflow: 'hidden' }}>
               <div
                 style={{
                   width: `${pct}%`,
                   height: '100%',
-                  background: rank === 1 ? '#b45309' : '#0f172a',
+                  background: rank === 1 ? 'var(--accent)' : 'var(--text-primary)',
                   transition: 'width 0.4s ease',
                 }}
               />

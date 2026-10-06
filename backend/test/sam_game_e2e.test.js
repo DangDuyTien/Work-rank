@@ -23,11 +23,11 @@ test('Comprehensive Sam Lốc V1 Full Vertical Slice E2E Test Suite', async (t) 
   let testRoomId = null;
 
   before(async () => {
-    await SamRoom.sync({ alter: true });
-    await SamPlayer.sync({ alter: true });
-    await SamAction.sync({ alter: true });
-    await SamResult.sync({ alter: true });
-    await SamUserStat.sync({ alter: true });
+    await SamRoom.sync();
+    await SamPlayer.sync();
+    await SamAction.sync();
+    await SamResult.sync();
+    await SamUserStat.sync();
 
     const ts = Date.now();
     hostUser = await User.create({
@@ -135,7 +135,8 @@ test('Comprehensive Sam Lốc V1 Full Vertical Slice E2E Test Suite', async (t) 
     const fakeStart = await request(app)
       .post(`/api/games/sam/rooms/${testRoomId}/start`)
       .set('Authorization', `Bearer ${token2}`);
-    assert.equal(fakeStart.status, 500); // Only host can start
+    assert.equal(fakeStart.status, 403); // Only host can start
+    assert.match(fakeStart.body.message || fakeStart.text, /Chỉ có chủ phòng/);
 
     const realStart = await request(app)
       .post(`/api/games/sam/rooms/${testRoomId}/start`)
@@ -188,7 +189,7 @@ test('Comprehensive Sam Lốc V1 Full Vertical Slice E2E Test Suite', async (t) 
       .post(`/api/games/sam/rooms/${testRoomId}/play-cards`)
       .set('Authorization', `Bearer ${hostToken}`)
       .send({ cardIds: ['3S'] });
-    assert.equal(wrongTurn.status, 500);
+    assert.equal(wrongTurn.status, 400);
     assert.match(wrongTurn.body.message || wrongTurn.text, /Chưa đến lượt/);
   });
 
@@ -198,7 +199,7 @@ test('Comprehensive Sam Lốc V1 Full Vertical Slice E2E Test Suite', async (t) 
       .post(`/api/games/sam/rooms/${testRoomId}/play-cards`)
       .set('Authorization', `Bearer ${token2}`)
       .send({ cardIds: ['NON_EXISTENT_CARD'] });
-    assert.equal(fakeCard.status, 500);
+    assert.equal(fakeCard.status, 400);
     assert.match(fakeCard.body.message || fakeCard.text, /không có trên tay/);
   });
 

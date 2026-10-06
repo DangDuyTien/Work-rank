@@ -60,10 +60,10 @@ const DEPARTMENT_SUGGESTIONS = [
 ];
 
 const CARD = {
-  background: '#ffffff',
-  border: '1px solid rgba(15,23,42,0.08)',
-  borderRadius: 0,
-  boxShadow: 'none',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-content)',
+  boxShadow: 'var(--shadow-card)',
 };
 
 const SEASON_STATUS_LABELS = {
@@ -109,10 +109,10 @@ function Avatar({ user, size = 40 }) {
     <div style={{
       width: size,
       height: size,
-      borderRadius: 0,
+      borderRadius: 'var(--radius-avatar)',
       overflow: 'hidden',
-      background: '#b45309',
-      color: '#ffffff',
+      background: 'var(--accent)',
+      color: 'var(--surface)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -581,36 +581,36 @@ export default function AdminPrivileges() {
   const adminCount = users.filter((u) => u.role === 'admin').length;
 
   return (
-    <div style={{ width: '100%', maxWidth: 1680, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
+    <div className="admin-data-page" style={{ width: '100%', maxWidth: 1680, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
       {/* ── HEADER & STATS ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: '#b45309', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: 'var(--accent)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <BadgeCheck size={14} />
             Quản trị nhân sự & Đặc quyền vận hành
           </div>
-          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: '#0f172a', fontWeight: 700 }}>
+          <h1 style={{ margin: '12px 0 6px', fontSize: 'var(--text-h1, 24px)', lineHeight: 1.25, color: 'var(--text-primary)', fontWeight: 700 }}>
             Nhân sự, Chức danh & Danh hiệu Vinh danh
           </h1>
-          <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
             Quản lý hồ sơ nhân viên, phân quyền RBAC, cấp tích xanh (Verified), Dev badge, chức danh công tác và trao giải thưởng MVP / Champion.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tổng nhân sự</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#0f172a', fontWeight: 700 }}>{pagination?.total ?? users.length}</strong>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Tổng nhân sự</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: 'var(--text-primary)', fontWeight: 700 }}>{pagination?.total ?? users.length}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Tích xanh</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#b45309', fontWeight: 700 }}>{verifiedCount}</strong>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Tích xanh</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: 'var(--accent)', fontWeight: 700 }}>{verifiedCount}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Dev Team</div>
-            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#0891b2', fontWeight: 700 }}>{devCount}</strong>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Dev Team</div>
+            <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: 'var(--info)', fontWeight: 700 }}>{devCount}</strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 100 }}>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Quản trị viên</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>Quản trị viên</div>
             <strong style={{ display: 'block', marginTop: 3, fontSize: 20, color: '#dc2626', fontWeight: 700 }}>{adminCount}</strong>
           </div>
           <button
@@ -620,7 +620,7 @@ export default function AdminPrivileges() {
               minHeight: 40,
               padding: '0 16px',
               background: '#7c3aed',
-              color: '#ffffff',
+              color: 'var(--surface)',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -638,8 +638,8 @@ export default function AdminPrivileges() {
             style={{
               minHeight: 40,
               padding: '0 16px',
-              background: '#b45309',
-              color: '#ffffff',
+              background: 'var(--accent)',
+              color: 'var(--surface)',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -657,7 +657,7 @@ export default function AdminPrivileges() {
       {/* ── SEARCH & FILTERS ── */}
       <section style={{ ...CARD, padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', minWidth: 260, flex: '1 1 320px' }}>
-          <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             value={query}
             onChange={onSearchChange}
@@ -679,9 +679,9 @@ export default function AdminPrivileges() {
               onClick={() => setFilter(key)}
               style={{
                 minHeight: 34,
-                border: filter === key ? '1px solid #b45309' : '1px solid rgba(15,23,42,0.1)',
-                background: filter === key ? '#b45309' : '#ffffff',
-                color: filter === key ? '#ffffff' : '#64748b',
+                border: filter === key ? '1px solid var(--accent)' : '1px solid rgba(15,23,42,0.1)',
+                background: filter === key ? 'var(--accent)' : 'var(--surface)',
+                color: filter === key ? 'var(--surface)' : 'var(--text-secondary)',
                 padding: '0 12px',
                 fontSize: 12,
                 fontWeight: 600,
@@ -695,7 +695,7 @@ export default function AdminPrivileges() {
             type="button"
             onClick={() => loadData(query, page)}
             disabled={loading}
-            style={{ minHeight: 34, border: '1px solid rgba(180,83,9,0.2)', background: 'rgba(180,83,9,0.06)', color: '#b45309', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}
+            style={{ minHeight: 34, border: '1px solid rgba(180,83,9,0.2)', background: 'rgba(180,83,9,0.06)', color: 'var(--accent)', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}
           >
             <RefreshCw size={13} className={loading ? 'spin' : ''} />
             Làm mới
@@ -706,9 +706,9 @@ export default function AdminPrivileges() {
       {/* ── USER LIST ── */}
       <section style={{ display: 'grid', gap: 10 }}>
         {loading ? (
-          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 600 }}>Đang tải danh sách nhân sự...</div>
+          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Đang tải danh sách nhân sự...</div>
         ) : filteredUsers.length === 0 ? (
-          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: '#64748b', fontWeight: 600 }}>Không tìm thấy nhân viên phù hợp.</div>
+          <div style={{ ...CARD, padding: 40, textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Không tìm thấy nhân viên phù hợp.</div>
         ) : filteredUsers.map((u) => {
           const userId = String(u.id);
           const pending = Boolean(saving[userId]);
@@ -722,11 +722,11 @@ export default function AdminPrivileges() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <Avatar user={u} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#0f172a', fontSize: 13, fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || `User #${u.id}`}</span>
                     {userHasVerified && <VerifiedBadge size={14} />}
                     {userHasDev && (
-                      <span style={{ fontSize: 10, padding: '1px 5px', background: '#ecfeff', color: '#0891b2', border: '1px solid rgba(8,145,178,0.2)', fontWeight: 700 }}>
+                      <span style={{ fontSize: 10, padding: '1px 5px', background: 'var(--info-soft)', color: 'var(--info)', border: '1px solid var(--info-border)', fontWeight: 700 }}>
                         DEV
                       </span>
                     )}
@@ -736,7 +736,7 @@ export default function AdminPrivileges() {
                       </span>
                     )}
                   </div>
-                  <div style={{ marginTop: 2, color: '#64748b', fontSize: 11, fontWeight: 500 }}>
+                  <div style={{ marginTop: 2, color: 'var(--text-secondary)', fontSize: 11, fontWeight: 500 }}>
                     WR-{String(u.id).padStart(4, '0')} · {u.email || 'Chưa có email'}
                   </div>
                 </div>
@@ -748,7 +748,7 @@ export default function AdminPrivileges() {
                   <div>
                     <JobTitleBadge jobTitle={u.jobTitle} size="xs" />
                   </div>
-                  <div style={{ marginTop: 3, fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ marginTop: 3, fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.department || 'Media & Content'}
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export default function AdminPrivileges() {
                   type="button"
                   onClick={() => openEditModal(u)}
                   title="Chỉnh sửa toàn bộ hồ sơ nhân sự"
-                  style={{ padding: '4px 8px', background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ padding: '4px 8px', background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <Edit3 size={11} /> Sửa
                 </button>
@@ -772,8 +772,8 @@ export default function AdminPrivileges() {
                   style={{
                     minHeight: 30,
                     border: userHasVerified ? '1px solid rgba(180,83,9,0.3)' : '1px solid rgba(15,23,42,0.1)',
-                    background: userHasVerified ? 'rgba(180,83,9,0.08)' : '#ffffff',
-                    color: userHasVerified ? '#b45309' : '#64748b',
+                    background: userHasVerified ? 'rgba(180,83,9,0.08)' : 'var(--surface)',
+                    color: userHasVerified ? 'var(--accent)' : 'var(--text-secondary)',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
                     fontSize: 11, fontWeight: 600, cursor: pending ? 'wait' : 'pointer',
@@ -790,9 +790,9 @@ export default function AdminPrivileges() {
                   onClick={() => toggleDevBadge(u)}
                   style={{
                     minHeight: 30,
-                    border: userHasDev ? '1px solid rgba(8,145,178,0.3)' : '1px solid rgba(15,23,42,0.1)',
-                    background: userHasDev ? 'rgba(8,145,178,0.08)' : '#ffffff',
-                    color: userHasDev ? '#0891b2' : '#64748b',
+                    border: userHasDev ? '1px solid var(--info-border)' : '1px solid var(--border-2)',
+                    background: userHasDev ? 'var(--info-soft)' : 'var(--surface)',
+                    color: userHasDev ? 'var(--info)' : 'var(--text-secondary)',
                     padding: '0 9px',
                     display: 'inline-flex', alignItems: 'center', gap: 5,
                     fontSize: 11, fontWeight: 600, cursor: pending ? 'wait' : 'pointer',
@@ -847,7 +847,7 @@ export default function AdminPrivileges() {
                   style={{
                     width: 30, height: 30,
                     border: '1px solid rgba(15,23,42,0.1)',
-                    background: '#ffffff', color: '#64748b',
+                    background: 'var(--surface)', color: 'var(--text-secondary)',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                   }}
@@ -864,7 +864,7 @@ export default function AdminPrivileges() {
                     style={{
                       width: 30, height: 30,
                       border: '1px solid rgba(148,163,184,0.25)',
-                      background: '#f8fafc', color: '#94a3b8',
+                      background: 'var(--surface-soft)', color: 'var(--text-muted)',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'not-allowed',
                     }}
@@ -901,18 +901,18 @@ export default function AdminPrivileges() {
             type="button"
             disabled={page <= 1}
             onClick={() => { const p = page - 1; setPage(p); loadData(query, p); }}
-            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page <= 1 ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: page <= 1 ? 'var(--border-2)' : 'var(--text-secondary)', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
           >
             « Trước
           </button>
-          <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600, padding: '0 8px' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, padding: '0 8px' }}>
             Trang {page} / {pagination.totalPages} ({pagination.total} nhân sự)
           </span>
           <button
             type="button"
             disabled={page >= pagination.totalPages}
             onClick={() => { const p = page + 1; setPage(p); loadData(query, p); }}
-            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: '#ffffff', color: page >= pagination.totalPages ? '#cbd5e1' : '#64748b', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page >= pagination.totalPages ? 'not-allowed' : 'pointer' }}
+            style={{ minHeight: 32, border: '1px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: page >= pagination.totalPages ? 'var(--border-2)' : 'var(--text-secondary)', padding: '0 12px', fontSize: 12, fontWeight: 600, cursor: page >= pagination.totalPages ? 'not-allowed' : 'pointer' }}
           >
             Sau »
           </button>
@@ -926,18 +926,18 @@ export default function AdminPrivileges() {
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
+          <div className="modal-dialog-enter" style={{ background: 'var(--surface)', width: '100%', maxWidth: 500, padding: 24, border: '1px solid rgba(15,23,42,0.15)', borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserPlus size={18} color="#b45309" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+                <UserPlus size={18} color="var(--accent)" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)' }}>
                   Thêm Nhân Sự Mới Vào Hệ Thống
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={18} />
               </button>
@@ -945,7 +945,7 @@ export default function AdminPrivileges() {
 
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Họ và Tên Nhân Viên *
                 </label>
                 <input
@@ -954,13 +954,13 @@ export default function AdminPrivileges() {
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   placeholder="Ví dụ: Nguyễn Văn An"
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Email Đăng Nhập *
                   </label>
                   <input
@@ -969,11 +969,11 @@ export default function AdminPrivileges() {
                     value={createForm.email}
                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                     placeholder="an.nguyen@workrank.vn"
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Mật Khẩu Khởi Tạo *
                   </label>
                   <input
@@ -982,20 +982,20 @@ export default function AdminPrivileges() {
                     value={createForm.password}
                     onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                     placeholder="••••••••"
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                   />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Chức Danh & Bậc Huy Hiệu
                   </label>
                   <select
                     value={createForm.jobTitle}
                     onChange={(e) => setCreateForm({ ...createForm, jobTitle: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)', cursor: 'pointer' }}
                   >
                     {CATEGORIZED_JOB_TITLES.map((group) => (
                       <optgroup key={group.category} label={group.category}>
@@ -1010,13 +1010,13 @@ export default function AdminPrivileges() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Phòng Ban Trực Thuộc
                   </label>
                   <select
                     value={createForm.department}
                     onChange={(e) => setCreateForm({ ...createForm, department: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)', cursor: 'pointer' }}
                   >
                     <optgroup label="Phòng ban chính thức">
                       {CATEGORIZED_DEPARTMENTS.map((d) => (
@@ -1028,13 +1028,13 @@ export default function AdminPrivileges() {
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Đội Nhóm Trực Thuộc (Team)
                 </label>
                 <select
                   value={createForm.teamId}
                   onChange={(e) => setCreateForm({ ...createForm, teamId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)', cursor: 'pointer' }}
                 >
                   <option value="">-- Chưa gán đội nhóm (Không có đội) --</option>
                   {teamsList.map((t) => (
@@ -1045,13 +1045,13 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Vai Trò Quyền Hạn (RBAC)
                   </label>
                   <select
                     value={createForm.role}
                     onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)' }}
                   >
                     <option value="user">Nhân Viên (User)</option>
                     <option value="admin">Quản Trị Viên (Admin)</option>
@@ -1081,7 +1081,7 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1089,7 +1089,7 @@ export default function AdminPrivileges() {
                   type="submit"
                   disabled={creating}
                   style={{
-                    padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
+                    padding: '8px 18px', background: 'var(--accent)', color: 'var(--surface)', border: 'none',
                     fontSize: 12, fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -1114,7 +1114,7 @@ export default function AdminPrivileges() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <Avatar user={{ ...editModalUser, name: editForm.name, avatarData: editForm.avatarData || null }} size={52} />
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: '#f8fafc', border: '1px solid #cbd5e1', fontSize: 12, color: '#334155', cursor: savingEdit || processingAvatar ? 'wait' : 'pointer' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'var(--surface-soft)', border: '1px solid var(--border-2)', fontSize: 12, color: 'var(--text-secondary)', cursor: savingEdit || processingAvatar ? 'wait' : 'pointer' }}>
                     <Upload size={14} /> {processingAvatar ? 'Đang xử lý ảnh...' : 'Đổi ảnh đại diện'}
                     <input type="file" accept="image/*" aria-label="Ảnh đại diện nhân sự" onChange={handleAvatarFile} disabled={savingEdit || processingAvatar} style={{ display: 'none' }} />
                   </label>
@@ -1127,7 +1127,7 @@ export default function AdminPrivileges() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Họ và Tên *
                   </label>
                   <input
@@ -1135,11 +1135,11 @@ export default function AdminPrivileges() {
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Email Liên Hệ *
                   </label>
                   <input
@@ -1147,23 +1147,23 @@ export default function AdminPrivileges() {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                   />
                 </div>
               </div>
 
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: '#475569' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Số điện thoại liên hệ
-                <input type="tel" value={editForm.phone} onChange={(event) => setEditForm((prev) => ({ ...prev, phone: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #cbd5e1' }} />
+                <input type="tel" value={editForm.phone} onChange={(event) => setEditForm((prev) => ({ ...prev, phone: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid var(--border-2)' }} />
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: '#475569' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Giới thiệu / Trách nhiệm chuyên môn
-                <textarea rows={3} value={editForm.bio} onChange={(event) => setEditForm((prev) => ({ ...prev, bio: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }} />
+                <textarea rows={3} value={editForm.bio} onChange={(event) => setEditForm((prev) => ({ ...prev, bio: event.target.value }))} style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid var(--border-2)', resize: 'vertical' }} />
               </label>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
-                  <label htmlFor="person-edit-job-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-job-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Chức Danh & Bậc Huy Hiệu
                   </label>
                   <input
@@ -1172,7 +1172,7 @@ export default function AdminPrivileges() {
                     value={editForm.jobTitle}
                     onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
                     maxLength={120}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)' }}
                   />
                   <datalist id="person-edit-job-titles">
                     {CATEGORIZED_JOB_TITLES.flatMap((group) => group.titles.map((title) => (
@@ -1184,7 +1184,7 @@ export default function AdminPrivileges() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="person-edit-department" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-department" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Phòng Ban Trực Thuộc
                   </label>
                   <input
@@ -1193,7 +1193,7 @@ export default function AdminPrivileges() {
                     value={editForm.department}
                     onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
                     maxLength={120}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)' }}
                   />
                   <datalist id="person-edit-departments">
                     {CATEGORIZED_DEPARTMENTS.map((department) => (
@@ -1204,13 +1204,13 @@ export default function AdminPrivileges() {
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Đội Nhóm Trực Thuộc (Team)
                 </label>
                 <select
                   value={editForm.teamId}
                   onChange={(e) => setEditForm({ ...editForm, teamId: e.target.value })}
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)', cursor: 'pointer' }}
                 >
                   <option value="">-- Chưa gán đội nhóm (Không có đội) --</option>
                   {teamsList.map((t) => (
@@ -1221,14 +1221,14 @@ export default function AdminPrivileges() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 <div>
-                  <label htmlFor="person-edit-role" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-role" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Phân Quyền Hệ Thống
                   </label>
                   <select
                     id="person-edit-role"
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)' }}
                   >
                     <option value="user">Nhân Viên (User)</option>
                     <option value="manager">Quản Lý (Manager)</option>
@@ -1236,14 +1236,14 @@ export default function AdminPrivileges() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="person-edit-status" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                  <label htmlFor="person-edit-status" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Trạng Thái Tài Khoản
                   </label>
                   <select
                     id="person-edit-status"
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)' }}
                   >
                     <option value="active">Hoạt động (Active)</option>
                     <option value="inactive">Tạm khóa (Inactive)</option>
@@ -1274,7 +1274,7 @@ export default function AdminPrivileges() {
                 <button
                   type="button"
                   onClick={closeEditModal}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1282,7 +1282,7 @@ export default function AdminPrivileges() {
                   type="submit"
                   disabled={savingEdit || processingAvatar}
                   style={{
-                    padding: '8px 18px', background: '#b45309', color: '#ffffff', border: 'none',
+                    padding: '8px 18px', background: 'var(--accent)', color: 'var(--surface)', border: 'none',
                     fontSize: 12, fontWeight: 600, cursor: savingEdit ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -1306,13 +1306,13 @@ export default function AdminPrivileges() {
       >
         {awardModalUser && (
           <>
-            <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)', marginBottom: 14, fontSize: 12 }}>
+            <div style={{ padding: '8px 12px', background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)', marginBottom: 14, fontSize: 12 }}>
               Trao cho: <strong>{awardModalUser.name}</strong> (#{awardModalUser.id} · {awardModalUser.jobTitle || 'Nhân viên'})
             </div>
 
             <form onSubmit={submitAward} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label htmlFor="admin-award-season" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label htmlFor="admin-award-season" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Năm &amp; Mùa Giải *
                 </label>
                 <select
@@ -1321,7 +1321,7 @@ export default function AdminPrivileges() {
                   value={awardForm.seasonId}
                   onChange={(e) => setAwardForm({ ...awardForm, seasonId: e.target.value })}
                   disabled={awardSeasonsLoading || awardSeasons.length === 0}
-                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' }}
+                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', background: 'var(--surface)', color: 'var(--text-primary)' }}
                 >
                   <option value="">
                     {awardSeasonsLoading ? 'Đang tải danh sách mùa giải...' : '-- Chọn năm và tên mùa --'}
@@ -1333,14 +1333,14 @@ export default function AdminPrivileges() {
                   ))}
                 </select>
                 {!awardSeasonsLoading && awardSeasons.length === 0 && (
-                  <p style={{ margin: '5px 0 0', fontSize: 11, color: '#b91c1c' }}>
+                  <p style={{ margin: '5px 0 0', fontSize: 11, color: 'var(--danger)' }}>
                     Chưa có mùa giải để gắn danh hiệu.
                   </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="admin-award-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label htmlFor="admin-award-title" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Tiêu Đề Vinh Danh (Tùy chọn)
                 </label>
                 <input
@@ -1349,12 +1349,12 @@ export default function AdminPrivileges() {
                   value={awardForm.title}
                   onChange={(e) => setAwardForm({ ...awardForm, title: e.target.value })}
                   placeholder={awardType === 'MVP' ? 'Ví dụ: MVP Mùa Giải 2026' : 'Ví dụ: Quán Quân Mùa 2026'}
-                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid #cbd5e1' }}
+                  style={{ width: '100%', minHeight: 38, padding: '8px', fontSize: 12, border: '1px solid var(--border-2)' }}
                 />
               </div>
 
               <div>
-                <label htmlFor="admin-award-reason" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                <label htmlFor="admin-award-reason" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Lý Do &amp; Căn Cứ Vinh Danh *
                 </label>
                 <textarea
@@ -1364,7 +1364,7 @@ export default function AdminPrivileges() {
                   value={awardForm.reason}
                   onChange={(e) => setAwardForm({ ...awardForm, reason: e.target.value })}
                   placeholder="Ghi rõ thành tích, đóng góp nổi bật hoặc chỉ số đạt được..."
-                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid #cbd5e1', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '8px', fontSize: 12, border: '1px solid var(--border-2)', resize: 'vertical' }}
                 />
               </div>
 
@@ -1373,7 +1373,7 @@ export default function AdminPrivileges() {
                   type="button"
                   onClick={() => setAwardModalUser(null)}
                   disabled={awarding}
-                  style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: awarding ? 'not-allowed' : 'pointer' }}
+                  style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: awarding ? 'not-allowed' : 'pointer' }}
                 >
                   Hủy
                 </button>
@@ -1383,7 +1383,7 @@ export default function AdminPrivileges() {
                   style={{
                     padding: '8px 18px',
                     background: awardType === 'MVP' ? '#7c3aed' : '#d97706',
-                    color: '#ffffff', border: 'none',
+                    color: 'var(--surface)', border: 'none',
                     fontSize: 12, fontWeight: 600, cursor: awarding ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
@@ -1404,18 +1404,18 @@ export default function AdminPrivileges() {
           display: 'flex', justifyContent: 'flex-end',
         }}>
           <div className="drawer-slide-right-enter" style={{
-            background: '#ffffff', width: '100%', maxWidth: 440, height: '100%',
+            background: 'var(--surface)', width: '100%', maxWidth: 440, height: '100%',
             overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20,
             boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(15,23,42,0.08)', paddingBottom: 14 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)' }}>
                 Hồ Sơ Nhân Sự Chi Tiết
               </h3>
               <button
                 type="button"
                 onClick={() => setDetailDrawerUser(null)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={20} />
               </button>
@@ -1424,36 +1424,36 @@ export default function AdminPrivileges() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <Avatar user={detailDrawerUser} size={56} />
               <div>
-                <div style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#0f172a' }}>
+                <div style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: 'var(--text-primary)' }}>
                   {detailDrawerUser.name}
                 </div>
-                <div style={{ color: '#64748b', fontSize: 12 }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                   WR-{String(detailDrawerUser.id).padStart(4, '0')} · {detailDrawerUser.email}
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gap: 12, padding: 14, background: '#f8fafc', border: '1px solid rgba(15,23,42,0.06)' }}>
+            <div style={{ display: 'grid', gap: 12, padding: 14, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>CHỨC DANH CÔNG TÁC:</span>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>CHỨC DANH CÔNG TÁC:</span>
                 <div style={{ marginTop: 4 }}>
                   <JobTitleBadge jobTitle={detailDrawerUser.jobTitle} size="sm" />
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>PHÒNG BAN:</span>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>PHÒNG BAN:</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
                   {detailDrawerUser.department || 'Media & Content'}
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>VAI TRÒ / PHÂN QUYỀN:</span>
-                <div style={{ fontSize: 13, fontWeight: 600, color: detailDrawerUser.role === 'admin' ? '#dc2626' : '#b45309', marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>VAI TRÒ / PHÂN QUYỀN:</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: detailDrawerUser.role === 'admin' ? '#dc2626' : 'var(--accent)', marginTop: 2 }}>
                   {detailDrawerUser.role === 'admin' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (User)'}
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TRẠNG THÁI:</span>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>TRẠNG THÁI:</span>
                 <div style={{ fontSize: 13, fontWeight: 600, color: (detailDrawerUser.accountStatus || detailDrawerUser.status) === 'inactive' ? '#dc2626' : '#16a34a', marginTop: 2 }}>
                   {(detailDrawerUser.accountStatus || detailDrawerUser.status) === 'inactive' ? 'Tạm khóa (Inactive)' : 'Hoạt động (Active)'}
                 </div>
@@ -1468,7 +1468,7 @@ export default function AdminPrivileges() {
                   setDetailDrawerUser(null);
                 }}
                 style={{
-                  width: '100%', padding: '10px', background: '#b45309', color: '#ffffff',
+                  width: '100%', padding: '10px', background: 'var(--accent)', color: 'var(--surface)',
                   border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
@@ -1482,7 +1482,7 @@ export default function AdminPrivileges() {
                   setDetailDrawerUser(null);
                 }}
                 style={{
-                  width: '100%', padding: '10px', background: '#ffffff', color: '#0f172a',
+                  width: '100%', padding: '10px', background: 'var(--surface)', color: 'var(--text-primary)',
                   border: '1px solid rgba(15,23,42,0.15)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
@@ -1501,7 +1501,7 @@ export default function AdminPrivileges() {
           background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
-          <div className="modal-dialog-enter" style={{ background: '#ffffff', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(220,38,38,0.3)', borderRadius: 6 }}>
+          <div className="modal-dialog-enter" style={{ background: 'var(--surface)', width: '100%', maxWidth: 460, padding: 24, border: '1px solid rgba(220,38,38,0.3)', borderRadius: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', marginBottom: 14 }}>
               <Trash2 size={20} />
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>Xác Nhận Xóa Nhân Sự</h3>
@@ -1509,21 +1509,21 @@ export default function AdminPrivileges() {
             
             <div style={{ background: '#fef2f2', border: '1px solid rgba(220,38,38,0.2)', padding: '12px 14px', borderRadius: 4, marginBottom: 14 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: '#991b1b', marginBottom: 2 }}>{deleteConfirmUser.name}</div>
-              <div style={{ fontSize: 12, color: '#b91c1c' }}>{deleteConfirmUser.email} · WR-{String(deleteConfirmUser.id).padStart(4, '0')}</div>
+              <div style={{ fontSize: 12, color: 'var(--danger)' }}>{deleteConfirmUser.email} · WR-{String(deleteConfirmUser.id).padStart(4, '0')}</div>
               <div style={{ fontSize: 11, color: '#7f1d1d', marginTop: 4 }}>
                 {deleteConfirmUser.jobTitle || 'Nhân viên'} · {deleteConfirmUser.department || 'Media & Content'}
                 {deleteConfirmUser.teamName && ` · Đội: ${deleteConfirmUser.teamName}`}
               </div>
             </div>
 
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.55 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
               Hành động này sẽ xóa tài khoản nhân sự và thu hồi toàn bộ phiên đăng nhập của người này ngay lập tức. Dữ liệu lịch sử thi đấu và kênh YouTube của công ty vẫn được bảo toàn an toàn.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setDeleteConfirmUser(null)}
-                style={{ padding: '8px 14px', background: '#ffffff', border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
+                style={{ padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}
               >
                 Hủy
               </button>
@@ -1532,7 +1532,7 @@ export default function AdminPrivileges() {
                 disabled={deleting}
                 onClick={handleDeleteUser}
                 style={{
-                  padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none',
+                  padding: '8px 18px', background: '#dc2626', color: 'var(--surface)', border: 'none',
                   fontSize: 12, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', borderRadius: 4,
                 }}
               >

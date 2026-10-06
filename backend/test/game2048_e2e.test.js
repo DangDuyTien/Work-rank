@@ -309,7 +309,7 @@ test('Comprehensive 2048 Game Score Persistence & E2E Test Suite', async (t) => 
         moves: 50,
         gameSessionId: 'cheat_1',
       });
-    assert.equal(resInvalidTile.status, 500);
+    assert.equal(resInvalidTile.status, 400);
 
     // 8.2 Negative score
     const resNegative = await request(app)
@@ -321,7 +321,7 @@ test('Comprehensive 2048 Game Score Persistence & E2E Test Suite', async (t) => 
         moves: 50,
         gameSessionId: 'cheat_2',
       });
-    assert.equal(resNegative.status, 500);
+    assert.equal(resNegative.status, 400);
 
     // 8.3 Score claimed without moves
     const resNoMoves = await request(app)
@@ -333,7 +333,7 @@ test('Comprehensive 2048 Game Score Persistence & E2E Test Suite', async (t) => 
         moves: 0,
         gameSessionId: 'cheat_3',
       });
-    assert.equal(resNoMoves.status, 500);
+    assert.equal(resNoMoves.status, 400);
 
     // 8.4 Claiming 2048 tile with only 50 points (mathematically impossible)
     const resImpossibleTile = await request(app)
@@ -345,7 +345,7 @@ test('Comprehensive 2048 Game Score Persistence & E2E Test Suite', async (t) => 
         moves: 50,
         gameSessionId: 'cheat_4',
       });
-    assert.equal(resImpossibleTile.status, 500);
+    assert.equal(resImpossibleTile.status, 400);
   });
 
   await t.test('9. Company-wide Leaderboard reflects scores saved on Exit without Game Over', async () => {

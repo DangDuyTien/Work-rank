@@ -23,6 +23,7 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react';
+import { AnimatedModal } from '../components/ui';
 
 export default function QuizGame() {
   const { user, socket, isAdmin } = useAuth();
@@ -76,7 +77,7 @@ export default function QuizGame() {
   };
 
   // Push activity feed message
-  const pushActivity = (name, text, color = '#b45309', avatar = null) => {
+  const pushActivity = (name, text, color = 'var(--accent)', avatar = null) => {
     setRecentActivity((prev) => [
       ...prev.slice(-6),
       { name, text, color, avatar, time: Date.now() },
@@ -203,7 +204,7 @@ export default function QuizGame() {
       if (data.room) setRoom(data.room);
       const joinedUser = data.joinedUser || data.user || data.player?.user;
       if (joinedUser) {
-        pushActivity(joinedUser.name || 'Người chơi', 'đã tham gia phòng!', '#15803d');
+        pushActivity(joinedUser.name || 'Người chơi', 'đã tham gia phòng!', 'var(--success)');
       }
     };
 
@@ -228,7 +229,7 @@ export default function QuizGame() {
         setStartTimeMs(Number(data.questionStartTime) || Date.now());
         setDurationMs(Number(data.questionDurationMs) || (data.question.timeLimit * 1000) || 10000);
         setMaxPoints(data.maxPoints || data.question.points || 1000);
-        pushActivity('Hệ thống', 'Trận đấu bắt đầu! Câu hỏi số 1', '#b45309');
+        pushActivity('Hệ thống', 'Trận đấu bắt đầu! Câu hỏi số 1', 'var(--accent)');
       }
     };
 
@@ -245,7 +246,7 @@ export default function QuizGame() {
         setStartTimeMs(Number(data.questionStartTime) || Date.now());
         setDurationMs(Number(data.questionDurationMs) || (data.question.timeLimit * 1000) || 10000);
         setMaxPoints(data.maxPoints || data.question.points || 1000);
-        pushActivity('Hệ thống', `Chuyển sang Câu ${Number(data.questionIndex || 0) + 1}`, '#b45309');
+        pushActivity('Hệ thống', `Chuyển sang Câu ${Number(data.questionIndex || 0) + 1}`, 'var(--accent)');
       }
     };
 
@@ -268,7 +269,7 @@ export default function QuizGame() {
         responseTimeMs: data.responseTimeMs,
       });
 
-      pushActivity(displayName, 'đã khóa đáp án!', '#b45309');
+      pushActivity(displayName, 'đã khóa đáp án!', 'var(--accent)');
     };
 
     const onQuestionResult = (data) => {
@@ -278,7 +279,7 @@ export default function QuizGame() {
       const myAns = data.answers?.find((a) => Number(a.userId) === Number(user?.id));
       if (myAns?.isCorrect) {
         quizSound.playCorrect();
-        pushActivity('Bạn', `Đã trả lời đúng! (+${myAns.score}đ)`, '#15803d');
+        pushActivity('Bạn', `Đã trả lời đúng! (+${myAns.score}đ)`, 'var(--success)');
       } else {
         quizSound.playWrong();
       }
@@ -289,7 +290,7 @@ export default function QuizGame() {
       if (data.room) setRoom(data.room);
       if (data.players) setPlayers(data.players);
       setFinalResults(data);
-      pushActivity('Hệ thống', 'Trận đấu kết thúc!', '#b45309');
+      pushActivity('Hệ thống', 'Trận đấu kết thúc!', 'var(--accent)');
     };
 
     socket.on('quiz:roomUpdated', onRoomUpdated);
@@ -475,7 +476,7 @@ export default function QuizGame() {
         style={{
           width: '100%',
           minHeight: '100dvh',
-          background: 'var(--background, #f4f3ef)',
+          background: 'var(--background)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: isPlayingOrShowing ? 'space-between' : 'flex-start',
@@ -640,100 +641,75 @@ export default function QuizGame() {
         )}
 
         {/* Leave Room Confirmation Modal */}
-        {showLeaveConfirmModal && (
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1200,
-              padding: 16,
-            }}
-          >
+        <AnimatedModal
+          isOpen={showLeaveConfirmModal}
+          onClose={() => setShowLeaveConfirmModal(false)}
+          title="Xác Nhận Rời Trận Đấu"
+          maxWidth={400}
+        >
+          <div style={{ textAlign: 'center', padding: '6px 0 10px' }}>
             <div
               style={{
-                background: '#ffffff',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                borderRadius: 8,
-                padding: 24,
-                width: '100%',
-                maxWidth: 400,
-                boxShadow: '0 12px 32px rgba(0, 0, 0, 0.16)',
-                color: '#141414',
-                textAlign: 'center',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: '#fef2f2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
               }}
             >
-              <div
+              <AlertTriangle size={22} />
+            </div>
+
+            <p style={{ margin: '0 0 18px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: 400 }}>
+              Trận đấu đang diễn ra. Nếu bạn rời phòng lúc này, điểm số của câu hỏi hiện tại sẽ không được bảo lưu.
+            </p>
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirmModal(false)}
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  background: '#fef2f2',
-                  color: '#dc2626',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 12px',
+                  padding: '8px 16px',
+                  borderRadius: 6,
+                  background: 'var(--surface)',
+                  border: '1px solid rgba(0, 0, 0, 0.15)',
+                  color: 'var(--primary)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
                 }}
               >
-                <AlertTriangle size={22} />
-              </div>
+                Tiếp Tục Chơi
+              </button>
 
-              <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: '#141414' }}>
-                Xác Nhận Rời Trận Đấu
-              </h3>
-
-              <p style={{ margin: '0 0 18px', fontSize: 13, color: '#666666', lineHeight: 1.5, fontWeight: 400 }}>
-                Trận đấu đang diễn ra. Nếu bạn rời phòng lúc này, điểm số của câu hỏi hiện tại sẽ không được bảo lưu.
-              </p>
-
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowLeaveConfirmModal(false)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 6,
-                    background: '#ffffff',
-                    border: '1px solid rgba(0, 0, 0, 0.15)',
-                    color: '#141414',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Tiếp Tục Chơi
-                </button>
-
-                <button
-                  type="button"
-                  onClick={executeLeaveRoom}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    padding: '8px 16px',
-                    borderRadius: 6,
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(220, 38, 38, 0.25)',
-                  }}
-                >
-                  <LogOut size={13} />
-                  <span>Rời Phòng</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={executeLeaveRoom}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '8px 16px',
+                  borderRadius: 6,
+                  background: '#dc2626',
+                  color: 'var(--surface)',
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(220, 38, 38, 0.25)',
+                }}
+              >
+                <LogOut size={13} />
+                <span>Rời Phòng</span>
+              </button>
             </div>
           </div>
-        )}
+        </AnimatedModal>
       </div>
     </GameFullscreenShell>
   );

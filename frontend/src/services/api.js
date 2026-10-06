@@ -978,11 +978,11 @@ export const capitalBoardGame = {
   },
   getLeaderboard: async (params = {}) => {
     const res = await api.get('/api/games/leaderboard', { params });
-    return res.data || { data: [], myProfile: null };
+    return res.data?.data || res.data || { items: [], myProfile: null };
   },
   getMyHistory: async (params = {}) => {
     const res = await api.get('/api/games/history', { params });
-    return res.data?.data || [];
+    return res.data?.data || res.data || [];
   },
 };
 

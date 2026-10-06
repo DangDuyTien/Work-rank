@@ -1,36 +1,51 @@
+'use strict';
+
 const env = require('../config/env');
 
-const configuredOrigins = env.clientUrl.split(',').map((origin) => origin.trim()).filter(Boolean);
-const devOrigins = env.nodeEnv === 'development'
-  ? [
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5174',
-    ]
-  : [];
-const localAppOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-const origins = new Set([...configuredOrigins, ...devOrigins, ...localAppOrigins]);
+function getConfiguredOrigins(clientUrlStr = env.clientUrl) {
+  if (!clientUrlStr) return [];
+  return clientUrlStr
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+}
 
-function isAllowedOrigin(origin) {
+function isAllowedOrigin(origin, options = {}) {
+  // Allow requests with no origin (like mobile apps, curl, or server-to-server)
   if (!origin) return true;
-  if (origins.has(origin)) return true;
-  try {
-    const url = new URL(origin);
-    if (
-      url.hostname.endsWith('.onrender.com') ||
-      url.hostname === 'localhost' ||
-      url.hostname === '127.0.0.1'
-    ) {
-      return true;
+
+  const nodeEnv = options.nodeEnv || env.nodeEnv;
+  const configured = options.configuredOrigins || getConfiguredOrigins(options.clientUrl || env.clientUrl);
+  const normalizedOrigin = String(origin).trim().replace(/\/+$/, '');
+
+  // 1. Explicitly configured origins (from CLIENT_URL)
+  if (configured.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  // 2. In development or test environments only: allow localhost / 127.0.0.1
+  const isDevOrTest = nodeEnv === 'development' || nodeEnv === 'test';
+  if (isDevOrTest) {
+    try {
+      const url = new URL(normalizedOrigin);
+      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+        return true;
+      }
+    } catch {
+      // Invalid URL format
     }
-  } catch (e) {}
+  }
+
   return false;
 }
 
 module.exports = {
+  isAllowedOrigin,
+  getConfiguredOrigins,
   origin(origin, callback) {
-    if (isAllowedOrigin(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
     return callback(new Error('CORS origin not allowed'));
   },
   credentials: true,

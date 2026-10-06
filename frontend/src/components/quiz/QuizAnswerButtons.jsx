@@ -53,11 +53,11 @@ export default function QuizAnswerButtons({
         const isCorrect = revealedCorrectOption === key;
         const isWrong = revealedCorrectOption && isSelected && !isCorrect;
 
-        let background = '#ffffff';
+        let background = 'var(--surface)';
         let borderColor = 'rgba(15,23,42,0.12)';
-        let textColor = '#0f172a';
+        let textColor = 'var(--text-primary)';
         let badgeBg = 'rgba(15,23,42,0.06)';
-        let badgeColor = '#475569';
+        let badgeColor = 'var(--text-secondary)';
         let opacity = 1;
         let shadow = '0 1px 3px rgba(15,23,42,0.04)';
 
@@ -67,26 +67,26 @@ export default function QuizAnswerButtons({
             borderColor = '#10b981';
             textColor = '#065f46';
             badgeBg = '#10b981';
-            badgeColor = '#ffffff';
+            badgeColor = 'var(--surface)';
             shadow = '0 4px 12px rgba(16,185,129,0.15)';
           } else if (isWrong) {
             background = '#fef2f2';
             borderColor = '#ef4444';
             textColor = '#991b1b';
             badgeBg = '#ef4444';
-            badgeColor = '#ffffff';
+            badgeColor = 'var(--surface)';
             shadow = '0 2px 8px rgba(239,68,68,0.1)';
           } else {
             opacity = 0.45;
             borderColor = 'rgba(15,23,42,0.08)';
           }
         } else if (isSelected) {
-          background = 'rgba(2,132,199,0.08)';
-          borderColor = '#0284c7';
-          textColor = '#0369a1';
-          badgeBg = '#0284c7';
-          badgeColor = '#ffffff';
-          shadow = '0 0 0 1px #0284c7, 0 4px 12px rgba(2,132,199,0.15)';
+          background = 'var(--info-soft)';
+          borderColor = 'var(--info)';
+          textColor = 'var(--info)';
+          badgeBg = 'var(--info)';
+          badgeColor = 'var(--surface)';
+          shadow = '0 0 0 1px var(--info), 0 4px 12px var(--info-border)';
         } else if (disabled) {
           opacity = 0.6;
         }
@@ -110,7 +110,7 @@ export default function QuizAnswerButtons({
               boxShadow: shadow,
               opacity,
               cursor: disabled || selectedOption ? 'default' : 'pointer',
-              transition: 'background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.15s ease',
+              transition: 'background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
               textAlign: 'left',
               position: 'relative',
               userSelect: 'none',
@@ -118,15 +118,15 @@ export default function QuizAnswerButtons({
             }}
             onMouseEnter={(e) => {
               if (!disabled && !selectedOption && !revealedCorrectOption) {
-                e.currentTarget.style.borderColor = '#0284c7';
-                e.currentTarget.style.background = 'rgba(2,132,199,0.03)';
+                e.currentTarget.style.borderColor = 'var(--info)';
+                e.currentTarget.style.background = 'var(--info-soft)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseLeave={(e) => {
               if (!disabled && !selectedOption && !revealedCorrectOption) {
                 e.currentTarget.style.borderColor = 'rgba(15,23,42,0.12)';
-                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.background = 'var(--surface)';
                 e.currentTarget.style.transform = 'translateY(0)';
               }
             }}
@@ -147,7 +147,7 @@ export default function QuizAnswerButtons({
                   fontSize: 14,
                   fontWeight: 700,
                   flexShrink: 0,
-                  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
+                  transition: 'background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
                 }}
               >
                 {key}
@@ -179,7 +179,7 @@ export default function QuizAnswerButtons({
                       height: 26,
                       borderRadius: '50%',
                       background: '#10b981',
-                      color: '#ffffff',
+                      color: 'var(--surface)',
                     }}
                   >
                     <Check size={16} strokeWidth={3} />
@@ -194,7 +194,7 @@ export default function QuizAnswerButtons({
                       height: 26,
                       borderRadius: '50%',
                       background: '#ef4444',
-                      color: '#ffffff',
+                      color: 'var(--surface)',
                     }}
                   >
                     <X size={16} strokeWidth={3} />
@@ -205,8 +205,8 @@ export default function QuizAnswerButtons({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    background: 'rgba(2,132,199,0.15)',
-                    color: '#0284c7',
+                    background: 'var(--info-border)',
+                    color: 'var(--info)',
                     padding: '3px 8px',
                     borderRadius: 6,
                     fontFamily: 'JetBrains Mono, monospace',
@@ -219,7 +219,7 @@ export default function QuizAnswerButtons({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    color: '#94a3b8',
+                    color: 'var(--text-muted)',
                     fontFamily: 'JetBrains Mono, monospace',
                     background: 'rgba(15,23,42,0.04)',
                     padding: '2px 6px',

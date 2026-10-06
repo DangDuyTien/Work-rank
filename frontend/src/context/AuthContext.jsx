@@ -5,7 +5,7 @@ import { connectSocket, disconnectSocket } from '../services/socket';
 
 import { setStoredAvatar, removeStoredAvatar } from '../utils/avatar';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate();
@@ -169,4 +169,10 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth phải được gọi bên trong AuthProvider.');
+  }
+  return context;
+}

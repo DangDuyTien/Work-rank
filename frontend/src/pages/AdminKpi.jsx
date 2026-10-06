@@ -358,7 +358,7 @@ export default function AdminKpi() {
   }, [definitions, filterDept, searchTerm]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px', minHeight: '80vh' }}>
+    <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px', minHeight: '80vh' }}>
       {/* PAGE HEADER */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
         <div>
@@ -366,10 +366,10 @@ export default function AdminKpi() {
             <Target size={14} />
             WorkRank KPI Foundation
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>
             Quản Lý Phòng Ban & Chỉ Tiêu KPI
           </h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
             Cấu hình danh mục KPI cho CONTENT & EDIT, thiết lập mục tiêu và ghi nhận kết quả thực tế.
           </p>
         </div>
@@ -384,9 +384,9 @@ export default function AdminKpi() {
               alignItems: 'center',
               gap: 6,
               padding: '8px 14px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              color: '#334155',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-2)',
+              color: 'var(--text-secondary)',
               fontSize: 12.5,
               fontWeight: 600,
               borderRadius: 4,
@@ -414,7 +414,7 @@ export default function AdminKpi() {
       )}
 
       {/* NAVIGATION TABS */}
-      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid #e2e8f0', marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
         {[
           { id: 'kpis', label: 'Quản Lý KPI', icon: Target, count: definitions.length },
           { id: 'departments', label: 'Phòng Ban', icon: Building2, count: departments.length },
@@ -436,11 +436,11 @@ export default function AdminKpi() {
                 border: 'none',
                 borderBottom: isActive ? '2px solid #059669' : '2px solid transparent',
                 background: 'transparent',
-                color: isActive ? '#059669' : '#64748b',
+                color: isActive ? '#059669' : 'var(--text-secondary)',
                 fontSize: 13.5,
                 fontWeight: isActive ? 700 : 500,
                 cursor: 'pointer',
-                transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
+                transition: 'background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard)',
               }}
             >
               <IconComp size={16} />
@@ -449,8 +449,8 @@ export default function AdminKpi() {
                 <span style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  background: isActive ? '#ecfdf5' : '#f1f5f9',
-                  color: isActive ? '#059669' : '#64748b',
+                  background: isActive ? '#ecfdf5' : 'var(--surface-muted)',
+                  color: isActive ? '#059669' : 'var(--text-secondary)',
                   padding: '1px 6px',
                   borderRadius: 10,
                 }}>
@@ -478,11 +478,11 @@ export default function AdminKpi() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: 4,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface)',
                   fontSize: 12.5,
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <option value="">Tất cả phòng ban</option>
@@ -495,7 +495,7 @@ export default function AdminKpi() {
 
               {/* Search */}
               <div style={{ position: 'relative' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
                   placeholder="Tìm kiếm chỉ tiêu KPI..."
@@ -504,7 +504,7 @@ export default function AdminKpi() {
                   style={{
                     padding: '7px 12px 7px 30px',
                     borderRadius: 4,
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid var(--border-2)',
                     fontSize: 12.5,
                     width: 220,
                     outline: 'none',
@@ -522,7 +522,7 @@ export default function AdminKpi() {
                 gap: 6,
                 padding: '8px 16px',
                 background: '#059669',
-                color: '#ffffff',
+                color: 'var(--surface)',
                 border: 'none',
                 borderRadius: 4,
                 fontSize: 12.5,
@@ -536,24 +536,24 @@ export default function AdminKpi() {
           </div>
 
           {/* KPI List Table */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Mã & Tên KPI</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Phòng Ban</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Mục Tiêu Mặc Định</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Chu Kỳ</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Nguồn Dữ Liệu</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Trạng Thái</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Thao Tác</th>
+                <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Mã & Tên KPI</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Phòng Ban</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Mục Tiêu Mặc Định</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Chu Kỳ</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Nguồn Dữ Liệu</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'center' }}>Trạng Thái</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'right' }}>Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDefinitions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-                      <Target size={36} color="#cbd5e1" style={{ margin: '0 auto 10px' }} />
+                    <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      <Target size={36} color="var(--border-2)" style={{ margin: '0 auto 10px' }} />
                       <div style={{ fontWeight: 600 }}>Không tìm thấy chỉ tiêu KPI nào</div>
                       <div style={{ fontSize: 12, marginTop: 4 }}>Nhấn "Thêm Chỉ Tiêu KPI" để khởi tạo KPI cho bộ phận.</div>
                     </td>
@@ -562,15 +562,15 @@ export default function AdminKpi() {
                   filteredDefinitions.map((kpi) => {
                     const dept = departments.find((d) => d.id === kpi.departmentId);
                     return (
-                      <tr key={kpi.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <tr key={kpi.id} style={{ borderBottom: '1px solid var(--surface-muted)' }}>
                         <td style={{ padding: '12px 16px' }}>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>{kpi.name}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{kpi.name}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                            <code style={{ fontSize: 11, background: '#f1f5f9', color: '#475569', padding: '1px 5px', borderRadius: 3 }}>
+                            <code style={{ fontSize: 11, background: 'var(--surface-muted)', color: 'var(--text-secondary)', padding: '1px 5px', borderRadius: 3 }}>
                               {kpi.code}
                             </code>
                             {kpi.description && (
-                              <span style={{ fontSize: 11, color: '#64748b' }}>{kpi.description}</span>
+                              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{kpi.description}</span>
                             )}
                           </div>
                         </td>
@@ -580,21 +580,21 @@ export default function AdminKpi() {
                             fontWeight: 700,
                             padding: '3px 8px',
                             borderRadius: 4,
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
+                            background: 'var(--info-soft)',
+                            color: 'var(--info)',
+                            border: '1px solid var(--info-border)',
                           }}>
                             {dept?.name || kpi.departmentId}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 16px', fontWeight: 600, color: '#0f172a' }}>
-                          {Number(kpi.target || 0).toLocaleString()} <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{kpi.unit}</span>
+                        <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {Number(kpi.target || 0).toLocaleString()} <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 400 }}>{kpi.unit}</span>
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#334155' }}>
+                        <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>
                           {PERIOD_TYPE_LABELS[kpi.periodType] || kpi.periodType}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <span style={{ fontSize: 11, color: '#475569', background: '#f1f5f9', padding: '2px 6px', borderRadius: 3 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: 'var(--surface-muted)', padding: '2px 6px', borderRadius: 3 }}>
                             {SOURCE_TYPE_LABELS[kpi.sourceType] || kpi.sourceType}
                           </span>
                         </td>
@@ -609,8 +609,8 @@ export default function AdminKpi() {
                               borderRadius: 12,
                               border: 'none',
                               cursor: 'pointer',
-                              background: kpi.active ? '#dcfce7' : '#f1f5f9',
-                              color: kpi.active ? '#15803d' : '#64748b',
+                              background: kpi.active ? '#dcfce7' : 'var(--surface-muted)',
+                              color: kpi.active ? 'var(--success)' : 'var(--text-secondary)',
                             }}
                           >
                             {kpi.active ? 'ĐANG BẬT' : 'ĐANG TẮT'}
@@ -623,10 +623,10 @@ export default function AdminKpi() {
                               onClick={() => handleOpenEditKpi(kpi)}
                               style={{
                                 padding: '5px 8px',
-                                background: '#f8fafc',
-                                border: '1px solid #cbd5e1',
+                                background: 'var(--surface-soft)',
+                                border: '1px solid var(--border-2)',
                                 borderRadius: 4,
-                                color: '#334155',
+                                color: 'var(--text-secondary)',
                                 cursor: 'pointer',
                               }}
                               title="Sửa KPI"
@@ -666,7 +666,7 @@ export default function AdminKpi() {
       {activeTab === 'departments' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
               Danh mục phòng ban nghiệp vụ của tổ chức. Hệ thống được cấu hình sẵn cho <strong>CONTENT</strong> và <strong>EDIT</strong>.
             </p>
             <button
@@ -678,7 +678,7 @@ export default function AdminKpi() {
                 gap: 6,
                 padding: '8px 16px',
                 background: '#059669',
-                color: '#ffffff',
+                color: 'var(--surface)',
                 border: 'none',
                 borderRadius: 4,
                 fontSize: 12.5,
@@ -698,8 +698,8 @@ export default function AdminKpi() {
                 <div
                   key={dept.id}
                   style={{
-                    background: '#ffffff',
-                    border: '1px solid #e2e8f0',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
                     padding: 18,
                     display: 'flex',
@@ -714,8 +714,8 @@ export default function AdminKpi() {
                           width: 34,
                           height: 34,
                           borderRadius: 6,
-                          background: '#eff6ff',
-                          color: '#2563eb',
+                          background: 'var(--info-soft)',
+                          color: 'var(--info)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -723,8 +723,8 @@ export default function AdminKpi() {
                           <Building2 size={18} />
                         </div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{dept.name}</h3>
-                          <code style={{ fontSize: 11, color: '#64748b' }}>{dept.code}</code>
+                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{dept.name}</h3>
+                          <code style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{dept.code}</code>
                         </div>
                       </div>
 
@@ -733,36 +733,36 @@ export default function AdminKpi() {
                         fontWeight: 700,
                         padding: '2px 8px',
                         borderRadius: 10,
-                        background: dept.active ? '#dcfce7' : '#f1f5f9',
-                        color: dept.active ? '#15803d' : '#64748b',
+                        background: dept.active ? '#dcfce7' : 'var(--surface-muted)',
+                        color: dept.active ? 'var(--success)' : 'var(--text-secondary)',
                       }}>
                         {dept.active ? 'HOẠT ĐỘNG' : 'TẠM KHÓA'}
                       </span>
                     </div>
 
-                    <p style={{ margin: '8px 0 14px', fontSize: 12.5, color: '#64748b', lineHeight: 1.45 }}>
+                    <p style={{ margin: '8px 0 14px', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
                       {dept.description || 'Chưa có mô tả phòng ban.'}
                     </p>
 
-                    <div style={{ padding: '10px 12px', background: '#f8fafc', borderRadius: 4, fontSize: 12, marginBottom: 14 }}>
-                      <div style={{ fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                    <div style={{ padding: '10px 12px', background: 'var(--surface-soft)', borderRadius: 4, fontSize: 12, marginBottom: 14 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                         Chỉ tiêu KPI ({deptKpis.length}):
                       </div>
                       {deptKpis.length > 0 ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                           {deptKpis.map((k) => (
-                            <span key={k.id} style={{ fontSize: 11, background: '#e2e8f0', color: '#1e293b', padding: '2px 6px', borderRadius: 3 }}>
+                            <span key={k.id} style={{ fontSize: 11, background: 'var(--border)', color: '#1e293b', padding: '2px 6px', borderRadius: 3 }}>
                               {k.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: '#94a3b8' }}>Chưa có KPI nào gán cho phòng này.</span>
+                        <span style={{ color: 'var(--text-muted)' }}>Chưa có KPI nào gán cho phòng này.</span>
                       )}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, borderTop: '1px solid var(--surface-muted)', paddingTop: 10 }}>
                     <button
                       type="button"
                       onClick={() => handleOpenEditDept(dept)}
@@ -771,12 +771,12 @@ export default function AdminKpi() {
                         alignItems: 'center',
                         gap: 4,
                         padding: '6px 12px',
-                        background: '#f8fafc',
-                        border: '1px solid #cbd5e1',
+                        background: 'var(--surface-soft)',
+                        border: '1px solid var(--border-2)',
                         borderRadius: 4,
                         fontSize: 12,
                         fontWeight: 600,
-                        color: '#334155',
+                        color: 'var(--text-secondary)',
                         cursor: 'pointer',
                       }}
                     >
@@ -806,11 +806,11 @@ export default function AdminKpi() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: 4,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface)',
                   fontSize: 12.5,
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <option value="">Tất cả phòng ban</option>
@@ -828,11 +828,11 @@ export default function AdminKpi() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: 4,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface)',
                   fontSize: 12.5,
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <option value="">Tất cả các kỳ</option>
@@ -850,11 +850,11 @@ export default function AdminKpi() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: 4,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface)',
                   fontSize: 12.5,
                   fontWeight: 500,
-                  color: '#334155',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 <option value="">Tất cả nhân viên</option>
@@ -875,7 +875,7 @@ export default function AdminKpi() {
                 gap: 6,
                 padding: '8px 16px',
                 background: '#059669',
-                color: '#ffffff',
+                color: 'var(--surface)',
                 border: 'none',
                 borderRadius: 4,
                 fontSize: 12.5,
@@ -889,25 +889,25 @@ export default function AdminKpi() {
           </div>
 
           {/* Results Table */}
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Nhân Viên</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Phòng Ban</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Chỉ Tiêu KPI</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Kỳ Đánh Giá</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Thực Tế / Chỉ Tiêu</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Tiến Độ</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Trạng Thái</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Thao Tác</th>
+                <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Nhân Viên</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Phòng Ban</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Chỉ Tiêu KPI</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Kỳ Đánh Giá</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Thực Tế / Chỉ Tiêu</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Tiến Độ</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'center' }}>Trạng Thái</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'right' }}>Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
                 {results.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-                      <BarChart3 size={36} color="#cbd5e1" style={{ margin: '0 auto 10px' }} />
+                    <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      <BarChart3 size={36} color="var(--border-2)" style={{ margin: '0 auto 10px' }} />
                       <div style={{ fontWeight: 600 }}>Chưa có kết quả KPI nào trong bộ lọc này</div>
                       <div style={{ fontSize: 12, marginTop: 4 }}>Nhấn "Ghi Nhận Kết Quả KPI" để cập nhật số liệu thực tế cho nhân sự.</div>
                     </td>
@@ -920,13 +920,13 @@ export default function AdminKpi() {
                     const isDone = pct >= 100;
 
                     return (
-                      <tr key={res.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <tr key={res.id} style={{ borderBottom: '1px solid var(--surface-muted)' }}>
                         <td style={{ padding: '12px 16px' }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                             {res.user?.fullName || res.user?.username || `User #${res.userId}`}
                           </div>
                           {res.user?.jobTitle && (
-                            <div style={{ fontSize: 11, color: '#64748b' }}>{res.user.jobTitle}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{res.user.jobTitle}</div>
                           )}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
@@ -935,19 +935,19 @@ export default function AdminKpi() {
                           </span>
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{res.kpi?.name}</div>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>{res.kpi?.code}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{res.kpi?.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{res.kpi?.code}</div>
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#334155' }}>
+                        <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>
                           {res.period?.name || res.periodId}
                         </td>
                         <td style={{ padding: '12px 16px', fontWeight: 700 }}>
-                          <span style={{ color: isDone ? '#059669' : '#0f172a' }}>{actual.toLocaleString()}</span>
-                          <span style={{ color: '#64748b', fontWeight: 400 }}> / {target.toLocaleString()} {res.kpi?.unit}</span>
+                          <span style={{ color: isDone ? '#059669' : 'var(--text-primary)' }}>{actual.toLocaleString()}</span>
+                          <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}> / {target.toLocaleString()} {res.kpi?.unit}</span>
                         </td>
                         <td style={{ padding: '12px 16px', width: 140 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
                               <div style={{
                                 width: `${Math.min(pct, 100)}%`,
                                 height: '100%',
@@ -967,7 +967,7 @@ export default function AdminKpi() {
                             padding: '2px 8px',
                             borderRadius: 4,
                             background: isDone ? '#dcfce7' : '#fef3c7',
-                            color: isDone ? '#15803d' : '#b45309',
+                            color: isDone ? 'var(--success)' : 'var(--accent)',
                           }}>
                             {isDone ? 'ĐẠT' : 'ĐANG TIẾN HÀNH'}
                           </span>
@@ -978,12 +978,12 @@ export default function AdminKpi() {
                             onClick={() => handleOpenRecordResult(res)}
                             style={{
                               padding: '5px 10px',
-                              background: '#f8fafc',
-                              border: '1px solid #cbd5e1',
+                              background: 'var(--surface-soft)',
+                              border: '1px solid var(--border-2)',
                               borderRadius: 4,
                               fontSize: 12,
                               fontWeight: 600,
-                              color: '#334155',
+                              color: 'var(--text-secondary)',
                               cursor: 'pointer',
                             }}
                           >
@@ -1005,35 +1005,35 @@ export default function AdminKpi() {
       {/* ========================================================================= */}
       {activeTab === 'history' && (
         <div>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#64748b' }}>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-secondary)' }}>
             Nhật ký ghi nhận và sửa đổi số liệu KPI theo thời gian thực (Audit Trail).
           </p>
 
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Thời Gian</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Hành Động</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Nhân Viên</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Chỉ Tiêu KPI</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Biến Động (Trước → Sau)</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Người Thực Hiện</th>
-                  <th style={{ padding: '10px 16px', fontWeight: 600, color: '#475569' }}>Nguồn</th>
+                <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Thời Gian</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Hành Động</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Nhân Viên</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Chỉ Tiêu KPI</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Biến Động (Trước → Sau)</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Người Thực Hiện</th>
+                  <th style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-secondary)' }}>Nguồn</th>
                 </tr>
               </thead>
               <tbody>
                 {history.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-                      <History size={36} color="#cbd5e1" style={{ margin: '0 auto 10px' }} />
+                    <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      <History size={36} color="var(--border-2)" style={{ margin: '0 auto 10px' }} />
                       <div style={{ fontWeight: 600 }}>Chưa có sự kiện KPI nào được ghi nhận</div>
                     </td>
                   </tr>
                 ) : (
                   history.map((ev) => (
-                    <tr key={ev.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '10px 16px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                    <tr key={ev.id} style={{ borderBottom: '1px solid var(--surface-muted)' }}>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                         {new Date(ev.createdAt).toLocaleString('vi-VN')}
                       </td>
                       <td style={{ padding: '10px 16px' }}>
@@ -1042,28 +1042,28 @@ export default function AdminKpi() {
                           fontWeight: 700,
                           padding: '2px 6px',
                           borderRadius: 3,
-                          background: ev.eventType === 'CREATED' ? '#dcfce7' : '#eff6ff',
-                          color: ev.eventType === 'CREATED' ? '#15803d' : '#1d4ed8',
+                          background: ev.eventType === 'CREATED' ? 'var(--success-soft)' : 'var(--info-soft)',
+                          color: ev.eventType === 'CREATED' ? 'var(--success)' : 'var(--info)',
                         }}>
                           {ev.eventType}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 16px', fontWeight: 600, color: '#0f172a' }}>
+                      <td style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {ev.user?.fullName || ev.user?.username || `User #${ev.userId}`}
                       </td>
                       <td style={{ padding: '10px 16px' }}>
                         {ev.kpi?.name || `KPI #${ev.kpiId}`}
                       </td>
                       <td style={{ padding: '10px 16px', fontFamily: 'monospace' }}>
-                        <span style={{ color: '#94a3b8' }}>{ev.oldValue !== null ? ev.oldValue : '—'}</span>
-                        <span style={{ margin: '0 6px', color: '#64748b' }}>→</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{ev.oldValue !== null ? ev.oldValue : '—'}</span>
+                        <span style={{ margin: '0 6px', color: 'var(--text-secondary)' }}>→</span>
                         <strong style={{ color: '#059669' }}>{ev.newValue}</strong>
                       </td>
-                      <td style={{ padding: '10px 16px', color: '#475569' }}>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-secondary)' }}>
                         {ev.triggeredBy?.fullName || ev.triggeredBy?.username || 'Hệ thống'}
                       </td>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ fontSize: 11, background: '#f1f5f9', color: '#475569', padding: '1px 6px', borderRadius: 3 }}>
+                        <span style={{ fontSize: 11, background: 'var(--surface-muted)', color: 'var(--text-secondary)', padding: '1px 6px', borderRadius: 3 }}>
                           {ev.source}
                         </span>
                       </td>
@@ -1101,7 +1101,7 @@ export default function AdminKpi() {
           <div
             className="modal-dialog-enter"
             style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 6,
               width: 'min(520px, 100%)',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
@@ -1110,18 +1110,18 @@ export default function AdminKpi() {
           >
             <div style={{
               padding: '16px 20px',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                 {editingKpi ? 'Chỉnh Sửa Chỉ Tiêu KPI' : 'Thêm Mới Chỉ Tiêu KPI'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsKpiModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={18} />
               </button>
@@ -1130,14 +1130,14 @@ export default function AdminKpi() {
             <form onSubmit={handleSaveKpi} style={{ padding: 20 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Phòng Ban *
                   </label>
                   <select
                     required
                     value={kpiFormData.departmentId}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, departmentId: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   >
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -1148,7 +1148,7 @@ export default function AdminKpi() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Mã KPI (Code) *
                   </label>
                   <input
@@ -1157,13 +1157,13 @@ export default function AdminKpi() {
                     placeholder="VD: CONT_VID, EDIT_REV"
                     value={kpiFormData.code}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, code: e.target.value.toUpperCase() })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13, textTransform: 'uppercase' }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13, textTransform: 'uppercase' }}
                   />
                 </div>
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Tên Chỉ Tiêu KPI *
                 </label>
                 <input
@@ -1172,12 +1172,12 @@ export default function AdminKpi() {
                   placeholder="VD: Video hoàn thành, Revision bản dựng..."
                   value={kpiFormData.name}
                   onChange={(e) => setKpiFormData({ ...kpiFormData, name: e.target.value })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Mô Tả
                 </label>
                 <textarea
@@ -1185,13 +1185,13 @@ export default function AdminKpi() {
                   placeholder="Mô tả tiêu chuẩn và cách thức đo lường KPI..."
                   value={kpiFormData.description}
                   onChange={(e) => setKpiFormData({ ...kpiFormData, description: e.target.value })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13, resize: 'none' }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13, resize: 'none' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Đơn Vị Đo *
                   </label>
                   <input
@@ -1200,12 +1200,12 @@ export default function AdminKpi() {
                     placeholder="VD: video, lượt xem, bản..."
                     value={kpiFormData.unit}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, unit: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Mục Tiêu Mặc Định *
                   </label>
                   <input
@@ -1215,20 +1215,20 @@ export default function AdminKpi() {
                     min={0}
                     value={kpiFormData.target}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, target: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Kỳ Đánh Giá *
                   </label>
                   <select
                     value={kpiFormData.periodType}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, periodType: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   >
                     <option value="daily">Hàng ngày (Daily)</option>
                     <option value="weekly">Hàng tuần (Weekly)</option>
@@ -1239,13 +1239,13 @@ export default function AdminKpi() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Nguồn Dữ Liệu *
                   </label>
                   <select
                     value={kpiFormData.sourceType}
                     onChange={(e) => setKpiFormData({ ...kpiFormData, sourceType: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   >
                     <option value="manual">Thủ công (Manual)</option>
                     <option value="admin">Quản trị viên (Admin)</option>
@@ -1264,7 +1264,7 @@ export default function AdminKpi() {
                   checked={kpiFormData.active}
                   onChange={(e) => setKpiFormData({ ...kpiFormData, active: e.target.checked })}
                 />
-                <label htmlFor="kpiActive" style={{ fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+                <label htmlFor="kpiActive" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                   Kích hoạt chỉ tiêu KPI này
                 </label>
               </div>
@@ -1276,9 +1276,9 @@ export default function AdminKpi() {
                   style={{
                     padding: '8px 16px',
                     borderRadius: 4,
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#475569',
+                    border: '1px solid var(--border-2)',
+                    background: 'var(--surface)',
+                    color: 'var(--text-secondary)',
                     fontSize: 13,
                     cursor: 'pointer',
                   }}
@@ -1292,7 +1292,7 @@ export default function AdminKpi() {
                     borderRadius: 4,
                     border: 'none',
                     background: '#059669',
-                    color: '#ffffff',
+                    color: 'var(--surface)',
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -1326,7 +1326,7 @@ export default function AdminKpi() {
           <div
             className="modal-dialog-enter"
             style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 6,
               width: 'min(460px, 100%)',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
@@ -1335,18 +1335,18 @@ export default function AdminKpi() {
           >
             <div style={{
               padding: '16px 20px',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                 {editingDept ? 'Chỉnh Sửa Phòng Ban' : 'Thêm Phòng Ban'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsDeptModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={18} />
               </button>
@@ -1354,7 +1354,7 @@ export default function AdminKpi() {
 
             <form onSubmit={handleSaveDept} style={{ padding: 20 }}>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Tên Phòng Ban *
                 </label>
                 <input
@@ -1363,12 +1363,12 @@ export default function AdminKpi() {
                   placeholder="VD: CONTENT, EDIT..."
                   value={deptFormData.name}
                   onChange={(e) => setDeptFormData({ ...deptFormData, name: e.target.value })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Mã Phòng Ban (Code) *
                 </label>
                 <input
@@ -1377,12 +1377,12 @@ export default function AdminKpi() {
                   placeholder="VD: CONTENT, EDIT"
                   value={deptFormData.code}
                   onChange={(e) => setDeptFormData({ ...deptFormData, code: e.target.value.toUpperCase() })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13, textTransform: 'uppercase' }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13, textTransform: 'uppercase' }}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Mô Tả Nghiệp Vụ
                 </label>
                 <textarea
@@ -1390,7 +1390,7 @@ export default function AdminKpi() {
                   placeholder="Mô tả chức năng nhiệm vụ của phòng ban..."
                   value={deptFormData.description}
                   onChange={(e) => setDeptFormData({ ...deptFormData, description: e.target.value })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13, resize: 'none' }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13, resize: 'none' }}
                 />
               </div>
 
@@ -1401,7 +1401,7 @@ export default function AdminKpi() {
                   checked={deptFormData.active}
                   onChange={(e) => setDeptFormData({ ...deptFormData, active: e.target.checked })}
                 />
-                <label htmlFor="deptActive" style={{ fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+                <label htmlFor="deptActive" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                   Kích hoạt phòng ban này
                 </label>
               </div>
@@ -1413,9 +1413,9 @@ export default function AdminKpi() {
                   style={{
                     padding: '8px 16px',
                     borderRadius: 4,
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#475569',
+                    border: '1px solid var(--border-2)',
+                    background: 'var(--surface)',
+                    color: 'var(--text-secondary)',
                     fontSize: 13,
                     cursor: 'pointer',
                   }}
@@ -1429,7 +1429,7 @@ export default function AdminKpi() {
                     borderRadius: 4,
                     border: 'none',
                     background: '#059669',
-                    color: '#ffffff',
+                    color: 'var(--surface)',
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -1463,7 +1463,7 @@ export default function AdminKpi() {
           <div
             className="modal-dialog-enter"
             style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 6,
               width: 'min(500px, 100%)',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
@@ -1472,18 +1472,18 @@ export default function AdminKpi() {
           >
             <div style={{
               padding: '16px 20px',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                 Ghi Nhận Kết Quả Thực Tế KPI
               </h3>
               <button
                 type="button"
                 onClick={() => setIsResultModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
               >
                 <X size={18} />
               </button>
@@ -1491,7 +1491,7 @@ export default function AdminKpi() {
 
             <form onSubmit={handleSaveResult} style={{ padding: 20 }}>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Nhân Viên *
                 </label>
                 <select
@@ -1506,7 +1506,7 @@ export default function AdminKpi() {
                       departmentId: u?.departmentId ? String(u.departmentId) : resultFormData.departmentId,
                     });
                   }}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                 >
                   {usersList.map((u) => (
                     <option key={u.id} value={u.id}>
@@ -1518,14 +1518,14 @@ export default function AdminKpi() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Phòng Ban *
                   </label>
                   <select
                     required
                     value={resultFormData.departmentId}
                     onChange={(e) => setResultFormData({ ...resultFormData, departmentId: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   >
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -1536,14 +1536,14 @@ export default function AdminKpi() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Kỳ Đánh Giá *
                   </label>
                   <select
                     required
                     value={resultFormData.periodId}
                     onChange={(e) => setResultFormData({ ...resultFormData, periodId: e.target.value })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   >
                     {periods.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -1555,7 +1555,7 @@ export default function AdminKpi() {
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Chỉ Tiêu KPI *
                 </label>
                 <select
@@ -1570,7 +1570,7 @@ export default function AdminKpi() {
                       targetValue: k?.target !== undefined ? k.target : resultFormData.targetValue,
                     });
                   }}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                 >
                   {definitions.map((k) => (
                     <option key={k.id} value={k.id}>
@@ -1582,7 +1582,7 @@ export default function AdminKpi() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Mục Tiêu (Target) *
                   </label>
                   <input
@@ -1592,12 +1592,12 @@ export default function AdminKpi() {
                     min={0}
                     value={resultFormData.targetValue}
                     onChange={(e) => setResultFormData({ ...resultFormData, targetValue: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     Thực Tế Đạt Được (Actual) *
                   </label>
                   <input
@@ -1607,13 +1607,13 @@ export default function AdminKpi() {
                     min={0}
                     value={resultFormData.actualValue}
                     onChange={(e) => setResultFormData({ ...resultFormData, actualValue: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 700, color: '#059669' }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13, fontWeight: 700, color: '#059669' }}
                   />
                 </div>
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Ghi Chú Nghiệp Vụ / Lý Do Cập Nhật
                 </label>
                 <input
@@ -1621,7 +1621,7 @@ export default function AdminKpi() {
                   placeholder="Ghi chú xác nhận số liệu thực tế..."
                   value={resultFormData.notes}
                   onChange={(e) => setResultFormData({ ...resultFormData, notes: e.target.value })}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 4, border: '1px solid var(--border-2)', fontSize: 13 }}
                 />
               </div>
 
@@ -1632,9 +1632,9 @@ export default function AdminKpi() {
                   style={{
                     padding: '8px 16px',
                     borderRadius: 4,
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#475569',
+                    border: '1px solid var(--border-2)',
+                    background: 'var(--surface)',
+                    color: 'var(--text-secondary)',
                     fontSize: 13,
                     cursor: 'pointer',
                   }}
@@ -1648,7 +1648,7 @@ export default function AdminKpi() {
                     borderRadius: 4,
                     border: 'none',
                     background: '#059669',
-                    color: '#ffffff',
+                    color: 'var(--surface)',
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',

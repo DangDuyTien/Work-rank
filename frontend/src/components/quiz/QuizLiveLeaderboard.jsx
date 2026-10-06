@@ -15,7 +15,7 @@ export default function QuizLiveLeaderboard({
     <div
       style={{
         width: '100%',
-        background: '#ffffff',
+        background: 'var(--surface)',
         border: '1px solid rgba(15,23,42,0.1)',
         borderRadius: 14,
         boxShadow: '0 2px 10px rgba(15,23,42,0.04)',
@@ -35,7 +35,7 @@ export default function QuizLiveLeaderboard({
           borderBottom: isExpanded ? '1px solid rgba(15,23,42,0.08)' : 'none',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
           <Trophy size={14} color="#d97706" />
           <span>Điểm Số Trực Tiếp ({players.length})</span>
         </div>
@@ -51,7 +51,7 @@ export default function QuizLiveLeaderboard({
             borderRadius: 6,
             background: 'transparent',
             border: '1px solid rgba(15,23,42,0.1)',
-            color: '#475569',
+            color: 'var(--text-secondary)',
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
@@ -88,8 +88,8 @@ export default function QuizLiveLeaderboard({
                 gap: 4,
                 padding: '6px 10px',
                 borderRadius: 10,
-                background: isMe ? 'rgba(2,132,199,0.08)' : 'transparent',
-                border: isMe ? '1px solid rgba(2,132,199,0.3)' : '1px solid transparent',
+                background: isMe ? 'var(--info-soft)' : 'transparent',
+                border: isMe ? '1px solid var(--info-border)' : '1px solid transparent',
                 minWidth: 70,
                 flexShrink: 0,
                 position: 'relative',
@@ -106,7 +106,7 @@ export default function QuizLiveLeaderboard({
                     borderRadius: '50%',
                     objectFit: 'cover',
                     border: isMe
-                      ? '2px solid #0284c7'
+                      ? '2px solid var(--info)'
                       : rank === 1
                       ? '2px solid #f59e0b'
                       : '2px solid rgba(15,23,42,0.1)',
@@ -119,7 +119,7 @@ export default function QuizLiveLeaderboard({
                       top: -6,
                       right: -4,
                       background: '#f59e0b',
-                      color: '#ffffff',
+                      color: 'var(--surface)',
                       borderRadius: '50%',
                       padding: 2,
                       display: 'flex',
@@ -138,7 +138,7 @@ export default function QuizLiveLeaderboard({
                 style={{
                   fontSize: 11,
                   fontWeight: isMe ? 600 : 500,
-                  color: isMe ? '#0284c7' : '#0f172a',
+                  color: isMe ? 'var(--info)' : 'var(--text-primary)',
                   maxWidth: 64,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -156,7 +156,7 @@ export default function QuizLiveLeaderboard({
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 11,
                   fontWeight: 700,
-                  color: rank === 1 ? '#d97706' : '#475569',
+                  color: rank === 1 ? '#d97706' : 'var(--text-secondary)',
                   background: rank === 1 ? 'rgba(245,158,11,0.1)' : 'rgba(15,23,42,0.05)',
                   padding: '1px 6px',
                   borderRadius: 4,
@@ -194,7 +194,7 @@ export default function QuizLiveLeaderboard({
                     justifyContent: 'space-between',
                     padding: '6px 10px',
                     borderRadius: 6,
-                    background: isMe ? 'rgba(2,132,199,0.08)' : 'rgba(15,23,42,0.02)',
+                    background: isMe ? 'var(--info-soft)' : 'var(--surface-hover)',
                     fontSize: 12,
                   }}
                 >
@@ -203,20 +203,20 @@ export default function QuizLiveLeaderboard({
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
                         fontWeight: 700,
-                        color: rank <= 3 ? '#d97706' : '#64748b',
+                        color: rank <= 3 ? '#d97706' : 'var(--text-secondary)',
                         width: 20,
                       }}
                     >
                       #{rank}
                     </span>
                     <img src={avatarUrl} alt="" style={{ width: 20, height: 20, borderRadius: '50%' }} />
-                    <span style={{ fontWeight: isMe ? 600 : 500, color: '#0f172a' }}>
+                    <span style={{ fontWeight: isMe ? 600 : 500, color: 'var(--text-primary)' }}>
                       {player.user?.name || `Người chơi ${player.userId}`}
                       {isMe && ' (Bạn)'}
                     </span>
                   </div>
 
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#0284c7' }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--info)' }}>
                     {Number(player.score || 0).toLocaleString()} pts
                   </span>
                 </div>

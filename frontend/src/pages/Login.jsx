@@ -200,6 +200,8 @@ export default function Login() {
           {/* Active session banner */}
           {user && (
             <div
+              aria-hidden={isRegister}
+              inert={isRegister ? '' : undefined}
               style={{
                 marginBottom: 20,
                 padding: '14px 16px',
@@ -209,14 +211,14 @@ export default function Login() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <CheckCircle2 size={18} color="#b45309" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#111111' }}>
+                <CheckCircle2 size={18} color="var(--accent)" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                   Bạn đang đăng nhập
                 </span>
               </div>
 
-              <div style={{ fontSize: 12, color: '#555555', marginBottom: 12 }}>
-                Tài khoản: <strong style={{ color: '#111111', fontWeight: 600 }}>{user.name}</strong> ({user.email})
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                Tài khoản: <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{user.name}</strong> ({user.email})
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -230,17 +232,17 @@ export default function Login() {
                     justifyContent: 'center',
                     gap: 6,
                     padding: '9px 14px',
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     border: 'none',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'background 0.15s ease',
+                    transition: 'background var(--motion-fast) var(--ease-standard)',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#2b2b2b'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#141414'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary-hover)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
                 >
                   <span>Mở Dashboard</span>
                   <ArrowRight size={14} />
@@ -254,17 +256,17 @@ export default function Login() {
                     alignItems: 'center',
                     gap: 4,
                     padding: '9px 12px',
-                    background: '#ffffff',
-                    color: '#b91c1c',
+                    background: 'var(--surface)',
+                    color: 'var(--danger)',
                     border: '1px solid rgba(185,28,28,0.25)',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'background 0.15s ease',
+                    transition: 'background var(--motion-fast) var(--ease-standard)',
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(185,28,28,0.04)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface)'; }}
                 >
                   <LogOut size={13} />
                   <span>Đăng xuất</span>
@@ -279,7 +281,7 @@ export default function Login() {
               position: 'relative',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              background: '#f4f3ef',
+              background: 'var(--background)',
               padding: 4,
               borderRadius: 8,
               marginBottom: 24,
@@ -295,7 +297,7 @@ export default function Login() {
                 bottom: 4,
                 left: 4,
                 width: 'calc(50% - 4px)',
-                background: '#ffffff',
+                background: 'var(--surface)',
                 borderRadius: 6,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
                 transform: `translateX(${isRegister ? '100%' : '0%'})`,
@@ -318,7 +320,7 @@ export default function Login() {
                 gap: 6,
                 padding: '9px',
                 background: 'transparent',
-                color: !isRegister ? '#111111' : '#666666',
+                color: !isRegister ? 'var(--text-primary)' : 'var(--text-secondary)',
                 border: 'none',
                 borderRadius: 6,
                 fontSize: 13,
@@ -345,7 +347,7 @@ export default function Login() {
                 gap: 6,
                 padding: '9px',
                 background: 'transparent',
-                color: isRegister ? '#111111' : '#666666',
+                color: isRegister ? 'var(--text-primary)' : 'var(--text-secondary)',
                 border: 'none',
                 borderRadius: 6,
                 fontSize: 13,
@@ -362,6 +364,8 @@ export default function Login() {
           {/* Form Header with Smooth Crossfade */}
           <div className="public-auth-form-heading" aria-live="polite" style={{ position: 'relative' }}>
             <div
+              aria-hidden={isRegister}
+              inert={isRegister ? '' : undefined}
               style={{
                 gridRow: '1',
                 gridColumn: '1',
@@ -374,6 +378,8 @@ export default function Login() {
               <h1>Chào mừng trở lại.</h1>
             </div>
             <div
+              aria-hidden={!isRegister}
+              inert={!isRegister ? '' : undefined}
               style={{
                 gridRow: '1',
                 gridColumn: '1',
@@ -387,6 +393,8 @@ export default function Login() {
             </div>
 
             <div
+              aria-hidden={isRegister}
+              inert={isRegister ? '' : undefined}
               style={{
                 gridRow: '2',
                 gridColumn: '1',
@@ -399,6 +407,8 @@ export default function Login() {
               <p>Đăng nhập để tiếp tục hành trình cùng đội của bạn.</p>
             </div>
             <div
+              aria-hidden={!isRegister}
+              inert={!isRegister ? '' : undefined}
               style={{
                 gridRow: '2',
                 gridColumn: '1',
@@ -424,7 +434,7 @@ export default function Login() {
                 padding: '10px 14px',
                 background: '#f0fdf4',
                 border: '1px solid #bbf7d0',
-                color: '#15803d',
+                color: 'var(--success)',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 500,
@@ -448,7 +458,7 @@ export default function Login() {
                 padding: '10px 14px',
                 background: '#fef2f2',
                 border: '1px solid #fecaca',
-                color: '#b91c1c',
+                color: 'var(--danger)',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 500,
@@ -466,11 +476,11 @@ export default function Login() {
             {/* Name Field (Register only) */}
             <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
               <fieldset disabled={!isRegister} className="public-auth-field-inner">
-                <label htmlFor="auth-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+                <label htmlFor="auth-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                   Họ và tên *
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <UserRound size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                  <UserRound size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input
                     id="auth-name"
                     autoComplete="name"
@@ -487,8 +497,8 @@ export default function Login() {
                       fontSize: 14,
                       outline: 'none',
                       boxSizing: 'border-box',
-                      background: '#ffffff',
-                      color: '#111111',
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
                     }}
                   />
                 </div>
@@ -497,11 +507,11 @@ export default function Login() {
 
             {/* Email / Identifier Field */}
             <div>
-              <label htmlFor="auth-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+              <label htmlFor="auth-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                 Email hoặc Tên đăng nhập *
               </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   id="auth-email"
                   type={isRegister ? 'email' : 'text'}
@@ -518,8 +528,8 @@ export default function Login() {
                     fontSize: 14,
                     outline: 'none',
                     boxSizing: 'border-box',
-                    background: '#ffffff',
-                    color: '#111111',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
                   }}
                 />
               </div>
@@ -528,7 +538,7 @@ export default function Login() {
             {/* Password Field */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label htmlFor="auth-password" style={{ fontSize: 12, fontWeight: 600, color: '#111111' }}>
+                <label htmlFor="auth-password" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
                   Mật khẩu *
                 </label>
 
@@ -539,7 +549,7 @@ export default function Login() {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#b45309',
+                      color: 'var(--accent)',
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -552,7 +562,7 @@ export default function Login() {
               </div>
 
               <div style={{ position: 'relative' }}>
-                <Lock size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   id="auth-password"
                   type={showPassword ? 'text' : 'password'}
@@ -569,8 +579,8 @@ export default function Login() {
                     fontSize: 14,
                     outline: 'none',
                     boxSizing: 'border-box',
-                    background: '#ffffff',
-                    color: '#111111',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
                   }}
                 />
                 <button
@@ -585,7 +595,7 @@ export default function Login() {
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    color: '#777777',
+                    color: 'var(--text-muted)',
                     cursor: 'pointer',
                     padding: 4,
                   }}
@@ -598,11 +608,11 @@ export default function Login() {
             {/* Confirm Password Field (Register only) */}
             <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
               <fieldset disabled={!isRegister} className="public-auth-field-inner">
-                <label htmlFor="auth-confirm-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#111111', marginBottom: 6 }}>
+                <label htmlFor="auth-confirm-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                   Xác nhận mật khẩu *
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} color="#777777" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                  <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input
                     id="auth-confirm-password"
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -619,8 +629,8 @@ export default function Login() {
                       fontSize: 14,
                       outline: 'none',
                       boxSizing: 'border-box',
-                      background: '#ffffff',
-                      color: '#111111',
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
                     }}
                   />
                   <button
@@ -635,7 +645,7 @@ export default function Login() {
                       transform: 'translateY(-50%)',
                       background: 'none',
                       border: 'none',
-                      color: '#777777',
+                      color: 'var(--text-muted)',
                       cursor: 'pointer',
                       padding: 4,
                     }}
@@ -656,8 +666,8 @@ export default function Login() {
                 justifyContent: 'center',
                 gap: 8,
                 padding: '12px 20px',
-                background: '#141414',
-                color: '#ffffff',
+                background: 'var(--primary)',
+                color: 'var(--surface)',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 14,
@@ -665,10 +675,10 @@ export default function Login() {
                 cursor: loading ? 'not-allowed' : 'pointer',
                 boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
                 marginTop: 8,
-                transition: 'background 0.15s ease, transform 0.1s ease',
+                transition: 'background var(--motion-fast) var(--ease-standard), transform var(--motion-instant) var(--ease-standard)',
               }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#2b2b2b'; }}
-              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#141414'; }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = 'var(--primary-hover)'; }}
+              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = 'var(--primary)'; }}
             >
               {loading ? (
                 <>
@@ -690,7 +700,7 @@ export default function Login() {
           </form>
 
           {/* Switch Prompt */}
-          <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: '#666666' }}>
+          <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
             {isRegister ? 'Đã có tài khoản thành viên?' : 'Chưa có tài khoản trên hệ thống?'}{' '}
             <button
               type="button"
@@ -698,7 +708,7 @@ export default function Login() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#b45309',
+                color: 'var(--accent)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 padding: 0,
@@ -734,7 +744,7 @@ export default function Login() {
             aria-modal="true"
             aria-labelledby="password-help-title"
             style={{
-              background: '#ffffff',
+              background: 'var(--surface)',
               borderRadius: 10,
               border: '1px solid rgba(0,0,0,0.08)',
               padding: 24,
@@ -747,27 +757,27 @@ export default function Login() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: '#111111' }}>
-                <HelpCircle size={20} color="#b45309" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <HelpCircle size={20} color="var(--accent)" />
                 <span id="password-help-title">Hướng Dẫn Cấp Lại Mật Khẩu</span>
               </div>
               <button
                 type="button"
                 aria-label="Đóng hướng dẫn cấp lại mật khẩu"
                 onClick={() => setShowForgotPasswordModal(false)}
-                style={{ background: 'none', border: 'none', color: '#777777', cursor: 'pointer', padding: 4 }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               <p style={{ margin: '0 0 12px' }}>
                 Nhằm đảm bảo an toàn dữ liệu và tuân thủ chính sách bảo mật nội bộ của <strong>WorkRank</strong>, mật khẩu tài khoản được quản lý tập trung.
               </p>
-              <div style={{ background: '#f4f3ef', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, color: '#111111', marginBottom: 4 }}>Quy trình hỗ trợ:</div>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#666666' }}>
+              <div style={{ background: 'var(--background)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Quy trình hỗ trợ:</div>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <li>Liên hệ trực tiếp Quản Trị Viên (Admin) của tổ chức.</li>
                   <li>Hoặc gửi yêu cầu qua kênh Kỹ thuật / Nhân sự nội bộ.</li>
                   <li>Admin sẽ xác thực danh tính và cập nhật mật khẩu mới cho bạn.</li>
@@ -781,17 +791,17 @@ export default function Login() {
               style={{
                 width: '100%',
                 padding: '11px',
-                background: '#141414',
-                color: '#ffffff',
+                background: 'var(--primary)',
+                color: 'var(--surface)',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'background 0.15s ease',
+                transition: 'background var(--motion-fast) var(--ease-standard)',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#2b2b2b'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#141414'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
             >
               Đã hiểu & Đóng
             </button>

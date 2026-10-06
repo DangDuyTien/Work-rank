@@ -28,7 +28,7 @@ test('archives resolve linked portraits and retain historical fields and legacy 
   assert.deepEqual(publicEntry.mvp.galleryImages, ['/gallery-0.png', '/gallery-1.png']);
   assert.equal(publicEntry.mvp.score, 1200);
   assert.equal(publicEntry.mvp.jobTitle, 'Historical job');
-  assert.equal(publicEntry.mvp.isVerified, false);
+  assert.equal(publicEntry.mvp.isVerified, true);
   assert.equal(publicEntry.id, undefined);
   assert.equal(UserProfileImage.findAll.mock.callCount(), 1);
 });

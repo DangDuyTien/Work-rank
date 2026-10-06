@@ -4,6 +4,12 @@ const crypto = require('crypto');
 const { Op } = require('sequelize');
 const { sequelize, User, Game2048Score, Game2048UserStat } = require('../models');
 
+const {
+  ValidationError,
+  UnauthorizedError,
+  NotFoundError,
+} = require('../utils/errors');
+
 const USER_ATTRIBUTES = ['id', 'name', 'email', 'role', 'teamId', 'jobTitle', 'department', 'isVerified', 'isDev'];
 
 // Valid powers of 2 for 2048 tiles
@@ -20,25 +26,25 @@ function validateScorePlausibility(score, maxTile, moves) {
   const numMoves = Number(moves);
 
   if (isNaN(numScore) || numScore < 0 || !Number.isInteger(numScore)) {
-    throw new Error('Điểm số không hợp lệ');
+    throw new ValidationError('Điểm số không hợp lệ');
   }
 
   if (isNaN(numMoves) || numMoves < 0 || !Number.isInteger(numMoves)) {
-    throw new Error('Số lượt di chuyển không hợp lệ');
+    throw new ValidationError('Số lượt di chuyển không hợp lệ');
   }
 
   if (isNaN(numTile) || !VALID_TILES.has(numTile)) {
-    throw new Error('Tile cao nhất không hợp lệ');
+    throw new ValidationError('Tile cao nhất không hợp lệ');
   }
 
   // A game with score > 0 must have at least 1 move
   if (numScore > 0 && numMoves <= 0) {
-    throw new Error('Số lượt di chuyển phải lớn hơn 0 khi có điểm');
+    throw new ValidationError('Số lượt di chuyển phải lớn hơn 0 khi có điểm');
   }
 
   // Maximum theoretical limit on standard 4x4 grid is under 4,000,000
   if (numScore > 3932160) {
-    throw new Error('Điểm số vượt quá giới hạn lý thuyết tối đa');
+    throw new ValidationError('Điểm số vượt quá giới hạn lý thuyết tối đa');
   }
 
   // Minimum points mathematically required to merge up to maxTile
@@ -48,7 +54,7 @@ function validateScorePlausibility(score, maxTile, moves) {
     const minRequiredScore = (k - 1) * numTile;
     // Allow small 15% tolerance for initial spawned 4-tiles
     if (numScore < Math.floor(minRequiredScore * 0.85)) {
-      throw new Error(`Điểm số (${numScore}) không tương xứng với tile cao nhất đạt được (${numTile})`);
+      throw new ValidationError(`Điểm số (${numScore}) không tương xứng với tile cao nhất đạt được (${numTile})`);
     }
   }
 
@@ -56,7 +62,7 @@ function validateScorePlausibility(score, maxTile, moves) {
   if (numMoves > 0) {
     const ptsPerMove = numScore / numMoves;
     if (ptsPerMove > 2500) {
-      throw new Error('Tỷ lệ điểm trên mỗi nước đi bất thường');
+      throw new ValidationError('Tỷ lệ điểm trên mỗi nước đi bất thường');
     }
   }
 
@@ -67,7 +73,7 @@ function validateScorePlausibility(score, maxTile, moves) {
  * Starts a new 2048 game session and persists ACTIVE session record
  */
 async function startSession(userId, initialData = {}) {
-  if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
+  if (!userId) throw new UnauthorizedError('Yêu cầu phiên đăng nhập người dùng');
 
   const gameSessionId = 'g2048_' + crypto.randomBytes(16).toString('hex');
   const now = new Date();
@@ -97,11 +103,11 @@ async function startSession(userId, initialData = {}) {
  * Checkpoints current session score & board state during active gameplay
  */
 async function checkpointSession({ userId, score, maxTile, moves, gameSessionId, boardState }) {
-  if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
+  if (!userId) throw new UnauthorizedError('Yêu cầu phiên đăng nhập người dùng');
 
   const cleanSessionId = String(gameSessionId || '').trim();
   if (!cleanSessionId) {
-    throw new Error('Thiếu mã phiên chơi game (gameSessionId)');
+    throw new ValidationError('Thiếu mã phiên chơi game (gameSessionId)');
   }
 
   const numScore = Math.floor(Number(score) || 0);
@@ -202,11 +208,11 @@ async function checkpointSession({ userId, score, maxTile, moves, gameSessionId,
  * Submits a completed or exited 2048 game result (GAME OVER, EXIT, or ABANDONED)
  */
 async function submitScore({ userId, score, maxTile, moves, gameSessionId, playedAt, status, boardState }) {
-  if (!userId) throw new Error('Yêu cầu phiên đăng nhập người dùng');
+  if (!userId) throw new UnauthorizedError('Yêu cầu phiên đăng nhập người dùng');
 
   const cleanSessionId = String(gameSessionId || '').trim();
   if (!cleanSessionId) {
-    throw new Error('Thiếu mã phiên chơi game (gameSessionId)');
+    throw new ValidationError('Thiếu mã phiên chơi game (gameSessionId)');
   }
 
   const numScore = Math.floor(Number(score) || 0);

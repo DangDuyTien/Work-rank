@@ -108,12 +108,12 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
       <div
         className={closing ? 'modal-dialog-exit' : 'modal-dialog-enter'}
         style={{
-          background: '#ffffff',
+          background: 'var(--surface)',
           width: '100%',
           maxWidth: 820,
           maxHeight: '90vh',
           overflowY: 'auto',
-          border: '1px solid #cbd5e1',
+          border: '1px solid var(--border-2)',
           borderRadius: 8,
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
           display: 'flex',
@@ -125,11 +125,11 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: '1px solid #e2e8f0',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#f8fafc',
+            background: 'var(--surface-soft)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -137,7 +137,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
               <img
                 src={channel.thumbnailUrl}
                 alt={channel.title}
-                style={{ width: 44, height: 44, borderRadius: 22, objectFit: 'cover', border: '1px solid #cbd5e1' }}
+                style={{ width: 44, height: 44, borderRadius: 22, objectFit: 'cover', border: '1px solid var(--border-2)' }}
               />
             ) : (
               <div
@@ -156,7 +156,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
             )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   {channel?.title || 'Chi tiết kênh YouTube'}
                 </h3>
                 {channel?.team?.name ? (
@@ -178,7 +178,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                       fontSize: 11,
                       fontWeight: 600,
                       background: '#fef3c7',
-                      color: '#b45309',
+                      color: 'var(--accent)',
                       padding: '2px 8px',
                       border: '1px solid #fde68a',
                     }}
@@ -187,7 +187,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                 {channel?.customUrl || channel?.channelId || 'ID: —'}
               </div>
             </div>
@@ -206,9 +206,9 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                   padding: '6px 10px',
                   fontSize: 12,
                   fontWeight: 600,
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  color: '#334155',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border-2)',
+                  color: 'var(--text-secondary)',
                   textDecoration: 'none',
                 }}
               >
@@ -224,7 +224,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                 border: 'none',
                 padding: 6,
                 cursor: 'pointer',
-                color: '#64748b',
+                color: 'var(--text-secondary)',
               }}
             >
               <X size={20} />
@@ -235,7 +235,7 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
         {/* Content */}
         <div style={{ padding: '20px' }}>
           {loading ? (
-            <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748b' }}>
+            <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
               <RefreshCw size={24} className="spin" style={{ marginBottom: 12 }} />
               <div>Đang tải dữ liệu lịch sử kênh...</div>
             </div>
@@ -254,28 +254,28 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                   marginBottom: 20,
                 }}
               >
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>TỔNG LƯỢT XEM</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
                     {formatNum(channel.views)}
                   </div>
                 </div>
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>SUBSCRIBERS</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>SUBSCRIBERS</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
                     {formatNum(channel.subscribers)}
                   </div>
                 </div>
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>TĂNG TRƯỞNG KỲ</div>
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>TĂNG TRƯỞNG KỲ</div>
                   <div
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 20,
                       fontWeight: 700,
-                      color: channel.viewsGrowthPct !== null ? (channel.viewsGrowthPct >= 0 ? '#10b981' : '#ef4444') : '#64748b',
+                      color: channel.viewsGrowthPct !== null ? (channel.viewsGrowthPct >= 0 ? '#10b981' : '#ef4444') : 'var(--text-secondary)',
                       marginTop: 4,
                     }}
                   >
@@ -283,10 +283,10 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
                   </div>
                 </div>
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>ĐỒNG BỘ GẦN NHẤT</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Clock size={14} color="#64748b" />
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase' }}>ĐỒNG BỘ GẦN NHẤT</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Clock size={14} color="var(--text-secondary)" />
                     <span>{formatRelativeTime(channel.lastSyncedAt)}</span>
                   </div>
                 </div>
@@ -304,8 +304,8 @@ export default function ChannelDetailModal({ channelId, isOpen, onClose }) {
 
               {/* Description & Metadata */}
               {channel.description && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>Mô tả kênh:</div>
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', padding: '12px 14px', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Mô tả kênh:</div>
                   <div style={{ maxHeight: 80, overflowY: 'auto' }}>{channel.description}</div>
                 </div>
               )}

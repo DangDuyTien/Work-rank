@@ -29,10 +29,10 @@ function progressPercent(startAt, endAt) {
 const STATUS_BADGE = {
   ACTIVE: { label: 'Đang diễn ra', bg: 'rgba(34,197,94,0.12)', color: '#16a34a', border: 'rgba(34,197,94,0.3)' },
   PAUSED: { label: 'Tạm dừng', bg: 'rgba(234,179,8,0.15)', color: '#ca8a04', border: 'rgba(234,179,8,0.4)' },
-  SCHEDULED: { label: 'Sắp diễn ra', bg: 'rgba(180,83,9,0.15)', color: '#b45309', border: 'rgba(180,83,9,0.3)' },
+  SCHEDULED: { label: 'Sắp diễn ra', bg: 'rgba(180,83,9,0.15)', color: 'var(--accent)', border: 'rgba(180,83,9,0.3)' },
   CALCULATING: { label: 'Đang kết toán', bg: 'rgba(168,85,247,0.15)', color: '#9333ea', border: 'rgba(168,85,247,0.3)' },
-  FINISHED: { label: 'Đã hoàn thành', bg: 'rgba(100,116,139,0.12)', color: '#475569', border: 'rgba(100,116,139,0.25)' },
-  DRAFT: { label: 'Bản nháp', bg: 'rgba(148,163,184,0.1)', color: '#64748b', border: 'rgba(148,163,184,0.2)' },
+  FINISHED: { label: 'Đã hoàn thành', bg: 'rgba(100,116,139,0.12)', color: 'var(--text-secondary)', border: 'rgba(100,116,139,0.25)' },
+  DRAFT: { label: 'Bản nháp', bg: 'rgba(148,163,184,0.1)', color: 'var(--text-secondary)', border: 'rgba(148,163,184,0.2)' },
 };
 
 export default function Arena() {
@@ -178,8 +178,8 @@ export default function Arena() {
       <section
         style={{
           padding: '24px 28px',
-          background: '#141414',
-          color: '#ffffff',
+          background: 'var(--primary)',
+          color: 'var(--surface)',
           border: '1px solid rgba(180, 83, 9, 0.3)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
         }}
@@ -196,7 +196,7 @@ export default function Arena() {
                   fontSize: 10,
                   fontWeight: 600,
                   background: 'rgba(255,255,255,0.12)',
-                  color: '#ffffff',
+                  color: 'var(--surface)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   textTransform: 'uppercase',
                   letterSpacing: 0.5,
@@ -210,7 +210,7 @@ export default function Arena() {
             </div>
 
             <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 6px 0', lineHeight: 1.3, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Flame size={24} color="var(--accent, #b45309)" /> {season.name}
+              <Flame size={24} color="var(--accent, var(--accent))" /> {season.name}
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.55, fontWeight: 400 }}>
               {season.description || 'Giải đấu YouTube Production & Quality Battle giữa các Content Creators và Video Editors.'}
@@ -223,7 +223,7 @@ export default function Arena() {
                 <span>{progress}%</span>
               </div>
               <div style={{ height: 6, width: '100%', background: 'rgba(255,255,255,0.12)' }}>
-                <div style={{ height: '100%', width: `${progress}%`, background: 'var(--accent, #b45309)', transition: 'width 0.4s ease' }} />
+                <div style={{ height: '100%', width: `${progress}%`, background: 'var(--accent, var(--accent))', transition: 'width 0.4s ease' }} />
               </div>
             </div>
           </div>
@@ -246,8 +246,8 @@ export default function Arena() {
                 style={{
                   width: 44,
                   height: 44,
-                  background: 'var(--accent, #b45309)',
-                  color: '#ffffff',
+                  background: 'var(--accent, var(--accent))',
+                  color: 'var(--surface)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -260,7 +260,7 @@ export default function Arena() {
               <div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textTransform: 'uppercase' }}>Đội của bạn</div>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{myTeam.teamNameSnapshot}</div>
-                <div style={{ fontSize: 12, color: 'var(--accent, #b45309)', fontWeight: 600, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--accent, var(--accent))', fontWeight: 600, marginTop: 2 }}>
                   Hạng #{myRankObj?.rank || '-'} • {(myRankObj?.score || 0).toLocaleString()} XP
                 </div>
               </div>
@@ -275,9 +275,9 @@ export default function Arena() {
 
       {/* QUICK STATS */}
       <div className="arena-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-        <StatCard icon={Users} label="Đội thi đấu" value={leaderboard.length} color="#b45309" />
-        <StatCard icon={Swords} label="Cá nhân tranh tài" value={individualLeaderboard.length} color="#141414" />
-        <StatCard icon={Target} label="Thử thách đang mở" value={activeChallenges} detail={completedChallenges > 0 ? `${completedChallenges} đã hoàn thành` : undefined} color="#b45309" />
+        <StatCard icon={Users} label="Đội thi đấu" value={leaderboard.length} color="var(--accent)" />
+        <StatCard icon={Swords} label="Cá nhân tranh tài" value={individualLeaderboard.length} color="var(--primary)" />
+        <StatCard icon={Target} label="Thử thách đang mở" value={activeChallenges} detail={completedChallenges > 0 ? `${completedChallenges} đã hoàn thành` : undefined} color="var(--accent)" />
       </div>
 
       {/* TABS */}
@@ -303,7 +303,7 @@ export default function Arena() {
         {/* TAB: TEAM LEADERBOARD (preview) */}
         {activeTab === 'leaderboard' && (
           <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Trophy size={18} color="var(--accent, #b45309)" /> BXH Đội Nhóm Mùa Giải</span>}
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Trophy size={18} color="var(--accent, var(--accent))" /> BXH Đội Nhóm Mùa Giải</span>}
             description="Xếp hạng dựa trên Điểm Đội từ Sổ Cái Điểm Số (Score Ledger)"
             actions={
               season?.id && (
@@ -314,8 +314,8 @@ export default function Arena() {
                     alignItems: 'center',
                     gap: 5,
                     padding: '7px 14px',
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     fontSize: 12,
                     fontWeight: 600,
                     textDecoration: 'none',
@@ -343,7 +343,7 @@ export default function Arena() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '12px 16px',
-                        background: isMyTeam ? 'rgba(0, 0, 0, 0.02)' : '#ffffff',
+                        background: isMyTeam ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)',
                         border: isMyTeam ? '1.5px solid rgba(0, 0, 0, 0.2)' : isTop1 ? '1.5px solid rgba(180, 83, 9, 0.25)' : '1px solid var(--border)',
                         gap: 12,
                         flexWrap: 'wrap',
@@ -354,8 +354,8 @@ export default function Arena() {
                           style={{
                             width: 30,
                             height: 30,
-                            background: isTop1 ? '#b45309' : team.rank === 2 ? '#78716c' : team.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                            color: team.rank <= 3 ? '#ffffff' : '#111111',
+                            background: isTop1 ? 'var(--accent)' : team.rank === 2 ? '#78716c' : team.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
+                            color: team.rank <= 3 ? 'var(--surface)' : 'var(--text-primary)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -371,8 +371,8 @@ export default function Arena() {
                           style={{
                             width: 36,
                             height: 36,
-                            background: team.color || '#b45309',
-                            color: '#fff',
+                            background: team.color || 'var(--accent)',
+                            color: 'var(--surface)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -385,28 +385,28 @@ export default function Arena() {
                         </div>
 
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                             {isMyTeam && (
-                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'var(--primary)', color: 'var(--surface)', textTransform: 'uppercase' }}>
                                 Đội của bạn
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
                             {team.isEligible ? 'Đủ điều kiện tranh giải' : 'Tạm dừng xếp hạng'}
                           </div>
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 17, fontWeight: 700, color: '#111111', fontFamily: "'JetBrains Mono', monospace" }}>
-                          <AnimatedNumber value={team.score || 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777', fontFamily: 'inherit', fontWeight: 400 }}>XP</span>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', fontFamily: "'JetBrains Mono', monospace" }}>
+                          <AnimatedNumber value={team.score || 0} duration={700} /> <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'inherit', fontWeight: 400 }}>XP</span>
                         </div>
-                        <div style={{ fontSize: 11, color: isTop1 ? '#15803d' : '#777777', fontWeight: 500, marginTop: 2 }}>
+                        <div style={{ fontSize: 11, color: isTop1 ? 'var(--success)' : 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>
                           {isTop1 ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#15803d' }}>
-                              <Crown size={11} color="#15803d" /> Dẫn đầu
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--success)' }}>
+                              <Crown size={11} color="var(--success)" /> Dẫn đầu
                             </span>
                           ) : (
                             `Cách top 1: ${(leaderboard[0].score - team.score).toLocaleString()} XP`
@@ -424,7 +424,7 @@ export default function Arena() {
         {/* TAB: INDIVIDUAL LEADERBOARD (preview) */}
         {activeTab === 'individual' && (
           <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Users size={18} color="#b45309" /> BXH Cá Nhân Mùa Giải</span>}
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Users size={18} color="var(--accent)" /> BXH Cá Nhân Mùa Giải</span>}
             description="Điểm cá nhân được tính độc lập theo Mùa Giải hiện tại"
             actions={
               season?.id && (
@@ -435,8 +435,8 @@ export default function Arena() {
                     alignItems: 'center',
                     gap: 5,
                     padding: '7px 14px',
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     fontSize: 12,
                     fontWeight: 600,
                     textDecoration: 'none',
@@ -469,7 +469,7 @@ export default function Arena() {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '12px 16px',
-                          background: isMe ? 'rgba(0, 0, 0, 0.02)' : '#ffffff',
+                          background: isMe ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)',
                           border: isMe ? '1.5px solid rgba(0, 0, 0, 0.2)' : isTop1 ? '1.5px solid rgba(180, 83, 9, 0.25)' : '1px solid var(--border)',
                           gap: 12,
                           flexWrap: 'wrap',
@@ -480,8 +480,8 @@ export default function Arena() {
                             style={{
                               width: 30,
                               height: 30,
-                              background: isTop1 ? '#b45309' : emp.rank === 2 ? '#78716c' : emp.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                              color: emp.rank <= 3 ? '#ffffff' : '#111111',
+                              background: isTop1 ? 'var(--accent)' : emp.rank === 2 ? '#78716c' : emp.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
+                              color: emp.rank <= 3 ? 'var(--surface)' : 'var(--text-primary)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -494,26 +494,26 @@ export default function Arena() {
                           </div>
 
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.userName || emp.name}</span>
                               {isMe && (
-                                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'var(--primary)', color: 'var(--surface)', textTransform: 'uppercase' }}>
                                   Bạn
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
-                              Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> {emp.eventsCount ? `• ${emp.eventsCount} sự kiện` : ''}
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
+                              Đội: <strong style={{ color: 'var(--text-secondary)' }}>{emp.teamName || 'Chưa gán đội'}</strong> {emp.eventsCount ? `• ${emp.eventsCount} sự kiện` : ''}
                             </div>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
-                            <AnimatedNumber value={emp.points ?? emp.score ?? 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777', fontWeight: 400 }}>XP</span>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, var(--accent))', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <AnimatedNumber value={emp.points ?? emp.score ?? 0} duration={700} /> <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>XP</span>
                           </div>
                           {emp.trend && (
-                            <div style={{ fontSize: 11, color: emp.trend === 'UP' ? '#15803d' : emp.trend === 'DOWN' ? '#b91c1c' : '#777777', fontWeight: 500, marginTop: 2 }}>
+                            <div style={{ fontSize: 11, color: emp.trend === 'UP' ? 'var(--success)' : emp.trend === 'DOWN' ? 'var(--danger)' : 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>
                               {emp.trend === 'UP' ? (
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                   <ArrowUp size={11} strokeWidth={2.5} /> Tăng
@@ -555,7 +555,7 @@ export default function Arena() {
                       key={ch.id}
                       style={{
                         padding: 20,
-                        background: '#ffffff',
+                        background: 'var(--surface)',
                         border: isCompleted ? '1px solid rgba(21, 128, 61, 0.3)' : '1px solid var(--border)',
                       }}
                     >
@@ -566,26 +566,26 @@ export default function Arena() {
                             fontWeight: 600,
                             padding: '3px 8px',
                             background: isCompleted ? 'rgba(21, 128, 61, 0.1)' : 'rgba(180, 83, 9, 0.1)',
-                            color: isCompleted ? '#15803d' : '#b45309',
+                            color: isCompleted ? 'var(--success)' : 'var(--accent)',
                             textTransform: 'uppercase',
                           }}
                         >
                           {ch.type} • {ch.status}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
                           Mục tiêu: {ch.targetValue}
                         </span>
                       </div>
 
-                      <h3 style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.35, color: '#111111', margin: '0 0 6px 0' }}>{ch.title}</h3>
-                      <p style={{ fontSize: 12, color: '#777777', margin: '0 0 14px 0', lineHeight: 1.55, fontWeight: 400 }}>{ch.description}</p>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.35, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>{ch.title}</h3>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 14px 0', lineHeight: 1.55, fontWeight: 400 }}>{ch.description}</p>
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#555555', fontWeight: 500 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
                         <span>Trạng thái</span>
-                        <span style={{ fontWeight: 600, color: isCompleted ? '#15803d' : '#111111' }}>
+                        <span style={{ fontWeight: 600, color: isCompleted ? 'var(--success)' : 'var(--text-primary)' }}>
                           {isCompleted ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <CheckCircle2 size={13} color="#15803d" /> Hoàn thành
+                              <CheckCircle2 size={13} color="var(--success)" /> Hoàn thành
                             </span>
                           ) : (
                             'Đang mở'
@@ -603,51 +603,51 @@ export default function Arena() {
         {/* TAB: RULES */}
         {activeTab === 'rules' && (
           <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BookOpen size={18} color="var(--accent, #b45309)" /> Luật Mùa Giải Đang Áp Dụng</span>}
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BookOpen size={18} color="var(--accent, var(--accent))" /> Luật Mùa Giải Đang Áp Dụng</span>}
           >
-            <div style={{ marginBottom: 16, padding: 14, background: '#ffffff', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#111111' }}>
+            <div style={{ marginBottom: 16, padding: 14, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                 Bộ luật: {seasonRules?.ruleSetName || season.ruleSet?.name || 'YouTube Production Championship Rules'}
               </div>
-              <div style={{ fontSize: 12, color: '#777777', marginTop: 4, fontWeight: 500 }}>
-                Phiên bản: <strong style={{ color: '#555555' }}>#{seasonRules?.versionNumber || season.activeRuleVersion?.versionNumber || '1.0'}</strong> — Bất biến trong suốt thời gian diễn ra giải đấu
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
+                Phiên bản: <strong style={{ color: 'var(--text-secondary)' }}>#{seasonRules?.versionNumber || season.activeRuleVersion?.versionNumber || '1.0'}</strong> — Bất biến trong suốt thời gian diễn ra giải đấu
               </div>
             </div>
 
             {seasonRules?.rules && seasonRules.rules.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                 {seasonRules.rules.map((r, idx) => (
                   <div
                     key={idx}
                     style={{
                       padding: 14,
-                      borderLeft: `3px solid ${r.effectType === 'TEAM_SCORE' ? '#b45309' : '#15803d'}`,
-                      background: '#ffffff',
+                      borderLeft: `3px solid ${r.effectType === 'TEAM_SCORE' ? 'var(--accent)' : 'var(--success)'}`,
+                      background: 'var(--surface)',
                       border: '1px solid var(--border)',
                       borderLeftWidth: 3,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <strong style={{ color: '#111111', fontWeight: 600 }}>{idx + 1}. {r.name}</strong>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', background: r.effectType === 'TEAM_SCORE' ? 'rgba(180, 83, 9, 0.1)' : 'rgba(21, 128, 61, 0.1)', color: r.effectType === 'TEAM_SCORE' ? '#b45309' : '#15803d' }}>
+                      <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{idx + 1}. {r.name}</strong>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', background: r.effectType === 'TEAM_SCORE' ? 'rgba(180, 83, 9, 0.1)' : 'rgba(21, 128, 61, 0.1)', color: r.effectType === 'TEAM_SCORE' ? 'var(--accent)' : 'var(--success)' }}>
                         {r.effectType === 'TEAM_SCORE' ? 'Điểm Đội' : 'Điểm Cá Nhân'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#555555', fontWeight: 400, lineHeight: 1.55 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 400, lineHeight: 1.55 }}>
                       {r.humanSummary}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                <div style={{ padding: 14, borderLeft: '3px solid #15803d', background: '#ffffff', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <div style={{ padding: 14, borderLeft: '3px solid var(--success)', background: 'var(--surface)', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
                   <strong>1. Video Hợp Lệ:</strong> Mỗi video được duyệt (APPROVED) sẽ cộng <strong>+100 XP</strong> cho cá nhân và đóng góp điểm vào Team.
                 </div>
-                <div style={{ padding: 14, borderLeft: '3px solid #b45309', background: '#ffffff', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
+                <div style={{ padding: 14, borderLeft: '3px solid var(--accent)', background: 'var(--surface)', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
                   <strong>2. Thưởng Chuỗi (Streak Bonus):</strong> Hoàn thành liên tiếp 3 video đạt chuẩn nhận thêm <strong>+150 XP</strong> mốc.
                 </div>
-                <div style={{ padding: 14, borderLeft: '3px solid #b45309', background: '#ffffff', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
+                <div style={{ padding: 14, borderLeft: '3px solid var(--accent)', background: 'var(--surface)', border: '1px solid var(--border)', borderLeftWidth: 3 }}>
                   <strong>3. Hệ Số Cuối Tuần (Weekend Multiplier):</strong> Video hoàn thành trong Thứ 7 & Chủ Nhật tự động được nhân <strong>x2 XP</strong>.
                 </div>
               </div>
@@ -656,8 +656,8 @@ export default function Arena() {
         )}
       </TabTransition>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '12px 0' }}>
-        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
-        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
+        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
+        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
       </div>
     </PageShell>
   );

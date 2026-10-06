@@ -1,6 +1,7 @@
 'use strict';
 
 const gameService = require('../services/capitalBoardGame.service');
+const { GameRoom } = require('../models');
 
 async function listRooms(req, res) {
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 30));
@@ -14,8 +15,20 @@ async function getActiveRoom(req, res) {
 }
 
 async function getRoom(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const param = String(req.params.id || '').trim();
+  if (!param) return res.status(400).json({ message: 'Thiếu mã phòng hoặc ID phòng' });
+
+  let roomId = Number(param);
+  if (!roomId || isNaN(roomId)) {
+    const found = await GameRoom.findOne({
+      where: {
+        code: param.toUpperCase(),
+      },
+    });
+    if (found) roomId = found.id;
+  }
+
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng game' });
 
   const roomState = await gameService.getRoomState(roomId, req.user.id);
   if (!roomState) return res.status(404).json({ message: 'Không tìm thấy phòng game' });
@@ -39,8 +52,20 @@ async function createRoom(req, res) {
 }
 
 async function joinRoom(req, res) {
-  const roomId = Number(req.params.id);
-  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+  const param = String(req.params.id || '').trim();
+  if (!param) return res.status(400).json({ message: 'Thiếu mã phòng hoặc ID phòng' });
+
+  let roomId = Number(param);
+  if (!roomId || isNaN(roomId)) {
+    const found = await GameRoom.findOne({
+      where: {
+        code: param.toUpperCase(),
+      },
+    });
+    if (found) roomId = found.id;
+  }
+
+  if (!roomId) return res.status(404).json({ message: 'Không tìm thấy phòng game với mã này' });
 
   try {
     const room = await gameService.joinRoom(roomId, req.user.id);

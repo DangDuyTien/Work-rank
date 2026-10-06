@@ -1,6 +1,6 @@
 'use strict';
 
-const { test, before } = require('node:test');
+const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const {
@@ -17,14 +17,12 @@ test('Game Catalog Coming Soon Test Suite', async (t) => {
   let adminToken, userToken;
 
   before(async () => {
-    await sequelize.sync();
-
     await GameCatalog.bulkCreate([
       { gameKey: 'capital_board', name: 'Cờ Thủ Đô', route: '/games/capital-board', status: 'AVAILABLE', enabled: true, sortOrder: 1 },
       { gameKey: 'game_2048', name: '2048 Vô Địch', route: '/games/2048', status: 'AVAILABLE', enabled: true, sortOrder: 2 },
       { gameKey: 'quiz', name: 'Đấu Trí Tri Thức', route: '/games/quiz', status: 'AVAILABLE', enabled: true, sortOrder: 3 },
       { gameKey: 'sam', name: 'Sâm Lốc', route: '/games/sam', status: 'AVAILABLE', enabled: true, sortOrder: 4 },
-    ]);
+    ], { updateOnDuplicate: ['name', 'route', 'status', 'enabled', 'sortOrder'] });
 
     const ts = Date.now();
     adminUser = await User.create({
@@ -107,5 +105,10 @@ test('Game Catalog Coming Soon Test Suite', async (t) => {
 
     assert.equal(allowedRes.status, 200);
     assert.ok(allowedRes.body.data?.gameSessionId || allowedRes.body.gameSessionId);
+  });
+
+  after(async () => {
+    if (adminUser) await User.destroy({ where: { id: adminUser.id } });
+    if (normalUser) await User.destroy({ where: { id: normalUser.id } });
   });
 });

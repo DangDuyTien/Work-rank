@@ -165,8 +165,8 @@ export default function GrandHub() {
       <section
         style={{
           padding: '28px 32px',
-          background: '#141414',
-          color: '#ffffff',
+          background: 'var(--primary)',
+          color: 'var(--surface)',
           border: '1px solid rgba(180, 83, 9, 0.3)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
           position: 'relative',
@@ -184,8 +184,8 @@ export default function GrandHub() {
                   padding: '3px 12px',
                   fontSize: 10,
                   fontWeight: 600,
-                  background: 'var(--accent, #b45309)',
-                  color: '#ffffff',
+                  background: 'var(--accent, var(--accent))',
+                  color: 'var(--surface)',
                   textTransform: 'uppercase',
                   letterSpacing: 0.8,
                   display: 'flex',
@@ -201,7 +201,7 @@ export default function GrandHub() {
             </div>
 
             <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Trophy size={26} color="var(--accent, #b45309)" /> {grand.name}
+              <Trophy size={26} color="var(--accent, var(--accent))" /> {grand.name}
             </h1>
             <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontWeight: 400, maxWidth: 600 }}>
               {grand.description || 'Giải đấu lớn nhất toàn công ty tích lũy điểm Grand Points từ tất cả các Mùa Giải trong năm.'}
@@ -214,7 +214,7 @@ export default function GrandHub() {
                 <span>{yearProgress}%</span>
               </div>
               <div style={{ height: 6, width: '100%', background: 'rgba(255,255,255,0.12)' }}>
-                <div style={{ height: '100%', width: `${yearProgress}%`, background: 'var(--accent, #b45309)', transition: 'width 0.4s ease' }} />
+                <div style={{ height: '100%', width: `${yearProgress}%`, background: 'var(--accent, var(--accent))', transition: 'width 0.4s ease' }} />
               </div>
             </div>
           </div>
@@ -237,8 +237,8 @@ export default function GrandHub() {
                 style={{
                   width: 48,
                   height: 48,
-                  background: 'var(--accent, #b45309)',
-                  color: '#ffffff',
+                  background: 'var(--accent, var(--accent))',
+                  color: 'var(--surface)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -251,7 +251,7 @@ export default function GrandHub() {
               <div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 600, textTransform: 'uppercase' }}>Đội của bạn</div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{myTeamStandings.teamName}</div>
-                <div style={{ fontSize: 13, color: 'var(--accent, #b45309)', fontWeight: 700, marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
+                <div style={{ fontSize: 13, color: 'var(--accent, var(--accent))', fontWeight: 700, marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
                   {myTeamStandings.grandPoints} GP
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2, fontWeight: 500 }}>
@@ -269,9 +269,9 @@ export default function GrandHub() {
 
       {/* QUICK STATS */}
       <div className="grand-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-        <StatCard icon={Trophy} label="Đội tranh tài" value={standings.length} color="#b45309" />
-        <StatCard icon={Star} label="Cá nhân xếp hạng" value={individualStandings.length} color="#141414" />
-        <StatCard icon={Calendar} label="Mùa giải trong năm" value={timeline.length} detail={activeSeasons > 0 ? `${activeSeasons} đang diễn ra` : `${finishedSeasons} đã kết thúc`} color="#15803d" />
+        <StatCard icon={Trophy} label="Đội tranh tài" value={standings.length} color="var(--accent)" />
+        <StatCard icon={Star} label="Cá nhân xếp hạng" value={individualStandings.length} color="var(--primary)" />
+        <StatCard icon={Calendar} label="Mùa giải trong năm" value={timeline.length} detail={activeSeasons > 0 ? `${activeSeasons} đang diễn ra` : `${finishedSeasons} đã kết thúc`} color="var(--success)" />
       </div>
 
       {/* TABS */}
@@ -298,7 +298,7 @@ export default function GrandHub() {
         {/* TAB: TEAM STANDINGS (preview) */}
         {activeTab === 'standings' && (
           <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Trophy size={18} color="var(--accent, #b45309)" /> Bảng Tổng Sắp Đội Nhóm Năm {grand.year}</span>}
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Trophy size={18} color="var(--accent, var(--accent))" /> Bảng Tổng Sắp Đội Nhóm Năm {grand.year}</span>}
             description="Xếp theo: Điểm tích lũy GP → Số lần Vô địch mùa giải → Top 3"
             actions={
               grand?.id && (
@@ -309,8 +309,8 @@ export default function GrandHub() {
                     alignItems: 'center',
                     gap: 5,
                     padding: '7px 14px',
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     fontSize: 12,
                     fontWeight: 600,
                     textDecoration: 'none',
@@ -338,7 +338,7 @@ export default function GrandHub() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '12px 16px',
-                        background: isMyTeam ? 'rgba(0, 0, 0, 0.02)' : '#ffffff',
+                        background: isMyTeam ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)',
                         border: isMyTeam ? '1.5px solid rgba(0, 0, 0, 0.2)' : isTop1 ? '1.5px solid rgba(180, 83, 9, 0.25)' : '1px solid var(--border)',
                         gap: 12,
                         flexWrap: 'wrap',
@@ -349,8 +349,8 @@ export default function GrandHub() {
                           style={{
                             width: 32,
                             height: 32,
-                            background: isTop1 ? '#b45309' : team.rank === 2 ? '#78716c' : team.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                            color: team.rank <= 3 ? '#ffffff' : '#111111',
+                            background: isTop1 ? 'var(--accent)' : team.rank === 2 ? '#78716c' : team.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
+                            color: team.rank <= 3 ? 'var(--surface)' : 'var(--text-primary)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -362,33 +362,33 @@ export default function GrandHub() {
                           #{team.rank}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.teamName}</span>
                             {isMyTeam && (
-                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'var(--primary)', color: 'var(--surface)', textTransform: 'uppercase' }}>
                                 Đội của bạn
                               </span>
                             )}
                             {isTop1 && (
-                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'rgba(180, 83, 9, 0.12)', color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'rgba(180, 83, 9, 0.12)', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                 <Crown size={10} /> Dẫn đầu năm
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
                             {team.seasonWins} Vô địch • {team.podiumCount} Top 3 • {team.completedSeasons} giải
                           </div>
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: '#b45309', fontFamily: "'JetBrains Mono', monospace" }}>
-                          <AnimatedNumber value={team.grandPoints || 0} duration={700} /> <span style={{ fontSize: 12, color: '#777777' }}>GP</span>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent)', fontFamily: "'JetBrains Mono', monospace" }}>
+                          <AnimatedNumber value={team.grandPoints || 0} duration={700} /> <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>GP</span>
                         </div>
-                        <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
                           {isTop1 ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#b45309' }}>
-                              <Crown size={11} color="#b45309" /> Vị trí số 1
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--accent)' }}>
+                              <Crown size={11} color="var(--accent)" /> Vị trí số 1
                             </span>
                           ) : (
                             `Kém top 1: ${standings[0].grandPoints - team.grandPoints} GP`
@@ -406,7 +406,7 @@ export default function GrandHub() {
         {/* TAB: INDIVIDUAL GRAND STANDINGS (preview) */}
         {activeTab === 'individual' && (
           <Section
-            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Star size={18} color="var(--accent, #b45309)" /> Bảng Tổng Sắp Cá Nhân Năm {grand.year}</span>}
+            title={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Star size={18} color="var(--accent, var(--accent))" /> Bảng Tổng Sắp Cá Nhân Năm {grand.year}</span>}
             description={`Tổng hợp điểm thi đấu cá nhân từ tất cả các Mùa Giải trong năm ${grand.year}`}
             actions={
               grand?.id && (
@@ -417,8 +417,8 @@ export default function GrandHub() {
                     alignItems: 'center',
                     gap: 5,
                     padding: '7px 14px',
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     fontSize: 12,
                     fontWeight: 600,
                     textDecoration: 'none',
@@ -452,7 +452,7 @@ export default function GrandHub() {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '12px 16px',
-                          background: isMe ? 'rgba(0, 0, 0, 0.02)' : '#ffffff',
+                          background: isMe ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)',
                           border: isMe ? '1.5px solid rgba(0, 0, 0, 0.2)' : isTop1 ? '1.5px solid rgba(180, 83, 9, 0.25)' : '1px solid var(--border)',
                           gap: 12,
                           flexWrap: 'wrap',
@@ -463,8 +463,8 @@ export default function GrandHub() {
                             style={{
                               width: 30,
                               height: 30,
-                              background: isTop1 ? '#b45309' : emp.rank === 2 ? '#78716c' : emp.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
-                              color: emp.rank <= 3 ? '#ffffff' : '#111111',
+                              background: isTop1 ? 'var(--accent)' : emp.rank === 2 ? '#78716c' : emp.rank === 3 ? '#a8a29e' : 'rgba(0, 0, 0, 0.06)',
+                              color: emp.rank <= 3 ? 'var(--surface)' : 'var(--text-primary)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -476,28 +476,28 @@ export default function GrandHub() {
                             #{emp.rank}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#111111', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.name}</span>
                               {isMe && (
-                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: '#141414', color: '#fff', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', background: 'var(--primary)', color: 'var(--surface)', textTransform: 'uppercase' }}>
                                 Bạn
                               </span>
                             )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
-                              Đội: <strong style={{ color: '#555555' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 0} mùa giải • {emp.seasonWins || 0} lần vô địch
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
+                              Đội: <strong style={{ color: 'var(--text-secondary)' }}>{emp.teamName || 'Chưa gán đội'}</strong> • {emp.seasonsCount || 0} mùa giải • {emp.seasonWins || 0} lần vô địch
                             </div>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
-                            <AnimatedNumber value={emp.grandPoints ?? 0} duration={700} /> <span style={{ fontSize: 11, color: '#777777' }}>GP</span>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent, var(--accent))', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <AnimatedNumber value={emp.grandPoints ?? 0} duration={700} /> <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>GP</span>
                           </div>
-                          <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
                             {isTop1 ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#b45309' }}>
-                                <Crown size={11} color="#b45309" /> Top 1
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--accent)' }}>
+                                <Crown size={11} color="var(--accent)" /> Top 1
                               </span>
                             ) : (
                               `Kém top 1: ${((individualStandings[0]?.grandPoints || 0) - (emp.grandPoints || 0)).toLocaleString()} GP`
@@ -539,7 +539,7 @@ export default function GrandHub() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: 16,
-                        background: '#ffffff',
+                        background: 'var(--surface)',
                         border: isActive ? '1.5px solid rgba(21, 128, 61, 0.35)' : '1px solid var(--border)',
                         flexWrap: 'wrap',
                         gap: 12,
@@ -552,8 +552,8 @@ export default function GrandHub() {
                               fontSize: 9,
                               fontWeight: 600,
                               padding: '2px 6px',
-                              background: isActive ? '#15803d' : isFinished ? '#78716c' : '#141414',
-                              color: '#fff',
+                              background: isActive ? 'var(--success)' : isFinished ? '#78716c' : 'var(--primary)',
+                              color: 'var(--surface)',
                               textTransform: 'uppercase',
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -561,17 +561,17 @@ export default function GrandHub() {
                             }}
                           >
                             {isActive ? (
-                              <><Flame size={9} color="#fff" /> Đang diễn ra</>
+                              <><Flame size={9} color="var(--surface)" /> Đang diễn ra</>
                             ) : isFinished ? (
-                              <><CheckCircle2 size={9} color="#fff" /> Đã kết thúc</>
+                              <><CheckCircle2 size={9} color="var(--surface)" /> Đã kết thúc</>
                             ) : (
-                              <><Clock size={9} color="#fff" /> Sắp diễn ra</>
+                              <><Clock size={9} color="var(--surface)" /> Sắp diễn ra</>
                             )}
                           </span>
-                          <span style={{ fontSize: 11, color: '#777777', fontWeight: 500 }}>{s.seasonType}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{s.seasonType}</span>
                         </div>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111111', margin: '0 0 4px 0' }}>{s.name}</h3>
-                        <div style={{ fontSize: 11, color: '#777777', fontWeight: 500 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>{s.name}</h3>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
                           {new Date(s.startAt).toLocaleDateString('vi-VN')} — {new Date(s.endAt).toLocaleDateString('vi-VN')}
                         </div>
                       </div>
@@ -579,15 +579,15 @@ export default function GrandHub() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
                         {s.winner ? (
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 600, textTransform: 'uppercase' }}>Đội chiến thắng</div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: '#15803d', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Trophy size={13} color="#15803d" /> {s.winner.teamName}
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Đội chiến thắng</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <Trophy size={13} color="var(--success)" /> {s.winner.teamName}
                             </div>
                           </div>
                         ) : (
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 10, color: '#777777', fontWeight: 600, textTransform: 'uppercase' }}>Giải thưởng Top 1</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, #b45309)', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Giải thưởng Top 1</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, var(--accent))', fontFamily: "'JetBrains Mono', monospace" }}>
                               +{(s.grandPointsDistribution?.distribution?.[0]?.points) || 10} GP
                             </div>
                           </div>
@@ -623,19 +623,19 @@ export default function GrandHub() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '12px 16px',
-                      background: '#ffffff',
+                      background: 'var(--surface)',
                       border: '1px solid var(--border)',
                       gap: 12,
                       flexWrap: 'wrap',
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#111111' }}>{h.seasonName}</div>
-                      <div style={{ fontSize: 11, color: '#777777', marginTop: 2, fontWeight: 500 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{h.seasonName}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
                         Hạng #{h.rankPosition} • {h.reason}
                       </div>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d', fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--success)', fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
                       +{h.grandPointsAwarded} GP
                     </div>
                   </div>
@@ -662,7 +662,7 @@ export default function GrandHub() {
                   key={m.id}
                   style={{
                     padding: 20,
-                    background: '#ffffff',
+                    background: 'var(--surface)',
                     border: isUnlocked ? '1.5px solid rgba(180, 83, 9, 0.3)' : '1px solid var(--border)',
                   }}
                 >
@@ -672,7 +672,7 @@ export default function GrandHub() {
                         width: 34,
                         height: 34,
                         background: isUnlocked ? 'rgba(180, 83, 9, 0.1)' : 'rgba(0, 0, 0, 0.04)',
-                        color: isUnlocked ? '#b45309' : '#777777',
+                        color: isUnlocked ? 'var(--accent)' : 'var(--text-muted)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -686,7 +686,7 @@ export default function GrandHub() {
                         fontWeight: 600,
                         padding: '2px 8px',
                         background: isUnlocked ? 'rgba(21, 128, 61, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                        color: isUnlocked ? '#15803d' : '#777777',
+                        color: isUnlocked ? 'var(--success)' : 'var(--text-muted)',
                         textTransform: 'uppercase',
                       }}
                     >
@@ -694,12 +694,12 @@ export default function GrandHub() {
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111111', margin: '0 0 4px 0' }}>{m.title}</h3>
-                  <p style={{ fontSize: 12, color: '#777777', margin: '0 0 12px 0', lineHeight: 1.4, fontWeight: 400 }}>{m.desc}</p>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>{m.title}</h3>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: 1.4, fontWeight: 400 }}>{m.desc}</p>
 
                   {/* Progress bar */}
                   <div style={{ height: 4, width: '100%', background: 'rgba(0, 0, 0, 0.06)' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: isUnlocked ? '#15803d' : 'var(--accent, #b45309)', transition: 'width 0.3s ease' }} />
+                    <div style={{ height: '100%', width: `${pct}%`, background: isUnlocked ? 'var(--success)' : 'var(--accent, var(--accent))', transition: 'width 0.3s ease' }} />
                   </div>
                 </Card>
               );
@@ -708,8 +708,8 @@ export default function GrandHub() {
         )}
       </TabTransition>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, padding: '12px 0' }}>
-        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
-        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#334155', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
+        <Link to="/youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}><Tv size={15} /> Số liệu YouTube <ExternalLink size={13} /></Link>
+        <Link to="/leaderboard?scope=youtube" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>BXH YouTube <ExternalLink size={13} /></Link>
       </div>
     </PageShell>
   );

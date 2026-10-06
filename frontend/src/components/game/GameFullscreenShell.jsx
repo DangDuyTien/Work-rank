@@ -9,9 +9,8 @@ import JobTitleBadge from '../JobTitleBadge';
  * Universal Game Fullscreen Shell & Transition System for WorkRank.
  *
  * Requirements:
- * - Enter Transition: App contents / sidebar slide & fade away, Game container expands
- *   from scale(0.96) + opacity(0.8) to scale(1) + opacity(1) in 250-450ms.
- * - Exit Transition: Game container scales down (1 -> 0.96, opacity 1 -> 0.85) in 250-350ms,
+ * - Enter Transition: game content follows WorkRank's shared page fade/slide rhythm.
+ * - Exit Transition: game content fades and moves up slightly before navigating,
  *   navigation slides back in, body scroll restored, then navigates to previous page / arena.
  * - State machine: IDLE -> ENTERING -> ACTIVE -> EXITING -> IDLE.
  * - Locks body scroll while mounted, cleanly unlocks on unmount / exit.
@@ -43,32 +42,17 @@ export default function GameFullscreenShell({
     && window.matchMedia
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Lock body scroll on mount, restore on unmount
+  // Game pages live inside the normal WorkRank shell so the vertical sidebar
+  // and app scroll container remain available while playing.
   useEffect(() => {
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
     // Enter animation timer
-    const enterDuration = isReducedMotion ? 50 : 360;
+    const enterDuration = isReducedMotion ? 50 : 340;
     const enterTimer = setTimeout(() => {
       setTransitionState('ACTIVE');
     }, enterDuration);
 
-    // Listen for browser back / popstate to ensure clean scroll unlock
-    const handlePopState = () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-    };
-    window.addEventListener('popstate', handlePopState);
-
     return () => {
       clearTimeout(enterTimer);
-      window.removeEventListener('popstate', handlePopState);
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, [isReducedMotion]);
 
@@ -99,12 +83,8 @@ export default function GameFullscreenShell({
     isExitingRef.current = true;
     setTransitionState('EXITING');
 
-    const exitDuration = isReducedMotion ? 50 : 300;
+    const exitDuration = isReducedMotion ? 50 : 260;
     setTimeout(() => {
-      // Restore scroll before navigating
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-
       if (exitTo) {
         navigate(exitTo);
       } else {
@@ -125,27 +105,27 @@ export default function GameFullscreenShell({
     <div
       className={`wr-game-shell-root ${transitionClass} ${className}`}
       style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100vw',
-        height: '100dvh',
-        zIndex: 1000,
-        background: 'var(--background, #f4f3ef)',
-        color: 'var(--foreground, #111111)',
+        position: 'relative',
+        width: '100%',
+        minHeight: '100%',
+        zIndex: 1,
+        background: 'var(--background)',
+        color: 'var(--foreground, var(--text-primary))',
         fontFamily: "var(--font-sans, 'Space Grotesk', -apple-system, sans-serif)",
         display: 'flex',
         flexDirection: 'column',
         overflowX: 'hidden',
-        overflowY: 'auto',
+        overflowY: 'visible',
       }}
     >
       {/* ── UNIFIED GAME TOP BAR (WorkRank Warm Editorial Design System) ── */}
       {topBar && (
         <header
+          className="wr-game-shell-topbar"
           style={{
             height: 54,
             minHeight: 54,
-            background: '#ffffff',
+            background: 'var(--surface)',
             borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
             display: 'flex',
             alignItems: 'center',
@@ -162,6 +142,7 @@ export default function GameFullscreenShell({
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
             <button
               type="button"
+              className="wr-game-shell-exit-button"
               onClick={handleExit}
               disabled={transitionState === 'EXITING' || isSavingExit}
               style={{
@@ -169,21 +150,21 @@ export default function GameFullscreenShell({
                 alignItems: 'center',
                 gap: 6,
                 padding: '6px 12px',
-                background: '#f4f3ef',
+                background: 'var(--background)',
                 border: '1px solid rgba(0, 0, 0, 0.1)',
                 borderRadius: 6,
-                color: '#111111',
+                color: 'var(--text-primary)',
                 fontSize: 12,
                 fontWeight: 800,
                 cursor: (transitionState === 'EXITING' || isSavingExit) ? 'default' : 'pointer',
-                transition: 'background 0.15s ease, border-color 0.15s ease',
+                transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
                 opacity: isSavingExit ? 0.75 : 1,
               }}
               onMouseEnter={(e) => {
                 if (!isSavingExit && transitionState !== 'EXITING') e.currentTarget.style.background = '#eceae4';
               }}
               onMouseLeave={(e) => {
-                if (!isSavingExit && transitionState !== 'EXITING') e.currentTarget.style.background = '#f4f3ef';
+                if (!isSavingExit && transitionState !== 'EXITING') e.currentTarget.style.background = 'var(--background)';
               }}
               title="Thoát trò chơi về WorkRank"
             >
@@ -200,8 +181,8 @@ export default function GameFullscreenShell({
                     width: 28,
                     height: 28,
                     borderRadius: 6,
-                    background: '#141414',
-                    color: '#ffffff',
+                    background: 'var(--primary)',
+                    color: 'var(--surface)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -217,7 +198,7 @@ export default function GameFullscreenShell({
                   style={{
                     fontSize: 14,
                     fontWeight: 900,
-                    color: '#111111',
+                    color: 'var(--text-primary)',
                     letterSpacing: '-0.2px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -235,7 +216,7 @@ export default function GameFullscreenShell({
                       padding: '2px 8px',
                       borderRadius: 9999,
                       background: 'rgba(180, 83, 9, 0.1)',
-                      color: '#b45309',
+                      color: 'var(--accent)',
                       letterSpacing: '0.3px',
                       textTransform: 'uppercase',
                       flexShrink: 0,
@@ -270,7 +251,7 @@ export default function GameFullscreenShell({
                   style={{
                     fontSize: 12,
                     fontWeight: 800,
-                    color: '#111111',
+                    color: 'var(--text-primary)',
                     maxWidth: 140,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -285,7 +266,7 @@ export default function GameFullscreenShell({
               </div>
             ) : (
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#eceae4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <User size={14} color="#777777" />
+                <User size={14} color="var(--text-muted)" />
               </div>
             )}
           </div>

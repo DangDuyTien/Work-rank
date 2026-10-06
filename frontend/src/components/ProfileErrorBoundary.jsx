@@ -21,7 +21,7 @@ export default class ProfileErrorBoundary extends React.Component {
           <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: '#ef4444', marginBottom: 8 }}>
             Đã xảy ra lỗi hiển thị hồ sơ
           </div>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px', lineHeight: 1.55 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.55 }}>
             Vui lòng tải lại trang hoặc quay lại sau.
           </p>
           <button

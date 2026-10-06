@@ -487,32 +487,70 @@ async function submitAnswer(roomId, questionId, userId, selectedOption) {
   }
 
   // Atomically create answer & update player score
-  const createdAnswer = await sequelize.transaction(async (t) => {
-    const ans = await QuizAnswer.create(
-      {
-        roomId,
-        questionId,
-        questionIndex: room.currentQuestionIndex,
-        userId,
-        selectedOption: cleanOption,
-        isCorrect,
-        responseTimeMs: elapsedMs,
-        score,
-        submittedAt: now,
-      },
-      { transaction: t }
-    );
+  let createdAnswer;
+  let alreadySubmitted = false;
 
-    player.score = (player.score || 0) + score;
-    player.totalAnswered = (player.totalAnswered || 0) + 1;
-    if (isCorrect) {
-      player.correctAnswers = (player.correctAnswers || 0) + 1;
+  try {
+    createdAnswer = await sequelize.transaction(async (t) => {
+      // Double check inside transaction to prevent race conditions
+      const txExisting = await QuizAnswer.findOne({
+        where: { roomId, questionId, userId },
+        transaction: t,
+      });
+      if (txExisting) {
+        alreadySubmitted = true;
+        return txExisting;
+      }
+
+      const ans = await QuizAnswer.create(
+        {
+          roomId,
+          questionId,
+          questionIndex: room.currentQuestionIndex,
+          userId,
+          selectedOption: cleanOption,
+          isCorrect,
+          responseTimeMs: elapsedMs,
+          score,
+          submittedAt: now,
+        },
+        { transaction: t }
+      );
+
+      player.score = (player.score || 0) + score;
+      player.totalAnswered = (player.totalAnswered || 0) + 1;
+      if (isCorrect) {
+        player.correctAnswers = (player.correctAnswers || 0) + 1;
+      }
+      player.totalResponseTimeMs = (player.totalResponseTimeMs || 0) + elapsedMs;
+      await player.save({ transaction: t });
+
+      return ans;
+    });
+  } catch (err) {
+    // If unique constraint error on concurrent requests, recover gracefully and return existing answer
+    if (err.name === 'SequelizeUniqueConstraintError' || (err.message && err.message.toLowerCase().includes('unique'))) {
+      const recovered = await QuizAnswer.findOne({
+        where: { roomId, questionId, userId },
+      });
+      if (recovered) {
+        return {
+          success: true,
+          answer: recovered,
+          alreadySubmitted: true,
+        };
+      }
     }
-    player.totalResponseTimeMs = (player.totalResponseTimeMs || 0) + elapsedMs;
-    await player.save({ transaction: t });
+    throw err;
+  }
 
-    return ans;
-  });
+  if (alreadySubmitted) {
+    return {
+      success: true,
+      answer: createdAnswer,
+      alreadySubmitted: true,
+    };
+  }
 
   // Re-rank all players in room
   const allPlayers = await QuizPlayer.findAll({

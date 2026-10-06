@@ -79,7 +79,7 @@ function CanonicalRedirect({ to, ranking = false }) {
 }
 
 const PageFallback = ({ text = 'Đang tải...' }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#64748b', fontSize: 14 }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)', fontSize: 14 }}>
     {text}
   </div>
 );
@@ -108,20 +108,20 @@ class AppErrorBoundary extends React.Component {
     if (!this.state.error) return this.props.children;
     const message = String(this.state.error?.message || 'Không xác định');
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#f8fafc' }}>
-        <div style={{ width: 'min(460px, 100%)', background: '#ffffff', border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, boxShadow: 'none', padding: 24 }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, lineHeight: 1.25, color: '#0f172a' }}>Không tải được giao diện</h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 14, lineHeight: 1.55 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--surface-soft)' }}>
+        <div style={{ width: 'min(460px, 100%)', background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.1)', borderRadius: 0, boxShadow: 'none', padding: 24 }}>
+          <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, lineHeight: 1.25, color: 'var(--text-primary)' }}>Không tải được giao diện</h1>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>
             Trình duyệt có thể đang giữ bản build cũ. Tải lại trang sẽ lấy bundle mới nhất.
           </p>
-          <div style={{ marginTop: 14, padding: 10, borderRadius: 0, background: 'rgba(15,23,42,0.04)', color: '#475569', fontSize: 12, wordBreak: 'break-word' }}>
+          <div style={{ marginTop: 14, padding: 10, borderRadius: 0, background: 'rgba(15,23,42,0.04)', color: 'var(--text-secondary)', fontSize: 12, wordBreak: 'break-word' }}>
             {message}
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              style={{ border: 'none', borderRadius: 0, background: '#38bdf8', color: '#ffffff', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ border: 'none', borderRadius: 0, background: 'var(--accent)', color: 'var(--accent-foreground)', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               Tải lại trang
             </button>
@@ -132,7 +132,7 @@ class AppErrorBoundary extends React.Component {
                 localStorage.removeItem('refreshToken');
                 window.location.href = '/login';
               }}
-              style={{ border: '1px solid rgba(15,23,42,0.12)', borderRadius: 0, background: '#ffffff', color: '#0f172a', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ border: '1px solid rgba(15,23,42,0.12)', borderRadius: 0, background: 'var(--surface)', color: 'var(--text-primary)', padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               Đăng nhập lại
             </button>
@@ -190,6 +190,13 @@ function AppRoutes() {
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<GameHub />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
+            <Route path="/games/2048" element={<Game2048 />} />
+            <Route path="/games/capital-board" element={<CapitalBoardGame />} />
+            <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
+            <Route path="/games/quiz" element={<QuizGame />} />
+            <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
+            <Route path="/games/sam" element={<SamGame />} />
+            <Route path="/games/sam/room/:roomId" element={<SamGame />} />
             <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
             <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
@@ -202,63 +209,6 @@ function AppRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/users/:id" element={<UserDetail />} />
           </Route>
-          {/* Full-bleed Standalone Game Routes */}
-          <Route
-            path="/games/2048"
-            element={
-              <ProtectedRoute>
-                <Game2048 />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/capital-board"
-            element={
-              <ProtectedRoute>
-                <CapitalBoardGame />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/capital-board/room/:roomId"
-            element={
-              <ProtectedRoute>
-                <CapitalBoardGame />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/quiz"
-            element={
-              <ProtectedRoute>
-                <QuizGame />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/quiz/room/:roomId"
-            element={
-              <ProtectedRoute>
-                <QuizGame />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/sam"
-            element={
-              <ProtectedRoute>
-                <SamGame />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/sam/room/:roomId"
-            element={
-              <ProtectedRoute>
-                <SamGame />
-              </ProtectedRoute>
-            }
-          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -839,7 +839,7 @@ export default function AdminQuiz() {
 
   return (
     <div
-      className="min-h-screen bg-[#faf9f6] text-slate-900 p-4 sm:p-6 lg:p-8"
+      className="admin-quiz-page min-h-screen bg-[#faf9f6] text-slate-900 p-4 sm:p-6 lg:p-8"
       onPaste={handlePaste}
       style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >

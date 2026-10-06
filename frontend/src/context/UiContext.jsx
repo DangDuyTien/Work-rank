@@ -11,10 +11,10 @@ const TOAST_ICON = {
 };
 
 const TOAST_COLOR = {
-  success: '#15803d',
-  error: '#b91c1c',
-  warning: '#b45309',
-  info: '#141414',
+  success: 'var(--success)',
+  error: 'var(--danger)',
+  warning: 'var(--warning)',
+  info: 'var(--primary)',
 };
 
 export function UiProvider({ children }) {
@@ -110,18 +110,18 @@ export function UiProvider({ children }) {
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 10,
-                background: '#ffffff',
-                border: '1px solid rgba(0,0,0,0.08)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderLeft: `4px solid ${color}`,
                 borderRadius: 8,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                boxShadow: 'var(--shadow-card-hover)',
                 padding: '12px 14px',
               }}
             >
               <Icon size={18} color={color} style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                {item.title && <div style={{ color: '#111111', fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
-                <div style={{ color: '#555555', fontSize: 12, lineHeight: 1.45 }}>{item.message}</div>
+                {item.title && <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{item.title}</div>}
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.45 }}>{item.message}</div>
               </div>
               <button
                 type="button"
@@ -130,7 +130,7 @@ export function UiProvider({ children }) {
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#888888',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   padding: 2,
                   display: 'flex',
@@ -171,10 +171,10 @@ export function UiProvider({ children }) {
             style={{
               width: '100%',
               maxWidth: 420,
-              background: '#ffffff',
-              border: '1px solid rgba(0,0,0,0.08)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 12,
-              boxShadow: '0 16px 36px rgba(0,0,0,0.12)',
+              boxShadow: 'var(--shadow-modal)',
               padding: 24,
             }}
           >
@@ -186,17 +186,17 @@ export function UiProvider({ children }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: confirmState.tone === 'danger' ? 'rgba(185,28,28,0.08)' : 'rgba(0,0,0,0.06)',
-                color: confirmState.tone === 'danger' ? '#b91c1c' : '#141414',
+                background: confirmState.tone === 'danger' ? 'var(--danger-soft)' : 'var(--surface-active)',
+                color: confirmState.tone === 'danger' ? 'var(--danger)' : 'var(--primary)',
                 flexShrink: 0,
               }}>
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: '#111111', fontSize: 17, fontWeight: 800 }}>
+                <h2 id="workrank-confirm-title" style={{ margin: '0 0 6px', color: 'var(--text-primary)', fontSize: 17, fontWeight: 800 }}>
                   {confirmState.title}
                 </h2>
-                <div style={{ color: '#555555', fontSize: 13, lineHeight: 1.55 }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.55 }}>
                   {confirmState.message}
                 </div>
               </div>
@@ -207,18 +207,18 @@ export function UiProvider({ children }) {
                 type="button"
                 onClick={() => closeConfirm(false)}
                 style={{
-                  border: '1px solid rgba(0,0,0,0.12)',
-                  background: '#ffffff',
-                  color: '#555555',
+                  border: '1px solid var(--border-2)',
+                  background: 'var(--surface)',
+                  color: 'var(--text-secondary)',
                   borderRadius: 8,
                   padding: '9px 16px',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 700,
-                  transition: 'background 0.15s ease',
+                  transition: 'background var(--motion-fast) var(--ease-standard)',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface)'; }}
               >
                 {confirmState.cancelText}
               </button>
@@ -227,20 +227,20 @@ export function UiProvider({ children }) {
                 onClick={() => closeConfirm(true)}
                 style={{
                   border: 'none',
-                  background: confirmState.tone === 'danger' ? '#b91c1c' : '#141414',
-                  color: '#ffffff',
+                  background: confirmState.tone === 'danger' ? 'var(--danger)' : 'var(--primary)',
+                  color: 'var(--primary-foreground)',
                   borderRadius: 8,
                   padding: '9px 18px',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 800,
-                  transition: 'background 0.15s ease',
+                  transition: 'background var(--motion-fast) var(--ease-standard)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = confirmState.tone === 'danger' ? '#991b1b' : '#2b2b2b';
+                  e.currentTarget.style.background = confirmState.tone === 'danger' ? '#991b1b' : 'var(--primary-hover)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = confirmState.tone === 'danger' ? '#b91c1c' : '#141414';
+                  e.currentTarget.style.background = confirmState.tone === 'danger' ? 'var(--danger)' : 'var(--primary)';
                 }}
               >
                 {confirmState.confirmText}
