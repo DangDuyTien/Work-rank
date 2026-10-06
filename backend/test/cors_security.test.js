@@ -8,6 +8,7 @@ describe('CORS Security Configuration Test Suite', () => {
   const prodOptions = {
     nodeEnv: 'production',
     configuredOrigins: ['https://workrank.io', 'https://app.workrank.io'],
+    externalUrl: '',
   };
 
   const devOptions = {
@@ -47,5 +48,17 @@ describe('CORS Security Configuration Test Suite', () => {
   it('6. Rejects random malicious origins in development', () => {
     assert.equal(isAllowedOrigin('https://attacker.com', devOptions), false);
     assert.equal(isAllowedOrigin('https://phishing-site.xyz', devOptions), false);
+  });
+
+  it('7. Allows only the exact public URL supplied by Render', () => {
+    const options = { ...prodOptions, externalUrl: 'https://work3winmedia-c94e.onrender.com/' };
+    assert.equal(isAllowedOrigin('https://work3winmedia-c94e.onrender.com', options), true);
+    assert.equal(isAllowedOrigin('https://attacker-app.onrender.com', options), false);
+    assert.equal(isAllowedOrigin('https://work3winmedia-c94e.onrender.com.attacker.com', options), false);
+    assert.equal(isAllowedOrigin('http://work3winmedia-c94e.onrender.com', options), false);
+  });
+
+  it('8. Invalid platform URL does not allow unconfigured origins', () => {
+    assert.equal(isAllowedOrigin('https://evil.onrender.com', { ...prodOptions, externalUrl: 'invalid' }), false);
   });
 });

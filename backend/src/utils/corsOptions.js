@@ -18,6 +18,16 @@ function isAllowedOrigin(origin, options = {}) {
   const configured = options.configuredOrigins || getConfiguredOrigins(options.clientUrl || env.clientUrl);
   const normalizedOrigin = String(origin).trim().replace(/\/+$/, '');
 
+  // Render supplies the actual public URL, including generated service suffixes.
+  const externalUrl = options.externalUrl ?? process.env.RENDER_EXTERNAL_URL;
+  if (externalUrl) {
+    try {
+      if (normalizedOrigin === new URL(externalUrl).origin) return true;
+    } catch {
+      // An invalid platform URL must not broaden the allowlist.
+    }
+  }
+
   // 1. Explicitly configured origins (from CLIENT_URL)
   if (configured.includes(normalizedOrigin)) {
     return true;
