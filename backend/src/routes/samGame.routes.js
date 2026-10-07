@@ -12,11 +12,14 @@ router.use(auth);
 // ── LOBBY & ROOMS ──
 router.get('/rooms', samGameController.listRooms);
 router.post('/rooms', requireGameAvailable('sam'), samGameController.createRoom);
+router.post('/practice', requireGameAvailable('sam'), samGameController.createPracticeRoom);
 router.get('/rooms/active', samGameController.getActiveRoom);
 router.get('/rooms/:id', samGameController.getRoom);
 router.post('/rooms/:id/join', requireGameAvailable('sam'), samGameController.joinRoom);
 router.post('/rooms/:id/leave', samGameController.leaveRoom);
 router.post('/rooms/:id/ready', samGameController.toggleReady);
+router.post('/rooms/:id/bots', samGameController.addBot);
+router.post('/rooms/:id/fill-bots', samGameController.fillBots);
 
 // ── GAMEPLAY ACTIONS ──
 router.post('/rooms/:id/start', requireGameAvailable('sam'), samGameController.startMatch);

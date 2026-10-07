@@ -250,7 +250,7 @@ test.describe('Capital Board Game (Cờ Tỷ Phú) E2E Suite', () => {
     // Check Tab navigation
     await page.click('button:has-text("Bảng Xếp Hạng")');
     await expect(page.getByRole('heading', { name: /Bảng Xếp Hạng Cờ Tỷ Phú/i })).toBeVisible();
-    await expect(page.getByText('Đặng Tuấn Anh').first()).toBeVisible();
+    await expect(page.locator('table').getByText(/Đặng Tuấn Anh/i)).toBeVisible();
 
     await page.click('button:has-text("Lịch Sử Đấu")');
     await expect(page.getByRole('heading', { name: /Lịch Sử Đấu Cờ Tỷ Phú/i })).toBeVisible();
@@ -266,7 +266,7 @@ test.describe('Capital Board Game (Cờ Tỷ Phú) E2E Suite', () => {
     await expect(page.getByText('#CB-8888').first()).toBeVisible();
 
     // Check player slots
-    await expect(page.getByText('Đặng Tuấn Anh').first()).toBeVisible();
+    await expect(page.getByText('Đặng Tuấn Anh').last()).toBeVisible();
     await expect(page.getByText('Nguyễn Hoài Nam').first()).toBeVisible();
     await expect(page.getByText('Lê Minh Trang').first()).toBeVisible();
 

@@ -966,6 +966,7 @@ async function getYouTubeChannelLeaderboard(params = {}) {
       {
         model: YouTubeChannelMetric,
         as: 'metrics',
+        separate: true,
         limit: 1,
         order: [['capturedAt', 'DESC']],
       },

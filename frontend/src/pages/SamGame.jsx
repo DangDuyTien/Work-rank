@@ -588,6 +588,7 @@ export default function SamGame() {
   const handleCreateRoom = async (formData) => {
     try {
       setActionLoading(true);
+      setErrorMsg(null);
       const res = await samGame.createRoom(formData);
       if (res?.room) {
         setRoom(res.room);
@@ -596,7 +597,25 @@ export default function SamGame() {
       }
       setShowCreateModal(false);
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Không thể tạo phòng');
+      setErrorMsg(err.response?.data?.message || err.message || 'Không thể tạo phòng');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCreatePracticeRoom = async (botCount = 3) => {
+    try {
+      setActionLoading(true);
+      setErrorMsg(null);
+      const res = await samGame.createPracticeRoom({ botCount });
+      if (res?.room) {
+        setRoom(res.room);
+        setPlayers(res.players || []);
+        if (res.myHandCards) setMyHandCards(res.myHandCards);
+        navigate(`/games/sam/room/${res.room.id}`);
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message || 'Không thể tạo phòng luyện tập');
     } finally {
       setActionLoading(false);
     }
@@ -605,6 +624,7 @@ export default function SamGame() {
   const handleCreateBotRoom = async (formData) => {
     try {
       setActionLoading(true);
+      setErrorMsg(null);
       const res = await samGame.createBotTestRoom(formData);
       if (res?.room) {
         setRoom(res.room);
@@ -613,7 +633,7 @@ export default function SamGame() {
       }
       setShowBotModal(false);
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Không thể tạo phòng Bot Test');
+      setErrorMsg(err.response?.data?.message || err.message || 'Không thể tạo phòng Bot Test');
     } finally {
       setActionLoading(false);
     }
@@ -622,6 +642,7 @@ export default function SamGame() {
   const handleJoinRoom = async (targetRoomId) => {
     try {
       setActionLoading(true);
+      setErrorMsg(null);
       const res = await samGame.joinRoom(targetRoomId);
       if (res?.room) {
         setRoom(res.room);
@@ -630,7 +651,7 @@ export default function SamGame() {
         navigate(`/games/sam/room/${res.room.id}`);
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Không thể tham gia phòng');
+      setErrorMsg(err.response?.data?.message || err.message || 'Không thể tham gia phòng');
     } finally {
       setActionLoading(false);
     }
@@ -1074,6 +1095,8 @@ export default function SamGame() {
           isAdmin={isAdmin}
           startCountdownSec={startCountdownSec}
           actionLoading={actionLoading}
+          errorMsg={errorMsg}
+          onDismissError={() => setErrorMsg(null)}
           onLeaveRoom={handleLeaveRoom}
           onToggleReady={handleToggleReady}
           onStartMatch={handleStartMatch}
@@ -1107,9 +1130,12 @@ export default function SamGame() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         loading={loading}
+        errorMsg={errorMsg}
+        onDismissError={() => setErrorMsg(null)}
         onOpenCreateModal={() => setShowCreateModal(true)}
         onOpenBotModal={() => setShowBotModal(true)}
         onOpenRulesModal={() => setShowRulesModal(true)}
+        onCreatePracticeRoom={handleCreatePracticeRoom}
         onJoinRoom={handleJoinRoom}
       />
 

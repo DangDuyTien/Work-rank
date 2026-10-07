@@ -964,12 +964,24 @@ export const capitalBoardGame = {
     const res = await api.post('/api/games/rooms', data);
     return res.data?.data || null;
   },
+  createPracticeRoom: async (botCount = 3) => {
+    const res = await api.post('/api/games/practice', { botCount });
+    return res.data?.data || null;
+  },
   joinRoom: async (id) => {
     const res = await api.post(`/api/games/rooms/${id}/join`);
     return res.data?.data || null;
   },
   leaveRoom: async (id) => {
     const res = await api.post(`/api/games/rooms/${id}/leave`);
+    return res.data?.data || null;
+  },
+  addBot: async (id) => {
+    const res = await api.post(`/api/games/rooms/${id}/bots`);
+    return res.data?.data || null;
+  },
+  removeBot: async (id, botUserId) => {
+    const res = await api.delete(`/api/games/rooms/${id}/bots/${botUserId}`);
     return res.data?.data || null;
   },
   startGame: async (id) => {
@@ -1181,6 +1193,10 @@ export const samGame = {
     const res = await api.post('/api/games/sam/rooms', data);
     return res.data;
   },
+  createPracticeRoom: async (data = {}) => {
+    const res = await api.post('/api/games/sam/practice', data);
+    return res.data;
+  },
   joinRoom: async (id) => {
     const res = await api.post(`/api/games/sam/rooms/${id}/join`);
     return res.data;
@@ -1207,6 +1223,14 @@ export const samGame = {
   },
   passTurn: async (id) => {
     const res = await api.post(`/api/games/sam/rooms/${id}/pass`);
+    return res.data;
+  },
+  addBot: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/bots`);
+    return res.data;
+  },
+  fillBots: async (id) => {
+    const res = await api.post(`/api/games/sam/rooms/${id}/fill-bots`);
     return res.data;
   },
   getLeaderboard: async (params = {}) => {
@@ -1240,10 +1264,6 @@ export const samGame = {
   },
   restartBotTest: async (id) => {
     const res = await api.post(`/api/games/sam/admin/rooms/${id}/restart`);
-    return res.data;
-  },
-  fillBots: async (id) => {
-    const res = await api.post(`/api/games/sam/admin/rooms/${id}/fill-bots`);
     return res.data;
   },
   stopBotTest: async (id) => {
@@ -1362,5 +1382,69 @@ export const gameCatalogApi = {
   },
 };
 
+export const typingGameApi = {
+  getStatus: async () => {
+    const res = await api.get('/api/games/typing/status');
+    return res.data;
+  },
+  getMyStats: async () => {
+    const res = await api.get('/api/games/typing/my-stats');
+    return res.data;
+  },
+  getLeaderboard: async (params = {}) => {
+    const res = await api.get('/api/games/typing/leaderboard', { params });
+    return res.data;
+  },
+  getChallenges: async (params = {}) => {
+    const res = await api.get('/api/games/typing/challenges', { params });
+    return res.data;
+  },
+  listRooms: async (params = {}) => {
+    const res = await api.get('/api/games/typing/rooms', { params });
+    return res.data;
+  },
+  createRoom: async (data) => {
+    const res = await api.post('/api/games/typing/rooms', data);
+    return res.data;
+  },
+  quickMatch: async (data) => {
+    const res = await api.post('/api/games/typing/matchmaking/quick', data);
+    return res.data;
+  },
+  getRoomDetail: async (roomId) => {
+    const res = await api.get(`/api/games/typing/rooms/${roomId}`);
+    return res.data;
+  },
+  joinRoom: async (roomId) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/join`);
+    return res.data;
+  },
+  switchTeam: async (roomId, team) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/switch-team`, { team });
+    return res.data;
+  },
+  leaveRoom: async (roomId) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/leave`);
+    return res.data;
+  },
+  toggleReady: async (roomId, isReady) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/ready`, { isReady });
+    return res.data;
+  },
+  startMatch: async (roomId) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/start`);
+    return res.data;
+  },
+  updateProgress: async (roomId, data) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/progress`, data);
+    return res.data;
+  },
+  submitFinish: async (roomId, data) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/finish`, data);
+    return res.data;
+  },
+};
+
 export { storeAuth, refreshStoredAuth as refreshSession };
 export default api;
+

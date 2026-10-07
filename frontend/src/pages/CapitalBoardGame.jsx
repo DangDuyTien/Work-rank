@@ -64,6 +64,7 @@ export default function CapitalBoardGame() {
   const [lastDiceSum, setLastDiceSum] = useState(null);
   const [recentEventBanner, setRecentEventBanner] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [botLoading, setBotLoading] = useState(false);
 
   // Lobby state
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -377,6 +378,60 @@ export default function CapitalBoardGame() {
       setErrorMsg(err.response?.data?.message || 'Không thể tạo phòng chơi');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleCreatePracticeRoom = async (botCount = 3) => {
+    try {
+      setActionLoading(true);
+      setErrorMsg(null);
+      const res = await capitalBoardGame.createPracticeRoom(botCount);
+      const data = res?.data || res;
+      if (data?.id) {
+        syncRoomState(data);
+        navigate(`/games/capital-board/room/${data.id}`);
+      }
+    } catch (err) {
+      console.error('Failed to create practice room:', err);
+      setErrorMsg(err.response?.data?.message || 'Không thể tạo phòng luyện tập với bot');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddBot = async () => {
+    if (!room?.id || botLoading) return;
+    try {
+      setBotLoading(true);
+      setErrorMsg(null);
+      const res = await capitalBoardGame.addBot(room.id);
+      const data = res?.data || res;
+      if (data?.id) {
+        syncRoomState(data);
+      }
+    } catch (err) {
+      console.error('Failed to add bot:', err);
+      setErrorMsg(err.response?.data?.message || 'Không thể thêm bot vào phòng');
+    } finally {
+      setBotLoading(false);
+    }
+  };
+
+  const handleRemoveBot = async (botUserId) => {
+    if (!room?.id || botLoading) return;
+    try {
+      setBotLoading(true);
+      setErrorMsg(null);
+      const res = await capitalBoardGame.removeBot(room.id, botUserId);
+      const data = res?.data || res;
+      if (data?.id) {
+        syncRoomState(data);
+      }
+    } catch (err) {
+      console.error('Failed to remove bot:', err);
+      setErrorMsg(err.response?.data?.message || 'Không thể xóa bot');
+    } finally {
+      setBotLoading(false);
     }
   };
 
@@ -716,6 +771,7 @@ export default function CapitalBoardGame() {
             onRefresh={fetchLobbyRooms}
             onJoinRoom={handleJoinRoom}
             onCreateRoom={handleCreateRoom}
+            onCreatePracticeRoom={handleCreatePracticeRoom}
             actionLoading={actionLoading}
           />
         )}
@@ -728,45 +784,18 @@ export default function CapitalBoardGame() {
             currentUser={user}
             onStartGame={handleStartGame}
             onLeaveRoom={handleLeaveRoom}
+            onAddBot={handleAddBot}
+            onRemoveBot={handleRemoveBot}
             actionLoading={actionLoading}
+            botLoading={botLoading}
           />
         )}
 
         {/* ─────────────────── 3. PLAYING BOARD VIEW ─────────────────── */}
         {isInsideRoom && isPlaying && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: 16,
-              alignItems: 'start',
-            }}
-          >
-            {/* Left Column: Player Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
-                Người chơi ({players.length})
-              </div>
-              {players.map((p) => {
-                const isCurrentTurn = Number(p.userId) === Number(room.currentTurnPlayerId);
-                const isMe = Number(p.userId) === Number(user?.id);
-                const propertiesCount = properties.filter((prop) => Number(prop.ownerUserId) === Number(p.userId)).length;
-
-                return (
-                  <PlayerCard
-                    key={p.id || p.userId}
-                    player={p}
-                    isCurrentTurn={isCurrentTurn}
-                    isMe={isMe}
-                    turnTimeRemaining={turnTimeRemaining}
-                    propertiesOwnedCount={propertiesCount}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Center Column: Capital Board */}
-            <div style={{ gridColumn: 'auto' }}>
+          <div className="capital-board-layout">
+            {/* Main Stage: Large Hero 2D Capital Board */}
+            <div style={{ width: '100%', minWidth: 0, display: 'flex', justifyContent: 'center' }}>
               <CapitalBoard
                 room={room}
                 players={players}
@@ -787,9 +816,43 @@ export default function CapitalBoardGame() {
               />
             </div>
 
-            {/* Right Column: Live Event Log */}
-            <div style={{ gridColumn: 'auto' }}>
-              <GameEventLog events={events} maxHeight={540} collapsibleOnMobile />
+            {/* Sidebar HUD: Players & Live Activity Log */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', minWidth: 0 }}>
+              {/* Player Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Users size={15} color="var(--info)" />
+                    <span>Người chơi ({players.length})</span>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                    Lượt {room.turnNumber || 1}/50
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {players.map((p) => {
+                    const isCurrentTurn = Number(p.userId) === Number(room.currentTurnPlayerId);
+                    const isMe = Number(p.userId) === Number(user?.id);
+                    const playerProperties = properties.filter((prop) => Number(prop.ownerUserId) === Number(p.userId));
+
+                    return (
+                      <PlayerCard
+                        key={p.id || p.userId}
+                        player={p}
+                        isCurrentTurn={isCurrentTurn}
+                        isMe={isMe}
+                        turnTimeRemaining={turnTimeRemaining}
+                        propertiesOwnedCount={playerProperties.length}
+                        ownedProperties={playerProperties}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Live Event Log */}
+              <GameEventLog events={events} maxHeight={340} collapsibleOnMobile />
             </div>
           </div>
         )}

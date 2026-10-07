@@ -9,7 +9,10 @@ export default function CapitalBoardWaitingRoom({
   currentUser,
   onStartGame,
   onLeaveRoom,
+  onAddBot,
+  onRemoveBot,
   actionLoading = false,
+  botLoading = false,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -18,6 +21,7 @@ export default function CapitalBoardWaitingRoom({
   const isHost = Number(room.hostUserId || room.host?.id) === Number(currentUser?.id);
   const maxPlayers = Number(room.maxPlayers) || 4;
   const canStart = players.length >= 2;
+  const isFull = players.length >= maxPlayers;
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/games/capital-board/room/${room.id}`;
@@ -69,8 +73,8 @@ export default function CapitalBoardWaitingRoom({
           </span>
         </div>
 
-        {/* Share Deep-Link & Code Bar */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+        {/* Share Deep-Link & Bot Action Bar */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={handleCopyLink}
@@ -86,12 +90,38 @@ export default function CapitalBoardWaitingRoom({
               fontSize: 12,
               fontWeight: 700,
               cursor: 'pointer',
-              transition: 'background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
+              transition: 'background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
             }}
           >
             {copied ? <Check size={14} /> : <Share2 size={14} />}
             <span>{copied ? 'Đã sao chép link mời!' : 'Sao chép link mời'}</span>
           </button>
+
+          {isHost && !isFull && onAddBot && (
+            <button
+              type="button"
+              onClick={onAddBot}
+              disabled={botLoading || actionLoading}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'var(--info-soft)',
+                color: 'var(--info)',
+                border: '1px solid var(--info-border, rgba(56,189,248,0.3))',
+                borderRadius: 6,
+                padding: '6px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: botLoading || actionLoading ? 'not-allowed' : 'pointer',
+                opacity: botLoading || actionLoading ? 0.7 : 1,
+                transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard)',
+              }}
+            >
+              <Sparkles size={14} />
+              <span>{botLoading ? 'Đang thêm...' : '+ Thêm Bot AI'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -109,6 +139,7 @@ export default function CapitalBoardWaitingRoom({
           const sColor = SEAT_COLORS[idx] || '#38bdf8';
           const isPlayerHost = p && Number(p.userId) === Number(room.hostUserId || room.host?.id);
           const isCurrentPlayer = p && Number(p.userId) === Number(currentUser?.id);
+          const isBot = p && Boolean(p.user?.isBot || p.user?.isSimulated);
 
           return (
             <div
@@ -138,34 +169,76 @@ export default function CapitalBoardWaitingRoom({
                   fontSize: 15,
                   fontWeight: 800,
                   boxShadow: p ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                  flexShrink: 0,
                 }}
               >
-                {p ? (p.user?.name || `P${idx + 1}`).charAt(0).toUpperCase() : idx + 1}
+                {p ? (isBot ? '🤖' : (p.user?.name || `P${idx + 1}`).charAt(0).toUpperCase()) : idx + 1}
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
                   <span style={{ fontSize: 10, fontWeight: 800, color: sColor, textTransform: 'uppercase' }}>
                     Vị trí {idx + 1}
                   </span>
-                  {isPlayerHost && (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 3,
-                        fontSize: 10,
-                        color: '#f59e0b',
-                        fontWeight: 800,
-                        background: 'rgba(245,158,11,0.12)',
-                        padding: '1px 5px',
-                        borderRadius: 3,
-                      }}
-                    >
-                      <Crown size={11} />
-                      <span>HOST</span>
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {isBot && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          fontSize: 9,
+                          color: 'var(--info)',
+                          fontWeight: 800,
+                          background: 'var(--info-soft)',
+                          padding: '1px 5px',
+                          borderRadius: 3,
+                        }}
+                      >
+                        BOT
+                      </span>
+                    )}
+                    {isPlayerHost && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          fontSize: 10,
+                          color: '#f59e0b',
+                          fontWeight: 800,
+                          background: 'rgba(245,158,11,0.12)',
+                          padding: '1px 5px',
+                          borderRadius: 3,
+                        }}
+                      >
+                        <Crown size={11} />
+                        <span>HOST</span>
+                      </span>
+                    )}
+                    {isBot && isHost && onRemoveBot && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveBot(p.userId)}
+                        disabled={actionLoading || botLoading}
+                        title="Xóa Bot này"
+                        style={{
+                          background: 'rgba(239,68,68,0.1)',
+                          color: '#ef4444',
+                          border: 'none',
+                          borderRadius: 3,
+                          padding: '2px 5px',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          lineHeight: 1,
+                          transition: 'background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div
@@ -179,7 +252,32 @@ export default function CapitalBoardWaitingRoom({
                     marginTop: 2,
                   }}
                 >
-                  {p ? p.user?.name || `Người chơi ${idx + 1}` : 'Đang chờ người chơi...'}
+                  {p ? p.user?.name || `Người chơi ${idx + 1}` : (
+                    isHost && onAddBot ? (
+                      <button
+                        type="button"
+                        onClick={onAddBot}
+                        disabled={botLoading || actionLoading}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          color: 'var(--info)',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Sparkles size={12} />
+                        <span>+ Thêm Bot vào đây</span>
+                      </button>
+                    ) : (
+                      'Đang chờ người chơi...'
+                    )
+                  )}
                 </div>
 
                 {isCurrentPlayer && (
@@ -198,7 +296,7 @@ export default function CapitalBoardWaitingRoom({
         <button
           type="button"
           onClick={onLeaveRoom}
-          disabled={actionLoading}
+          disabled={actionLoading || botLoading}
           style={{
             flex: 1,
             background: 'var(--surface)',
@@ -213,6 +311,7 @@ export default function CapitalBoardWaitingRoom({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 6,
+            transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
           }}
         >
           <LogOut size={16} />
@@ -223,7 +322,7 @@ export default function CapitalBoardWaitingRoom({
           <button
             type="button"
             onClick={onStartGame}
-            disabled={actionLoading || !canStart}
+            disabled={actionLoading || botLoading || !canStart}
             style={{
               flex: 2,
               background: canStart ? '#16a34a' : 'var(--text-muted)',
@@ -239,6 +338,7 @@ export default function CapitalBoardWaitingRoom({
               justifyContent: 'center',
               gap: 6,
               boxShadow: canStart ? '0 4px 14px rgba(22,163,74,0.3)' : 'none',
+              transition: 'background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
             }}
           >
             <Play size={16} />

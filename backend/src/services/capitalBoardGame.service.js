@@ -25,6 +25,50 @@ const {
 } = require('../config/capitalBoardTemplate');
 const gameRealtime = require('./gameRealtime.service');
 
+const BOT_PROFILES = [
+  {
+    name: '🤖 AI Tony (Chiến Lược)',
+    email: 'ai_tony@capitalboard.internal',
+    jobTitle: 'AI Nhà Đầu Tư',
+    department: 'Media & Strategy',
+  },
+  {
+    name: '🤖 AI Mia (Bất Động Sản)',
+    email: 'ai_mia@capitalboard.internal',
+    jobTitle: 'AI Môi Giới',
+    department: 'Real Estate Growth',
+  },
+  {
+    name: '🤖 AI Alex (Tài Phiệt)',
+    email: 'ai_alex@capitalboard.internal',
+    jobTitle: 'AI Quản Lý Quỹ',
+    department: 'Finance Core',
+  },
+];
+
+async function getOrCreateBotUsers() {
+  const bots = [];
+  for (const profile of BOT_PROFILES) {
+    const [botUser] = await User.findOrCreate({
+      where: { email: profile.email },
+      defaults: {
+        name: profile.name,
+        email: profile.email,
+        passwordHash: 'BOT_SIMULATED_ACCOUNT',
+        role: 'user',
+        jobTitle: profile.jobTitle,
+        department: profile.department,
+        isVerified: true,
+        isDev: false,
+        isSimulated: true,
+        status: 'active',
+      },
+    });
+    bots.push(botUser);
+  }
+  return bots;
+}
+
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'CB-';
@@ -36,6 +80,7 @@ function generateRoomCode() {
 
 function sanitizeUser(user) {
   if (!user) return null;
+  const isBot = Boolean(user.isSimulated || user.email?.includes('capitalboard') || user.name?.startsWith('🤖'));
   return {
     id: user.id,
     name: user.name,
@@ -44,6 +89,8 @@ function sanitizeUser(user) {
     department: user.department,
     isVerified: user.isVerified,
     isDev: user.isDev,
+    isBot,
+    isSimulated: isBot,
     avatarData: user.UserProfilePreference?.avatarData || null,
   };
 }
@@ -58,11 +105,11 @@ class CapitalBoardGameService {
         status: { [Op.in]: ['WAITING', 'PLAYING'] },
       },
       include: [
-        { model: User, as: 'Host', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev'] },
+        { model: User, as: 'Host', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev', 'isSimulated'] },
         {
           model: GamePlayer,
           as: 'players',
-          include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev'] }],
+          include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev', 'isSimulated'] }],
         },
       ],
       order: [
@@ -122,8 +169,8 @@ class CapitalBoardGameService {
   async getRoomState(roomId, currentUserId = null) {
     const room = await GameRoom.findByPk(roomId, {
       include: [
-        { model: User, as: 'Host', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev'] },
-        { model: User, as: 'Winner', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev'] },
+        { model: User, as: 'Host', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev', 'isSimulated'] },
+        { model: User, as: 'Winner', attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev', 'isSimulated'] },
         {
           model: GamePlayer,
           as: 'players',
@@ -131,7 +178,7 @@ class CapitalBoardGameService {
             {
               model: User,
               as: 'user',
-              attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev'],
+              attributes: ['id', 'name', 'email', 'jobTitle', 'isVerified', 'isDev', 'isSimulated'],
               include: [{ model: UserProfilePreference, attributes: ['avatarData'], required: false }],
             },
           ],
@@ -450,6 +497,7 @@ class CapitalBoardGameService {
         setImmediate(() => {
           gameRealtime.emitToRoom(room.id, 'game:bankrupt', { roomId: room.id, userId });
           gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+          this.scheduleBotTurnIfActive(room.id, room.currentTurnPlayerId);
         });
 
         return { ok: true, status: 'SURRENDERED' };
@@ -457,6 +505,140 @@ class CapitalBoardGameService {
 
       return { ok: true };
     });
+  }
+
+  /**
+   * Add a simulated Bot player to a waiting room (Host only)
+   */
+  async addBot(roomId, hostUserId) {
+    await sequelize.transaction(async (t) => {
+      const room = await GameRoom.findByPk(roomId, {
+        include: [{ model: GamePlayer, as: 'players' }],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!room) throw new Error('Không tìm thấy phòng game.');
+      if (room.status !== 'WAITING') throw new Error('Phòng đã bắt đầu hoặc đã kết thúc.');
+      if (Number(room.hostUserId) !== Number(hostUserId)) {
+        throw new Error('Chỉ chủ phòng mới có quyền thêm Bot.');
+      }
+      if (room.players.length >= room.maxPlayers) {
+        throw new Error('Phòng đã đủ số lượng người chơi.');
+      }
+
+      const botUsers = await getOrCreateBotUsers();
+      const existingUserIds = new Set(room.players.map((p) => Number(p.userId)));
+      const availableBot = botUsers.find((b) => !existingUserIds.has(Number(b.id)));
+
+      if (!availableBot) {
+        throw new Error('Đã thêm tối đa số Bot cho phép trong phòng.');
+      }
+
+      const usedSeats = new Set(room.players.map((p) => p.seatIndex));
+      let nextSeat = 0;
+      for (let i = 0; i < room.maxPlayers; i++) {
+        if (!usedSeats.has(i)) {
+          nextSeat = i;
+          break;
+        }
+      }
+
+      const color = SEAT_COLORS[nextSeat] || '#38bdf8';
+      await GamePlayer.create(
+        {
+          roomId: room.id,
+          userId: availableBot.id,
+          seatIndex: nextSeat,
+          color,
+          cash: STARTING_CASH,
+          position: 0,
+          status: 'WAITING',
+        },
+        { transaction: t }
+      );
+
+      setImmediate(() => {
+        gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+      });
+    });
+
+    return this.getRoomState(roomId, hostUserId);
+  }
+
+  /**
+   * Remove a simulated Bot player from a waiting room (Host only)
+   */
+  async removeBot(roomId, hostUserId, botUserId) {
+    await sequelize.transaction(async (t) => {
+      const room = await GameRoom.findByPk(roomId, {
+        include: [{ model: GamePlayer, as: 'players' }],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!room) throw new Error('Không tìm thấy phòng game.');
+      if (room.status !== 'WAITING') throw new Error('Phòng đã bắt đầu.');
+      if (Number(room.hostUserId) !== Number(hostUserId)) {
+        throw new Error('Chỉ chủ phòng mới có quyền xóa Bot.');
+      }
+
+      await GamePlayer.destroy({
+        where: { roomId: room.id, userId: botUserId },
+        transaction: t,
+      });
+
+      setImmediate(() => {
+        gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+      });
+    });
+
+    return this.getRoomState(roomId, hostUserId);
+  }
+
+  /**
+   * Instant Create & Start Practice Room with Bots (1 Human + 1-3 AI Bots)
+   */
+  async createPracticeRoom(userId, botCount = 3) {
+    const code = generateRoomCode();
+    const room = await GameRoom.create({
+      code,
+      title: 'Phòng Luyện Tập (Đấu Với Bot)',
+      hostUserId: userId,
+      status: 'WAITING',
+      maxPlayers: 4,
+    });
+
+    // 1. Add human player at seat 0
+    await GamePlayer.create({
+      roomId: room.id,
+      userId,
+      seatIndex: 0,
+      color: SEAT_COLORS[0],
+      cash: STARTING_CASH,
+      position: 0,
+      status: 'WAITING',
+    });
+
+    // 2. Add requested number of AI bots
+    const botUsers = await getOrCreateBotUsers();
+    const numBots = Math.min(3, Math.max(1, Number(botCount) || 3));
+    for (let i = 0; i < numBots; i++) {
+      const bot = botUsers[i];
+      await GamePlayer.create({
+        roomId: room.id,
+        userId: bot.id,
+        seatIndex: i + 1,
+        color: SEAT_COLORS[i + 1] || '#ef4444',
+        cash: STARTING_CASH,
+        position: 0,
+        status: 'WAITING',
+      });
+    }
+
+    // 3. Auto start game immediately
+    await this.startGame(room.id, userId);
+    return this.getRoomState(room.id, userId);
   }
 
   /**
@@ -539,6 +721,7 @@ class CapitalBoardGameService {
       setImmediate(() => {
         gameRealtime.emitToRoom(room.id, 'game:started', { roomId: room.id, firstTurnUserId: firstPlayer.userId });
         gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+        this.scheduleBotTurnIfActive(room.id, firstPlayer.userId);
       });
 
       return room;
@@ -991,6 +1174,7 @@ class CapitalBoardGameService {
           turnNumber: room.turnNumber,
         });
         gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+        this.scheduleBotTurnIfActive(room.id, room.currentTurnPlayerId);
       });
 
       return room;
@@ -1058,8 +1242,92 @@ class CapitalBoardGameService {
           reason: 'TIMEOUT',
         });
         gameRealtime.emitToRoom(room.id, 'game:roomUpdated', { roomId: room.id });
+        this.scheduleBotTurnIfActive(room.id, room.currentTurnPlayerId);
       });
     });
+  }
+
+  /**
+   * Schedule automated turn execution for simulated bot players
+   */
+  scheduleBotTurnIfActive(roomId, currentTurnUserId) {
+    if (!roomId || !currentTurnUserId) return;
+
+    // Run in background with realistic pacing so human players can watch
+    setTimeout(async () => {
+      try {
+        const room = await GameRoom.findByPk(roomId, {
+          include: [
+            {
+              model: GamePlayer,
+              as: 'players',
+              include: [{ model: User, as: 'user' }],
+            },
+            { model: GameProperty, as: 'properties' },
+          ],
+        });
+
+        if (!room || room.status !== 'PLAYING') return;
+        if (Number(room.currentTurnPlayerId) !== Number(currentTurnUserId)) return;
+
+        const currentPlayer = room.players.find((p) => Number(p.userId) === Number(currentTurnUserId));
+        if (!currentPlayer || currentPlayer.status !== 'ACTIVE') return;
+
+        const isBot = currentPlayer.user?.isSimulated || currentPlayer.user?.email?.endsWith('@capitalboard.workrank');
+        if (!isBot) return;
+
+        // 1. Roll dice
+        await this.rollDice(roomId, currentTurnUserId);
+
+        // 2. Wait for token movement and tile landing animation
+        setTimeout(async () => {
+          try {
+            const freshRoom = await GameRoom.findByPk(roomId, {
+              include: [
+                { model: GamePlayer, as: 'players' },
+                { model: GameProperty, as: 'properties' },
+              ],
+            });
+
+            if (!freshRoom || freshRoom.status !== 'PLAYING') return;
+            if (Number(freshRoom.currentTurnPlayerId) !== Number(currentTurnUserId)) return;
+
+            const freshPlayer = freshRoom.players.find((p) => Number(p.userId) === Number(currentTurnUserId));
+            if (!freshPlayer || freshPlayer.status !== 'ACTIVE') return;
+
+            const turnState = freshRoom.turnState || {};
+
+            // If landed on buyable property, bot buys if holding cash reserve (price + 150)
+            if (turnState.canBuy) {
+              const property = freshRoom.properties.find((p) => p.tileIndex === freshPlayer.position);
+              if (property && !property.ownerUserId && freshPlayer.cash >= property.price + 150) {
+                try {
+                  await this.buyProperty(roomId, currentTurnUserId);
+                } catch (buyErr) {
+                  // Ignore if already bought or funds insufficient
+                }
+              }
+            }
+
+            // 3. End Turn
+            setTimeout(async () => {
+              try {
+                const checkRoom = await GameRoom.findByPk(roomId);
+                if (checkRoom && checkRoom.status === 'PLAYING' && Number(checkRoom.currentTurnPlayerId) === Number(currentTurnUserId)) {
+                  await this.endTurn(roomId, currentTurnUserId);
+                }
+              } catch (err) {
+                console.warn('[CapitalBoardBot] Error ending bot turn:', err.message);
+              }
+            }, 800);
+          } catch (err) {
+            console.warn('[CapitalBoardBot] Error during bot property action:', err.message);
+          }
+        }, 1400);
+      } catch (err) {
+        console.warn('[CapitalBoardBot] Error rolling dice for bot:', err.message);
+      }
+    }, 1200);
   }
 
   /**
@@ -1170,31 +1438,34 @@ class CapitalBoardGameService {
         { transaction }
       );
 
-      // Update Career Profile
-      let profile = await GameLeaderboardProfile.findOne({
-        where: { userId: p.userId },
-        transaction,
-      });
+      // Update Career Profile (for human players only)
+      const isBotUser = p.user?.isSimulated || p.user?.email?.endsWith('@capitalboard.workrank');
+      if (!isBotUser) {
+        let profile = await GameLeaderboardProfile.findOne({
+          where: { userId: p.userId },
+          transaction,
+        });
 
-      if (!profile) {
-        profile = await GameLeaderboardProfile.create(
-          {
-            userId: p.userId,
-            careerMoney: reward,
-            gamesPlayed: 1,
-            gamesWon: rank === 1 ? 1 : 0,
-            totalNetWorth: sp.netWorth,
-            bestRank: rank,
-          },
-          { transaction }
-        );
-      } else {
-        profile.careerMoney = Number(profile.careerMoney || 0) + reward;
-        profile.gamesPlayed = Number(profile.gamesPlayed || 0) + 1;
-        profile.gamesWon = Number(profile.gamesWon || 0) + (rank === 1 ? 1 : 0);
-        profile.totalNetWorth = Number(profile.totalNetWorth || 0) + sp.netWorth;
-        profile.bestRank = Math.min(Number(profile.bestRank || 999), rank);
-        await profile.save({ transaction });
+        if (!profile) {
+          profile = await GameLeaderboardProfile.create(
+            {
+              userId: p.userId,
+              careerMoney: reward,
+              gamesPlayed: 1,
+              gamesWon: rank === 1 ? 1 : 0,
+              totalNetWorth: sp.netWorth,
+              bestRank: rank,
+            },
+            { transaction }
+          );
+        } else {
+          profile.careerMoney = Number(profile.careerMoney || 0) + reward;
+          profile.gamesPlayed = Number(profile.gamesPlayed || 0) + 1;
+          profile.gamesWon = Number(profile.gamesWon || 0) + (rank === 1 ? 1 : 0);
+          profile.totalNetWorth = Number(profile.totalNetWorth || 0) + sp.netWorth;
+          profile.bestRank = Math.min(Number(profile.bestRank || 999), rank);
+          await profile.save({ transaction });
+        }
       }
     }
 

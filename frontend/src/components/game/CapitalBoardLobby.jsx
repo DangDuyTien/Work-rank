@@ -25,14 +25,18 @@ export default function CapitalBoardLobby({
   onRefresh,
   onJoinRoom,
   onCreateRoom,
+  onCreatePracticeRoom,
   actionLoading = false,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [joinCodeInput, setJoinCodeInput] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const [practiceBotCount, setPracticeBotCount] = useState(3);
   const [newRoomName, setNewRoomName] = useState('');
   const [newMaxPlayers, setNewMaxPlayers] = useState(4);
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [creatingPractice, setCreatingPractice] = useState(false);
   const [codeJoinError, setCodeJoinError] = useState(null);
 
   const handleCreateSubmit = async (e) => {
@@ -48,6 +52,18 @@ export default function CapitalBoardLobby({
       setNewRoomName('');
     } finally {
       setCreatingRoom(false);
+    }
+  };
+
+  const handlePracticeSubmit = async (e) => {
+    e.preventDefault();
+    if (creatingPractice || !onCreatePracticeRoom) return;
+    try {
+      setCreatingPractice(true);
+      await onCreatePracticeRoom(practiceBotCount);
+      setShowPracticeModal(false);
+    } finally {
+      setCreatingPractice(false);
     }
   };
 
@@ -255,8 +271,8 @@ export default function CapitalBoardLobby({
                 </form>
               </div>
 
-              {/* Create & Refresh Buttons */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {/* Create, Practice & Refresh Buttons */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={onRefresh}
@@ -273,11 +289,37 @@ export default function CapitalBoardLobby({
                     fontWeight: 700,
                     color: 'var(--text-primary)',
                     cursor: lobbyLoading ? 'not-allowed' : 'pointer',
+                    transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
                   }}
                 >
                   <RefreshCw size={13} className={lobbyLoading ? 'spin' : ''} />
                   <span>Làm mới</span>
                 </button>
+
+                {onCreatePracticeRoom && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPracticeModal(true)}
+                    disabled={actionLoading}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'var(--info-soft)',
+                      color: 'var(--info)',
+                      border: '1px solid var(--info-border, rgba(56,189,248,0.3))',
+                      borderRadius: 6,
+                      padding: '7px 13px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: actionLoading ? 'not-allowed' : 'pointer',
+                      transition: 'background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard)',
+                    }}
+                  >
+                    <Sparkles size={14} />
+                    <span>🎮 Luyện Tập Bot</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -295,6 +337,7 @@ export default function CapitalBoardLobby({
                     fontWeight: 700,
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(15,23,42,0.15)',
+                    transition: 'background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
                   }}
                 >
                   <Plus size={15} />
@@ -557,6 +600,91 @@ export default function CapitalBoardLobby({
               }}
             >
               {creatingRoom ? 'Đang tạo phòng...' : 'Tạo Phòng Ngay'}
+            </button>
+          </div>
+        </form>
+      </AnimatedModal>
+
+      {/* Practice with Bot Modal */}
+      <AnimatedModal
+        isOpen={showPracticeModal}
+        onClose={() => setShowPracticeModal(false)}
+        title="Luyện Tập Với Bot AI"
+        maxWidth={440}
+      >
+        <form onSubmit={handlePracticeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
+            Tạo phòng chơi riêng tư để luyện tập & trải nghiệm cờ tỷ phú với các Bot AI thông minh. Bot sẽ tự động gieo xúc xắc và mua đất nhanh chóng.
+          </p>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+              Số lượng Bot tham gia
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { count: 1, label: '1 Bot (2 người)' },
+                { count: 2, label: '2 Bot (3 người)' },
+                { count: 3, label: '3 Bot (4 người)' },
+              ].map((item) => (
+                <button
+                  key={item.count}
+                  type="button"
+                  onClick={() => setPracticeBotCount(item.count)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: 6,
+                    border: practiceBotCount === item.count ? '2px solid var(--info)' : '1px solid rgba(15,23,42,0.15)',
+                    background: practiceBotCount === item.count ? 'var(--info-soft)' : 'var(--surface)',
+                    color: practiceBotCount === item.count ? 'var(--info)' : 'var(--text-primary)',
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    transition: 'border-color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard)',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={() => setShowPracticeModal(false)}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: 6,
+                border: '1px solid rgba(15,23,42,0.2)',
+                background: 'var(--surface)',
+                color: 'var(--text-secondary)',
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={creatingPractice}
+              style={{
+                flex: 2,
+                padding: '10px 14px',
+                borderRadius: 6,
+                border: 'none',
+                background: 'var(--info)',
+                color: 'var(--surface)',
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: creatingPractice ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 8px rgba(2,132,199,0.25)',
+              }}
+            >
+              {creatingPractice ? 'Đang tạo phòng...' : 'Vào Chơi Ngay'}
             </button>
           </div>
         </form>

@@ -11792,71 +11792,267 @@ html[data-workrank-contrast="true"] .profile-level-card {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   CAPITAL BOARD GAME (CỜ TỶ PHÚ) STYLING
+   CAPITAL BOARD GAME (CỜ TỶ PHÚ) STYLING - MODERN 2D BOARD GAME
    ───────────────────────────────────────────────────────────────────────── */
-.board-game-container {
+.capital-board-layout {
   display: grid;
-  gap: 16px;
-}
-
-.game-board-perimeter {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  grid-template-rows: repeat(8, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+  gap: 20px;
   width: 100%;
-  max-width: 760px;
-  aspect-ratio: 1 / 1;
-  background: var(--surface);
-  border: 3px solid var(--text-primary);
-  position: relative;
+  max-width: 1280px;
   margin: 0 auto;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
 }
 
-.game-tile {
-  border: 1px solid rgba(15, 23, 42, 0.15);
+@media (min-width: 1080px) {
+  .capital-board-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+    gap: 24px;
+  }
+}
+
+/* Outer Board Mat / Wooden & Slate Bezel Frame */
+.board-mat-frame {
+  width: 100%;
+  max-width: 860px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  padding: 8px;
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22),
+              0 4px 12px rgba(15, 23, 42, 0.15),
+              inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 4px;
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .board-mat-frame {
+    padding: 4px;
+    gap: 2.5px;
+    border-radius: 12px;
+  }
+}
+
+/* Individual Board Tile Base */
+.board-tile-card {
+  background: var(--surface);
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 4px;
+  padding: 3px 2px;
   position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: transform var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.board-tile-card:hover {
+  transform: translateY(-2px);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+  z-index: 10;
+}
+
+.board-tile-card.is-selected {
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5), inset 0 0 4px rgba(56, 189, 248, 0.2);
+  z-index: 12;
+}
+
+.board-tile-card.is-active-landed {
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.55);
+  animation: tile-land-pulse 1.8s infinite;
+  z-index: 11;
+}
+
+@keyframes tile-land-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.85);
+  }
+}
+
+/* Corner Tile Specials */
+.board-tile-card.is-corner {
   background: var(--surface);
-  transition: background var(--transition-fast), transform var(--transition-fast);
-  user-select: none;
+  border: 1.5px solid rgba(15, 23, 42, 0.15);
 }
 
-.game-tile.is-corner {
-  background: var(--surface-soft);
-  font-weight: 900;
+/* Center Console Box */
+.board-center-stage {
+  grid-row: 2 / 8;
+  grid-column: 2 / 8;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.05),
+              0 8px 24px rgba(15, 23, 42, 0.04);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.game-tile.is-property-owned {
-  border-width: 2px;
+@media (max-width: 640px) {
+  .board-center-stage {
+    padding: 8px;
+    border-radius: 8px;
+  }
 }
 
-.game-tile-player-marker {
-  width: 18px;
-  height: 18px;
+/* 2D Player Token Pin */
+.token-pawn-badge {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--surface);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.6);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  color: var(--surface);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+  position: relative;
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
 }
 
+@media (max-width: 640px) {
+  .token-pawn-badge {
+    width: 15px;
+    height: 15px;
+    font-size: 8px;
+    border-width: 1.5px;
+  }
+}
+
+.token-pawn-badge.is-current-turn {
+  animation: token-active-float 1.6s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes token-active-float {
+  0%, 100% {
+    transform: translateY(0) scale(1.12);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.22);
+  }
+}
+
+/* 2D Building Token (House & Hotel) */
+.property-building-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 1px 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-weight: 800;
+}
+
+/* Dice Tumbling & Roll Animation */
 @keyframes dice-roll-spin {
-  0% { transform: rotate(0deg) scale(0.9); }
-  50% { transform: rotate(180deg) scale(1.1); }
+  0% { transform: rotate(0deg) scale(0.92); }
+  25% { transform: rotate(90deg) scale(1.12); }
+  50% { transform: rotate(180deg) scale(0.96); }
+  75% { transform: rotate(270deg) scale(1.08); }
   100% { transform: rotate(360deg) scale(1); }
 }
 
 .dice-rolling {
-  animation: dice-roll-spin 0.4s ease-in-out infinite;
+  animation: dice-roll-spin 0.45s ease-in-out infinite;
+}
+
+/* Arcade Action Buttons */
+.game-btn-roll {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
+}
+
+.game-btn-roll:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.game-btn-roll:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.game-btn-buy {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
+}
+
+.game-btn-buy:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
+}
+
+.game-btn-buy:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Reduced Motion Disabler */
+@media (prefers-reduced-motion: reduce) {
+  .dice-rolling,
+  .token-pawn-badge.is-current-turn,
+  .board-tile-card.is-active-landed {
+    animation: none !important;
+  }
+}
+
+html[data-workrank-reduce-motion="true"] .dice-rolling,
+html[data-workrank-reduce-motion="true"] .token-pawn-badge.is-current-turn,
+html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
+  animation: none !important;
 }
 
 /* ── QUIZ GAME FULL-BLEED GAMESHELL & RESPONSIVE STYLES ── */

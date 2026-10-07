@@ -349,5 +349,75 @@ test('Comprehensive Capital Board Game V1 E2E Test Suite', async (t) => {
     await GamePlayer.destroy({ where: { roomId: newRoom.id } }).catch(() => {});
     await GameRoom.destroy({ where: { id: newRoom.id } }).catch(() => {});
   });
+
+  await t.test('9. Practice Room with Bots: Host creates 1 Human + 3 Bots practice room', async () => {
+    const practiceRes = await request(app)
+      .post('/api/games/practice')
+      .set('Authorization', `Bearer ${token1}`)
+      .send({ botCount: 3 });
+
+    assert.equal(practiceRes.status, 201);
+    const practiceRoom = practiceRes.body.data;
+    assert.ok(practiceRoom.id);
+    assert.equal(practiceRoom.players.length, 4);
+    assert.equal(Number(practiceRoom.players[0].userId), Number(user1.id));
+
+    // Verify bots have isBot and simulated flags
+    const bots = practiceRoom.players.filter((p) => Number(p.userId) !== Number(user1.id));
+    assert.equal(bots.length, 3);
+    for (const b of bots) {
+      assert.ok(b.user.isBot || b.user.isSimulated);
+      assert.ok(b.user.name.includes('🤖'));
+    }
+
+    // Clean up
+    await GameProperty.destroy({ where: { roomId: practiceRoom.id } });
+    await GamePlayer.destroy({ where: { roomId: practiceRoom.id } });
+    await GameRoom.destroy({ where: { id: practiceRoom.id } });
+  });
+
+  await t.test('10. Add and Remove Bot in Custom Waiting Room', async () => {
+    // 1. Create a 4-player room
+    const createRes = await request(app)
+      .post('/api/games/rooms')
+      .set('Authorization', `Bearer ${token1}`)
+      .send({ title: 'Phòng Thêm Bot Test', maxPlayers: 4 });
+    assert.equal(createRes.status, 201);
+    const room = createRes.body.data;
+
+    // 2. Add 1st bot
+    const addBot1 = await request(app)
+      .post(`/api/games/rooms/${room.id}/bots`)
+      .set('Authorization', `Bearer ${token1}`);
+    assert.equal(addBot1.status, 200);
+    assert.equal(addBot1.body.data.players.length, 2);
+    const bot1UserId = addBot1.body.data.players.find((p) => p.userId !== user1.id).userId;
+
+    // 3. Add 2nd bot
+    const addBot2 = await request(app)
+      .post(`/api/games/rooms/${room.id}/bots`)
+      .set('Authorization', `Bearer ${token1}`);
+    assert.equal(addBot2.status, 200);
+    assert.equal(addBot2.body.data.players.length, 3);
+
+    // 4. Non-host cannot add bot
+    const nonHostAdd = await request(app)
+      .post(`/api/games/rooms/${room.id}/bots`)
+      .set('Authorization', `Bearer ${token2}`);
+    assert.equal(nonHostAdd.status, 400);
+
+    // 5. Remove 1st bot
+    const removeBot1 = await request(app)
+      .delete(`/api/games/rooms/${room.id}/bots/${bot1UserId}`)
+      .set('Authorization', `Bearer ${token1}`);
+    assert.equal(removeBot1.status, 200);
+    assert.equal(removeBot1.body.data.players.length, 2);
+
+    // Clean up
+    await GameProperty.destroy({ where: { roomId: room.id } }).catch(() => {});
+    await GamePlayer.destroy({ where: { roomId: room.id } }).catch(() => {});
+    await GameRoom.destroy({ where: { id: room.id } }).catch(() => {});
+  });
 });
+
 

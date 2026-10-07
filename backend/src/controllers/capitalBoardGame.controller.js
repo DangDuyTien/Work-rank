@@ -140,6 +140,41 @@ async function endTurn(req, res) {
   }
 }
 
+async function addBot(req, res) {
+  const roomId = Number(req.params.id);
+  if (!roomId) return res.status(400).json({ message: 'Invalid room ID' });
+
+  try {
+    const roomState = await gameService.addBot(roomId, req.user.id);
+    return res.json({ data: roomState });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
+async function removeBot(req, res) {
+  const roomId = Number(req.params.id);
+  const botUserId = Number(req.params.botUserId);
+  if (!roomId || !botUserId) return res.status(400).json({ message: 'Invalid room ID or bot user ID' });
+
+  try {
+    const roomState = await gameService.removeBot(roomId, req.user.id, botUserId);
+    return res.json({ data: roomState });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
+async function createPracticeRoom(req, res) {
+  const { botCount = 3 } = req.body || {};
+  try {
+    const roomState = await gameService.createPracticeRoom(req.user.id, botCount);
+    return res.status(201).json({ data: roomState });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+}
+
 async function getLeaderboard(req, res) {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
   const page = Math.max(1, Number(req.query.page) || 1);
@@ -162,8 +197,11 @@ module.exports = {
   getActiveRoom,
   getRoom,
   createRoom,
+  createPracticeRoom,
   joinRoom,
   leaveRoom,
+  addBot,
+  removeBot,
   startGame,
   rollDice,
   buyProperty,

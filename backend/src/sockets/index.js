@@ -4,6 +4,7 @@ const { User } = require('../models');
 const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
 const samRealtime = require('../services/samRealtime.service');
+const typingRealtime = require('../services/typingRealtime.service');
 const { canAccessGameRoom } = require('../services/gameRoomAuth.service');
 
 function emitPresence(io, user, status) {
@@ -32,6 +33,9 @@ function chatUserPayload(user) {
 }
 
 function registerSockets(io) {
+  samRealtime.setIo(io);
+  typingRealtime.setIo(io);
+
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
@@ -235,8 +239,92 @@ function registerSockets(io) {
       }
     });
 
+    // ── Typing Competition Socket Rooms & Actions ──
+    socket.on('typing:joinRoom', async (payload = {}, ack) => {
+      try {
+        const auth = await canAccessGameRoom({
+          userId: socket.user.id,
+          userRole: socket.user.role,
+          roomId: payload.roomId,
+          gameType: 'typing',
+          clientSpectatorHint: !!payload.isSpectator,
+        });
+
+        if (!auth.allowed) {
+          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
+          socket.emit('error', { message: auth.error, code: auth.code });
+          return;
+        }
+
+        socket.join(`typing:${auth.roomId}`);
+        if (auth.isSpectator) {
+          typingRealtime.addSpectator(auth.roomId, socket.id);
+        }
+        if (typeof ack === 'function') {
+          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
+        }
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
+    socket.on('typing:leaveRoom', (payload = {}) => {
+      const roomId = Number(payload.roomId);
+      if (roomId) {
+        socket.leave(`typing:${roomId}`);
+        typingRealtime.removeSpectator(roomId, socket.id);
+      }
+    });
+
+    socket.on('typing:toggleReady', async (payload = {}, ack) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        const isReady = Boolean(payload.isReady);
+        const result = await typingGameService.toggleReady(roomId, socket.user.id, isReady);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
+    socket.on('typing:switchTeam', async (payload = {}, ack) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        const result = await typingGameService.switchTeam(roomId, socket.user.id, payload.team);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
+    socket.on('typing:progress', async (payload = {}) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        if (roomId) {
+          await typingGameService.updateProgress(roomId, socket.user.id, payload);
+        }
+      } catch {
+        // High frequency progress update is best-effort
+      }
+    });
+
+    socket.on('typing:finish', async (payload = {}, ack) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        const result = await typingGameService.submitFinish(roomId, socket.user.id, payload);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
     socket.on('disconnect', () => {
       samRealtime.removeSpectatorFromAll(socket.id);
+      typingRealtime.removeSpectatorFromAll(socket.id);
       const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
         emitPresence(io, offlineUser, 'offline');
       });

@@ -44,7 +44,7 @@ function scheduleStartCountdown(roomId) {
   const timer = setTimeout(async () => {
     startCountdownTimers.delete(numId);
     try {
-      const room = await SamRoom.findByPk(numId, {
+      const room = await findRoom(numId, {
         include: [{ model: SamPlayer, as: 'players' }],
       });
       if (!room || room.status !== 'STARTING') return;
@@ -126,6 +126,21 @@ function isPlayerMatch(p, identifier) {
   return false;
 }
 
+// Helper to reliably find room by integer ID or alphanumeric room code (e.g. SAM-ABCD)
+async function findRoom(roomIdOrCode, options = {}) {
+  if (roomIdOrCode == null || roomIdOrCode === '') return null;
+  const trimmed = String(roomIdOrCode).trim();
+  const isNumeric = typeof roomIdOrCode === 'number' || (!isNaN(Number(trimmed)) && /^\d+$/.test(trimmed));
+  const where = isNumeric
+    ? { [Op.or]: [{ id: Number(trimmed) }, { code: trimmed }] }
+    : { code: trimmed };
+
+  return SamRoom.findOne({
+    where,
+    ...options,
+  });
+}
+
 // ── LOBBY & ROOM MANAGEMENT ──
 
 async function listRooms(filters = {}, requestingUser = null) {
@@ -182,9 +197,34 @@ async function createRoom(data, requestingUser = null) {
   }
 
   const validMax = Math.min(4, Math.max(2, Number(maxPlayers) || 4));
-  const code = generateRoomCode();
 
   const result = await sequelize.transaction(async (t) => {
+    // Check if user is already playing in another active match
+    const activeMatch = await SamPlayer.findOne({
+      where: { userId: actualUserId, status: 'ACTIVE' },
+      include: [{ model: SamRoom, as: 'room', where: { status: 'PLAYING' } }],
+      transaction: t,
+    });
+    if (activeMatch) {
+      throw new ConflictError('Bạn đang tham gia một ván đấu chưa kết thúc. Vui lòng hoàn thành ván đấu hiện tại.');
+    }
+
+    // Clean up any old WAITING seat for this user
+    const oldWaiting = await SamPlayer.findAll({
+      where: { userId: actualUserId, status: 'WAITING' },
+      include: [{ model: SamRoom, as: 'room', where: { status: 'WAITING' } }],
+      transaction: t,
+    });
+    for (const ow of oldWaiting) {
+      await ow.destroy({ transaction: t });
+    }
+
+    // Generate guaranteed unique room code
+    let code = generateRoomCode();
+    while (await SamRoom.findOne({ where: { code }, transaction: t })) {
+      code = generateRoomCode();
+    }
+
     const room = await SamRoom.create(
       {
         code,
@@ -244,9 +284,13 @@ async function createBotTestRoom(data, adminUser) {
 
   const totalSeats = Math.min(4, Math.max(2, Number(playerCount) || 4));
   const validDifficulty = ['EASY', 'NORMAL', 'HARD'].includes(difficulty) ? difficulty : 'NORMAL';
-  const code = generateRoomCode();
 
   const result = await sequelize.transaction(async (t) => {
+    let code = generateRoomCode();
+    while (await SamRoom.findOne({ where: { code }, transaction: t })) {
+      code = generateRoomCode();
+    }
+
     const room = await SamRoom.create(
       {
         code,
@@ -315,12 +359,102 @@ async function createBotTestRoom(data, adminUser) {
   return getRoomDetail(result.id, adminUser.id, 'admin');
 }
 
+// ── PRACTICE ROOM CREATION (FOR ALL PLAYERS VS AI BOTS) ──
+
+async function createPracticeRoom(userId, botCount = 3) {
+  if (!userId) {
+    throw new UnauthorizedError('Yêu cầu xác thực người dùng để tạo phòng');
+  }
+
+  const requestedBots = Math.min(3, Math.max(1, Number(botCount) || 3));
+  const totalSeats = requestedBots + 1;
+
+  const result = await sequelize.transaction(async (t) => {
+    // Clean up any old WAITING seat for this user
+    const oldWaiting = await SamPlayer.findAll({
+      where: { userId, status: 'WAITING' },
+      include: [{ model: SamRoom, as: 'room', where: { status: 'WAITING' } }],
+      transaction: t,
+    });
+    for (const ow of oldWaiting) {
+      await ow.destroy({ transaction: t });
+    }
+
+    let code = generateRoomCode();
+    while (await SamRoom.findOne({ where: { code }, transaction: t })) {
+      code = generateRoomCode();
+    }
+
+    const room = await SamRoom.create(
+      {
+        code,
+        title: 'Luyện Tập Đánh Sâm (vs Bot)',
+        hostUserId: userId,
+        status: 'WAITING',
+        maxPlayers: totalSeats,
+        roundNumber: 1,
+        passPlayerIds: [],
+        samPhase: 'WAITING',
+        roomType: 'BOT_TEST',
+        isTest: true,
+        botDifficulty: 'NORMAL',
+        testScenario: 'PRACTICE_BOT',
+        botPaused: false,
+        spectatorCount: 0,
+      },
+      { transaction: t }
+    );
+
+    // 1. Add human player at seat 0
+    await SamPlayer.create(
+      {
+        roomId: room.id,
+        userId,
+        seatIndex: 0,
+        handCards: [],
+        remainingCardsCount: 0,
+        status: 'WAITING',
+        isReady: true,
+        playerType: 'HUMAN',
+        isBot: false,
+      },
+      { transaction: t }
+    );
+
+    // 2. Add AI Bots for remaining seats
+    for (let b = 1; b <= requestedBots; b++) {
+      await SamPlayer.create(
+        {
+          roomId: room.id,
+          userId: null,
+          seatIndex: b,
+          handCards: [],
+          remainingCardsCount: 0,
+          status: 'WAITING',
+          isReady: true,
+          playerType: 'BOT',
+          isBot: true,
+          botId: `BOT_TEST_0${b + 1}`,
+          botName: `BOT-0${b + 1}`,
+        },
+        { transaction: t }
+      );
+    }
+
+    return room;
+  });
+
+  // Start match automatically for instant practice experience
+  await startMatch(result.id, userId, true);
+  return getRoomDetail(result.id, userId, 'admin');
+}
+
 async function joinRoom(roomId, userId, requestingUser = null) {
   if (!roomId || !userId) {
     throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
 
@@ -328,9 +462,9 @@ async function joinRoom(roomId, userId, requestingUser = null) {
     throw new NotFoundError('Phòng chơi không tồn tại');
   }
 
-  // If this is a test room, verify admin role
+  // If this is a test room, verify admin role or host ownership
   const userRole = requestingUser ? requestingUser.role : (await User.findByPk(userId))?.role;
-  if (room.isTest && userRole !== 'admin') {
+  if (room.isTest && userRole !== 'admin' && Number(room.hostUserId) !== Number(userId)) {
     throw new ForbiddenError('Bạn không có quyền tham gia phòng thử nghiệm này');
   }
 
@@ -387,7 +521,7 @@ async function joinRoom(roomId, userId, requestingUser = null) {
 }
 
 async function leaveRoom(roomId, userId) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
 
@@ -461,7 +595,7 @@ async function leaveRoom(roomId, userId) {
 }
 
 async function toggleReady(roomId, userId, isReady) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       {
         model: SamPlayer,
@@ -565,7 +699,7 @@ async function toggleReady(roomId, userId, isReady) {
 // ── MATCH LIFECYCLE ──
 
 async function startMatch(roomId, hostUserId, isAdmin = false) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       {
         model: SamPlayer,
@@ -702,7 +836,7 @@ function scheduleSamPhaseTimer(roomId) {
   const timer = setTimeout(async () => {
     samPhaseTimers.delete(numId);
     try {
-      const room = await SamRoom.findByPk(numId, {
+      const room = await findRoom(numId, {
         include: [{ model: SamPlayer, as: 'players', include: [{ model: User, as: 'user' }] }],
       });
       if (!room || room.status !== 'PLAYING' || room.samPhase !== 'SAM_DECLARING') {
@@ -764,7 +898,7 @@ function clearSamPhaseTimer(roomId) {
 }
 
 async function declareSam(roomId, userOrBotId, declare = true) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       {
         model: SamPlayer,
@@ -892,7 +1026,7 @@ async function playCards(roomId, userOrBotId, cardIds) {
     throw new ValidationError('Vui lòng chọn ít nhất 1 lá bài để đánh');
   }
 
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       {
         model: SamPlayer,
@@ -1046,7 +1180,7 @@ async function playCards(roomId, userOrBotId, cardIds) {
 }
 
 async function passTurn(roomId, userOrBotId) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
 
@@ -1324,7 +1458,7 @@ async function handleThoi2Finish(room, player, cardIds) {
 }
 
 async function finishMatch(roomId, winnerId, reason = 'NORMAL') {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
   if (!room) return;
@@ -1380,7 +1514,7 @@ async function updateUserStats(playerResults, winnerUserId, isSamWin) {
 // ── GET ROOM DETAIL (SECURITY & SPECTATOR & RECONNECT SAFE) ──
 
 async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'user') {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       { model: User, as: 'host', attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'role'] },
       {
@@ -1396,10 +1530,10 @@ async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'use
     throw new Error('Phòng không tồn tại');
   }
 
-  // Security: Non-admins cannot access bot test rooms
+  // Security: Non-admins cannot access bot test rooms EXCEPT if they are the host (e.g. Practice Room)
   if (room.isTest && requestingUserRole !== 'admin') {
     if (requestingUserId && Number(room.hostUserId) === Number(requestingUserId)) {
-      // Host is admin
+      // Host is allowed
     } else {
       const error = new Error('Bạn không có quyền truy cập phòng thử nghiệm');
       error.status = 403;
@@ -1518,7 +1652,7 @@ function triggerBotLifecycle(roomId) {
   scheduleBotTimer(
     roomId,
     async () => {
-      const room = await SamRoom.findByPk(roomId, {
+      const room = await findRoom(roomId, {
         include: [{ model: SamPlayer, as: 'players' }],
       });
 
@@ -1582,15 +1716,27 @@ function triggerBotLifecycle(roomId) {
   );
 }
 
-// ── ADMIN BOT TEST CONTROLS ──
+// ── BOT ROOM CONTROLS (HOST & ADMIN) ──
 
-async function fillBots(roomId, adminUserId) {
-  const room = await SamRoom.findByPk(roomId, {
+async function fillBots(roomId, requestingUserId, isAdmin = false) {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
 
-  if (!room) throw new Error('Phòng không tồn tại');
-  if (!room.isTest) throw new Error('Chỉ có thể thêm bot vào phòng Bot Test');
+  if (!room) throw new NotFoundError('Phòng không tồn tại');
+  if (room.status !== 'WAITING') throw new ConflictError('Chỉ có thể thêm bot khi phòng ở trạng thái chờ');
+
+  const isHost = Number(room.hostUserId) === Number(requestingUserId);
+  if (!isAdmin && !isHost) {
+    throw new ForbiddenError('Chỉ chủ phòng hoặc Quản trị viên mới có quyền thêm Bot');
+  }
+
+  // If a live room has bots added, mark room as isTest = true so that stats don't get polluted
+  if (!room.isTest) {
+    room.isTest = true;
+    room.roomType = 'BOT_TEST';
+    await room.save();
+  }
 
   const takenSeats = room.players.map((p) => p.seatIndex);
   for (let s = 0; s < room.maxPlayers; s++) {
@@ -1611,13 +1757,64 @@ async function fillBots(roomId, adminUserId) {
     }
   }
 
-  const detail = await getRoomDetail(room.id, adminUserId, 'admin');
+  const detail = await getRoomDetail(room.id, requestingUserId, isAdmin ? 'admin' : 'user');
+  samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
+  return detail;
+}
+
+async function addBotToRoom(roomId, requestingUserId, isAdmin = false) {
+  const room = await findRoom(roomId, {
+    include: [{ model: SamPlayer, as: 'players' }],
+  });
+
+  if (!room) throw new NotFoundError('Phòng không tồn tại');
+  if (room.status !== 'WAITING') throw new ConflictError('Chỉ có thể thêm bot khi phòng ở trạng thái chờ');
+
+  const isHost = Number(room.hostUserId) === Number(requestingUserId);
+  if (!isAdmin && !isHost) {
+    throw new ForbiddenError('Chỉ chủ phòng hoặc Quản trị viên mới có quyền thêm Bot');
+  }
+
+  if (room.players.length >= room.maxPlayers) {
+    throw new ConflictError('Phòng đã đủ người chơi');
+  }
+
+  if (!room.isTest) {
+    room.isTest = true;
+    room.roomType = 'BOT_TEST';
+    await room.save();
+  }
+
+  const takenSeats = room.players.map((p) => p.seatIndex);
+  let availableSeat = 0;
+  for (let s = 0; s < room.maxPlayers; s++) {
+    if (!takenSeats.includes(s)) {
+      availableSeat = s;
+      break;
+    }
+  }
+
+  await SamPlayer.create({
+    roomId: room.id,
+    userId: null,
+    seatIndex: availableSeat,
+    handCards: [],
+    remainingCardsCount: 0,
+    status: 'WAITING',
+    isReady: true,
+    playerType: 'BOT',
+    isBot: true,
+    botId: `BOT_TEST_0${availableSeat + 1}`,
+    botName: `BOT-0${availableSeat + 1}`,
+  });
+
+  const detail = await getRoomDetail(room.id, requestingUserId, isAdmin ? 'admin' : 'user');
   samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
   return detail;
 }
 
 async function pauseBotTest(roomId, adminUserId) {
-  const room = await SamRoom.findByPk(roomId);
+  const room = await findRoom(roomId);
   if (!room) throw new Error('Phòng không tồn tại');
   room.botPaused = true;
   await room.save();
@@ -1628,7 +1825,7 @@ async function pauseBotTest(roomId, adminUserId) {
 }
 
 async function resumeBotTest(roomId, adminUserId) {
-  const room = await SamRoom.findByPk(roomId);
+  const room = await findRoom(roomId);
   if (!room) throw new Error('Phòng không tồn tại');
   room.botPaused = false;
   await room.save();
@@ -1639,7 +1836,7 @@ async function resumeBotTest(roomId, adminUserId) {
 }
 
 async function stepBotTest(roomId, adminUserId) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [{ model: SamPlayer, as: 'players' }],
   });
   if (!room || room.status !== 'PLAYING') throw new Error('Trận đấu chưa bắt đầu');
@@ -1665,7 +1862,7 @@ async function restartBotTest(roomId, adminUserId) {
 
 async function stopBotTest(roomId, adminUserId) {
   clearBotTimers(roomId);
-  const room = await SamRoom.findByPk(roomId);
+  const room = await findRoom(roomId);
   if (room) {
     room.status = 'ABANDONED';
     await room.save();
@@ -1675,7 +1872,7 @@ async function stopBotTest(roomId, adminUserId) {
 }
 
 async function getBotDebugState(roomId, adminUserId) {
-  const room = await SamRoom.findByPk(roomId, {
+  const room = await findRoom(roomId, {
     include: [
       {
         model: SamPlayer,
@@ -1768,6 +1965,7 @@ async function getMyStats(userId) {
 module.exports = {
   listRooms,
   createRoom,
+  createPracticeRoom,
   createBotTestRoom,
   joinRoom,
   leaveRoom,
@@ -1782,6 +1980,7 @@ module.exports = {
   getRoomDetail,
   getActiveRoom,
   fillBots,
+  addBotToRoom,
   pauseBotTest,
   resumeBotTest,
   stepBotTest,

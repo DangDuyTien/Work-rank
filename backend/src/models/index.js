@@ -74,6 +74,12 @@ const ProductionKpiExecutionSnapshot = require('./ProductionKpiExecutionSnapshot
 // System Settings & Game Catalog
 const SystemSetting = require('./SystemSetting');
 const GameCatalog = require('./GameCatalog');
+// Typing Competition Models
+const TypingChallenge = require('./TypingChallenge');
+const TypingRoom = require('./TypingRoom');
+const TypingPlayer = require('./TypingPlayer');
+const TypingMatchResult = require('./TypingMatchResult');
+const TypingUserStat = require('./TypingUserStat');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -285,6 +291,24 @@ ProductionKpiExecutionSnapshot.belongsTo(ProductionKpiRule, { foreignKey: 'ruleI
 ProductionKpiExecutionSnapshot.belongsTo(ScoreLedger, { foreignKey: 'ledgerId', as: 'scoreLedger' });
 ProductionKpiExecutionSnapshot.belongsTo(CompetitionEvent, { foreignKey: 'eventId', as: 'event' });
 
+// Typing Competition Associations
+TypingRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
+TypingRoom.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
+TypingRoom.belongsTo(TypingChallenge, { as: 'challenge', foreignKey: 'challengeId' });
+TypingRoom.hasMany(TypingPlayer, { as: 'players', foreignKey: 'roomId' });
+TypingPlayer.belongsTo(TypingRoom, { as: 'room', foreignKey: 'roomId' });
+TypingPlayer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+TypingRoom.hasOne(TypingMatchResult, { as: 'result', foreignKey: 'roomId' });
+TypingMatchResult.belongsTo(TypingRoom, { as: 'room', foreignKey: 'roomId' });
+TypingMatchResult.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
+TypingMatchResult.belongsTo(Season, { as: 'season', foreignKey: 'seasonId' });
+
+User.hasOne(TypingUserStat, { as: 'typingStats', foreignKey: 'userId' });
+TypingUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+TypingChallenge.belongsTo(User, { as: 'creator', foreignKey: 'createdBy' });
+
 module.exports = {
   sequelize,
   Team,
@@ -367,6 +391,12 @@ module.exports = {
   // System Settings & Game Catalog
   SystemSetting,
   GameCatalog,
+  // Typing Competition Models
+  TypingChallenge,
+  TypingRoom,
+  TypingPlayer,
+  TypingMatchResult,
+  TypingUserStat,
 };
 
 

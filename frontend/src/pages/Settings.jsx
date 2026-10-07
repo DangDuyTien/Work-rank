@@ -29,6 +29,7 @@ import {
   Check,
   Wrench,
   Gamepad2,
+  Keyboard,
   LayoutGrid,
   Club,
   Activity,
@@ -1078,7 +1079,16 @@ export default function Settings() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                 {gameCatalog.map((game) => {
-                  const Icon = game.gameKey === 'capital_board' ? Gamepad2 : game.gameKey === 'game_2048' ? LayoutGrid : game.gameKey === 'sam' ? Club : Sparkles;
+                  const Icon =
+                    game.gameKey === 'typing_battle' || game.gameKey === 'typing'
+                      ? Keyboard
+                      : game.gameKey === 'capital_board'
+                      ? Gamepad2
+                      : game.gameKey === 'game_2048'
+                      ? LayoutGrid
+                      : game.gameKey === 'sam'
+                      ? Club
+                      : Sparkles;
                   const isAvail = game.status === 'AVAILABLE';
                   const isUpdating = updatingGameKey === game.gameKey;
                   return (

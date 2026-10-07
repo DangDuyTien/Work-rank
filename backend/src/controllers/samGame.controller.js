@@ -37,7 +37,7 @@ async function createRoom(req, res, next) {
 async function getRoom(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.getRoomDetail(Number(id), req.user.id, req.user.role);
+    const room = await samGameService.getRoomDetail(id, req.user.id, req.user.role);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -56,7 +56,7 @@ async function getActiveRoom(req, res, next) {
 async function joinRoom(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.joinRoom(Number(id), req.user.id, req.user);
+    const room = await samGameService.joinRoom(id, req.user.id, req.user);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -66,7 +66,7 @@ async function joinRoom(req, res, next) {
 async function leaveRoom(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await samGameService.leaveRoom(Number(id), req.user.id);
+    const result = await samGameService.leaveRoom(id, req.user.id);
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -77,7 +77,7 @@ async function toggleReady(req, res, next) {
   try {
     const { id } = req.params;
     const { isReady } = req.body;
-    const room = await samGameService.toggleReady(Number(id), req.user.id, isReady);
+    const room = await samGameService.toggleReady(id, req.user.id, isReady);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -87,7 +87,7 @@ async function toggleReady(req, res, next) {
 async function startMatch(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.startMatch(Number(id), req.user.id, req.user.role === 'admin');
+    const room = await samGameService.startMatch(id, req.user.id, req.user.role === 'admin');
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -98,7 +98,7 @@ async function declareSam(req, res, next) {
   try {
     const { id } = req.params;
     const { declare } = req.body;
-    const room = await samGameService.declareSam(Number(id), req.user.id, declare);
+    const room = await samGameService.declareSam(id, req.user.id, declare);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -109,7 +109,7 @@ async function playCards(req, res, next) {
   try {
     const { id } = req.params;
     const { cardIds } = req.body;
-    const room = await samGameService.playCards(Number(id), req.user.id, cardIds);
+    const room = await samGameService.playCards(id, req.user.id, cardIds);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -119,7 +119,7 @@ async function playCards(req, res, next) {
 async function passTurn(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.passTurn(Number(id), req.user.id);
+    const room = await samGameService.passTurn(id, req.user.id);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -145,7 +145,17 @@ async function getMyStats(req, res, next) {
   }
 }
 
-// ── ADMIN BOT TEST CONTROLLER ACTIONS ──
+// ── PRACTICE ROOM & BOT CONTROLLER ACTIONS ──
+
+async function createPracticeRoom(req, res, next) {
+  try {
+    const { botCount = 3 } = req.body;
+    const room = await samGameService.createPracticeRoom(req.user.id, botCount);
+    return res.status(201).json(room);
+  } catch (err) {
+    return next(err);
+  }
+}
 
 async function createBotTestRoom(req, res, next) {
   try {
@@ -179,7 +189,17 @@ async function listBotTestRooms(req, res, next) {
 async function fillBots(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.fillBots(Number(id), req.user.id);
+    const room = await samGameService.fillBots(id, req.user.id, req.user.role === 'admin');
+    return res.status(200).json(room);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function addBot(req, res, next) {
+  try {
+    const { id } = req.params;
+    const room = await samGameService.addBotToRoom(id, req.user.id, req.user.role === 'admin');
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -189,7 +209,7 @@ async function fillBots(req, res, next) {
 async function pauseBotTest(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.pauseBotTest(Number(id), req.user.id);
+    const room = await samGameService.pauseBotTest(id, req.user.id);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -199,7 +219,7 @@ async function pauseBotTest(req, res, next) {
 async function resumeBotTest(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.resumeBotTest(Number(id), req.user.id);
+    const room = await samGameService.resumeBotTest(id, req.user.id);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -209,7 +229,7 @@ async function resumeBotTest(req, res, next) {
 async function stepBotTest(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.stepBotTest(Number(id), req.user.id);
+    const room = await samGameService.stepBotTest(id, req.user.id);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -219,7 +239,7 @@ async function stepBotTest(req, res, next) {
 async function restartBotTest(req, res, next) {
   try {
     const { id } = req.params;
-    const room = await samGameService.restartBotTest(Number(id), req.user.id);
+    const room = await samGameService.restartBotTest(id, req.user.id);
     return res.status(200).json(room);
   } catch (err) {
     return next(err);
@@ -229,7 +249,7 @@ async function restartBotTest(req, res, next) {
 async function stopBotTest(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await samGameService.stopBotTest(Number(id), req.user.id);
+    const result = await samGameService.stopBotTest(id, req.user.id);
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -239,7 +259,7 @@ async function stopBotTest(req, res, next) {
 async function getBotDebugState(req, res, next) {
   try {
     const { id } = req.params;
-    const state = await samGameService.getBotDebugState(Number(id), req.user.id);
+    const state = await samGameService.getBotDebugState(id, req.user.id);
     return res.status(200).json(state);
   } catch (err) {
     return next(err);
@@ -249,6 +269,7 @@ async function getBotDebugState(req, res, next) {
 module.exports = {
   listRooms,
   createRoom,
+  createPracticeRoom,
   getRoom,
   getActiveRoom,
   joinRoom,
@@ -263,6 +284,7 @@ module.exports = {
   createBotTestRoom,
   listBotTestRooms,
   fillBots,
+  addBot,
   pauseBotTest,
   resumeBotTest,
   stepBotTest,

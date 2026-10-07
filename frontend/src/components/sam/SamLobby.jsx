@@ -36,9 +36,12 @@ export default function SamLobby({
   activeTab = 'LOBBY',
   setActiveTab,
   loading = false,
+  errorMsg = null,
+  onDismissError,
   onOpenCreateModal,
   onOpenBotModal,
   onOpenRulesModal,
+  onCreatePracticeRoom,
   onJoinRoom,
 }) {
   return (
@@ -89,6 +92,15 @@ export default function SamLobby({
           <Button variant="secondary" onClick={onOpenRulesModal}>
             <HelpCircle size={15} /> Luật chơi
           </Button>
+          {onCreatePracticeRoom && (
+            <Button
+              variant="secondary"
+              onClick={() => onCreatePracticeRoom(3)}
+              style={{ color: '#0284c7', borderColor: 'rgba(2,132,199,0.3)', fontWeight: 700 }}
+            >
+              <Bot size={15} /> Luyện tập Bot
+            </Button>
+          )}
           {isAdmin && (
             <Button variant="secondary" onClick={onOpenBotModal} style={{ color: '#7c3aed', borderColor: 'rgba(124,58,237,0.3)' }}>
               <Bot size={15} /> Bot Test
@@ -103,6 +115,44 @@ export default function SamLobby({
           </Button>
         </div>
       </div>
+
+      {/* Error Message Alert Banner */}
+      {errorMsg && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: '12px 16px',
+            background: '#fef2f2',
+            border: '1px solid #f87171',
+            borderRadius: 8,
+            color: '#b91c1c',
+            fontSize: 13,
+            fontWeight: 600,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span>{errorMsg}</span>
+          {onDismissError && (
+            <button
+              type="button"
+              onClick={onDismissError}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#b91c1c',
+                cursor: 'pointer',
+                fontSize: 18,
+                lineHeight: 1,
+                padding: '0 4px',
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Active Room Rejoin Banner */}
       {activeRoom && (

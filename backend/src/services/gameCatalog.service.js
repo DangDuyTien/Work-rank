@@ -2,10 +2,73 @@
 
 const { GameCatalog } = require('../models');
 
+const DEFAULT_GAMES = [
+  {
+    gameKey: 'typing_battle',
+    name: 'WorkRank Typing Battle',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 1,
+    description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
+    icon: 'Keyboard',
+    route: '/games/typing',
+  },
+  {
+    gameKey: 'capital_board',
+    name: 'Cờ Tỷ Phú',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 2,
+    description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.',
+    icon: 'Gamepad2',
+    route: '/games/capital-board',
+  },
+  {
+    gameKey: 'game_2048',
+    name: '2048',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 3,
+    description: 'Trò chơi ghép số 2048 trí tuệ, thử thách tư duy và bảng xếp hạng công ty.',
+    icon: 'LayoutGrid',
+    route: '/games/2048',
+  },
+  {
+    gameKey: 'sam',
+    name: 'Đánh Sâm',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 4,
+    description: 'Trò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực kịch tính.',
+    icon: 'Club',
+    route: '/games/sam',
+  },
+  {
+    gameKey: 'quiz',
+    name: 'Đoán Hình & Đoán Nhạc',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 5,
+    description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao nhiều người chơi.',
+    icon: 'Sparkles',
+    route: '/games/quiz',
+  },
+];
+
+async function ensureDefaultCatalog() {
+  for (const g of DEFAULT_GAMES) {
+    const existing = await GameCatalog.findOne({ where: { gameKey: g.gameKey } });
+    if (!existing) {
+      await GameCatalog.create(g).catch(() => {});
+    }
+  }
+}
+
 /**
  * Returns all games in the catalog.
  */
 async function getCatalog() {
+  await ensureDefaultCatalog().catch(() => {});
   const games = await GameCatalog.findAll({
     order: [['sort_order', 'ASC'], ['id', 'ASC']],
   });

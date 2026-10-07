@@ -9,6 +9,7 @@ import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { gameCatalogApi } from '../services/api';
 
 const GAME_ROUTE_TO_KEY = {
+  '/games/typing': 'typing_battle',
   '/games/capital-board': 'capital_board',
   '/games/2048': 'game_2048',
   '/games/sam': 'sam',

@@ -11,6 +11,8 @@ export default function SamWaitingRoom({
   isAdmin = false,
   startCountdownSec = null,
   actionLoading = false,
+  errorMsg = null,
+  onDismissError,
   onLeaveRoom,
   onToggleReady,
   onStartMatch,
@@ -44,6 +46,43 @@ export default function SamWaitingRoom({
           borderRadius: 'var(--radius-content, 8px)',
         }}
       >
+        {/* Error Message Alert Banner */}
+        {errorMsg && (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: '10px 14px',
+              background: '#fef2f2',
+              border: '1px solid #f87171',
+              borderRadius: 8,
+              color: '#b91c1c',
+              fontSize: 13,
+              fontWeight: 600,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span>{errorMsg}</span>
+            {onDismissError && (
+              <button
+                type="button"
+                onClick={onDismissError}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#b91c1c',
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  lineHeight: 1,
+                  padding: '0 4px',
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
         {/* Header Section */}
         <div
           style={{
@@ -320,9 +359,14 @@ export default function SamWaitingRoom({
               <HelpCircle size={14} /> Luật chơi
             </Button>
 
-            {isAdmin && room.isTest && players.length < room.maxPlayers && (
-              <Button variant="secondary" onClick={onFillBots}>
-                <Bot size={14} /> Lấp đầy Bot
+            {(isHost || (isAdmin && room.isTest)) && players.length < room.maxPlayers && (
+              <Button
+                variant="secondary"
+                disabled={actionLoading}
+                onClick={onFillBots}
+                style={{ color: '#0284c7', borderColor: 'rgba(2,132,199,0.3)', fontWeight: 700 }}
+              >
+                <Bot size={14} /> Thêm Bot
               </Button>
             )}
 

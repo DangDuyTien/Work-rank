@@ -13,6 +13,7 @@ import {
   Tv,
   Building2,
   Gamepad2,
+  Keyboard,
   Sparkles,
   LayoutGrid,
   Club,
@@ -119,6 +120,15 @@ export const NAVIGATION_CONFIG = [
         shortLabel: 'Trò chơi',
         icon: Gamepad2,
         description: 'Danh sách trò chơi và trạng thái mở chơi',
+      },
+      {
+        to: '/games/typing',
+        label: 'WorkRank Typing Battle',
+        shortLabel: 'Typing Battle',
+        icon: Keyboard,
+        badge: 'Mới',
+        tourTarget: 'nav-typing-battle',
+        description: 'Đấu trường thi đấu đánh máy tốc độ cao 1v1, 2v2, 3v3',
       },
       {
         to: '/games/capital-board',
@@ -291,6 +301,7 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
+  if (pathname.startsWith('/games/typing')) return 'WorkRank Typing Battle';
   if (pathname.startsWith('/games/2048')) return 'Game 2048';
   if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú';
   if (pathname.startsWith('/games/sam')) return 'Đánh Sâm';

@@ -51,6 +51,7 @@ const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
 const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
 const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
+const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
 const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
 
@@ -197,6 +198,8 @@ function AppRoutes() {
             <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
             <Route path="/games/sam" element={<SamGame />} />
             <Route path="/games/sam/room/:roomId" element={<SamGame />} />
+            <Route path="/games/typing" element={<TypingBattle />} />
+            <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
             <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
             <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />

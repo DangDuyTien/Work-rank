@@ -7,6 +7,8 @@ const {
   QuizPlayer,
   GameRoom,
   GamePlayer,
+  TypingRoom,
+  TypingPlayer,
 } = require('../models');
 
 /**
@@ -196,6 +198,54 @@ async function canAccessGameRoom({
     return {
       allowed: false,
       error: 'Bạn không phải là người chơi trong phòng Cờ tỷ phú này',
+      code: 'FORBIDDEN',
+      status: 403,
+    };
+  }
+
+  if (gameType === 'typing' || gameType === 'typing_battle') {
+    let room = null;
+    if (typeof roomId === 'number' || /^\d+$/.test(String(roomId))) {
+      room = await TypingRoom.findByPk(Number(roomId));
+    }
+    if (!room && roomId) {
+      room = await TypingRoom.findOne({ where: { code: String(roomId).trim().toUpperCase().replace(/^#/, '') } });
+    }
+
+    if (!room) {
+      return { allowed: false, error: 'Phòng thi đấu đánh máy không tồn tại', code: 'ROOM_NOT_FOUND', status: 404 };
+    }
+
+    const player = await TypingPlayer.findOne({
+      where: { roomId: room.id, userId: uid },
+    });
+
+    const isHost = Number(room.hostUserId) === uid;
+    const isPlayer = !!player;
+
+    if (isPlayer || isHost) {
+      return {
+        allowed: true,
+        roomId: room.id,
+        isSpectator: false,
+        isPlayer: true,
+        role: 'player',
+      };
+    }
+
+    if (room.status === 'PLAYING' || room.status === 'FINISHED') {
+      return {
+        allowed: true,
+        roomId: room.id,
+        isSpectator: true,
+        isPlayer: false,
+        role: 'spectator',
+      };
+    }
+
+    return {
+      allowed: false,
+      error: 'Bạn không phải là người chơi trong phòng thi đấu này',
       code: 'FORBIDDEN',
       status: 403,
     };

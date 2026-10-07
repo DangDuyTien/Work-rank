@@ -23,6 +23,8 @@ router.use('/admin/quiz', require('./quizAdmin.routes'));
 router.use('/games/2048', require('./game2048.routes'));
 router.use('/games/sam', require('./samGame.routes'));
 router.use('/admin/games/sam', require('./samGame.routes'));
+router.use('/games/typing', require('./typingGame.routes'));
+router.use('/admin/games/typing', require('./typingGame.routes'));
 router.use('/admin/games', require('./gameCatalog.routes'));
 router.use('/games/catalog', require('./gameCatalog.routes'));
 router.use('/games', require('./capitalBoardGame.routes'));

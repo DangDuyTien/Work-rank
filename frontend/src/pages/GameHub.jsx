@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   Sparkles,
   Club,
+  Keyboard,
   Play,
   Clock,
   Shield,
@@ -18,6 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../components/ui';
 
 const GAME_ICONS = {
+  typing_battle: Keyboard,
+  typing: Keyboard,
   capital_board: Gamepad2,
   game_2048: LayoutGrid,
   quiz: Sparkles,
@@ -25,6 +28,14 @@ const GAME_ICONS = {
 };
 
 const DEFAULT_GAMES = [
+  {
+    gameKey: 'typing_battle',
+    name: 'WorkRank Typing Battle',
+    status: 'AVAILABLE',
+    description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
+    icon: 'Keyboard',
+    route: '/games/typing',
+  },
   {
     gameKey: 'capital_board',
     name: 'Cờ Tỷ Phú',
@@ -70,15 +81,31 @@ export default function GameHub() {
     try {
       setError(null);
       const res = await gameCatalogApi.getCatalog();
-      if (res && Array.isArray(res.games) && res.games.length > 0) {
-        const merged = res.games.map((g) => {
-          const def = DEFAULT_GAMES.find((d) => d.gameKey === g.gameKey);
+      if (res && Array.isArray(res.games)) {
+        const merged = DEFAULT_GAMES.map((def) => {
+          const serverGame = res.games.find((g) => (g.gameKey || g.game_key) === def.gameKey);
+          if (!serverGame) return def;
           return {
             ...def,
-            ...g,
-            route: g.route || def?.route || (g.gameKey === 'capital_board' ? '/games/capital-board' : `/games/${g.gameKey}`),
+            ...serverGame,
+            route: serverGame.route || def.route || (def.gameKey === 'capital_board' ? '/games/capital-board' : `/games/${def.gameKey}`),
           };
         });
+
+        res.games.forEach((g) => {
+          const key = g.gameKey || g.game_key;
+          if (key && !DEFAULT_GAMES.some((d) => d.gameKey === key)) {
+            merged.push({
+              gameKey: key,
+              name: g.name,
+              status: g.status || 'AVAILABLE',
+              description: g.description || '',
+              route: g.route || `/games/${key}`,
+              enabled: g.enabled !== false,
+            });
+          }
+        });
+
         setGames(merged);
       }
     } catch (err) {

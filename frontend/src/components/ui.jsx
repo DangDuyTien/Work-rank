@@ -51,20 +51,22 @@ export function PageState({ type = 'loading', title, description, onRetry }) {
   );
 }
 
-export function SegmentedControl({ options, value, onChange, ariaLabel }) {
+export function SegmentedControl({ options, items, value, onChange, ariaLabel }) {
+  const list = Array.isArray(options) ? options : Array.isArray(items) ? items : [];
   return (
     <div
       role="group"
       aria-label={ariaLabel}
       className="ui-segmented"
     >
-      {options.map((option) => {
-        const active = value === option.key;
+      {list.map((option) => {
+        const key = option.key ?? option.id ?? option.value;
+        const active = value === key;
         return (
           <button
-            key={option.key}
+            key={key}
             type="button"
-            onClick={() => onChange(option.key)}
+            onClick={() => onChange(key)}
             className={cx('ui-segmented__button', active && 'is-active')}
             aria-pressed={active}
           >
