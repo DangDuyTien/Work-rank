@@ -7,10 +7,12 @@ const registerSockets = require('./sockets');
 const { sequelize } = require('./models');
 const competitionRealtime = require('./services/competition/competitionRealtime.service');
 const { ensureYouTubeSchema } = require('./services/youtube/youtubeSchemaCheck');
+const { ensureTypingSchema } = require('./services/typingSchemaCheck');
 
 async function start() {
   await sequelize.authenticate();
   await ensureYouTubeSchema(sequelize);
+  await ensureTypingSchema(sequelize);
   const server = http.createServer(app);
   const io = new Server(server, socketOptions);
   app.set('io', io);

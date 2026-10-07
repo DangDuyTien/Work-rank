@@ -88,6 +88,11 @@ async function submitFinish(req, res) {
   res.json(detail);
 }
 
+async function submitPractice(req, res) {
+  const result = await typingGameService.submitPracticeResult(req.body, req.user);
+  res.json(result);
+}
+
 async function getMyStats(req, res) {
   const stats = await typingGameService.getMyStats(req.user.id);
   res.json(stats || {});
@@ -120,6 +125,7 @@ module.exports = {
   resetRoom,
   updateProgress,
   submitFinish,
+  submitPractice,
   getMyStats,
   getLeaderboard,
   getChallenges,

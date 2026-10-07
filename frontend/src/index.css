@@ -12433,6 +12433,15 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
   }
 }
 
+@keyframes caretBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce), [data-workrank-reduce-motion="true"] {
   *,
   *::before,

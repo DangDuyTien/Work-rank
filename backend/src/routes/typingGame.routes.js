@@ -29,5 +29,6 @@ router.post('/rooms/:roomId/reset', auth, asyncHandler(typingGameController.rese
 // In-game actions
 router.post('/rooms/:roomId/progress', auth, asyncHandler(typingGameController.updateProgress));
 router.post('/rooms/:roomId/finish', auth, asyncHandler(typingGameController.submitFinish));
+router.post('/practice/finish', auth, asyncHandler(typingGameController.submitPractice));
 
 module.exports = router;

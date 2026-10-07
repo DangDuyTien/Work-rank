@@ -43,11 +43,13 @@ function generateRoomCode() {
   return code;
 }
 
-// Ensure challenges exist
+// Ensure challenges and tables exist
 async function ensureChallengesExist() {
-  const count = await TypingChallenge.count();
-  if (count === 0) {
-    await seedTypingChallenges().catch((err) => console.warn('Typing challenge seed warning:', err.message));
+  try {
+    const { ensureTypingSchema } = require('./typingSchemaCheck');
+    await ensureTypingSchema(sequelize);
+  } catch (err) {
+    console.warn('[TypingService] ensureChallengesExist warning:', err.message);
   }
 }
 
@@ -146,13 +148,18 @@ async function listRooms(filters = {}) {
 // Helper to construct a rich continuous stream of words without any punctuation for timed tests
 async function buildContinuousChallengeText({ durationLimitSeconds = 120, difficulty = 'MEDIUM', language = 'VI' }) {
   const targetWords = Math.max(80, Math.round((Number(durationLimitSeconds) / 60) * 120)); // ~120 words per minute of test
-  const challenges = await TypingChallenge.findAll({
-    where: {
-      language: ['VI', 'EN', 'CODE'].includes(language) ? language : 'VI',
-      isActive: true,
-    },
-    order: sequelize.random ? sequelize.random() : [['id', 'ASC']],
-  });
+  let challenges = [];
+  try {
+    challenges = await TypingChallenge.findAll({
+      where: {
+        language: ['VI', 'EN', 'CODE'].includes(language) ? language : 'VI',
+        isActive: true,
+      },
+      order: [['id', 'ASC']],
+    });
+  } catch (err) {
+    console.warn('[TypingService] findAll challenges warning:', err.message);
+  }
 
   if (!challenges || challenges.length === 0) {
     return 'tốc độ và sự chính xác tạo nên sức mạnh vượt trội của mỗi thành viên trong công việc hàng ngày rèn luyện bản thân mỗi ngày để bứt phá giới hạn và vươn tới thành công';
@@ -178,14 +185,14 @@ async function buildContinuousChallengeText({ durationLimitSeconds = 120, diffic
     idx++;
   }
 
-  return combined;
+  return combined || 'tốc độ và sự chính xác tạo nên sức mạnh vượt trội của mỗi thành viên';
 }
 
 async function createRoom(data, requestingUser) {
   await ensureChallengesExist();
 
-  const actualUserId = requestingUser ? requestingUser.id : data.userId;
-  if (!actualUserId) {
+  const actualUserId = Number(requestingUser ? requestingUser.id : data.userId);
+  if (!actualUserId || isNaN(actualUserId)) {
     throw new UnauthorizedError('Yêu cầu đăng nhập để tạo phòng thi đấu');
   }
 
@@ -211,13 +218,17 @@ async function createRoom(data, requestingUser) {
   let selectedChallenge = null;
 
   if (challengeId) {
-    selectedChallenge = await TypingChallenge.findByPk(challengeId);
-    if (selectedChallenge) {
-      challengeText = (selectedChallenge.content || '')
-        .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'<>]/g, '')
-        .replace(/\s+/g, ' ')
-        .toLowerCase()
-        .trim();
+    try {
+      selectedChallenge = await TypingChallenge.findByPk(challengeId);
+      if (selectedChallenge) {
+        challengeText = (selectedChallenge.content || '')
+          .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'<>]/g, '')
+          .replace(/\s+/g, ' ')
+          .toLowerCase()
+          .trim();
+      }
+    } catch (err) {
+      console.warn('[TypingService] findByPk challenge error:', err.message);
     }
   }
 
@@ -1157,6 +1168,144 @@ async function getChallenges(filters = {}) {
   });
 }
 
+/**
+ * Records practice test result to individual leaderboard and stats IF test is >= 2 minutes (120s).
+ */
+async function submitPracticeResult(data, requestingUser) {
+  const userId = Number(requestingUser ? requestingUser.id : data.userId);
+  if (!userId || isNaN(userId)) {
+    throw new UnauthorizedError('Yêu cầu đăng nhập để ghi nhận kết quả');
+  }
+
+  const {
+    durationLimitSeconds = 120,
+    wpm = 0,
+    accuracy = 100,
+    typedChars = 0,
+    errorCount = 0,
+    elapsedSeconds = 120,
+  } = data;
+
+  const duration = Number(durationLimitSeconds) || 120;
+  const cleanElapsed = Number(elapsedSeconds) || duration;
+  const cleanWpm = Number(wpm) || 0;
+  const cleanAccuracy = Number(accuracy) || 0;
+  const cleanTypedChars = Number(typedChars) || 0;
+  const cleanErrorCount = Number(errorCount) || 0;
+
+  // Condition: Only tests of 2 minutes (120s) or more are counted toward individual leaderboard
+  if (duration < 120) {
+    return {
+      recorded: false,
+      reason: 'DURATION_LESS_THAN_2_MINUTES',
+      message: 'Thành tích chỉ được tính vào BXH cá nhân khi gõ từ 2 phút trở lên',
+      stats: await getMyStats(userId),
+    };
+  }
+
+  // Anti-cheat verification
+  if (cleanWpm > 280) {
+    console.warn(`[Practice Anti-Cheat] User #${userId} submitted unrealistic WPM ${cleanWpm}`);
+    return {
+      recorded: false,
+      reason: 'SPEED_LIMIT_EXCEEDED',
+      message: 'Tốc độ vượt quá giới hạn lý thuyết',
+      stats: await getMyStats(userId),
+    };
+  }
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const activeSeason = await Season.findOne({
+    where: { status: 'ACTIVE' },
+    order: [['id', 'DESC']],
+  });
+
+  const [stat] = await TypingUserStat.findOrCreate({
+    where: { userId },
+    defaults: {
+      userId,
+      dailyResetDate: todayStr,
+    },
+  });
+
+  if (stat.dailyResetDate !== todayStr) {
+    stat.dailyResetDate = todayStr;
+    stat.dailyRankedCount = 0;
+    stat.dailyPointsEarned = 0;
+  }
+
+  // Update stats
+  stat.totalMatches += 1;
+  stat.practiceMatches += 1;
+
+  let isNewBestWpm = false;
+  if (cleanWpm > Number(stat.bestWpm || 0)) {
+    stat.bestWpm = cleanWpm;
+    isNewBestWpm = true;
+  }
+
+  if (cleanAccuracy > Number(stat.bestAccuracy || 0)) {
+    stat.bestAccuracy = cleanAccuracy;
+  }
+
+  if (cleanAccuracy >= 100 && cleanTypedChars >= 100) {
+    stat.perfectRunsCount += 1;
+  }
+
+  stat.totalCharsTyped = Number(stat.totalCharsTyped || 0) + cleanTypedChars;
+  stat.totalErrors = Number(stat.totalErrors || 0) + cleanErrorCount;
+  stat.lastPlayedAt = now;
+
+  // Calculate rolling average
+  const prevCount = Math.max(0, stat.totalMatches - 1);
+  stat.avgWpm = prevCount > 0 ? Math.round(((stat.avgWpm * prevCount + cleanWpm) / stat.totalMatches) * 10) / 10 : cleanWpm;
+  stat.avgAccuracy = prevCount > 0 ? Math.round(((stat.avgAccuracy * prevCount + cleanAccuracy) / stat.totalMatches) * 10) / 10 : cleanAccuracy;
+
+  // Award practice XP (5-40 XP based on performance and test length)
+  const awardedXp = Math.min(40, Math.max(5, Math.round((cleanWpm * (cleanAccuracy / 100) * (duration / 60)) / 10)));
+  stat.totalWorkRankPointsEarned = Number(stat.totalWorkRankPointsEarned || 0) + awardedXp;
+
+  await stat.save();
+
+  // Insert into ScoreLedger for personal recognition
+  if (awardedXp > 0) {
+    const user = await User.findByPk(userId);
+    const idempotencyKey = `typing_practice:${userId}:${Date.now()}`;
+    await ScoreLedger.create({
+      idempotencyKey,
+      effectType: 'INDIVIDUAL_XP',
+      pointsDelta: awardedXp,
+      userId,
+      teamId: user?.teamId || null,
+      seasonId: activeSeason ? activeSeason.id : null,
+      eventId: crypto.randomUUID(),
+      reason: `Luyện tập Đánh Máy (${duration >= 60 ? `${duration / 60}p` : `${duration}s`}) WPM: ${cleanWpm}, Acc: ${cleanAccuracy}%`,
+      metadata: {
+        type: 'PRACTICE',
+        duration,
+        wpm: cleanWpm,
+        accuracy: cleanAccuracy,
+        isNewBestWpm,
+      },
+    }).catch((err) => console.warn('[Practice ScoreLedger warning]:', err.message));
+  }
+
+  // Re-project individual leaderboard
+  if (activeSeason) {
+    projector.projectSeasonIndividualLeaderboard(activeSeason.id).catch(() => {});
+  }
+
+  return {
+    recorded: true,
+    awardedXp,
+    isNewBestWpm,
+    stats: await getMyStats(userId),
+    message: isNewBestWpm ? 'Đã phá kỷ lục Best WPM cá nhân và cập nhật BXH!' : 'Thành tích đã được ghi nhận vào BXH cá nhân!',
+  };
+}
+
 module.exports = {
   ensureChallengesExist,
   listRooms,
@@ -1170,6 +1319,7 @@ module.exports = {
   resetRoom,
   updateProgress,
   submitFinish,
+  submitPracticeResult,
   finalizeMatch,
   getRoomDetail,
   getMyStats,

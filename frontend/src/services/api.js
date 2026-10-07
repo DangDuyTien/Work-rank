@@ -1447,6 +1447,10 @@ export const typingGameApi = {
     const res = await api.post(`/api/games/typing/rooms/${roomId}/finish`, data);
     return res.data;
   },
+  submitPracticeResult: async (data) => {
+    const res = await api.post('/api/games/typing/practice/finish', data);
+    return res.data;
+  },
 };
 
 export { storeAuth, refreshStoredAuth as refreshSession };
