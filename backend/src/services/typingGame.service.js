@@ -1087,6 +1087,64 @@ async function getTypingLeaderboard({ limit = 50, currentUserId = null } = {}) {
   };
 }
 
+async function resetRoom(roomId, requestingUserId) {
+  const room = await TypingRoom.findByPk(roomId, {
+    include: [{ model: TypingPlayer, as: 'players' }],
+  });
+
+  if (!room) throw new NotFoundError('Phòng thi đấu không tồn tại');
+
+  if (Number(room.hostUserId) !== Number(requestingUserId)) {
+    throw new ForbiddenError('Chỉ chủ phòng mới có quyền đặt lại phòng để chơi ván mới');
+  }
+
+  // Generate fresh continuous text for new game
+  const freshText = await buildContinuousChallengeText({
+    durationLimitSeconds: room.durationLimitSeconds || 120,
+    difficulty: room.difficulty,
+    language: room.language || 'VI',
+  });
+
+  await sequelize.transaction(async (t) => {
+    room.status = 'WAITING';
+    room.startAt = null;
+    room.startedAt = null;
+    room.finishedAt = null;
+    room.winnerUserId = null;
+    room.winnerTeam = 'NONE';
+    room.challengeText = freshText;
+    room.targetWordCount = freshText.split(/\s+/).length;
+    await room.save({ transaction: t });
+
+    for (const p of room.players) {
+      p.status = 'WAITING';
+      p.isReady = room.mode === 'SOLO';
+      p.progressPct = 0;
+      p.typedChars = 0;
+      p.wpm = 0;
+      p.accuracy = 100.0;
+      p.errorCount = 0;
+      p.completionTimeMs = null;
+      p.individualRank = null;
+      p.scoreDelta = 0;
+      p.performanceScore = 0;
+      p.finalPayload = null;
+      await p.save({ transaction: t });
+    }
+  });
+
+  const detail = await getRoomDetail(room.id, requestingUserId);
+  typingRealtime.emitToRoom(room.id, 'typing:roomReset', {
+    roomId: room.id,
+    room: detail.room,
+    players: detail.players,
+    challengeText: room.challengeText,
+  });
+  typingRealtime.emitToRoom(room.id, 'typing:roomUpdated', { room: detail.room });
+
+  return detail;
+}
+
 async function getChallenges(filters = {}) {
   await ensureChallengesExist();
   const where = { isActive: true };
@@ -1109,6 +1167,7 @@ module.exports = {
   leaveRoom,
   toggleReady,
   startMatch,
+  resetRoom,
   updateProgress,
   submitFinish,
   finalizeMatch,
@@ -1117,3 +1176,4 @@ module.exports = {
   getTypingLeaderboard,
   getChallenges,
 };
+

@@ -311,6 +311,28 @@ function registerSockets(io) {
       }
     });
 
+    socket.on('typing:start', async (payload = {}, ack) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        const result = await typingGameService.startMatch(roomId, socket.user.id);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
+    socket.on('typing:resetRoom', async (payload = {}, ack) => {
+      try {
+        const typingGameService = require('../services/typingGame.service');
+        const roomId = Number(payload.roomId);
+        const result = await typingGameService.resetRoom(roomId, socket.user.id);
+        if (typeof ack === 'function') ack({ ok: true, data: result });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
     socket.on('typing:finish', async (payload = {}, ack) => {
       try {
         const typingGameService = require('../services/typingGame.service');
@@ -321,6 +343,7 @@ function registerSockets(io) {
         if (typeof ack === 'function') ack({ ok: false, error: err.message });
       }
     });
+
 
     socket.on('disconnect', () => {
       samRealtime.removeSpectatorFromAll(socket.id);

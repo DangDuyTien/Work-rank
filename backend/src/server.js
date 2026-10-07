@@ -21,9 +21,13 @@ async function start() {
   quizRealtime.setIo(io);
   const samRealtime = require('./services/samRealtime.service');
   samRealtime.setIo(io);
+  const typingRealtime = require('./services/typingRealtime.service');
+  typingRealtime.setIo(io);
   const youtubeSyncWorker = require('./workers/youtubeSync.worker');
   youtubeSyncWorker.setIo(io);
   youtubeSyncWorker.startPeriodicSync();
+  const keepAliveWorker = require('./workers/keepAlive.worker');
+  keepAliveWorker.startKeepAlive();
   registerSockets(io);
   server.listen(env.port, '0.0.0.0', () => {
     console.log(`WorkRank backend listening on 0.0.0.0:${env.port}`);

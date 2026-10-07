@@ -42,6 +42,19 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+const keepAliveWorker = require('./workers/keepAlive.worker');
+
+// Auto-detect public URL on incoming traffic for 24/7 KeepAlive worker
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.startsWith('::1')) {
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    keepAliveWorker.setTargetUrl(`${proto}://${host}`);
+    keepAliveWorker.startKeepAlive();
+  }
+  next();
+});
+
 // Root health & keep-alive probes (Liveness / Readiness / Ping)
 // Placed before rate limiters to guarantee keep-alive and platform probes never fail
 app.get('/health', asyncHandler(healthController.health));

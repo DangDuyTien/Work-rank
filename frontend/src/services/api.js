@@ -1435,6 +1435,10 @@ export const typingGameApi = {
     const res = await api.post(`/api/games/typing/rooms/${roomId}/start`);
     return res.data;
   },
+  resetRoom: async (roomId) => {
+    const res = await api.post(`/api/games/typing/rooms/${roomId}/reset`);
+    return res.data;
+  },
   updateProgress: async (roomId, data) => {
     const res = await api.post(`/api/games/typing/rooms/${roomId}/progress`, data);
     return res.data;

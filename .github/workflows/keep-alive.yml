@@ -1,0 +1,19 @@
+name: Keep Web Alive 24/7
+
+on:
+  schedule:
+    # Runs every 10 minutes continuously
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger if needed
+
+jobs:
+  ping:
+    name: Auto Ping Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Web & Backend Health Endpoint
+        run: |
+          URL="${{ secrets.APP_URL || 'https://work3winmedia-c94e.onrender.com' }}"
+          echo "Sending automated keep-alive ping to $URL/health..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/health" || echo "000")
+          echo "Keep-alive response code: $STATUS"

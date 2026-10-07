@@ -73,6 +73,11 @@ async function startMatch(req, res) {
   res.json(detail);
 }
 
+async function resetRoom(req, res) {
+  const detail = await typingGameService.resetRoom(req.params.roomId, req.user.id);
+  res.json(detail);
+}
+
 async function updateProgress(req, res) {
   await typingGameService.updateProgress(req.params.roomId, req.user.id, req.body);
   res.json({ ok: true });
@@ -112,9 +117,11 @@ module.exports = {
   leaveRoom,
   toggleReady,
   startMatch,
+  resetRoom,
   updateProgress,
   submitFinish,
   getMyStats,
   getLeaderboard,
   getChallenges,
 };
+

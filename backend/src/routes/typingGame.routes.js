@@ -24,6 +24,7 @@ router.post('/rooms/:roomId/switch-team', auth, asyncHandler(typingGameControlle
 router.post('/rooms/:roomId/leave', auth, asyncHandler(typingGameController.leaveRoom));
 router.post('/rooms/:roomId/ready', auth, asyncHandler(typingGameController.toggleReady));
 router.post('/rooms/:roomId/start', auth, asyncHandler(typingGameController.startMatch));
+router.post('/rooms/:roomId/reset', auth, asyncHandler(typingGameController.resetRoom));
 
 // In-game actions
 router.post('/rooms/:roomId/progress', auth, asyncHandler(typingGameController.updateProgress));

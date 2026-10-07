@@ -24,7 +24,6 @@ import {
   HelpCircle,
   Volume2,
   VolumeX,
-  Shuffle,
   Flag,
   ChevronRight,
   Eye,
@@ -557,17 +556,18 @@ export default function TypingBattle() {
   }, [activeTab, room]);
 
   // ── 2. FETCH INITIAL DATA & CHALLENGES ──
+  // ── 2. FETCH INITIAL DATA & CHALLENGES ──
   const fetchHubData = useCallback(async () => {
     try {
       setLoading(true);
       const [statsRes, lbRes, roomsRes, chRes] = await Promise.all([
         typingGameApi.getMyStats().catch(() => null),
-        typingGameApi.getLeaderboard(20).catch(() => ({ leaderboard: [] })),
-        typingGameApi.listRooms('WAITING').catch(() => ({ rooms: [] })),
+        typingGameApi.getLeaderboard({ limit: 50 }).catch(() => ({ leaderboard: [] })),
+        typingGameApi.listRooms({ status: 'WAITING' }).catch(() => ({ rooms: [] })),
         typingGameApi.getChallenges().catch(() => ({ challenges: [] })),
       ]);
 
-      if (statsRes?.stats) setMyStats(statsRes.stats);
+      if (statsRes) setMyStats(statsRes.stats || statsRes);
       if (lbRes?.leaderboard) setLeaderboard(lbRes.leaderboard);
       if (roomsRes?.rooms) setRoomList(roomsRes.rooms);
       if (chRes?.challenges && chRes.challenges.length > 0) {
@@ -589,60 +589,129 @@ export default function TypingBattle() {
     }
   }, []);
 
+  const fetchRoomDetail = useCallback(async (roomIdToFetch) => {
+    try {
+      setLoading(true);
+      const data = await typingGameApi.getRoomDetail(roomIdToFetch);
+      if (data && data.room) {
+        setRoom(data.room);
+        setPlayers(data.players || []);
+        if (data.result) {
+          setMatchResult(data.result);
+          if (data.room.status === 'FINISHED') {
+            setShowResultModal(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch typing room detail:', err);
+      navigate('/games/typing');
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
   useEffect(() => {
-    fetchHubData();
-  }, [fetchHubData]);
+    if (urlRoomId) {
+      fetchRoomDetail(urlRoomId);
+    } else {
+      setRoom(null);
+      setPlayers([]);
+      fetchHubData();
+    }
+  }, [urlRoomId, fetchRoomDetail, fetchHubData]);
 
   // ── 3. REALTIME SOCKET EVENT LISTENERS ──
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoomState = (data) => {
+    if (urlRoomId) {
+      socket.emit('typing:joinRoom', { roomId: Number(urlRoomId) });
+    }
+
+    const handleRoomUpdated = (data) => {
       if (data?.room) {
-        setRoom(data.room);
-        setPlayers(data.room.players || []);
+        setRoom((prev) => ({ ...prev, ...data.room }));
       }
     };
 
-    const handleCountdown = (data) => {
-      setCountdownNumber(data.count);
-      if (soundEnabled) {
-        if (data.count > 0) typingSound.playCountdown();
-        else typingSound.playStart();
-      }
+    const handlePlayerJoined = (data) => {
+      if (data?.players) setPlayers(data.players);
     };
 
-    const handleMatchStarted = (data) => {
+    const handlePlayerLeft = (data) => {
+      if (data?.players) setPlayers(data.players);
+    };
+
+    const handlePlayerReady = (data) => {
+      if (data?.players) setPlayers(data.players);
+    };
+
+    const handleStarting = (data) => {
+      if (data?.room) setRoom((prev) => ({ ...prev, ...data.room }));
+      if (data?.players) setPlayers(data.players);
+      setCountdownNumber(5);
+      if (soundEnabled) typingSound.playCountdown();
+    };
+
+    const handleStartingCancelled = (data) => {
       setCountdownNumber(null);
-      setRoom(data.room);
-      setPlayers(data.room.players || []);
+      if (data?.room) setRoom((prev) => ({ ...prev, ...data.room }));
+      if (data?.players) setPlayers(data.players);
+    };
+
+    const handleStarted = (data) => {
+      setCountdownNumber(null);
+      if (data?.room) setRoom(data.room);
+      if (data?.players) setPlayers(data.players);
       setTypedText('');
       setErrorCount(0);
       setLiveWpm(0);
       setLiveAccuracy(100);
       setStartTime(Date.now());
       setTimeElapsed(0);
-      const duration = data.room?.durationLimitSeconds || 120;
+      const duration = data.durationLimitSeconds || data.room?.durationLimitSeconds || 120;
       setTimeRemaining(duration);
       setIsFinished(false);
       setMatchResult(null);
       setShowResultModal(false);
       if (soundEnabled) typingSound.playStart();
-
-      // Auto-focus typing input immediately
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus(), 60);
     };
 
-    const handleProgressUpdate = (data) => {
+    const handleProgressBatch = (data) => {
+      if (Array.isArray(data?.updates)) {
+        setPlayers((prev) =>
+          prev.map((p) => {
+            const update = data.updates.find((u) => Number(u.userId) === Number(p.userId));
+            if (update) {
+              return {
+                ...p,
+                progressPct: update.progressPct,
+                typedChars: update.typedChars,
+                wpm: update.wpm,
+                accuracy: update.accuracy,
+                errorCount: update.errorCount,
+              };
+            }
+            return p;
+          })
+        );
+      }
+    };
+
+    const handlePlayerFinished = (data) => {
       setPlayers((prev) =>
         prev.map((p) => {
-          if (p.userId === data.userId) {
+          if (Number(p.userId) === Number(data.userId)) {
             return {
               ...p,
-              typedChars: data.typedChars,
+              status: 'FINISHED',
+              individualRank: data.individualRank,
               wpm: data.wpm,
               accuracy: data.accuracy,
-              isFinished: data.isFinished,
+              completionTimeMs: data.completionTimeMs,
+              progressPct: 100,
             };
           }
           return p;
@@ -654,32 +723,85 @@ export default function TypingBattle() {
       setIsFinished(true);
       setMatchResult(data);
       setShowResultModal(true);
-      if (data.room) setRoom(data.room);
+      if (data?.room) setRoom((prev) => ({ ...prev, ...data.room, status: 'FINISHED' }));
       if (soundEnabled) typingSound.playWin();
       fetchHubData();
     };
 
-    socket.on('typing:roomState', handleRoomState);
-    socket.on('typing:countdown', handleCountdown);
-    socket.on('typing:started', handleMatchStarted);
-    socket.on('typing:progressUpdate', handleProgressUpdate);
-    socket.on('typing:finished', handleMatchFinished);
+    const handleRoomReset = (data) => {
+      setTypedText('');
+      setErrorCount(0);
+      setLiveWpm(0);
+      setLiveAccuracy(100);
+      setStartTime(null);
+      setTimeElapsed(0);
+      setIsFinished(false);
+      setMatchResult(null);
+      setShowResultModal(false);
+      if (data?.room) setRoom(data.room);
+      if (data?.players) setPlayers(data.players);
+      const duration = data.room?.durationLimitSeconds || 120;
+      setTimeRemaining(duration);
+      setTimeout(() => inputRef.current?.focus(), 60);
+    };
+
+    const handleRoomListChanged = () => {
+      if (!urlRoomId) {
+        typingGameApi.listRooms({ status: 'WAITING' }).then((res) => {
+          if (res?.rooms) setRoomList(res.rooms);
+        }).catch(() => {});
+      }
+    };
+
+    socket.on('typing:roomUpdated', handleRoomUpdated);
+    socket.on('typing:playerJoined', handlePlayerJoined);
+    socket.on('typing:playerLeft', handlePlayerLeft);
+    socket.on('typing:playerReady', handlePlayerReady);
+    socket.on('typing:starting', handleStarting);
+    socket.on('typing:startingCancelled', handleStartingCancelled);
+    socket.on('typing:started', handleStarted);
+    socket.on('typing:progressBatch', handleProgressBatch);
+    socket.on('typing:playerFinished', handlePlayerFinished);
+    socket.on('typing:matchFinished', handleMatchFinished);
+    socket.on('typing:roomReset', handleRoomReset);
+    socket.on('typing:roomListChanged', handleRoomListChanged);
 
     return () => {
-      socket.off('typing:roomState', handleRoomState);
-      socket.off('typing:countdown', handleCountdown);
-      socket.off('typing:started', handleMatchStarted);
-      socket.off('typing:progressUpdate', handleProgressUpdate);
-      socket.off('typing:finished', handleMatchFinished);
+      if (urlRoomId) {
+        socket.emit('typing:leaveRoom', { roomId: Number(urlRoomId) });
+      }
+      socket.off('typing:roomUpdated', handleRoomUpdated);
+      socket.off('typing:playerJoined', handlePlayerJoined);
+      socket.off('typing:playerLeft', handlePlayerLeft);
+      socket.off('typing:playerReady', handlePlayerReady);
+      socket.off('typing:starting', handleStarting);
+      socket.off('typing:startingCancelled', handleStartingCancelled);
+      socket.off('typing:started', handleStarted);
+      socket.off('typing:progressBatch', handleProgressBatch);
+      socket.off('typing:playerFinished', handlePlayerFinished);
+      socket.off('typing:matchFinished', handleMatchFinished);
+      socket.off('typing:roomReset', handleRoomReset);
+      socket.off('typing:roomListChanged', handleRoomListChanged);
     };
-  }, [socket, soundEnabled, fetchHubData]);
+  }, [socket, urlRoomId, soundEnabled, fetchHubData]);
 
-  // Handle URL room joining
+  // Countdown timer effect
   useEffect(() => {
-    if (urlRoomId && socket) {
-      socket.emit('typing:joinRoom', { roomId: Number(urlRoomId) });
+    if (countdownNumber === null) return;
+    if (countdownNumber <= 0) {
+      setCountdownNumber(null);
+      return;
     }
-  }, [urlRoomId, socket]);
+    const timer = setTimeout(() => {
+      const next = countdownNumber - 1;
+      setCountdownNumber(next);
+      if (soundEnabled) {
+        if (next > 0) typingSound.playCountdown();
+        else typingSound.playStart();
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdownNumber, soundEnabled]);
 
   // ── 4. TIME-BASED TEST ENGINE (COUNTDOWN & TIMEOUT FINALIZER) ──
   const effectiveTotalDuration = room?.durationLimitSeconds || selectedDuration;
@@ -734,6 +856,14 @@ export default function TypingBattle() {
   };
 
   const handleRestartPractice = () => {
+    setSelectedChallengeIndex((prev) => {
+      if (practiceChallenges.length <= 1) return 0;
+      let next;
+      do {
+        next = Math.floor(Math.random() * practiceChallenges.length);
+      } while (next === prev);
+      return next;
+    });
     setTypedText('');
     setErrorCount(0);
     setLiveWpm(0);
@@ -746,14 +876,6 @@ export default function TypingBattle() {
     setSessionSentencesCount(0);
     setIsFinished(false);
     setShowResultModal(false);
-    setLastFeedback(null);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  };
-
-  const handleShufflePracticeChallenge = () => {
-    setSelectedChallengeIndex((prev) => (prev + 1) % practiceChallenges.length);
-    setTypedText('');
-    setErrorCount(0);
     setLastFeedback(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
@@ -832,7 +954,7 @@ export default function TypingBattle() {
         return;
       }
 
-      // In practice mode: seamlessly advance to the next sentence!
+      // In practice mode: seamlessly advance to a randomized sentence!
       if (soundEnabled) {
         typingSound.playStreak();
       }
@@ -842,9 +964,17 @@ export default function TypingBattle() {
       setTypedText('');
       setErrorCount(0);
       setLastFeedback(null);
-      setSelectedChallengeIndex((prev) => (prev + 1) % practiceChallenges.length);
+      setSelectedChallengeIndex((prev) => {
+        if (practiceChallenges.length <= 1) return 0;
+        let next;
+        do {
+          next = Math.floor(Math.random() * practiceChallenges.length);
+        } while (next === prev);
+        return next;
+      });
       return;
     }
+
 
     setTypedText(val);
 
@@ -957,6 +1087,22 @@ export default function TypingBattle() {
     }
   };
 
+  const handleResetRoom = async () => {
+    if (!room?.id) return;
+    try {
+      setLoading(true);
+      if (socket) {
+        socket.emit('typing:resetRoom', { roomId: room.id });
+      } else {
+        await typingGameApi.resetRoom(room.id);
+      }
+    } catch (err) {
+      alert(err.message || 'Không thể đặt lại phòng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLeaveRoom = async () => {
     if (!room?.id) {
       navigate('/games/typing');
@@ -979,6 +1125,7 @@ export default function TypingBattle() {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
 
   // ── 8. ELEGANT 2-LINE TYPING ARENA (CLEAN 2-LINE SENTENCE WITH BLINKING CARET) ──
   const renderedText = useMemo(() => {
@@ -1612,14 +1759,20 @@ export default function TypingBattle() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-                    <Button variant="secondary" onClick={handleLeaveRoom}>
-                      Quay lại Sảnh Đấu
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    {isHost && (
+                      <Button variant="primary" onClick={handleResetRoom} disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <RotateCcw size={14} /> Chơi Lại Ván Mới
+                      </Button>
+                    )}
+                    <Button variant="secondary" onClick={handleLeaveRoom} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <LogOut size={14} /> Quay lại Sảnh Đấu
                     </Button>
-                    <Button variant="primary" onClick={() => navigate('/leaderboard')}>
-                      Xem Bảng Xếp Hạng Công Ty
+                    <Button variant="secondary" onClick={() => navigate('/leaderboard')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Trophy size={14} /> Bảng Xếp Hạng Công Ty
                     </Button>
                   </div>
+
                 </div>
               );
             })()}
@@ -1807,14 +1960,7 @@ export default function TypingBattle() {
                     onClick={handleRestartPractice}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, padding: '6px 12px' }}
                   >
-                    <RotateCcw size={13} /> Gõ lại <span style={{ opacity: 0.6, fontSize: 10 }}>(Esc)</span>
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleShufflePracticeChallenge}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, padding: '6px 14px' }}
-                  >
-                    <Shuffle size={13} /> Đổi chủ đề MXH
+                    <RotateCcw size={13} /> Thử bài mới <span style={{ opacity: 0.6, fontSize: 10 }}>(Esc)</span>
                   </Button>
                   <Button
                     variant="secondary"
@@ -1825,6 +1971,7 @@ export default function TypingBattle() {
                     {showKeyboard ? 'Ẩn phím' : 'Hiện phím'}
                   </Button>
                 </div>
+
               </div>
 
               {/* Realtime Minimalist Typing HUD with Big Countdown Clock */}
