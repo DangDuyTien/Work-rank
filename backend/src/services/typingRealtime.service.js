@@ -8,7 +8,7 @@
  */
 
 let ioInstance = null;
-const roomSpectators = new Map(); // Map<roomId, Set<socketId>>
+const roomSpectators = new Map(); // Map<roomId, Map<socketId, { socketId, userId, name, avatar, jobTitle, department, joinedAt }>>
 const progressThrottleTimers = new Map(); // Map<roomId, { timer, pendingUpdates: Map<userId, object> }>
 
 function setIo(io) {
@@ -23,13 +23,24 @@ function roomChannel(roomId) {
   return `typing:${roomId}`;
 }
 
-function addSpectator(roomId, socketId) {
+function addSpectator(roomId, socketId, userData = {}) {
   if (!roomId || !socketId) return;
   const numId = Number(roomId);
   if (!roomSpectators.has(numId)) {
-    roomSpectators.set(numId, new Set());
+    roomSpectators.set(numId, new Map());
   }
-  roomSpectators.get(numId).add(socketId);
+
+  const specMap = roomSpectators.get(numId);
+  specMap.set(socketId, {
+    socketId,
+    userId: userData?.id || userData?.userId || null,
+    name: userData?.name || 'Khán giả',
+    avatar: userData?.avatar || null,
+    jobTitle: userData?.jobTitle || '',
+    department: userData?.department || '',
+    joinedAt: new Date(),
+  });
+
   emitSpectatorCount(numId);
 }
 
@@ -37,8 +48,9 @@ function removeSpectator(roomId, socketId) {
   if (!roomId || !socketId) return;
   const numId = Number(roomId);
   if (roomSpectators.has(numId)) {
-    roomSpectators.get(numId).delete(socketId);
-    if (roomSpectators.get(numId).size === 0) {
+    const specMap = roomSpectators.get(numId);
+    specMap.delete(socketId);
+    if (specMap.size === 0) {
       roomSpectators.delete(numId);
     }
   }
@@ -47,29 +59,55 @@ function removeSpectator(roomId, socketId) {
 
 function removeSpectatorFromAll(socketId) {
   if (!socketId) return;
-  for (const [roomId, socketSet] of roomSpectators.entries()) {
-    if (socketSet.has(socketId)) {
-      socketSet.delete(socketId);
+  for (const [roomId, specMap] of roomSpectators.entries()) {
+    if (specMap.has(socketId)) {
+      specMap.delete(socketId);
       emitSpectatorCount(roomId);
-      if (socketSet.size === 0) {
+      if (specMap.size === 0) {
         roomSpectators.delete(roomId);
       }
     }
   }
 }
 
+function getSpectatorsList(roomId) {
+  if (!roomId) return [];
+  const numId = Number(roomId);
+  if (!roomSpectators.has(numId)) return [];
+
+  const specMap = roomSpectators.get(numId);
+  const userMap = new Map(); // Deduplicate by userId
+
+  for (const spec of specMap.values()) {
+    const key = spec.userId ? String(spec.userId) : spec.socketId;
+    if (!userMap.has(key)) {
+      userMap.set(key, {
+        userId: spec.userId,
+        name: spec.name,
+        avatar: spec.avatar,
+        jobTitle: spec.jobTitle,
+        department: spec.department,
+        joinedAt: spec.joinedAt,
+      });
+    }
+  }
+
+  return Array.from(userMap.values());
+}
+
 function getSpectatorCount(roomId) {
   if (!roomId) return 0;
-  const numId = Number(roomId);
-  return roomSpectators.has(numId) ? roomSpectators.get(numId).size : 0;
+  return getSpectatorsList(roomId).length;
 }
 
 function emitSpectatorCount(roomId) {
   if (!ioInstance) return;
   const count = getSpectatorCount(roomId);
+  const spectators = getSpectatorsList(roomId);
   ioInstance.to(roomChannel(roomId)).emit('typing:spectatorCount', {
     roomId: Number(roomId),
     spectatorCount: count,
+    spectators,
   });
 }
 
@@ -136,6 +174,7 @@ module.exports = {
   removeSpectator,
   removeSpectatorFromAll,
   getSpectatorCount,
+  getSpectatorsList,
   emitSpectatorCount,
   emitToRoom,
   emitToUser,

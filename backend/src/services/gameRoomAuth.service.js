@@ -230,6 +230,15 @@ async function canAccessGameRoom({
     }
 
     if (room.status === 'WAITING' || room.status === 'STARTING') {
+      if (clientSpectatorHint) {
+        return {
+          allowed: true,
+          roomId: room.id,
+          isSpectator: true,
+          isPlayer: false,
+          role: 'spectator',
+        };
+      }
       return {
         allowed: false,
         error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',

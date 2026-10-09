@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Palette,
   Heart,
   Download,
+  Maximize2,
   Trash2,
   ArrowUpRight,
   Medal,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { drawingApi } from '../services/api';
 import { getSocket } from '../services/socket';
 import { Reveal, Button, AnimatedModal, Skeleton } from './ui';
-import {
-  RecognitionPortrait,
-  RecognitionName,
-  displayScore,
-  removeVietnameseDiacritics,
-} from './PublicRecognition';
+import VerifiedBadge from './VerifiedBadge';
+import { displayScore, removeVietnameseDiacritics } from './PublicRecognition';
+import { initialsFromName, avatarHue } from '../utils/avatar';
 
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
@@ -43,7 +40,41 @@ function formatRelativeTime(dateString) {
   });
 }
 
-const HEART_COLORS = ['#ef4444', '#f43f5e', '#fb7185', '#e11d48', '#f87171', '#fda4af'];
+const HEART_COLORS = ['#ef4444', '#f43f5e', '#fb7185', '#e11d48', '#f87171'];
+
+function AuthorAvatar({ author, size = 38 }) {
+  const [imageError, setImageError] = useState(false);
+  const authorName = author?.name || 'Thành viên';
+  const hue = avatarHue(authorName, author?.id);
+
+  if (author?.avatarUrl && !imageError) {
+    return (
+      <img
+        src={author.avatarUrl}
+        alt={authorName}
+        className="public-artwork-avatar-img"
+        style={{ width: size, height: size }}
+        loading="lazy"
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="public-artwork-avatar-fallback"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: `hsl(${hue}, 45%, 92%)`,
+        color: `hsl(${hue}, 70%, 32%)`,
+      }}
+      aria-hidden="true"
+    >
+      {initialsFromName(authorName)}
+    </div>
+  );
+}
 
 export default function CreativeCornerSection() {
   const navigate = useNavigate();
@@ -53,37 +84,39 @@ export default function CreativeCornerSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('top'); // 'top' | 'latest'
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [homeVisible, setHomeVisible] = useState(true);
 
-  // Floating Hearts Particle Animation State
+  // Floating Heart Particle Animation State
   const [floatingHearts, setFloatingHearts] = useState([]);
-  const [centerHeartAnim, setCenterHeartAnim] = useState(false);
-  const canvasRef = useRef(null);
 
-  // Delete Artwork state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // Lightbox Modal State
+  const [lightboxArtwork, setLightboxArtwork] = useState(null);
+
+  // Delete Confirmation Modal State
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Spawn floating Lucide heart particles at given coordinates
+  // Trigger floating hearts on like action
   const triggerHeartBurst = useCallback((clientX, clientY) => {
     const burstCount = 8;
+    const originX = clientX || window.innerWidth / 2;
+    const originY = clientY || window.innerHeight / 2;
     const newHearts = Array.from({ length: burstCount }).map((_, i) => ({
       id: `${Date.now()}-${i}-${Math.random()}`,
-      x: (clientX || window.innerWidth / 2) + (Math.random() * 60 - 30),
-      y: (clientY || window.innerHeight / 2) + (Math.random() * 30 - 15),
+      x: originX + (Math.random() * 50 - 25),
+      y: originY + (Math.random() * 20 - 10),
       color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
-      size: 16 + Math.floor(Math.random() * 12),
-      scale: 0.85 + Math.random() * 0.5,
-      rotate: Math.random() * 50 - 25,
-      duration: 900 + Math.random() * 400,
+      size: 15 + Math.floor(Math.random() * 10),
+      scale: 0.85 + Math.random() * 0.45,
+      rotate: Math.random() * 40 - 20,
+      duration: 850 + Math.random() * 350,
     }));
 
     setFloatingHearts((prev) => [...prev, ...newHearts]);
 
     setTimeout(() => {
       setFloatingHearts((prev) => prev.filter((h) => !newHearts.some((nh) => nh.id === h.id)));
-    }, 1400);
+    }, 1300);
   }, []);
 
   // Fetch drawings from API
@@ -102,7 +135,6 @@ export default function CreativeCornerSection() {
       }
       if (res && Array.isArray(res.drawings)) {
         setDrawings(res.drawings);
-        setSelectedIndex(0);
       }
     } catch (err) {
       console.error('Lỗi tải danh sách tác phẩm:', err);
@@ -116,7 +148,7 @@ export default function CreativeCornerSection() {
     fetchDrawings();
   }, [fetchDrawings]);
 
-  // Realtime Socket listeners for live updates without refresh
+  // Realtime Socket listeners
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
@@ -133,16 +165,18 @@ export default function CreativeCornerSection() {
       if (!payload || !payload.drawingId) return;
       setDrawings((prev) =>
         prev.map((d) =>
-          d.id === payload.drawingId
-            ? { ...d, likesCount: payload.likesCount }
-            : d
+          d.id === payload.drawingId ? { ...d, likesCount: payload.likesCount } : d
         )
+      );
+      setLightboxArtwork((prev) =>
+        prev && prev.id === payload.drawingId ? { ...prev, likesCount: payload.likesCount } : prev
       );
     };
 
     const handleDeleted = (payload) => {
       if (!payload || !payload.drawingId) return;
       setDrawings((prev) => prev.filter((d) => d.id !== payload.drawingId));
+      setLightboxArtwork((prev) => (prev && prev.id === payload.drawingId ? null : prev));
     };
 
     const handleSettingsUpdated = (newSettings) => {
@@ -164,11 +198,10 @@ export default function CreativeCornerSection() {
     };
   }, []);
 
-  // Handle Like toggle with interactive Heart Burst & optimistic UI update
+  // Handle Like toggle with optimistic UI update
   const handleToggleLike = async (e, drawing) => {
     if (e && e.stopPropagation) e.stopPropagation();
 
-    // Trigger Heart Burst animation from click origin
     if (e && e.currentTarget) {
       const rect = e.currentTarget.getBoundingClientRect();
       triggerHeartBurst(rect.left + rect.width / 2, rect.top);
@@ -187,74 +220,50 @@ export default function CreativeCornerSection() {
     const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
 
     // Optimistic update
-    setDrawings((prev) =>
-      prev.map((d) =>
-        d.id === drawing.id
-          ? { ...d, hasLiked: nextLiked, likesCount: nextCount }
-          : d
-      )
-    );
+    const updateItem = (item) =>
+      item.id === drawing.id ? { ...item, hasLiked: nextLiked, likesCount: nextCount } : item;
+
+    setDrawings((prev) => prev.map(updateItem));
+    if (lightboxArtwork && lightboxArtwork.id === drawing.id) {
+      setLightboxArtwork((prev) => ({ ...prev, hasLiked: nextLiked, likesCount: nextCount }));
+    }
 
     try {
       const res = await drawingApi.toggleLike(drawing.id);
       if (res) {
-        setDrawings((prev) =>
-          prev.map((d) =>
-            d.id === drawing.id
-              ? { ...d, hasLiked: res.hasLiked, likesCount: res.likesCount }
-              : d
-          )
-        );
+        const syncItem = (item) =>
+          item.id === drawing.id
+            ? { ...item, hasLiked: res.hasLiked, likesCount: res.likesCount }
+            : item;
+        setDrawings((prev) => prev.map(syncItem));
+        if (lightboxArtwork && lightboxArtwork.id === drawing.id) {
+          setLightboxArtwork((prev) => ({
+            ...prev,
+            hasLiked: res.hasLiked,
+            likesCount: res.likesCount,
+          }));
+        }
       }
     } catch (err) {
       // Revert on error
-      setDrawings((prev) =>
-        prev.map((d) =>
-          d.id === drawing.id
-            ? { ...d, hasLiked: currentLiked, likesCount: currentCount }
-            : d
-        )
-      );
-    }
-  };
-
-  // Double-click on Massive Canvas to Like & spawn Lucide Heart burst
-  const handleCanvasDoubleClick = (e) => {
-    e.preventDefault();
-    if (!activeArtwork) return;
-
-    setCenterHeartAnim(true);
-    setTimeout(() => setCenterHeartAnim(false), 900);
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX || rect.left + rect.width / 2;
-    const y = e.clientY || rect.top + rect.height / 2;
-    triggerHeartBurst(x, y);
-
-    if (!activeArtwork.hasLiked) {
-      handleToggleLike(e, activeArtwork);
-    }
-  };
-
-  // Delete active artwork (by author or admin)
-  const handleDeleteArtwork = async () => {
-    if (!activeArtwork) return;
-    try {
-      setIsDeleting(true);
-      await drawingApi.deleteDrawing(activeArtwork.id);
-      setDrawings((prev) => prev.filter((d) => d.id !== activeArtwork.id));
-      setShowDeleteConfirm(false);
-      setSelectedIndex(0);
-    } catch (err) {
-      console.error('Lỗi xóa tác phẩm:', err);
-    } finally {
-      setIsDeleting(false);
+      const revertItem = (item) =>
+        item.id === drawing.id
+          ? { ...item, hasLiked: currentLiked, likesCount: currentCount }
+          : item;
+      setDrawings((prev) => prev.map(revertItem));
+      if (lightboxArtwork && lightboxArtwork.id === drawing.id) {
+        setLightboxArtwork((prev) => ({
+          ...prev,
+          hasLiked: currentLiked,
+          likesCount: currentCount,
+        }));
+      }
     }
   };
 
   // Download artwork locally as PNG
-  const handleDownloadArtwork = (e, drawing) => {
-    e.stopPropagation();
+  const handleDownload = (e, drawing) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!drawing || !drawing.imageUrl) return;
     const link = document.createElement('a');
     link.href = drawing.imageUrl;
@@ -263,38 +272,61 @@ export default function CreativeCornerSection() {
     link.click();
   };
 
-  const currentCount = drawings.length;
-  const activeArtwork = drawings[selectedIndex] || drawings[0] || null;
-  const author = activeArtwork?.author || {};
-  const authorName = author?.name ? removeVietnameseDiacritics(author.name) : 'Thanh vien';
-  const authorAvatar = author?.avatarUrl || null;
-  const authorProfileUrl = author?.id ? `/users/${author.id}` : '#';
-
-  const isAuthorOrAdmin =
-    user &&
-    activeArtwork &&
-    (activeArtwork.author?.id === user.id || isAdmin);
-
-  const handlePrev = () => {
-    if (currentCount <= 1) return;
-    setSelectedIndex((prev) => (prev - 1 + currentCount) % currentCount);
+  // Delete artwork
+  const handleDeleteArtwork = async () => {
+    if (!deleteTarget) return;
+    try {
+      setIsDeleting(true);
+      await drawingApi.deleteDrawing(deleteTarget.id);
+      setDrawings((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+      if (lightboxArtwork && lightboxArtwork.id === deleteTarget.id) {
+        setLightboxArtwork(null);
+      }
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Lỗi xóa tác phẩm:', err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const handleNext = () => {
-    if (currentCount <= 1) return;
-    setSelectedIndex((prev) => (prev + 1) % currentCount);
-  };
+  // Lightbox keyboard navigation (ArrowLeft / ArrowRight)
+  const handleLightboxPrev = useCallback(() => {
+    if (!lightboxArtwork || drawings.length <= 1) return;
+    const currIdx = drawings.findIndex((d) => d.id === lightboxArtwork.id);
+    const prevIdx = (currIdx - 1 + drawings.length) % drawings.length;
+    setLightboxArtwork(drawings[prevIdx]);
+  }, [lightboxArtwork, drawings]);
 
-  // If Admin has turned off Creative Corner on Home, do not render the section
+  const handleLightboxNext = useCallback(() => {
+    if (!lightboxArtwork || drawings.length <= 1) return;
+    const currIdx = drawings.findIndex((d) => d.id === lightboxArtwork.id);
+    const nextIdx = (currIdx + 1) % drawings.length;
+    setLightboxArtwork(drawings[nextIdx]);
+  }, [lightboxArtwork, drawings]);
+
+  useEffect(() => {
+    if (!lightboxArtwork) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') handleLightboxPrev();
+      if (e.key === 'ArrowRight') handleLightboxNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxArtwork, handleLightboxPrev, handleLightboxNext]);
+
+  // If Admin has toggled Home Visibility to false, do not render section
   if (!homeVisible) {
     return null;
   }
+
+  const currentCount = drawings.length;
 
   return (
     <Reveal
       as="section"
       delay={500}
-      className="public-season-section public-archive-section public-weekly-recognition public-creative-recognition"
+      className="public-season-section public-archive-section public-creative-section"
       aria-labelledby="creative-corner-title"
       aria-busy={loading}
     >
@@ -319,380 +351,370 @@ export default function CreativeCornerSection() {
         </div>
       )}
 
-      {/* 1. Standard Editorial Heading */}
+      {/* 1. Standard WorkRank Home Editorial Heading */}
       <div className="public-season-heading is-detail">
         <h2 id="creative-corner-title">
           <span>Sáng tạo · Thư viện tranh</span>
         </h2>
         <div>
           <p>{currentCount > 0 ? `${currentCount} Tác phẩm` : 'Studio nghệ thuật'}</p>
-          <span>Nét vẽ cảm hứng &amp; sáng tạo từ các thành viên 3Win Media</span>
+          <span>Nét vẽ cảm hứng &amp; sắc màu nghệ thuật từ nhân sự 3WIN MEDIA</span>
         </div>
       </div>
 
-      {/* 2. Top Identification Grid: Author Portrait (Khung ô vuông chân dung người vẽ / Chủ tài khoản) + Metadata */}
-      <div className="public-recognition-grid public-creative-recognition-grid">
-        {/* Left Column: Ô VUÔNG CHÂN DUNG NGƯỜI VẼ / CHỦ SỞ HỮU TÀI KHOẢN */}
-        <figure className="public-featured-person" aria-label={`Ảnh chân dung tác giả ${authorName}`}>
-          <div
-            className={`public-featured-frame is-ready ${author?.id ? 'is-interactive' : ''}`}
-            onClick={() => author?.id && navigate(authorProfileUrl)}
-            title={author?.id ? `Xem hồ sơ của ${author.name}` : undefined}
+      {/* 2. Gallery Header Bar: Filter Tabs & Studio CTA */}
+      <div className="public-creative-control-bar">
+        <div className="public-creative-tabs" role="tablist" aria-label="Bộ lọc tác phẩm tranh">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === 'top'}
+            className={`public-creative-tab ${filter === 'top' ? 'is-active' : ''}`}
+            onClick={() => setFilter('top')}
           >
-            <svg className="public-frame-quote is-opening" viewBox="0 0 100 175" aria-hidden="true" focusable="false">
-              <path d="M0 0H100V100L52 175H0L48 100H0Z" />
-            </svg>
-            <svg className="public-frame-quote is-closing" viewBox="0 0 100 175" aria-hidden="true" focusable="false">
-              <path d="M0 0H100V100L52 175H0L48 100H0Z" />
-            </svg>
-
-            {/* Author Portrait inside Quote Frame */}
-            <RecognitionPortrait
-              key={`author-${author?.id || 'none'}-${activeArtwork?.id || 'none'}`}
-              name={authorName}
-              image={authorAvatar}
-              type="member"
-              imageOnly
-            />
-          </div>
-
-          {activeArtwork && (
-            <figcaption className="public-creative-caption">
-              <p className="public-honoree-role">
-                Họa sĩ sáng tạo:
-              </p>
-              <h3 className="public-creative-author-heading">
-                <Link to={authorProfileUrl} className="public-archive-name-simple">
-                  <RecognitionName name={author.name || 'Thành viên WorkRank'} verified={author.isVerified} />
-                  <ArrowUpRight size={18} aria-hidden="true" />
-                </Link>
-              </h3>
-              <p className="public-honoree-role">
-                {author.jobTitle || author.department || 'Nhân sự 3Win Media'}
-                {author.teamName && ` · Đội ${author.teamName}`}
-              </p>
-            </figcaption>
-          )}
-        </figure>
-
-        {/* Right Column: Tiêu đề tác phẩm, Bảng thông số & Bộ lọc */}
-        <div className="public-archive-content">
-          {/* Filter switchers & Studio CTA */}
-          <div className="public-creative-filter-bar">
-            <div className="public-creative-tabs" role="tablist" aria-label="Bộ lọc tác phẩm">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={filter === 'top'}
-                className={`public-creative-tab ${filter === 'top' ? 'is-active' : ''}`}
-                onClick={() => setFilter('top')}
-              >
-                Nhiều tim nhất
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={filter === 'latest'}
-                className={`public-creative-tab ${filter === 'latest' ? 'is-active' : ''}`}
-                onClick={() => setFilter('latest')}
-              >
-                Mới nhất
-              </button>
-            </div>
-
-            <Link to="/games/drawing" className="public-editorial-link public-creative-cta">
-              <Palette size={16} aria-hidden="true" />
-              <span>Vào Studio vẽ tranh</span>
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="public-creative-loading">
-              <Skeleton height={32} width="70%" style={{ marginBottom: 12 }} />
-              <Skeleton height={20} width="90%" style={{ marginBottom: 8 }} />
-              <Skeleton height={20} width="60%" />
-            </div>
-          ) : error ? (
-            <div className="public-recognition-feedback" role="alert">
-              <span>{error}</span>
-              <button type="button" onClick={fetchDrawings}>
-                Thử lại <ArrowUpRight size={15} />
-              </button>
-            </div>
-          ) : !activeArtwork ? (
-            <div className="public-honoree-empty">
-              <p>Chưa có tác phẩm nào trong Thư Viện Tranh.</p>
-              <Link to="/games/drawing" className="public-editorial-link">
-                <span>Bắt đầu vẽ bức tranh đầu tiên</span>
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </Link>
-            </div>
-          ) : (
-            <div className="public-creative-active-info">
-              <div className="public-archive-name-line">
-                <div className="public-archive-name">
-                  <span className="public-recognition-name">{activeArtwork.title}</span>
-                </div>
-              </div>
-
-              {/* Status pill */}
-              <span className="public-recognition-status is-official">
-                <i aria-hidden="true" />
-                {filter === 'top' ? `Tác phẩm dẫn đầu lượt tim` : `Tác phẩm mới nhất`}
-              </span>
-
-              {/* Fact pairs */}
-              <dl className="public-recognition-facts public-weekly-facts" aria-label={`Thông số tác phẩm ${activeArtwork.title}`}>
-                <div>
-                  <dt>Lượt tim</dt>
-                  <dd className="is-text public-likes-counter">
-                    <Heart
-                      size={15}
-                      fill={activeArtwork.likesCount > 0 ? '#ef4444' : 'none'}
-                      stroke={activeArtwork.likesCount > 0 ? '#ef4444' : 'currentColor'}
-                      strokeWidth={2}
-                    />
-                    <span>{displayScore(activeArtwork.likesCount)}</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Tác giả</dt>
-                  <dd className="is-text">
-                    <RecognitionName name={author.name || 'Ẩn danh'} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>Đội nhóm</dt>
-                  <dd className="is-text">{author.teamName || '3Win Media'}</dd>
-                </div>
-                <div>
-                  <dt>Thời gian</dt>
-                  <dd className="is-text">{formatRelativeTime(activeArtwork.createdAt)}</dd>
-                </div>
-              </dl>
-
-              {/* Interactive Lucide Heart Reaction Bar */}
-              <div className="public-creative-active-actions">
-                <button
-                  type="button"
-                  className={`public-creative-heart-btn ${activeArtwork.hasLiked ? 'is-liked' : ''}`}
-                  onClick={(e) => handleToggleLike(e, activeArtwork)}
-                  title="Nhấn để thả tim"
-                >
-                  <Heart
-                    size={17}
-                    className="public-heart-btn-icon"
-                    fill={activeArtwork.hasLiked ? '#ef4444' : 'none'}
-                    stroke={activeArtwork.hasLiked ? '#ef4444' : 'currentColor'}
-                    strokeWidth={2}
-                  />
-                  <span>{activeArtwork.hasLiked ? 'Đã thả tim' : 'Thả tim'} ({displayScore(activeArtwork.likesCount)})</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="public-creative-btn-secondary"
-                  onClick={(e) => handleDownloadArtwork(e, activeArtwork)}
-                  title="Tải tác phẩm về máy"
-                >
-                  <Download size={15} />
-                  <span>Tải ảnh PNG</span>
-                </button>
-
-                {isAuthorOrAdmin && (
-                  <button
-                    type="button"
-                    className="public-creative-btn-secondary is-danger"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    title="Gỡ bỏ tác phẩm này"
-                  >
-                    <Trash2 size={15} />
-                    <span>Xóa tranh</span>
-                  </button>
-                )}
-
-                {currentCount > 1 && (
-                  <div className="public-creative-nav-arrows">
-                    <button
-                      type="button"
-                      className="public-creative-arrow-btn"
-                      onClick={handlePrev}
-                      aria-label="Tác phẩm trước"
-                      title="Tác phẩm trước"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <span className="public-creative-index-badge">
-                      {selectedIndex + 1}/{currentCount}
-                    </span>
-                    <button
-                      type="button"
-                      className="public-creative-arrow-btn"
-                      onClick={handleNext}
-                      aria-label="Tác phẩm tiếp theo"
-                      title="Tác phẩm tiếp theo"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+            Nhiều tim nhất
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === 'latest'}
+            className={`public-creative-tab ${filter === 'latest' ? 'is-active' : ''}`}
+            onClick={() => setFilter('latest')}
+          >
+            Mới nhất
+          </button>
         </div>
+
+        <Link to="/games/drawing" className="public-editorial-link public-creative-studio-cta">
+          <Palette size={16} aria-hidden="true" />
+          <span>Vào phòng vẽ tranh</span>
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </Link>
       </div>
 
-      {/* 3. MASSIVE GRAND EXHIBITION CANVAS (BẢN VẼ KHỔ LỚN HOÀNH TRÁNG TO SẴN TRỰC TIẾP) */}
-      {activeArtwork && (
-        <div className="public-creative-grand-showcase">
-          <div className="public-grand-canvas-wrapper" ref={canvasRef}>
-            <div
-              className="public-grand-canvas-frame"
-              onDoubleClick={handleCanvasDoubleClick}
-              title="Nhấn đúp (Double-click) để thả tim"
-            >
-              <img
-                src={activeArtwork.imageUrl}
-                alt={activeArtwork.title || 'Bản vẽ sáng tạo'}
-                className="public-grand-canvas-image"
-                loading="lazy"
-              />
-
-              {/* Big Center Heart Animation on Double Click */}
-              {centerHeartAnim && (
-                <div className="public-canvas-center-heart" aria-hidden="true">
-                  <Heart size={92} fill="#ef4444" stroke="#ffffff" strokeWidth={1.5} />
+      {/* 3. Main Artwork Content Area */}
+      {loading ? (
+        <div className="public-artwork-grid" aria-label="Đang tải danh sách tác phẩm">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="public-artwork-card is-skeleton">
+              <div className="public-artwork-author-row">
+                <Skeleton height={38} width={38} radius={50} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <Skeleton height={14} width="55%" />
+                  <Skeleton height={11} width="35%" />
                 </div>
-              )}
-            </div>
-
-            {/* Bottom Caption & Interactive Reaction Bar */}
-            <div className="public-grand-canvas-bar">
-              <div className="public-grand-canvas-bar-info">
-                <span className="public-grand-canvas-bar-title">{activeArtwork.title}</span>
-                <span className="public-grand-canvas-bar-author">
-                  Họa sĩ: <strong>{author.name || 'Thành viên'}</strong>
-                  {author.teamName && ` · Đội ${author.teamName}`}
-                </span>
               </div>
-
-              <div className="public-grand-canvas-bar-actions">
-                <button
-                  type="button"
-                  className={`public-creative-heart-btn ${activeArtwork.hasLiked ? 'is-liked' : ''}`}
-                  onClick={(e) => handleToggleLike(e, activeArtwork)}
-                  title="Nhấn để thả tim"
-                >
-                  <Heart
-                    size={17}
-                    className="public-heart-btn-icon"
-                    fill={activeArtwork.hasLiked ? '#ef4444' : 'none'}
-                    stroke={activeArtwork.hasLiked ? '#ef4444' : 'currentColor'}
-                    strokeWidth={2}
-                  />
-                  <span>Thả tim ({displayScore(activeArtwork.likesCount)})</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="public-creative-btn-secondary"
-                  onClick={(e) => handleDownloadArtwork(e, activeArtwork)}
-                >
-                  <Download size={15} />
-                  <span>Tải ảnh PNG</span>
-                </button>
-
-                <Link to="/games/drawing" className="public-editorial-link public-grand-canvas-cta">
-                  <span>Vẽ tác phẩm mới</span>
-                  <ArrowUpRight size={16} aria-hidden="true" />
-                </Link>
+              <Skeleton height={240} width="100%" radius={0} />
+              <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Skeleton height={16} width="75%" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Skeleton height={28} width={68} radius={999} />
+                  <Skeleton height={28} width={60} radius={6} />
+                </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
-
-      {/* 4. EXHIBITION GALLERY STRIP: BỘ SƯU TẬP TÁC PHẨM */}
-      {drawings.length > 1 && (
-        <div className="public-creative-strip-section">
-          <div className="public-creative-strip-header">
-            <h3 className="public-creative-strip-title">
-              <span>Thư viện tác phẩm · 3Win Media Studio</span>
-            </h3>
-            <span className="public-creative-strip-sub">
-              Nhấn vào bất kỳ tranh nào trong thư viện để chuyển sang xem bản vẽ khổ lớn và thông tin tác giả
-            </span>
+      ) : error ? (
+        <div className="public-recognition-feedback" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={fetchDrawings}>
+            Thử lại <ArrowUpRight size={15} />
+          </button>
+        </div>
+      ) : currentCount === 0 ? (
+        <div className="public-creative-empty-card">
+          <div className="public-creative-empty-icon" aria-hidden="true">
+            <Palette size={34} />
           </div>
+          <h3 className="public-creative-empty-title">Chưa có tác phẩm nào trong Thư Viện Tranh</h3>
+          <p className="public-creative-empty-desc">
+            Hãy là người đầu tiên đặt nét vẽ cảm hứng lên bảng tranh của 3WIN MEDIA!
+          </p>
+          <Link to="/games/drawing" className="public-entry-button public-creative-empty-cta">
+            <span>Bắt đầu vẽ bức tranh đầu tiên</span>
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      ) : (
+        <div className="public-artwork-grid">
+          {drawings.map((item, index) => {
+            const author = item.author || {};
+            const canDelete = user && (author.id === user.id || isAdmin);
+            const authorProfileUrl = author.id ? `/users/${author.id}` : '#';
 
-          <div className="public-creative-strip-grid">
-            {drawings.map((item, index) => {
-              const isSelected = activeArtwork?.id === item.id;
-              const itemAuthor = item.author || {};
-              return (
+            return (
+              <article key={item.id} className="public-artwork-card">
+                {/* Author Information Header */}
+                <header className="public-artwork-author-row">
+                  <Link
+                    to={authorProfileUrl}
+                    className="public-artwork-author-link"
+                    onClick={(e) => !author.id && e.preventDefault()}
+                    title={author.name ? `Xem hồ sơ của ${author.name}` : undefined}
+                  >
+                    <AuthorAvatar author={author} size={38} />
+                    <div className="public-artwork-author-meta">
+                      <div className="public-artwork-author-name-wrap">
+                        <span className="public-artwork-author-name">
+                          {author.name || 'Thành viên 3WIN'}
+                        </span>
+                        {author.isVerified && <VerifiedBadge size={14} />}
+                      </div>
+                      <div className="public-artwork-author-sub">
+                        <span className="public-artwork-time">
+                          {formatRelativeTime(item.createdAt)}
+                        </span>
+                        {(author.teamName || author.department) && (
+                          <>
+                            <span className="public-artwork-sep">·</span>
+                            <span
+                              className="public-artwork-department"
+                              title={author.teamName ? `Đội ${author.teamName}` : author.department}
+                            >
+                              {author.teamName ? `Đội ${author.teamName}` : author.department}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="public-artwork-header-aside">
+                    {filter === 'top' && index < 3 && (
+                      <span
+                        className={`public-artwork-top-pill rank-${index + 1}`}
+                        title={`Top ${index + 1} lượt tim`}
+                      >
+                        <Medal size={11} aria-hidden="true" />
+                        <span>#{index + 1}</span>
+                      </span>
+                    )}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="public-artwork-delete-icon-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTarget(item);
+                        }}
+                        title="Xóa tác phẩm"
+                        aria-label="Xóa tác phẩm"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                </header>
+
+                {/* Artwork Canvas Frame (Large, Balanced, Aspect Ratio Preserved) */}
                 <div
-                  key={item.id}
-                  className={`public-creative-card ${isSelected ? 'is-active' : ''}`}
-                  onClick={() => setSelectedIndex(index)}
-                  tabIndex={0}
+                  className="public-artwork-media-frame"
+                  onClick={() => setLightboxArtwork(item)}
                   role="button"
-                  aria-pressed={isSelected}
+                  tabIndex={0}
+                  aria-label={`Xem chi tiết tác phẩm: ${item.title}`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      setSelectedIndex(index);
+                      setLightboxArtwork(item);
                     }
                   }}
                 >
-                  <div className="public-creative-card-thumb">
+                  <div className="public-artwork-canvas-backdrop">
                     <img
                       src={item.imageUrl}
                       alt={item.title}
+                      className="public-artwork-canvas-img"
                       loading="lazy"
-                      className="public-creative-card-img"
                     />
-                    <span className="public-creative-card-rank">
-                      <Medal size={13} />
-                      <span>{filter === 'top' ? `#${index + 1}` : `${index + 1}`}</span>
+                  </div>
+                  <div className="public-artwork-media-overlay" aria-hidden="true">
+                    <span className="public-artwork-media-hint">
+                      <Maximize2 size={13} />
+                      <span>Xem chi tiết</span>
                     </span>
                   </div>
+                </div>
 
-                  <div className="public-creative-card-meta">
-                    <h4 className="public-creative-card-title" title={item.title}>
-                      {item.title}
-                    </h4>
-                    <div className="public-creative-card-footer">
-                      <span className="public-creative-card-author">
-                        {itemAuthor.name || 'Ẩn danh'}
+                {/* Artwork Bottom: Title & Action Bar */}
+                <div className="public-artwork-info-row">
+                  <h3
+                    className="public-artwork-title"
+                    title={item.title}
+                    onClick={() => setLightboxArtwork(item)}
+                  >
+                    {item.title}
+                  </h3>
+
+                  <div className="public-artwork-bottom-bar">
+                    <button
+                      type="button"
+                      className={`public-artwork-like-pill ${item.hasLiked ? 'is-liked' : ''}`}
+                      onClick={(e) => handleToggleLike(e, item)}
+                      title={item.hasLiked ? 'Đã thả tim (nhấn để bỏ thích)' : 'Thả tim tác phẩm'}
+                      aria-pressed={Boolean(item.hasLiked)}
+                    >
+                      <Heart
+                        size={15}
+                        className="public-artwork-heart-svg"
+                        fill={item.hasLiked ? '#ef4444' : 'none'}
+                        stroke={item.hasLiked ? '#ef4444' : 'currentColor'}
+                        strokeWidth={item.hasLiked ? 0 : 2}
+                      />
+                      <span className="public-artwork-like-count">
+                        {displayScore(item.likesCount)}
                       </span>
+                    </button>
+
+                    <div className="public-artwork-action-group">
                       <button
                         type="button"
-                        className={`public-creative-mini-heart ${item.hasLiked ? 'is-liked' : ''}`}
-                        onClick={(e) => handleToggleLike(e, item)}
-                        title="Thả tim tác phẩm này"
+                        className="public-artwork-icon-btn"
+                        onClick={(e) => handleDownload(e, item)}
+                        title="Tải ảnh PNG về máy"
+                        aria-label="Tải ảnh PNG"
                       >
-                        <Heart
-                          size={12}
-                          className="public-mini-heart-icon"
-                          fill={item.hasLiked ? '#ef4444' : 'none'}
-                          stroke={item.hasLiked ? '#ef4444' : 'currentColor'}
-                          strokeWidth={2}
-                        />
-                        <span>{displayScore(item.likesCount)}</span>
+                        <Download size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="public-artwork-icon-btn"
+                        onClick={() => setLightboxArtwork(item)}
+                        title="Xem toàn màn hình"
+                        aria-label="Xem toàn màn hình"
+                      >
+                        <Maximize2 size={15} />
                       </button>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
+      {/* 4. Full Artwork Lightbox Modal */}
+      <AnimatedModal
+        isOpen={Boolean(lightboxArtwork)}
+        onClose={() => setLightboxArtwork(null)}
+        title={lightboxArtwork?.title || 'Chi tiết tác phẩm'}
+        maxWidth={940}
+      >
+        {lightboxArtwork && (
+          <div className="public-artwork-modal-body">
+            {/* Modal Image Exhibition Frame */}
+            <div className="public-artwork-modal-frame">
+              <img
+                src={lightboxArtwork.imageUrl}
+                alt={lightboxArtwork.title}
+                className="public-artwork-modal-image"
+              />
+
+              {drawings.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="public-artwork-modal-nav is-prev"
+                    onClick={handleLightboxPrev}
+                    aria-label="Tác phẩm trước (Phím mũi tên trái)"
+                    title="Tác phẩm trước"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    className="public-artwork-modal-nav is-next"
+                    onClick={handleLightboxNext}
+                    aria-label="Tác phẩm kế tiếp (Phím mũi tên phải)"
+                    title="Tác phẩm kế tiếp"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Modal Metadata & Actions Panel */}
+            <div className="public-artwork-modal-info-bar">
+              <div className="public-artwork-modal-author">
+                <AuthorAvatar author={lightboxArtwork.author} size={42} />
+                <div className="public-artwork-modal-author-text">
+                  <div className="public-artwork-author-name-wrap">
+                    <Link
+                      to={lightboxArtwork.author?.id ? `/users/${lightboxArtwork.author.id}` : '#'}
+                      className="public-artwork-modal-author-name"
+                      onClick={(e) => !lightboxArtwork.author?.id && e.preventDefault()}
+                    >
+                      {lightboxArtwork.author?.name || 'Thành viên 3WIN'}
+                    </Link>
+                    {lightboxArtwork.author?.isVerified && <VerifiedBadge size={15} />}
+                  </div>
+                  <div className="public-artwork-modal-sub">
+                    <span>{formatRelativeTime(lightboxArtwork.createdAt)}</span>
+                    {(lightboxArtwork.author?.teamName || lightboxArtwork.author?.department) && (
+                      <>
+                        <span>·</span>
+                        <span>
+                          {lightboxArtwork.author.teamName
+                            ? `Đội ${lightboxArtwork.author.teamName}`
+                            : lightboxArtwork.author.department}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="public-artwork-modal-actions">
+                <button
+                  type="button"
+                  className={`public-artwork-like-pill is-large ${lightboxArtwork.hasLiked ? 'is-liked' : ''}`}
+                  onClick={(e) => handleToggleLike(e, lightboxArtwork)}
+                  title={lightboxArtwork.hasLiked ? 'Bỏ thích' : 'Thả tim tác phẩm'}
+                >
+                  <Heart
+                    size={16}
+                    fill={lightboxArtwork.hasLiked ? '#ef4444' : 'none'}
+                    stroke={lightboxArtwork.hasLiked ? '#ef4444' : 'currentColor'}
+                    strokeWidth={lightboxArtwork.hasLiked ? 0 : 2}
+                  />
+                  <span>
+                    {lightboxArtwork.hasLiked ? 'Đã thả tim' : 'Thả tim'} (
+                    {displayScore(lightboxArtwork.likesCount)})
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="public-artwork-btn-secondary"
+                  onClick={(e) => handleDownload(e, lightboxArtwork)}
+                >
+                  <Download size={15} />
+                  <span>Tải ảnh PNG</span>
+                </button>
+
+                {user && (lightboxArtwork.author?.id === user.id || isAdmin) && (
+                  <button
+                    type="button"
+                    className="public-artwork-btn-secondary is-danger"
+                    onClick={() => setDeleteTarget(lightboxArtwork)}
+                  >
+                    <Trash2 size={15} />
+                    <span>Xóa</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatedModal>
+
       {/* 5. Delete Confirmation Modal */}
       <AnimatedModal
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
         title="Xác nhận xóa tác phẩm"
         maxWidth={440}
         actions={
@@ -702,7 +724,7 @@ export default function CreativeCornerSection() {
               variant="secondary"
               size="sm"
               disabled={isDeleting}
-              onClick={() => setShowDeleteConfirm(false)}
+              onClick={() => setDeleteTarget(null)}
             >
               Hủy
             </Button>
@@ -719,7 +741,8 @@ export default function CreativeCornerSection() {
         }
       >
         <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Bạn có chắc chắn muốn gỡ bỏ tác phẩm "<b>{activeArtwork?.title}</b>" khỏi Thư Viện Tranh không? Thao tác này không thể hoàn tác.
+          Bạn có chắc chắn muốn gỡ bỏ tác phẩm "<b>{deleteTarget?.title}</b>" khỏi Thư Viện Tranh
+          không? Thao tác này không thể hoàn tác.
         </p>
       </AnimatedModal>
     </Reveal>

@@ -1460,6 +1460,10 @@ export const typingGameApi = {
     const res = await api.get(`/api/games/typing/rooms/${roomId}`);
     return res.data;
   },
+  getRoomSpectators: async (roomId) => {
+    const res = await api.get(`/api/games/typing/rooms/${roomId}/spectators`);
+    return res.data;
+  },
   joinRoom: async (roomId) => {
     const res = await api.post(`/api/games/typing/rooms/${roomId}/join`);
     return res.data;

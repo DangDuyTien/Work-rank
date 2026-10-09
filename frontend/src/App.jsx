@@ -201,6 +201,7 @@ function AppRoutes() {
             <Route path="/games/sam/room/:roomId" element={<SamGame />} />
             <Route path="/games/typing" element={<TypingBattle />} />
             <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
+            <Route path="/games/typing/spectate/:roomId" element={<TypingBattle />} />
             <Route path="/games/drawing" element={<DrawingGame />} />
             <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
             <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />

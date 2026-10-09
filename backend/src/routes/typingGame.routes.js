@@ -20,6 +20,7 @@ router.get('/active-room', auth, asyncHandler(typingGameController.getActiveRoom
 router.post('/rooms', auth, asyncHandler(typingGameController.createRoom));
 router.post('/matchmaking/quick', auth, asyncHandler(typingGameController.quickMatch));
 router.get('/rooms/:roomId', auth, asyncHandler(typingGameController.getRoomDetail));
+router.get('/rooms/:roomId/spectators', auth, asyncHandler(typingGameController.getRoomSpectators));
 router.post('/rooms/:roomId/join', auth, asyncHandler(typingGameController.joinRoom));
 router.post('/rooms/:roomId/switch-team', auth, asyncHandler(typingGameController.switchTeam));
 router.post('/rooms/:roomId/leave', auth, asyncHandler(typingGameController.leaveRoom));

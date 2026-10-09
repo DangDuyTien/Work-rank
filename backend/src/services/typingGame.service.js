@@ -1099,15 +1099,19 @@ async function getRoomDetail(roomId, requestingUserId = null) {
 
   const data = room.toJSON();
   const spectatorCount = typingRealtime.getSpectatorCount(room.id);
+  const spectators = typingRealtime.getSpectatorsList(room.id);
 
   return {
     room: {
       ...data,
       spectatorCount,
+      spectators,
     },
     players: data.players || [],
     challenge: data.challenge,
     result: data.result,
+    spectatorCount,
+    spectators,
   };
 }
 

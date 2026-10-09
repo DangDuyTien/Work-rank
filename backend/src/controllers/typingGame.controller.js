@@ -1,6 +1,7 @@
 'use strict';
 
 const typingGameService = require('../services/typingGame.service');
+const typingRealtime = require('../services/typingRealtime.service');
 const { checkGameAvailability } = require('../services/gameCatalog.service');
 
 async function getCatalogStatus(req, res) {
@@ -116,12 +117,22 @@ async function getActiveRoom(req, res) {
   res.json({ room: detail?.room || null, detail });
 }
 
+async function getRoomSpectators(req, res) {
+  const roomId = Number(req.params.roomId);
+  res.json({
+    roomId,
+    spectatorCount: typingRealtime.getSpectatorCount(roomId),
+    spectators: typingRealtime.getSpectatorsList(roomId),
+  });
+}
+
 module.exports = {
   getCatalogStatus,
   listRooms,
   createRoom,
   quickMatch,
   getRoomDetail,
+  getRoomSpectators,
   getActiveRoom,
   joinRoom,
   switchTeam,

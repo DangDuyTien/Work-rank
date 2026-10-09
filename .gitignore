@@ -5,3 +5,5 @@ dist/
 desktop-app/build/
 desktop-app/release/
 __pycache__/
+test-results/
+playwright-report/

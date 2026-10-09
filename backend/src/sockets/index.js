@@ -269,7 +269,7 @@ function registerSockets(io) {
 
         socket.join(`typing:${auth.roomId}`);
         if (auth.isSpectator) {
-          typingRealtime.addSpectator(auth.roomId, socket.id);
+          typingRealtime.addSpectator(auth.roomId, socket.id, socket.user);
         }
         if (typeof ack === 'function') {
           ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
@@ -287,6 +287,18 @@ function registerSockets(io) {
         }
       } catch (err) {
         if (typeof ack === 'function') ack({ ok: false, error: err.message });
+      }
+    });
+
+    socket.on('typing:getSpectators', (payload = {}, ack) => {
+      const roomId = Number(payload.roomId);
+      if (typeof ack === 'function') {
+        ack({
+          ok: true,
+          roomId,
+          spectatorCount: typingRealtime.getSpectatorCount(roomId),
+          spectators: typingRealtime.getSpectatorsList(roomId),
+        });
       }
     });
 
