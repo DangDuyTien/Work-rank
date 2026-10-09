@@ -459,6 +459,7 @@ export default function TypingBattle() {
   const [room, setRoom] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [roomError, setRoomError] = useState(null);
   const [roomList, setRoomList] = useState([]);
   const [myStats, setMyStats] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -665,8 +666,29 @@ export default function TypingBattle() {
   const fetchRoomDetail = useCallback(async (roomIdToFetch) => {
     try {
       setLoading(true);
-      const data = await typingGameApi.getRoomDetail(roomIdToFetch);
+      setRoomError(null);
+      let data = await typingGameApi.getRoomDetail(roomIdToFetch);
       if (data && data.room) {
+        // Auto-join if user is logged in, room is in WAITING state, user is not already in players, and room not full
+        if (
+          user?.id &&
+          data.room.status === 'WAITING' &&
+          (!data.players || !data.players.some((p) => p.userId && Number(p.userId) === Number(user.id))) &&
+          (data.players ? data.players.length : 0) < (data.room.maxPlayers || 2)
+        ) {
+          try {
+            const joinedData = await typingGameApi.joinRoom(roomIdToFetch);
+            if (joinedData && joinedData.room) {
+              data = joinedData;
+            }
+          } catch (joinErr) {
+            const status = joinErr.response?.status;
+            const message = joinErr.response?.data?.message || joinErr.message || 'Không thể tham gia phòng thi đấu';
+            console.warn('[TypingBattle] Auto-join notice:', message);
+            if ([403, 404, 409].includes(status)) setRoomError(message);
+          }
+        }
+
         setRoom(data.room);
         setPlayers(data.players || []);
         if (data.result) {
@@ -682,7 +704,23 @@ export default function TypingBattle() {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, user?.id]);
+
+  const handleJoinExistingRoom = async (targetRoomId) => {
+    try {
+      setLoading(true);
+      const res = await typingGameApi.joinRoom(targetRoomId);
+      if (res?.room) {
+        setRoom(res.room);
+        setPlayers(res.players || []);
+        navigate(`/games/typing/room/${res.room.id}`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Không thể tham gia phòng thi đấu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (urlRoomId) {
@@ -690,6 +728,7 @@ export default function TypingBattle() {
     } else {
       setRoom(null);
       setPlayers([]);
+      setRoomError(null);
       fetchHubData();
     }
   }, [urlRoomId, fetchRoomDetail, fetchHubData]);
@@ -698,9 +737,39 @@ export default function TypingBattle() {
   useEffect(() => {
     if (!socket) return;
 
-    if (urlRoomId) {
-      socket.emit('typing:joinRoom', { roomId: Number(urlRoomId) });
-    }
+    // Subscribe to the socket room only once the authoritative room is known.
+    // Emitting on `urlRoomId` alone races the HTTP auto-join: a slow join leaves
+    // the socket rejected (non-player in WAITING) and it never re-subscribes, so
+    // the client silently misses every later event (ready/starting/started).
+    const joinRoomChannel = () => {
+      if (room?.id) {
+        socket.emit('typing:joinRoom', { roomId: Number(room.id) }, (res) => {
+          if (res && res.ok === false) {
+            setRoomError(res.error || 'Bạn không phải là người chơi trong phòng này.');
+          } else if (res && res.ok) {
+            setRoomError(null);
+          }
+        });
+      }
+    };
+    joinRoomChannel();
+    socket.on('connect', joinRoomChannel);
+
+    // Authoritative snapshot pushed by the server right after the socket joins.
+    // Covers late join / reconnect where the original broadcasts were missed.
+    const handleRoomState = (data) => {
+      if (data?.room) {
+        setRoom(data.room);
+        if (data.room.status === 'PLAYING' && data.room.startedAt) {
+          setStartTime((prev) => prev ?? new Date(data.room.startedAt).getTime());
+        }
+      }
+      if (Array.isArray(data?.players)) setPlayers(data.players);
+      if (data?.result) {
+        setMatchResult(data.result);
+        if (data?.room?.status === 'FINISHED') setShowResultModal(true);
+      }
+    };
 
     const handleRoomUpdated = (data) => {
       if (data?.room) {
@@ -828,6 +897,7 @@ export default function TypingBattle() {
       }
     };
 
+    socket.on('typing:roomState', handleRoomState);
     socket.on('typing:roomUpdated', handleRoomUpdated);
     socket.on('typing:playerJoined', handlePlayerJoined);
     socket.on('typing:playerLeft', handlePlayerLeft);
@@ -842,9 +912,11 @@ export default function TypingBattle() {
     socket.on('typing:roomListChanged', handleRoomListChanged);
 
     return () => {
-      if (urlRoomId) {
-        socket.emit('typing:leaveRoom', { roomId: Number(urlRoomId) });
+      socket.off('connect', joinRoomChannel);
+      if (room?.id) {
+        socket.emit('typing:leaveRoom', { roomId: Number(room.id) });
       }
+      socket.off('typing:roomState', handleRoomState);
       socket.off('typing:roomUpdated', handleRoomUpdated);
       socket.off('typing:playerJoined', handlePlayerJoined);
       socket.off('typing:playerLeft', handlePlayerLeft);
@@ -858,7 +930,7 @@ export default function TypingBattle() {
       socket.off('typing:roomReset', handleRoomReset);
       socket.off('typing:roomListChanged', handleRoomListChanged);
     };
-  }, [socket, urlRoomId, soundEnabled, fetchHubData]);
+  }, [socket, room?.id, urlRoomId, soundEnabled, fetchHubData]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -1380,6 +1452,7 @@ export default function TypingBattle() {
     const isPlaying = room.status === 'PLAYING';
     const isDone = room.status === 'FINISHED';
     const isHost = Number(room?.hostUserId) === Number(user?.id);
+    const mePlayer = (players || []).find((p) => Number(p.userId) === Number(user?.id));
     const requiredPlayerCount = room.mode === 'SOLO' ? 1 : room.mode === '1V1' ? 2 : room.mode === '2V2' ? 4 : 6;
     const canStartMatch = isHost && (players || []).length >= requiredPlayerCount && (players || []).every((p) => p.isReady);
     const teamAPlayers = (players || []).filter((p) => p.team === 'A');
@@ -1506,6 +1579,26 @@ export default function TypingBattle() {
           </div>
         )}
 
+        {/* ── JOIN / ACCESS ERROR NOTICE ── */}
+        {roomError && !isPlaying && !isDone && (
+          <div
+            className="motion-slide-down"
+            role="alert"
+            style={{
+              marginBottom: 16,
+              padding: '12px 16px',
+              borderRadius: 10,
+              background: 'rgba(185, 28, 28, 0.08)',
+              border: '1px solid rgba(185, 28, 28, 0.25)',
+              color: 'var(--danger, #b91c1c)',
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            {roomError}
+          </div>
+        )}
+
         {/* ── LOBBY WAITING STAGE ── */}
         {!isPlaying && !isDone && (
           <Card style={{ padding: 24, marginBottom: 16 }}>
@@ -1518,12 +1611,16 @@ export default function TypingBattle() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Button
-                  variant={players.find((p) => Number(p.userId) === Number(user?.id))?.isReady ? 'secondary' : 'primary'}
-                  onClick={handleToggleReady}
-                >
-                  {players.find((p) => Number(p.userId) === Number(user?.id))?.isReady ? 'Hủy Sẵn Sàng' : 'Sẵn Sàng'}
-                </Button>
+                {mePlayer ? (
+                  <Button
+                    variant={mePlayer.isReady ? 'secondary' : 'primary'}
+                    onClick={handleToggleReady}
+                  >
+                    {mePlayer.isReady ? 'Hủy Sẵn Sàng' : 'Sẵn Sàng'}
+                  </Button>
+                ) : (
+                  <Button variant="secondary" onClick={handleLeaveRoom}>Về sảnh thi đấu</Button>
+                )}
 
                 {isHost && (
                   <Button
@@ -2421,7 +2518,7 @@ export default function TypingBattle() {
                         variant="primary"
                         size="sm"
                         style={{ width: '100%' }}
-                        onClick={() => navigate(`/games/typing/room/${r.id}`)}
+                        onClick={() => handleJoinExistingRoom(r.id)}
                       >
                         Tham Gia Phòng
                       </Button>

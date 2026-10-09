@@ -134,8 +134,26 @@ export default function SamGame() {
     try {
       setActionLoading(true);
       setErrorMsg(null);
-      const data = await samGame.getRoom(roomIdToFetch);
+      let data = await samGame.getRoom(roomIdToFetch);
       if (data && data.room) {
+        // Auto-join if user is logged in, room is in WAITING state, not a test room, and user is not yet in players
+        if (
+          user?.id &&
+          data.room.status === 'WAITING' &&
+          !data.room.isTest &&
+          (!data.players || !data.players.some((p) => p.userId && Number(p.userId) === Number(user.id))) &&
+          (data.players ? data.players.length : 0) < (data.room.maxPlayers || 4)
+        ) {
+          try {
+            const joinedData = await samGame.joinRoom(roomIdToFetch);
+            if (joinedData && joinedData.room) {
+              data = joinedData;
+            }
+          } catch (joinErr) {
+            console.warn('[SamGame] Auto-join notice:', joinErr.message);
+          }
+        }
+
         setRoom(data.room);
         if (data.room.serverTime) {
           setServerTimeOffset(new Date(data.room.serverTime).getTime() - Date.now());
@@ -157,7 +175,7 @@ export default function SamGame() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (urlRoomId) {
@@ -220,7 +238,19 @@ export default function SamGame() {
   useEffect(() => {
     if (!socket || !room?.id) return;
 
-    socket.emit('sam:joinRoom', { roomId: room.id, isSpectator });
+    // (Re)subscribe on mount and after every socket reconnect so a dropped
+    // connection never leaves the client outside the room channel.
+    const joinRoomChannel = () => socket.emit('sam:joinRoom', { roomId: room.id, isSpectator });
+    joinRoomChannel();
+    socket.on('connect', joinRoomChannel);
+
+    // Authoritative snapshot pushed by the server right after the socket joins.
+    const handleRoomState = (data) => {
+      if (data?.room) setRoom(data.room);
+      if (Array.isArray(data?.players)) setPlayers(data.players);
+      if (Array.isArray(data?.myHandCards)) setMyHandCards(data.myHandCards);
+      if (typeof data?.isSpectator === 'boolean') setIsSpectator(data.isSpectator);
+    };
 
     const handleRoomUpdated = (data) => {
       if (data?.room) setRoom((prev) => ({ ...prev, ...data.room }));
@@ -458,6 +488,7 @@ export default function SamGame() {
       }
     };
 
+    socket.on('sam:roomState', handleRoomState);
     socket.on('sam:roomUpdated', handleRoomUpdated);
     socket.on('sam:playerJoined', handlePlayerJoined);
     socket.on('sam:playerLeft', handlePlayerLeft);
@@ -480,7 +511,9 @@ export default function SamGame() {
     socket.on('sam:botDebug', handleBotDebug);
 
     return () => {
+      socket.off('connect', joinRoomChannel);
       socket.emit('sam:leaveRoom', { roomId: room.id });
+      socket.off('sam:roomState', handleRoomState);
       socket.off('sam:roomUpdated', handleRoomUpdated);
       socket.off('sam:playerJoined', handlePlayerJoined);
       socket.off('sam:playerLeft', handlePlayerLeft);

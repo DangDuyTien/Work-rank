@@ -56,8 +56,10 @@ async function canAccessGameRoom({
       return { allowed: false, error: 'Phòng Sâm không tồn tại', code: 'ROOM_NOT_FOUND', status: 404 };
     }
 
-    // Check test room authorization
-    if (room.isTest && userRole !== 'admin') {
+    // Check test room authorization (Admin only, EXCEPT practice bot room or host)
+    const isHost = Number(room.hostUserId) === uid;
+    const isPracticeBot = room.testScenario === 'PRACTICE_BOT';
+    if (room.isTest && userRole !== 'admin' && !isHost && !isPracticeBot) {
       return {
         allowed: false,
         error: 'Chỉ quản trị viên (Admin) mới có quyền truy cập phòng test kịch bản bot',
@@ -69,8 +71,6 @@ async function canAccessGameRoom({
     const player = await SamPlayer.findOne({
       where: { roomId: room.id, userId: uid },
     });
-
-    const isHost = Number(room.hostUserId) === uid;
     const isPlayer = !!player;
 
     if (isPlayer || isHost) {
@@ -83,26 +83,23 @@ async function canAccessGameRoom({
       };
     }
 
-    // Spectator policy: Only allow if match is actively PLAYING or FINISHED on a LIVE (non-test, non-private) room.
-    // In WAITING or STARTING state, outside users who have not joined as a player are rejected with 403.
-    const isLiveMatch = room.roomType === 'LIVE' && !room.isTest;
-    const canSpectate = isLiveMatch && (room.status === 'PLAYING' || room.status === 'FINISHED');
-
-    if (canSpectate) {
+    // In WAITING or STARTING state, outside non-players cannot connect to socket
+    if (room.status === 'WAITING' || room.status === 'STARTING') {
       return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: true,
-        isPlayer: false,
-        role: 'spectator',
+        allowed: false,
+        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
+        code: 'FORBIDDEN',
+        status: 403,
       };
     }
 
+    // In PLAYING or FINISHED state, allow spectator
     return {
-      allowed: false,
-      error: 'Bạn không phải là người chơi trong phòng này và phòng chưa mở chế độ khán giả',
-      code: 'FORBIDDEN',
-      status: 403,
+      allowed: true,
+      roomId: room.id,
+      isSpectator: true,
+      isPlayer: false,
+      role: 'spectator',
     };
   }
 
@@ -136,22 +133,21 @@ async function canAccessGameRoom({
       };
     }
 
-    // Quiz room: Spectators only allowed if explicitly in PLAYING/FINISHED status
-    if (room.status === 'PLAYING' || room.status === 'FINISHED') {
+    if (room.status === 'WAITING' || room.status === 'STARTING') {
       return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: true,
-        isPlayer: false,
-        role: 'spectator',
+        allowed: false,
+        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
+        code: 'FORBIDDEN',
+        status: 403,
       };
     }
 
     return {
-      allowed: false,
-      error: 'Bạn không phải là người chơi trong phòng Quiz này',
-      code: 'FORBIDDEN',
-      status: 403,
+      allowed: true,
+      roomId: room.id,
+      isSpectator: true,
+      isPlayer: false,
+      role: 'spectator',
     };
   }
 
@@ -185,21 +181,21 @@ async function canAccessGameRoom({
       };
     }
 
-    if (room.status === 'PLAYING' || room.status === 'FINISHED') {
+    if (room.status === 'WAITING' || room.status === 'STARTING') {
       return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: true,
-        isPlayer: false,
-        role: 'spectator',
+        allowed: false,
+        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
+        code: 'FORBIDDEN',
+        status: 403,
       };
     }
 
     return {
-      allowed: false,
-      error: 'Bạn không phải là người chơi trong phòng Cờ tỷ phú này',
-      code: 'FORBIDDEN',
-      status: 403,
+      allowed: true,
+      roomId: room.id,
+      isSpectator: true,
+      isPlayer: false,
+      role: 'spectator',
     };
   }
 
@@ -233,21 +229,22 @@ async function canAccessGameRoom({
       };
     }
 
-    if (room.status === 'PLAYING' || room.status === 'FINISHED') {
+    if (room.status === 'WAITING' || room.status === 'STARTING') {
       return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: true,
-        isPlayer: false,
-        role: 'spectator',
+        allowed: false,
+        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
+        code: 'FORBIDDEN',
+        status: 403,
       };
     }
 
+    // In PLAYING or FINISHED state, allow spectator
     return {
-      allowed: false,
-      error: 'Bạn không phải là người chơi trong phòng thi đấu này',
-      code: 'FORBIDDEN',
-      status: 403,
+      allowed: true,
+      roomId: room.id,
+      isSpectator: true,
+      isPlayer: false,
+      role: 'spectator',
     };
   }
 

@@ -16,6 +16,7 @@ router.get('/challenges', auth, asyncHandler(typingGameController.getChallenges)
 
 // Room management
 router.get('/rooms', auth, asyncHandler(typingGameController.listRooms));
+router.get('/active-room', auth, asyncHandler(typingGameController.getActiveRoom));
 router.post('/rooms', auth, asyncHandler(typingGameController.createRoom));
 router.post('/matchmaking/quick', auth, asyncHandler(typingGameController.quickMatch));
 router.get('/rooms/:roomId', auth, asyncHandler(typingGameController.getRoomDetail));

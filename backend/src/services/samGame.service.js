@@ -141,9 +141,57 @@ async function findRoom(roomIdOrCode, options = {}) {
   });
 }
 
+// Helper to self-heal and clean up stale or abandoned rooms and player locks
+async function cleanupStaleSamRooms(t = null) {
+  try {
+    const staleCutoff = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes past deadline
+    const longPlayingCutoff = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes match timeout
+
+    const staleRooms = await SamRoom.findAll({
+      where: {
+        status: 'PLAYING',
+        [Op.or]: [
+          { turnDeadline: { [Op.lt]: staleCutoff } },
+          { startedAt: { [Op.lt]: longPlayingCutoff } },
+        ],
+      },
+      transaction: t,
+    });
+
+    for (const sr of staleRooms) {
+      sr.status = 'ABANDONED';
+      sr.samPhase = 'FINISHED';
+      sr.finishedAt = new Date();
+      await sr.save({ transaction: t });
+
+      await SamPlayer.update(
+        { status: 'FINISHED' },
+        { where: { roomId: sr.id, status: 'ACTIVE' }, transaction: t }
+      );
+    }
+
+    // Clean up empty WAITING rooms with 0 players
+    const emptyWaitingRooms = await SamRoom.findAll({
+      where: { status: 'WAITING' },
+      include: [{ model: SamPlayer, as: 'players' }],
+      transaction: t,
+    });
+
+    for (const er of emptyWaitingRooms) {
+      if (!er.players || er.players.length === 0 || er.players.every((p) => p.isBot)) {
+        er.status = 'ABANDONED';
+        await er.save({ transaction: t });
+      }
+    }
+  } catch (err) {
+    console.warn('[SamService] cleanupStaleSamRooms warning:', err.message);
+  }
+}
+
 // ── LOBBY & ROOM MANAGEMENT ──
 
 async function listRooms(filters = {}, requestingUser = null) {
+  await cleanupStaleSamRooms().catch(() => {});
   const where = {};
   const isTestQuery = filters.isTest === 'true' || filters.isTest === true || filters.roomType === 'BOT_TEST';
 
@@ -178,7 +226,13 @@ async function listRooms(filters = {}, requestingUser = null) {
     limit: filters.limit ? Number(filters.limit) : 20,
   });
 
-  return rooms.map((r) => {
+  // Filter out any abandoned or 0-human-player waiting rooms
+  const activeRooms = rooms.filter((r) => {
+    if (r.status === 'WAITING' && (!r.players || r.players.length === 0)) return false;
+    return true;
+  });
+
+  return activeRooms.map((r) => {
     const data = r.toJSON();
     return {
       ...data,
@@ -199,6 +253,8 @@ async function createRoom(data, requestingUser = null) {
   const validMax = Math.min(4, Math.max(2, Number(maxPlayers) || 4));
 
   const result = await sequelize.transaction(async (t) => {
+    await cleanupStaleSamRooms(t);
+
     // Check if user is already playing in another active match
     const activeMatch = await SamPlayer.findOne({
       where: { userId: actualUserId, status: 'ACTIVE' },
@@ -209,14 +265,19 @@ async function createRoom(data, requestingUser = null) {
       throw new ConflictError('Bạn đang tham gia một ván đấu chưa kết thúc. Vui lòng hoàn thành ván đấu hiện tại.');
     }
 
-    // Clean up any old WAITING seat for this user
+    // Clean up any old WAITING seat for this user and mark orphaned rooms abandoned
     const oldWaiting = await SamPlayer.findAll({
       where: { userId: actualUserId, status: 'WAITING' },
       include: [{ model: SamRoom, as: 'room', where: { status: 'WAITING' } }],
       transaction: t,
     });
     for (const ow of oldWaiting) {
+      const oldRoomId = ow.roomId;
       await ow.destroy({ transaction: t });
+      const remaining = await SamPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
+      if (remaining === 0) {
+        await SamRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+      }
     }
 
     // Generate guaranteed unique room code
@@ -361,7 +422,18 @@ async function createBotTestRoom(data, adminUser) {
 
 // ── PRACTICE ROOM CREATION (FOR ALL PLAYERS VS AI BOTS) ──
 
-async function createPracticeRoom(userId, botCount = 3) {
+async function createPracticeRoom(userIdOrData, botCountOrUser = 3) {
+  let userId = null;
+  let botCount = 3;
+
+  if (typeof userIdOrData === 'object' && userIdOrData !== null) {
+    botCount = userIdOrData.botCount || 3;
+    userId = userIdOrData.userId || (botCountOrUser && botCountOrUser.id ? botCountOrUser.id : null);
+  } else {
+    userId = userIdOrData;
+    botCount = typeof botCountOrUser === 'number' ? botCountOrUser : 3;
+  }
+
   if (!userId) {
     throw new UnauthorizedError('Yêu cầu xác thực người dùng để tạo phòng');
   }
@@ -454,68 +526,88 @@ async function joinRoom(roomId, userId, requestingUser = null) {
     throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
-  const room = await findRoom(roomId, {
-    include: [{ model: SamPlayer, as: 'players' }],
-  });
-
-  if (!room) {
-    throw new NotFoundError('Phòng chơi không tồn tại');
-  }
-
-  // If this is a test room, verify admin role or host ownership
-  const userRole = requestingUser ? requestingUser.role : (await User.findByPk(userId))?.role;
-  if (room.isTest && userRole !== 'admin' && Number(room.hostUserId) !== Number(userId)) {
-    throw new ForbiddenError('Bạn không có quyền tham gia phòng thử nghiệm này');
-  }
-
-  if (room.status !== 'WAITING') {
-    // Check if player is already in this playing room -> reconnect
-    const existingPlayer = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
-    if (existingPlayer) {
-      return getRoomDetail(room.id, userId, userRole);
+  const joinResult = await sequelize.transaction(async (t) => {
+    // 1. Clean up any stale waiting seats the user might have in other rooms
+    const oldWaiting = await SamPlayer.findAll({
+      where: { userId, status: 'WAITING', roomId: { [Op.ne]: roomId } },
+      include: [{ model: SamRoom, as: 'room', where: { status: 'WAITING' } }],
+      transaction: t,
+    });
+    for (const ow of oldWaiting) {
+      const oldRoomId = ow.roomId;
+      await ow.destroy({ transaction: t });
+      const remaining = await SamPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
+      if (remaining === 0) {
+        await SamRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+      }
     }
-    // If not a player, allow spectating
-    return getRoomDetail(room.id, userId, userRole);
-  }
 
-  // Check if player already in room
-  const alreadyIn = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
-  if (alreadyIn) {
-    return getRoomDetail(room.id, userId, userRole);
-  }
+    const room = await SamRoom.findByPk(roomId, {
+      include: [{ model: SamPlayer, as: 'players' }],
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
 
-  if (room.players.length >= room.maxPlayers) {
-    throw new ConflictError('Phòng chơi đã đủ người');
-  }
-
-  // Find next available seat index
-  const takenSeats = room.players.map((p) => p.seatIndex);
-  let availableSeat = 0;
-  for (let s = 0; s < room.maxPlayers; s++) {
-    if (!takenSeats.includes(s)) {
-      availableSeat = s;
-      break;
+    if (!room) {
+      throw new NotFoundError('Phòng chơi không tồn tại');
     }
+
+    const userRole = requestingUser ? requestingUser.role : (await User.findByPk(userId, { transaction: t }))?.role;
+    if (room.isTest && userRole !== 'admin' && Number(room.hostUserId) !== Number(userId)) {
+      throw new ForbiddenError('Bạn không có quyền tham gia phòng thử nghiệm này');
+    }
+
+    if (room.status !== 'WAITING') {
+      return { roomId: room.id, userId, userRole, isNewJoin: false };
+    }
+
+    // Check if player already in room
+    const alreadyIn = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
+    if (alreadyIn) {
+      return { roomId: room.id, userId, userRole, isNewJoin: false };
+    }
+
+    if (room.players.length >= room.maxPlayers) {
+      throw new ConflictError('Phòng chơi đã đủ người');
+    }
+
+    // Find next available seat index
+    const takenSeats = room.players.map((p) => p.seatIndex);
+    let availableSeat = 0;
+    for (let s = 0; s < room.maxPlayers; s++) {
+      if (!takenSeats.includes(s)) {
+        availableSeat = s;
+        break;
+      }
+    }
+
+    await SamPlayer.create(
+      {
+        roomId: room.id,
+        userId,
+        seatIndex: availableSeat,
+        handCards: [],
+        remainingCardsCount: 0,
+        status: 'WAITING',
+        playerType: 'HUMAN',
+        isBot: false,
+      },
+      { transaction: t }
+    );
+
+    return { roomId: room.id, userId, userRole, isNewJoin: true };
+  });
+
+  const detail = await getRoomDetail(joinResult.roomId, joinResult.userId, joinResult.userRole);
+  if (joinResult.isNewJoin) {
+    samRealtime.emitToRoom(joinResult.roomId, 'sam:playerJoined', {
+      roomId: joinResult.roomId,
+      userId: joinResult.userId,
+      players: detail.players,
+    });
+    samRealtime.emitToRoom(joinResult.roomId, 'sam:roomUpdated', { room: detail.room });
+    samRealtime.emitToRoom(joinResult.roomId, 'sam:roomListChanged', { roomId: joinResult.roomId });
   }
-
-  await SamPlayer.create({
-    roomId: room.id,
-    userId,
-    seatIndex: availableSeat,
-    handCards: [],
-    remainingCardsCount: 0,
-    status: 'WAITING',
-    playerType: 'HUMAN',
-    isBot: false,
-  });
-
-  const detail = await getRoomDetail(room.id, userId, userRole);
-  samRealtime.emitToRoom(room.id, 'sam:playerJoined', {
-    roomId: room.id,
-    userId,
-    players: detail.players,
-  });
-  samRealtime.emitToRoom(room.id, 'sam:roomUpdated', { room: detail.room });
 
   return detail;
 }
@@ -1530,10 +1622,13 @@ async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'use
     throw new Error('Phòng không tồn tại');
   }
 
-  // Security: Non-admins cannot access bot test rooms EXCEPT if they are the host (e.g. Practice Room)
-  if (room.isTest && requestingUserRole !== 'admin') {
+  // Security: Non-admins cannot access bot test rooms EXCEPT if they are the host, a bot, or practice room
+  const isBotCaller = typeof requestingUserId === 'string' && (requestingUserId.startsWith('BOT') || requestingUserId.startsWith('bot'));
+  if (room.isTest && requestingUserRole !== 'admin' && !isBotCaller) {
     if (requestingUserId && Number(room.hostUserId) === Number(requestingUserId)) {
       // Host is allowed
+    } else if (room.testScenario === 'PRACTICE_BOT') {
+      // Practice bot room allows its players/spectators
     } else {
       const error = new Error('Bạn không có quyền truy cập phòng thử nghiệm');
       error.status = 403;
@@ -1625,6 +1720,7 @@ async function getRoomDetail(roomId, requestingUserId, requestingUserRole = 'use
 
 async function getActiveRoom(userId) {
   if (!userId) return null;
+  await cleanupStaleSamRooms().catch(() => {});
   const activePlayer = await SamPlayer.findOne({
     where: {
       userId,

@@ -111,12 +111,18 @@ async function getChallenges(req, res) {
   res.json({ challenges });
 }
 
+async function getActiveRoom(req, res) {
+  const detail = await typingGameService.getActiveRoom(req.user.id);
+  res.json({ room: detail?.room || null, detail });
+}
+
 module.exports = {
   getCatalogStatus,
   listRooms,
   createRoom,
   quickMatch,
   getRoomDetail,
+  getActiveRoom,
   joinRoom,
   switchTeam,
   leaveRoom,

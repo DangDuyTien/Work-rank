@@ -28,6 +28,7 @@ const {
 
 const seasonService = require('./season.service');
 const grandLeaderboardService = require('./grandLeaderboard.service');
+const teamSyncService = require('../teamSync.service');
 
 async function checkConsistency(options = {}) {
   const diffs = [];
@@ -47,6 +48,7 @@ async function checkConsistency(options = {}) {
 
     const projectedRows = await SeasonLeaderboardProjection.findAll({
       where: { seasonId: s.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     });
     const projMap = new Map();
     for (const p of projectedRows) {
@@ -86,6 +88,16 @@ async function checkConsistency(options = {}) {
             reason: `Rank mismatch for Team #${tRow.teamId} in Season #${s.id}`,
           });
         }
+        if (s.status !== 'FINISHED' && s.status !== 'ARCHIVED' && proj.team && proj.teamName !== proj.team.name) {
+          diffs.push({
+            projection: 'SeasonLeaderboardProjection',
+            entityId: `season:${s.id}:team:${tRow.teamId}`,
+            field: 'teamName',
+            expected: proj.team.name,
+            actual: proj.teamName,
+            reason: `Stale team name in active Season #${s.id} projection: expected '${proj.team.name}', got '${proj.teamName}'`,
+          });
+        }
       }
     }
   }
@@ -102,6 +114,7 @@ async function checkConsistency(options = {}) {
 
     const projectedRows = await GrandLeaderboardProjection.findAll({
       where: { grandId: g.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     });
     const projMap = new Map();
     for (const p of projectedRows) {
@@ -141,6 +154,16 @@ async function checkConsistency(options = {}) {
             reason: `Rank mismatch for Team #${tRow.teamId} in Grand #${g.id}`,
           });
         }
+        if (g.status !== 'FINISHED' && g.status !== 'ARCHIVED' && proj.team && proj.teamName !== proj.team.name) {
+          diffs.push({
+            projection: 'GrandLeaderboardProjection',
+            entityId: `grand:${g.id}:team:${tRow.teamId}`,
+            field: 'teamName',
+            expected: proj.team.name,
+            actual: proj.teamName,
+            reason: `Stale team name in active Grand #${g.id} projection: expected '${proj.team.name}', got '${proj.teamName}'`,
+          });
+        }
       }
     }
   }
@@ -176,6 +199,12 @@ async function checkConsistency(options = {}) {
   };
 }
 
+async function reconcileTeamMetadata() {
+  return teamSyncService.reconcileAllTeamReadModels();
+}
+
 module.exports = {
   checkConsistency,
+  reconcileTeamMetadata,
 };
+

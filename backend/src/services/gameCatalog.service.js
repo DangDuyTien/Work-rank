@@ -53,6 +53,16 @@ const DEFAULT_GAMES = [
     icon: 'Sparkles',
     route: '/games/quiz',
   },
+  {
+    gameKey: 'drawing',
+    name: 'Góc Sáng Tạo (Game Vẽ)',
+    status: 'AVAILABLE',
+    enabled: true,
+    sortOrder: 6,
+    description: 'Không gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.',
+    icon: 'Palette',
+    route: '/games/drawing',
+  },
 ];
 
 async function ensureDefaultCatalog() {

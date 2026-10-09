@@ -25,13 +25,8 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
   let activeSeason;
 
   before(async () => {
-    await sequelize.sync();
-
-    // Clean test typing tables
-    await TypingPlayer.destroy({ where: {}, truncate: true }).catch(() => {});
-    await TypingMatchResult.destroy({ where: {}, truncate: true }).catch(() => {});
-    await TypingRoom.destroy({ where: {}, truncate: true }).catch(() => {});
-    await TypingUserStat.destroy({ where: {}, truncate: true }).catch(() => {});
+    const typingGameService = require('../src/services/typingGame.service');
+    await typingGameService.ensureChallengesExist();
 
     const ts = Date.now();
     user1 = await User.create({

@@ -101,10 +101,54 @@ function scheduleStartCountdown(roomId) {
   startCountdownTimers.set(numId, timer);
 }
 
+// ── STALE ROOMS CLEANUP & SELF-HEALING ──
+
+async function cleanupStaleTypingRooms(t = null) {
+  try {
+    const now = new Date();
+    const staleCutoff = new Date(now.getTime() - 15 * 60 * 1000); // 15 min for playing
+
+    const staleRooms = await TypingRoom.findAll({
+      where: {
+        status: 'PLAYING',
+        startedAt: { [Op.lt]: staleCutoff },
+      },
+      transaction: t,
+    });
+
+    for (const sr of staleRooms) {
+      sr.status = 'ABANDONED';
+      sr.finishedAt = new Date();
+      await sr.save({ transaction: t });
+      await TypingPlayer.update(
+        { status: 'FINISHED' },
+        { where: { roomId: sr.id, status: 'TYPING' }, transaction: t }
+      );
+    }
+
+    // Clean up empty WAITING rooms with 0 players
+    const emptyWaiting = await TypingRoom.findAll({
+      where: { status: 'WAITING' },
+      include: [{ model: TypingPlayer, as: 'players' }],
+      transaction: t,
+    });
+
+    for (const er of emptyWaiting) {
+      if (!er.players || er.players.length === 0) {
+        er.status = 'ABANDONED';
+        await er.save({ transaction: t });
+      }
+    }
+  } catch (err) {
+    console.warn('[TypingService] cleanupStaleTypingRooms warning:', err.message);
+  }
+}
+
 // ── LOBBY & ROOM MANAGEMENT ──
 
 async function listRooms(filters = {}) {
   await ensureChallengesExist();
+  await cleanupStaleTypingRooms().catch(() => {});
   const where = {};
 
   if (filters.status) {
@@ -135,7 +179,12 @@ async function listRooms(filters = {}) {
     limit: filters.limit ? Number(filters.limit) : 30,
   });
 
-  return rooms.map((r) => {
+  const activeRooms = rooms.filter((r) => {
+    if (r.status === 'WAITING' && (!r.players || r.players.length === 0)) return false;
+    return true;
+  });
+
+  return activeRooms.map((r) => {
     const data = r.toJSON();
     return {
       ...data,
@@ -242,6 +291,23 @@ async function createRoom(data, requestingUser) {
 
   const code = generateRoomCode();
   const result = await sequelize.transaction(async (t) => {
+    await cleanupStaleTypingRooms(t);
+
+    // Clean up any old WAITING seat for this user and mark orphaned rooms abandoned
+    const oldWaiting = await TypingPlayer.findAll({
+      where: { userId: actualUserId, status: 'WAITING' },
+      include: [{ model: TypingRoom, as: 'room', where: { status: 'WAITING' } }],
+      transaction: t,
+    });
+    for (const ow of oldWaiting) {
+      const oldRoomId = ow.roomId;
+      await ow.destroy({ transaction: t });
+      const remaining = await TypingPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
+      if (remaining === 0) {
+        await TypingRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+      }
+    }
+
     const room = await TypingRoom.create(
       {
         code,
@@ -329,67 +395,94 @@ async function joinRoom(roomId, userId) {
     throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
-  const room = await TypingRoom.findByPk(roomId, {
-    include: [{ model: TypingPlayer, as: 'players' }],
-  });
-
-  if (!room) {
-    throw new NotFoundError('Phòng thi đấu không tồn tại');
-  }
-
-  // If player already in room -> return detail
-  const existingPlayer = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
-  if (existingPlayer) {
-    return getRoomDetail(room.id, userId);
-  }
-
-  if (room.status !== 'WAITING') {
-    // Room is already in play -> allow spectating
-    return getRoomDetail(room.id, userId);
-  }
-
-  if (room.players.length >= room.maxPlayers) {
-    throw new ConflictError('Phòng thi đấu đã đủ người');
-  }
-
-  // Determine team & seat index
-  const takenSeats = room.players.map((p) => p.seatIndex);
-  let availableSeat = 0;
-  for (let s = 0; s < room.maxPlayers; s++) {
-    if (!takenSeats.includes(s)) {
-      availableSeat = s;
-      break;
+  const joinResult = await sequelize.transaction(async (t) => {
+    // 1. Clean up any stale waiting seats the user might have in other rooms
+    const oldWaiting = await TypingPlayer.findAll({
+      where: { userId: Number(userId), status: 'WAITING', roomId: { [Op.ne]: Number(roomId) } },
+      include: [{ model: TypingRoom, as: 'room', where: { status: 'WAITING' } }],
+      transaction: t,
+    });
+    for (const ow of oldWaiting) {
+      const oldRoomId = ow.roomId;
+      await ow.destroy({ transaction: t });
+      const remaining = await TypingPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
+      if (remaining === 0) {
+        await TypingRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+      }
     }
-  }
 
-  let assignedTeam = 'NONE';
-  if (room.mode === '2V2' || room.mode === '3V3') {
-    const teamACount = room.players.filter((p) => p.team === 'A').length;
-    const teamBCount = room.players.filter((p) => p.team === 'B').length;
-    assignedTeam = teamACount <= teamBCount ? 'A' : 'B';
-  }
+    const room = await TypingRoom.findByPk(roomId, {
+      include: [{ model: TypingPlayer, as: 'players' }],
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
 
-  await TypingPlayer.create({
-    roomId: room.id,
-    userId,
-    team: assignedTeam,
-    seatIndex: availableSeat,
-    isReady: false,
-    status: 'WAITING',
-    progressPct: 0,
-    typedChars: 0,
-    wpm: 0,
-    accuracy: 100.0,
-    errorCount: 0,
+    if (!room) {
+      throw new NotFoundError('Phòng thi đấu không tồn tại');
+    }
+
+    // If player already in room -> return detail
+    const existingPlayer = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
+    if (existingPlayer) {
+      return { roomId: room.id, userId, isNewJoin: false };
+    }
+
+    if (room.status !== 'WAITING') {
+      // Room is already in play -> allow spectating
+      return { roomId: room.id, userId, isNewJoin: false };
+    }
+
+    if (room.players.length >= room.maxPlayers) {
+      throw new ConflictError('Phòng thi đấu đã đủ người');
+    }
+
+    // Determine team & seat index
+    const takenSeats = room.players.map((p) => p.seatIndex);
+    let availableSeat = 0;
+    for (let s = 0; s < room.maxPlayers; s++) {
+      if (!takenSeats.includes(s)) {
+        availableSeat = s;
+        break;
+      }
+    }
+
+    let assignedTeam = 'NONE';
+    if (room.mode === '2V2' || room.mode === '3V3') {
+      const teamACount = room.players.filter((p) => p.team === 'A').length;
+      const teamBCount = room.players.filter((p) => p.team === 'B').length;
+      assignedTeam = teamACount <= teamBCount ? 'A' : 'B';
+    }
+
+    await TypingPlayer.create(
+      {
+        roomId: room.id,
+        userId: Number(userId),
+        team: assignedTeam,
+        seatIndex: availableSeat,
+        isReady: false,
+        status: 'WAITING',
+        progressPct: 0,
+        typedChars: 0,
+        wpm: 0,
+        accuracy: 100.0,
+        errorCount: 0,
+      },
+      { transaction: t }
+    );
+
+    return { roomId: room.id, userId, isNewJoin: true };
   });
 
-  const detail = await getRoomDetail(room.id, userId);
-  typingRealtime.emitToRoom(room.id, 'typing:playerJoined', {
-    roomId: room.id,
-    userId,
-    players: detail.players,
-  });
-  typingRealtime.emitToRoom(room.id, 'typing:roomUpdated', { room: detail.room });
+  const detail = await getRoomDetail(joinResult.roomId, joinResult.userId);
+  if (joinResult.isNewJoin) {
+    typingRealtime.emitToRoom(joinResult.roomId, 'typing:playerJoined', {
+      roomId: joinResult.roomId,
+      userId: joinResult.userId,
+      players: detail.players,
+    });
+    typingRealtime.emitToRoom(joinResult.roomId, 'typing:roomUpdated', { room: detail.room });
+    typingRealtime.emitToRoom(joinResult.roomId, 'typing:roomListChanged', { roomId: joinResult.roomId });
+  }
 
   return detail;
 }
@@ -1306,6 +1399,30 @@ async function submitPracticeResult(data, requestingUser) {
   };
 }
 
+async function getActiveRoom(userId) {
+  if (!userId) return null;
+  await cleanupStaleTypingRooms().catch(() => {});
+  const activePlayer = await TypingPlayer.findOne({
+    where: {
+      userId: Number(userId),
+      status: { [Op.in]: ['WAITING', 'TYPING'] },
+    },
+    include: [
+      {
+        model: TypingRoom,
+        as: 'room',
+        where: { status: { [Op.in]: ['WAITING', 'STARTING', 'PLAYING'] } },
+      },
+    ],
+  });
+
+  if (!activePlayer || !activePlayer.room) {
+    return null;
+  }
+
+  return getRoomDetail(activePlayer.room.id, userId);
+}
+
 module.exports = {
   ensureChallengesExist,
   listRooms,
@@ -1322,6 +1439,7 @@ module.exports = {
   submitPracticeResult,
   finalizeMatch,
   getRoomDetail,
+  getActiveRoom,
   getMyStats,
   getTypingLeaderboard,
   getChallenges,

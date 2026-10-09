@@ -6,6 +6,7 @@ import BrandMark from '../components/BrandMark';
 import usePublicSpotlight from '../hooks/usePublicSpotlight';
 import RecognitionPortraitFrame from '../components/RecognitionPortraitFrame';
 import CompanyMembersSection from '../components/CompanyMembersSection';
+import CreativeCornerSection from '../components/CreativeCornerSection';
 import { Reveal, RevealText } from '../components/ui';
 import {
   RecognitionLink, RecognitionName, RecognitionStatus,
@@ -316,6 +317,7 @@ export default function Home() {
 
         <WeeklyLeaderboard items={weekly} loading={weeklyLoading} error={weeklyError} retry={retry} />
         <YouTubeLeaderboard items={youtube} loading={youtubeLoading} error={youtubeError} retry={retry} />
+        <CreativeCornerSection />
         <CompanyMembersSection items={members} loading={membersLoading} error={membersError} retry={retry} />
 
         {/* Section cuối — hiện khi cuộn tới */}

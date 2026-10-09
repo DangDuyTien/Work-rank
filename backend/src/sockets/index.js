@@ -214,6 +214,17 @@ function registerSockets(io) {
         if (typeof ack === 'function') {
           ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
         }
+
+        // Push an authoritative snapshot to the joining socket. This lets a late
+        // joiner (socket connected after join/start broadcasts) converge instead
+        // of being stuck on stale UI.
+        try {
+          const samGameService = require('../services/samGame.service');
+          const detail = await samGameService.getRoomDetail(auth.roomId, socket.user.id, socket.user.role);
+          socket.emit('sam:roomState', detail);
+        } catch {
+          // Snapshot is best-effort; the HTTP room detail endpoint remains the fallback.
+        }
       } catch (err) {
         if (typeof ack === 'function') ack({ ok: false, error: err.message });
       }
@@ -262,6 +273,17 @@ function registerSockets(io) {
         }
         if (typeof ack === 'function') {
           ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
+        }
+
+        // Push an authoritative snapshot to the joining socket. A client whose
+        // socket connects after the join/ready/start broadcasts must still get
+        // the current authoritative room state (reconnect / late join).
+        try {
+          const typingGameService = require('../services/typingGame.service');
+          const detail = await typingGameService.getRoomDetail(auth.roomId, socket.user.id);
+          socket.emit('typing:roomState', detail);
+        } catch {
+          // Snapshot is best-effort; the HTTP room detail endpoint remains the fallback.
         }
       } catch (err) {
         if (typeof ack === 'function') ack({ ok: false, error: err.message });

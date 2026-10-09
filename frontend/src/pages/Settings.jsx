@@ -38,7 +38,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
-import { auth, users as usersApi, gameCatalogApi } from '../services/api';
+import { auth, users as usersApi, gameCatalogApi, drawingApi } from '../services/api';
 import VerifiedBadge from '../components/VerifiedBadge';
 import { AnimatedModal } from '../components/ui';
 import JobTitleBadge from '../components/JobTitleBadge';
@@ -238,6 +238,48 @@ export default function Settings() {
       toast.error(parseApiError(err, 'Không thể cập nhật trạng thái game.'));
     } finally {
       setUpdatingGameKey(null);
+    }
+  };
+
+  // ── Creative Corner / Drawing Gallery Admin Setting ──
+  const [creativeSettings, setCreativeSettings] = useState({ homeVisible: true, gameEnabled: true });
+  const [loadingCreativeSettings, setLoadingCreativeSettings] = useState(false);
+  const [savingCreativeSettings, setSavingCreativeSettings] = useState(false);
+
+  const loadCreativeSettings = useCallback(async () => {
+    if (!isAdmin) return;
+    setLoadingCreativeSettings(true);
+    try {
+      const res = await drawingApi.getSettings();
+      if (res?.settings) setCreativeSettings(res.settings);
+    } catch (err) {
+      console.warn('Failed to load creative corner settings:', err);
+    } finally {
+      setLoadingCreativeSettings(false);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadCreativeSettings();
+    }
+  }, [isAdmin, loadCreativeSettings]);
+
+  const handleToggleHomeVisible = async () => {
+    const nextVal = !creativeSettings.homeVisible;
+    setSavingCreativeSettings(true);
+    try {
+      const res = await drawingApi.updateSettings({ homeVisible: nextVal });
+      if (res?.settings) {
+        setCreativeSettings(res.settings);
+      } else {
+        setCreativeSettings((prev) => ({ ...prev, homeVisible: nextVal }));
+      }
+      toast.success(nextVal ? 'Đã BẬT hiển thị Góc Sáng Tạo trên Trang chủ' : 'Đã ẨN Góc Sáng Tạo khỏi Trang chủ');
+    } catch (err) {
+      toast.error(parseApiError(err, 'Không thể cập nhật cấu hình Góc Sáng Tạo.'));
+    } finally {
+      setSavingCreativeSettings(false);
     }
   };
 
@@ -1154,6 +1196,69 @@ export default function Settings() {
                 })}
               </div>
             )}
+          </SettingSection>
+        )}
+
+        {/* KHỐI: QUẢN LÝ GÓC SÁNG TẠO & THƯ VIỆN TRANH (ADMIN ONLY) */}
+        {isAdmin && (
+          <SettingSection
+            id="settings-creative"
+            icon={Palette}
+            title="Quản Lý Góc Sáng Tạo & Thư Viện Tranh"
+            desc="Cấu hình chế độ hiển thị khu vực Góc Sáng Tạo / Thư Viện Tranh trên Trang chủ (Home) của toàn công ty."
+            className="settings-card-wide"
+          >
+            <div style={{
+              padding: '18px 20px',
+              background: 'var(--surface-soft)',
+              border: '1px solid rgba(15,23,42,0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              flexWrap: 'wrap',
+            }}>
+              <div style={{ maxWidth: 540 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>
+                    Hiển thị Góc Sáng Tạo trên Trang Chủ
+                  </strong>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      textTransform: 'uppercase',
+                      background: creativeSettings.homeVisible ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                      color: creativeSettings.homeVisible ? '#16a34a' : '#dc2626',
+                      border: `1px solid ${creativeSettings.homeVisible ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    }}
+                  >
+                    {creativeSettings.homeVisible ? 'Đang bật' : 'Đang ẩn'}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  Khi bật, khu vực triển lãm tranh nghệ thuật sẽ hiển thị trực tiếp tại Trang chủ. Khi tắt, toàn bộ khu vực Thư Viện Tranh sẽ được ẩn khỏi Trang chủ.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button
+                  type="button"
+                  disabled={savingCreativeSettings || loadingCreativeSettings}
+                  onClick={handleToggleHomeVisible}
+                  className={creativeSettings.homeVisible ? 'settings-secondary-button' : 'settings-primary-button'}
+                  style={{
+                    fontSize: 13,
+                    padding: '8px 18px',
+                    cursor: (savingCreativeSettings || loadingCreativeSettings) ? 'not-allowed' : 'pointer',
+                    opacity: (savingCreativeSettings || loadingCreativeSettings) ? 0.6 : 1,
+                  }}
+                >
+                  {savingCreativeSettings ? 'Đang lưu...' : creativeSettings.homeVisible ? 'Tắt / Ẩn khỏi Trang chủ' : 'Bật hiển thị Trang chủ'}
+                </button>
+              </div>
+            </div>
           </SettingSection>
         )}
 

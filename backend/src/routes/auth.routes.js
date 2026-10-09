@@ -19,7 +19,6 @@ router.get('/me', auth, asyncHandler(controller.me));
 router.patch('/me', auth, validate(z.object({
   body: z.object({
     name: z.string().trim().min(1).max(120),
-    email,
   }),
 })), asyncHandler(controller.updateMe));
 router.patch('/password', auth, validate(z.object({

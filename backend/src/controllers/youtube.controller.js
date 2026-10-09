@@ -97,6 +97,7 @@ async function getLeaderboard(req, res, next) {
 
     const leaderboard = await youtubeAggregationService.getYouTubeTeamLeaderboard({
       sortBy,
+      search,
       limit: Number(limit),
       page: Number(page),
     });

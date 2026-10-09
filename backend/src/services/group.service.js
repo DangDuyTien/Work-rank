@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { Team, User, UserProfilePreference } = require('../models');
+const teamSyncService = require('./teamSync.service');
 
 function makeInviteCode() {
   return `WR-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
@@ -180,6 +181,7 @@ async function create(user, payload) {
       await User.update({ teamId: team.id }, { where: { id: validMemberIds } });
     }
   }
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id).catch(() => {});
   return toGroupPayload(team, user.id);
 }
 
@@ -191,6 +193,7 @@ async function join(user, inviteCode) {
     throw error;
   }
   await user.update({ teamId: team.id });
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id).catch(() => {});
   return toGroupPayload(team, user.id);
 }
 
@@ -207,6 +210,7 @@ async function leave(user, teamId) {
     throw error;
   }
   await user.update({ teamId: null });
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(teamId).catch(() => {});
   return { ok: true };
 }
 
@@ -241,6 +245,7 @@ async function update(user, teamId, payload = {}) {
   if (Object.keys(updates).length > 0) {
     try {
       await team.update(updates);
+      await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id, updates);
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
         const conflict = new Error('Group name already exists');
@@ -258,6 +263,7 @@ async function remove(user, teamId) {
   assertCanManage(user, team);
   await User.update({ teamId: null }, { where: { teamId: team.id } });
   await team.destroy();
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(teamId).catch(() => {});
   return { ok: true };
 }
 
@@ -276,6 +282,7 @@ async function kick(user, teamId, targetUserId) {
     throw error;
   }
   await target.update({ teamId: null });
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id).catch(() => {});
   return toGroupPayload(team, user.id);
 }
 
@@ -297,6 +304,7 @@ async function addMember(user, teamId, targetUserId) {
     if (user.role === 'admin') {
       // Admin có quyền chuyển thành viên từ đội khác sang đội này
       await target.update({ teamId: team.id });
+      await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id).catch(() => {});
       return toGroupPayload(team, user.id);
     }
     const error = new Error('Thành viên này đang thuộc một đội khác');
@@ -304,6 +312,7 @@ async function addMember(user, teamId, targetUserId) {
     throw error;
   }
   await target.update({ teamId: team.id });
+  await teamSyncService.syncTeamAcrossReadModelsAndRealtime(team.id).catch(() => {});
   return toGroupPayload(team, user.id);
 }
 

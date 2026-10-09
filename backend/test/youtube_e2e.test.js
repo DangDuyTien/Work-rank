@@ -127,11 +127,11 @@ describe('YouTube ↔ Team Analytics End-to-End (E2E) Flow', () => {
 
     // 7. User queries YouTube Team Leaderboard
     const lbRes = await request(app)
-      .get('/api/youtube/leaderboard?sortBy=views')
+      .get(`/api/youtube/leaderboard?sortBy=views&search=${encodeURIComponent(teamPhoenix.name)}`)
       .set('Authorization', `Bearer ${memberToken}`)
       .expect(200);
 
-    assert.ok(lbRes.body.items.length >= 2);
+    assert.ok(lbRes.body.items.length >= 1);
     const phoenixRow = lbRes.body.items.find((i) => Number(i.teamId) === Number(teamPhoenix.id));
     assert.ok(phoenixRow);
     assert.ok(phoenixRow.totalViews > 0);

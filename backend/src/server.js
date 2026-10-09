@@ -8,11 +8,13 @@ const { sequelize } = require('./models');
 const competitionRealtime = require('./services/competition/competitionRealtime.service');
 const { ensureYouTubeSchema } = require('./services/youtube/youtubeSchemaCheck');
 const { ensureTypingSchema } = require('./services/typingSchemaCheck');
+const { ensureDrawingSchema } = require('./services/drawingSchemaCheck');
 
 async function start() {
   await sequelize.authenticate();
   await ensureYouTubeSchema(sequelize);
   await ensureTypingSchema(sequelize);
+  await ensureDrawingSchema(sequelize);
   const server = http.createServer(app);
   const io = new Server(server, socketOptions);
   app.set('io', io);

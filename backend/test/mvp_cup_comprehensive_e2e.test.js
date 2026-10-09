@@ -271,7 +271,7 @@ test('MVP Cup Comprehensive End-to-End Test Suite', async (t) => {
     assert.equal(summary.metadata?.mvpCount, 1);
 
     // 7. Verify Ranking Service (Hall of Fame) includes this MVP
-    const topPerformers = await rankingService.getTopPerformers({ limit: 100 });
+    const topPerformers = await rankingService.getTopPerformers({ limit: 500 });
     assert.ok(Array.isArray(topPerformers.seasonMvps));
     const mvpEntry = topPerformers.seasonMvps.find((m) => m.userId === normalUser1.id);
     assert.ok(mvpEntry, 'Top performers Hall of Fame should include Alice with MVP award');

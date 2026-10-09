@@ -264,6 +264,7 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
   // Live aggregation from ScoreLedger
   let seasonTeams = await SeasonTeam.findAll({
     where: { seasonId, isDisqualified: false },
+    include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     transaction,
   });
 
@@ -272,9 +273,10 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
     seasonTeams = allTeams.map((t) => ({
       teamId: t.id,
       teamNameSnapshot: t.name,
-      teamAvatarSnapshot: null,
-      teamColorSnapshot: '#0284c7',
+      teamAvatarSnapshot: t.avatar || null,
+      teamColorSnapshot: t.color || '#0284c7',
       isEligible: true,
+      team: t,
     }));
   }
 
@@ -318,11 +320,12 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
   const rankings = seasonTeams
     .map((st) => {
       const score = scoreMap.get(Number(st.teamId)) || 0;
+      const canonicalTeam = st.team || st.Team;
       return {
         teamId: st.teamId,
-        teamName: st.teamNameSnapshot,
-        avatar: st.teamAvatarSnapshot,
-        color: st.teamColorSnapshot || '#0284c7',
+        teamName: canonicalTeam?.name || st.teamNameSnapshot,
+        avatar: canonicalTeam?.avatar || st.teamAvatarSnapshot || null,
+        color: canonicalTeam?.color || st.teamColorSnapshot || '#0284c7',
         score,
         isEligible: st.isEligible !== false,
       };
@@ -411,14 +414,16 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
   // Also get team details
   const seasonTeams = await SeasonTeam.findAll({
     where: { seasonId },
+    include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     transaction,
   });
   const teamInfoMap = new Map();
   for (const st of seasonTeams) {
+    const canonicalTeam = st.team || st.Team;
     teamInfoMap.set(Number(st.teamId), {
-      name: st.teamNameSnapshot,
-      avatar: st.teamAvatarSnapshot,
-      color: st.teamColorSnapshot || '#0284c7',
+      name: canonicalTeam?.name || st.teamNameSnapshot,
+      avatar: canonicalTeam?.avatar || st.teamAvatarSnapshot || null,
+      color: canonicalTeam?.color || st.teamColorSnapshot || '#0284c7',
     });
   }
 

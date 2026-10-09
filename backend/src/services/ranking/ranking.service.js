@@ -53,6 +53,7 @@ async function getRankingOverview() {
   if (activeSeason) {
     let rawTeams = await SeasonLeaderboardProjection.findAll({
       where: { seasonId: activeSeason.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: 3,
     });
@@ -60,6 +61,7 @@ async function getRankingOverview() {
       await projector.projectSeasonLeaderboard(activeSeason.id);
       rawTeams = await SeasonLeaderboardProjection.findAll({
         where: { seasonId: activeSeason.id },
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
         order: [['rank', 'ASC']],
         limit: 3,
       });
@@ -67,7 +69,7 @@ async function getRankingOverview() {
 
     seasonTopTeams = rawTeams.map((t) => ({
       teamId: t.teamId,
-      teamName: t.teamName,
+      teamName: t.team?.name || t.teamName,
       totalScore: Number(t.score || 0),
       rank: t.rank,
       wins: t.wins,
@@ -76,6 +78,7 @@ async function getRankingOverview() {
 
     let rawIndivs = await SeasonIndividualLeaderboardProjection.findAll({
       where: { seasonId: activeSeason.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: 3,
     });
@@ -83,6 +86,7 @@ async function getRankingOverview() {
       await projector.projectSeasonIndividualLeaderboard(activeSeason.id);
       rawIndivs = await SeasonIndividualLeaderboardProjection.findAll({
         where: { seasonId: activeSeason.id },
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
         order: [['rank', 'ASC']],
         limit: 3,
       });
@@ -92,7 +96,7 @@ async function getRankingOverview() {
       userId: i.userId,
       userName: i.userName,
       teamId: i.teamId,
-      teamName: i.teamName,
+      teamName: i.team?.name || i.teamName,
       score: Number(i.points || 0),
       rank: i.rank,
       trend: i.trend,
@@ -115,6 +119,7 @@ async function getRankingOverview() {
   if (currentGrand) {
     let rawGrandTeams = await GrandLeaderboardProjection.findAll({
       where: { grandId: currentGrand.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: 3,
     });
@@ -122,6 +127,7 @@ async function getRankingOverview() {
       await projector.projectGrandLeaderboard(currentGrand.id);
       rawGrandTeams = await GrandLeaderboardProjection.findAll({
         where: { grandId: currentGrand.id },
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
         order: [['rank', 'ASC']],
         limit: 3,
       });
@@ -129,7 +135,7 @@ async function getRankingOverview() {
 
     grandTopTeams = rawGrandTeams.map((t) => ({
       teamId: t.teamId,
-      teamName: t.teamName,
+      teamName: t.team?.name || t.teamName,
       grandPoints: Number(t.grandPoints || 0),
       rank: t.rank,
       seasonsWon: t.seasonsWon,
@@ -138,6 +144,7 @@ async function getRankingOverview() {
 
     let rawGrandIndivs = await GrandIndividualLeaderboardProjection.findAll({
       where: { grandId: currentGrand.id },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: 3,
     });
@@ -145,6 +152,7 @@ async function getRankingOverview() {
       await projector.projectGrandIndividualLeaderboard(currentGrand.id);
       rawGrandIndivs = await GrandIndividualLeaderboardProjection.findAll({
         where: { grandId: currentGrand.id },
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
         order: [['rank', 'ASC']],
         limit: 3,
       });
@@ -154,7 +162,7 @@ async function getRankingOverview() {
       userId: i.userId,
       userName: i.userName,
       teamId: i.teamId,
-      teamName: i.teamName,
+      teamName: i.team?.name || i.teamName,
       grandPoints: Number(i.grandPoints || 0),
       rank: i.rank,
     }));
@@ -279,6 +287,7 @@ async function getTeamRankings(params = {}) {
 
     const { rows, count } = await GrandLeaderboardProjection.findAndCountAll({
       where: { grandId: targetGrandId },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: numLimit,
       offset,
@@ -292,12 +301,13 @@ async function getTeamRankings(params = {}) {
     if (params.currentUserTeamId) {
       const myTeam = await GrandLeaderboardProjection.findOne({
         where: { grandId: targetGrandId, teamId: params.currentUserTeamId },
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       });
       if (myTeam) {
         currentUserTeamRank = {
           rank: myTeam.rank,
           teamId: myTeam.teamId,
-          teamName: myTeam.teamName,
+          teamName: myTeam.team?.name || myTeam.teamName,
           score: Number(myTeam.grandPoints || 0),
           gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(myTeam.grandPoints || 0)),
         };
@@ -311,7 +321,7 @@ async function getTeamRankings(params = {}) {
       items: rows.map((r) => ({
         rank: r.rank,
         teamId: r.teamId,
-        teamName: r.teamName,
+        teamName: r.team?.name || r.teamName,
         grandPoints: Number(r.grandPoints || 0),
         seasonsWon: Number(r.seasonsWon || 0),
         podiumCount: Number(r.podiumCount || 0),
@@ -328,6 +338,7 @@ async function getTeamRankings(params = {}) {
 
   if (scope === 'all-time') {
     const { rows, count } = await CompetitionTeamSummary.findAndCountAll({
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['currentSeasonScore', 'DESC'], ['seasonWins', 'DESC']],
       limit: numLimit,
       offset,
@@ -337,7 +348,7 @@ async function getTeamRankings(params = {}) {
     const items = rows.map((r, idx) => ({
       rank: offset + idx + 1,
       teamId: r.teamId,
-      teamName: r.teamName,
+      teamName: r.team?.name || r.teamName,
       totalScore: Number(r.currentSeasonScore || 0),
       seasonsWon: Number(r.seasonWins || 0),
       grandPoints: Number(r.grandPoints || 0),
@@ -350,8 +361,8 @@ async function getTeamRankings(params = {}) {
     let currentUserTeamRank = null;
     if (params.currentUserTeamId) {
       const allTeamSummaries = await CompetitionTeamSummary.findAll({
+        include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
         order: [['currentSeasonScore', 'DESC'], ['seasonWins', 'DESC']],
-        attributes: ['teamId', 'teamName', 'currentSeasonScore'],
       });
       const tIdx = allTeamSummaries.findIndex((t) => Number(t.teamId) === Number(params.currentUserTeamId));
       if (tIdx !== -1) {
@@ -359,7 +370,7 @@ async function getTeamRankings(params = {}) {
         currentUserTeamRank = {
           rank: tIdx + 1,
           teamId: t.teamId,
-          teamName: t.teamName,
+          teamName: t.team?.name || t.teamName,
           score: Number(t.currentSeasonScore || 0),
           gap: Math.max(0, leaderScore - Number(t.currentSeasonScore || 0)),
         };
@@ -398,6 +409,7 @@ async function getTeamRankings(params = {}) {
 
   let { rows, count } = await SeasonLeaderboardProjection.findAndCountAll({
     where: { seasonId: targetSeasonId },
+    include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     order: [['rank', 'ASC']],
     limit: numLimit,
     offset,
@@ -407,6 +419,7 @@ async function getTeamRankings(params = {}) {
     await projector.projectSeasonLeaderboard(targetSeasonId);
     const refreshed = await SeasonLeaderboardProjection.findAndCountAll({
       where: { seasonId: targetSeasonId },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
       order: [['rank', 'ASC']],
       limit: numLimit,
       offset,
@@ -423,12 +436,13 @@ async function getTeamRankings(params = {}) {
   if (params.currentUserTeamId) {
     const myTeam = await SeasonLeaderboardProjection.findOne({
       where: { seasonId: targetSeasonId, teamId: params.currentUserTeamId },
+      include: [{ model: Team, as: 'team', attributes: ['id', 'name'], required: false }],
     });
     if (myTeam) {
       currentUserTeamRank = {
         rank: myTeam.rank,
         teamId: myTeam.teamId,
-        teamName: myTeam.teamName,
+        teamName: myTeam.team?.name || myTeam.teamName,
         score: Number(myTeam.score || 0),
         gap: Math.max(0, Number(rows[0]?.score || 0) - Number(myTeam.score || 0)),
       };
@@ -442,7 +456,7 @@ async function getTeamRankings(params = {}) {
     items: rows.map((r) => ({
       rank: r.rank,
       teamId: r.teamId,
-      teamName: r.teamName,
+      teamName: r.team?.name || r.teamName,
       totalScore: Number(r.score || 0),
       wins: r.wins,
       podiums: r.podiums,
@@ -497,10 +511,17 @@ async function getIndividualRankings(params = {}) {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId'],
           include: [
             { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+            { model: Team, attributes: ['id', 'name'], required: false },
           ],
+          required: false,
+        },
+        {
+          model: Team,
+          as: 'team',
+          attributes: ['id', 'name'],
           required: false,
         },
       ],
@@ -517,10 +538,17 @@ async function getIndividualRankings(params = {}) {
           {
             model: User,
             as: 'user',
-            attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+            attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId'],
             include: [
               { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+              { model: Team, attributes: ['id', 'name'], required: false },
             ],
+            required: false,
+          },
+          {
+            model: Team,
+            as: 'team',
+            attributes: ['id', 'name'],
             required: false,
           },
         ],
@@ -540,6 +568,10 @@ async function getIndividualRankings(params = {}) {
     if (params.currentUserId) {
       const myRow = await GrandIndividualLeaderboardProjection.findOne({
         where: { grandId: targetGrandId, userId: params.currentUserId },
+        include: [
+          { model: Team, as: 'team', attributes: ['id', 'name'], required: false },
+          { model: User, as: 'user', include: [{ model: Team, attributes: ['id', 'name'], required: false }] },
+        ],
       });
       if (myRow) {
         currentUserRank = {
@@ -547,7 +579,7 @@ async function getIndividualRankings(params = {}) {
           userId: myRow.userId,
           userName: myRow.userName,
           score: Number(myRow.grandPoints || 0),
-          teamName: myRow.teamName,
+          teamName: myRow.team?.name || myRow.user?.Team?.name || myRow.teamName,
           gap: Math.max(0, Number(rows[0]?.grandPoints || 0) - Number(myRow.grandPoints || 0)),
         };
       }
@@ -573,7 +605,7 @@ async function getIndividualRankings(params = {}) {
           avatarData: pref?.avatarData || null,
           featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
           teamId: r.teamId,
-          teamName: r.teamName,
+          teamName: r.team?.name || u?.Team?.name || r.teamName,
           grandPoints: Number(r.grandPoints || 0),
           score: Number(r.grandPoints || 0),
           totalScore: Number(r.grandPoints || 0),
@@ -722,10 +754,17 @@ async function getIndividualRankings(params = {}) {
       {
         model: User,
         as: 'user',
-        attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+        attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId'],
         include: [
           { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+          { model: Team, attributes: ['id', 'name'], required: false },
         ],
+        required: false,
+      },
+      {
+        model: Team,
+        as: 'team',
+        attributes: ['id', 'name'],
         required: false,
       },
     ],
@@ -742,10 +781,17 @@ async function getIndividualRankings(params = {}) {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev'],
+          attributes: ['id', 'name', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId'],
           include: [
             { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
+            { model: Team, attributes: ['id', 'name'], required: false },
           ],
+          required: false,
+        },
+        {
+          model: Team,
+          as: 'team',
+          attributes: ['id', 'name'],
           required: false,
         },
       ],
@@ -765,6 +811,10 @@ async function getIndividualRankings(params = {}) {
   if (params.currentUserId) {
     const myRow = await SeasonIndividualLeaderboardProjection.findOne({
       where: { seasonId: targetSeasonId, userId: params.currentUserId },
+      include: [
+        { model: Team, as: 'team', attributes: ['id', 'name'], required: false },
+        { model: User, as: 'user', include: [{ model: Team, attributes: ['id', 'name'], required: false }] },
+      ],
     });
     if (myRow) {
       currentUserRank = {
@@ -773,7 +823,7 @@ async function getIndividualRankings(params = {}) {
         userName: myRow.userName,
         score: Number(myRow.points || 0),
         points: Number(myRow.points || 0),
-        teamName: myRow.teamName,
+        teamName: myRow.team?.name || myRow.user?.Team?.name || myRow.teamName,
         gap: Math.max(0, Number(rows[0]?.points || 0) - Number(myRow.points || 0)),
       };
     }
@@ -798,7 +848,7 @@ async function getIndividualRankings(params = {}) {
         avatarData: pref?.avatarData || null,
         featuredBadges: Array.isArray(pref?.featuredBadges) ? pref.featuredBadges : [],
         teamId: r.teamId,
-        teamName: r.teamName,
+        teamName: r.team?.name || u?.Team?.name || r.teamName,
         score: Number(r.points || 0),
         points: Number(r.points || 0),
         totalScore: Number(r.points || 0),
@@ -852,21 +902,19 @@ async function getYouTubeRankings(params = {}) {
  * Integrates officially awarded MVP recognitions and competition summaries.
  */
 async function getTopPerformers(options = {}) {
-  const limit = Math.max(1, Math.min(100, Number(options?.limit || 10)));
+  const limit = Math.max(1, Math.min(500, Number(options?.limit || 10)));
   // 1. Query officially awarded MVP counts from UserRecognition table
   const mvpAwards = await UserRecognition.findAll({
     where: { awardType: 'mvp' },
-    attributes: [
-      'userId',
-      [sequelize.fn('COUNT', sequelize.col('id')), 'awardCount'],
-    ],
-    group: ['user_id'],
-    raw: true,
+    attributes: ['id', 'userId'],
   });
 
   const mvpCountMap = new Map();
   for (const row of mvpAwards) {
-    mvpCountMap.set(Number(row.userId), Number(row.awardCount || 0));
+    const uid = Number(row.userId || row.user_id || (row.get && row.get('userId')));
+    if (uid && !isNaN(uid)) {
+      mvpCountMap.set(uid, (mvpCountMap.get(uid) || 0) + 1);
+    }
   }
 
   // 2. Query summary candidates

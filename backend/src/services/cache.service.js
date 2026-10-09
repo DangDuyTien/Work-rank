@@ -76,4 +76,30 @@ async function rememberJson(key, ttlSeconds, producer) {
   return value;
 }
 
-module.exports = { getJson, setJson, rememberJson };
+async function del(key) {
+  await initRedis();
+  if (redisReady && redisClient) {
+    try {
+      await redisClient.del(key);
+    } catch {
+      // Ignore redis error
+    }
+  }
+  memoryStore.delete(key);
+}
+
+async function clear() {
+  await initRedis();
+  if (redisReady && redisClient) {
+    try {
+      await redisClient.flushDb();
+    } catch {
+      // Ignore redis error
+    }
+  }
+  memoryStore.clear();
+}
+
+module.exports = { getJson, setJson, rememberJson, del, clear };
+
+

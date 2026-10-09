@@ -80,6 +80,9 @@ const TypingRoom = require('./TypingRoom');
 const TypingPlayer = require('./TypingPlayer');
 const TypingMatchResult = require('./TypingMatchResult');
 const TypingUserStat = require('./TypingUserStat');
+// Creative Corner Drawing Models
+const Drawing = require('./Drawing');
+const DrawingLike = require('./DrawingLike');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -309,6 +312,15 @@ TypingUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 TypingChallenge.belongsTo(User, { as: 'creator', foreignKey: 'createdBy' });
 
+// Creative Corner Drawing Associations
+User.hasMany(Drawing, { as: 'drawings', foreignKey: 'userId' });
+Drawing.belongsTo(User, { as: 'author', foreignKey: 'userId' });
+
+Drawing.hasMany(DrawingLike, { as: 'likes', foreignKey: 'drawingId' });
+DrawingLike.belongsTo(Drawing, { as: 'drawing', foreignKey: 'drawingId' });
+User.hasMany(DrawingLike, { as: 'drawingLikes', foreignKey: 'userId' });
+DrawingLike.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
 module.exports = {
   sequelize,
   Team,
@@ -397,6 +409,9 @@ module.exports = {
   TypingPlayer,
   TypingMatchResult,
   TypingUserStat,
+  // Creative Corner Drawing Models
+  Drawing,
+  DrawingLike,
 };
 
 

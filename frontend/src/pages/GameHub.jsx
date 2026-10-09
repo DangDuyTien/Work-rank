@@ -6,6 +6,7 @@ import {
   Sparkles,
   Club,
   Keyboard,
+  Palette,
   Play,
   Clock,
   Shield,
@@ -25,6 +26,7 @@ const GAME_ICONS = {
   game_2048: LayoutGrid,
   quiz: Sparkles,
   sam: Club,
+  drawing: Palette,
 };
 
 const DEFAULT_GAMES = [
@@ -35,6 +37,14 @@ const DEFAULT_GAMES = [
     description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
     icon: 'Keyboard',
     route: '/games/typing',
+  },
+  {
+    gameKey: 'drawing',
+    name: 'Góc Sáng Tạo (Game Vẽ)',
+    status: 'AVAILABLE',
+    description: 'Không gian sáng tạo vẽ tranh nghệ thuật trên canvas siêu lớn & chia sẻ lên trang chủ WorkRank.',
+    icon: 'Palette',
+    route: '/games/drawing',
   },
   {
     gameKey: 'capital_board',

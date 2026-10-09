@@ -325,24 +325,65 @@ export const groups = {
   },
   create: async (data) => {
     const res = await api.post('/api/groups', data);
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
     return { ...res, data: res.data?.data || res.data?.group };
   },
   update: async (id, data) => {
     const res = await api.patch(`/api/groups/${id}`, data);
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
     return { ...res, data: res.data?.data || res.data?.group };
   },
-  delete: (id) => api.delete(`/api/groups/${id}`),
+  delete: async (id) => {
+    const res = await api.delete(`/api/groups/${id}`);
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
+    return res;
+  },
   join: async (inviteCode) => {
     const res = await api.post('/api/groups/join', { inviteCode });
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
     return { ...res, data: res.data?.data || res.data?.group };
   },
-  leave: (id) => api.post(`/api/groups/${id}/leave`),
+  leave: async (id) => {
+    const res = await api.post(`/api/groups/${id}/leave`);
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
+    return res;
+  },
   kick: async (id, userId) => {
     const res = await api.post(`/api/groups/${id}/kick`, { userId });
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
     return { ...res, data: res.data?.data || res.data?.group };
   },
   addMember: async (id, userId) => {
     const res = await api.post(`/api/groups/${id}/add-member`, { userId });
+    invalidateCache('groups');
+    invalidateCache('rankings');
+    invalidateCache('dashboard');
+    invalidateCache('user:profile');
+    invalidateCache('competition');
     return { ...res, data: res.data?.data || res.data?.group };
   },
 };
@@ -1403,6 +1444,10 @@ export const typingGameApi = {
     const res = await api.get('/api/games/typing/rooms', { params });
     return res.data;
   },
+  getActiveRoom: async () => {
+    const res = await api.get('/api/games/typing/active-room');
+    return res.data;
+  },
   createRoom: async (data) => {
     const res = await api.post('/api/games/typing/rooms', data);
     return res.data;
@@ -1449,6 +1494,45 @@ export const typingGameApi = {
   },
   submitPracticeResult: async (data) => {
     const res = await api.post('/api/games/typing/practice/finish', data);
+    return res.data;
+  },
+};
+
+export const drawingApi = {
+  getSettings: async () => {
+    const res = await api.get('/api/drawings/settings');
+    return res.data;
+  },
+  updateSettings: async (payload) => {
+    const res = await api.patch('/api/drawings/settings', payload);
+    return res.data;
+  },
+  getGallery: async (params = {}) => {
+    const res = await api.get('/api/drawings', { params });
+    return res.data;
+  },
+  getById: async (id) => {
+    const res = await api.get(`/api/drawings/${id}`);
+    return res.data;
+  },
+  getUserDrawings: async (userId, params = {}) => {
+    const res = await api.get(`/api/drawings/user/${userId}`, { params });
+    return res.data;
+  },
+  createDrawing: async (formData) => {
+    const res = await api.post('/api/drawings', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
+  toggleLike: async (id) => {
+    const res = await api.post(`/api/drawings/${id}/like`);
+    return res.data;
+  },
+  deleteDrawing: async (id) => {
+    const res = await api.delete(`/api/drawings/${id}`);
     return res.data;
   },
 };

@@ -37,8 +37,9 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
     adminToken = adminRes.body.accessToken || adminRes.body.token;
 
     // 2. Create Teams
-    teamAlpha = await Team.create({ name: 'Alpha Studio', description: 'Alpha production team' });
-    teamBeta = await Team.create({ name: 'Beta Media', description: 'Beta media team' });
+    const uniqueYtSuffix = Date.now();
+    teamAlpha = await Team.create({ name: `Alpha Studio ${uniqueYtSuffix}`, description: 'Alpha production team' });
+    teamBeta = await Team.create({ name: `Beta Media ${uniqueYtSuffix}`, description: 'Beta media team' });
 
     const memberRes = await request(app).post('/api/auth/register').send({
       email: `yt_member_${Date.now()}@workrank.io`,
@@ -166,7 +167,7 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
     it('getYouTubeChannelLeaderboard ranks all channels including unassigned channels', async () => {
       const leaderboard = await youtubeAggregationService.getYouTubeChannelLeaderboard({
         sortBy: 'views',
-        limit: 500,
+        limit: 5000,
       });
 
       assert.ok(leaderboard.items.length >= 5);
@@ -174,7 +175,7 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
       const topChannel = leaderboard.items[0];
       assert.ok(topChannel.views >= 6000);
 
-      const u2 = leaderboard.items.find((c) => c.id === channelUnassigned2.id);
+      const u2 = leaderboard.items.find((c) => Number(c.id) === Number(channelUnassigned2.id));
       assert.ok(u2);
       assert.equal(u2.views, 6000);
       assert.equal(u2.subscribers, 600);
@@ -182,10 +183,10 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
       assert.equal(u2.isUnassigned, true);
       assert.ok(u2.rank >= 1);
 
-      const a1 = leaderboard.items.find((c) => c.id === channelAlpha1.id);
+      const a1 = leaderboard.items.find((c) => Number(c.id) === Number(channelAlpha1.id));
       assert.ok(a1);
       assert.equal(a1.views, 1000);
-      assert.equal(a1.teamName, 'Alpha Studio');
+      assert.equal(a1.teamName, teamAlpha.name);
       assert.equal(a1.isUnassigned, false);
     });
 
@@ -196,10 +197,10 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
       });
 
       assert.equal(alphaLeaderboard.total, 2);
-      assert.ok(alphaLeaderboard.items.every((c) => c.teamId === teamAlpha.id));
-      assert.equal(alphaLeaderboard.items[0].id, channelAlpha2.id); // 2,000 views > 1,000 views
+      assert.ok(alphaLeaderboard.items.every((c) => Number(c.teamId) === Number(teamAlpha.id)));
+      assert.equal(Number(alphaLeaderboard.items[0].id), Number(channelAlpha2.id)); // 2,000 views > 1,000 views
       assert.equal(alphaLeaderboard.items[0].rank, 1);
-      assert.equal(alphaLeaderboard.items[1].id, channelAlpha1.id);
+      assert.equal(Number(alphaLeaderboard.items[1].id), Number(channelAlpha1.id));
       assert.equal(alphaLeaderboard.items[1].rank, 2);
     });
 
@@ -224,7 +225,7 @@ describe('YouTube Unassigned Channels & Hierarchical Ranking Test Suite', () => 
       assert.equal(res.status, 200);
       assert.ok(res.body.success);
       assert.ok(Array.isArray(res.body.items));
-      const foundU1 = res.body.items.find((c) => c.id === channelUnassigned1.id);
+      const foundU1 = res.body.items.find((c) => Number(c.id) === Number(channelUnassigned1.id));
       assert.ok(foundU1);
       assert.equal(foundU1.teamName, 'Chưa gán đội');
     });

@@ -100,23 +100,8 @@ async function logout(user) {
 async function updateProfile(user, payload = {}) {
   const updates = {};
   const name = String(payload.name || '').trim();
-  const email = String(payload.email || '').trim().toLowerCase();
 
   if (name) updates.name = name;
-  if (email && email !== String(user.email || '').toLowerCase()) {
-    const existing = await User.findOne({
-      where: {
-        email,
-        id: { [Op.ne]: user.id },
-      },
-    });
-    if (existing) {
-      const error = new Error('Email already registered');
-      error.statusCode = 409;
-      throw error;
-    }
-    updates.email = email;
-  }
 
   if (!Object.keys(updates).length) return { user: await userPayload(user) };
   await user.update(updates);
