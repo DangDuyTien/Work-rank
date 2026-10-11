@@ -1,0 +1,173 @@
+{
+  "$schema": "https://dsh.local/schemas/verification-contract/v1",
+  "contractId": "dsh.document-verification/v1",
+  "version": "1.0.0",
+  "status": "frozen",
+  "title": "Document Verification Contract — Phase-21 runtime probe",
+  "owner": {
+    "role": "Chief Systems Architect",
+    "department": "architecture",
+    "project": "proj-d97458c5",
+    "cwd": "/Applications/du-an/workrank"
+  },
+  "path": {
+    "relative": ".dsh-runtime-verification.txt",
+    "absolute": "/Applications/du-an/workrank/.dsh-runtime-verification.txt",
+    "anchor": "projectRoot",
+    "projectRootEnv": "WORKRANK_ROOT",
+    "projectRootDefault": "/Applications/du-an/workrank",
+    "resolutionRule": "resolve(projectRoot, relative) — never relative to process.cwd()",
+    "mustBeSiblingOf": ["package.json"],
+    "mustBeOutsideGitTree": true,
+    "encodingForbiddenInPath": ["non-ASCII", "NFC/NFD normalization differences"]
+  },
+  "encoding": {
+    "charset": "utf-8",
+    "charsetAliasesAccepted": ["utf8", "utf-8"],
+    "bom": false,
+    "bomByteOrderMark": "EF BB BF",
+    "lineEnding": "LF",
+    "lineEndingByte": "0A",
+    "forbiddenBytes": [
+      { "name": "CR", "hex": "0D" },
+      { "name": "UTF-8_BOM_EF", "hex": "EF" },
+      { "name": "UTF-8_BOM_BB", "hex": "BB" },
+      { "name": "UTF-8_BOM_BF", "hex": "BF" }
+    ],
+    "bomIsForbidden": true,
+    "crIsForbidden": true,
+    "trailingNewline": {
+      "required": true,
+      "exactly": 1,
+      "byte": "0A",
+      "rule": "raw[last] === 0x0A && raw[last-1] !== 0x0A"
+    },
+    "byteLength": {
+      "reference": 83,
+      "fixed": false,
+      "variableField": "timestamp",
+      "variableFieldLength": 24,
+      "formula": "28(sentinel) +1(LF) +17(project) +1(LF) +11('Timestamp: ') +24(ISO) +1(LF) = 83",
+      "min": 83,
+      "max": 83
+    }
+  },
+  "content": {
+    "lineCount": 3,
+    "lineTerminator": "LF",
+    "lines": [
+      {
+        "index": 1,
+        "kind": "literal",
+        "literal": "DSH_RUNTIME_VERIFIED_PHASE21",
+        "utf8Bytes": 28
+      },
+      {
+        "index": 2,
+        "kind": "literal",
+        "literal": "Project: WorkRank",
+        "utf8Bytes": 17,
+        "caseSensitive": true
+      },
+      {
+        "index": 3,
+        "kind": "pattern",
+        "prefix": "Timestamp: ",
+        "prefixBytes": 11,
+        "pattern": "^Timestamp: \\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+        "generator": "new Date(now).toISOString()",
+        "constraints": {
+          "timezone": "UTC",
+          "utcSuffix": "Z",
+          "millisecondDigits": 3,
+          "offsetFormLikeMinus0700": "forbidden",
+          "mustParseWithDateParse": true
+        },
+        "utf8Bytes": 35
+      }
+    ]
+  },
+  "rereadVerification": {
+    "approach": "write-atomic-then-reopen-read-raw-bytes-compare",
+    "steps": [
+      {
+        "order": 1,
+        "id": "build",
+        "action": "buildProbeContent(now)",
+        "detail": "Buffer.from of the 3 literal lines joined with LF; no template indentation, no trailing blank line"
+      },
+      {
+        "order": 2,
+        "id": "prewrite-hygiene",
+        "action": "assertCanonicalBytes(buffer)",
+        "detail": "reject before touching disk if BOM, CR, missing/extra trailing LF, line-count or literal mismatch"
+      },
+      {
+        "order": 3,
+        "id": "atomic-write",
+        "action": "writeSync(temp) + closeSync + renameSync(temp, target)",
+        "detail": "rename is atomic on POSIX; a reader can never observe a half-written file"
+      },
+      {
+        "order": 4,
+        "id": "reopen-readback",
+        "action": "readFileSync(target) with NO encoding argument",
+        "detail": "read raw bytes as Buffer; never decode through a string to avoid normalization drift"
+      },
+      {
+        "order": 5,
+        "id": "equality",
+        "action": "byteExact(written, readback)",
+        "detail": "same length AND every byte equal AND SHA-256(written) === SHA-256(readback); firstMismatch must be -1"
+      },
+      {
+        "order": 6,
+        "id": "schema-audit",
+        "action": "validateArtifact(readback)",
+        "detail": "re-assert encoding/content invariants on the bytes actually stored on disk"
+      },
+      {
+        "order": 7,
+        "id": "handoff",
+        "action": "leave file in place for harness",
+        "detail": "harness readFileSync(L107) then unlinkSync(L109); verifier must not delete inside a live acceptance run"
+      }
+    ],
+    "equalityDefinition": "byte-exact <=> length(write)===length(readback) AND forall i: write[i]===readback[i] AND sha256(write)===sha256(readback)",
+    "hashAlgorithm": "sha256",
+    "firstMismatchIsRequired": true,
+    "readMode": "buffer",
+    "atomic": true,
+    "verifierDeletesArtifact": false
+  },
+  "falsification": {
+    "required": true,
+    "principle": "a verifier that cannot reject a corrupted artifact is not a verifier",
+    "mutations": [
+      { "id": "prepend-bom", "expectViolation": "BOM_PRESENT" },
+      { "id": "crlf-injection", "expectViolation": "CR_BYTE_PRESENT" },
+      { "id": "drop-trailing-lf", "expectViolation": "MISSING_TRAILING_LF" },
+      { "id": "double-trailing-lf", "expectViolation": "EXTRA_TRAILING_LF" },
+      { "id": "line-count-four", "expectViolation": "LINE_COUNT_MISMATCH" },
+      { "id": "sentinel-typo", "expectViolation": "LINE1_MISMATCH" },
+      { "id": "project-case-flip", "expectViolation": "LINE2_MISMATCH" },
+      { "id": "timestamp-no-ms", "expectViolation": "LINE3_PATTERN_MISMATCH" },
+      { "id": "timestamp-offset", "expectViolation": "LINE3_PATTERN_MISMATCH" },
+      { "id": "empty-file", "expectViolation": "LINE_COUNT_MISMATCH" },
+      { "id": "truncate-mid-line", "expectViolation": "LINE3_PATTERN_MISMATCH" },
+      { "id": "nul-byte-injected", "expectViolation": "FORBIDDEN_NUL" }
+    ]
+  },
+  "artifactLifecycle": {
+    "transient": true,
+    "harness": "/Applications/du-an/agent/company-workspace/scripts/test-phase21-dsh-live.ts",
+    "harnessReferenceLines": {
+      "pathResolve": "L7-L8",
+      "cleanSlateUnlink": "L11-L13",
+      "contentLiteral": "L17",
+      "existsAndRead": "L106-L108",
+      "cleanupUnlink": "L109"
+    },
+    "commitPolicy": "never commit — project root is outside the git tree"
+  }
+}

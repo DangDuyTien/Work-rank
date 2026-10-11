@@ -4,6 +4,7 @@ import {
   Paintbrush,
   Eraser,
   PaintBucket,
+  Hand,
   RotateCcw,
   RotateCw,
   Trash2,
@@ -14,11 +15,15 @@ import {
   CheckCircle2,
   Palette as PaletteIcon,
   Image as ImageIcon,
-  Eye,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Keyboard,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { drawingApi } from '../services/api';
-import { PageShell, Card, Button, AnimatedModal, Notice } from '../components/ui';
+import { PageShell, Button, AnimatedModal, Notice } from '../components/ui';
 
 const PRESET_COLORS = [
   '#0f172a', // Slate Black
@@ -57,21 +62,43 @@ export default function DrawingGame() {
 
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
+  const viewportRef = useRef(null);
 
   // Drawing state
-  const [tool, setTool] = useState('brush'); // 'brush' | 'eraser' | 'fill'
+  const [tool, setTool] = useState('brush'); // 'brush' | 'eraser' | 'select' | 'fill'
   const [color, setColor] = useState('#0f172a');
   const [brushSize, setBrushSize] = useState(6);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [lastPoint, setLastPoint] = useState(null);
 
-  // History for Undo/Redo
-  const [undoStack, setUndoStack] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
+  // Viewport Zoom & Pan state
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+
+  // Fast synchronous refs for drawing & interaction loop (bypasses React re-render lag)
+  const toolRef = useRef(tool);
+  const colorRef = useRef(color);
+  const brushSizeRef = useRef(brushSize);
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  const isDrawingRef = useRef(false);
+  const lastPointRef = useRef(null);
+  const lastMidPointRef = useRef(null);
+  const pointsCountRef = useRef(0);
+  const isPanningRef = useRef(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const isSpacePressedRef = useRef(false);
+
+  // History for Undo/Redo (using refs for synchronous responsiveness + state for UI button disabled states)
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Preview & Publishing state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [artworkTitle, setArtworkTitle] = useState('');
   const [visibility, setVisibility] = useState('PUBLIC');
@@ -79,7 +106,72 @@ export default function DrawingGame() {
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Setup canvas resolution & 2D context
+  // Synchronize state changes to refs immediately and synchronously
+  const changeTool = useCallback((nextTool) => {
+    toolRef.current = nextTool;
+    setTool(nextTool);
+  }, []);
+
+  const changeColor = useCallback((nextColor) => {
+    colorRef.current = nextColor;
+    setColor(nextColor);
+  }, []);
+
+  const changeBrushSize = useCallback((nextSize) => {
+    brushSizeRef.current = nextSize;
+    setBrushSize(nextSize);
+  }, []);
+
+  useEffect(() => {
+    toolRef.current = tool;
+  }, [tool]);
+
+  useEffect(() => {
+    colorRef.current = color;
+  }, [color]);
+
+  useEffect(() => {
+    brushSizeRef.current = brushSize;
+  }, [brushSize]);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
+    panRef.current = pan;
+  }, [pan]);
+
+  // Translate client coordinates to internal canvas coordinates
+  // Works identically regardless of zoom level, pan position, or screen scale
+  const getCoordinates = useCallback((e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return { x: 0, y: 0 };
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * CANVAS_WIDTH,
+      y: ((e.clientY - rect.top) / rect.height) * CANVAS_HEIGHT,
+    };
+  }, []);
+
+  // Stroke context styling helper
+  const applyStrokeContext = (ctx, activeTool, activeColor, activeBrushSize) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = activeBrushSize;
+    if (activeTool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = activeColor;
+      ctx.fillStyle = activeColor;
+    }
+  };
+
+  // Setup canvas resolution, 2D context & initial centered placement
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -91,15 +183,27 @@ export default function DrawingGame() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Fill background with clean white initially
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
+    // Clear canvas to pristine transparent state (revealing white board beneath)
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     contextRef.current = ctx;
 
     // Save initial blank state
     const initialState = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    setUndoStack([initialState]);
+    undoStackRef.current = [initialState];
+    redoStackRef.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
+
+    // Calculate initial centered fit within viewport
+    if (viewportRef.current) {
+      const vpRect = viewportRef.current.getBoundingClientRect();
+      const fitZoom = Math.min(1, Math.min((vpRect.width - 32) / CANVAS_WIDTH, (vpRect.height - 32) / CANVAS_HEIGHT));
+      const initialZoom = Math.max(0.4, Math.round(fitZoom * 100) / 100);
+      const initialX = Math.round((vpRect.width - CANVAS_WIDTH * initialZoom) / 2);
+      const initialY = Math.round((vpRect.height - CANVAS_HEIGHT * initialZoom) / 2);
+      setZoom(initialZoom);
+      setPan({ x: initialX, y: initialY });
+    }
   }, []);
 
   // Save current canvas snapshot to undo stack
@@ -107,81 +211,231 @@ export default function DrawingGame() {
     const ctx = contextRef.current;
     if (!ctx) return;
     const snapshot = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    setUndoStack((prev) => {
-      const next = [...prev, snapshot];
-      if (next.length > MAX_UNDO_STEPS) {
-        next.shift();
-      }
-      return next;
-    });
-    setRedoStack([]); // Clear redo stack on new action
+    undoStackRef.current.push(snapshot);
+    if (undoStackRef.current.length > MAX_UNDO_STEPS) {
+      undoStackRef.current.shift();
+    }
+    redoStackRef.current = [];
+    setCanUndo(undoStackRef.current.length > 1);
+    setCanRedo(false);
   }, []);
 
-  // Undo action
+  // Undo action (synchronous & instant)
   const handleUndo = useCallback(() => {
-    if (undoStack.length <= 1) return;
+    if (undoStackRef.current.length <= 1) return;
     const ctx = contextRef.current;
     if (!ctx) return;
 
-    const current = undoStack[undoStack.length - 1];
-    const previous = undoStack[undoStack.length - 2];
-
-    setRedoStack((prev) => [...prev, current]);
-    setUndoStack((prev) => prev.slice(0, prev.length - 1));
+    const current = undoStackRef.current.pop();
+    redoStackRef.current.push(current);
+    const previous = undoStackRef.current[undoStackRef.current.length - 1];
 
     ctx.putImageData(previous, 0, 0);
-  }, [undoStack]);
+    setCanUndo(undoStackRef.current.length > 1);
+    setCanRedo(redoStackRef.current.length > 0);
+  }, []);
 
-  // Redo action
+  // Redo action (synchronous & instant)
   const handleRedo = useCallback(() => {
-    if (redoStack.length === 0) return;
+    if (redoStackRef.current.length === 0) return;
     const ctx = contextRef.current;
     if (!ctx) return;
 
-    const nextState = redoStack[redoStack.length - 1];
-
-    setUndoStack((prev) => [...prev, nextState]);
-    setRedoStack((prev) => prev.slice(0, prev.length - 1));
+    const nextState = redoStackRef.current.pop();
+    undoStackRef.current.push(nextState);
 
     ctx.putImageData(nextState, 0, 0);
-  }, [redoStack]);
+    setCanUndo(undoStackRef.current.length > 1);
+    setCanRedo(redoStackRef.current.length > 0);
+  }, []);
 
-  // Keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
+  // Zoom management helper (centered at cursor position or viewport center)
+  const updateZoom = useCallback((targetZoom, centerScreen) => {
+    const clamped = Math.min(4.0, Math.max(0.25, Math.round(targetZoom * 100) / 100));
+    const currentZoom = zoomRef.current;
+    if (clamped === currentZoom) return;
+
+    const ratio = clamped / currentZoom;
+    const vp = viewportRef.current;
+
+    let newPan = { ...panRef.current };
+    if (centerScreen && vp) {
+      const vpRect = vp.getBoundingClientRect();
+      const cx = centerScreen.x - vpRect.left;
+      const cy = centerScreen.y - vpRect.top;
+      newPan = {
+        x: Math.round(cx - (cx - panRef.current.x) * ratio),
+        y: Math.round(cy - (cy - panRef.current.y) * ratio),
+      };
+    } else if (vp) {
+      const vpRect = vp.getBoundingClientRect();
+      const cx = vpRect.width / 2;
+      const cy = vpRect.height / 2;
+      newPan = {
+        x: Math.round(cx - (cx - panRef.current.x) * ratio),
+        y: Math.round(cy - (cy - panRef.current.y) * ratio),
+      };
+    }
+
+    setZoom(clamped);
+    setPan(newPan);
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    updateZoom(zoomRef.current * 1.25);
+  }, [updateZoom]);
+
+  const handleZoomOut = useCallback(() => {
+    updateZoom(zoomRef.current * 0.8);
+  }, [updateZoom]);
+
+  const handleResetView = useCallback(() => {
+    const vp = viewportRef.current;
+    if (!vp) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      return;
+    }
+    const vpRect = vp.getBoundingClientRect();
+    const fitZoom = Math.min(1, Math.min((vpRect.width - 32) / CANVAS_WIDTH, (vpRect.height - 32) / CANVAS_HEIGHT));
+    const targetZoom = Math.max(0.4, Math.round(fitZoom * 100) / 100);
+    const targetX = Math.round((vpRect.width - CANVAS_WIDTH * targetZoom) / 2);
+    const targetY = Math.round((vpRect.height - CANVAS_HEIGHT * targetZoom) / 2);
+    setZoom(targetZoom);
+    setPan({ x: targetX, y: targetY });
+  }, []);
+
+  // Wheel listener: Ctrl + Wheel for cursor-centered zoom; page scrolling preserved without Ctrl
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+
+    const handleWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.87;
+        updateZoom(zoomRef.current * factor, { x: e.clientX, y: e.clientY });
+      }
+    };
+
+    vp.addEventListener('wheel', handleWheel, { passive: false });
+    return () => vp.removeEventListener('wheel', handleWheel);
+  }, [updateZoom]);
+
+  // Keyboard shortcuts handler (P, E, V, Space, Ctrl+Z, Ctrl+Y, +, -, 0, Esc, ?)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      // Guard against text inputs, textareas, and editable fields
+      const tag = (e.target.tagName || '').toUpperCase();
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || e.target.isContentEditable) {
+        return;
+      }
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+
+      // Undo: Ctrl/Cmd + Z
+      if (isCtrlOrCmd && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
-      } else if (
-        ((e.ctrlKey || e.metaKey) && e.key === 'y') ||
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')
+        return;
+      }
+
+      // Redo: Ctrl/Cmd + Shift + Z OR Ctrl/Cmd + Y
+      if (
+        (isCtrlOrCmd && e.shiftKey && e.key.toLowerCase() === 'z') ||
+        (isCtrlOrCmd && e.key.toLowerCase() === 'y')
       ) {
         e.preventDefault();
         handleRedo();
+        return;
+      }
+
+      // Space: temporary pan mode (without triggering page scroll)
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        isSpacePressedRef.current = true;
+        setIsSpacePressed(true);
+        return;
+      }
+
+      // Zoom in: + or =
+      if ((e.key === '+' || e.key === '=') && !isCtrlOrCmd) {
+        e.preventDefault();
+        handleZoomIn();
+        return;
+      }
+
+      // Zoom out: - or _
+      if ((e.key === '-' || e.key === '_') && !isCtrlOrCmd) {
+        e.preventDefault();
+        handleZoomOut();
+        return;
+      }
+
+      // Reset view: 0
+      if (e.key === '0' && !isCtrlOrCmd) {
+        e.preventDefault();
+        handleResetView();
+        return;
+      }
+
+      // Tool shortcuts (single keys)
+      if (!isCtrlOrCmd && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'p') {
+          changeTool('brush');
+        } else if (key === 'e') {
+          changeTool('eraser');
+        } else if (key === 'v') {
+          changeTool('select');
+        } else if (key === '?' || key === 'h') {
+          setShowShortcutsModal((prev) => !prev);
+        } else if (key === 'escape') {
+          if (showShortcutsModal) setShowShortcutsModal(false);
+          else if (showClearConfirmModal) setShowClearConfirmModal(false);
+          else if (showPreviewModal && !isPublishing) setShowPreviewModal(false);
+          else if (toolRef.current === 'select') changeTool('brush');
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo]);
-
-  // Translate client coordinates to internal canvas coordinates
-  const getCoordinates = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = CANVAS_WIDTH / rect.width;
-    const scaleY = CANVAS_HEIGHT / rect.height;
-
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+    const handleKeyUp = (e) => {
+      if (e.code === 'Space') {
+        isSpacePressedRef.current = false;
+        setIsSpacePressed(false);
+      }
     };
-  };
 
-  // Flood Fill / Paint Bucket Algorithm
+    const handleBlur = () => {
+      isSpacePressedRef.current = false;
+      setIsSpacePressed(false);
+      isPanningRef.current = false;
+      setIsPanning(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [
+    changeTool,
+    handleUndo,
+    handleRedo,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetView,
+    showShortcutsModal,
+    showClearConfirmModal,
+    showPreviewModal,
+    isPublishing,
+  ]);
+
+  // Flood Fill / Paint Bucket Algorithm (supports transparent & opaque pixels)
   const floodFill = (startX, startY, fillColor) => {
     const ctx = contextRef.current;
     if (!ctx) return;
@@ -209,19 +463,24 @@ export default function DrawingGame() {
 
     // Already the same color
     if (
+      startA === fillA &&
       Math.abs(startR - fillR) < 5 &&
       Math.abs(startG - fillG) < 5 &&
-      Math.abs(startB - fillB) < 5 &&
-      Math.abs(startA - fillA) < 5
+      Math.abs(startB - fillB) < 5
     ) {
       return;
     }
 
     const matchColor = (pos) => {
+      const a = data[pos + 3];
+      // If both are transparent, they match
+      if (startA === 0 && a === 0) return true;
+      // If one is transparent and other is opaque, they don't match
+      if ((startA === 0 && a > 32) || (startA > 32 && a === 0)) return false;
+
       const r = data[pos];
       const g = data[pos + 1];
       const b = data[pos + 2];
-      const a = data[pos + 3];
       return (
         Math.abs(r - startR) <= 32 &&
         Math.abs(g - startG) <= 32 &&
@@ -256,66 +515,184 @@ export default function DrawingGame() {
       if (curX + 1 < CANVAS_WIDTH && !visited[idx + 1]) queue.push([curX + 1, curY]);
       if (curX - 1 >= 0 && !visited[idx - 1]) queue.push([curX - 1, curY]);
       if (curY + 1 < CANVAS_HEIGHT && !visited[idx + CANVAS_WIDTH]) queue.push([curX, curY + 1]);
-      if (curY - 1 >= 0 && !visited[idx - 1]) queue.push([curX, curY - 1]);
+      if (curY - 1 >= 0 && !visited[idx - CANVAS_WIDTH]) queue.push([curX, curY - 1]);
     }
 
     ctx.putImageData(imgData, 0, 0);
     saveSnapshot();
   };
 
-  // Pointer Down (Start drawing)
+  // Pointer Down (Draw or Pan)
   const handlePointerDown = (e) => {
+    // Check for Pan modes:
+    // 1. Middle mouse button (button === 1)
+    // 2. Space key held down
+    // 3. 'select' tool active
+    if (e.button === 1 || isSpacePressedRef.current || toolRef.current === 'select') {
+      e.preventDefault();
+      isPanningRef.current = true;
+      setIsPanning(true);
+      panStartRef.current = {
+        x: e.clientX - panRef.current.x,
+        y: e.clientY - panRef.current.y,
+      };
+      if (e.currentTarget?.setPointerCapture) {
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      return;
+    }
+
+    // Left mouse button only for drawing / fill
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+
     const coords = getCoordinates(e);
 
-    if (tool === 'fill') {
-      floodFill(coords.x, coords.y, color);
+    if (toolRef.current === 'fill') {
+      floodFill(coords.x, coords.y, colorRef.current);
       return;
     }
 
     const ctx = contextRef.current;
     if (!ctx) return;
 
-    setIsDrawing(true);
-    setLastPoint(coords);
+    // Use Pointer Capture so fast movements never lose the stroke
+    if (e.currentTarget?.setPointerCapture) {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    }
 
+    isDrawingRef.current = true;
+    lastPointRef.current = coords;
+    lastMidPointRef.current = coords;
+    pointsCountRef.current = 1;
+
+    // Render initial contact dot immediately
+    ctx.save();
+    applyStrokeContext(ctx, toolRef.current, colorRef.current, brushSizeRef.current);
     ctx.beginPath();
-    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
-    ctx.lineWidth = brushSize;
-    ctx.moveTo(coords.x, coords.y);
-    ctx.lineTo(coords.x, coords.y);
-    ctx.stroke();
+    ctx.arc(coords.x, coords.y, Math.max(0.5, brushSizeRef.current / 2), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   };
 
-  // Pointer Move (Draw smoothly)
+  // Pointer Move (Smooth quadratic Bézier midpoint interpolation + coalesced event sampling)
   const handlePointerMove = (e) => {
-    if (!isDrawing || tool === 'fill') return;
+    if (isPanningRef.current) {
+      const newX = e.clientX - panStartRef.current.x;
+      const newY = e.clientY - panStartRef.current.y;
+      setPan({ x: newX, y: newY });
+      return;
+    }
+
+    if (!isDrawingRef.current) return;
     const ctx = contextRef.current;
-    if (!ctx || !lastPoint) return;
+    if (!ctx || !lastPointRef.current) return;
 
-    const currentPoint = getCoordinates(e);
+    // Extract sub-frame coalesced pointer events for high-rate sampling
+    const events =
+      typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
 
-    ctx.beginPath();
-    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
-    ctx.lineWidth = brushSize;
-    ctx.moveTo(lastPoint.x, lastPoint.y);
+    const activeTool = toolRef.current;
+    const activeColor = colorRef.current;
+    const activeSize = brushSizeRef.current;
 
-    const midPoint = {
-      x: (lastPoint.x + currentPoint.x) / 2,
-      y: (lastPoint.y + currentPoint.y) / 2,
-    };
-    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y);
-    ctx.stroke();
+    ctx.save();
+    applyStrokeContext(ctx, activeTool, activeColor, activeSize);
 
-    setLastPoint(currentPoint);
+    for (let i = 0; i < events.length; i++) {
+      const pt = getCoordinates(events[i]);
+      const prev = lastPointRef.current;
+      const dx = pt.x - prev.x;
+      const dy = pt.y - prev.y;
+
+      // Skip redundant zero-movement points (< 0.25px distance squared)
+      if (dx * dx + dy * dy < 0.25) continue;
+
+      const mid = {
+        x: (prev.x + pt.x) / 2,
+        y: (prev.y + pt.y) / 2,
+      };
+
+      // Quadratic curve from last midpoint through previous point to new midpoint
+      // Guarantees 100% gap-free, continuous strokes at all speeds!
+      ctx.beginPath();
+      ctx.moveTo(lastMidPointRef.current.x, lastMidPointRef.current.y);
+      ctx.quadraticCurveTo(prev.x, prev.y, mid.x, mid.y);
+      ctx.stroke();
+
+      lastMidPointRef.current = mid;
+      lastPointRef.current = pt;
+      pointsCountRef.current++;
+    }
+
+    ctx.restore();
   };
 
-  // Pointer Up / Leave (End drawing)
-  const handlePointerUp = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    setLastPoint(null);
+  // Pointer Up / Cancel (Stroke completion & snapshot saving)
+  const handlePointerUp = (e) => {
+    if (isPanningRef.current) {
+      isPanningRef.current = false;
+      setIsPanning(false);
+      if (e?.currentTarget?.hasPointerCapture && e.currentTarget.hasPointerCapture(e.pointerId)) {
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      return;
+    }
+
+    if (!isDrawingRef.current) return;
+
+    const ctx = contextRef.current;
+    if (ctx && lastPointRef.current && lastMidPointRef.current && pointsCountRef.current > 1) {
+      // Complete stroke with final line to last point
+      ctx.save();
+      applyStrokeContext(ctx, toolRef.current, colorRef.current, brushSizeRef.current);
+      ctx.beginPath();
+      ctx.moveTo(lastMidPointRef.current.x, lastMidPointRef.current.y);
+      ctx.lineTo(lastPointRef.current.x, lastPointRef.current.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    isDrawingRef.current = false;
+    lastPointRef.current = null;
+    lastMidPointRef.current = null;
+    pointsCountRef.current = 0;
+
+    if (e?.currentTarget?.hasPointerCapture && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+
     saveSnapshot();
+  };
+
+  // Viewport background pointer down (allows panning on empty viewport workspace)
+  const handleViewportPointerDown = (e) => {
+    if (
+      e.target === viewportRef.current ||
+      e.button === 1 ||
+      isSpacePressedRef.current ||
+      toolRef.current === 'select'
+    ) {
+      e.preventDefault();
+      isPanningRef.current = true;
+      setIsPanning(true);
+      panStartRef.current = {
+        x: e.clientX - panRef.current.x,
+        y: e.clientY - panRef.current.y,
+      };
+      if (viewportRef.current?.setPointerCapture) {
+        try {
+          viewportRef.current.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+    }
   };
 
   // Clear entire canvas
@@ -323,18 +700,33 @@ export default function DrawingGame() {
     const ctx = contextRef.current;
     if (!ctx) return;
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     saveSnapshot();
     setShowClearConfirmModal(false);
   };
 
+  // Helper to get composited canvas with pure white background for download/export/publish
+  const getCompositedCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = CANVAS_WIDTH;
+    exportCanvas.height = CANVAS_HEIGHT;
+    const expCtx = exportCanvas.getContext('2d');
+    // Solid white paper background
+    expCtx.fillStyle = '#ffffff';
+    expCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Draw current artwork
+    expCtx.drawImage(canvas, 0, 0);
+    return exportCanvas;
+  }, []);
+
   // Download artwork locally as PNG
   const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const exportCanvas = getCompositedCanvas();
+    if (!exportCanvas) return;
 
-    const dataUrl = canvas.toDataURL('image/png');
+    const dataUrl = exportCanvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = `workrank-art-${Date.now()}.png`;
     link.href = dataUrl;
@@ -343,10 +735,10 @@ export default function DrawingGame() {
 
   // Open Finish & Preview Modal
   const handleOpenPreview = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const exportCanvas = getCompositedCanvas();
+    if (!exportCanvas) return;
 
-    const dataUrl = canvas.toDataURL('image/png');
+    const dataUrl = exportCanvas.toDataURL('image/png');
     setPreviewImageUrl(dataUrl);
 
     const now = new Date();
@@ -362,15 +754,15 @@ export default function DrawingGame() {
 
   // Submit & Publish to WorkRank
   const handlePublish = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const exportCanvas = getCompositedCanvas();
+    if (!exportCanvas) return;
 
     try {
       setIsPublishing(true);
       setErrorMessage('');
 
       const blob = await new Promise((resolve) => {
-        canvas.toBlob((b) => resolve(b), 'image/png');
+        exportCanvas.toBlob((b) => resolve(b), 'image/png');
       });
 
       if (!blob) {
@@ -383,22 +775,30 @@ export default function DrawingGame() {
       formData.append('width', String(CANVAS_WIDTH));
       formData.append('height', String(CANVAS_HEIGHT));
       formData.append('visibility', visibility);
-      formData.append('metadata', JSON.stringify({
-        drawnAt: new Date().toISOString(),
-        toolUsed: 'WorkRank Creative Canvas',
-      }));
+      formData.append(
+        'metadata',
+        JSON.stringify({
+          drawnAt: new Date().toISOString(),
+          toolUsed: 'WorkRank Creative Canvas Studio',
+        })
+      );
 
       await drawingApi.createDrawing(formData);
 
       setPublishSuccess(true);
     } catch (err) {
       console.error('Lỗi chia sẻ tác phẩm:', err);
-      const msg = err.response?.data?.message || err.message || 'Không thể chia sẻ tác phẩm. Vui lòng thử lại.';
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Không thể chia sẻ tác phẩm. Vui lòng thử lại.';
       setErrorMessage(msg);
     } finally {
       setIsPublishing(false);
     }
   };
+
+  const zoomPercent = Math.round(zoom * 100);
 
   return (
     <PageShell className="drawing-game-shell">
@@ -436,32 +836,87 @@ export default function DrawingGame() {
         </div>
       </div>
 
-      {/* Main Drawing Stage (LARGE CANVAS CENTERPIECE) */}
+      {/* Main Drawing Stage (WHITEBOARD VIEWPORT WITH ZOOM & PAN) */}
       <div className="drawing-stage-container">
-        <div className="drawing-canvas-wrapper">
-          <canvas
-            ref={canvasRef}
-            className={`drawing-canvas tool-${tool}`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            style={{ touchAction: 'none' }}
-          />
+        <div
+          ref={viewportRef}
+          className={`drawing-viewport tool-${tool} ${isPanning ? 'is-panning' : ''} ${isSpacePressed ? 'is-space-pressed' : ''}`}
+          onPointerDown={handleViewportPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          {/* Zoomable / Pannable Board Layer */}
+          <div
+            className="drawing-canvas-layer"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            }}
+          >
+            <div className="drawing-canvas-card">
+              <canvas
+                ref={canvasRef}
+                className="drawing-canvas"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                style={{ touchAction: 'none' }}
+              />
+            </div>
+          </div>
+
+          {/* Floating Zoom & View HUD in corner */}
+          <div className="drawing-viewport-hud">
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={handleZoomOut}
+              title="Thu nhỏ (-)"
+              aria-label="Thu nhỏ"
+            >
+              <ZoomOut size={15} />
+            </button>
+            <span
+              className="hud-zoom-badge"
+              onClick={handleResetView}
+              title="Nhấn để đặt lại góc nhìn 100% (0)"
+            >
+              {zoomPercent}%
+            </span>
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={handleZoomIn}
+              title="Phóng to (+)"
+              aria-label="Phóng to"
+            >
+              <ZoomIn size={15} />
+            </button>
+            <div className="hud-divider" />
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={handleResetView}
+              title="Đặt lại khung nhìn (0)"
+              aria-label="Đặt lại khung nhìn"
+            >
+              <Maximize2 size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Compact Creative Toolbar (Under the canvas) */}
+      {/* Compact Creative Toolbar */}
       <div className="drawing-toolbar-container">
         <div className="drawing-toolbar">
-          {/* Tool selectors */}
+          {/* Tool selectors (Brush, Eraser, Move/Pan, Fill) */}
           <div className="toolbar-group">
             <button
               type="button"
               className={`tool-btn ${tool === 'brush' ? 'is-active' : ''}`}
-              onClick={() => setTool('brush')}
-              title="Cọ vẽ (Brush)"
+              onClick={() => changeTool('brush')}
+              title="Cọ vẽ (P)"
               aria-label="Cọ vẽ"
             >
               <Paintbrush size={18} />
@@ -470,8 +925,8 @@ export default function DrawingGame() {
             <button
               type="button"
               className={`tool-btn ${tool === 'eraser' ? 'is-active' : ''}`}
-              onClick={() => setTool('eraser')}
-              title="Cục tẩy (Eraser)"
+              onClick={() => changeTool('eraser')}
+              title="Cục tẩy (E)"
               aria-label="Cục tẩy"
             >
               <Eraser size={18} />
@@ -479,8 +934,18 @@ export default function DrawingGame() {
             </button>
             <button
               type="button"
+              className={`tool-btn ${tool === 'select' ? 'is-active' : ''}`}
+              onClick={() => changeTool('select')}
+              title="Di chuyển canvas (V hoặc Giữ Space)"
+              aria-label="Di chuyển canvas"
+            >
+              <Hand size={18} />
+              <span className="tool-label">Di chuyển</span>
+            </button>
+            <button
+              type="button"
               className={`tool-btn ${tool === 'fill' ? 'is-active' : ''}`}
-              onClick={() => setTool('fill')}
+              onClick={() => changeTool('fill')}
               title="Đổ màu (Paint Bucket)"
               aria-label="Đổ màu"
             >
@@ -499,7 +964,7 @@ export default function DrawingGame() {
                 key={b.size}
                 type="button"
                 className={`size-btn ${brushSize === b.size ? 'is-active' : ''}`}
-                onClick={() => setBrushSize(b.size)}
+                onClick={() => changeBrushSize(b.size)}
                 title={`${b.label} (${b.size}px)`}
                 aria-label={b.label}
               >
@@ -508,7 +973,7 @@ export default function DrawingGame() {
                   style={{
                     width: Math.max(4, Math.min(22, b.size * 0.75)),
                     height: Math.max(4, Math.min(22, b.size * 0.75)),
-                    backgroundColor: tool === 'eraser' ? '#94a3b8' : color,
+                    backgroundColor: tool === 'eraser' ? '#ef4444' : color,
                   }}
                 />
               </button>
@@ -527,8 +992,8 @@ export default function DrawingGame() {
                   className={`color-swatch ${color === c && tool !== 'eraser' ? 'is-active' : ''}`}
                   style={{ backgroundColor: c }}
                   onClick={() => {
-                    setColor(c);
-                    if (tool === 'eraser') setTool('brush');
+                    changeColor(c);
+                    if (tool === 'eraser' || tool === 'select') changeTool('brush');
                   }}
                   title={c}
                   aria-label={`Màu ${c}`}
@@ -542,8 +1007,8 @@ export default function DrawingGame() {
                 type="color"
                 value={color}
                 onChange={(e) => {
-                  setColor(e.target.value);
-                  if (tool === 'eraser') setTool('brush');
+                  changeColor(e.target.value);
+                  if (tool === 'eraser' || tool === 'select') changeTool('brush');
                 }}
                 className="sr-only"
               />
@@ -555,13 +1020,13 @@ export default function DrawingGame() {
 
           <div className="toolbar-divider" />
 
-          {/* Undo, Redo, Clear & Download */}
+          {/* Undo, Redo, Zoom, Clear, Download & Shortcuts Help */}
           <div className="toolbar-group actions-group">
             <button
               type="button"
               className="action-btn"
               onClick={handleUndo}
-              disabled={undoStack.length <= 1}
+              disabled={!canUndo}
               title="Hoàn tác (Ctrl+Z)"
               aria-label="Hoàn tác"
             >
@@ -571,7 +1036,7 @@ export default function DrawingGame() {
               type="button"
               className="action-btn"
               onClick={handleRedo}
-              disabled={redoStack.length === 0}
+              disabled={!canRedo}
               title="Làm lại (Ctrl+Y)"
               aria-label="Làm lại"
             >
@@ -595,9 +1060,115 @@ export default function DrawingGame() {
             >
               <Trash2 size={16} />
             </button>
+            <button
+              type="button"
+              className="action-btn"
+              onClick={() => setShowShortcutsModal(true)}
+              title="Bảng phím tắt (? hoặc H)"
+              aria-label="Bảng phím tắt"
+            >
+              <Keyboard size={16} />
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Shortcuts Help Modal */}
+      <AnimatedModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+        title="Phím tắt Whiteboard"
+        maxWidth={500}
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => setShowShortcutsModal(false)}
+          >
+            Đã hiểu
+          </Button>
+        }
+      >
+        <div className="shortcuts-modal-grid">
+          <div className="shortcut-row">
+            <span className="shortcut-label">Cọ vẽ</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">P</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Cục tẩy</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">E</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Di chuyển bảng vẽ (Pan)</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">V</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Di chuyển nhanh</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">Space</kbd>
+              <span className="shortcut-plus">+</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Kéo chuột</span>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Di chuyển bằng chuột giữa</span>
+            <div className="shortcut-keys">
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Chuột giữa + Kéo</span>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Thu phóng quanh con trỏ</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">Ctrl/Cmd</kbd>
+              <span className="shortcut-plus">+</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Lăn chuột</span>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Phóng to / Thu nhỏ</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">+</kbd>
+              <span className="shortcut-plus">/</span>
+              <kbd className="shortcut-kbd">-</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Đặt lại góc nhìn mặc định</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">0</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Hoàn tác (Undo)</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">Ctrl/Cmd</kbd>
+              <span className="shortcut-plus">+</span>
+              <kbd className="shortcut-kbd">Z</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Làm lại (Redo)</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">Ctrl/Cmd</kbd>
+              <span className="shortcut-plus">+</span>
+              <kbd className="shortcut-kbd">Y</kbd>
+            </div>
+          </div>
+          <div className="shortcut-row">
+            <span className="shortcut-label">Đóng hộp thoại / Hủy thao tác</span>
+            <div className="shortcut-keys">
+              <kbd className="shortcut-kbd">Esc</kbd>
+            </div>
+          </div>
+        </div>
+      </AnimatedModal>
 
       {/* Clear Confirmation Modal */}
       <AnimatedModal
@@ -758,7 +1329,9 @@ export default function DrawingGame() {
                 </div>
                 <div>
                   <div className="author-name">{user?.name || 'Thành viên WorkRank'}</div>
-                  <div className="author-role">{user?.jobTitle || user?.department || 'Tác giả sáng tạo'}</div>
+                  <div className="author-role">
+                    {user?.jobTitle || user?.department || 'Tác giả sáng tạo'}
+                  </div>
                 </div>
               </div>
             </div>
