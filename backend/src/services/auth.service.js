@@ -189,4 +189,4 @@ async function changeEmail(user, { newEmail, currentPassword }) {
   };
 }
 
-module.exports = { register, login, refresh, logout, updateProfile, changePassword, changeEmail, userPayload };
+module.exports = { register, login, refresh, logout, updateProfile, changePassword, changeEmail, userPayload, issueTokens, ACCOUNT_LOCKED_MESSAGE };

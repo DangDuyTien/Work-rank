@@ -166,6 +166,7 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/google/callback" element={<Login />} />
           <Route
             element={
               <ProtectedRoute>

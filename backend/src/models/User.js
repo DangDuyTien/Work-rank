@@ -10,6 +10,8 @@ User.init(
     email: { type: DataTypes.STRING(191), allowNull: false, unique: true },
     passwordHash: { type: DataTypes.STRING(191), allowNull: false, field: 'password_hash' },
     refreshTokenHash: { type: DataTypes.STRING(191), allowNull: true, field: 'refresh_token_hash' },
+    googleSub: { type: DataTypes.STRING(191), allowNull: true, unique: true, field: 'google_sub' },
+    avatarUrl: { type: DataTypes.STRING(2048), allowNull: true, field: 'avatar_url' },
     role: { type: DataTypes.ENUM('admin', 'manager', 'user'), allowNull: false, defaultValue: 'user' },
     teamId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'team_id' },
     jobTitle: { type: DataTypes.STRING(120), allowNull: true, defaultValue: 'Nhân viên', field: 'job_title' },

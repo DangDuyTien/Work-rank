@@ -54,12 +54,63 @@ function MvpVisualAward({ data, loading, error, retry }) {
   );
 }
 
+function GoogleMark() {
+  return <img src="/google-g-logo.png" alt="" aria-hidden="true" style={{ width: 20, height: 20.4, flexShrink: 0 }} />;
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUser, logout } = useAuth();
-
   const spotlight = usePublicSpotlight();
+
+  useEffect(() => {
+    const authError = new URLSearchParams(location.search).get('authError');
+    if (authError) setError({ cancelled: 'Bạn đã hủy đăng nhập Google.', not_configured: 'Đăng nhập Google chưa được cấu hình.', invalid_state: 'Phiên Google không còn hợp lệ.', google_failed: 'Không thể hoàn tất đăng nhập Google.' }[authError] || 'Đăng nhập Google thất bại.');
+    if (location.pathname !== '/auth/google/callback') return;
+    const ticket = new URLSearchParams(location.hash.slice(1)).get('ticket');
+    if (!ticket || googleTicketRef.current === ticket) return;
+    googleTicketRef.current = ticket;
+    setGoogleBusy(true);
+    auth.exchangeGoogleTicket(ticket).then((response) => {
+      if (response.data?.linkRequired) {
+        setGoogleLinkTicket(response.data.linkTicket);
+        setGoogleLinkEmail(response.data.email || '');
+        setNotice('Email Google đã có tài khoản WorkRank. Nhập mật khẩu cũ để liên kết.');
+      } else {
+        setUser(response.data.user);
+        navigate(response.data.redirectTo || '/dashboard', { replace: true });
+      }
+    }).catch((err) => setError(err.response?.data?.message || 'Không thể hoàn tất đăng nhập Google.')).finally(() => setGoogleBusy(false));
+  }, [location.hash, location.pathname, location.search, navigate, setUser]);
+
+  const handleGoogleLogin = async () => {
+    setGoogleBusy(true);
+    setError('');
+    try {
+      await auth.checkGoogleAvailability();
+      window.location.assign(auth.googleStartUrl('/dashboard'));
+    } catch (err) {
+      setGoogleBusy(false);
+      setError(err.response?.data?.message || 'Đăng nhập Google hiện không khả dụng.');
+    }
+  };
+
+  const handleGoogleLink = async (event) => {
+    event.preventDefault();
+    setGoogleBusy(true);
+    try {
+      const response = await auth.linkGoogleAccount(googleLinkTicket, password);
+      setUser(response.data.user);
+      navigate(response.data.redirectTo || '/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể liên kết tài khoản Google.');
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
+
 
   const [isRegister, setIsRegister] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
   const [email, setEmail] = useState('');
@@ -70,6 +121,10 @@ export default function Login() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const passwordHelpRef = useRef(null);
+  const googleTicketRef = useRef('');
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleLinkTicket, setGoogleLinkTicket] = useState('');
+  const [googleLinkEmail, setGoogleLinkEmail] = useState('');
 
   useEffect(() => {
     if (!showForgotPasswordModal) return undefined;
@@ -699,7 +754,14 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Switch Prompt */}
+          <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontSize: 12 }}><span style={{ flex: 1, height: 1, background: 'var(--border)' }} /> hoặc <span style={{ flex: 1, height: 1, background: 'var(--border)' }} /></div>
+            <button type="button" onClick={handleGoogleLogin} disabled={googleBusy} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '11px 12px', background: '#fff', color: '#1f1f1f', border: '1px solid #747775', borderRadius: 8, fontWeight: 600, cursor: googleBusy ? 'wait' : 'pointer' }}>
+              {googleBusy ? <Loader2 size={18} /> : <GoogleMark />} Tiếp tục với Google
+            </button>
+            {googleLinkTicket && <form onSubmit={handleGoogleLink} style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}><small>Email {googleLinkEmail} đã tồn tại. Nhập mật khẩu WorkRank để liên kết:</small><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /><button type="submit" disabled={googleBusy}>Xác minh và liên kết</button></form>}
+          </div>
+
           <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
             {isRegister ? 'Đã có tài khoản thành viên?' : 'Chưa có tài khoản trên hệ thống?'}{' '}
             <button

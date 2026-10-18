@@ -1,6 +1,7 @@
 const sequelize = require('../config/database');
 const Team = require('./Team');
 const User = require('./User');
+const GoogleAuthTicket = require('./GoogleAuthTicket');
 const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
 const Friendship = require('./Friendship');
@@ -325,6 +326,7 @@ module.exports = {
   sequelize,
   Team,
   User,
+  GoogleAuthTicket,
   UserProfileImage,
   UserProfilePreference,
   Friendship,

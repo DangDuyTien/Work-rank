@@ -38,7 +38,7 @@ function isAccountLockedResponse(err) {
 }
 
 function isAuthEndpoint(url = '') {
-  return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token'].some((path) => String(url).includes(path));
+  return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token', '/api/auth/google/exchange', '/api/auth/google/link'].some((path) => String(url).includes(path));
 }
 
 async function refreshStoredAuth() {
@@ -211,6 +211,22 @@ export const auth = {
     const payload = (data && typeof data === 'object') ? data : { email: data, password };
     const res = await api.post('/api/auth/login', payload);
     storeAuth(res.data);
+    return res;
+  },
+  googleStartUrl: (returnTo) => {
+    const url = new URL('/api/auth/google', import.meta.env.VITE_API_URL || window.location.origin);
+    if (returnTo) url.searchParams.set('returnTo', returnTo);
+    return url.toString();
+  },
+  checkGoogleAvailability: () => api.get('/api/health'),
+  exchangeGoogleTicket: async (ticket) => {
+    const res = await api.post('/api/auth/google/exchange', { ticket });
+    if (res.data?.accessToken) storeAuth(res.data);
+    return res;
+  },
+  linkGoogleAccount: async (ticket, password) => {
+    const res = await api.post('/api/auth/google/link', { ticket, password });
+    if (res.data?.accessToken) storeAuth(res.data);
     return res;
   },
   refreshSession: refreshStoredAuth,

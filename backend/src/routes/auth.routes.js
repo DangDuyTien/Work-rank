@@ -3,6 +3,7 @@ const { z } = require('zod');
 const controller = require('../controllers/auth.controller');
 const validate = require('../middlewares/validate.middleware');
 const { auth } = require('../middlewares/auth.middleware');
+const { googleLinkLimiter } = require('../middlewares/rateLimit.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
@@ -13,6 +14,10 @@ const registerPassword = z.string().min(1).max(128);
 
 router.post('/register', validate(z.object({ body: z.object({ name: z.string().trim().min(1).max(120), email, password: registerPassword, teamId: z.coerce.number().int().positive().optional() }) })), asyncHandler(controller.register));
 router.post('/login', validate(z.object({ body: z.object({ email: loginIdentifier, password: loginPassword }) })), asyncHandler(controller.login));
+router.get('/google', asyncHandler(controller.startGoogle));
+router.get('/google/callback', asyncHandler(controller.googleCallback));
+router.post('/google/exchange', validate(z.object({ body: z.object({ ticket: z.string().min(1).max(64) }) })), asyncHandler(controller.exchangeGoogleTicket));
+router.post('/google/link', googleLinkLimiter, validate(z.object({ body: z.object({ ticket: z.string().min(1).max(64), password: loginPassword }) })), asyncHandler(controller.linkGoogleAccount));
 router.post('/refresh-token', validate(z.object({ body: z.object({ refreshToken: z.string().min(1) }) })), asyncHandler(controller.refreshToken));
 router.post('/logout', auth, asyncHandler(controller.logout));
 router.get('/me', auth, asyncHandler(controller.me));
