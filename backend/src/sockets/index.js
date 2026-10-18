@@ -5,7 +5,6 @@ const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
 const samRealtime = require('../services/samRealtime.service');
 const typingRealtime = require('../services/typingRealtime.service');
-const { canAccessGameRoom } = require('../services/gameRoomAuth.service');
 
 function emitPresence(io, user, status) {
   const payload = {
@@ -41,9 +40,15 @@ function registerSockets(io) {
       const token = socket.handshake.auth?.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
       if (!token) return next(new Error('Missing token'));
       const payload = jwt.verify(token, env.jwtSecret);
+      if (payload.tokenType === 'refresh') return next(new Error('Unauthorized'));
       const user = await User.findByPk(payload.sub);
       if (!user || user.status !== 'active') return next(new Error('Invalid user'));
+      if (payload.tokenVersion !== undefined && Number(payload.tokenVersion) !== Number(user.tokenVersion || 0)) {
+        return next(new Error('Session revoked'));
+      }
       socket.user = user;
+      socket.authToken = token;
+      socket.authSessionId = payload.jti;
       socket.clientType = 'web';
       return next();
     } catch (error) {
@@ -113,39 +118,6 @@ function registerSockets(io) {
         if (typeof ack === 'function') ack({ ok: true, ...result });
       } catch (error) {
         if (typeof ack === 'function') ack({ ok: false, error: error.message || 'Không cập nhật được trạng thái đọc' });
-      }
-    });
-
-    // ── Capital Board Game Socket Rooms ──
-    socket.on('game:joinRoom', async (payload = {}, ack) => {
-      try {
-        const auth = await canAccessGameRoom({
-          userId: socket.user.id,
-          userRole: socket.user.role,
-          roomId: payload.roomId,
-          gameType: 'game',
-          clientSpectatorHint: !!payload.isSpectator,
-        });
-
-        if (!auth.allowed) {
-          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
-          socket.emit('error', { message: auth.error, code: auth.code });
-          return;
-        }
-
-        socket.join(`game:${auth.roomId}`);
-        if (typeof ack === 'function') {
-          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
-        }
-      } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
-      }
-    });
-
-    socket.on('game:leaveRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
-      if (roomId) {
-        socket.leave(`game:${roomId}`);
       }
     });
 
@@ -382,12 +354,35 @@ function registerSockets(io) {
     socket.on('disconnect', () => {
       samRealtime.removeSpectatorFromAll(socket.id);
       typingRealtime.removeSpectatorFromAll(socket.id);
-      const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
-        emitPresence(io, offlineUser, 'offline');
-      });
-      if (state.sockets.size > 0) return;
+      if (socket.user) {
+        const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
+          emitPresence(io, offlineUser, 'offline');
+        });
+        if (state && state.sockets && state.sockets.size > 0) return;
+      }
     });
   });
 }
+
+function evictUserSockets(io, userId, reason = 'auth:revoked', { excludeSessionId } = {}) {
+  if (!io || !userId) return;
+  const room = `user:${userId}`;
+  try {
+    const userRoom = io.sockets?.adapter?.rooms?.get(room);
+    if (userRoom) {
+      for (const socketId of [...userRoom]) {
+        const s = io.sockets.sockets.get(socketId);
+        if (s && (!excludeSessionId || s.authSessionId !== excludeSessionId)) {
+          s.emit('auth:revoked', { message: reason });
+          s.disconnect(true);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[evictUserSockets] Error evicting sockets for user:', userId, err);
+  }
+}
+
+registerSockets.evictUserSockets = evictUserSockets;
 
 module.exports = registerSockets;

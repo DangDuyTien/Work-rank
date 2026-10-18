@@ -31,6 +31,7 @@ function lazyWithReload(importer) {
 }
 
 const Login = lazyWithReload(() => import('./pages/Login'));
+const Onboarding = lazyWithReload(() => import('./pages/Onboarding'));
 const Home = lazyWithReload(() => import('./pages/Home'));
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const Leaderboard = lazyWithReload(() => import('./pages/Leaderboard'));
@@ -46,10 +47,8 @@ const AdminOperations = lazyWithReload(() => import('./pages/AdminOperations'));
 const Arena = lazyWithReload(() => import('./pages/Arena'));
 const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
-const CapitalBoardGame = lazyWithReload(() => import('./pages/CapitalBoardGame'));
 const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
 const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
-const Game2048 = lazyWithReload(() => import('./pages/Game2048'));
 const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
 const DrawingGame = lazyWithReload(() => import('./pages/DrawingGame'));
@@ -58,10 +57,23 @@ const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
 
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isProfileComplete } = useAuth();
   const location = useLocation();
   if (loading) return <PageFallback text="Đang kiểm tra phiên đăng nhập..." />;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!isProfileComplete && location.pathname !== '/onboarding') {
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/onboarding?returnTo=${encodeURIComponent(returnTo)}`} replace state={{ from: location }} />;
+  }
+  return children;
+};
+
+const OnboardingRoute = ({ children }) => {
+  const { user, loading, isProfileComplete } = useAuth();
+  const location = useLocation();
+  if (loading) return <PageFallback text="Đang tải hồ sơ..." />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (isProfileComplete) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -166,6 +178,8 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
+          <Route path="/auth/google/callback" element={<Login />} />
           <Route
             element={
               <ProtectedRoute>
@@ -192,9 +206,6 @@ function AppRoutes() {
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<GameHub />} />
             <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
-            <Route path="/games/2048" element={<Game2048 />} />
-            <Route path="/games/capital-board" element={<CapitalBoardGame />} />
-            <Route path="/games/capital-board/room/:roomId" element={<CapitalBoardGame />} />
             <Route path="/games/quiz" element={<QuizGame />} />
             <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
             <Route path="/games/sam" element={<SamGame />} />

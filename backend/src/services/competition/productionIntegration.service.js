@@ -16,17 +16,39 @@
 const eventIngestionService = require('./eventIngestion.service');
 
 /**
+ * Resolve and enforce authorized actor and team identity.
+ * If caller is provided and is not admin, actorId cannot be spoofed.
+ */
+function resolveAuthorizedActor(params, options = {}) {
+  const caller = options.caller;
+  if (caller) {
+    if (caller.role !== 'admin' && params.actorId && Number(params.actorId) !== Number(caller.id)) {
+      const err = new Error(`Forbidden: User #${caller.id} cannot emit domain event for actor #${params.actorId}`);
+      err.status = 403;
+      throw err;
+    }
+    return {
+      actorId: caller.role === 'admin' ? (params.actorId || caller.id) : caller.id,
+      teamId: caller.role === 'admin' ? (params.teamId !== undefined ? params.teamId : caller.teamId) : (caller.teamId || null),
+    };
+  }
+  return {
+    actorId: params.actorId,
+    teamId: params.teamId,
+  };
+}
+
+/**
  * Record a video approved event in the production pipeline.
  */
 async function recordVideoApproved(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     videoId,
     title = 'Untitled Video',
     duration = 0,
     qualityScore = 100,
     category = 'standard',
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -55,13 +77,12 @@ async function recordVideoApproved(params, options = {}) {
  * Record a video published event.
  */
 async function recordVideoPublished(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     videoId,
     url,
     title = 'Published Video',
     platform = 'youtube',
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -89,12 +110,11 @@ async function recordVideoPublished(params, options = {}) {
  * Record a script draft submitted by a writer.
  */
 async function recordScriptSubmitted(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     scriptId,
     title,
     wordCount = 0,
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -121,13 +141,12 @@ async function recordScriptSubmitted(params, options = {}) {
  * Record a script approved by lead reviewer.
  */
 async function recordScriptApproved(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     scriptId,
     title,
     wordCount = 0,
     reviewerId,
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -155,12 +174,11 @@ async function recordScriptApproved(params, options = {}) {
  * Record an edit draft submitted by an editor.
  */
 async function recordEditSubmitted(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     editId,
     videoId,
     cutVersion = 1,
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -187,13 +205,12 @@ async function recordEditSubmitted(params, options = {}) {
  * Record an edit draft approved.
  */
 async function recordEditApproved(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     editId,
     videoId,
     cutVersion = 1,
     reviewerId,
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;
@@ -221,12 +238,11 @@ async function recordEditApproved(params, options = {}) {
  * Record QC inspection passed for a video.
  */
 async function recordQCPassed(params, options = {}) {
+  const { actorId, teamId } = resolveAuthorizedActor(params, options);
   const {
     videoId,
     score = 100,
     checklistPassed = true,
-    actorId,
-    teamId,
     seasonId,
     idempotencyKey,
   } = params;

@@ -189,10 +189,23 @@ async function processEvent(event) {
 
   // Track state updates to emit realtime after commit
   const stateUpdatesToEmit = [];
+  let claimedByThisRun = false;
 
   // Persist all effects and state mutations in ONE transaction
   // If persist fails → DO NOT mark PROCESSED → event stays PENDING → retried
   await sequelize.transaction(async (t) => {
+    // 0. Atomic conditional claim on PENDING status: prevents concurrent workers from double-processing
+    const [claimed] = await CompetitionEvent.update(
+      { status: 'PROCESSED', processedAt: new Date() },
+      { where: { eventId: event.eventId, status: 'PENDING' }, transaction: t },
+    );
+
+    if (claimed === 0) {
+      // Event already processed or claimed by another worker
+      return;
+    }
+    claimedByThisRun = true;
+
     // 1. Process any state mutations configured in rules
     for (const rule of rules) {
       if (rule.state_mutation) {
@@ -246,12 +259,11 @@ async function processEvent(event) {
         transaction: t,
       });
     }
-    // Mark PROCESSED inside the same transaction — atomicity guarantee
-    await CompetitionEvent.update(
-      { status: 'PROCESSED', processedAt: new Date() },
-      { where: { eventId: event.eventId }, transaction: t },
-    );
   });
+
+  if (!claimedByThisRun) {
+    return;
+  }
 
   // After transaction commits successfully: Emit Realtime events & Update Read Model Projections
   for (const eff of allEffects) {
@@ -293,6 +305,7 @@ async function processEvent(event) {
 // ─── Batch processing ─────────────────────────────────────────────────────────
 
 async function processBatch() {
+  lastHeartbeatAt = new Date();
   if (!isProcessingEnabled()) {
     console.log('[CompetitionEngine] Scoring processing is currently disabled (Kill Switch active). Backlog retained.');
     return { count: 0, paused: true };
@@ -319,25 +332,92 @@ async function processBatch() {
 
 let running = false;
 let timerId = null;
+let lastHeartbeatAt = null;
+let activeBatchPromise = null;
+
+function getStatus() {
+  return {
+    running,
+    lastHeartbeatAt,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    batchSize: BATCH_SIZE,
+    processingEnabled: isProcessingEnabled(),
+    shadowMode: isShadowModeEnabled(),
+  };
+}
+
+/**
+ * Quarantine known poison or audit-forged events before processing begins.
+ * Ensures that unverified events from BUG-002 do not get executed by the worker.
+ */
+async function quarantineKnownPoisonEvents() {
+  const { Op } = require('sequelize');
+  try {
+    const [count] = await CompetitionEvent.update(
+      {
+        status: 'IGNORED',
+        lastError: 'Quarantined: audit test event',
+      },
+      {
+        where: {
+          status: 'PENDING',
+          [Op.or]: [
+            { idempotencyKey: 'audit-20261017-forged' },
+            { eventId: '737f883c-c2f3-4936-b025-875e1e0dbde3' },
+          ],
+        },
+      },
+    );
+    if (count > 0) {
+      console.log(`[CompetitionEngine] Quarantined ${count} known audit-forged event(s).`);
+    }
+    return count;
+  } catch (err) {
+    console.warn('[CompetitionEngine] quarantineKnownPoisonEvents error:', err.message);
+    return 0;
+  }
+}
 
 function start() {
   if (running) return;
   running = true;
+  lastHeartbeatAt = new Date();
   console.log(`[CompetitionEngine] Started (interval=${POLL_INTERVAL_MS}ms, batch=${BATCH_SIZE})`);
   scheduleNext();
 }
 
-async function stop() {
+async function stop(timeoutMs = 10000) {
   running = false;
-  if (timerId) { clearTimeout(timerId); timerId = null; }
+  if (timerId) {
+    clearTimeout(timerId);
+    timerId = null;
+  }
+  if (activeBatchPromise) {
+    console.log('[CompetitionEngine] Awaiting in-flight batch completion before stop...');
+    const timeout = new Promise((resolve) => setTimeout(resolve, timeoutMs));
+    await Promise.race([activeBatchPromise, timeout]);
+  }
   console.log('[CompetitionEngine] Stopped');
 }
 
 function scheduleNext() {
   if (!running) return;
   timerId = setTimeout(async () => {
-    try { await processBatch(); } catch (e) { console.error('[CompetitionEngine] batch error', e.message); }
-    finally { scheduleNext(); }
+    activeBatchPromise = (async () => {
+      try {
+        await processBatch();
+      } catch (e) {
+        console.error('[CompetitionEngine] batch error', e.message);
+      } finally {
+        activeBatchPromise = null;
+      }
+    })();
+
+    try {
+      await activeBatchPromise;
+    } finally {
+      scheduleNext();
+    }
   }, POLL_INTERVAL_MS);
 }
 
@@ -351,4 +431,6 @@ module.exports = {
   setProcessingEnabled,
   isShadowModeEnabled,
   setShadowModeEnabled,
+  getStatus,
+  quarantineKnownPoisonEvents,
 };

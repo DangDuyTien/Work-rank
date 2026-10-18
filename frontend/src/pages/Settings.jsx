@@ -30,7 +30,6 @@ import {
   Wrench,
   Gamepad2,
   Keyboard,
-  LayoutGrid,
   Club,
   Activity,
   Clock,
@@ -1124,10 +1123,6 @@ export default function Settings() {
                   const Icon =
                     game.gameKey === 'typing_battle' || game.gameKey === 'typing'
                       ? Keyboard
-                      : game.gameKey === 'capital_board'
-                      ? Gamepad2
-                      : game.gameKey === 'game_2048'
-                      ? LayoutGrid
                       : game.gameKey === 'sam'
                       ? Club
                       : Sparkles;

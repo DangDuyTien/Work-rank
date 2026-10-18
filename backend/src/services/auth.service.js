@@ -3,8 +3,10 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const env = require('../config/env');
 const { User, UserProfilePreference } = require('../models');
+const competitionRealtime = require('./competition/competitionRealtime.service');
 const { signAccessToken, signRefreshToken } = require('../utils/token');
 const sanitizeUser = require('../utils/sanitizeUser');
+const { normalizeJobTitle, normalizeDepartment } = require('../config/employeeProfile');
 
 const ACCOUNT_LOCKED_MESSAGE = 'Tài khoản đã bị khóa. Inbox Facebook để được mở nếu đây là lỗi.';
 
@@ -18,8 +20,9 @@ async function userPayload(user) {
 }
 
 async function issueTokens(user) {
-  const accessToken = signAccessToken(user);
-  const refreshToken = signRefreshToken(user);
+  const sessionId = require('crypto').randomUUID();
+  const accessToken = signAccessToken(user, sessionId);
+  const refreshToken = signRefreshToken(user, sessionId);
   await user.update({ lastSeenAt: new Date() });
   return { accessToken, refreshToken, user: await userPayload(user) };
 }
@@ -82,9 +85,17 @@ async function refresh(refreshToken) {
       error.statusCode = 403;
       throw error;
     }
+    const tokenVersion = Number(payload.tokenVersion ?? 0);
+    const currentVersion = Number(user.tokenVersion ?? 0);
+    if (tokenVersion !== currentVersion) {
+      const error = new Error('Phiên đăng nhập đã hết hạn hoặc đã bị thu hồi.');
+      error.statusCode = 401;
+      throw error;
+    }
     return issueTokens(user);
   } catch (err) {
     if (err.statusCode === 403) throw err;
+    if (err.statusCode === 401) throw err;
     const error = new Error('Invalid or expired refresh token');
     error.statusCode = 401;
     throw error;
@@ -92,23 +103,59 @@ async function refresh(refreshToken) {
 }
 
 async function logout(user) {
-  // To implement true global logout, we would bump a tokenVersion here.
-  // For now, removing the token from the client is sufficient for standard logout.
-  await user.update({ lastSeenAt: new Date() });
+  const nextTokenVersion = Number(user.tokenVersion || 0) + 1;
+  await user.update({ tokenVersion: nextTokenVersion, lastSeenAt: new Date() });
+  user.tokenVersion = nextTokenVersion;
+  try {
+    const io = competitionRealtime.getIo();
+    if (io) {
+      const registerSockets = require('../sockets');
+      if (typeof registerSockets.evictUserSockets === 'function') {
+        registerSockets.evictUserSockets(io, user.id, 'Đã đăng xuất.');
+      } else {
+        io.to(`user:${user.id}`).emit('auth:revoked', { message: 'Đã đăng xuất.' });
+      }
+    }
+  } catch (ioErr) {
+    // Sockets might not be initialized in test environment
+  }
 }
 
 async function updateProfile(user, payload = {}) {
   const updates = {};
   const name = String(payload.name || '').trim();
-
   if (name) updates.name = name;
+  if (payload.jobTitle !== undefined) {
+    const jobTitle = normalizeJobTitle(payload.jobTitle);
+    if (!jobTitle) { const error = new Error('Chức danh không hợp lệ'); error.statusCode = 400; throw error; }
+    updates.jobTitle = jobTitle;
+  }
+  if (payload.department !== undefined) {
+    const department = normalizeDepartment(payload.department);
+    if (!department) { const error = new Error('Phòng ban không hợp lệ'); error.statusCode = 400; throw error; }
+    updates.department = department;
+  }
+  const hasEmployeeFields = updates.jobTitle !== undefined || updates.department !== undefined;
+  if (hasEmployeeFields) {
+    if (user.profileStatus === 'complete') {
+      const error = new Error('Hồ sơ đã hoàn tất. Chức danh và phòng ban do Admin quản lý.');
+      error.statusCode = 403;
+      throw error;
+    }
+    if (!updates.jobTitle || !updates.department) {
+      const error = new Error('Vui lòng chọn đầy đủ chức danh và phòng ban.');
+      error.statusCode = 400;
+      throw error;
+    }
+    updates.profileStatus = 'complete';
+  }
 
   if (!Object.keys(updates).length) return { user: await userPayload(user) };
   await user.update(updates);
   return { user: await userPayload(user) };
 }
 
-async function changePassword(user, { currentPassword, newPassword }) {
+async function changePassword(user, { currentPassword, newPassword }, { sessionId } = {}) {
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!valid) {
     const error = new Error('Mật khẩu hiện tại không chính xác');
@@ -117,8 +164,35 @@ async function changePassword(user, { currentPassword, newPassword }) {
   }
 
   const passwordHash = await bcrypt.hash(newPassword, env.bcryptRounds);
-  await user.update({ passwordHash, lastSeenAt: new Date() });
-  return { ok: true, message: 'Đổi mật khẩu thành công.' };
+  const nextTokenVersion = Number(user.tokenVersion || 0) + 1;
+  await user.update({
+    passwordHash,
+    tokenVersion: nextTokenVersion,
+    lastSeenAt: new Date(),
+  });
+  user.tokenVersion = nextTokenVersion;
+
+  try {
+    const io = competitionRealtime.getIo();
+    if (io) {
+      const registerSockets = require('../sockets');
+      if (typeof registerSockets.evictUserSockets === 'function') {
+        registerSockets.evictUserSockets(io, user.id, 'Mật khẩu đã được thay đổi.', { excludeSessionId: sessionId });
+      } else {
+        const registerSockets = require('../sockets');
+      if (typeof registerSockets.evictUserSockets === 'function') {
+        registerSockets.evictUserSockets(io, user.id, 'Mật khẩu đã được thay đổi.', { excludeSessionId: sessionId });
+      } else {
+        io.to(`user:${user.id}`).emit('auth:revoked', { message: 'Mật khẩu đã được thay đổi.' });
+      }
+      }
+    }
+  } catch (ioErr) {
+    // Sockets might not be initialized in test environment
+  }
+
+  const tokens = await issueTokens(user);
+  return { ok: true, message: 'Đổi mật khẩu thành công.', ...tokens };
 }
 
 async function changeEmail(user, { newEmail, currentPassword }) {
@@ -189,4 +263,15 @@ async function changeEmail(user, { newEmail, currentPassword }) {
   };
 }
 
-module.exports = { register, login, refresh, logout, updateProfile, changePassword, changeEmail, userPayload };
+module.exports = {
+  register,
+  login,
+  refresh,
+  logout,
+  updateProfile,
+  changePassword,
+  changeEmail,
+  userPayload,
+  issueTokens,
+  ACCOUNT_LOCKED_MESSAGE,
+};

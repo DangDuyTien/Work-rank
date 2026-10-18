@@ -100,6 +100,14 @@ function formatAuthor(user) {
 /**
  * Formats drawing object including like status.
  */
+function canViewDrawing(drawing, { userId = null, teamId = null, isAdmin = false } = {}) {
+  const plain = drawing.get ? drawing.get({ plain: true }) : drawing;
+  if (isAdmin || plain.visibility === 'PUBLIC') return true;
+  if (!userId) return false;
+  if (Number(plain.userId) === Number(userId)) return true;
+  return plain.visibility === 'TEAM' && teamId != null && Number(plain.author?.teamId) === Number(teamId);
+}
+
 function formatDrawing(drawing, likedDrawingIds = new Set()) {
   const plain = drawing.get ? drawing.get({ plain: true }) : drawing;
   return {
@@ -127,6 +135,8 @@ async function getGallery({
   page = 1,
   limit = 20,
   currentUserId = null,
+  currentUserTeamId = null,
+  isAdmin = false,
   visibility = 'PUBLIC',
   filter = 'latest',
 } = {}) {
@@ -140,6 +150,21 @@ async function getGallery({
 
   if (visibility && visibility !== 'ALL') {
     whereClause.visibility = visibility;
+  }
+
+  if (visibility === 'PRIVATE') {
+    if (!currentUserId) return { drawings: [], settings: await getSettings(), pagination: { page: safePage, limit: safeLimit, total: 0, totalPages: 0 } };
+    whereClause.userId = currentUserId;
+  } else if (visibility === 'ALL' || visibility === 'TEAM') {
+    const allowedVisibility = [{ visibility: 'PUBLIC' }];
+    if (isAdmin) {
+      allowedVisibility.push({ visibility: 'PRIVATE' }, { visibility: 'TEAM' });
+    } else {
+      if (currentUserId) allowedVisibility.push({ visibility: 'PRIVATE', userId: currentUserId });
+      if (currentUserTeamId) allowedVisibility.push({ visibility: 'TEAM', '$author.team_id$': currentUserTeamId });
+    }
+    whereClause[Op.or] = allowedVisibility;
+    delete whereClause.visibility;
   }
 
   let order = [['created_at', 'DESC']];
@@ -206,7 +231,7 @@ async function getGallery({
 /**
  * Get single artwork detail by ID.
  */
-async function getById(drawingId, currentUserId = null) {
+async function getById(drawingId, { userId = null, teamId = null, isAdmin = false } = {}) {
   const drawing = await Drawing.findOne({
     where: {
       id: drawingId,
@@ -236,16 +261,19 @@ async function getById(drawingId, currentUserId = null) {
   if (!drawing) {
     throw new NotFoundError('Tác phẩm không tồn tại hoặc đã bị gỡ bỏ.');
   }
+  if (!canViewDrawing(drawing, { userId, teamId, isAdmin })) {
+    throw new ForbiddenError('Bạn không có quyền xem tác phẩm này.');
+  }
 
   // Increment views count asynchronously
   drawing.increment('viewsCount').catch(() => {});
 
   let hasLiked = false;
-  if (currentUserId) {
+  if (userId) {
     const like = await DrawingLike.findOne({
       where: {
         drawingId: drawing.id,
-        userId: currentUserId,
+        userId,
       },
     });
     hasLiked = Boolean(like);
@@ -260,6 +288,7 @@ async function getById(drawingId, currentUserId = null) {
  */
 async function createDrawing({
   userId,
+  teamId = null,
   title,
   imageUrl,
   width = 1200,
@@ -295,20 +324,24 @@ async function createDrawing({
     metadata: metadata || {},
   });
 
-  const created = await getById(drawing.id, userId);
+  const created = await getById(drawing.id, { userId, teamId });
   return created;
 }
 
 /**
  * Toggle like on a drawing artwork.
  */
-async function toggleLike({ drawingId, userId }) {
+async function toggleLike({ drawingId, userId, teamId = null, isAdmin = false }) {
   const drawing = await Drawing.findOne({
     where: { id: drawingId, status: 'ACTIVE' },
+    include: [{ model: User, as: 'author', attributes: ['id', 'teamId'] }],
   });
 
   if (!drawing) {
     throw new NotFoundError('Tác phẩm không tồn tại.');
+  }
+  if (!canViewDrawing(drawing, { userId, teamId, isAdmin })) {
+    throw new ForbiddenError('Bạn không có quyền thích tác phẩm này.');
   }
 
   const existingLike = await DrawingLike.findOne({
@@ -374,7 +407,7 @@ async function deleteDrawing({ drawingId, userId, isAdmin = false }) {
 /**
  * Get drawings by a specific user.
  */
-async function getUserDrawings({ userId, currentUserId = null, page = 1, limit = 20 }) {
+async function getUserDrawings({ userId, currentUserId = null, currentUserTeamId = null, isAdmin = false, page = 1, limit = 20 }) {
   const safePage = Math.max(1, parseInt(page, 10) || 1);
   const safeLimit = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const offset = (safePage - 1) * safeLimit;
@@ -384,9 +417,12 @@ async function getUserDrawings({ userId, currentUserId = null, page = 1, limit =
     status: 'ACTIVE',
   };
 
-  // If viewing someone else, only show PUBLIC
-  if (currentUserId !== userId) {
-    whereClause.visibility = 'PUBLIC';
+  if (currentUserId !== userId && !isAdmin && currentUserTeamId) {
+    const author = await User.findByPk(userId, { attributes: ['teamId'] });
+    if (author?.teamId === currentUserTeamId) {
+      delete whereClause.visibility;
+      whereClause[Op.or] = [{ visibility: 'PUBLIC' }, { visibility: 'TEAM' }];
+    }
   }
 
   const { rows, count } = await Drawing.findAndCountAll({

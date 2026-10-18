@@ -12,7 +12,7 @@
  */
 
 const sequelize = require('../config/database');
-const { ScoreLedger, CompetitionEvent } = require('../models');
+const { ScoreLedger, CompetitionEvent, User } = require('../models');
 const competitionStateService = require('../services/competition/competitionState.service');
 const { Op } = require('sequelize');
 
@@ -681,7 +681,30 @@ async function listEventContracts(req, res) {
 }
 
 async function publishDomainEvent(req, res) {
-  const result = await eventIngestionService.publishEvent(req.body);
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  const result = await eventIngestionService.publishEvent(req.body, { caller: req.user });
+
+  // Audit log admin publishing action
+  if (result?.event?.eventId) {
+    await CompetitionAuditLog.create({
+      actorId: req.user.id,
+      action: 'DOMAIN_EVENT_PUBLISHED',
+      entityType: 'COMPETITION_EVENT',
+      entityId: String(result.event.eventId),
+      beforeState: null,
+      afterState: {
+        eventType: result.event.eventType,
+        actorId: result.event.actorId,
+        teamId: result.event.teamId,
+        status: result.event.status,
+      },
+      reason: req.body?.reason || 'Admin published domain event',
+    }).catch((err) => console.warn('[CompetitionController] Audit log failed:', err.message));
+  }
+
   res.status(201).json(result);
 }
 
@@ -717,37 +740,113 @@ async function adminRetryIntegrationEvent(req, res) {
 }
 
 async function triggerProductionAction(req, res) {
-  const { action, ...params } = req.body;
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  const { action, ...params } = req.body || {};
   let result;
   if (action === 'video_published') {
-    result = await productionIntegration.recordVideoPublished(params);
+    result = await productionIntegration.recordVideoPublished(params, { caller: req.user });
   } else if (action === 'script_approved') {
-    result = await productionIntegration.recordScriptApproved(params);
+    result = await productionIntegration.recordScriptApproved(params, { caller: req.user });
   } else if (action === 'edit_approved') {
-    result = await productionIntegration.recordEditApproved(params);
+    result = await productionIntegration.recordEditApproved(params, { caller: req.user });
   } else if (action === 'qc_passed') {
-    result = await productionIntegration.recordQCPassed(params);
+    result = await productionIntegration.recordQCPassed(params, { caller: req.user });
   } else {
-    result = await productionIntegration.recordVideoApproved(params);
+    result = await productionIntegration.recordVideoApproved(params, { caller: req.user });
   }
+
+  // Audit log admin production action
+  if (result?.eventId) {
+    await CompetitionAuditLog.create({
+      actorId: req.user.id,
+      action: `PRODUCTION_ACTION_${(action || 'video_approved').toUpperCase()}`,
+      entityType: 'COMPETITION_EVENT',
+      entityId: String(result.eventId),
+      beforeState: null,
+      afterState: { action, eventId: result.eventId },
+      reason: req.body?.reason || `Admin triggered production action: ${action || 'video_approved'}`,
+    }).catch((err) => console.warn('[CompetitionController] Audit log failed:', err.message));
+  }
+
   res.status(201).json(result);
 }
 
 async function triggerYouTubeMilestone(req, res) {
-  const { type, ...params } = req.body;
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  const { type, ...params } = req.body || {};
   let result;
   if (type === 'subscriber') {
-    result = await youtubeIntegration.recordSubscriberMilestone(params);
+    result = await youtubeIntegration.recordSubscriberMilestone(params, { caller: req.user });
   } else if (type === 'performance') {
-    result = await youtubeIntegration.recordPerformanceMilestone(params);
+    result = await youtubeIntegration.recordPerformanceMilestone(params, { caller: req.user });
   } else {
-    result = await youtubeIntegration.recordViewMilestone(params);
+    result = await youtubeIntegration.recordViewMilestone(params, { caller: req.user });
   }
+
+  if (result?.eventId) {
+    await CompetitionAuditLog.create({
+      actorId: req.user.id,
+      action: `YOUTUBE_MILESTONE_${(type || 'view').toUpperCase()}`,
+      entityType: 'COMPETITION_EVENT',
+      entityId: String(result.eventId),
+      beforeState: null,
+      afterState: { type, eventId: result.eventId },
+      reason: req.body?.reason || `Admin triggered YouTube milestone: ${type || 'view'}`,
+    }).catch((err) => console.warn('[CompetitionController] Audit log failed:', err.message));
+  }
+
   res.status(201).json(result);
 }
 
 async function triggerCommunityKudos(req, res) {
-  const result = await communityIntegration.recordKudosSent(req.body);
+  const { recipientId, reason, kudosType, seasonId, idempotencyKey } = req.body || {};
+
+  if (!recipientId) {
+    return res.status(400).json({ message: 'recipientId là bắt buộc' });
+  }
+
+  const numericRecipientId = Number(recipientId);
+  if (!Number.isInteger(numericRecipientId) || numericRecipientId <= 0) {
+    return res.status(400).json({ message: 'recipientId không hợp lệ' });
+  }
+
+  // Disallow self-kudos
+  if (numericRecipientId === Number(req.user.id)) {
+    return res.status(400).json({ message: 'Không thể tự gửi kudos cho chính mình' });
+  }
+
+  // Validate recipient exists in DB and is active
+  const recipient = await User.findByPk(numericRecipientId);
+  if (!recipient || recipient.status !== 'active') {
+    return res.status(400).json({ message: 'Người nhận không tồn tại hoặc tài khoản đã bị vô hiệu hóa' });
+  }
+
+  // Bind sender and team identity authoritatively from session and DB
+  const senderId = req.user.id;
+  const senderTeamId = req.user.teamId || null;
+  const recipientTeamId = recipient.teamId || null;
+
+  const result = await communityIntegration.recordKudosSent(
+    {
+      kudosId: req.body?.kudosId,
+      senderId,
+      recipientId: numericRecipientId,
+      senderTeamId,
+      recipientTeamId,
+      reason: reason || 'Great teamwork!',
+      kudosType: kudosType || 'appreciation',
+      seasonId: seasonId ? Number(seasonId) : null,
+      idempotencyKey,
+    },
+    { caller: req.user }
+  );
+
   res.status(201).json(result);
 }
 

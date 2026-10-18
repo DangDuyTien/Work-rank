@@ -739,30 +739,36 @@ async function updateProgress(roomId, userId, data) {
   const player = room.players.find((p) => Number(p.userId) === Number(userId));
   if (!player || player.status !== 'TYPING') return;
 
+  const incomingChars = Math.floor(Number(typedChars) || 0);
+  const safeChars = Math.max(player.typedChars || 0, incomingChars);
+
   const totalLength = room.challengeText ? room.challengeText.length : 100;
-  const progressPct = Math.min(100, Math.round((typedChars / totalLength) * 1000) / 10);
+  const progressPct = Math.min(100, Math.round((safeChars / totalLength) * 1000) / 10);
 
   const serverDurationMs = room.startedAt ? Date.now() - new Date(room.startedAt).getTime() : 1000;
-  const effectiveDuration = clientDurationMs > 0 ? clientDurationMs : serverDurationMs;
+  const effectiveDuration = serverDurationMs;
 
-  const wpm = typingEngine.calculateWPM(typedChars, effectiveDuration);
-  const accuracy = typingEngine.calculateAccuracy(typedChars, typedChars, errorCount);
+  const wpm = typingEngine.calculateWPM(safeChars, effectiveDuration);
+  const effectiveErrors = incomingChars >= (player.typedChars || 0)
+    ? (Number(errorCount) || 0)
+    : (player.errorCount || 0);
+  const accuracy = typingEngine.calculateAccuracy(safeChars, safeChars, effectiveErrors);
 
-  player.typedChars = typedChars;
-  player.progressPct = progressPct;
+  player.typedChars = safeChars;
+  player.progressPct = Math.max(player.progressPct || 0, progressPct);
   player.wpm = wpm;
   player.accuracy = accuracy;
-  player.errorCount = errorCount;
+  player.errorCount = effectiveErrors;
   await player.save();
 
   // Queue throttled progress broadcast
   typingRealtime.queueProgressUpdate(roomId, userId, {
     userId: Number(userId),
-    progressPct,
-    typedChars,
+    progressPct: player.progressPct,
+    typedChars: safeChars,
     wpm,
     accuracy,
-    errorCount,
+    errorCount: effectiveErrors,
     team: player.team,
   });
 }
@@ -787,44 +793,64 @@ async function submitFinish(roomId, userId, data) {
     return getRoomDetail(room.id, userId);
   }
 
-  const serverDurationMs = room.startedAt ? Date.now() - new Date(room.startedAt).getTime() : 1000;
-  const challengeLen = room.challengeText ? room.challengeText.length : (typedChars || 100);
-  const actualTyped = Number(typedChars) || 0;
+  const incomingChars = Math.floor(Number(typedChars) || 0);
+  const safeChars = Math.max(player.typedChars || 0, incomingChars);
+  const effectiveErrorCount = incomingChars >= (player.typedChars || 0)
+    ? (Number(errorCount) || 0)
+    : (player.errorCount || 0);
 
-  // Anti-cheat verification
+  const serverDurationMs = room.startedAt ? Date.now() - new Date(room.startedAt).getTime() : 1000;
+  const reportedDurationMs = Math.max(0, Number(clientDurationMs) || 0);
+  const effectiveDuration = Math.min(
+    Math.max(1000, serverDurationMs, reportedDurationMs),
+    Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000)
+  );
+  const challengeLen = room.challengeText ? room.challengeText.length : (safeChars || 100);
+
+  // Anti-cheat verification retains the client-reported duration for compatibility; completion time is server bounded.
   const plausibility = typingEngine.validateSubmissionPlausibility({
     challengeLength: challengeLen,
-    typedChars: actualTyped,
+    typedChars: safeChars,
     durationMs: serverDurationMs,
     clientDurationMs,
-    errorCount,
+    errorCount: effectiveErrorCount,
   });
 
   if (!plausibility.valid) {
     console.warn(`[Typing Anti-Cheat Warning] User #${userId} in Room #${roomId} rejected: ${plausibility.reason}`);
   }
 
-  const effectiveDuration = Math.max(1000, clientDurationMs > 0 ? clientDurationMs : serverDurationMs);
   const finalWpm = plausibility.wpm;
   const finalAcc = plausibility.accuracy;
 
   const finishedCount = room.players.filter((p) => p.status === 'FINISHED').length;
 
+  // Completion check: only completed if safeChars >= targetWordCount * 4 (or minimum 90% challenge length)
+  const targetChars = room.targetWordCount && room.targetWordCount > 0
+    ? Math.min(room.targetWordCount * 4, Math.floor(challengeLen * 0.9))
+    : Math.floor(challengeLen * 0.9);
+  const isCompleted = safeChars >= targetChars;
+
+  // Minimum participation threshold: minimum 20 chars and passing anti-cheat plausibility
+  const meetsParticipation = safeChars >= 20 && plausibility.valid;
+
   player.status = 'FINISHED';
-  player.progressPct = Math.min(100, Math.round((actualTyped / Math.max(1, challengeLen)) * 100));
-  player.typedChars = actualTyped;
+  player.progressPct = Math.min(100, Math.round((safeChars / Math.max(1, challengeLen)) * 100));
+  player.typedChars = safeChars;
   player.wpm = finalWpm;
   player.accuracy = finalAcc;
-  player.errorCount = errorCount;
+  player.errorCount = effectiveErrorCount;
   player.completionTimeMs = effectiveDuration;
   player.individualRank = finishedCount + 1;
-  player.performanceScore = typingEngine.computeBasePerformanceScore({
-    wpm: finalWpm,
-    accuracy: finalAcc,
-    errorCount,
-    completed: true,
-    difficulty: room.difficulty,
-  });
+  player.performanceScore = meetsParticipation
+    ? typingEngine.computeBasePerformanceScore({
+        wpm: finalWpm,
+        accuracy: finalAcc,
+        errorCount: effectiveErrorCount,
+        completed: isCompleted,
+        difficulty: room.difficulty,
+      })
+    : 0;
   player.finalPayload = finalPayload;
   await player.save();
 
@@ -879,6 +905,26 @@ async function finalizeMatch(roomId) {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
 
+  // Close unfinished players at the authoritative match deadline before resolving winners.
+  // This makes timeout results eligible for the same deterministic scoring rules as submissions.
+  for (const player of room.players) {
+    if (player.status !== 'TYPING') continue;
+    player.status = 'FINISHED';
+    player.completionTimeMs = Math.min(
+      Math.max(1000, room.startedAt ? now.getTime() - new Date(room.startedAt).getTime() : 1000),
+      Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000)
+    );
+    if (!player.performanceScore && (player.typedChars || 0) >= 20) {
+      player.performanceScore = typingEngine.computeBasePerformanceScore({
+        wpm: player.wpm || 0,
+        accuracy: player.accuracy || 0,
+        errorCount: player.errorCount || 0,
+        completed: (player.progressPct || 0) >= 90,
+        difficulty: room.difficulty,
+      });
+    }
+  }
+
   // Resolve Team Results or Solo/1v1 winners
   let winnerTeam = 'NONE';
   let winnerUserId = null;
@@ -887,15 +933,26 @@ async function finalizeMatch(roomId) {
     const teamResult = typingEngine.calculateTeamMatchResult(room.players);
     winnerTeam = teamResult.winnerTeam;
   } else if (room.mode === '1V1') {
-    const sorted = [...room.players].sort((a, b) => {
-      if (a.status === 'FINISHED' && b.status !== 'FINISHED') return -1;
-      if (b.status === 'FINISHED' && a.status !== 'FINISHED') return 1;
-      if (a.completionTimeMs && b.completionTimeMs) return a.completionTimeMs - b.completionTimeMs;
-      return (b.performanceScore || 0) - (a.performanceScore || 0);
-    });
-    winnerUserId = sorted[0]?.userId || null;
+    // Only players who met the minimum participation threshold (typedChars >= 20) are eligible to win
+    const eligiblePlayers = room.players.filter((p) => (p.typedChars || 0) >= 20 && (p.performanceScore || 0) > 0);
+    if (eligiblePlayers.length > 0) {
+      const sorted = [...eligiblePlayers].sort((a, b) => {
+        const aCompleted = (a.progressPct || 0) >= 90;
+        const bCompleted = (b.progressPct || 0) >= 90;
+        if (aCompleted && !bCompleted) return -1;
+        if (bCompleted && !aCompleted) return 1;
+        if (aCompleted && bCompleted && a.completionTimeMs && b.completionTimeMs) {
+          return a.completionTimeMs - b.completionTimeMs;
+        }
+        return (b.performanceScore || 0) - (a.performanceScore || 0) || (b.typedChars || 0) - (a.typedChars || 0);
+      });
+      winnerUserId = sorted[0]?.userId || null;
+    } else {
+      winnerUserId = null;
+    }
   } else if (room.mode === 'SOLO') {
-    winnerUserId = room.players[0]?.userId || null;
+    const p = room.players[0];
+    winnerUserId = (p && (p.typedChars || 0) >= 20 && (p.performanceScore || 0) > 0) ? p.userId : null;
   }
 
   room.status = 'FINISHED';
@@ -910,6 +967,27 @@ async function finalizeMatch(roomId) {
   await sequelize.transaction(async (t) => {
     for (const player of room.players) {
       if (!player.userId) continue;
+
+      // Handle players who timed out while still TYPING
+      if (player.status === 'TYPING') {
+        player.status = 'FINISHED';
+        if (!player.completionTimeMs) {
+          player.completionTimeMs = (room.durationLimitSeconds || 30) * 1000;
+        }
+        const pChars = player.typedChars || 0;
+        const pCompleted = (player.progressPct || 0) >= 90;
+        if (!player.performanceScore && pChars >= 20) {
+          player.performanceScore = typingEngine.computeBasePerformanceScore({
+            wpm: player.wpm || 0,
+            accuracy: player.accuracy || 0,
+            errorCount: player.errorCount || 0,
+            completed: pCompleted,
+            difficulty: room.difficulty,
+          });
+        }
+      }
+
+      const meetsParticipation = (player.typedChars || 0) >= 20 && (player.performanceScore || 0) > 0;
 
       // 1. Fetch or create User Typing Stat
       const [stat] = await TypingUserStat.findOrCreate({
@@ -929,25 +1007,29 @@ async function finalizeMatch(roomId) {
         stat.dailyPointsEarned = 0;
       }
 
-      const isWinner =
+      const isWinner = meetsParticipation && (
         (room.mode === '1V1' && Number(player.userId) === Number(winnerUserId)) ||
         (room.mode === 'SOLO' && player.status === 'FINISHED') ||
-        ((room.mode === '2V2' || room.mode === '3V3') && player.team === winnerTeam);
+        ((room.mode === '2V2' || room.mode === '3V3') && player.team === winnerTeam)
+      );
 
       const isDraw = winnerTeam === 'DRAW';
 
-      const pointsCalc = typingEngine.calculateAwardedPoints({
-        matchType: room.matchType,
-        mode: room.mode,
-        performanceScore: player.performanceScore || 0,
-        isWinner,
-        isDraw,
-        teamContributionRatio: 1.0,
-        dailyRankedCount: stat.dailyRankedCount,
-        dailyPointsEarned: stat.dailyPointsEarned,
-      });
+      let awardedPoints = 0;
+      if (meetsParticipation) {
+        const pointsCalc = typingEngine.calculateAwardedPoints({
+          matchType: room.matchType,
+          mode: room.mode,
+          performanceScore: player.performanceScore || 0,
+          isWinner,
+          isDraw,
+          teamContributionRatio: 1.0,
+          dailyRankedCount: stat.dailyRankedCount,
+          dailyPointsEarned: stat.dailyPointsEarned,
+        });
+        awardedPoints = pointsCalc.workrankPoints;
+      }
 
-      const awardedPoints = pointsCalc.workrankPoints;
       player.scoreDelta = awardedPoints;
       await player.save({ transaction: t });
 
@@ -995,37 +1077,39 @@ async function finalizeMatch(roomId) {
         stat.practiceMatches += 1;
       }
 
-      if (isWinner && room.mode !== 'SOLO') {
-        stat.winsCount += 1;
-        stat.currentWinStreak += 1;
-        if (stat.currentWinStreak > stat.maxWinStreak) {
-          stat.maxWinStreak = stat.currentWinStreak;
+      if (meetsParticipation) {
+        if (isWinner && room.mode !== 'SOLO') {
+          stat.winsCount += 1;
+          stat.currentWinStreak += 1;
+          if (stat.currentWinStreak > stat.maxWinStreak) {
+            stat.maxWinStreak = stat.currentWinStreak;
+          }
+          if (room.mode === '2V2' || room.mode === '3V3') {
+            stat.teamWinsCount += 1;
+          }
+        } else if (!isDraw && room.mode !== 'SOLO') {
+          stat.currentWinStreak = 0;
         }
-        if (room.mode === '2V2' || room.mode === '3V3') {
-          stat.teamWinsCount += 1;
+
+        if (player.wpm > (stat.bestWpm || 0)) {
+          stat.bestWpm = player.wpm;
         }
-      } else if (!isDraw && room.mode !== 'SOLO') {
-        stat.currentWinStreak = 0;
-      }
+        if (player.accuracy > (stat.bestAccuracy || 0)) {
+          stat.bestAccuracy = player.accuracy;
+        }
+        if (player.accuracy >= 100.0 && player.progressPct >= 100.0) {
+          stat.perfectRunsCount += 1;
+        }
 
-      if (player.wpm > (stat.bestWpm || 0)) {
-        stat.bestWpm = player.wpm;
-      }
-      if (player.accuracy > (stat.bestAccuracy || 0)) {
-        stat.bestAccuracy = player.accuracy;
-      }
-      if (player.accuracy >= 100.0 && player.progressPct >= 100.0) {
-        stat.perfectRunsCount += 1;
-      }
+        stat.totalCharsTyped = Number(stat.totalCharsTyped || 0) + Number(player.typedChars || 0);
+        stat.totalErrors = Number(stat.totalErrors || 0) + Number(player.errorCount || 0);
 
-      stat.totalCharsTyped = Number(stat.totalCharsTyped || 0) + Number(player.typedChars || 0);
-      stat.totalErrors = Number(stat.totalErrors || 0) + Number(player.errorCount || 0);
+        // Recalculate rolling average WPM & accuracy
+        const prevMatches = stat.totalMatches - 1;
+        stat.avgWpm = Math.round(((stat.avgWpm * prevMatches + player.wpm) / stat.totalMatches) * 10) / 10;
+        stat.avgAccuracy = Math.round(((stat.avgAccuracy * prevMatches + player.accuracy) / stat.totalMatches) * 10) / 10;
+      }
       stat.lastPlayedAt = now;
-
-      // Recalculate rolling average WPM & accuracy
-      const prevMatches = stat.totalMatches - 1;
-      stat.avgWpm = Math.round(((stat.avgWpm * prevMatches + player.wpm) / stat.totalMatches) * 10) / 10;
-      stat.avgAccuracy = Math.round(((stat.avgAccuracy * prevMatches + player.accuracy) / stat.totalMatches) * 10) / 10;
       await stat.save({ transaction: t });
 
       playerResultList.push({

@@ -26,13 +26,25 @@ const BATCH_SIZE = Number(process.env.OUTBOX_BATCH_SIZE ?? 50);
 
 let running = false;
 let timerId = null;
+let lastHeartbeatAt = null;
+let activeBatchPromise = null;
+
+function getStatus() {
+  return {
+    running,
+    lastHeartbeatAt,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    batchSize: BATCH_SIZE,
+  };
+}
 
 /**
  * Process one batch of pending outbox rows.
  */
 async function processBatch() {
+  lastHeartbeatAt = new Date();
   const rows = await outboxService.fetchPendingBatch(BATCH_SIZE);
-  if (rows.length === 0) return;
+  if (rows.length === 0) return 0;
 
   for (const row of rows) {
     try {
@@ -51,6 +63,7 @@ async function processBatch() {
       await outboxService.markFailed(row.id, err.message).catch(() => {});
     }
   }
+  return rows.length;
 }
 
 /**
@@ -59,10 +72,18 @@ async function processBatch() {
 function scheduleNext() {
   if (!running) return;
   timerId = setTimeout(async () => {
+    activeBatchPromise = (async () => {
+      try {
+        await processBatch();
+      } catch (err) {
+        console.error('[OutboxDispatcher] Unexpected error in processBatch', err.message);
+      } finally {
+        activeBatchPromise = null;
+      }
+    })();
+
     try {
-      await processBatch();
-    } catch (err) {
-      console.error('[OutboxDispatcher] Unexpected error in processBatch', err.message);
+      await activeBatchPromise;
     } finally {
       scheduleNext();
     }
@@ -75,6 +96,7 @@ function scheduleNext() {
 function start() {
   if (running) return;
   running = true;
+  lastHeartbeatAt = new Date();
   console.log(`[OutboxDispatcher] Started (interval=${POLL_INTERVAL_MS}ms, batch=${BATCH_SIZE})`);
   scheduleNext();
 }
@@ -82,14 +104,19 @@ function start() {
 /**
  * Graceful shutdown — waits for current batch to finish.
  */
-async function stop() {
+async function stop(timeoutMs = 10000) {
   running = false;
   if (timerId) {
     clearTimeout(timerId);
     timerId = null;
   }
+  if (activeBatchPromise) {
+    console.log('[OutboxDispatcher] Awaiting in-flight batch completion before stop...');
+    const timeout = new Promise((resolve) => setTimeout(resolve, timeoutMs));
+    await Promise.race([activeBatchPromise, timeout]);
+  }
   console.log('[OutboxDispatcher] Stopped');
 }
 
-// Expose processBatch for testing
-module.exports = { start, stop, processBatch };
+// Expose processBatch and getStatus for testing and health monitoring
+module.exports = { start, stop, processBatch, getStatus };

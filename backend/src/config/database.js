@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const env = require('./env');
+const { assertSafeTestDatabase } = require('./env');
 
 function buildDialectOptions() {
   if (!env.db.ssl) return {};
@@ -16,6 +17,9 @@ function buildDialectOptions() {
 
   return { ssl };
 }
+
+// Fail-closed guard: ensure tests NEVER connect to an unsafe or working/production database
+assertSafeTestDatabase(env);
 
 const sequelize = new Sequelize(env.db.name, env.db.user, env.db.password, {
   host: env.db.host,

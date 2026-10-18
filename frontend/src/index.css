@@ -467,6 +467,65 @@ html[data-workrank-reduce-motion="true"] :is(.public-auth-field-collapse, .publi
 .public-auth-form-heading p { margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
 .public-auth-form-panel input { min-height: 46px; }
 .public-auth-mobile-brand { display: none; }
+.google-auth-heading { display: block; min-height: 0; margin-bottom: 30px; }
+.google-auth-heading h1 { margin: 0; }
+.google-auth-heading p { margin-top: 10px; line-height: 1.6; }
+.google-auth-feedback-slot { min-height: 58px; margin-bottom: 8px; }
+.google-auth-feedback-slot > :last-child { margin-bottom: 0; }
+.google-auth-actions { padding-top: 28px; }
+.google-auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(24, 32, 48, .06);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+.google-auth-button:hover:not(:disabled) { background: #fbfbfa; border-color: #9ca3af; box-shadow: 0 4px 12px rgba(24, 32, 48, .1); transform: translateY(-1px); }
+.google-auth-button:active:not(:disabled) { transform: translateY(0); }
+.google-auth-button:disabled { cursor: not-allowed; opacity: .72; }
+.google-auth-caption { margin: 13px 0 0; text-align: center; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.google-auth-footer { display: flex; flex-direction: column; align-items: center; gap: 7px; margin-top: 26px; color: var(--text-secondary); font-size: 12px; line-height: 1.55; text-align: center; }
+.google-auth-footer a { color: var(--accent); font-weight: 600; text-underline-offset: 3px; }
+.google-auth-session { margin-bottom: 24px; padding: 14px 16px; border: 1px solid rgba(180, 83, 9, .25); border-radius: 8px; background: rgba(180, 83, 9, .06); }
+.google-auth-session-copy { display: flex; gap: 8px; align-items: flex-start; color: var(--text-primary); font-size: 13px; line-height: 1.5; }
+.google-auth-session-copy > svg { flex: 0 0 auto; color: var(--accent); }
+.google-auth-session-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.google-auth-secondary, .google-auth-logout { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 8px 12px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.google-auth-secondary { flex: 1; border: 1px solid var(--primary); background: var(--primary); color: var(--surface); }
+.google-auth-secondary:hover { background: var(--primary-hover); }
+.google-auth-logout { border: 1px solid rgba(185, 28, 28, .25); background: var(--surface); color: var(--danger); }
+.google-auth-logout:hover { background: rgba(185, 28, 28, .04); }
+.google-auth-notice, .google-auth-error { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; padding: 10px 14px; border: 1px solid; border-radius: 8px; font-size: 13px; font-weight: 500; line-height: 1.5; }
+.google-auth-notice { border-color: #bbf7d0; background: #f0fdf4; color: var(--success); }
+.google-auth-error { border-color: #fecaca; background: #fef2f2; color: var(--danger); }
+.google-auth-notice svg, .google-auth-error svg { flex: 0 0 auto; margin-top: 2px; }
+.google-auth-pending { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 100px; color: var(--text-secondary); font-size: 13px; }
+.google-auth-spinner { flex: 0 0 auto; animation: spin calc(var(--motion-slow) * 2) linear infinite; }
+.google-auth-link-form { display: flex; flex-direction: column; gap: 12px; }
+.google-auth-link-explainer { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 4px; padding: 12px; border: 1px solid rgba(180, 83, 9, .2); border-radius: 8px; background: rgba(180, 83, 9, .05); color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.google-auth-link-explainer svg { flex: 0 0 auto; margin-top: 1px; color: var(--accent); }
+.google-auth-link-explainer strong { color: var(--text-primary); overflow-wrap: anywhere; }
+.google-auth-link-form label { color: var(--text-primary); font-size: 12px; font-weight: 600; }
+.google-auth-link-form input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid rgba(0, 0, 0, .18); border-radius: 8px; background: var(--surface); color: var(--text-primary); font: inherit; font-size: 14px; }
+.google-auth-link-form .google-auth-button { margin-top: 4px; background: var(--primary); border-color: var(--primary); color: var(--surface); }
+.google-auth-link-form .google-auth-button:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+.google-auth-help { margin: 2px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.google-auth-restart { align-self: center; margin-top: 2px; border: 0; padding: 5px 8px; background: transparent; color: var(--accent); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.google-auth-restart:disabled { cursor: not-allowed; opacity: .6; }
+html[data-workrank-reduce-motion="true"] .google-auth-spinner { animation: none; }
+@media (prefers-reduced-motion: reduce) { .google-auth-spinner { animation: none; } }
 
 @media (min-width: 1600px) { .public-editorial-footer { padding-left: calc((100vw - 1456px) / 2); padding-right: calc((100vw - 1456px) / 2); } }
 @media (max-width: 1000px) {
@@ -11791,26 +11850,6 @@ html[data-workrank-contrast="true"] .profile-level-card {
   color: #0d9488;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   CAPITAL BOARD GAME (CỜ TỶ PHÚ) STYLING - MODERN 2D BOARD GAME
-   ───────────────────────────────────────────────────────────────────────── */
-.capital-board-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-@media (min-width: 1080px) {
-  .capital-board-layout {
-    grid-template-columns: minmax(0, 1fr) 340px;
-    align-items: start;
-    gap: 24px;
-  }
-}
-
 /* Outer Board Mat / Wooden & Slate Bezel Frame */
 .board-mat-frame {
   width: 100%;
@@ -12304,135 +12343,6 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
   }
 }
 
-/* =========================================================================
- * WORKRANK 2048 GAME STYLES & PHYSICAL TILE ANIMATIONS (Warm Editorial)
- * ========================================================================= */
-
-.wr-2048-board-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background: #e8e5dc;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  padding: clamp(8px, 2.2vw, 14px);
-  box-sizing: border-box;
-  user-select: none;
-  touch-action: none;
-  overflow: hidden;
-}
-
-.wr-2048-grid-bg {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: clamp(6px, 1.8vw, 12px);
-  width: 100%;
-  height: 100%;
-}
-
-.wr-2048-cell-slot {
-  background: #dedad0;
-  border-radius: 5px;
-  width: 100%;
-  height: 100%;
-}
-
-.wr-2048-tile-layer {
-  position: absolute;
-  top: clamp(8px, 2.2vw, 14px);
-  left: clamp(8px, 2.2vw, 14px);
-  right: clamp(8px, 2.2vw, 14px);
-  bottom: clamp(8px, 2.2vw, 14px);
-  pointer-events: none;
-}
-
-.wr-2048-tile {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: calc((100% - 3 * var(--wr-2048-gap, 10px)) / 4);
-  height: calc((100% - 3 * var(--wr-2048-gap, 10px)) / 4);
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'JetBrains Mono', 'Space Grotesk', -apple-system, monospace;
-  font-weight: 900;
-  user-select: none;
-  box-sizing: border-box;
-  will-change: transform;
-  transition: transform 130ms cubic-bezier(0.25, 1, 0.5, 1);
-  z-index: 10;
-}
-
-.wr-2048-tile.is-disappearing {
-  z-index: 5;
-  pointer-events: none;
-  opacity: 0.9;
-}
-
-.wr-2048-tile.is-new {
-  animation: wr2048TileSpawn 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  z-index: 12;
-}
-
-.wr-2048-tile.is-merged {
-  animation: wr2048TileMergePop 160ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  z-index: 15;
-}
-
-@keyframes wr2048TileSpawn {
-  0% {
-    transform: var(--wr-tile-transform) scale(0.4);
-    opacity: 0;
-  }
-  60% {
-    transform: var(--wr-tile-transform) scale(1.06);
-    opacity: 1;
-  }
-  100% {
-    transform: var(--wr-tile-transform) scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes wr2048TileMergePop {
-  0% {
-    transform: var(--wr-tile-transform) scale(0.85);
-  }
-  50% {
-    transform: var(--wr-tile-transform) scale(1.12);
-  }
-  100% {
-    transform: var(--wr-tile-transform) scale(1);
-  }
-}
-
-.wr-2048-score-gain {
-  position: absolute;
-  top: -10px;
-  right: 12px;
-  font-size: 13px;
-  font-weight: 900;
-  color: var(--accent);
-  font-family: 'JetBrains Mono', monospace;
-  pointer-events: none;
-  animation: wr2048ScoreFloat 600ms ease-out forwards;
-}
-
-@keyframes wr2048ScoreFloat {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-24px);
-  }
-}
-
 /* ── WorkRank Typing Battle: Team Duel & Arena Styles ── */
 .workrank-team-lanes-grid {
   display: grid;
@@ -12548,9 +12458,36 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
   }
 }
 
-/* ==========================================================================
-   CREATIVE CORNER & DRAWING GAME STYLES (WorkRank Creative Studio)
-   ========================================================================== */
+.onboarding-page { min-height: 100svh; display: grid; place-items: center; padding: 32px 20px; background: var(--surface-soft); }
+.onboarding-shell { width: min(760px, 100%); padding: clamp(24px, 5vw, 52px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-content); box-shadow: var(--shadow-card); }
+.onboarding-mark { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--accent); background: var(--accent-soft); margin-bottom: 16px; }
+.onboarding-kicker { margin: 0 0 8px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.onboarding-shell h1 { margin: 0; color: var(--text-primary); font-size: clamp(28px, 4vw, 42px); line-height: 1.12; }
+.onboarding-intro { max-width: 580px; margin: 12px 0 30px; color: var(--text-secondary); line-height: 1.55; }
+.onboarding-shell fieldset { border: 0; padding: 0; margin: 0; }
+.onboarding-shell legend { margin-bottom: 12px; color: var(--text-primary); font-size: 14px; font-weight: 700; }
+.onboarding-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.onboarding-role-card { position: relative; min-height: 112px; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-interactive); background: var(--surface); cursor: pointer; transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard); }
+.onboarding-role-card:hover { border-color: var(--accent); box-shadow: var(--shadow-card); }
+.onboarding-role-card.is-selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent); }
+.onboarding-role-card input { position: absolute; opacity: 0; pointer-events: none; }
+.onboarding-role-card > span:last-of-type { color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
+.onboarding-role-card > svg { position: absolute; top: 12px; right: 12px; color: var(--accent); }
+.onboarding-field { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; color: var(--text-primary); font-size: 14px; font-weight: 700; }
+.onboarding-field select { min-height: 46px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-interactive); background: var(--surface); color: var(--text-primary); font: inherit; }
+.onboarding-field select:focus-visible, .onboarding-role-card:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); outline-offset: 2px; }
+.onboarding-feedback { min-height: 38px; padding-top: 14px; }
+.onboarding-error { display: flex; align-items: center; gap: 8px; color: var(--danger); font-size: 13px; line-height: 1.4; }
+.onboarding-submit { width: 100%; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-interactive); background: var(--accent); color: var(--accent-foreground); font: inherit; font-weight: 700; cursor: pointer; transition: opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard); }
+.onboarding-submit:hover:not(:disabled) { transform: translateY(-1px); }
+.onboarding-submit:disabled { opacity: .55; cursor: not-allowed; }
+.onboarding-spinner { animation: spin 1s linear infinite; }
+.onboarding-note { margin: 16px 0 0; color: var(--text-muted); font-size: 12px; text-align: center; }
+@media (max-width: 640px) { .onboarding-page { padding: 16px 12px; place-items: start center; } .onboarding-shell { padding: 24px 18px; margin-top: 16px; } .onboarding-role-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 390px) { .onboarding-role-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce), [data-workrank-reduce-motion="true"] { .onboarding-role-card, .onboarding-submit { transition: none; } .onboarding-spinner { animation: none; } }
+
+
 
 /* --- Drawing Game Page --- */
 .drawing-game-shell {

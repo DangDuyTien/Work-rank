@@ -15,7 +15,7 @@ import {
   Gamepad2,
   Keyboard,
   Sparkles,
-  LayoutGrid,
+  Layers,
   Club,
   Palette,
   Target,
@@ -30,7 +30,7 @@ import {
  * - Overview (Dashboard, YouTube Analytics, Leaderboard)
  * - Competition (Arena, Grand Championship)
  * - Collaboration (Members / Teams)
- * - Games (Capital Board Game, 2048, Guess Quiz)
+ * - Games (Typing Battle, Sâm, Quiz, Drawing)
  * - Admin (People & Privileges, Teams & YouTube, Seasons, Grand Championship, Operations & Logs)
  * - Account (Profile, Settings)
  */
@@ -130,22 +130,6 @@ export const NAVIGATION_CONFIG = [
         badge: 'Mới',
         tourTarget: 'nav-typing-battle',
         description: 'Đấu trường thi đấu đánh máy tốc độ cao 1v1, 2v2, 3v3',
-      },
-      {
-        to: '/games/capital-board',
-        label: 'Cờ Tỷ Phú',
-        shortLabel: 'Cờ Tỷ Phú',
-        icon: Gamepad2,
-        tourTarget: 'nav-capital-board',
-        description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản',
-      },
-      {
-        to: '/games/2048',
-        label: '2048',
-        shortLabel: '2048',
-        icon: LayoutGrid,
-        tourTarget: 'nav-game-2048',
-        description: 'Trò chơi ghép số 2048 trí tuệ & bảng xếp hạng công ty',
       },
       {
         to: '/games/sam',
@@ -312,8 +296,6 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
   if (pathname.startsWith('/games/typing')) return 'WorkRank Typing Battle';
-  if (pathname.startsWith('/games/2048')) return 'Game 2048';
-  if (pathname.startsWith('/games/capital-board')) return 'Cờ Tỷ Phú';
   if (pathname.startsWith('/games/sam')) return 'Đánh Sâm';
   if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
   if (pathname.startsWith('/admin/kpi')) return 'Quản Lý KPI & Phòng Ban';

@@ -320,8 +320,9 @@ async function projectSeasonLeaderboard(seasonId, options = {}) {
   if (!season) return [];
 
   // Reuse pure domain leaderboard calculator
-  const leaderboardResult = await seasonService.getSeasonLeaderboard(seasonId);
+  const leaderboardResult = await seasonService.getSeasonLeaderboard(seasonId, { transaction });
   const rankings = leaderboardResult.rankings || [];
+  const authoritativeIds = new Set(rankings.map((row) => Number(row.teamId)));
 
   // Fetch existing projections to calculate trend
   const existingProjections = await SeasonLeaderboardProjection.findAll({
@@ -332,7 +333,14 @@ async function projectSeasonLeaderboard(seasonId, options = {}) {
   for (const p of existingProjections) {
     prevRankMap.set(Number(p.teamId), Number(p.rank));
   }
-
+  if (authoritativeIds.size === 0) {
+    await SeasonLeaderboardProjection.destroy({ where: { seasonId }, transaction });
+  } else {
+    await SeasonLeaderboardProjection.destroy({
+      where: { seasonId, teamId: { [Op.notIn]: [...authoritativeIds] } },
+      transaction,
+    });
+  }
   for (const row of rankings) {
     const prevRank = prevRankMap.get(Number(row.teamId));
     let trend = 'SAME';
@@ -381,8 +389,9 @@ async function projectSeasonIndividualLeaderboard(seasonId, options = {}) {
   if (!season) return [];
 
   // Reuse pure domain individual leaderboard calculator
-  const leaderboardResult = await seasonService.getSeasonIndividualLeaderboard(seasonId, { limit: 1000 });
+  const leaderboardResult = await seasonService.getSeasonIndividualLeaderboard(seasonId, { limit: 1000, transaction });
   const rankings = leaderboardResult.rankings || [];
+  const authoritativeIds = new Set(rankings.map((row) => Number(row.userId)));
 
   // Fetch existing projections to calculate trend
   const existingProjections = await SeasonIndividualLeaderboardProjection.findAll({
@@ -392,6 +401,14 @@ async function projectSeasonIndividualLeaderboard(seasonId, options = {}) {
   const prevRankMap = new Map();
   for (const p of existingProjections) {
     prevRankMap.set(Number(p.userId), Number(p.rank));
+  }
+  if (authoritativeIds.size === 0) {
+    await SeasonIndividualLeaderboardProjection.destroy({ where: { seasonId }, transaction });
+  } else {
+    await SeasonIndividualLeaderboardProjection.destroy({
+      where: { seasonId, userId: { [Op.notIn]: [...authoritativeIds] } },
+      transaction,
+    });
   }
 
   for (const row of rankings) {

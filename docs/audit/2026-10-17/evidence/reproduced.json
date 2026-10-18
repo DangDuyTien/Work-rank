@@ -1,0 +1,549 @@
+[
+  {
+    "name": "sam-create",
+    "value": {
+      "status": 500,
+      "data": {
+        "success": false,
+        "message": "Column 'has_declared_sam' cannot be null",
+        "correlationId": "f0e174f3-00e6-412f-83bf-e6308c927ee2"
+      }
+    }
+  },
+  {
+    "name": "capital-list",
+    "value": {
+      "status": 500,
+      "data": {
+        "success": false,
+        "message": "Column 'status' in order clause is ambiguous",
+        "correlationId": "6bee4dab-3ffd-4f9b-b09c-8804fea13279"
+      }
+    }
+  },
+  {
+    "name": "forged-production-event",
+    "value": {
+      "status": 201,
+      "data": {
+        "success": true,
+        "eventId": "737f883c-c2f3-4936-b025-875e1e0dbde3",
+        "isDuplicate": false,
+        "event": {
+          "eventId": "737f883c-c2f3-4936-b025-875e1e0dbde3",
+          "attemptCount": 0,
+          "idempotencyKey": "audit-20261017-forged",
+          "eventType": "VIDEO_APPROVED",
+          "sourceModule": "production",
+          "aggregateType": "video",
+          "aggregateId": 12345678,
+          "actorId": 35,
+          "teamId": null,
+          "occurredAt": "2026-10-17T01:14:58.611Z",
+          "receivedAt": "2026-10-17T01:14:58.611Z",
+          "payload": {
+            "videoId": 12345678,
+            "title": "Untitled Video",
+            "duration": 0,
+            "qualityScore": 100,
+            "category": "standard",
+            "seasonId": null
+          },
+          "schemaVersion": 1,
+          "correlationId": null,
+          "causationId": null,
+          "status": "PENDING",
+          "createdAt": "2026-10-17T01:14:58.612Z"
+        }
+      }
+    }
+  },
+  {
+    "name": "outbox-health-before",
+    "value": {
+      "status": 200,
+      "data": {
+        "status": "HEALTHY",
+        "summary": {
+          "totalEvents": 2,
+          "volume24h": 2,
+          "pendingCount": 2,
+          "processedCount": 0,
+          "failedCount": 0,
+          "ignoredCount": 0,
+          "failureRate": "0.00%"
+        },
+        "bySourceModule": {
+          "production": 2
+        },
+        "recentFailures": [],
+        "checkedAt": "2026-10-17T01:14:58.629Z",
+        "renderService": "ONLINE",
+        "lastHealthPingAt": null,
+        "healthPingCount": 0,
+        "serverStartedAt": "2026-10-17T01:13:56.480Z",
+        "uptimeSeconds": 62
+      }
+    }
+  },
+  {
+    "name": "2048-start-A",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "gameSessionId": "g2048_bca4cfc7abffb88d6f6397a0811afc5f",
+          "startedAt": 1792199698633,
+          "status": "ACTIVE"
+        }
+      }
+    }
+  },
+  {
+    "name": "2048-B-checkpoint-A",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "success": true,
+          "score": 128,
+          "bestScore": 128,
+          "highestTile": 16,
+          "isNewBest": false,
+          "status": "ACTIVE"
+        }
+      }
+    }
+  },
+  {
+    "name": "2048-A-after-B-checkpoint",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "gameSessionId": "g2048_bca4cfc7abffb88d6f6397a0811afc5f",
+          "score": 128,
+          "maxTile": 16,
+          "moves": 30,
+          "boardState": [
+            {
+              "id": 1,
+              "value": 16,
+              "row": 0,
+              "col": 0
+            }
+          ],
+          "startedAt": "2026-10-17T01:14:58.000Z",
+          "lastActivityAt": "2026-10-17T01:14:58.000Z",
+          "status": "ACTIVE"
+        }
+      }
+    }
+  },
+  {
+    "name": "2048-B-finalize-A",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "success": true,
+          "score": 128,
+          "bestScore": 128,
+          "highestTile": 16,
+          "isNewBest": false,
+          "alreadyProcessed": false,
+          "status": "COMPLETED"
+        }
+      }
+    }
+  },
+  {
+    "name": "2048-A-active-after-B-submit",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "gameSessionId": "g2048_0273d10adde27f88c63ee2bbde0119f6",
+          "score": 176,
+          "maxTile": 32,
+          "moves": 30,
+          "boardState": [
+            {
+              "id": 26,
+              "value": 4,
+              "row": 1,
+              "col": 3,
+              "isMerged": false,
+              "isNew": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 30,
+              "value": 2,
+              "row": 2,
+              "col": 3,
+              "isNew": false,
+              "isMerged": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 27,
+              "value": 32,
+              "row": 2,
+              "col": 2,
+              "isMerged": false,
+              "isNew": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 31,
+              "value": 8,
+              "row": 3,
+              "col": 3,
+              "isMerged": false,
+              "isNew": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 29,
+              "value": 4,
+              "row": 3,
+              "col": 2,
+              "isMerged": false,
+              "isNew": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 29,
+              "value": 8,
+              "row": 3,
+              "col": 1,
+              "isMerged": false,
+              "isNew": false,
+              "isDisappearing": false
+            },
+            {
+              "id": 32,
+              "value": 2,
+              "row": 1,
+              "col": 1,
+              "isNew": false,
+              "isMerged": false,
+              "isDisappearing": false
+            }
+          ],
+          "startedAt": "2026-10-16T14:22:42.000Z",
+          "lastActivityAt": "2026-10-16T14:33:38.000Z",
+          "status": "ACTIVE"
+        }
+      }
+    }
+  },
+  {
+    "name": "password-change",
+    "value": {
+      "status": 200
+    }
+  },
+  {
+    "name": "old-refresh-after-password-change",
+    "value": {
+      "status": 200,
+      "userId": 36
+    }
+  },
+  {
+    "name": "2048-new-user-stats-after-checkpoint",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "bestScore": 4,
+          "highestTile": 4,
+          "totalGames": 1,
+          "totalMoves": 1,
+          "rank": 3
+        }
+      }
+    }
+  },
+  {
+    "name": "2048-new-user-stats-after-submit",
+    "value": {
+      "status": 200,
+      "data": {
+        "success": true,
+        "data": {
+          "bestScore": 4,
+          "highestTile": 4,
+          "totalGames": 2,
+          "totalMoves": 2,
+          "rank": 3
+        }
+      }
+    }
+  },
+  {
+    "name": "operations-all-api-500",
+    "value": {
+      "text": "AA\nTRUNG TÂM KIỂM TOÁN & GIÁM SÁT VẬN HÀNH\nGiám Sát Vận Hành & Nhật Ký Kiểm Toán\n\nTheo dõi sức khỏe hệ thống, hàng đợi sự kiện YouTube/Production, độ trễ Bảng Xếp Hạng và tra cứu toàn bộ Audit Logs.\n\nTRẠNG THÁI VẬN HÀNH\nCần Chú Ý\nSỰ KIỆN XỬ LÝ\n0\nNHẬT KÝ AUDIT\n0\nSức Khỏe Hệ Thống\nNhật Ký Kiểm Toán (0)\nHàng Đợi Sự Kiện (0)\nĐồng Bộ Bảng Xếp Hạng\nAPI & Competition Engine\nHOẠT ĐỘNG\nTrạng thái worker:\nSẵn sàng (Online)\nXử lý sự kiện:\nRealtime Stream\nCơ chế chấm điểm:\nYouTube Views Direct\nDatabase & Outbox Queue\nTỐT\nHàng đợi Outbox chờ xử lý:\n0\nSự kiện lỗi (Failed):\n0\nBảo vệ bất biến (Immutable):\nBật (Append-Only)\nYouTube Data API v3\nKẾT NỐI\nTỷ lệ thành công:\n100%\nKênh lỗi đồng bộ:\n0\nĐồng bộ gần nhất:\nVừa xong\nWeb Service & Keep-Alive\nONLINE\nKeep-alive gần nhất:\nChưa có ping\nTổng lượt Ping nhận:\n0\nTần suất khuyến nghị:\n10 phút / lần\nTrạng Thái Bản Sao Bảng Xếp Hạng (Read Model Projections)\nProjections là bảng dữ liệu tối ưu đọc thời gian thực để người dùng xem bảng xếp hạng ngay lập tức.\nKiểm tra độ lệch (Drift Check)\nĐỘ LỆCH DỮ LIỆU (LAG / DRIFT)\n0% — Đồng bộ 100%\nBẢN GHI ĐỘI (SEASON PROJECTION)\n0\nBẢN GHI CÁ NHÂN (INDIVIDUAL PROJECTION)\n0\nSỔ CÁI ĐIỂM SỐ (SCORE LEDGER)\n0 bản ghi"
+    }
+  },
+  {
+    "name": "auth-me-500-clears-session",
+    "value": {
+      "url": "http://127.0.0.1:5173/login",
+      "storage": {
+        "token": false,
+        "refresh": false
+      }
+    }
+  },
+  {
+    "name": "chat-draft-after-navigation",
+    "value": {
+      "text": "Đồng nghiệp\n1 liên hệ\nĐANG HOẠT ĐỘNG\nAB\nAudit Bob\nNgoại tuyến\nThành Viên & Đội Nhóm",
+      "drafts": [
+        ""
+      ]
+    }
+  },
+  {
+    "name": "2048-before-navigation",
+    "value": {
+      "text": "Thoát\n2048\nGHÉP SỐ\nVán mới\nAA\nAudit Alice\nEditor\n2048\nGhép số. Tư duy. Chinh phục ô 2048.\nĐIỂM\n240\n+4\nKỶ LỤC\n240\nHẠNG\n#1\nNước đi: 45\n•\nÔ cao nhất: 32\nChơi lại\n4\n8\n4\n8\n8\n4\n8\n8\n32\n2\n2\n8\n2\n4\n4\n32\n4\n4\n16\n2\n8\n2\nCách chơi: Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Điểm số của bạn luôn được tự động lưu liên tục — bạn có thể an tâm thoát game bất kỳ lúc nào mà không sợ mất điểm!\nBXH 2048 TOÀN CÔNG TY\nAA\nVị trí của bạn:\nHạng #1\n240 pts\nAA\nAudit Alice\nEditor\nMax: 32\n176 pts\nAB\nAudit Bob\nEditor\nMax: 16\n128 pts\nAS\nAudit 2048 Stats\nEditor\nMax: 4\n4 pts"
+    }
+  },
+  {
+    "name": "2048-after-navigation",
+    "value": {
+      "text": "Thoát\n2048\nGHÉP SỐ\nVán mới\nAA\nAudit Alice\nEditor\n2048\nGhép số. Tư duy. Chinh phục ô 2048.\nĐIỂM\n176\nKỶ LỤC\n176\nHẠNG\n#1\nNước đi: 30\n•\nÔ cao nhất: 32\nChơi lại\n4\n2\n32\n8\n4\n8\n2\nCách chơi: Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Điểm số của bạn luôn được tự động lưu liên tục — bạn có thể an tâm thoát game bất kỳ lúc nào mà không sợ mất điểm!\nBXH 2048 TOÀN CÔNG TY\nAA\nVị trí của bạn:\nHạng #1\n176 pts\nAA\nAudit Alice\nEditor\nMax: 32\n176 pts\nAB\nAudit Bob\nEditor\nMax: 16\n128 pts\nAS\nAudit 2048 Stats\nEditor\nMax: 4\n4 pts"
+    }
+  },
+  {
+    "name": "2048-B-reads-A-local",
+    "value": {
+      "localA": {
+        "gameSessionId": "g2048_0273d10adde27f88c63ee2bbde0119f6",
+        "score": 252,
+        "moves": 42,
+        "tiles": [
+          {
+            "id": 24,
+            "value": 2,
+            "row": 0,
+            "col": 2,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 27,
+            "value": 32,
+            "row": 0,
+            "col": 1,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 12,
+            "value": 16,
+            "row": 1,
+            "col": 2,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 25,
+            "value": 16,
+            "row": 0,
+            "col": 3,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 21,
+            "value": 4,
+            "row": 0,
+            "col": 0,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 9,
+            "value": 8,
+            "row": 1,
+            "col": 1,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 20,
+            "value": 2,
+            "row": 2,
+            "col": 2,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 16,
+            "value": 4,
+            "row": 1,
+            "col": 3,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 26,
+            "value": 4,
+            "row": 3,
+            "col": 0,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          }
+        ],
+        "savedAt": 1792199765026
+      },
+      "localB": {
+        "gameSessionId": "g2048_0273d10adde27f88c63ee2bbde0119f6",
+        "score": 252,
+        "moves": 42,
+        "tiles": [
+          {
+            "id": 24,
+            "value": 2,
+            "row": 0,
+            "col": 2,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 27,
+            "value": 32,
+            "row": 0,
+            "col": 1,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 12,
+            "value": 16,
+            "row": 1,
+            "col": 2,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 25,
+            "value": 16,
+            "row": 0,
+            "col": 3,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 21,
+            "value": 4,
+            "row": 0,
+            "col": 0,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 9,
+            "value": 8,
+            "row": 1,
+            "col": 1,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 20,
+            "value": 2,
+            "row": 2,
+            "col": 2,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 16,
+            "value": 4,
+            "row": 1,
+            "col": 3,
+            "isMerged": false,
+            "isNew": false,
+            "isDisappearing": false
+          },
+          {
+            "id": 26,
+            "value": 4,
+            "row": 3,
+            "col": 0,
+            "isNew": false,
+            "isMerged": false,
+            "isDisappearing": false
+          }
+        ],
+        "savedAt": 1792199765026
+      },
+      "text": "Thoát\n2048\nGHÉP SỐ\nVán mới\nAB\nAudit Bob\nEditor\n2048\nGhép số. Tư duy. Chinh phục ô 2048.\nĐIỂM\n252\nKỶ LỤC\n128\nHẠNG\n#2\nNước đi: 42\n•\nÔ cao nhất: 32\nChơi lại\n2\n32\n16\n16\n4\n8\n2\n4\n4\nCách chơi: Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Điểm số của bạn luôn được tự động lưu liên tục — bạn có thể an tâm thoát game bất kỳ lúc nào mà không sợ mất điểm!\nBXH 2048 TOÀN CÔNG TY\nAB\nVị trí của bạn:\nHạng #2\n128 pts\nAA\nAudit Alice\nEditor\nMax: 32\n252 pts\nAB\nAudit Bob\nEditor\nMax: 16\n128 pts\nAS\nAudit 2048 Stats\nEditor\nMax: 4\n4 pts"
+    }
+  },
+  {
+    "name": "drawing-navigation",
+    "value": {
+      "empty": 0,
+      "drawn": 1077,
+      "after": 0
+    }
+  },
+  {
+    "name": "outbox-health-after",
+    "value": {
+      "status": 200,
+      "data": {
+        "status": "HEALTHY",
+        "summary": {
+          "totalEvents": 2,
+          "volume24h": 2,
+          "pendingCount": 2,
+          "processedCount": 0,
+          "failedCount": 0,
+          "ignoredCount": 0,
+          "failureRate": "0.00%"
+        },
+        "bySourceModule": {
+          "production": 2
+        },
+        "recentFailures": [],
+        "checkedAt": "2026-10-17T01:16:08.652Z",
+        "renderService": "ONLINE",
+        "lastHealthPingAt": null,
+        "healthPingCount": 0,
+        "serverStartedAt": "2026-10-17T01:13:56.480Z",
+        "uptimeSeconds": 132
+      }
+    }
+  }
+]

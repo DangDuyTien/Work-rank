@@ -86,30 +86,6 @@ module.exports = {
       // Seed standard games
       await queryInterface.bulkInsert('game_catalogs', [
         {
-          game_key: 'capital_board',
-          name: 'Cờ Tỷ Phú',
-          status: 'AVAILABLE',
-          enabled: true,
-          sort_order: 1,
-          description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.',
-          icon: 'Gamepad2',
-          route: '/games/capital-board',
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
-          game_key: 'game_2048',
-          name: '2048',
-          status: 'AVAILABLE',
-          enabled: true,
-          sort_order: 2,
-          description: 'Trò chơi ghép số 2048 trí tuệ, thử thách kỹ năng tư duy và bảng xếp hạng công ty.',
-          icon: 'LayoutGrid',
-          route: '/games/2048',
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
           game_key: 'sam',
           name: 'Đánh Sâm',
           status: 'AVAILABLE',

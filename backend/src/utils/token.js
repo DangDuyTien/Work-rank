@@ -2,16 +2,28 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const env = require('../config/env');
 
-function signAccessToken(user) {
-  return jwt.sign({ sub: user.id, role: user.role, teamId: user.teamId }, env.jwtSecret, {
-    expiresIn: env.jwtExpiresIn,
-  });
+function signAccessToken(user, sessionId = crypto.randomUUID()) {
+  return jwt.sign(
+    {
+      sub: user.id,
+      role: user.role,
+      teamId: user.teamId,
+      tokenVersion: Number(user?.tokenVersion || 0),
+      jti: sessionId,
+    },
+    env.jwtSecret,
+    { expiresIn: env.jwtExpiresIn },
+  );
 }
 
-function signRefreshToken(user) {
-  return jwt.sign({ sub: user.id, tokenType: 'refresh' }, env.refreshTokenSecret, {
-    expiresIn: env.refreshTokenExpiresIn,
-  });
+function signRefreshToken(user, sessionId = crypto.randomUUID()) {
+  return jwt.sign(
+    { sub: user.id, tokenType: 'refresh', tokenVersion: Number(user?.tokenVersion || 0), jti: sessionId },
+    env.refreshTokenSecret,
+    {
+      expiresIn: env.refreshTokenExpiresIn,
+    }
+  );
 }
 
 function hashToken(token) {

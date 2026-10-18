@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { Op } = require('sequelize');
 const { User, UserProfilePreference, Friendship, CompetitionUserSummary, ScoreLedger, CompetitionEvent, UserRecognition } = require('../models');
-const { weekBounds, scoreHistory, compareWeekly } = require('./ranking/weeklyRanking');
+const { rangeBounds, scoreHistory, compareWeekly } = require('./ranking/weeklyRanking');
 const { resolveUserPresence } = require('./userPresence.service');
 const presence = require('./presence.service');
 const cache = require('./cache.service');
@@ -165,10 +165,10 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
     ],
   });
 
-  let weeklyScores = new Map();
+  let rangeScores = new Map();
   let mvpCounts = new Map();
-  if (normalizedRange === 'week') {
-    const { start, end } = weekBounds();
+  if (['today', 'week', 'month', 'year'].includes(normalizedRange)) {
+    const { start, end } = rangeBounds(normalizedRange);
     const entries = await ScoreLedger.findAll({
       where: { userId: { [Op.in]: allUsers.map((u) => u.id) }, createdAt: { [Op.gte]: start, [Op.lt]: end } },
       attributes: ['userId', 'pointsDelta', 'createdAt'],
@@ -181,18 +181,20 @@ async function leaderboardUncached({ range = 'today', teamId, limit = 20, page =
       if (!histories.has(id)) histories.set(id, []);
       histories.get(id).push(entry);
     }
-    weeklyScores = new Map([...histories].map(([id, history]) => [id, scoreHistory(history)]));
-    const awards = await UserRecognition.findAll({ where: { awardType: 'mvp' }, attributes: ['userId'], raw: true });
-    for (const award of awards) {
-      const id = String(award.userId);
-      mvpCounts.set(id, (mvpCounts.get(id) || 0) + 1);
+    rangeScores = new Map([...histories].map(([id, history]) => [id, scoreHistory(history)]));
+    if (normalizedRange === 'week') {
+      const awards = await UserRecognition.findAll({ where: { awardType: 'mvp' }, attributes: ['userId'], raw: true });
+      for (const award of awards) {
+        const id = String(award.userId);
+        mvpCounts.set(id, (mvpCounts.get(id) || 0) + 1);
+      }
     }
   }
 
   const rankedAll = allUsers
     .map((u, i) => mapLeaderboardUser(u, i))
-    .map((u) => normalizedRange === 'week' ? {
-      ...u, ...(weeklyScores.get(String(u.id)) || { score: 0, reachedAt: Infinity }),
+    .map((u) => ['today', 'week', 'month', 'year'].includes(normalizedRange) ? {
+      ...u, ...(rangeScores.get(String(u.id)) || { score: 0, reachedAt: Infinity }),
       mvpCount: mvpCounts.get(String(u.id)) || 0,
     } : u)
     .sort(normalizedRange === 'week' ? compareWeekly : (a, b) => b.score - a.score || a.name.localeCompare(b.name))

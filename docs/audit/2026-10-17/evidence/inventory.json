@@ -1,0 +1,3599 @@
+{
+  "commit": "cd1523c7bf0b0352ff768a03dbf1b27c99798133",
+  "frontendSourceFiles": 115,
+  "models": 74,
+  "routes": [
+    {
+      "path": "/",
+      "line": 167,
+      "declaration": "<Route path=\"/\" element={<Home />} />"
+    },
+    {
+      "path": "/login",
+      "line": 168,
+      "declaration": "<Route path=\"/login\" element={<Login />} />"
+    },
+    {
+      "path": "/dashboard",
+      "line": 176,
+      "declaration": "<Route path=\"/dashboard\" element={<Dashboard />} />"
+    },
+    {
+      "path": "/kpi",
+      "line": 177,
+      "declaration": "<Route path=\"/kpi\" element={<CanonicalRedirect to=\"/dashboard\" />} />"
+    },
+    {
+      "path": "/activity",
+      "line": 178,
+      "declaration": "<Route path=\"/activity\" element={<Navigate to=\"/dashboard\" replace />} />"
+    },
+    {
+      "path": "/tracking",
+      "line": 179,
+      "declaration": "<Route path=\"/tracking\" element={<Navigate to=\"/dashboard\" replace />} />"
+    },
+    {
+      "path": "/productivity",
+      "line": 180,
+      "declaration": "<Route path=\"/productivity\" element={<Navigate to=\"/dashboard\" replace />} />"
+    },
+    {
+      "path": "/activity-ranking",
+      "line": 181,
+      "declaration": "<Route path=\"/activity-ranking\" element={<CanonicalRedirect to=\"/leaderboard\" ranking />} />"
+    },
+    {
+      "path": "/activity-leaderboard",
+      "line": 182,
+      "declaration": "<Route path=\"/activity-leaderboard\" element={<CanonicalRedirect to=\"/leaderboard\" ranking />} />"
+    },
+    {
+      "path": "/youtube",
+      "line": 183,
+      "declaration": "<Route path=\"/youtube\" element={<YouTubeOverview />} />"
+    },
+    {
+      "path": "/arena",
+      "line": 184,
+      "declaration": "<Route path=\"/arena\" element={<Arena />} />"
+    },
+    {
+      "path": "/grand",
+      "line": 185,
+      "declaration": "<Route path=\"/grand\" element={<GrandHub />} />"
+    },
+    {
+      "path": "/leaderboard",
+      "line": 186,
+      "declaration": "<Route path=\"/leaderboard\" element={<Leaderboard />} />"
+    },
+    {
+      "path": "/rankings",
+      "line": 187,
+      "declaration": "<Route path=\"/rankings\" element={<CanonicalRedirect to=\"/leaderboard\" ranking />} />"
+    },
+    {
+      "path": "/admin/kpi",
+      "line": 188,
+      "declaration": "<Route path=\"/admin/kpi\" element={<AdminRoute><AdminKpi /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/departments",
+      "line": 189,
+      "declaration": "<Route path=\"/admin/departments\" element={<Navigate to=\"/admin/kpi\" replace />} />"
+    },
+    {
+      "path": "/groups",
+      "line": 191,
+      "declaration": "<Route path=\"/groups\" element={<Navigate to=\"/friends\" replace />} />"
+    },
+    {
+      "path": "/friends",
+      "line": 192,
+      "declaration": "<Route path=\"/friends\" element={<Friends />} />"
+    },
+    {
+      "path": "/games",
+      "line": 193,
+      "declaration": "<Route path=\"/games\" element={<GameHub />} />"
+    },
+    {
+      "path": "/games/guess",
+      "line": 194,
+      "declaration": "<Route path=\"/games/guess\" element={<Navigate to=\"/games/quiz\" replace />} />"
+    },
+    {
+      "path": "/games/2048",
+      "line": 195,
+      "declaration": "<Route path=\"/games/2048\" element={<Game2048 />} />"
+    },
+    {
+      "path": "/games/capital-board",
+      "line": 196,
+      "declaration": "<Route path=\"/games/capital-board\" element={<CapitalBoardGame />} />"
+    },
+    {
+      "path": "/games/capital-board/room/:roomId",
+      "line": 197,
+      "declaration": "<Route path=\"/games/capital-board/room/:roomId\" element={<CapitalBoardGame />} />"
+    },
+    {
+      "path": "/games/quiz",
+      "line": 198,
+      "declaration": "<Route path=\"/games/quiz\" element={<QuizGame />} />"
+    },
+    {
+      "path": "/games/quiz/room/:roomId",
+      "line": 199,
+      "declaration": "<Route path=\"/games/quiz/room/:roomId\" element={<QuizGame />} />"
+    },
+    {
+      "path": "/games/sam",
+      "line": 200,
+      "declaration": "<Route path=\"/games/sam\" element={<SamGame />} />"
+    },
+    {
+      "path": "/games/sam/room/:roomId",
+      "line": 201,
+      "declaration": "<Route path=\"/games/sam/room/:roomId\" element={<SamGame />} />"
+    },
+    {
+      "path": "/games/typing",
+      "line": 202,
+      "declaration": "<Route path=\"/games/typing\" element={<TypingBattle />} />"
+    },
+    {
+      "path": "/games/typing/room/:roomId",
+      "line": 203,
+      "declaration": "<Route path=\"/games/typing/room/:roomId\" element={<TypingBattle />} />"
+    },
+    {
+      "path": "/games/typing/spectate/:roomId",
+      "line": 204,
+      "declaration": "<Route path=\"/games/typing/spectate/:roomId\" element={<TypingBattle />} />"
+    },
+    {
+      "path": "/games/drawing",
+      "line": 205,
+      "declaration": "<Route path=\"/games/drawing\" element={<DrawingGame />} />"
+    },
+    {
+      "path": "/admin/quiz",
+      "line": 206,
+      "declaration": "<Route path=\"/admin/quiz\" element={<AdminRoute><AdminQuiz /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/games/quiz",
+      "line": 207,
+      "declaration": "<Route path=\"/admin/games/quiz\" element={<Navigate to=\"/admin/quiz\" replace />} />"
+    },
+    {
+      "path": "/admin/privileges",
+      "line": 208,
+      "declaration": "<Route path=\"/admin/privileges\" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/teams-youtube",
+      "line": 209,
+      "declaration": "<Route path=\"/admin/teams-youtube\" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/competition",
+      "line": 210,
+      "declaration": "<Route path=\"/admin/competition\" element={<Navigate to=\"/admin/competition/seasons\" replace />} />"
+    },
+    {
+      "path": "/admin/competition/rules",
+      "line": 211,
+      "declaration": "<Route path=\"/admin/competition/rules\" element={<AdminRoute><CompetitionAdmin /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/competition/seasons",
+      "line": 212,
+      "declaration": "<Route path=\"/admin/competition/seasons\" element={<AdminRoute><AdminSeasons /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/competition/grand",
+      "line": 213,
+      "declaration": "<Route path=\"/admin/competition/grand\" element={<AdminRoute><AdminGrand /></AdminRoute>} />"
+    },
+    {
+      "path": "/admin/operations",
+      "line": 214,
+      "declaration": "<Route path=\"/admin/operations\" element={<AdminRoute><AdminOperations /></AdminRoute>} />"
+    },
+    {
+      "path": "/settings",
+      "line": 215,
+      "declaration": "<Route path=\"/settings\" element={<Settings />} />"
+    },
+    {
+      "path": "/users/:id",
+      "line": 216,
+      "declaration": "<Route path=\"/users/:id\" element={<UserDetail />} />"
+    },
+    {
+      "path": "*",
+      "line": 218,
+      "declaration": "<Route path=\"*\" element={<Navigate to=\"/\" replace />} />"
+    }
+  ],
+  "apiDeclarations": [
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 14,
+      "method": "POST",
+      "path": "/register"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 15,
+      "method": "POST",
+      "path": "/login"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 16,
+      "method": "POST",
+      "path": "/refresh-token"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 17,
+      "method": "POST",
+      "path": "/logout"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/me"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 19,
+      "method": "PATCH",
+      "path": "/me"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 24,
+      "method": "PATCH",
+      "path": "/password"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 31,
+      "method": "PATCH",
+      "path": "/email"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 37,
+      "method": "POST",
+      "path": "/email"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 43,
+      "method": "POST",
+      "path": "/change-email"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 50,
+      "method": "DELETE",
+      "path": "/me/account"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 51,
+      "method": "POST",
+      "path": "/me/delete"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 15,
+      "method": "GET",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/active-room"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/rooms/:id"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 18,
+      "method": "POST",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 19,
+      "method": "POST",
+      "path": "/practice"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/rooms/:id/join"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/rooms/:id/leave"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 22,
+      "method": "POST",
+      "path": "/rooms/:id/bots"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 23,
+      "method": "DELETE",
+      "path": "/rooms/:id/bots/:botUserId"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 24,
+      "method": "POST",
+      "path": "/rooms/:id/start"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 27,
+      "method": "POST",
+      "path": "/rooms/:id/roll"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 28,
+      "method": "POST",
+      "path": "/rooms/:id/buy"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 29,
+      "method": "POST",
+      "path": "/rooms/:id/end-turn"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 32,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 33,
+      "method": "GET",
+      "path": "/history"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 9,
+      "method": "GET",
+      "path": "/unread-counts"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/:friendId/messages"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 11,
+      "method": "POST",
+      "path": "/:friendId/messages"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 12,
+      "method": "POST",
+      "path": "/:friendId/read"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 11,
+      "method": "GET",
+      "path": "/public/spotlight"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 12,
+      "method": "GET",
+      "path": "/public/spotlight/archives"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 13,
+      "method": "GET",
+      "path": "/public/members"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/my-state"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/my-score-history"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/seasons/active"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 19,
+      "method": "GET",
+      "path": "/seasons/:id"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 20,
+      "method": "GET",
+      "path": "/seasons/:id/rules"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 21,
+      "method": "GET",
+      "path": "/seasons/:id/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 22,
+      "method": "GET",
+      "path": "/seasons/:id/individual-leaderboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 23,
+      "method": "GET",
+      "path": "/seasons/:id/challenges"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 24,
+      "method": "GET",
+      "path": "/grand/current"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 25,
+      "method": "GET",
+      "path": "/grand/:id/standings"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 26,
+      "method": "GET",
+      "path": "/grand/:id/individual-standings"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 27,
+      "method": "GET",
+      "path": "/grand/:id/timeline"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 28,
+      "method": "GET",
+      "path": "/grand/:id/teams/:teamId/journey"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 29,
+      "method": "GET",
+      "path": "/top-performers"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 30,
+      "method": "GET",
+      "path": "/users/:id/competition-profile"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 33,
+      "method": "GET",
+      "path": "/admin/states"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 34,
+      "method": "GET",
+      "path": "/admin/states/:id"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 35,
+      "method": "GET",
+      "path": "/admin/score-inspect/:userId"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 36,
+      "method": "GET",
+      "path": "/admin/seasons"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 37,
+      "method": "POST",
+      "path": "/admin/seasons"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 38,
+      "method": "PATCH",
+      "path": "/admin/seasons/:id/status"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 39,
+      "method": "POST",
+      "path": "/admin/seasons/:id/teams"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 42,
+      "method": "GET",
+      "path": "/admin/mvp/seasons"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 43,
+      "method": "GET",
+      "path": "/admin/mvp/preview/:seasonId"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 44,
+      "method": "POST",
+      "path": "/admin/mvp/award"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 47,
+      "method": "GET",
+      "path": "/admin/spotlight"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 48,
+      "method": "POST",
+      "path": "/admin/spotlight"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 51,
+      "method": "GET",
+      "path": "/admin/spotlight/archives"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 52,
+      "method": "POST",
+      "path": "/admin/spotlight/archives"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 53,
+      "method": "DELETE",
+      "path": "/admin/spotlight/archives/:year"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 57,
+      "method": "GET",
+      "path": "/admin/rules"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 58,
+      "method": "GET",
+      "path": "/admin/rule-sets"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 59,
+      "method": "POST",
+      "path": "/admin/rules"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 60,
+      "method": "POST",
+      "path": "/admin/rule-sets"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 61,
+      "method": "GET",
+      "path": "/admin/rules/:id"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 62,
+      "method": "PUT",
+      "path": "/admin/rules/:id"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 63,
+      "method": "POST",
+      "path": "/admin/rules/:id/archive"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 64,
+      "method": "POST",
+      "path": "/admin/rules/:id/versions"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 65,
+      "method": "POST",
+      "path": "/admin/rule-sets/:id/versions"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 66,
+      "method": "GET",
+      "path": "/admin/rules/:id/versions/:versionId"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 67,
+      "method": "PUT",
+      "path": "/admin/rules/:id/versions/:versionId"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 68,
+      "method": "POST",
+      "path": "/admin/rules/:id/versions/:versionId/duplicate"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 69,
+      "method": "POST",
+      "path": "/admin/rules/:id/versions/:versionId/validate"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 70,
+      "method": "POST",
+      "path": "/admin/rules/:id/versions/:versionId/publish"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 71,
+      "method": "POST",
+      "path": "/admin/rule-sets/versions/:versionId/publish"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 72,
+      "method": "POST",
+      "path": "/admin/rules/simulate"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 73,
+      "method": "POST",
+      "path": "/admin/rules/:id/simulate"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 74,
+      "method": "GET",
+      "path": "/admin/rules/:id/diff/:fromVersionId/:toVersionId"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 76,
+      "method": "POST",
+      "path": "/admin/seasons/:id/challenges"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 77,
+      "method": "GET",
+      "path": "/admin/audit-logs"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 79,
+      "method": "GET",
+      "path": "/admin/grand"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 80,
+      "method": "POST",
+      "path": "/admin/grand"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 81,
+      "method": "PATCH",
+      "path": "/admin/grand/:id/status"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 82,
+      "method": "POST",
+      "path": "/admin/grand/:id/seasons/:seasonId/link"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 83,
+      "method": "POST",
+      "path": "/admin/grand/:id/seasons/:seasonId/settle"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 84,
+      "method": "POST",
+      "path": "/admin/grand/:id/reconcile"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 87,
+      "method": "GET",
+      "path": "/dashboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 88,
+      "method": "GET",
+      "path": "/teams/:teamId/summary"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 89,
+      "method": "GET",
+      "path": "/activity"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 90,
+      "method": "GET",
+      "path": "/company-overview"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 91,
+      "method": "GET",
+      "path": "/projections/seasons/:id/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 92,
+      "method": "GET",
+      "path": "/projections/grand/:id/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 95,
+      "method": "GET",
+      "path": "/admin/dashboard"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 96,
+      "method": "GET",
+      "path": "/admin/employee-excellence"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 97,
+      "method": "GET",
+      "path": "/admin/projections/status"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 98,
+      "method": "GET",
+      "path": "/admin/projections/consistency"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 99,
+      "method": "POST",
+      "path": "/admin/projections/rebuild"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 102,
+      "method": "GET",
+      "path": "/events/:eventId/trace"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 103,
+      "method": "GET",
+      "path": "/contracts"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 104,
+      "method": "POST",
+      "path": "/events/publish"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 105,
+      "method": "POST",
+      "path": "/integration/production/video-action"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 106,
+      "method": "POST",
+      "path": "/integration/youtube/milestone"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 107,
+      "method": "POST",
+      "path": "/integration/community/kudos"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 109,
+      "method": "GET",
+      "path": "/admin/integration/health"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 110,
+      "method": "GET",
+      "path": "/admin/integration/events"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 111,
+      "method": "POST",
+      "path": "/admin/events/:eventId/retry"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 7,
+      "method": "GET",
+      "path": "/overview"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 8,
+      "method": "GET",
+      "path": "/realtime-users"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 9,
+      "method": "GET",
+      "path": "/team-summary"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/heatmap"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 11,
+      "method": "GET",
+      "path": "/settings"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 12,
+      "method": "PATCH",
+      "path": "/settings"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 15,
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/user/:userId"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/:id"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/:id/like"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 22,
+      "method": "DELETE",
+      "path": "/:id"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 9,
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/requests"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 11,
+      "method": "POST",
+      "path": "/requests"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 12,
+      "method": "POST",
+      "path": "/requests/:id/accept"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 13,
+      "method": "POST",
+      "path": "/requests/:id/decline"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 14,
+      "method": "DELETE",
+      "path": "/requests/:id"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 15,
+      "method": "DELETE",
+      "path": "/:userId"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 15,
+      "method": "POST",
+      "path": "/start"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 16,
+      "method": "POST",
+      "path": "/checkpoint"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 17,
+      "method": "POST",
+      "path": "/submit"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/active-session"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 21,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 22,
+      "method": "GET",
+      "path": "/my-stats"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 11,
+      "method": "GET",
+      "path": "/list"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 12,
+      "method": "GET",
+      "path": "/:gameKey"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 15,
+      "method": "PATCH",
+      "path": "/status/:gameKey"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 16,
+      "method": "PATCH",
+      "path": "/:gameKey"
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 11,
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 12,
+      "method": "GET",
+      "path": "/all"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 6,
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 7,
+      "method": "GET",
+      "path": "/health/live"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 8,
+      "method": "GET",
+      "path": "/health/ready"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 32,
+      "method": "DELETE",
+      "path": "/admin/users/:id"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/my-kpis"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 13,
+      "method": "GET",
+      "path": "/departments"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 14,
+      "method": "POST",
+      "path": "/departments"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 15,
+      "method": "PUT",
+      "path": "/departments/:id"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/definitions"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 19,
+      "method": "POST",
+      "path": "/definitions"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 20,
+      "method": "PUT",
+      "path": "/definitions/:id"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 21,
+      "method": "PATCH",
+      "path": "/definitions/:id/toggle"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 22,
+      "method": "DELETE",
+      "path": "/definitions/:id"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 25,
+      "method": "GET",
+      "path": "/periods"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 26,
+      "method": "POST",
+      "path": "/periods"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 29,
+      "method": "GET",
+      "path": "/results"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 30,
+      "method": "POST",
+      "path": "/results"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 31,
+      "method": "GET",
+      "path": "/results/history"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 52,
+      "method": "GET",
+      "path": "/production/rules"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 53,
+      "method": "GET",
+      "path": "/production/versions"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 76,
+      "method": "POST",
+      "path": "/production/calculate/editor"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 77,
+      "method": "POST",
+      "path": "/production/calculate/content"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 80,
+      "method": "GET",
+      "path": "/production/history"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 7,
+      "method": "GET",
+      "path": "/public/weekly"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 32,
+      "method": "GET",
+      "path": "/daily"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 33,
+      "method": "GET",
+      "path": "/weekly"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 34,
+      "method": "GET",
+      "path": "/monthly"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 35,
+      "method": "GET",
+      "path": "/yearly"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 36,
+      "method": "GET",
+      "path": "/friends"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 37,
+      "method": "GET",
+      "path": "/team/:teamId"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 15,
+      "method": "POST",
+      "path": "/upload-image"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 16,
+      "method": "POST",
+      "path": "/upload-audio"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 19,
+      "method": "GET",
+      "path": "/questions"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/questions"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/questions/reorder"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 22,
+      "method": "GET",
+      "path": "/questions/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 23,
+      "method": "PUT",
+      "path": "/questions/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 24,
+      "method": "POST",
+      "path": "/questions/:id/duplicate"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 25,
+      "method": "DELETE",
+      "path": "/questions/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 28,
+      "method": "GET",
+      "path": "/sets"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 29,
+      "method": "POST",
+      "path": "/sets"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 30,
+      "method": "GET",
+      "path": "/sets/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 31,
+      "method": "PUT",
+      "path": "/sets/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 32,
+      "method": "POST",
+      "path": "/sets/:id/duplicate"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 33,
+      "method": "DELETE",
+      "path": "/sets/:id"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 34,
+      "method": "GET",
+      "path": "/sets/:id/export"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 37,
+      "method": "GET",
+      "path": "/share/:code"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 38,
+      "method": "POST",
+      "path": "/import/validate"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 39,
+      "method": "POST",
+      "path": "/import/confirm"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 15,
+      "method": "GET",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/active-room"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/rooms/:id"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 18,
+      "method": "POST",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 19,
+      "method": "POST",
+      "path": "/rooms/:id/join"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/rooms/:id/leave"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/rooms/:id/start"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 24,
+      "method": "POST",
+      "path": "/rooms/:id/answer"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 27,
+      "method": "GET",
+      "path": "/sets"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 30,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 31,
+      "method": "GET",
+      "path": "/my-stats"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/overview"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/teams"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/individuals"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 19,
+      "method": "GET",
+      "path": "/seasons"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 20,
+      "method": "GET",
+      "path": "/grands"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 21,
+      "method": "GET",
+      "path": "/youtube"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 22,
+      "method": "GET",
+      "path": "/top-performers"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 13,
+      "method": "GET",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 14,
+      "method": "POST",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 15,
+      "method": "POST",
+      "path": "/practice"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 16,
+      "method": "GET",
+      "path": "/rooms/active"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 17,
+      "method": "GET",
+      "path": "/rooms/:id"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 18,
+      "method": "POST",
+      "path": "/rooms/:id/join"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 19,
+      "method": "POST",
+      "path": "/rooms/:id/leave"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/rooms/:id/ready"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/rooms/:id/bots"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 22,
+      "method": "POST",
+      "path": "/rooms/:id/fill-bots"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 25,
+      "method": "POST",
+      "path": "/rooms/:id/start"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 26,
+      "method": "POST",
+      "path": "/rooms/:id/declare-sam"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 27,
+      "method": "POST",
+      "path": "/rooms/:id/play-cards"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 28,
+      "method": "POST",
+      "path": "/rooms/:id/pass"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 31,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 32,
+      "method": "GET",
+      "path": "/my-stats"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 35,
+      "method": "POST",
+      "path": "/admin/bot-room"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 36,
+      "method": "POST",
+      "path": "/bot-room"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 37,
+      "method": "GET",
+      "path": "/admin/bot-rooms"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 38,
+      "method": "POST",
+      "path": "/admin/rooms/:id/start"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 39,
+      "method": "POST",
+      "path": "/admin/rooms/:id/pause"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 40,
+      "method": "POST",
+      "path": "/admin/rooms/:id/resume"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 41,
+      "method": "POST",
+      "path": "/admin/rooms/:id/step"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 42,
+      "method": "POST",
+      "path": "/admin/rooms/:id/restart"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 43,
+      "method": "POST",
+      "path": "/admin/rooms/:id/fill-bots"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 44,
+      "method": "POST",
+      "path": "/admin/rooms/:id/stop"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 45,
+      "method": "DELETE",
+      "path": "/admin/rooms/:id"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 46,
+      "method": "GET",
+      "path": "/admin/rooms/:id/debug"
+    },
+    {
+      "file": "backend/src/routes/tradingview.routes.js",
+      "line": 7,
+      "method": "GET",
+      "path": "/candles"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 10,
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 13,
+      "method": "GET",
+      "path": "/my-stats"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 14,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 15,
+      "method": "GET",
+      "path": "/challenges"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 19,
+      "method": "GET",
+      "path": "/active-room"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 20,
+      "method": "POST",
+      "path": "/rooms"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/matchmaking/quick"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 22,
+      "method": "GET",
+      "path": "/rooms/:roomId"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 23,
+      "method": "GET",
+      "path": "/rooms/:roomId/spectators"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 24,
+      "method": "POST",
+      "path": "/rooms/:roomId/join"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 25,
+      "method": "POST",
+      "path": "/rooms/:roomId/switch-team"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 26,
+      "method": "POST",
+      "path": "/rooms/:roomId/leave"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 27,
+      "method": "POST",
+      "path": "/rooms/:roomId/ready"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 28,
+      "method": "POST",
+      "path": "/rooms/:roomId/start"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 29,
+      "method": "POST",
+      "path": "/rooms/:roomId/reset"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 32,
+      "method": "POST",
+      "path": "/rooms/:roomId/progress"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 33,
+      "method": "POST",
+      "path": "/rooms/:roomId/finish"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 34,
+      "method": "POST",
+      "path": "/practice/finish"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 8,
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 9,
+      "method": "GET",
+      "path": "/:id/profile-preferences"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 10,
+      "method": "PATCH",
+      "path": "/:id/profile-preferences"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 11,
+      "method": "PUT",
+      "path": "/:id/profile-preferences"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 12,
+      "method": "POST",
+      "path": "/:id/profile-preferences"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 13,
+      "method": "GET",
+      "path": "/:id/profile-likes"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 14,
+      "method": "POST",
+      "path": "/:id/profile-likes"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 15,
+      "method": "GET",
+      "path": "/:id/gallery"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 16,
+      "method": "PUT",
+      "path": "/:id/gallery/:slot"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 17,
+      "method": "DELETE",
+      "path": "/:id/gallery/:slot"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 18,
+      "method": "GET",
+      "path": "/:id/recognitions"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 19,
+      "method": "POST",
+      "path": "/admin/recognitions/mvp"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 20,
+      "method": "DELETE",
+      "path": "/admin/recognitions/:id"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 21,
+      "method": "POST",
+      "path": "/admin/recognitions/champion"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 22,
+      "method": "PATCH",
+      "path": "/admin/users/:id/job-profile"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 23,
+      "method": "GET",
+      "path": "/admin/recognitions/audit-logs"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 24,
+      "method": "GET",
+      "path": "/:id"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 25,
+      "method": "POST",
+      "path": "/"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 26,
+      "method": "PATCH",
+      "path": "/:id/profile"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 27,
+      "method": "PATCH",
+      "path": "/:id"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 28,
+      "method": "DELETE",
+      "path": "/me/account"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 29,
+      "method": "DELETE",
+      "path": "/admin/users/:id"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 30,
+      "method": "DELETE",
+      "path": "/:id"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 9,
+      "method": "GET",
+      "path": "/public/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 24,
+      "method": "GET",
+      "path": "/leaderboard"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 27,
+      "method": "GET",
+      "path": "/overview"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 28,
+      "method": "GET",
+      "path": "/history"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 29,
+      "method": "GET",
+      "path": "/my-overview"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 30,
+      "method": "GET",
+      "path": "/my-team"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 31,
+      "method": "GET",
+      "path": "/teams/:teamId"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 32,
+      "method": "GET",
+      "path": "/channels"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 33,
+      "method": "GET",
+      "path": "/channels/:id"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 34,
+      "method": "GET",
+      "path": "/compare"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 37,
+      "method": "GET",
+      "path": "/admin/overview"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 38,
+      "method": "GET",
+      "path": "/admin/channels"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 39,
+      "method": "POST",
+      "path": "/admin/channels"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 40,
+      "method": "PATCH",
+      "path": "/admin/channels/:id/link"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 41,
+      "method": "POST",
+      "path": "/admin/channels/:id/unlink"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 42,
+      "method": "POST",
+      "path": "/admin/channels/:id/sync"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 43,
+      "method": "POST",
+      "path": "/admin/sync-all"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 44,
+      "method": "DELETE",
+      "path": "/admin/channels/:id"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 45,
+      "method": "GET",
+      "path": "/admin/health"
+    }
+  ],
+  "pages": [
+    "frontend/src/pages/AdminGrand.jsx",
+    "frontend/src/pages/AdminKpi.jsx",
+    "frontend/src/pages/AdminOperations.jsx",
+    "frontend/src/pages/AdminPrivileges.jsx",
+    "frontend/src/pages/AdminQuiz.jsx",
+    "frontend/src/pages/AdminSeasons.jsx",
+    "frontend/src/pages/AdminTeamsYouTube.jsx",
+    "frontend/src/pages/Arena.jsx",
+    "frontend/src/pages/CapitalBoardGame.jsx",
+    "frontend/src/pages/CompetitionAdmin.jsx",
+    "frontend/src/pages/Dashboard.jsx",
+    "frontend/src/pages/DrawingGame.jsx",
+    "frontend/src/pages/Friends.jsx",
+    "frontend/src/pages/Game2048.jsx",
+    "frontend/src/pages/GameHub.jsx",
+    "frontend/src/pages/GrandHub.jsx",
+    "frontend/src/pages/Groups.jsx",
+    "frontend/src/pages/Home.jsx",
+    "frontend/src/pages/Leaderboard.jsx",
+    "frontend/src/pages/Login.jsx",
+    "frontend/src/pages/QuizGame.jsx",
+    "frontend/src/pages/SamGame.jsx",
+    "frontend/src/pages/Settings.jsx",
+    "frontend/src/pages/TypingBattle.jsx",
+    "frontend/src/pages/UserDetail.jsx",
+    "frontend/src/pages/YouTubeOverview.jsx"
+  ],
+  "allHttpMethodDeclarations": [
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 14,
+      "declaration": "router.post('/register', validate(z.object({ body: z.object({ name: z.string().trim().min(1).max(120), email, password: registerPassword, teamId: z.coerce.number().int().positive().optional() }) })), asyncHandler(controller.register));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 15,
+      "declaration": "router.post('/login', validate(z.object({ body: z.object({ email: loginIdentifier, password: loginPassword }) })), asyncHandler(controller.login));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 16,
+      "declaration": "router.post('/refresh-token', validate(z.object({ body: z.object({ refreshToken: z.string().min(1) }) })), asyncHandler(controller.refreshToken));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 17,
+      "declaration": "router.post('/logout', auth, asyncHandler(controller.logout));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 18,
+      "declaration": "router.get('/me', auth, asyncHandler(controller.me));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 19,
+      "declaration": "router.patch('/me', auth, validate(z.object({"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 24,
+      "declaration": "router.patch('/password', auth, validate(z.object({"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 31,
+      "declaration": "router.patch('/email', auth, validate(z.object({"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 37,
+      "declaration": "router.post('/email', auth, validate(z.object({"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 43,
+      "declaration": "router.post('/change-email', auth, validate(z.object({"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 50,
+      "declaration": "router.delete('/me/account', auth, asyncHandler(controller.deleteMe));"
+    },
+    {
+      "file": "backend/src/routes/auth.routes.js",
+      "line": 51,
+      "declaration": "router.post('/me/delete', auth, asyncHandler(controller.deleteMe));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 15,
+      "declaration": "router.get('/rooms', asyncHandler(controller.listRooms));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 16,
+      "declaration": "router.get('/active-room', asyncHandler(controller.getActiveRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 17,
+      "declaration": "router.get('/rooms/:id', asyncHandler(controller.getRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 18,
+      "declaration": "router.post('/rooms', requireGameAvailable('capital_board'), asyncHandler(controller.createRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 19,
+      "declaration": "router.post('/practice', requireGameAvailable('capital_board'), asyncHandler(controller.createPracticeRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 20,
+      "declaration": "router.post('/rooms/:id/join', requireGameAvailable('capital_board'), asyncHandler(controller.joinRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 21,
+      "declaration": "router.post('/rooms/:id/leave', asyncHandler(controller.leaveRoom));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 22,
+      "declaration": "router.post('/rooms/:id/bots', requireGameAvailable('capital_board'), asyncHandler(controller.addBot));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 23,
+      "declaration": "router.delete('/rooms/:id/bots/:botUserId', asyncHandler(controller.removeBot));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 24,
+      "declaration": "router.post('/rooms/:id/start', requireGameAvailable('capital_board'), asyncHandler(controller.startGame));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 27,
+      "declaration": "router.post('/rooms/:id/roll', asyncHandler(controller.rollDice));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 28,
+      "declaration": "router.post('/rooms/:id/buy', asyncHandler(controller.buyProperty));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 29,
+      "declaration": "router.post('/rooms/:id/end-turn', asyncHandler(controller.endTurn));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 32,
+      "declaration": "router.get('/leaderboard', asyncHandler(controller.getLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/capitalBoardGame.routes.js",
+      "line": 33,
+      "declaration": "router.get('/history', asyncHandler(controller.getMyHistory));"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 9,
+      "declaration": "router.get('/unread-counts', asyncHandler(controller.unreadCounts));"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 10,
+      "declaration": "router.get('/:friendId/messages', asyncHandler(controller.listMessages));"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 11,
+      "declaration": "router.post('/:friendId/messages', asyncHandler(controller.sendMessage));"
+    },
+    {
+      "file": "backend/src/routes/chats.routes.js",
+      "line": 12,
+      "declaration": "router.post('/:friendId/read', asyncHandler(controller.markRead));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 11,
+      "declaration": "router.get('/public/spotlight', asyncHandler(ctrl.getPublicSpotlight));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 12,
+      "declaration": "router.get('/public/spotlight/archives', asyncHandler(ctrl.getPublicSpotlightArchives));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 13,
+      "declaration": "router.get('/public/members', asyncHandler(ctrl.getPublicMembers));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 16,
+      "declaration": "router.get('/my-state', auth, asyncHandler(ctrl.getMyState));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 17,
+      "declaration": "router.get('/my-score-history', auth, asyncHandler(ctrl.getMyScoreHistory));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 18,
+      "declaration": "router.get('/seasons/active', auth, asyncHandler(ctrl.getActiveSeason));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 19,
+      "declaration": "router.get('/seasons/:id', auth, asyncHandler(ctrl.getSeasonDetail));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 20,
+      "declaration": "router.get('/seasons/:id/rules', auth, asyncHandler(ctrl.getSeasonRules));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 21,
+      "declaration": "router.get('/seasons/:id/leaderboard', auth, asyncHandler(ctrl.getSeasonLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 22,
+      "declaration": "router.get('/seasons/:id/individual-leaderboard', auth, asyncHandler(ctrl.getSeasonIndividualLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 23,
+      "declaration": "router.get('/seasons/:id/challenges', auth, asyncHandler(ctrl.getSeasonChallenges));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 24,
+      "declaration": "router.get('/grand/current', auth, asyncHandler(ctrl.getCurrentGrandChampionship));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 25,
+      "declaration": "router.get('/grand/:id/standings', auth, asyncHandler(ctrl.getGrandStandings));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 26,
+      "declaration": "router.get('/grand/:id/individual-standings', auth, asyncHandler(ctrl.getGrandIndividualStandings));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 27,
+      "declaration": "router.get('/grand/:id/timeline', auth, asyncHandler(ctrl.getGrandTimeline));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 28,
+      "declaration": "router.get('/grand/:id/teams/:teamId/journey', auth, asyncHandler(ctrl.getGrandTeamJourney));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 29,
+      "declaration": "router.get('/top-performers', auth, asyncHandler(ctrl.getTopPerformers));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 30,
+      "declaration": "router.get('/users/:id/competition-profile', auth, asyncHandler(ctrl.getUserCompetitionProfile));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 33,
+      "declaration": "router.get('/admin/states', auth, requireRole('admin'), asyncHandler(ctrl.adminListStates));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 34,
+      "declaration": "router.get('/admin/states/:id', auth, requireRole('admin'), asyncHandler(ctrl.adminGetStateDetail));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 35,
+      "declaration": "router.get('/admin/score-inspect/:userId', auth, requireRole('admin'), asyncHandler(ctrl.adminScoreInspect));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 36,
+      "declaration": "router.get('/admin/seasons', auth, requireRole('admin'), asyncHandler(ctrl.adminListSeasons));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 37,
+      "declaration": "router.post('/admin/seasons', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateSeason));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 38,
+      "declaration": "router.patch('/admin/seasons/:id/status', auth, requireRole('admin'), asyncHandler(ctrl.adminUpdateSeasonStatus));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 39,
+      "declaration": "router.post('/admin/seasons/:id/teams', auth, requireRole('admin'), asyncHandler(ctrl.adminAddTeamToSeason));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 42,
+      "declaration": "router.get('/admin/mvp/seasons', auth, requireRole('admin'), asyncHandler(ctrl.adminListMvpSeasons));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 43,
+      "declaration": "router.get('/admin/mvp/preview/:seasonId', auth, requireRole('admin'), asyncHandler(ctrl.adminPreviewSeasonMvp));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 44,
+      "declaration": "router.post('/admin/mvp/award', auth, requireRole('admin'), asyncHandler(ctrl.adminAwardMvpCup));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 47,
+      "declaration": "router.get('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminGetSpotlightConfig));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 48,
+      "declaration": "router.post('/admin/spotlight', auth, requireRole('admin'), asyncHandler(ctrl.adminSetSpotlightConfig));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 51,
+      "declaration": "router.get('/admin/spotlight/archives', auth, requireRole('admin'), asyncHandler(ctrl.adminGetSpotlightArchives));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 52,
+      "declaration": "router.post('/admin/spotlight/archives', auth, requireRole('admin'), asyncHandler(ctrl.adminSaveSpotlightArchive));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 53,
+      "declaration": "router.delete('/admin/spotlight/archives/:year', auth, requireRole('admin'), asyncHandler(ctrl.adminDeleteSpotlightArchive));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 57,
+      "declaration": "router.get('/admin/rules', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 58,
+      "declaration": "router.get('/admin/rule-sets', auth, requireRole('admin'), asyncHandler(ctrl.adminListRuleSets));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 59,
+      "declaration": "router.post('/admin/rules', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateRuleSet));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 60,
+      "declaration": "router.post('/admin/rule-sets', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateRuleSet));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 61,
+      "declaration": "router.get('/admin/rules/:id', auth, requireRole('admin'), asyncHandler(ctrl.adminGetRuleSet));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 62,
+      "declaration": "router.put('/admin/rules/:id', auth, requireRole('admin'), asyncHandler(ctrl.adminUpdateRuleSet));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 63,
+      "declaration": "router.post('/admin/rules/:id/archive', auth, requireRole('admin'), asyncHandler(ctrl.adminArchiveRuleSet));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 64,
+      "declaration": "router.post('/admin/rules/:id/versions', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateRuleSetVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 65,
+      "declaration": "router.post('/admin/rule-sets/:id/versions', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateRuleSetVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 66,
+      "declaration": "router.get('/admin/rules/:id/versions/:versionId', auth, requireRole('admin'), asyncHandler(ctrl.adminGetRuleSetVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 67,
+      "declaration": "router.put('/admin/rules/:id/versions/:versionId', auth, requireRole('admin'), asyncHandler(ctrl.adminUpdateDraftVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 68,
+      "declaration": "router.post('/admin/rules/:id/versions/:versionId/duplicate', auth, requireRole('admin'), asyncHandler(ctrl.adminDuplicateVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 69,
+      "declaration": "router.post('/admin/rules/:id/versions/:versionId/validate', auth, requireRole('admin'), asyncHandler(ctrl.adminValidateVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 70,
+      "declaration": "router.post('/admin/rules/:id/versions/:versionId/publish', auth, requireRole('admin'), asyncHandler(ctrl.adminPublishRuleSetVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 71,
+      "declaration": "router.post('/admin/rule-sets/versions/:versionId/publish', auth, requireRole('admin'), asyncHandler(ctrl.adminPublishRuleSetVersion));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 72,
+      "declaration": "router.post('/admin/rules/simulate', auth, requireRole('admin'), asyncHandler(ctrl.adminSimulateRule));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 73,
+      "declaration": "router.post('/admin/rules/:id/simulate', auth, requireRole('admin'), asyncHandler(ctrl.adminSimulateRule));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 74,
+      "declaration": "router.get('/admin/rules/:id/diff/:fromVersionId/:toVersionId', auth, requireRole('admin'), asyncHandler(ctrl.adminDiffVersions));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 76,
+      "declaration": "router.post('/admin/seasons/:id/challenges', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateChallenge));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 77,
+      "declaration": "router.get('/admin/audit-logs', auth, requireRole('admin'), asyncHandler(ctrl.adminListAuditLogs));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 79,
+      "declaration": "router.get('/admin/grand', auth, requireRole('admin'), asyncHandler(ctrl.adminListGrandChampionships));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 80,
+      "declaration": "router.post('/admin/grand', auth, requireRole('admin'), asyncHandler(ctrl.adminCreateGrandChampionship));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 81,
+      "declaration": "router.patch('/admin/grand/:id/status', auth, requireRole('admin'), asyncHandler(ctrl.adminUpdateGrandStatus));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 82,
+      "declaration": "router.post('/admin/grand/:id/seasons/:seasonId/link', auth, requireRole('admin'), asyncHandler(ctrl.adminLinkSeasonToGrand));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 83,
+      "declaration": "router.post('/admin/grand/:id/seasons/:seasonId/settle', auth, requireRole('admin'), asyncHandler(ctrl.adminSettleSeasonGrandPoints));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 84,
+      "declaration": "router.post('/admin/grand/:id/reconcile', auth, requireRole('admin'), asyncHandler(ctrl.adminReconcileGrandPoints));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 87,
+      "declaration": "router.get('/dashboard', auth, asyncHandler(ctrl.getCompetitionDashboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 88,
+      "declaration": "router.get('/teams/:teamId/summary', auth, asyncHandler(ctrl.getTeamSummary));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 89,
+      "declaration": "router.get('/activity', auth, asyncHandler(ctrl.getActivityFeed));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 90,
+      "declaration": "router.get('/company-overview', auth, asyncHandler(ctrl.getCompanyOverview));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 91,
+      "declaration": "router.get('/projections/seasons/:id/leaderboard', auth, asyncHandler(ctrl.getProjectedSeasonLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 92,
+      "declaration": "router.get('/projections/grand/:id/leaderboard', auth, asyncHandler(ctrl.getProjectedGrandLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 95,
+      "declaration": "router.get('/admin/dashboard', auth, requireRole('admin'), asyncHandler(ctrl.adminGetCompetitionDashboard));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 96,
+      "declaration": "router.get('/admin/employee-excellence', auth, requireRole('admin'), asyncHandler(ctrl.adminGetEmployeeExcellence));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 97,
+      "declaration": "router.get('/admin/projections/status', auth, requireRole('admin'), asyncHandler(ctrl.adminGetProjectionsStatus));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 98,
+      "declaration": "router.get('/admin/projections/consistency', auth, requireRole('admin'), asyncHandler(ctrl.adminCheckProjectionsConsistency));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 99,
+      "declaration": "router.post('/admin/projections/rebuild', auth, requireRole('admin'), asyncHandler(ctrl.adminRebuildProjections));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 102,
+      "declaration": "router.get('/events/:eventId/trace', auth, asyncHandler(ctrl.getEventTrace));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 103,
+      "declaration": "router.get('/contracts', auth, asyncHandler(ctrl.listEventContracts));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 104,
+      "declaration": "router.post('/events/publish', auth, asyncHandler(ctrl.publishDomainEvent));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 105,
+      "declaration": "router.post('/integration/production/video-action', auth, asyncHandler(ctrl.triggerProductionAction));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 106,
+      "declaration": "router.post('/integration/youtube/milestone', auth, asyncHandler(ctrl.triggerYouTubeMilestone));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 107,
+      "declaration": "router.post('/integration/community/kudos', auth, asyncHandler(ctrl.triggerCommunityKudos));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 109,
+      "declaration": "router.get('/admin/integration/health', auth, requireRole('admin'), asyncHandler(ctrl.adminGetIntegrationHealth));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 110,
+      "declaration": "router.get('/admin/integration/events', auth, requireRole('admin'), asyncHandler(ctrl.adminListIntegrationEvents));"
+    },
+    {
+      "file": "backend/src/routes/competition.routes.js",
+      "line": 111,
+      "declaration": "router.post('/admin/events/:eventId/retry', auth, requireRole('admin'), asyncHandler(ctrl.adminRetryIntegrationEvent));"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 7,
+      "declaration": "router.get('/overview', auth, asyncHandler(controller.overview));"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 8,
+      "declaration": "router.get('/realtime-users', auth, asyncHandler(controller.realtimeUsers));"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 9,
+      "declaration": "router.get('/team-summary', auth, asyncHandler(controller.teamSummary));"
+    },
+    {
+      "file": "backend/src/routes/dashboard.routes.js",
+      "line": 10,
+      "declaration": "router.get('/heatmap', auth, asyncHandler(controller.heatmap));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 11,
+      "declaration": "router.get('/settings', optionalAuth, asyncHandler(drawingController.getSettings));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 12,
+      "declaration": "router.patch('/settings', auth, requireRole('admin'), asyncHandler(drawingController.updateSettings));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 15,
+      "declaration": "router.get('/', optionalAuth, asyncHandler(drawingController.getGallery));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 16,
+      "declaration": "router.get('/user/:userId', optionalAuth, asyncHandler(drawingController.getUserDrawings));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 17,
+      "declaration": "router.get('/:id', optionalAuth, asyncHandler(drawingController.getById));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 20,
+      "declaration": "router.post('/', auth, drawingController.uploadMiddleware, asyncHandler(drawingController.create));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 21,
+      "declaration": "router.post('/:id/like', auth, asyncHandler(drawingController.toggleLike));"
+    },
+    {
+      "file": "backend/src/routes/drawing.routes.js",
+      "line": 22,
+      "declaration": "router.delete('/:id', auth, asyncHandler(drawingController.remove));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 9,
+      "declaration": "router.get('/', asyncHandler(controller.list));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 10,
+      "declaration": "router.get('/requests', asyncHandler(controller.requests));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 11,
+      "declaration": "router.post('/requests', asyncHandler(controller.sendRequest));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 12,
+      "declaration": "router.post('/requests/:id/accept', asyncHandler(controller.accept));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 13,
+      "declaration": "router.post('/requests/:id/decline', asyncHandler(controller.decline));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 14,
+      "declaration": "router.delete('/requests/:id', asyncHandler(controller.cancel));"
+    },
+    {
+      "file": "backend/src/routes/friends.routes.js",
+      "line": 15,
+      "declaration": "router.delete('/:userId', asyncHandler(controller.remove));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 15,
+      "declaration": "router.post('/start', requireGameAvailable('game_2048'), asyncHandler(controller.startSession));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 16,
+      "declaration": "router.post('/checkpoint', asyncHandler(controller.checkpointSession));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 17,
+      "declaration": "router.post('/submit', asyncHandler(controller.submitScore));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 18,
+      "declaration": "router.get('/active-session', asyncHandler(controller.getActiveSession));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 21,
+      "declaration": "router.get('/leaderboard', asyncHandler(controller.getLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/game2048.routes.js",
+      "line": 22,
+      "declaration": "router.get('/my-stats', asyncHandler(controller.getMyStats));"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 10,
+      "declaration": "router.get('/', optionalAuth, asyncHandler(gameCatalogController.getCatalog));"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 11,
+      "declaration": "router.get('/list', optionalAuth, asyncHandler(gameCatalogController.getCatalog));"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 12,
+      "declaration": "router.get('/:gameKey', optionalAuth, asyncHandler(gameCatalogController.getGame));"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 15,
+      "declaration": "router.patch('/status/:gameKey', auth, requireRole('admin'), asyncHandler(gameCatalogController.updateGame));"
+    },
+    {
+      "file": "backend/src/routes/gameCatalog.routes.js",
+      "line": 16,
+      "declaration": "router.patch('/:gameKey', auth, requireRole('admin'), asyncHandler(gameCatalogController.updateGame));"
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 11,
+      "declaration": "router.get('/', asyncHandler(controller.list));"
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 12,
+      "declaration": "router.get('/all', asyncHandler(controller.listAll));"
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 13,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 28,
+      "declaration": "router.patch("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 42,
+      "declaration": "router.delete("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 48,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 53,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 58,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 70,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/groups.routes.js",
+      "line": 82,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 6,
+      "declaration": "router.get('/health', asyncHandler(healthController.health));"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 7,
+      "declaration": "router.get('/health/live', asyncHandler(healthController.live));"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 8,
+      "declaration": "router.get('/health/ready', asyncHandler(healthController.ready));"
+    },
+    {
+      "file": "backend/src/routes/index.js",
+      "line": 32,
+      "declaration": "router.delete('/admin/users/:id', require('../middlewares/auth.middleware').auth, require('../middlewares/auth.middleware').requireRole('admin'), asyncHandler(require('../controllers/users.controller').remove));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 10,
+      "declaration": "router.get('/my-kpis', auth, asyncHandler(kpiController.getMyKpis));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 13,
+      "declaration": "router.get('/departments', auth, asyncHandler(kpiController.getDepartments));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 14,
+      "declaration": "router.post('/departments', auth, requireRole('admin'), asyncHandler(kpiController.createDepartment));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 15,
+      "declaration": "router.put('/departments/:id', auth, requireRole('admin'), asyncHandler(kpiController.updateDepartment));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 18,
+      "declaration": "router.get('/definitions', auth, asyncHandler(kpiController.getDefinitions));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 19,
+      "declaration": "router.post('/definitions', auth, requireRole('admin'), asyncHandler(kpiController.createDefinition));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 20,
+      "declaration": "router.put('/definitions/:id', auth, requireRole('admin'), asyncHandler(kpiController.updateDefinition));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 21,
+      "declaration": "router.patch('/definitions/:id/toggle', auth, requireRole('admin'), asyncHandler(kpiController.toggleDefinition));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 22,
+      "declaration": "router.delete('/definitions/:id', auth, requireRole('admin'), asyncHandler(kpiController.deleteDefinition));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 25,
+      "declaration": "router.get('/periods', auth, asyncHandler(kpiController.getPeriods));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 26,
+      "declaration": "router.post('/periods', auth, requireRole('admin'), asyncHandler(kpiController.createPeriod));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 29,
+      "declaration": "router.get('/results', auth, asyncHandler(kpiController.getResults));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 30,
+      "declaration": "router.post('/results', auth, requireRole('admin'), asyncHandler(kpiController.recordResult));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 31,
+      "declaration": "router.get('/results/history', auth, asyncHandler(kpiController.getResultHistory));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 52,
+      "declaration": "router.get('/production/rules',    auth, asyncHandler(kpiController.getProductionKpiRules));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 53,
+      "declaration": "router.get('/production/versions', auth, asyncHandler(kpiController.getProductionKpiVersions));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 56,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 62,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 68,
+      "declaration": "router.post("
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 76,
+      "declaration": "router.post('/production/calculate/editor',  auth, requireRole('admin', 'manager'), asyncHandler(kpiController.calculateEditorKpi));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 77,
+      "declaration": "router.post('/production/calculate/content', auth, requireRole('admin', 'manager'), asyncHandler(kpiController.calculateContentKpi));"
+    },
+    {
+      "file": "backend/src/routes/kpi.routes.js",
+      "line": 80,
+      "declaration": "router.get('/production/history', auth, asyncHandler(kpiController.getProductionKpiHistory));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 7,
+      "declaration": "router.get('/public/weekly', asyncHandler(async (req, res) => {"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 32,
+      "declaration": "router.get('/daily', auth, asyncHandler(controller.daily));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 33,
+      "declaration": "router.get('/weekly', auth, asyncHandler(controller.weekly));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 34,
+      "declaration": "router.get('/monthly', auth, asyncHandler(controller.monthly));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 35,
+      "declaration": "router.get('/yearly', auth, asyncHandler(controller.yearly));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 36,
+      "declaration": "router.get('/friends', auth, asyncHandler(controller.friends));"
+    },
+    {
+      "file": "backend/src/routes/leaderboard.routes.js",
+      "line": 37,
+      "declaration": "router.get('/team/:teamId', auth, asyncHandler(controller.team));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 15,
+      "declaration": "router.post('/upload-image', controller.uploadImage);"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 16,
+      "declaration": "router.post('/upload-audio', controller.uploadAudio);"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 19,
+      "declaration": "router.get('/questions', asyncHandler(controller.listQuestions));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 20,
+      "declaration": "router.post('/questions', asyncHandler(controller.createQuestion));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 21,
+      "declaration": "router.post('/questions/reorder', asyncHandler(controller.reorderQuestions));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 22,
+      "declaration": "router.get('/questions/:id', asyncHandler(controller.getQuestion));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 23,
+      "declaration": "router.put('/questions/:id', asyncHandler(controller.updateQuestion));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 24,
+      "declaration": "router.post('/questions/:id/duplicate', asyncHandler(controller.duplicateQuestion));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 25,
+      "declaration": "router.delete('/questions/:id', asyncHandler(controller.deleteQuestion));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 28,
+      "declaration": "router.get('/sets', asyncHandler(controller.listQuizSets));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 29,
+      "declaration": "router.post('/sets', asyncHandler(controller.createQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 30,
+      "declaration": "router.get('/sets/:id', asyncHandler(controller.getQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 31,
+      "declaration": "router.put('/sets/:id', asyncHandler(controller.updateQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 32,
+      "declaration": "router.post('/sets/:id/duplicate', asyncHandler(controller.duplicateQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 33,
+      "declaration": "router.delete('/sets/:id', asyncHandler(controller.deleteQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 34,
+      "declaration": "router.get('/sets/:id/export', asyncHandler(controller.exportQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 37,
+      "declaration": "router.get('/share/:code', asyncHandler(controller.getSharedQuizSet));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 38,
+      "declaration": "router.post('/import/validate', asyncHandler(controller.validateAndParseImport));"
+    },
+    {
+      "file": "backend/src/routes/quizAdmin.routes.js",
+      "line": 39,
+      "declaration": "router.post('/import/confirm', asyncHandler(controller.confirmImport));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 15,
+      "declaration": "router.get('/rooms', asyncHandler(controller.listRooms));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 16,
+      "declaration": "router.get('/active-room', asyncHandler(controller.getActiveRoom));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 17,
+      "declaration": "router.get('/rooms/:id', asyncHandler(controller.getRoom));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 18,
+      "declaration": "router.post('/rooms', requireGameAvailable('quiz'), asyncHandler(controller.createRoom));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 19,
+      "declaration": "router.post('/rooms/:id/join', requireGameAvailable('quiz'), asyncHandler(controller.joinRoom));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 20,
+      "declaration": "router.post('/rooms/:id/leave', asyncHandler(controller.leaveRoom));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 21,
+      "declaration": "router.post('/rooms/:id/start', requireGameAvailable('quiz'), asyncHandler(controller.startGame));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 24,
+      "declaration": "router.post('/rooms/:id/answer', asyncHandler(controller.submitAnswer));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 27,
+      "declaration": "router.get('/sets', asyncHandler(controller.listActiveSets));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 30,
+      "declaration": "router.get('/leaderboard', asyncHandler(controller.getLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/quizGame.routes.js",
+      "line": 31,
+      "declaration": "router.get('/my-stats', asyncHandler(controller.getMyStats));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 16,
+      "declaration": "router.get('/overview', auth, asyncHandler(ctrl.getOverview));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 17,
+      "declaration": "router.get('/teams', auth, asyncHandler(ctrl.getTeams));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 18,
+      "declaration": "router.get('/individuals', auth, asyncHandler(ctrl.getIndividuals));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 19,
+      "declaration": "router.get('/seasons', auth, asyncHandler(ctrl.getSeasons));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 20,
+      "declaration": "router.get('/grands', auth, asyncHandler(ctrl.getGrands));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 21,
+      "declaration": "router.get('/youtube', auth, asyncHandler(ctrl.getYouTube));"
+    },
+    {
+      "file": "backend/src/routes/ranking.routes.js",
+      "line": 22,
+      "declaration": "router.get('/top-performers', auth, asyncHandler(ctrl.getTopPerformers));"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 13,
+      "declaration": "router.get('/rooms', samGameController.listRooms);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 14,
+      "declaration": "router.post('/rooms', requireGameAvailable('sam'), samGameController.createRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 15,
+      "declaration": "router.post('/practice', requireGameAvailable('sam'), samGameController.createPracticeRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 16,
+      "declaration": "router.get('/rooms/active', samGameController.getActiveRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 17,
+      "declaration": "router.get('/rooms/:id', samGameController.getRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 18,
+      "declaration": "router.post('/rooms/:id/join', requireGameAvailable('sam'), samGameController.joinRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 19,
+      "declaration": "router.post('/rooms/:id/leave', samGameController.leaveRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 20,
+      "declaration": "router.post('/rooms/:id/ready', samGameController.toggleReady);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 21,
+      "declaration": "router.post('/rooms/:id/bots', samGameController.addBot);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 22,
+      "declaration": "router.post('/rooms/:id/fill-bots', samGameController.fillBots);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 25,
+      "declaration": "router.post('/rooms/:id/start', requireGameAvailable('sam'), samGameController.startMatch);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 26,
+      "declaration": "router.post('/rooms/:id/declare-sam', samGameController.declareSam);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 27,
+      "declaration": "router.post('/rooms/:id/play-cards', samGameController.playCards);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 28,
+      "declaration": "router.post('/rooms/:id/pass', samGameController.passTurn);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 31,
+      "declaration": "router.get('/leaderboard', samGameController.getLeaderboard);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 32,
+      "declaration": "router.get('/my-stats', samGameController.getMyStats);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 35,
+      "declaration": "router.post('/admin/bot-room', requireRole('admin'), samGameController.createBotTestRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 36,
+      "declaration": "router.post('/bot-room', requireRole('admin'), samGameController.createBotTestRoom);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 37,
+      "declaration": "router.get('/admin/bot-rooms', requireRole('admin'), samGameController.listBotTestRooms);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 38,
+      "declaration": "router.post('/admin/rooms/:id/start', requireRole('admin'), samGameController.startMatch);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 39,
+      "declaration": "router.post('/admin/rooms/:id/pause', requireRole('admin'), samGameController.pauseBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 40,
+      "declaration": "router.post('/admin/rooms/:id/resume', requireRole('admin'), samGameController.resumeBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 41,
+      "declaration": "router.post('/admin/rooms/:id/step', requireRole('admin'), samGameController.stepBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 42,
+      "declaration": "router.post('/admin/rooms/:id/restart', requireRole('admin'), samGameController.restartBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 43,
+      "declaration": "router.post('/admin/rooms/:id/fill-bots', requireRole('admin'), samGameController.fillBots);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 44,
+      "declaration": "router.post('/admin/rooms/:id/stop', requireRole('admin'), samGameController.stopBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 45,
+      "declaration": "router.delete('/admin/rooms/:id', requireRole('admin'), samGameController.stopBotTest);"
+    },
+    {
+      "file": "backend/src/routes/samGame.routes.js",
+      "line": 46,
+      "declaration": "router.get('/admin/rooms/:id/debug', requireRole('admin'), samGameController.getBotDebugState);"
+    },
+    {
+      "file": "backend/src/routes/tradingview.routes.js",
+      "line": 7,
+      "declaration": "router.get('/candles', asyncHandler(controller.candles));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 10,
+      "declaration": "router.get('/status', auth, asyncHandler(typingGameController.getCatalogStatus));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 13,
+      "declaration": "router.get('/my-stats', auth, asyncHandler(typingGameController.getMyStats));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 14,
+      "declaration": "router.get('/leaderboard', auth, asyncHandler(typingGameController.getLeaderboard));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 15,
+      "declaration": "router.get('/challenges', auth, asyncHandler(typingGameController.getChallenges));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 18,
+      "declaration": "router.get('/rooms', auth, asyncHandler(typingGameController.listRooms));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 19,
+      "declaration": "router.get('/active-room', auth, asyncHandler(typingGameController.getActiveRoom));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 20,
+      "declaration": "router.post('/rooms', auth, asyncHandler(typingGameController.createRoom));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 21,
+      "declaration": "router.post('/matchmaking/quick', auth, asyncHandler(typingGameController.quickMatch));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 22,
+      "declaration": "router.get('/rooms/:roomId', auth, asyncHandler(typingGameController.getRoomDetail));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 23,
+      "declaration": "router.get('/rooms/:roomId/spectators', auth, asyncHandler(typingGameController.getRoomSpectators));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 24,
+      "declaration": "router.post('/rooms/:roomId/join', auth, asyncHandler(typingGameController.joinRoom));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 25,
+      "declaration": "router.post('/rooms/:roomId/switch-team', auth, asyncHandler(typingGameController.switchTeam));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 26,
+      "declaration": "router.post('/rooms/:roomId/leave', auth, asyncHandler(typingGameController.leaveRoom));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 27,
+      "declaration": "router.post('/rooms/:roomId/ready', auth, asyncHandler(typingGameController.toggleReady));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 28,
+      "declaration": "router.post('/rooms/:roomId/start', auth, asyncHandler(typingGameController.startMatch));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 29,
+      "declaration": "router.post('/rooms/:roomId/reset', auth, asyncHandler(typingGameController.resetRoom));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 32,
+      "declaration": "router.post('/rooms/:roomId/progress', auth, asyncHandler(typingGameController.updateProgress));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 33,
+      "declaration": "router.post('/rooms/:roomId/finish', auth, asyncHandler(typingGameController.submitFinish));"
+    },
+    {
+      "file": "backend/src/routes/typingGame.routes.js",
+      "line": 34,
+      "declaration": "router.post('/practice/finish', auth, asyncHandler(typingGameController.submitPractice));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 8,
+      "declaration": "router.get('/', asyncHandler(controller.list));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 9,
+      "declaration": "router.get('/:id/profile-preferences', asyncHandler(controller.getProfilePreferences));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 10,
+      "declaration": "router.patch('/:id/profile-preferences', asyncHandler(controller.updateProfilePreferences));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 11,
+      "declaration": "router.put('/:id/profile-preferences', asyncHandler(controller.updateProfilePreferences));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 12,
+      "declaration": "router.post('/:id/profile-preferences', asyncHandler(controller.updateProfilePreferences));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 13,
+      "declaration": "router.get('/:id/profile-likes', asyncHandler(controller.getProfileLikes));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 14,
+      "declaration": "router.post('/:id/profile-likes', asyncHandler(controller.likeProfile));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 15,
+      "declaration": "router.get('/:id/gallery', asyncHandler(controller.gallery));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 16,
+      "declaration": "router.put('/:id/gallery/:slot', asyncHandler(controller.updateGalleryImage));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 17,
+      "declaration": "router.delete('/:id/gallery/:slot', asyncHandler(controller.removeGalleryImage));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 18,
+      "declaration": "router.get('/:id/recognitions', asyncHandler(controller.getRecognitions));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 19,
+      "declaration": "router.post('/admin/recognitions/mvp', requireRole('admin'), asyncHandler(controller.adminAwardMVP));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 20,
+      "declaration": "router.delete('/admin/recognitions/:id', requireRole('admin'), asyncHandler(controller.adminRevokeMVP));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 21,
+      "declaration": "router.post('/admin/recognitions/champion', requireRole('admin'), asyncHandler(controller.adminAwardChampion));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 22,
+      "declaration": "router.patch('/admin/users/:id/job-profile', requireRole('admin'), asyncHandler(controller.adminUpdateJobProfile));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 23,
+      "declaration": "router.get('/admin/recognitions/audit-logs', requireRole('admin'), asyncHandler(controller.adminGetAuditLogs));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 24,
+      "declaration": "router.get('/:id', asyncHandler(controller.getById));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 25,
+      "declaration": "router.post('/', requireRole('admin'), asyncHandler(controller.create));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 26,
+      "declaration": "router.patch('/:id/profile', asyncHandler(controller.update));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 27,
+      "declaration": "router.patch('/:id', asyncHandler(controller.update));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 28,
+      "declaration": "router.delete('/me/account', asyncHandler(controller.selfDelete));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 29,
+      "declaration": "router.delete('/admin/users/:id', requireRole('admin'), asyncHandler(controller.remove));"
+    },
+    {
+      "file": "backend/src/routes/users.routes.js",
+      "line": 30,
+      "declaration": "router.delete('/:id', requireRole('admin'), asyncHandler(controller.remove));"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 9,
+      "declaration": "router.get('/public/leaderboard', asyncHandler(async (req, res) => {"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 24,
+      "declaration": "router.get('/leaderboard', auth, youtubeController.getLeaderboard);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 27,
+      "declaration": "router.get('/overview', auth, youtubeController.getOverview);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 28,
+      "declaration": "router.get('/history', auth, youtubeController.getCompanyHistory);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 29,
+      "declaration": "router.get('/my-overview', auth, youtubeController.getMyOverview);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 30,
+      "declaration": "router.get('/my-team', auth, youtubeController.getMyTeam);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 31,
+      "declaration": "router.get('/teams/:teamId', auth, youtubeController.getTeamDetails);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 32,
+      "declaration": "router.get('/channels', auth, youtubeController.listChannels);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 33,
+      "declaration": "router.get('/channels/:id', auth, youtubeController.getChannelDetails);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 34,
+      "declaration": "router.get('/compare', auth, youtubeController.compareTeams);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 37,
+      "declaration": "router.get('/admin/overview', auth, requireRole('admin'), youtubeController.getAdminOverview);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 38,
+      "declaration": "router.get('/admin/channels', auth, requireRole('admin'), youtubeController.listAdminChannels);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 39,
+      "declaration": "router.post('/admin/channels', auth, requireRole('admin'), youtubeController.createAdminChannel);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 40,
+      "declaration": "router.patch('/admin/channels/:id/link', auth, requireRole('admin'), youtubeController.linkAdminChannel);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 41,
+      "declaration": "router.post('/admin/channels/:id/unlink', auth, requireRole('admin'), youtubeController.unlinkAdminChannel);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 42,
+      "declaration": "router.post('/admin/channels/:id/sync', auth, requireRole('admin'), youtubeController.syncAdminChannel);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 43,
+      "declaration": "router.post('/admin/sync-all', auth, requireRole('admin'), youtubeController.syncAllAdminChannels);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 44,
+      "declaration": "router.delete('/admin/channels/:id', auth, requireRole('admin'), youtubeController.deleteAdminChannel);"
+    },
+    {
+      "file": "backend/src/routes/youtube.routes.js",
+      "line": 45,
+      "declaration": "router.get('/admin/health', auth, requireRole('admin'), youtubeController.getAdminHealth);"
+    }
+  ],
+  "apiDeclarationCount": 310
+}

@@ -1,12 +1,22 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { weekBounds, scoreHistory, compareWeekly } = require('../src/services/ranking/weeklyRanking');
+const { weekBounds, rangeBounds, scoreHistory, compareWeekly } = require('../src/services/ranking/weeklyRanking');
 
 test('week starts on Monday midnight in Vietnam, including Sunday UTC', () => {
   assert.equal(weekBounds(new Date('2026-10-04T18:00:00Z')).start.toISOString(), '2026-10-04T17:00:00.000Z');
   assert.equal(weekBounds(new Date('2026-10-04T16:59:59Z')).end.toISOString(), '2026-10-04T17:00:00.000Z');
 });
-test('weekly ties prefer MVP, achievement time, then older account', () => {
+test('date ranges use Vietnam-local calendar boundaries', () => {
+  const now = new Date('2026-10-18T02:00:00Z');
+  assert.deepEqual(rangeBounds('today', now), {
+    start: new Date('2026-10-17T17:00:00Z'), end: new Date('2026-10-18T17:00:00Z'),
+  });
+  assert.deepEqual(rangeBounds('month', now), {
+    start: new Date('2026-09-30T17:00:00Z'), end: new Date('2026-10-31T17:00:00Z'),
+  });
+});
+
+test('weekly ranking applies deterministic tie-breakers', () => {
   const base = { score: 10, mvpCount: 0, reachedAt: 100, createdAt: '2026-01-01', userId: 1 };
   assert.ok(compareWeekly({ ...base, score: 20 }, { ...base, mvpCount: 2 }) < 0);
   assert.ok(compareWeekly({ ...base, mvpCount: 1 }, base) < 0);

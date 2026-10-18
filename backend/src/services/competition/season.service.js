@@ -268,17 +268,6 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
     transaction,
   });
 
-  if (seasonTeams.length === 0) {
-    const allTeams = await Team.findAll({ transaction });
-    seasonTeams = allTeams.map((t) => ({
-      teamId: t.id,
-      teamNameSnapshot: t.name,
-      teamAvatarSnapshot: t.avatar || null,
-      teamColorSnapshot: t.color || '#0284c7',
-      isEligible: true,
-      team: t,
-    }));
-  }
 
   // Map users to teamId so points from ScoreLedger are accurately attributed to teams
   const userTeamRows = await User.findAll({
@@ -310,7 +299,7 @@ async function getSeasonLeaderboard(seasonId, options = {}) {
     if (row.effectType === 'INDIVIDUAL_XP') {
       continue;
     }
-    const tId = Number(row.teamId) || (row.userId ? userToTeam.get(Number(row.userId)) : null);
+    const tId = Number(row.teamId) || null;
     if (tId) {
       scoreMap.set(tId, (scoreMap.get(tId) || 0) + Number(row.pointsDelta || 0));
     }
@@ -455,28 +444,9 @@ async function getSeasonIndividualLeaderboard(seasonId, options = {}) {
     });
   }
 
-  // 3. Build complete set of all participants (from members or score ledger)
-  // If no members registered yet, include all active users
-  let allUserIds = new Set([...memberTeamMap.keys(), ...scoreMap.keys()]);
-  if (allUserIds.size === 0) {
-    const fallbackUsers = await User.findAll({
-      where: {
-        status: { [Op.ne]: 'inactive' },
-        isSimulated: { [Op.ne]: true },
-      },
-      attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'isVerified', 'isDev', 'teamId', 'createdAt'],
-      include: [
-        { model: Team, attributes: ['id', 'name'] },
-        { model: UserProfilePreference, attributes: ['avatarData', 'featuredBadges'], required: false },
-      ],
-      transaction,
-    });
-    for (const u of fallbackUsers) {
-      userMap.set(Number(u.id), u);
-      if (u.teamId) memberTeamMap.set(Number(u.id), Number(u.teamId));
-      allUserIds.add(Number(u.id));
-    }
-  }
+  // 3. Build the participant set from the season snapshot only.
+  // Ledger rows for users no longer registered must not reintroduce them.
+  const allUserIds = new Set(memberTeamMap.keys());
 
   const rawList = [];
 

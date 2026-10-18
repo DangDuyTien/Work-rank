@@ -1,0 +1,1039 @@
+[
+  {
+    "id": "BUG-001",
+    "title": "2048 không kiểm tra chủ sở hữu phiên; bộ nhớ trình duyệt dùng chung giữa tài khoản",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Permission / API / Persistence",
+    "route": "/games/2048",
+    "steps": [
+      "A tạo phiên 2048 và lấy gameSessionId.",
+      "B đăng nhập riêng, gọi checkpoint và submit với mã phiên của A.",
+      "Trên cùng trình duyệt, A chơi và chờ checkpoint; đăng xuất rồi đăng nhập B, mở 2048."
+    ],
+    "observed": "Checkpoint và submit bằng token B đều trả 200 cho phiên A. Phiên đang ACTIVE của A bị sửa/kết thúc. Trình duyệt B hiển thị tên B nhưng tải lại cùng gameSessionId và 252 điểm của A từ localStorage. Khi A có nhiều phiên ACTIVE cũ, active-session sau khi B submit có thể trả phiên cũ khác; điều này không có nghĩa phiên vừa bị can thiệp còn ACTIVE.",
+    "expected": "Mọi lần đọc/ghi/kết thúc phiên phải ràng buộc với req.user.id. Dữ liệu lưu ở máy phải thuộc đúng tài khoản và được xác thực với server.",
+    "root": "checkpointSession và submitScore tìm Game2048Score bằng gameSessionId mà không kèm userId; không kiểm tra ownership trước cập nhật. initSession tin bản ghi wr_2048_active_session chung toàn origin, không lưu/xác thực userId; clearAuth chỉ xóa token và cache API.",
+    "refs": [
+      [
+        "backend/src/services/game2048.service.js",
+        "where: { gameSessionId: cleanSessionId }"
+      ],
+      [
+        "frontend/src/pages/Game2048.jsx",
+        "const ACTIVE_SESSION_STORAGE_KEY"
+      ],
+      [
+        "frontend/src/pages/Game2048.jsx",
+        "const initSession"
+      ],
+      [
+        "frontend/src/services/api.js",
+        "function clearAuth"
+      ]
+    ],
+    "impact": "Can thiệp kết quả và trạng thái người khác khi biết mã phiên; dùng chung trình duyệt là một đường lộ mã thực tế. ID phiên ngẫu nhiên làm giảm khả năng đoán từ xa, không thay thế quyền sở hữu.",
+    "fix": "Lọc và khóa phiên bằng cả gameSessionId + userId; trả 404/403 khi không thuộc người gọi. Không tự tạo bản ghi mới từ mã phiên không hợp lệ. Namespace localStorage theo userId/schemaVersion, kiểm tra server trước phục hồi, xóa dữ liệu tài khoản khi logout.",
+    "risk": "Phiên đang chơi, đồng bộ nhiều tab, retry checkpoint và dữ liệu lưu phiên bản cũ cần migration nhẹ.",
+    "verify": "A/B trên hai context: B không ghi/submit được phiên A; dữ liệu A nguyên vẹn. Trên cùng origin đổi A→B không phục hồi phiên A. A refresh vẫn tiếp tục phiên của mình.",
+    "evidence": [
+      "reproduced.json",
+      "reproduce.cjs"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/services/game2048.service.js:121](/Applications/du-an/workrank/workrank-realtime/backend/src/services/game2048.service.js:121)",
+      "[frontend/src/pages/Game2048.jsx:32](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Game2048.jsx:32)",
+      "[frontend/src/pages/Game2048.jsx:184](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Game2048.jsx:184)",
+      "[frontend/src/services/api.js:21](/Applications/du-an/workrank/workrank-realtime/frontend/src/services/api.js:21)"
+    ]
+  },
+  {
+    "id": "BUG-002",
+    "title": "Tài khoản thường có thể ghi sự kiện sản xuất với danh tính người khác",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Permission / API / Data",
+    "route": "/api/competition/events/publish; /integration/*",
+    "steps": [
+      "Đăng nhập Alice (role user).",
+      "POST /api/competition/integration/production/video-action với action=video_approved, actorId=35 (admin), videoId fixture chưa có workflow duyệt thật.",
+      "Kiểm tra response và trạng thái sự kiện."
+    ],
+    "observed": "API trả 201, lưu VIDEO_APPROVED actorId=35 dù người gọi là user 36. Các route publish/production/youtube/community chỉ yêu cầu auth. Có thể cung cấp các trường teamId/seasonId/payload từ client; chưa chứng minh tất cả biến thể đều tạo điểm.",
+    "expected": "Danh tính actor lấy từ người gọi hoặc integration đáng tin cậy. Người dùng không được tự khai báo một hành động duyệt sản xuất/YouTube đã xảy ra khi không có quyền và tài nguyên tương ứng.",
+    "root": "Router thiếu policy nghiệp vụ; controller truyền thẳng req.body/params vào ingestion service. Production service nhận actorId từ payload và xây domain event; không xác thực video ownership/workflow ở ranh giới này.",
+    "refs": [
+      [
+        "backend/src/routes/competition.routes.js",
+        "router.post('/events/publish'"
+      ],
+      [
+        "backend/src/controllers/competition.controller.js",
+        "async function publishDomainEvent"
+      ],
+      [
+        "backend/src/controllers/competition.controller.js",
+        "async function triggerProductionAction"
+      ],
+      [
+        "backend/src/services/competition/productionIntegration.service.js",
+        "async function recordVideoApproved"
+      ]
+    ],
+    "impact": "Làm giả nhật ký nghiệp vụ và đầu vào chấm điểm. Chưa quan sát phát sinh điểm trái phép vì worker chấm điểm chưa được chạy (BUG-004); không xem worker đang tắt là biện pháp bảo vệ.",
+    "fix": "Đóng route ingestion cho integration được xác thực hoặc service nội bộ. Với route người dùng, áp policy theo action/resource, lấy actor từ req.user, xác minh trạng thái sản xuất và idempotency ở server; kiểm tra team/season.",
+    "risk": "Các integration hợp lệ và replay/import lịch sử có thể cần cơ chế service principal riêng.",
+    "verify": "User thường gửi actorId khác bị từ chối; request không có video hợp lệ không tạo event. Integration hợp lệ vẫn tạo đúng một event và một bộ effects khi retry.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/routes/competition.routes.js:104](/Applications/du-an/workrank/workrank-realtime/backend/src/routes/competition.routes.js:104)",
+      "[backend/src/controllers/competition.controller.js:683](/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/competition.controller.js:683)",
+      "[backend/src/controllers/competition.controller.js:719](/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/competition.controller.js:719)",
+      "[backend/src/services/competition/productionIntegration.service.js:21](/Applications/du-an/workrank/workrank-realtime/backend/src/services/competition/productionIntegration.service.js:21)"
+    ]
+  },
+  {
+    "id": "BUG-003",
+    "title": "Đổi mật khẩu không thu hồi refresh token đã cấp",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Auth / Session",
+    "route": "/settings; /api/auth/refresh-token",
+    "steps": [
+      "Đăng nhập và giữ refresh token R.",
+      "Đổi mật khẩu qua PATCH /api/auth/password.",
+      "Dùng R cũ để POST /api/auth/refresh-token."
+    ],
+    "observed": "Đổi mật khẩu thành công; token R cũ vẫn refresh trả 200 và user 36. Lượt 16/10 cũng quan sát refresh sau logout vẫn 200. Logout hiện được code mô tả là logout cục bộ; lỗi chính ở đây là đổi mật khẩu không vô hiệu hóa thông tin xác thực cũ.",
+    "expected": "Đổi mật khẩu phải thu hồi các refresh session cũ theo chính sách rõ ràng; token bị lộ trước đó không thể tiếp tục cấp access token mới.",
+    "root": "Refresh chỉ xác minh chữ ký/hạn JWT và trạng thái user. issueTokens không lưu session/token hash hoặc tokenVersion; changePassword chỉ thay passwordHash và lastSeenAt.",
+    "refs": [
+      [
+        "backend/src/services/auth.service.js",
+        "async function issueTokens"
+      ],
+      [
+        "backend/src/services/auth.service.js",
+        "async function refresh("
+      ],
+      [
+        "backend/src/services/auth.service.js",
+        "async function changePassword"
+      ]
+    ],
+    "impact": "Người giữ refresh token cũ có thể tiếp tục truy cập sau khi chủ tài khoản đổi mật khẩu, trong thời hạn refresh token.",
+    "fix": "Thêm refresh sessions hoặc tokenVersion/credentialsChangedAt; rotate refresh token và phát hiện reuse. Thu hồi session khi đổi mật khẩu; xác định chính sách giữ phiên hiện tại và logout.",
+    "risk": "Có thể buộc đăng nhập lại người dùng hiện tại; cần triển khai tương thích token cũ và socket đang mở.",
+    "verify": "R trước đổi mật khẩu trả 401 sau thay đổi; token mới hoạt động; account locked vẫn 403; logout theo policy được kiểm tra riêng.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/services/auth.service.js:20](/Applications/du-an/workrank/workrank-realtime/backend/src/services/auth.service.js:20)",
+      "[backend/src/services/auth.service.js:66](/Applications/du-an/workrank/workrank-realtime/backend/src/services/auth.service.js:66)",
+      "[backend/src/services/auth.service.js:111](/Applications/du-an/workrank/workrank-realtime/backend/src/services/auth.service.js:111)"
+    ]
+  },
+  {
+    "id": "BUG-004",
+    "title": "Worker xử lý competition và outbox tồn tại nhưng không được khởi động",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Background process / Logic / Realtime",
+    "route": "Arena / Grand / Admin Operations / backend startup",
+    "steps": [
+      "Khởi động backend bằng npm start hoặc node src/server.js.",
+      "Tạo domain event hợp lệ/fixture.",
+      "Chờ trên 60 giây, đọc event status và integration health."
+    ],
+    "observed": "Event mới vẫn PENDING sau khoảng 70 giây; event của lượt 16/10 cũng còn PENDING ngày 17/10. Health trả pendingCount=2, processedCount=0, status=HEALTHY. event_outbox đang rỗng trong fixture: bằng chứng runtime này trực tiếp chứng minh competition_events không tiêu thụ; phần dispatcher không được nối xác nhận qua source.",
+    "expected": "Deployment có worker consumer rõ ràng, tự khởi động hoặc process riêng được cấu hình. Event tiến tới PROCESSED/FAILED/IGNORED; hệ thống phát hiện consumer chết hoặc pending quá hạn.",
+    "root": "server.js chỉ khởi động YouTube sync và keepAlive, gắn realtime rồi listen; không import/start competitionEngine.worker hay outboxDispatcher.worker. Package scripts không khai báo worker process riêng. Health chỉ xem số FAILED, không có heartbeat/tuổi pending.",
+    "refs": [
+      [
+        "backend/src/server.js",
+        "async function start"
+      ],
+      [
+        "backend/src/services/competition/competitionEngine.worker.js",
+        "const POLL_INTERVAL_MS"
+      ],
+      [
+        "backend/src/workers/outboxDispatcher.worker.js",
+        "function start()"
+      ],
+      [
+        "backend/src/services/competition/competitionIntegrationMonitor.service.js",
+        "status: statusMap.FAILED"
+      ]
+    ],
+    "impact": "Pipeline event-driven không tính effects/điểm và không phát kết quả mong đợi. Một số game/KPI dùng luồng ghi trực tiếp vẫn hoạt động; không kết luận toàn bộ cách tính điểm đều chết.",
+    "fix": "Chọn một owner/process cho mỗi consumer, nối start/stop có graceful shutdown; nếu chạy nhiều instance cần claim/lock/idempotency. Bổ sung heartbeat, oldestPendingAge, processing lag và readiness phù hợp.",
+    "risk": "Bật consumer ngay có thể xử lý backlog cũ, gồm event không hợp lệ của BUG-002; phải khóa ingestion và rà backlog trước.",
+    "verify": "Boot sạch → phát event → chờ tối đa SLA → terminal state, effects đúng và không nhân đôi khi restart. Tắt worker thì operations báo degraded/unknown. Kiểm tra outbox bằng row fixture riêng.",
+    "evidence": [
+      "reproduced.json",
+      "db-snapshot.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/server.js:13](/Applications/du-an/workrank/workrank-realtime/backend/src/server.js:13)",
+      "[backend/src/services/competition/competitionEngine.worker.js:37](/Applications/du-an/workrank/workrank-realtime/backend/src/services/competition/competitionEngine.worker.js:37)",
+      "[backend/src/workers/outboxDispatcher.worker.js:75](/Applications/du-an/workrank/workrank-realtime/backend/src/workers/outboxDispatcher.worker.js:75)",
+      "[backend/src/services/competition/competitionIntegrationMonitor.service.js:68](/Applications/du-an/workrank/workrank-realtime/backend/src/services/competition/competitionIntegrationMonitor.service.js:68)"
+    ]
+  },
+  {
+    "id": "BUG-005",
+    "title": "Lệnh test backend có thể dùng DB thật và xóa toàn bộ bảng nghiệp vụ",
+    "severity": "P1",
+    "kind": "TECH DEBT",
+    "area": "Tooling / Data safety",
+    "route": "backend npm test",
+    "steps": [
+      "Đọc npm test: chỉ đặt NODE_ENV=test.",
+      "Đối chiếu env.js: dotenv vẫn nạp DB_NAME và DB_DIALECT từ .env.",
+      "Đọc before/cleanTables của các test có destroy({where:{}}). Không chạy kịch bản này trên DB người dùng."
+    ],
+    "observed": "Runtime test không chuyển sang DB_NAME_TEST như cấu hình sequelize-cli test. Nếu .env có mysql và DB_NAME của môi trường làm việc, test dùng chính DB đó. Một số suite xóa toàn bộ CompetitionEvent/EventOutbox/QuizRoom/QuizQuestion/QuizSet. Đây là rủi ro xác nhận bằng source, không phải sự cố mất dữ liệu đã gây ra trong audit.",
+    "expected": "Lệnh test phải tạo/chọn database cô lập, chặn mọi DB không được phép trước khi import model hoặc chạy hooks phá dữ liệu.",
+    "root": "Cấu hình test runtime và sequelize-cli không thống nhất; không có guard tên DB/instance, không có schema reset/namespace fixture bắt buộc.",
+    "refs": [
+      [
+        "backend/package.json",
+        "\"test\":"
+      ],
+      [
+        "backend/src/config/env.js",
+        "name: process.env.DB_NAME"
+      ],
+      [
+        "backend/src/config/sequelize-cli.js",
+        "process.env.DB_NAME_TEST"
+      ],
+      [
+        "backend/test/competition_phase1.test.js",
+        "async function cleanTables"
+      ],
+      [
+        "backend/test/quiz_admin_management_e2e.test.js",
+        "await QuizAnswer.destroy"
+      ]
+    ],
+    "impact": "Developer/CI có thể xóa dữ liệu làm việc chỉ bằng npm test. Audit dùng DB audit riêng nên không quan sát mất dữ liệu gốc.",
+    "fix": "Thiết lập test config duy nhất, bắt buộc database kết thúc _test hoặc container riêng, fail-fast trước khi import models; không chỉ dựa NODE_ENV. Kiểm tra whitelist connection và tạo schema trước suite.",
+    "risk": "Test cũ dựa dữ liệu seed hoặc chia sẻ bảng sẽ cần chuẩn hóa fixtures và cleanup theo ownership.",
+    "verify": "Chạy lệnh test với DB_NAME của môi trường làm việc phải fail trước mọi truy vấn ghi; test DB riêng migrate/seed và suite chạy được; bảng sentinel ngoài test DB nguyên vẹn.",
+    "evidence": [
+      "SESSION_NOTE.md"
+    ],
+    "status": "CODE CONFIRMED — không chạy phá dữ liệu",
+    "codeLinks": [
+      "[backend/package.json:13](/Applications/du-an/workrank/workrank-realtime/backend/package.json:13)",
+      "[backend/src/config/env.js:19](/Applications/du-an/workrank/workrank-realtime/backend/src/config/env.js:19)",
+      "[backend/src/config/sequelize-cli.js:30](/Applications/du-an/workrank/workrank-realtime/backend/src/config/sequelize-cli.js:30)",
+      "[backend/test/competition_phase1.test.js:40](/Applications/du-an/workrank/workrank-realtime/backend/test/competition_phase1.test.js:40)",
+      "[backend/test/quiz_admin_management_e2e.test.js:31](/Applications/du-an/workrank/workrank-realtime/backend/test/quiz_admin_management_e2e.test.js:31)"
+    ]
+  },
+  {
+    "id": "BUG-006",
+    "title": "Sâm Lốc không tạo được phòng trên schema MySQL được migrate",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Database / API / Core workflow",
+    "route": "/games/sam",
+    "steps": [
+      "Migrate schema MySQL bằng db:migrate.",
+      "Đăng nhập user, chọn tạo phòng Sâm hoặc POST /api/games/sam/rooms."
+    ],
+    "observed": "POST trả 500: Column 'has_declared_sam' cannot be null. Không tạo được phòng để chơi thật. Lỗi tái hiện cả 16/10 và 17/10.",
+    "expected": "Tạo phòng 201 và thêm host thành công trên schema chính thức.",
+    "root": "SamPlayer model khai báo hasDeclaredSam allowNull=true/defaultValue=null, trong khi migration has_declared_sam NOT NULL/default=false; createRoom dùng giá trị mặc định model null.",
+    "refs": [
+      [
+        "backend/src/models/SamPlayer.js",
+        "hasDeclaredSam:"
+      ],
+      [
+        "backend/src/migrations/20261001180000-create-sam-game-tables.js",
+        "has_declared_sam:"
+      ],
+      [
+        "backend/src/services/samGame.service.js",
+        "async function createRoom"
+      ]
+    ],
+    "impact": "Chặn gameplay Sâm trên DB mới; tạo hàng loạt lỗi test phụ thuộc việc tạo người chơi/phòng.",
+    "fix": "Chốt tri-state nghiệp vụ (chưa tuyên bố / có / không) rồi đồng bộ model, service và migration bổ sung; không sửa migration cũ đơn độc cho DB đã triển khai.",
+    "risk": "Các bước khai báo Sâm, reset ván và bot có thể phụ thuộc null/false khác nhau.",
+    "verify": "Fresh migrate và upgrade DB cũ đều tạo/join/reset/start được phòng; test cả null/chưa quyết định, declared true/false theo contract đã chọn.",
+    "evidence": [
+      "reproduced.json",
+      "db-snapshot.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/models/SamPlayer.js:49](/Applications/du-an/workrank/workrank-realtime/backend/src/models/SamPlayer.js:49)",
+      "[backend/src/migrations/20261001180000-create-sam-game-tables.js:86](/Applications/du-an/workrank/workrank-realtime/backend/src/migrations/20261001180000-create-sam-game-tables.js:86)",
+      "[backend/src/services/samGame.service.js:245](/Applications/du-an/workrank/workrank-realtime/backend/src/services/samGame.service.js:245)"
+    ]
+  },
+  {
+    "id": "BUG-007",
+    "title": "Danh sách phòng Capital Board trả 500 vì ORDER BY mơ hồ",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "API / SQL / Navigation",
+    "route": "/games/capital-board",
+    "steps": [
+      "Đăng nhập.",
+      "Mở sảnh Capital Board hoặc GET /api/games/rooms?limit=30."
+    ],
+    "observed": "Trả 500: Column 'status' in order clause is ambiguous. UI báo lỗi và hiển thị sảnh không có phòng trong khi tạo phòng/deep-link phòng có thể hoạt động.",
+    "expected": "Danh sách trả 200 và sắp phòng WAITING lên trước; trạng thái lỗi phân biệt rõ với dữ liệu rỗng.",
+    "root": "literal CASE WHEN status = WAITING trong query có JOIN dùng tên cột status không định danh bảng; nhiều bảng có cột này.",
+    "refs": [
+      [
+        "backend/src/services/capitalBoardGame.service.js",
+        "async listRooms"
+      ],
+      [
+        "backend/src/services/capitalBoardGame.service.js",
+        "CASE WHEN status"
+      ]
+    ],
+    "impact": "Luồng tìm/vào phòng từ sảnh hỏng, gây hiểu nhầm không có phòng.",
+    "fix": "Dùng tên alias cột đúng model/bảng trong ORDER BY hoặc biểu thức Sequelize được qualify; kiểm tra query thực tế trên MySQL.",
+    "risk": "Alias có thể thay đổi theo include; test SQLite không đảm bảo bắt được cùng lỗi.",
+    "verify": "Sảnh có/không có phòng đều 200; WAITING trước PLAYING; giới hạn 30 đúng; loading/error/retry không hiện empty giả.",
+    "evidence": [
+      "reproduced.json",
+      "_games_capital-board-1440.png"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/services/capitalBoardGame.service.js:102](/Applications/du-an/workrank/workrank-realtime/backend/src/services/capitalBoardGame.service.js:102)",
+      "[backend/src/services/capitalBoardGame.service.js:116](/Applications/du-an/workrank/workrank-realtime/backend/src/services/capitalBoardGame.service.js:116)"
+    ]
+  },
+  {
+    "id": "BUG-008",
+    "title": "2048 mất tiến độ khi đi sang trang khác trước kỳ checkpoint",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Persistence / Routing / State",
+    "route": "/games/2048 → /dashboard → /games/2048",
+    "steps": [
+      "Chơi một số nước và tăng điểm trong chưa đầy 25 giây.",
+      "Bấm Tổng quan trên sidebar.",
+      "Quay lại 2048."
+    ],
+    "observed": "Tái kiểm thử: từ 240 điểm/45 nước về 176 điểm/30 nước. Lượt đầu cũng từ 36 về 0 khi chưa có checkpoint. UI hứa luôn tự động lưu liên tục và an tâm thoát bất kỳ lúc nào.",
+    "expected": "Giữ board/score/moves gần nhất khi chuyển route; không phụ thuộc thời điểm timer hoặc điểm có tăng hay không.",
+    "root": "Checkpoint mỗi 25 giây chỉ chạy nếu score lớn hơn lastPersistedScore. Cleanup interval khi unmount không flush; SPA navigation không phát pagehide/beforeunload. Di chuyển board không cộng điểm cũng bị bỏ qua điều kiện dirty dựa score.",
+    "refs": [
+      [
+        "frontend/src/pages/Game2048.jsx",
+        "// Periodic checkpoint timer"
+      ],
+      [
+        "frontend/src/pages/Game2048.jsx",
+        "state.score > lastPersistedScoreRef.current"
+      ],
+      [
+        "frontend/src/App.jsx",
+        "function RouteErrorBoundary"
+      ]
+    ],
+    "impact": "Mất tiến độ ván đang chơi và làm sai thông điệp lưu tự động.",
+    "fix": "Lưu snapshot cục bộ theo người dùng ngay khi board thay đổi; đồng bộ server có debounce/version và flush route exit. Tách dirty revision khỏi score; một owner cho phiên game, tránh request cũ ghi đè mới.",
+    "risk": "Concurrent checkpoint, multi-tab và logout cần chính sách revision/ownership cùng BUG-001.",
+    "verify": "Đi route/back/refresh trước và sau 25s, nước đi không tăng điểm, mạng chậm/offline rồi reconnect đều giữ snapshot và không ghi đè phiên người khác.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/Game2048.jsx:250](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Game2048.jsx:250)",
+      "[frontend/src/pages/Game2048.jsx:254](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Game2048.jsx:254)",
+      "[frontend/src/App.jsx:152](/Applications/du-an/workrank/workrank-realtime/frontend/src/App.jsx:152)"
+    ]
+  },
+  {
+    "id": "BUG-009",
+    "title": "Typing reload không khôi phục bài đang gõ và ghi số 0 đè tiến độ server",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Realtime / Persistence / Lifecycle",
+    "route": "/games/typing/room/:roomId",
+    "steps": [
+      "Hai user tạo, ready và bắt đầu trận 30 giây.",
+      "A gõ một đoạn và đợi progress được gửi lên server.",
+      "Reload hoặc chuyển route/quay lại trước khi hết giờ, chờ trận kết thúc."
+    ],
+    "observed": "Lượt 16/10 server đã nhận typedChars=56/progress=12.6%; sau reload input rỗng, khi timeout kết quả typedChars/errorCount về 0. Fixture trận đó còn trong DB: cả hai FINISHED, typedChars=0, WPM=0. Lượt17/10 tái hiện lại: server nhận42ký tự trước reload; input sau reload rỗng; kết quả FINISHED ghi0ký tự. Bằng chứng mới đầy đủ trong typing-recovery.json.",
+    "expected": "Reload tiếp tục hoặc khôi phục chỉ số đã xác nhận; client mới không được gửi final zero làm giảm tiến độ đã có.",
+    "root": "typedText/error state thuộc component. fetchRoomDetail và roomState khôi phục room/players/startTime nhưng không khôi phục nội dung đang gõ. Timer finish gửi typedText.length hiện tại; backend submitFinish gán đè typedChars/errorCount mà không revision/monotonic guard.",
+    "refs": [
+      [
+        "frontend/src/pages/TypingBattle.jsx",
+        "const [typedText, setTypedText]"
+      ],
+      [
+        "frontend/src/pages/TypingBattle.jsx",
+        "const fetchRoomDetail"
+      ],
+      [
+        "frontend/src/pages/TypingBattle.jsx",
+        "const handleRoomState"
+      ],
+      [
+        "backend/src/services/typingGame.service.js",
+        "async function submitFinish"
+      ]
+    ],
+    "impact": "Người dùng mất kết quả đang thi; kết quả và điểm không phản ánh thao tác trước reconnect.",
+    "fix": "Thiết kế checkpoint theo roomId+userId có revision, lưu draft tại client để phục hồi đúng đoạn. Reconcile khi join lại trước cho phép submit. Server không nhận snapshot cũ làm lùi progress; chốt authoritative deadline và chống finalize trùng.",
+    "risk": "SOLO/1V1/team mode, spectate, reset, kết thúc bằng timeout và người gõ xong sớm phải cùng contract.",
+    "verify": "Hai browser thật: gõ→reload→gõ tiếp, route/back, disconnect/reconnect trước deadline. Chỉ số cuối >= checkpoint hợp lệ trước đó; không duplicate ledger.",
+    "evidence": [
+      "db-snapshot.json",
+      "typing-recovery.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/TypingBattle.jsx:695](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/TypingBattle.jsx:695)",
+      "[frontend/src/pages/TypingBattle.jsx:870](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/TypingBattle.jsx:870)",
+      "[frontend/src/pages/TypingBattle.jsx:978](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/TypingBattle.jsx:978)",
+      "[backend/src/services/typingGame.service.js:772](/Applications/du-an/workrank/workrank-realtime/backend/src/services/typingGame.service.js:772)"
+    ]
+  },
+  {
+    "id": "BUG-010",
+    "title": "Typing vẫn chấm hoàn thành và thưởng điểm khi không gõ; anti-cheat chỉ log",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Scoring / Validation / Logic",
+    "route": "Typing RANKED; /api/games/typing/rooms/:id/finish",
+    "steps": [
+      "Tạo trận RANKED 1V1 với hai user.",
+      "Một user không gõ; để hết giờ hoặc gửi finish với typedChars=0.",
+      "Xem performanceScore, awardedPoints và ledger."
+    ],
+    "observed": "Trận fixture 16/10: hai user typedChars=0, WPM=0, accuracy=100, performanceScore=69; người thắng được 32 điểm, người thua 17 điểm. Có giới hạn ngày 5 trận/150 điểm nên không kết luận farm vô hạn. Lượt17/10 xác nhận lại người thắng0ký tự vẫn scoreDelta=32; Bob không gõ và không mở client lúc timeout vẫn được4điểm. Code nhánh plausibility.valid=false ghi warning có chữ rejected nhưng vẫn tiếp tục lưu và chấm.",
+    "expected": "Điểm hoàn thành/thi đấu cần điều kiện tham gia hợp lệ. Submission bị anti-cheat reject không được tiếp tục nhận điểm.",
+    "root": "submitFinish luôn truyền completed=true vào performance score, không có ngưỡng tiến độ tối thiểu; calculateAwardedPoints có effort/win/completion bonus dù typedChars=0. Kết quả validateSubmissionPlausibility không chặn luồng.",
+    "refs": [
+      [
+        "backend/src/services/typingGame.service.js",
+        "if (!plausibility.valid)"
+      ],
+      [
+        "backend/src/services/typingGame.service.js",
+        "completed: true"
+      ],
+      [
+        "backend/src/services/typingEngine.js",
+        "function calculateAwardedPoints"
+      ]
+    ],
+    "impact": "Điểm WorkRank/competition phản ánh sai đóng góp và có thể bị khai thác trong hạn mức ngày.",
+    "fix": "Chốt policy minimum typed/progress, completion ratio và timeout. Reject/quarantine invalid submission trước effects; accuracy cho zero input không coi như hoàn thành hoàn hảo; server tính thời gian và chốt điểm idempotent.",
+    "risk": "Phải phân biệt người dùng mạng yếu/reload với gian lận; tránh phạt hồi phục hợp lệ do BUG-009.",
+    "verify": "Idle, zero, negative, vượt challenge length, duration giả và tốc độ bất khả thi không nhận điểm; bài hợp lệ được điểm đúng; timeout dở dang có policy minh bạch.",
+    "evidence": [
+      "db-snapshot.json",
+      "typing-recovery.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/services/typingGame.service.js:803](/Applications/du-an/workrank/workrank-realtime/backend/src/services/typingGame.service.js:803)",
+      "[backend/src/services/typingGame.service.js:825](/Applications/du-an/workrank/workrank-realtime/backend/src/services/typingGame.service.js:825)",
+      "[backend/src/services/typingEngine.js:149](/Applications/du-an/workrank/workrank-realtime/backend/src/services/typingEngine.js:149)"
+    ]
+  },
+  {
+    "id": "BUG-011",
+    "title": "Nhiều tab dùng token tài khoản mới nhưng UI giữ danh tính tài khoản cũ",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Session / State synchronization",
+    "route": "Toàn bộ protected routes",
+    "steps": [
+      "Tab A đăng nhập Alice và mở Dashboard.",
+      "Tab B cùng origin đăng nhập Bob.",
+      "Ở tab A đọc UI và gọi /api/auth/me hoặc thao tác ghi."
+    ],
+    "observed": "Tab A vẫn hiển thị Alice, nhưng request /auth/me dùng token trong localStorage mới và trả Bob. Lượt đầu logout ở một tab cũng để tab kia giữ Dashboard cũ khi storage đã hết token.",
+    "expected": "Identity của UI, API và Socket phải đồng nhất. Đổi tài khoản/logout ở một tab khiến tab khác reconcile hoặc buộc xác nhận phiên mới.",
+    "root": "AuthContext chỉ lắng CustomEvent workrank:auth-updated trong cùng window; không nghe storage/BroadcastChannel. user nằm trong memory mỗi tab, Axios đọc token dùng chung từ localStorage; socket có thể giữ identity cũ.",
+    "refs": [
+      [
+        "frontend/src/context/AuthContext.jsx",
+        "const handleAuthUpdated"
+      ],
+      [
+        "frontend/src/services/api.js",
+        "function clearAuth"
+      ],
+      [
+        "frontend/src/services/api.js",
+        "localStorage.getItem('token')"
+      ]
+    ],
+    "impact": "Người dùng có thể thực hiện thao tác dưới tài khoản khác với danh tính đang thấy; dữ liệu và realtime sai chủ thể.",
+    "fix": "Dùng một protocol session change qua storage/BroadcastChannel, reconcile user+token+socket như một transaction. Hủy request/cache theo session generation khi chuyển identity.",
+    "risk": "Refresh rotation và logout trên nhiều tab có thể tạo vòng refresh; cần leader/lock hoặc retry có kiểm soát.",
+    "verify": "A/B login/logout/refresh ở hai tab; trước mọi action UI và /me/socket cùng userId; request của generation cũ bị hủy/không commit.",
+    "evidence": [
+      "supplement.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/context/AuthContext.jsx:60](/Applications/du-an/workrank/workrank-realtime/frontend/src/context/AuthContext.jsx:60)",
+      "[frontend/src/services/api.js:21](/Applications/du-an/workrank/workrank-realtime/frontend/src/services/api.js:21)",
+      "[frontend/src/services/api.js:170](/Applications/du-an/workrank/workrank-realtime/frontend/src/services/api.js:170)"
+    ]
+  },
+  {
+    "id": "BUG-012",
+    "title": "Lỗi mạng/500 lúc kiểm tra phiên và xóa tài khoản thất bại đều làm logout",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Auth / Error handling",
+    "route": "Auth bootstrap; /settings",
+    "steps": [
+      "Đăng nhập hợp lệ, chặn /api/auth/me trả 500 rồi reload Dashboard.",
+      "Độc lập: nhập sai password trong form xóa tài khoản."
+    ],
+    "observed": "auth/me 500 khiến token và refreshToken bị xóa, chuyển /login. Lượt 16/10 delete account trả 400 sai mật khẩu nhưng vẫn clearAuth và logout. Đây là hai đường clear session không phân loại lỗi.",
+    "expected": "Lỗi tạm thời có màn hình lỗi/retry và giữ credential hợp lệ. Delete thất bại không đăng xuất; chỉ xóa phiên sau thành công hoặc xác thực bị thu hồi thật.",
+    "root": "fetchMe catch mọi exception đều clearLocalSession. auth.deleteAccount dùng finally clearAuth bất kể kết quả server.",
+    "refs": [
+      [
+        "frontend/src/context/AuthContext.jsx",
+        "} catch (err) {"
+      ],
+      [
+        "frontend/src/services/api.js",
+        "deleteAccount: async"
+      ]
+    ],
+    "impact": "Sự cố API ngắn hạn buộc đăng nhập lại; validation sai ở hành động nguy hiểm gây mất ngữ cảnh và khó hiểu.",
+    "fix": "Tách unauthorized/revoked khỏi network/5xx/validation. Bootstrap có trạng thái unavailable/retry. Move clearAuth của deleteAccount sang nhánh success; giữ refresh logic 401 chỉ chạy một lần.",
+    "risk": "Không được giữ UI có quyền truy cập khi token thật sự vô hiệu; phân biệt credential presence với authenticated user.",
+    "verify": "500/timeout/offline không xóa token; retry thành công vào lại; 401 refresh fail và revoked logout; delete sai password vẫn ở Settings với lỗi rõ, đúng password mới logout.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/context/AuthContext.jsx:30](/Applications/du-an/workrank/workrank-realtime/frontend/src/context/AuthContext.jsx:30)",
+      "[frontend/src/services/api.js:245](/Applications/du-an/workrank/workrank-realtime/frontend/src/services/api.js:245)"
+    ]
+  },
+  {
+    "id": "BUG-013",
+    "title": "Giám sát vận hành báo Online/100% khi dữ liệu lỗi hoặc worker không chạy",
+    "severity": "P1",
+    "kind": "BUG",
+    "area": "Data accuracy / Error state / Operations",
+    "route": "/admin/operations",
+    "steps": [
+      "Chặn các API monitoring trả 500, giữ auth/me hoạt động.",
+      "Mở tab Sức Khỏe Hệ Thống và đọc từng card.",
+      "So sánh với pending events không được xử lý ở BUG-004."
+    ],
+    "observed": "Header có Cần Chú Ý nhưng các card vẫn ghi HOẠT ĐỘNG, worker Sẵn sàng (Online), queue TỐT, YouTube KẾT NỐI, thành công 100%, đồng bộ Vừa xong và drift 0% — Đồng bộ 100%. Khi API thật trả summary.pendingCount, UI còn đọc integrationHealth.outbox.pendingCount không khớp contract.",
+    "expected": "Không có dữ liệu hoặc request lỗi phải hiển thị Unknown/Không tải được; Online/100% cần bằng chứng đo. Pending lâu và worker chết phải bị phát hiện.",
+    "root": "Promise.all biến từng lỗi thành null/[] và mất error metadata. Nhiều nhãn hard-code/fallback thành công, dùng || cho số 0 hợp lệ. Contract frontend/backend health không thống nhất; backend health chỉ nhìn failedCount.",
+    "refs": [
+      [
+        "frontend/src/pages/AdminOperations.jsx",
+        "competition.adminGetIntegrationHealth().catch"
+      ],
+      [
+        "frontend/src/pages/AdminOperations.jsx",
+        "HOẠT ĐỘNG"
+      ],
+      [
+        "frontend/src/pages/AdminOperations.jsx",
+        "ytHealth?.successRate ||"
+      ],
+      [
+        "frontend/src/pages/AdminOperations.jsx",
+        "0% — Đồng bộ 100%"
+      ],
+      [
+        "backend/src/services/competition/competitionIntegrationMonitor.service.js",
+        "summary:"
+      ]
+    ],
+    "impact": "Người vận hành bị trấn an sai, bỏ qua consumer chết và dữ liệu chưa đồng bộ; trở ngại xử lý sự cố cốt lõi.",
+    "fix": "Giữ loading/error/unknown cho từng nguồn; schema health chung, fallback nullish đúng nghĩa; chỉ hiển thị drift sau đo. Backend cung cấp heartbeat, age/lag và trạng thái worker thực.",
+    "risk": "Màn hình có thể chuyển nhiều card sang Unknown thay vì xanh; đó là dữ liệu đúng. Cần kiểm tra lỗi từng phần và quyền admin.",
+    "verify": "Tất cả API 500 → không card xanh giả; successRate=0 hiển thị 0%; không lastSyncedAt → Chưa có dữ liệu; worker chết/pending quá SLA → degraded.",
+    "evidence": [
+      "reproduced.json",
+      "operations-500.png"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/AdminOperations.jsx:125](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminOperations.jsx:125)",
+      "[frontend/src/pages/AdminOperations.jsx:362](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminOperations.jsx:362)",
+      "[frontend/src/pages/AdminOperations.jsx:429](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminOperations.jsx:429)",
+      "[frontend/src/pages/AdminOperations.jsx:507](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminOperations.jsx:507)",
+      "[backend/src/services/competition/competitionIntegrationMonitor.service.js:69](/Applications/du-an/workrank/workrank-realtime/backend/src/services/competition/competitionIntegrationMonitor.service.js:69)"
+    ]
+  },
+  {
+    "id": "BUG-014",
+    "title": "Chuyển route làm đóng hội thoại và mất bản nháp chat",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "State / Routing / UX",
+    "route": "FriendsDock trên toàn bộ Layout",
+    "steps": [
+      "Mở danh bạ, chọn Nhắn tin với Bob.",
+      "Nhập bản nháp chưa gửi.",
+      "Bấm Số liệu YouTube hoặc đổi query route rồi mở lại hội thoại."
+    ],
+    "observed": "Chat quay về danh bạ; giá trị input trở thành chuỗi rỗng. Tin đã gửi trong DB không bị xóa; phần mất là hội thoại đang mở và nội dung chưa gửi.",
+    "expected": "Trong workspace, điều hướng trang vẫn giữ hội thoại và draft theo tài khoản/người nhận.",
+    "root": "RouteErrorBoundary có key gồm location.key/path/search bao toàn bộ AppRoutes, làm remount Layout/FriendsDock cho mỗi history entry. activeChatUser/chatInput nằm trong local useState; openChat cũng setChatInput rỗng.",
+    "refs": [
+      [
+        "frontend/src/App.jsx",
+        "function RouteErrorBoundary"
+      ],
+      [
+        "frontend/src/components/FriendsDock.jsx",
+        "const [activeChatUser"
+      ],
+      [
+        "frontend/src/components/FriendsDock.jsx",
+        "const [chatInput"
+      ]
+    ],
+    "impact": "Mất nội dung đang soạn và phải mở lại liên hệ sau mỗi lần xem dữ liệu khác.",
+    "fix": "Giữ Layout/shell mounted qua route; reset error boundary bằng resetKey/state thay vì key toàn subtree. Lưu draft theo userId+recipientId ở owner bền hơn page và chỉ xóa khi gửi thành công/chủ động bỏ.",
+    "risk": "Thay boundary có thể ảnh hưởng recovery từ lỗi render/chunk; cần test cả fallback và route khác sau crash.",
+    "verify": "Soạn→đổi route/query→Back→đổi liên hệ→quay lại giữ đúng draft; logout không lộ draft cho user kế tiếp; lỗi route không làm app mắc kẹt.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/App.jsx:152](/Applications/du-an/workrank/workrank-realtime/frontend/src/App.jsx:152)",
+      "[frontend/src/components/FriendsDock.jsx:118](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/FriendsDock.jsx:118)",
+      "[frontend/src/components/FriendsDock.jsx:121](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/FriendsDock.jsx:121)"
+    ]
+  },
+  {
+    "id": "BUG-015",
+    "title": "2048 đếm một ván thành hai ván khi có checkpoint trước submit",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "Data / Statistics",
+    "route": "/games/2048; my-stats",
+    "steps": [
+      "Tạo user fixture mới chưa có Game2048UserStat.",
+      "Start một phiên, checkpoint score=4/moves=1.",
+      "Submit kết thúc đúng phiên đó, đọc my-stats."
+    ],
+    "observed": "Sau checkpoint totalGames=1/totalMoves=1; sau submit thành totalGames=2/totalMoves=2 dù chỉ một ván và một nước được báo.",
+    "expected": "Một phiên kết thúc chỉ cộng một lần; checkpoint chỉ cập nhật tiến độ/best hoặc có delta thống kê được quản lý nhất quán.",
+    "root": "checkpoint findOrCreate stat có defaults totalGames=1,totalMoves=numMoves; submit tìm stat đã có và cộng thêm cùng game/moves khi chưa finalized.",
+    "refs": [
+      [
+        "backend/src/services/game2048.service.js",
+        "async function checkpointSession"
+      ],
+      [
+        "backend/src/services/game2048.service.js",
+        "totalGames: 1"
+      ],
+      [
+        "backend/src/services/game2048.service.js",
+        "stat.totalGames ="
+      ]
+    ],
+    "impact": "Hồ sơ và bảng xếp hạng thống kê sai, nhất là ván đầu tiên; audit không kết luận mọi ván đều bị nhân đôi.",
+    "fix": "Chọn thời điểm duy nhất chốt aggregate ở finalization transaction; khi tạo stat bởi checkpoint khởi tạo counter 0. Bảo vệ idempotency/race cho submit.",
+    "risk": "Dữ liệu lịch sử đã sai không thể sửa bằng đổi code đơn giản; cần kế hoạch backfill từ sessions nếu muốn.",
+    "verify": "User mới start/checkpoint/submit →1 ván; submit lại không tăng; nhiều checkpoint không tăng; user cũ có counters đúng và parallel submit không nhân đôi.",
+    "evidence": [
+      "reproduced.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/services/game2048.service.js:105](/Applications/du-an/workrank/workrank-realtime/backend/src/services/game2048.service.js:105)",
+      "[backend/src/services/game2048.service.js:167](/Applications/du-an/workrank/workrank-realtime/backend/src/services/game2048.service.js:167)",
+      "[backend/src/services/game2048.service.js:300](/Applications/du-an/workrank/workrank-realtime/backend/src/services/game2048.service.js:300)"
+    ]
+  },
+  {
+    "id": "BUG-016",
+    "title": "Nhiều trang tràn ngang bên trong main trên màn hình 390px",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "Responsive / Layout / UX",
+    "route": "Typing; Admin Operations; Admin Teams YouTube; một số trang competition/KPI",
+    "steps": [
+      "Mở trang ở viewport 390px.",
+      "Đo document và main riêng, quan sát nội dung bên phải.",
+      "Kiểm tra thao tác cuộn ngang và khả năng tới CTA."
+    ],
+    "observed": "documentWidth vẫn 390 nhưng main của Typing scrollWidth=515, Teams YouTube=433, Operations=696. Ảnh cho thấy title/card bên phải bị cắt. Dữ liệu có mùa giải làm Grand/KPI/Seasons/Rules/AdminGrand cũng vượt main. Arena từng cho scrollWidth rất lớn trong lúc resize, nhưng lượt đo DOM bổ sung không tái hiện phần tử vượt600px; không dùng phép đo thoáng qua này làm kết luận bug hoặc benchmark hiệu năng.",
+    "expected": "Khung trang/card/form reflow theo chiều rộng; chỉ bảng/tab thật sự cần cuộn ngang có container riêng và chỉ báo phù hợp.",
+    "root": "Các grid/flex con có min-content/min-width và layout chưa thu nhỏ; Operations dùng minmax(280px,1fr) kết hợp card rộng/nội dung nowrap. Shell/main overflow giữ documentWidth bình thường nên kiểm tra toàn document bỏ sót.",
+    "refs": [
+      [
+        "frontend/src/pages/AdminOperations.jsx",
+        "minmax(280px, 1fr)"
+      ],
+      [
+        "frontend/src/pages/TypingBattle.jsx",
+        "return ("
+      ],
+      [
+        "frontend/src/pages/AdminTeamsYouTube.jsx",
+        "return ("
+      ],
+      [
+        "frontend/src/components/Layout.jsx",
+        "<main"
+      ]
+    ],
+    "impact": "Mobile phải kéo ngang cả vùng trang để đọc và thao tác; tiêu đề/card/CTA không hiện trọn. Không đánh đồng bảng có scroll chủ ý với lỗi.",
+    "fix": "Sửa từng container đã chứng minh: min-width:0, wrap nội dung/toolbar, breakpoint cột, max-width:100%; chỉ giữ horizontal scroll cục bộ cho bảng/tabs. Kiểm tra cả dữ liệu dài và dữ liệu có thật.",
+    "risk": "CSS global có thể phá desktop/table overflow; giới hạn selector và dùng quy chuẩn motion khi có transition.",
+    "verify": "Cả 7 viewport đã dùng trong audit: document và shell không tràn; cards/CTA không bị cắt; bảng/tab cục bộ cuộn được; kiểm tra empty và populated.",
+    "evidence": [
+      "crawl.json",
+      "_admin_operations-390.png",
+      "_games_typing-390.png",
+      "_admin_teams-youtube-390.png"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/AdminOperations.jsx:353](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminOperations.jsx:353)",
+      "[frontend/src/pages/TypingBattle.jsx:427](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/TypingBattle.jsx:427)",
+      "[frontend/src/pages/AdminTeamsYouTube.jsx:73](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminTeamsYouTube.jsx:73)",
+      "[frontend/src/components/Layout.jsx:682](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/Layout.jsx:682)"
+    ]
+  },
+  {
+    "id": "BUG-017",
+    "title": "Modal dùng chung chưa quản lý focus bàn phím",
+    "severity": "P2",
+    "kind": "UX ISSUE",
+    "area": "Accessibility / Overlay",
+    "route": "AnimatedModal: Capital rules/create, Quiz và các form dùng chung",
+    "steps": [
+      "Dùng bàn phím mở modal từ nút ở trang.",
+      "Nhấn Tab/Shift+Tab và kiểm tra document.activeElement.",
+      "Đóng modal, kiểm tra focus trở lại trigger."
+    ],
+    "observed": "Lượt đầu các dialog không đưa focus vào; Tab có thể đi tới phần tử nền. Component chỉ nghe ESC; không có initial focus, focus trap, restore focus hoặc inert background. ESC đóng sau thời gian animation bình thường; không ghi ESC là lỗi.",
+    "expected": "Focus vào dialog khi mở, giới hạn trong dialog trong khi mở, trả về trigger khi đóng; dialog có accessible name.",
+    "root": "AnimatedModal portal/aria-modal không tự quản lý focus. role=dialog đặt trên overlay nhưng heading chưa liên kết aria-labelledby; aria-modal một mình không tạo focus trap.",
+    "refs": [
+      [
+        "frontend/src/components/ui.jsx",
+        "export function AnimatedModal"
+      ],
+      [
+        "frontend/src/components/ui.jsx",
+        "aria-modal=\"true\""
+      ]
+    ],
+    "impact": "Người dùng bàn phím/screen reader khó biết modal mở và có thể thao tác nền bị che.",
+    "fix": "Tập trung sửa shared component: lưu trigger, chọn focus target, trap Tab/Shift+Tab, restore sau close, inert nền, gắn id title và aria-labelledby. Giữ exit animation và cleanup đúng.",
+    "risk": "Autofocus form con, nhiều overlay và modal thoát bằng ESC/click ngoài cần phối hợp; không trap focus vào phần tử disabled/ẩn.",
+    "verify": "Kiểm tra mở bằng Enter, Tab vòng trong, Shift+Tab, ESC/đóng, restore trigger; modal không có input vẫn focus được; tên được đọc đúng.",
+    "evidence": [
+      "supplement.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/components/ui.jsx:277](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/ui.jsx:277)",
+      "[frontend/src/components/ui.jsx:325](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/ui.jsx:325)"
+    ]
+  },
+  {
+    "id": "BUG-018",
+    "title": "Chức danh lạ bị hiển thị Editor; giá trị mặc định form khác option đang thấy",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "Data mapping / Form / UX",
+    "route": "JobTitleBadge; /admin/privileges",
+    "steps": [
+      "Xem badge user có jobTitle=Nhân viên/System Administrator hoặc chuỗi chưa map.",
+      "Mở tạo nhân sự, không đổi select chức danh.",
+      "Submit và đối chiếu payload/DB với option hiển thị."
+    ],
+    "observed": "Badge mặc định Editor cho mọi giá trị không nhận diện. createForm.jobTitle=Nhân viên nhưng options là danh sách vai trò bắt đầu Editor, không có Nhân viên; trình duyệt hiển thị option đầu trong khi state/payload vẫn Nhân viên. Fixture nhân sự tiếng Việt tạo thành công nhưng chức danh gây hiểu sai.",
+    "expected": "UI thể hiện đúng dữ liệu; giá trị select và payload thống nhất. Giá trị chưa biết hiển thị nguyên bản hoặc chưa xác định.",
+    "root": "resolveJobTitleConfig trả JOB_TITLE_CONFIG.editor ở fallback; create/edit default dùng chuỗi không thuộc JOB_TITLE_OPTIONS.",
+    "refs": [
+      [
+        "frontend/src/components/JobTitleBadge.jsx",
+        "// Default to Editor"
+      ],
+      [
+        "frontend/src/pages/AdminPrivileges.jsx",
+        "jobTitle: 'Nhân viên'"
+      ],
+      [
+        "frontend/src/pages/AdminPrivileges.jsx",
+        "value={createForm.jobTitle}"
+      ]
+    ],
+    "impact": "Hiển thị sai vai trò nghề nghiệp, admin có thể tạo chức danh khác với thứ họ nghĩ đã chọn. Không phải lỗi quyền RBAC role.",
+    "fix": "Một nguồn enum/contract thống nhất; default thuộc options hoặc placeholder rỗng cần chọn. Unknown badge neutral và giữ nhãn thật; xử lý dữ liệu legacy.",
+    "risk": "Không map jobTitle sang role hoặc thay quyền của người dùng; test các alias Việt/Anh có sẵn.",
+    "verify": "Mọi option submit đúng value đang thấy; unknown/null/legacy không trở thành Editor; tạo/sửa/đọc lại user khớp.",
+    "evidence": [
+      "crawl.json",
+      "db-snapshot.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/components/JobTitleBadge.jsx:204](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/JobTitleBadge.jsx:204)",
+      "[frontend/src/pages/AdminPrivileges.jsx:153](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminPrivileges.jsx:153)",
+      "[frontend/src/pages/AdminPrivileges.jsx:996](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/AdminPrivileges.jsx:996)"
+    ]
+  },
+  {
+    "id": "BUG-019",
+    "title": "Lệnh seed toàn bộ dừng ở typingChallenges.seeder vì thiếu up/down",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "Tooling / Database setup",
+    "route": "backend npm run db:seed",
+    "steps": [
+      "Trên DB audit, migrate schema.",
+      "Chạy DB_NAME=workrank_audit_20261016 DB_DIALECT=mysql npm run db:seed."
+    ],
+    "observed": "Admin seed chạy trước, sau đó CLI dừng: Could not find migration method: up ở typingChallenges.seeder. Không thể coi seed command thành công chỉ vì runtime tự seed challenge.",
+    "expected": "Lệnh setup chính thức chạy hết và có kết quả rõ ràng/idempotent theo thiết kế.",
+    "root": "Thư mục sequelize-cli seeders chứa module helper exports DEFAULT_CHALLENGES/seedTypingChallenges thay vì contract up/down mà CLI khám phá tự động.",
+    "refs": [
+      [
+        "backend/src/seeders/typingChallenges.seeder.js",
+        "module.exports = {"
+      ],
+      [
+        "backend/package.json",
+        "\"db:seed\":"
+      ]
+    ],
+    "impact": "Onboarding/deploy/test setup bị dừng giữa chừng, DB có một phần seed khó đoán.",
+    "fix": "Đưa helper ra thư mục service/fixtures hoặc thêm seeder adapter up/down đúng chuẩn; không xóa dữ liệu challenge đã dùng khi rollback mù quáng.",
+    "risk": "Startup vẫn import đường dẫn cũ; cần cập nhật consumer và kiểm tra seed lặp.",
+    "verify": "Fresh migrate→seed exit 0; chạy lại theo policy không duplicate; typing service vẫn lấy challenge; rollback seed không phá room history.",
+    "evidence": [
+      "seed.log"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[backend/src/seeders/typingChallenges.seeder.js:358](/Applications/du-an/workrank/workrank-realtime/backend/src/seeders/typingChallenges.seeder.js:358)",
+      "[backend/package.json:15](/Applications/du-an/workrank/workrank-realtime/backend/package.json:15)"
+    ]
+  },
+  {
+    "id": "BUG-020",
+    "title": "Rời trang vẽ làm mất nét chưa lưu mà không có cảnh báo",
+    "severity": "P2",
+    "kind": "UX ISSUE",
+    "area": "Persistence / Navigation / UX",
+    "route": "/games/drawing",
+    "steps": [
+      "Vẽ một nét lên canvas.",
+      "Bấm Tổng quan trên sidebar.",
+      "Browser Back về trang vẽ."
+    ],
+    "observed": "Đếm pixel mực: canvas rỗng 0 → vẽ 1077 → trở lại 0; không có xác nhận bỏ thay đổi. Undo/redo và export hoạt động ở lượt trước; hoàn thành/publish là luồng lưu riêng.",
+    "expected": "Bảo vệ thao tác chưa lưu bằng draft recovery hoặc cảnh báo trước khi rời. Đây là bảo vệ công việc hiện có, không yêu cầu thêm trình biên tập mới.",
+    "root": "Canvas và undo stack nằm ở refs/state của page; effect mount tạo bề mặt mới. Không có dirty guard hoặc snapshot draft bền qua route.",
+    "refs": [
+      [
+        "frontend/src/pages/DrawingGame.jsx",
+        "const canvasRef = useRef"
+      ],
+      [
+        "frontend/src/pages/DrawingGame.jsx",
+        "canvas.width = CANVAS_WIDTH"
+      ]
+    ],
+    "impact": "Người dùng vô tình mất tác phẩm đang vẽ khi xem trang khác.",
+    "fix": "Ưu tiên local draft theo userId có debounce/giới hạn kích thước hoặc navigation guard theo dirty state. Xóa draft chỉ sau publish thành công/chủ động bỏ.",
+    "risk": "Canvas lớn có thể làm localStorage đầy/chặn main thread; dùng cơ chế storage phù hợp và hiển thị trạng thái lưu thật.",
+    "verify": "Vẽ→route/back/refresh khôi phục hoặc có xác nhận; hủy rời trang giữ nét; publish thành công có thể đọc lại; đổi tài khoản không lộ draft.",
+    "evidence": [
+      "reproduced.json",
+      "supplement.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/DrawingGame.jsx:63](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/DrawingGame.jsx:63)",
+      "[frontend/src/pages/DrawingGame.jsx:179](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/DrawingGame.jsx:179)"
+    ]
+  },
+  {
+    "id": "BUG-021",
+    "title": "Tiêu đề mùa giải Arena và Grand gần như chìm vào nền tối",
+    "severity": "P2",
+    "kind": "BUG",
+    "area": "Visual / Accessibility / CSS",
+    "route": "/arena và /grand khi có giải ACTIVE",
+    "steps": [
+      "Tạo/active một mùa giải rồi mở Arena.",
+      "Quan sát tên mùa trên hero tối ở desktop/mobile.",
+      "Đọc computed color của h1 và background hero."
+    ],
+    "observed": "Tên mùa Mùa Audit Tháng 10 và tên Grand Audit Grand 2026 hiện rất tối trên nền gần đen, khó đọc; screenshot 390 xác nhận. Computed color h1=rgb(17,17,17), nền hero=rgb(20,20,20). H1 không khai báo color, bị rule typography global áp text-primary.",
+    "expected": "Tên mùa có độ tương phản đọc được trên hero tối ở mọi theme.",
+    "root": "Hero đặt color var(--surface) để kế thừa nhưng h1 global tự đặt color var(--text-primary), thắng inheritance. Việc chỉ đặt màu trên parent không bảo đảm con heading nhận đúng màu.",
+    "refs": [
+      [
+        "frontend/src/pages/Arena.jsx",
+        "<h1 style="
+      ],
+      [
+        "frontend/src/pages/GrandHub.jsx",
+        "<h1 style="
+      ],
+      [
+        "frontend/src/index.css",
+        "h1, .h1 {"
+      ]
+    ],
+    "impact": "Ẩn thông tin định danh mùa giải ngay vùng quan trọng nhất; ảnh hưởng người thị lực yếu.",
+    "fix": "Đặt semantic foreground cho dark hero và áp rõ cho heading; rà các hero tương tự theo contrast, không đổi toàn bộ typography global.",
+    "risk": "Theme sáng/tối và hero ở Grand/Home có thể dùng token khác; cần giới hạn phạm vi.",
+    "verify": "Tên mùa đọc rõ trên mọi viewport/theme; đo contrast foreground/background và kiểm tra screenshot có dữ liệu ACTIVE, không chỉ empty state.",
+    "evidence": [
+      "_arena-390.png",
+      "_grand-390.png",
+      "supplement.json"
+    ],
+    "status": "REPRODUCED",
+    "codeLinks": [
+      "[frontend/src/pages/Arena.jsx:212](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Arena.jsx:212)",
+      "[frontend/src/pages/GrandHub.jsx:203](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/GrandHub.jsx:203)",
+      "[frontend/src/index.css:741](/Applications/du-an/workrank/workrank-realtime/frontend/src/index.css:741)"
+    ]
+  },
+  {
+    "id": "BUG-022",
+    "title": "Test harness chưa đủ tin cậy để làm cổng phát hành",
+    "severity": "P2",
+    "kind": "TECH DEBT",
+    "area": "Testing / Regression / Performance",
+    "route": "backend/test; frontend/tests; frontend scripts",
+    "steps": [
+      "Đọc và chạy bộ test trong DB cô lập.",
+      "Đối chiếu failures với hành vi UI/API thật và chạy lại nhóm liên quan.",
+      "Đọc verify-frontend/route smoke/backend lint để xác định chúng thực sự kiểm gì."
+    ],
+    "observed": "Lượt 16/10: MySQL 599 tests:553 pass/38 fail/8 cancelled; SQLite chưa boot schema:600 tests:42 pass/283 fail/275 cancelled. Playwright172:158 pass/14 fail; chạy lại public-recognition+sam36:28 pass/8 fail. Nhiều lỗi là selector/headings cũ, dữ liệu suite trước còn sót, phụ thuộc timing. Performance P95 967ms khi chạy đồng thời giảm còn332.71ms ở lượt cô lập và pass. Log gốc các lượt dài đã mất; không dùng tổng failure để đếm bug sản phẩm. Lượt17 build vẫn warning duplicate object keys Friends.jsx; script check báo0 errors vì phạm vi kiểm hẹp.",
+    "expected": "Harness boot schema, fixture tách biệt và assertion theo contract; phân biệt test failure với bug thật. Lint/typecheck báo đúng phạm vi.",
+    "root": "Tests dùng bảng chung/cleanup chưa đồng nhất, startup và fixed wait dễ race; expectations chưa đồng bộ UI. backend lint chỉ node --check src/server.js; frontend check là script integrity JS/JSX, không phải TypeScript typecheck.",
+    "refs": [
+      [
+        "backend/package.json",
+        "\"lint\":"
+      ],
+      [
+        "frontend/scripts/verify-frontend.js",
+        ""
+      ],
+      [
+        "frontend/scripts/route-smoke-test.cjs",
+        ""
+      ],
+      [
+        "backend/test/competition_phase9_performance.test.js",
+        ""
+      ],
+      [
+        "frontend/src/pages/Friends.jsx",
+        "display: 'inline-flex'"
+      ]
+    ],
+    "impact": "False alarm làm tốn thời gian, false confidence cho regression thật; không thể tuyên bố hệ thống ổn chỉ dựa build/check xanh.",
+    "fix": "Sau sửa bug cốt lõi: test DB guard/schema, fixtures per suite, poll condition thay fixed sleep, chỉnh selector semantic và expectations theo UI được duyệt; test tích hợp MySQL thật, không chỉ SQLite/mocks. Thêm static lint phù hợp JS; chỉ thêm typecheck nếu có mục tiêu rõ.",
+    "risk": "Không cập nhật expectation chỉ để xanh khi UI thật sai; không tăng timeout/budget để giấu regression.",
+    "verify": "Các suite ổn định qua nhiều run cô lập; failures có artifact/trace; performance đo ở tải định nghĩa trước; script tên và output phản ánh đúng coverage.",
+    "evidence": [
+      "SESSION_NOTE.md",
+      "frontend-build.log",
+      "route-smoke.log",
+      "cache-test.log",
+      "backend-lint.log"
+    ],
+    "status": "OBSERVED + CODE CONFIRMED; log dài cũ không còn",
+    "codeLinks": [
+      "[backend/package.json:12](/Applications/du-an/workrank/workrank-realtime/backend/package.json:12)",
+      "[frontend/scripts/verify-frontend.js:1](/Applications/du-an/workrank/workrank-realtime/frontend/scripts/verify-frontend.js:1)",
+      "[frontend/scripts/route-smoke-test.cjs:1](/Applications/du-an/workrank/workrank-realtime/frontend/scripts/route-smoke-test.cjs:1)",
+      "[backend/test/competition_phase9_performance.test.js:1](/Applications/du-an/workrank/workrank-realtime/backend/test/competition_phase9_performance.test.js:1)",
+      "[frontend/src/pages/Friends.jsx:89](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Friends.jsx:89)"
+    ]
+  },
+  {
+    "id": "BUG-023",
+    "title": "Source không gắn route và tài liệu backend cũ gây hiểu nhầm phạm vi sản phẩm",
+    "severity": "P3",
+    "kind": "TECH DEBT",
+    "area": "Maintenance / Documentation",
+    "route": "Groups.jsx; StatsCard.jsx; README_BACKEND_NEW.md",
+    "steps": [
+      "Đối chiếu imports và Route trong App.jsx.",
+      "Tìm consumer của Groups/StatsCard và so README_BACKEND_NEW với routes hiện tại."
+    ],
+    "observed": "Groups.jsx còn tồn tại nhưng /groups redirect /friends; không thấy import/render page Groups trong App. StatsCard không thấy consumer trực tiếp trong source hiện tại. README_BACKEND_NEW mô tả tracking/desktop activity cũ và frontend chưa có, trái sản phẩm hiện tại.",
+    "expected": "Tài liệu phản ánh kiến trúc đang chạy; code legacy có trạng thái rõ ràng. Redirect có chủ đích không tự động là feature missing.",
+    "root": "Sau dọn tính năng/đổi IA, các file cũ chưa được archive hoặc cập nhật tài liệu.",
+    "refs": [
+      [
+        "frontend/src/App.jsx",
+        "path=\"/groups\""
+      ],
+      [
+        "frontend/src/pages/Groups.jsx",
+        ""
+      ],
+      [
+        "frontend/src/components/StatsCard.jsx",
+        ""
+      ],
+      [
+        "README_BACKEND_NEW.md",
+        ""
+      ]
+    ],
+    "impact": "Người bảo trì dễ audit/sửa sai implementation hoặc tưởng tính năng cũ còn đang hoạt động.",
+    "fix": "Xác nhận chủ đích với owner sản phẩm qua lịch sử thay đổi, cập nhật tài liệu và đánh dấu/archive legacy sau khi kiểm tra consumer; không xóa tự động chỉ vì chưa có route.",
+    "risk": "Một module có thể được dùng ngoài bundle chính hoặc kế hoạch migration; cần kiểm tra trước cleanup.",
+    "verify": "Inventory/docs thống nhất; rg consumer và build/routes pass sau cleanup được duyệt; alias cũ vẫn chuyển đúng.",
+    "evidence": [
+      "inventory.json"
+    ],
+    "status": "CODE CONFIRMED",
+    "codeLinks": [
+      "[frontend/src/App.jsx:191](/Applications/du-an/workrank/workrank-realtime/frontend/src/App.jsx:191)",
+      "[frontend/src/pages/Groups.jsx:1](/Applications/du-an/workrank/workrank-realtime/frontend/src/pages/Groups.jsx:1)",
+      "[frontend/src/components/StatsCard.jsx:1](/Applications/du-an/workrank/workrank-realtime/frontend/src/components/StatsCard.jsx:1)",
+      "[README_BACKEND_NEW.md:1](/Applications/du-an/workrank/workrank-realtime/README_BACKEND_NEW.md:1)"
+    ]
+  }
+]

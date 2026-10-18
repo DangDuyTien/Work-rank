@@ -48,9 +48,6 @@ module.exports = {
         { table: 'capital_game_players', cols: ['user_id'] },
         { table: 'capital_game_user_stats', cols: ['user_id'] },
         { table: 'quiz_game_user_stats', cols: ['user_id'] },
-        { table: 'game_2048_user_stats', cols: ['user_id'] },
-        { table: 'game_2048_runs', cols: ['user_id'] },
-        { table: 'game_2048_leaderboard', cols: ['user_id'] },
         { table: 'score_ledgers', cols: ['user_id'] },
         { table: 'competition_events', cols: ['actor_id'] },
       ];

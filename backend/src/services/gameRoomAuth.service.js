@@ -18,7 +18,7 @@ const {
  * @param {number|string} params.userId
  * @param {string} [params.userRole]
  * @param {number|string} params.roomId - Numeric id or room code
- * @param {'sam'|'quiz'|'game'|'capital_board'} params.gameType
+ * @param {'sam'|'quiz'|'typing'|'typing_battle'} params.gameType
  * @param {boolean} [params.clientSpectatorHint] - Client hint if they want spectator mode
  * @returns {Promise<{
  *   allowed: boolean,
@@ -117,54 +117,6 @@ async function canAccessGameRoom({
     }
 
     const player = await QuizPlayer.findOne({
-      where: { roomId: room.id, userId: uid },
-    });
-
-    const isHost = Number(room.hostUserId) === uid;
-    const isPlayer = !!player;
-
-    if (isPlayer || isHost) {
-      return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: false,
-        isPlayer: true,
-        role: 'player',
-      };
-    }
-
-    if (room.status === 'WAITING' || room.status === 'STARTING') {
-      return {
-        allowed: false,
-        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
-        code: 'FORBIDDEN',
-        status: 403,
-      };
-    }
-
-    return {
-      allowed: true,
-      roomId: room.id,
-      isSpectator: true,
-      isPlayer: false,
-      role: 'spectator',
-    };
-  }
-
-  if (gameType === 'game' || gameType === 'capital_board') {
-    let room = null;
-    if (typeof roomId === 'number' || /^\d+$/.test(String(roomId))) {
-      room = await GameRoom.findByPk(Number(roomId));
-    }
-    if (!room && roomId) {
-      room = await GameRoom.findOne({ where: { code: String(roomId).trim().toUpperCase().replace(/^#/, '') } });
-    }
-
-    if (!room) {
-      return { allowed: false, error: 'Phòng Cờ tỷ phú không tồn tại', code: 'ROOM_NOT_FOUND', status: 404 };
-    }
-
-    const player = await GamePlayer.findOne({
       where: { roomId: room.id, userId: uid },
     });
 

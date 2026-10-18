@@ -626,6 +626,42 @@ function SpectatorTypingStream({ player, challengeText, teamColor = '#0284c7', t
   );
 }
 
+// ── SESSIONSTORAGE DRAFT RECOVERY HELPERS (BUG-009) ──
+function getDraftStorageKey(roomId, userId) {
+  if (!roomId || !userId) return null;
+  return `workrank:typing:draft:${roomId}:${userId}`;
+}
+
+function saveTypingDraft(roomId, userId, text, errors = 0) {
+  const key = getDraftStorageKey(roomId, userId);
+  if (!key) return;
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({ text, errorCount: errors, savedAt: Date.now() })
+    );
+  } catch {}
+}
+
+function loadTypingDraft(roomId, userId) {
+  const key = getDraftStorageKey(roomId, userId);
+  if (!key) return null;
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearTypingDraft(roomId, userId) {
+  const key = getDraftStorageKey(roomId, userId);
+  if (!key) return;
+  try {
+    sessionStorage.removeItem(key);
+  } catch {}
+}
+
 export default function TypingBattle() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -908,6 +944,41 @@ export default function TypingBattle() {
             setShowResultModal(true);
           }
         }
+
+        // Reconcile and restore draft progress on reload / room fetch
+        if (data.room.status === 'PLAYING') {
+          if (data.room.startedAt) {
+            setStartTime((prev) => prev ?? new Date(data.room.startedAt).getTime());
+          }
+          const myPlayer = (data.players || []).find((p) => Number(p.userId) === Number(user?.id));
+          if (myPlayer) {
+            const draft = loadTypingDraft(roomIdToFetch, user?.id);
+            let textToRestore = '';
+            let errorsToRestore = 0;
+            if (draft && typeof draft.text === 'string' && draft.text.length >= (myPlayer.typedChars || 0)) {
+              textToRestore = draft.text;
+              errorsToRestore = draft.errorCount || 0;
+            } else if ((myPlayer.typedChars || 0) > 0 && data.room.challengeText) {
+              textToRestore = sanitizeChallengeText(data.room.challengeText).slice(0, myPlayer.typedChars);
+              errorsToRestore = myPlayer.errorCount || 0;
+              saveTypingDraft(roomIdToFetch, user?.id, textToRestore, errorsToRestore);
+            }
+            if (textToRestore) {
+              setTypedText(textToRestore);
+              setErrorCount(errorsToRestore);
+              if (myPlayer.wpm) setLiveWpm(myPlayer.wpm);
+              if (myPlayer.accuracy) setLiveAccuracy(myPlayer.accuracy);
+              setTimeout(() => {
+                if (inputRef.current) {
+                  inputRef.current.focus();
+                  inputRef.current.setSelectionRange(textToRestore.length, textToRestore.length);
+                }
+              }, 100);
+            }
+          }
+        } else if (data.room.status === 'FINISHED') {
+          clearTypingDraft(roomIdToFetch, user?.id);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch typing room detail:', err);
@@ -982,12 +1053,51 @@ export default function TypingBattle() {
           setStartTime((prev) => prev ?? new Date(data.room.startedAt).getTime());
         }
       }
-      if (Array.isArray(data?.players)) setPlayers(data.players);
+      if (Array.isArray(data?.players)) {
+        setPlayers(data.players);
+        if (data?.room?.status === 'PLAYING') {
+          const myPlayer = data.players.find((p) => Number(p.userId) === Number(user?.id));
+          if (myPlayer) {
+            setTypedText((currentTyped) => {
+              if (currentTyped && currentTyped.length >= (myPlayer.typedChars || 0)) {
+                return currentTyped;
+              }
+              const draft = loadTypingDraft(data.room.id, user?.id);
+              let textToRestore = '';
+              let errorsToRestore = 0;
+              if (draft && typeof draft.text === 'string' && draft.text.length >= (myPlayer.typedChars || 0)) {
+                textToRestore = draft.text;
+                errorsToRestore = draft.errorCount || 0;
+              } else if ((myPlayer.typedChars || 0) > 0 && data.room?.challengeText) {
+                textToRestore = sanitizeChallengeText(data.room.challengeText).slice(0, myPlayer.typedChars);
+                errorsToRestore = myPlayer.errorCount || 0;
+                saveTypingDraft(data.room.id, user?.id, textToRestore, errorsToRestore);
+              }
+              if (textToRestore) {
+                setErrorCount(errorsToRestore);
+                if (myPlayer.wpm) setLiveWpm(myPlayer.wpm);
+                if (myPlayer.accuracy) setLiveAccuracy(myPlayer.accuracy);
+                setTimeout(() => {
+                  if (inputRef.current) {
+                    inputRef.current.focus();
+                    inputRef.current.setSelectionRange(textToRestore.length, textToRestore.length);
+                  }
+                }, 100);
+                return textToRestore;
+              }
+              return currentTyped;
+            });
+          }
+        }
+      }
       if (typeof data?.spectatorCount === 'number') setSpectatorCount(data.spectatorCount);
       if (Array.isArray(data?.spectators)) setSpectators(data.spectators);
       if (data?.result) {
         setMatchResult(data.result);
-        if (data?.room?.status === 'FINISHED') setShowResultModal(true);
+        if (data?.room?.status === 'FINISHED') {
+          clearTypingDraft(data?.room?.id || room?.id, user?.id);
+          setShowResultModal(true);
+        }
       }
     };
 
@@ -1026,6 +1136,7 @@ export default function TypingBattle() {
       setCountdownNumber(null);
       if (data?.room) setRoom(data.room);
       if (data?.players) setPlayers(data.players);
+      clearTypingDraft(data?.room?.id || room?.id, user?.id);
       setTypedText('');
       setScrollOffsetY(0);
       setErrorCount(0);
@@ -1083,6 +1194,7 @@ export default function TypingBattle() {
     };
 
     const handleMatchFinished = (data) => {
+      clearTypingDraft(data?.room?.id || room?.id, user?.id);
       setIsFinished(true);
       setMatchResult(data);
       setShowResultModal(true);
@@ -1103,6 +1215,7 @@ export default function TypingBattle() {
     };
 
     const handleRoomReset = (data) => {
+      clearTypingDraft(data?.room?.id || room?.id, user?.id);
       setTypedText('');
       setScrollOffsetY(0);
       setErrorCount(0);
@@ -1150,6 +1263,7 @@ export default function TypingBattle() {
       socket.off('connect', joinRoomChannel);
       if (room?.id) {
         socket.emit('typing:leaveRoom', { roomId: Number(room.id) });
+        clearTypingDraft(room.id, user?.id);
       }
       socket.off('typing:roomState', handleRoomState);
       socket.off('typing:roomUpdated', handleRoomUpdated);
@@ -1216,12 +1330,15 @@ export default function TypingBattle() {
           if (soundEnabled) typingSound.playWin();
 
           if (socket && room?.id && room?.status === 'PLAYING') {
+            const myPlayer = (players || []).find((p) => Number(p.userId) === Number(user?.id));
+            const safeChars = Math.max(typedText.length, myPlayer?.typedChars || 0);
             socket.emit('typing:finish', {
               roomId: room.id,
-              typedChars: typedText.length,
+              typedChars: safeChars,
               errorCount,
               clientDurationMs: elapsedSec * 1000,
             });
+            clearTypingDraft(room.id, user?.id);
           } else if (!room && user) {
             // Check if duration qualifies for individual leaderboard (>= 2 minutes / 120 seconds)
             const finalAccuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 100)) : 100;
@@ -1366,6 +1483,7 @@ export default function TypingBattle() {
       setTypedText(val);
       setIsFinished(true);
       setShowResultModal(true);
+      clearTypingDraft(room.id, user?.id);
       if (soundEnabled) typingSound.playWin();
       if (socket && room.id) {
         socket.emit('typing:finish', {
@@ -1379,6 +1497,9 @@ export default function TypingBattle() {
     }
 
     setTypedText(val);
+    if (room?.id && user?.id) {
+      saveTypingDraft(room.id, user.id, val, errors);
+    }
 
     // Compute real-time cumulative statistics
     const totalChars = sessionCompletedChars + val.length;

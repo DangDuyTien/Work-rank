@@ -88,12 +88,15 @@ const drawingController = {
    */
   async getGallery(req, res) {
     const currentUserId = req.user?.id || null;
+    const currentUserTeamId = req.user?.teamId || null;
+    const isAdmin = req.user?.role === 'admin';
     const { page, limit, visibility, filter } = req.query;
-
     const result = await drawingService.getGallery({
       page,
       limit,
       currentUserId,
+      currentUserTeamId,
+      isAdmin,
       visibility,
       filter,
     });
@@ -108,10 +111,12 @@ const drawingController = {
    * GET /api/drawings/:id
    */
   async getById(req, res) {
-    const currentUserId = req.user?.id || null;
+    const userId = req.user?.id || null;
+    const teamId = req.user?.teamId || null;
+    const isAdmin = req.user?.role === 'admin';
     const { id } = req.params;
 
-    const drawing = await drawingService.getById(id, currentUserId);
+    const drawing = await drawingService.getById(id, { userId, teamId, isAdmin });
     res.json({
       success: true,
       drawing,
@@ -157,6 +162,7 @@ const drawingController = {
 
     const created = await drawingService.createDrawing({
       userId,
+      teamId: req.user.teamId || null,
       title,
       imageUrl,
       width,
@@ -191,6 +197,8 @@ const drawingController = {
     const result = await drawingService.toggleLike({
       drawingId: parseInt(id, 10),
       userId,
+      teamId: req.user.teamId || null,
+      isAdmin: req.user.role === 'admin',
     });
 
     // Realtime broadcast like update
@@ -247,12 +255,16 @@ const drawingController = {
    */
   async getUserDrawings(req, res) {
     const currentUserId = req.user?.id || null;
+    const currentUserTeamId = req.user?.teamId || null;
+    const isAdmin = req.user?.role === 'admin';
     const { userId } = req.params;
     const { page, limit } = req.query;
 
     const result = await drawingService.getUserDrawings({
       userId: parseInt(userId, 10),
       currentUserId,
+      currentUserTeamId,
+      isAdmin,
       page,
       limit,
     });

@@ -101,9 +101,9 @@ router.post('/admin/projections/rebuild', auth, requireRole('admin'), asyncHandl
 // ─── Phase 8 — Product Integration & Event Tracing ─────────────────────────
 router.get('/events/:eventId/trace', auth, asyncHandler(ctrl.getEventTrace));
 router.get('/contracts', auth, asyncHandler(ctrl.listEventContracts));
-router.post('/events/publish', auth, asyncHandler(ctrl.publishDomainEvent));
-router.post('/integration/production/video-action', auth, asyncHandler(ctrl.triggerProductionAction));
-router.post('/integration/youtube/milestone', auth, asyncHandler(ctrl.triggerYouTubeMilestone));
+router.post('/events/publish', auth, requireRole('admin'), asyncHandler(ctrl.publishDomainEvent));
+router.post('/integration/production/video-action', auth, requireRole('admin'), asyncHandler(ctrl.triggerProductionAction));
+router.post('/integration/youtube/milestone', auth, requireRole('admin'), asyncHandler(ctrl.triggerYouTubeMilestone));
 router.post('/integration/community/kudos', auth, asyncHandler(ctrl.triggerCommunityKudos));
 
 router.get('/admin/integration/health', auth, requireRole('admin'), asyncHandler(ctrl.adminGetIntegrationHealth));

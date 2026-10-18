@@ -1,0 +1,2666 @@
+[
+  {
+    "route": "/",
+    "url": "http://127.0.0.1:5173/",
+    "text": "Đến nội dung chính\nWORKRANK\n3WIN MEDIA\nVào Dashboard\nRecipients\n2026\nĐỘI NHÓM\n\nMùa Audit Tháng 10\n\nDN\nAudit Alice\nAudit Bob\nDoi Audit Viet Nam\nĐang dẫn đầu · chưa chốt\nCÁ NHÂN\n\nMùa Audit Tháng 10\n\nAS\nMVP\nAudit 2048 Stats\nỨng viên · chưa xác nhận\nĐiểm mùa giải\n0\nChức danh\nNhân viên\nPhòng ban\nMedia & Content\nDanh hiệu\nMVP Mùa Giải\n\nLý do vinh danh: Đóng góp xuất sắc cho sự phát triển của công ty\n\nCÁ NHÂN · BXH TUẦN\nTT\nTop 1\nAudit Alice\nĐiểm tuần\n32\nDanh hiệu MVP\n0\nChức danh\nNhân viên\nPhòng ban\nMedia & Content\nĐội nhóm\nĐội Audit Việt Nam\nTop 2\nAudit Bob\nĐiểm tuần\n17\nDanh hiệu MVP\n0\nChức danh\nNhân viên\nPhòng ban\nMedia & Content\nĐội nhóm\nĐội Audit Việt Nam\nTop 3\nAudit Admin\nĐiểm tuần\n0\nDanh hiệu MVP\n0\nChức danh\nSystem Administrator\nPhòng ban\nManagement\nĐội nhóm\nChưa tham gia đội nhóm\nYOUTUBE · KÊNH DẪN ĐẦU\nYO\nTop 1\nKênh Audit\nLượt xem\n1.000\nNgười đăng ký\n100\nSÁNG TẠO · THƯ VIỆN TRANH\n\nStudio nghệ thuật\n\nNét vẽ cảm hứng & sắc màu nghệ thuật từ nhân sự 3WIN MEDIA\nNhiều tim nhất\nMới nhất\nVào phòng vẽ tranh\nChưa có tác phẩm nào trong Thư Viện Tranh\n\nHãy là người đầu tiên đặt nét vẽ cảm hứng lên bảng tranh của 3WIN MEDIA!\n\nBắt đầu vẽ bức tranh đầu tiên\nTẤT CẢ THÀNH VIÊN · 3WIN MEDIA\n\n5 Nhân sự\n\nGắn kết, cống hiến & cùng phát triển (1/5)\nAA\nTHÀNH VIÊN\nAudit Admin\nBan Quản Trị\nĐiểm mùa giải\n0\nChức danh\nSystem Administrator\nPhòng ban\nManagement\nĐội nhóm\n3Win Media\n\nThông tin cá nhân: Ban điều hành & phát triển hệ thống WorkRank\n\nTHÀNH TÍCH CÒN TIẾP NỐI\nMỗi mùa giải.\nMột dấu ấn.\nLịch sử vinh danh\nMùa giải & hoạt động\nKhám phá đội nhóm\nBảng xếp hạng\nMùa giải\nYouTube\nTrò chơi\nDashboard\n\nWork\nRank\n\nCông sức → Thành tích\nTiến bộ → Ghi nhận\n\n© 2026 WorkRank · 3WIN MEDIA",
+    "buttons": [],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1600,
+            "scroll": 1600
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1440,
+            "scroll": 1440
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1280,
+            "scroll": 1280
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/login",
+    "url": "http://127.0.0.1:5173/login",
+    "text": "Bạn đang đăng nhập\nTài khoản: Audit Admin (audit-admin@example.test)\nMở Dashboard\nĐăng xuất\nĐăng nhập\nĐăng ký\nChào mừng trở lại.\nTham gia 3WIN MEDIA.\n\nĐăng nhập để tiếp tục hành trình cùng đội của bạn.\n\nTạo tài khoản để cùng đội ghi dấu những thành tích mới.\n\nHọ và tên *\nEmail hoặc Tên đăng nhập *\nMật khẩu *\nQuên mật khẩu?\nXác nhận mật khẩu *\nĐăng Nhập Vào Hệ Thống\nChưa có tài khoản trên hệ thống? Đăng ký tài khoản\nWORKRANK\n3WIN MEDIA\nRecipients\n\nMùa Audit Tháng 10\n\nAS\nCÁ NHÂN NỔI BẬT\nAudit 2048 Stats\nỨng viên · chưa xác nhận\n\n0\nĐiểm mùa giải\n\nĐóng góp xuất sắc cho sự phát triển của công ty\n\nKhám phá vinh danh",
+    "buttons": [
+      "Mở Dashboard",
+      "Đăng xuất",
+      "Đăng nhập",
+      "Đăng ký",
+      "Quên mật khẩu?",
+      "",
+      "Đăng Nhập Vào Hệ Thống",
+      "Đăng ký tài khoản"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1920,
+            "scroll": 1920
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1440,
+            "scroll": 1440
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1280,
+            "scroll": 1280
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "url": "http://127.0.0.1:5173/dashboard",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nTổng quan\nAA\nWORKRANK PERFORMANCE CENTER\nXin chào, Audit Admin\nEditor\n•\nManagement\n•\nChưa gia nhập đội\nADMIN\nLàm mới\nĐI NHANH\nCá nhân\nĐội nhóm\nYouTube\nBXH & online\n1. Hiệu Suất & KPI Cá Nhân\nChỉ số hoàn thành công việc, điểm thi đua và tiến độ thực tế của bạn\nBảng xếp hạng cá nhân\nĐIỂM & XP CÁ NHÂN\nChưa xếp hạng\n0 XP\nStreak: 0 ngày\nTích lũy mùa thi đua\nTIẾN ĐỘ KPI CÔNG VIỆC\n0%\n0/1 chỉ số đạt target kỳ này\nVỊ TRÍ BẢNG XẾP HẠNG\nChưa xếp hạng\nXem vị trí cá nhân\nVINH DANH & PHÂN CÔNG\nThành viên Tích cực\nChỉ số thi đua được ghi nhận tự động\nChi tiết KPI phòng ban\nTháng 10/2026\nPhòng Audit\n2. Hiệu Suất Đội Nhóm & Phòng Ban\nTiến độ thi đua tập thể, xếp hạng và đóng góp thực tế của đội nhóm\nBảng xếp hạng đội nhóm\nBạn chưa gia nhập đội nhóm nào\nGia nhập đội nhóm để cùng đồng đội tích lũy điểm thi đua, đóng góp chỉ số KPI tập thể và tranh tài trên bảng xếp hạng.\nKhám phá các đội nhóm\n3. Hiệu Suất YouTube\nDữ liệu YouTube toàn công ty (Cấp 1 & Cấp 2)\nYouTube\nBXH YouTube\nLượt xem toàn công ty\n959\nNgười đăng ký\n96\nKênh trong hệ thống\n1\nTăng trưởng 30 ngày\nChưa đủ dữ liệu\nVị Thế Thi Đua & Bảng Xếp Hạng\nSeason & Grand Race\nCÁ NHÂN (SEASON)\nChưa xếp hạng\n0 XP\nXem BXH\nĐỘI NHÓM (TEAM)\nChưa vào đội\n0 XP\nXem BXH Đội\nĐấu trường Season\nGrand Championship\nNgười Đang Trực Tuyến\n0 online\nChưa có người trực tuyến\nBạn bè\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Làm mới",
+      "Bảng xếp hạng cá nhân",
+      "Bảng xếp hạng đội nhóm",
+      "Khám phá các đội nhóm",
+      "YouTube",
+      "BXH YouTube",
+      "Xem BXH",
+      "Xem BXH Đội",
+      "Đấu trường Season",
+      "Grand Championship",
+      "Bạn bè ",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/leaderboard",
+    "url": "http://127.0.0.1:5173/leaderboard?scope=kpi",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nBảng Xếp Hạng\nAA\nCông Ty (Tất cả)\nBảng Xếp Hạng Toàn Công Ty\n\nXếp hạng phân cấp: Cấp 1 Công ty → Cấp 2 Đội nhóm → Cấp 3 Cá nhân & Kênh YouTube.\n\nLàm mới\nBXH KPI\nBXH Đội Nhóm\nBXH Thành Viên\nBXH YouTube\nBảng Vinh Danh\nKỳ KPI tháng hiện tại\nTháng 10/2026\nTHEO DÕI TIẾN ĐỘ KPI\nBảng xếp hạng hiệu suất KPI\n\nTháng 10/2026\n\n1\nthành viên\n50%\ntiến độ TB\nPhòng Audit\nPhòng Audit\n1 thành viên có dữ liệu KPI\nTháng 10/2026\nHẠNG\tTHÀNH VIÊN\tĐỘI NHÓM\tTIẾN ĐỘ KPI\tTRẠNG THÁI\n1\t\nAA\nAudit Alice\naudit-alice@example.test\n\tChưa gia nhập đội\t\n50%\n\tĐang thực hiện\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Làm mới",
+      "BXH KPI",
+      "BXH Đội Nhóm",
+      "BXH Thành Viên",
+      "BXH YouTube",
+      "Bảng Vinh Danh",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/youtube",
+    "url": "http://127.0.0.1:5173/youtube",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nSố liệu YouTube\nAA\nYouTube\nYouTube\n10 giờ trước\nBXH YouTube\nQuản lý kênh\nLàm mới\nTổng quan\nKênh theo đội\nSo sánh\nLượt xem toàn công ty\n1.0K\n1 kênh hoạt động\nNgười đăng ký\n100\nToàn công ty\nĐội có kênh YouTube\n1\n0 kênh chưa gán đội\nLịch sử YouTube toàn công ty (30 ngày)\nĐang hiển thị Lượt xem (Views) theo thời gian thực\nViews\nSubs\n1k\n1k\n1k\n16/10\nTop 5 đội theo lượt xem\nXem BXH đội\n#1 Đội Audit Việt Nam\n100 người đăng ký\n1.0K\nTop 5 đội tăng trưởng 30 ngày\nXem BXH đội\n#1 Đội Audit Việt Nam\n1.0K lượt xem\nChưa đủ dữ liệu\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "YouTube",
+      " Làm mới",
+      "Views",
+      "Subs",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/arena",
+    "url": "http://127.0.0.1:5173/arena",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nĐấu Trường Mùa Giải\nAA\nĐANG DIỄN RA\n14d 9h 44m\nMùa Audit Tháng 10\n\nGiải đấu YouTube Production & Quality Battle giữa các Content Creators và Video Editors.\n\nTIẾN ĐỘ MÙA GIẢI\n53%\nBạn chưa thuộc Team nào tham gia mùa giải này.\nĐỘI THI ĐẤU\n1\nCÁ NHÂN TRANH TÀI\n2\nTHỬ THÁCH ĐANG MỞ\n0\nBXH Đội (1)\nBXH Cá Nhân (2)\nThử Thách (0)\nLuật Chơi\nCập nhật\nBXH Đội Nhóm Mùa Giải\n\nXếp hạng dựa trên Điểm Đội từ Sổ Cái Điểm Số (Score Ledger)\n\nXem toàn bộ BXH\n#1\nĐỘ\nĐội Audit Việt Nam\nĐủ điều kiện tranh giải\n0 XP\nDẫn đầu\nSố liệu YouTube\nBXH YouTube\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "BXH Đội (1)",
+      "BXH Cá Nhân (2)",
+      "Thử Thách (0)",
+      "Luật Chơi",
+      " Cập nhật",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 962173
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 33554432
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 24752
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 33554432
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 33554432
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/grand",
+    "url": "http://127.0.0.1:5173/grand",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nGiải Vô Địch Năm (Grand)\nAA\nNĂM 2026\nCòn 74 ngày\nAudit Grand 2026\n\nGiải đấu lớn nhất toàn công ty tích lũy điểm Grand Points từ tất cả các Mùa Giải trong năm.\n\nĐƯỜNG ĐUA NĂM 2026\n79%\nĐội của bạn chưa có điểm Grand Points nào trong năm 2026.\nĐỘI TRANH TÀI\n0\nCÁ NHÂN XẾP HẠNG\n2\nMÙA GIẢI TRONG NĂM\n1\n1 đang diễn ra\nBXH Đội (0)\nBXH Cá Nhân (2)\nDòng Thời Gian (1)\nHành Trình Đội\nVinh Danh\nCập nhật\nBảng Tổng Sắp Đội Nhóm Năm 2026\n\nXếp theo: Điểm tích lũy GP → Số lần Vô địch mùa giải → Top 3\n\nXem toàn bộ BXH Grand\nChưa có điểm Grand Points\n\nCác đội sẽ nhận Grand Points sau khi các Season trong năm được kết thúc.\n\nSố liệu YouTube\nBXH YouTube\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "BXH Đội (0)",
+      "BXH Cá Nhân (2)",
+      "Dòng Thời Gian (1)",
+      "Hành Trình Đội",
+      "Vinh Danh",
+      " Cập nhật",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 556
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 556
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/friends",
+    "url": "http://127.0.0.1:5173/friends",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nThành Viên & Đội Nhóm\nAA\nThành Viên & Đội Nhóm\nLàm mới\nQuản lý đội nhóm\nNhập mã mời\nTỔNG NHÂN SỰ CÔNG TY\n8 người\nTRỰC TUYẾN / HOẠT ĐỘNG\n0 đang online\nĐỘI NHÓM CỦA BẠN\nChưa tham gia đội\nVAI TRÒ TRONG ĐỘI\nChưa có đội\nDanh Bạ Đồng Nghiệp\n8\nĐội Nhóm Của Tôi\nBXH Thành Viên\nTất cả phòng ban\nMedia & Content\nEngineering Core\nCommunity & Growth\nPhòng Sản Xuất Video\nPhòng Truyền Thông\nPhòng Kỹ Thuật\nBan Giám Đốc\nTất cả trạng thái đội\nĐã có đội nhóm\nChưa tham gia đội\nAS\nAudit 2048 Stats\nWR-0042\nNGOẠI TUYẾN\nEditor\nMedia & Content\nChưa tham gia đội nhóm nào\nHồ sơ\n\ud83eP\n🤖 AI Alex (Tài Phiệt)\nWR-0041\nNGOẠI TUYẾN\nEditor\nFinance Core\nChưa tham gia đội nhóm nào\nHồ sơ\n\ud83eS\n🤖 AI Mia (Bất Động Sản)\nWR-0040\nNGOẠI TUYẾN\nEditor\nReal Estate Growth\nChưa tham gia đội nhóm nào\nHồ sơ\n\ud83eL\n🤖 AI Tony (Chiến Lược)\nWR-0039\nNGOẠI TUYẾN\nEditor\nMedia & Strategy\nChưa tham gia đội nhóm nào\nHồ sơ\nKA\nKiểm thử Tiếng Việt Nguyễn Văn An\nWR-0038\nNGOẠI TUYẾN\nEditor\nMedia & Content\nChưa tham gia đội nhóm nào\nHồ sơ\nAB\nAudit Bob\nWR-0037\nNGOẠI TUYẾN\nEditor\nMedia & Content\nĐội Audit Việt Nam\nHồ sơ\nAA\nAudit Alice\nWR-0036\nNGOẠI TUYẾN\nEditor\nMedia & Content\nĐội Audit Việt Nam\nTrưởng nhóm\nHồ sơ\nAA\nAudit Admin\nWR-0035 · Bạn\nNGOẠI TUYẾN\nEditor\nManagement\nChưa tham gia đội nhóm nào\nHồ sơ\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Làm mới",
+      "Quản lý đội nhóm",
+      "Nhập mã mời",
+      "Danh Bạ Đồng Nghiệp8",
+      "Đội Nhóm Của Tôi",
+      "BXH Thành Viên ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "Hồ sơ",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/users/35",
+    "url": "http://127.0.0.1:5173/users/35",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nHồ Sơ Cá Nhân\nAA\nQuay lại\nAA\nAudit Admin\nEditor\nManagement\n•\nChưa vào Team\n•\nID: #35\nTrực tuyến\nChỉnh sửa hồ sơ\nChưa có ảnh\n#1\n+ Thêm ảnh\nChưa có ảnh\n#2\n+ Thêm ảnh\nChưa có ảnh\n#3\n+ Thêm ảnh\nChưa có ảnh\n#4\n+ Thêm ảnh\nChưa có ảnh\n#5\n+ Thêm ảnh\nChưa có ảnh\n#6\n+ Thêm ảnh\nTổng Quan Nhân Sự\nThành Tích Thi Đấu\nNghiệp Vụ & Đóng Góp\nLịch Sử Mùa Giải\nThông Tin Nhân Sự & Chức Danh\nHuy hiệu chức danh:\nEditor\nPhòng ban:\nManagement\nĐội nhóm:\nChưa tham gia\nQuyền hệ thống (RBAC):\nADMIN\nMã nhân viên (ID):\n#35\nLiên Hệ & Tiểu Sử\nEmail:\naudit-admin@example.test\nĐiện thoại:\nChưa cập nhật\nGiới thiệu / Trách nhiệm công việc:\nChưa có thông tin giới thiệu công việc.\nHuy Hiệu & Vinh Danh Chính Thức (Official Recognitions)\nTài Khoản Đã Xác Thực\nĐược Ban Quản Trị cấp tích xanh định danh\nKhông Thuộc Dev Team\nĐội ngũ phát triển và kỹ thuật 3winmedia\nChưa Có Cúp Vô Địch\nQuán quân mùa giải / Grand Championship\nChưa Có Danh Hiệu MVP\nVinh danh thành tích đóng góp nổi bật\nChưa ghi nhận giải thưởng vinh danh nào trong hồ sơ.\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      " Quay lại",
+      "Chỉnh sửa hồ sơ",
+      "Chưa có ảnh#1+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Chưa có ảnh#2+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Chưa có ảnh#3+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Chưa có ảnh#4+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Chưa có ảnh#5+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Chưa có ảnh#6+ Thêm ảnh",
+      "+ Thêm ảnh",
+      "Tổng Quan Nhân Sự",
+      "Thành Tích Thi Đấu",
+      "Nghiệp Vụ & Đóng Góp",
+      "Lịch Sử Mùa Giải",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/settings",
+    "url": "http://127.0.0.1:5173/settings",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nCài đặt tài khoản\nAA\nCÀI ĐẶT CÁ NHÂN\nCài đặt tài khoản\n\nHồ sơ cá nhân, bảo mật và tùy chọn trình duyệt.\n\nAU\nAudit Admin\nEditor\n•\nManagement\nThông tin cá nhân & Liên hệ\n\nThông tin cơ bản hiển thị trên hồ sơ làm việc nội bộ của bạn.\n\nAA\nẢNH ĐẠI DIỆN (AVATAR)\nTải ảnh mới...\nHọ và tên hiển thị *\nEmail đăng nhập\nĐổi email →\nSố điện thoại liên hệ\nMã nhân viên (ID hệ thống)\nGiới thiệu / Trách nhiệm chuyên môn (Bio)\nLưu thông tin cá nhân\nMở hồ sơ đầy đủ\nChức danh công tác & Tổ chức\n\nVị trí chuyên môn và phòng ban công tác chính thức tại 3winmedia.\n\nHUY HIỆU CHỨC DANH\nEditor\nPHÒNG BAN TRỰC THUỘC\nManagement\nQUYỀN HỆ THỐNG (RBAC)\nQuản trị viên\nTRẠNG THÁI TÀI KHOẢN\nĐang hoạt động\nQuản lý hồ sơ & phân quyền nhân sự\nHuy hiệu & Vinh danh chính thức\n\nHệ thống định danh thành tích chuẩn mực của 3winmedia (Verified, Dev, Champion, MVP).\n\nQuản lý vinh danh\nĐã Xác Minh (Verified)\nTài khoản đã xác thực tích xanh chính thức\nDeveloper (Kỹ Thuật)\nKhông thuộc Dev team\nChưa Có Cúp Vô Địch\nChưa tham gia hoặc chưa vô địch mùa giải\nChưa Có Danh Hiệu MVP\nChưa có danh hiệu vinh danh xuất sắc\nLịch sử vinh danh & Giải thưởng đạt được\nLàm mới\nChưa ghi nhận giải thưởng vinh danh nào trong hồ sơ.\nBảo mật & Đổi mật khẩu\n\nCập nhật mật khẩu định kỳ để bảo vệ tài khoản làm việc.\n\nMật khẩu hiện tại *\nMật khẩu mới *\nXác nhận mật khẩu mới *\nCập nhật mật khẩu\nBảo mật & Đổi Email Đăng Nhập\n\nCập nhật địa chỉ email dùng để đăng nhập và nhận thông báo quan trọng.\n\nEmail hiện tại\nĐịa chỉ Email mới *\nXác nhận lại Email mới *\nMật khẩu tài khoản hiện tại *\nLưu Email Mới\nThông báo hệ thống\n\nCấu hình nhận thông báo thi đấu và âm thanh sự kiện.\n\nThông báo thi đấu\nThông báo khi có cập nhật thứ hạng hoặc giải thưởng mùa giải.\nÂm báo\nPhát âm báo nhẹ khi nhận được tin nhắn hoặc thông báo mới.\nTùy chọn giao diện\n\nTối ưu trải nghiệm hiển thị theo sở thích làm việc.\n\nMật độ hiển thị\nChọn khoảng cách nội dung trong app.\nThoáng\nGọn\nGiảm chuyển động\nHạn chế animation và transition cho giao diện.\nTăng tương phản\nLàm viền và chữ phụ rõ hơn trên các màn hình khó nhìn.\nDữ liệu trình duyệt\n\nXóa bộ nhớ tạm và cache cục bộ trên trình duyệt hiện tại.\n\nXóa thông báo\nXóa avatar local\nMặc định cài đặt\nLiên kết nhanh\n\nTruy cập nhanh các phân hệ nghiệp vụ chính.\n\nHồ sơ cá nhân\nĐấu trường mùa giải\nGiải vô địch năm\nBảng xếp hạng\nSố liệu YouTube\nPhân quyền & Tích xanh\nQuản Lý Trạng Thái Trò Chơi\n\nCấu hình chế độ phát hành toàn cục cho tất cả trò chơi (Đang hoạt động / Sắp ra mắt). Non-admin không thể vào chơi khi game ở trạng thái Sắp ra mắt.\n\nWorkRank Typing Battle\nkey: typing_battle\nĐANG HOẠT ĐỘNG\n\nĐấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.\n\nChuyển thành: Sắp ra mắt\nCờ Tỷ Phú\nkey: capital_board\nĐANG HOẠT ĐỘNG\n\nTrò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.\n\nChuyển thành: Sắp ra mắt\n2048\nkey: game_2048\nĐANG HOẠT ĐỘNG\n\nTrò chơi ghép số 2048 trí tuệ, thử thách tư duy và bảng xếp hạng công ty.\n\nChuyển thành: Sắp ra mắt\nĐánh Sâm\nkey: sam\nĐANG HOẠT ĐỘNG\n\nTrò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực kịch tính.\n\nChuyển thành: Sắp ra mắt\nĐoán Hình & Đoán Nhạc\nkey: quiz\nĐANG HOẠT ĐỘNG\n\nMini game đoán hình ảnh & đoán bài hát tốc độ cao nhiều người chơi.\n\nChuyển thành: Sắp ra mắt\nGóc Sáng Tạo (Game Vẽ)\nkey: drawing\nĐANG HOẠT ĐỘNG\n\nKhông gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.\n\nChuyển thành: Sắp ra mắt\nQuản Lý Góc Sáng Tạo & Thư Viện Tranh\n\nCấu hình chế độ hiển thị khu vực Góc Sáng Tạo / Thư Viện Tranh trên Trang chủ (Home) của toàn công ty.\n\nHiển thị Góc Sáng Tạo trên Trang Chủ\nĐANG BẬT\n\nKhi bật, khu vực triển lãm tranh nghệ thuật sẽ hiển thị trực tiếp tại Trang chủ. Khi tắt, toàn bộ khu vực Thư Viện Tranh sẽ được ẩn khỏi Trang chủ.\n\nTắt / Ẩn khỏi Trang chủ\nVùng Nguy Hiểm — Xóa Tài Khoản\n\nXóa vĩnh viễn quyền truy cập tài khoản của bạn khỏi hệ thống WorkRank.\n\nHành động này không thể hoàn tác\nKhi xóa tài khoản, tất cả phiên đăng nhập sẽ bị vô hiệu hóa ngay lập tức. Thông tin cá nhân (Email, Tên, Avatar) sẽ được ẩn danh. Bạn sẽ rời khỏi các đội nhóm đang tham gia và hủy quyền quản trị kênh YouTube liên kết (kênh YouTube và lịch sử điểm số/thứ hạng của các mùa giải trước vẫn được bảo toàn dữ liệu cho tập thể).\nXóa tài khoản của tôi\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Lưu thông tin cá nhân",
+      " Mở hồ sơ đầy đủ",
+      " Quản lý hồ sơ & phân quyền nhân sự",
+      " Quản lý vinh danh",
+      " Làm mới",
+      "Cập nhật mật khẩu",
+      "Lưu Email Mới",
+      "Thoáng",
+      "Gọn",
+      "Xóa thông báo",
+      "Xóa avatar local",
+      "Mặc định cài đặt",
+      "Hồ sơ cá nhân",
+      "Đấu trường mùa giải",
+      "Giải vô địch năm",
+      "Bảng xếp hạng",
+      "Số liệu YouTube",
+      "Phân quyền & Tích xanh",
+      "Chuyển thành: Sắp ra mắt",
+      "Chuyển thành: Sắp ra mắt",
+      "Chuyển thành: Sắp ra mắt",
+      "Chuyển thành: Sắp ra mắt",
+      "Chuyển thành: Sắp ra mắt",
+      "Chuyển thành: Sắp ra mắt",
+      "Tắt / Ẩn khỏi Trang chủ",
+      "Xóa tài khoản của tôi",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games",
+    "url": "http://127.0.0.1:5173/games",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nDanh mục trò chơi\nAA\nDanh Mục Trò Chơi WorkRank\n\nKhám phá các trò chơi tương tác bàn cờ kinh doanh, ghép số trí tuệ và đấu bài dân gian thời gian thực.\n\nQuản lý trạng thái game\nĐANG CÓ THỂ CHƠI\n6\nSẴN SÀNG\nWorkRank Typing Battle\n\nĐấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.\n\nChơi ngay\nSẴN SÀNG\nGóc Sáng Tạo (Game Vẽ)\n\nKhông gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.\n\nChơi ngay\nSẴN SÀNG\nCờ Tỷ Phú\n\nTrò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.\n\nChơi ngay\nSẴN SÀNG\n2048\n\nTrò chơi ghép số 2048 trí tuệ, thử thách tư duy và bảng xếp hạng công ty.\n\nChơi ngay\nSẴN SÀNG\nĐánh Sâm\n\nTrò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực kịch tính.\n\nChơi ngay\nSẴN SÀNG\nĐoán Hình & Đoán Nhạc\n\nMini game đoán hình ảnh & đoán bài hát tốc độ cao nhiều người chơi.\n\nChơi ngay\nSẮP RA MẮT\n0\nHiện tại tất cả trò chơi trong danh mục đều đã ra mắt và có thể chơi trực tiếp.\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Quản lý trạng thái game",
+      "Chơi ngay",
+      "Chơi ngay",
+      "Chơi ngay",
+      "Chơi ngay",
+      "Chơi ngay",
+      "Chơi ngay",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/2048",
+    "url": "http://127.0.0.1:5173/games/2048",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nGame 2048\nAA\nThoát\n2048\nGHÉP SỐ\nVán mới\nAA\nAudit Admin\nEditor\n2048\nGhép số. Tư duy. Chinh phục ô 2048.\nĐIỂM\n0\nKỶ LỤC\n0\nHẠNG\n-\nNước đi: 0\n•\nÔ cao nhất: 2\nChơi lại\n2\n2\nCách chơi: Sử dụng các phím mũi tên (↑ ↓ ← →) hoặc vuốt trên màn hình cảm ứng để di chuyển. Điểm số của bạn luôn được tự động lưu liên tục — bạn có thể an tâm thoát game bất kỳ lúc nào mà không sợ mất điểm!\nBXH 2048 TOÀN CÔNG TY\nAA\nVị trí của bạn:\nChưa xếp hạng\n0 pts\nAA\nAudit Alice\nEditor\nMax: 32\n176 pts\nAB\nAudit Bob\nEditor\nMax: 16\n128 pts\nAS\nAudit 2048 Stats\nEditor\nMax: 4\n4 pts\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Thoát",
+      "Ván mới",
+      "Chơi lại",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          },
+          {
+            "client": 1180,
+            "scroll": 1180
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          },
+          {
+            "client": 1114,
+            "scroll": 1114
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          },
+          {
+            "client": 963,
+            "scroll": 963
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          },
+          {
+            "client": 963,
+            "scroll": 963
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          },
+          {
+            "client": 722,
+            "scroll": 722
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          },
+          {
+            "client": 402,
+            "scroll": 402
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          },
+          {
+            "client": 362,
+            "scroll": 362
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/capital-board",
+    "url": "http://127.0.0.1:5173/games/capital-board",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nCờ Tỷ Phú\nAA\nThoát\nCờ Tỷ Phú\nBÀN CỜ\nLuật chơi\nAA\nAudit Admin\nEditor\nCỜ TỶ PHÚ WORKRANK\nV1 REALTIME\n\nGame bàn cờ kinh doanh & đầu tư bất động sản thời gian thực dành cho thành viên WorkRank.\n\nLuật Chơi\nKhông thể tải danh sách phòng chơi\nSảnh Phòng Đấu\nBảng Xếp Hạng\nLịch Sử Đấu\nVào Mã\nLàm mới\n🎮 Luyện Tập Bot\nTạo Phòng Chơi\nChưa có phòng nào đang chờ\n\nHãy tạo phòng mới để bắt đầu ván cờ đầu tiên!\n\nTạo Phòng Ngay\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Thoát",
+      "Luật chơi",
+      "Luật Chơi",
+      "",
+      "Sảnh Phòng Đấu",
+      "Bảng Xếp Hạng",
+      "Lịch Sử Đấu",
+      "Vào Mã",
+      "Làm mới",
+      "🎮 Luyện Tập Bot",
+      "Tạo Phòng Chơi",
+      "Tạo Phòng Ngay",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [
+      "500 http://localhost:5001/api/games/rooms?limit=30",
+      "500 http://localhost:5001/api/games/rooms?limit=30"
+    ],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/quiz",
+    "url": "http://127.0.0.1:5173/games/quiz",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nĐoán Hình & Đoán Nhạc\nAA\nBảng Điều Khiển\nQUIZ LIVE\nAA\nAudit Admin\nTRẮC NGHIỆM TỐC ĐỘ REALTIME\nĐoán Hình & Đoán Nhạc\n\nThử thách trực quan và giai điệu bài hát nhanh nhất để ghi điểm và thăng hạng trên bảng xếp hạng toàn công ty.\n\nVào phòng\nTạo Phòng Chơi\nTrận đấu đang diễn ra (#QZA6BB)\nPhòng: Audit Quiz\nVào lại\nTRẬN ĐÃ CHƠI\n1\nCHIẾN THẮNG\n1\nTỔNG ĐIỂM TÍCH LŨY\n85\nTỈ LỆ ĐÚNG\n100%\nĐIỂM KỶ LỤC\n85\nSảnh Phòng Đấu (1)\nBảng Xếp Hạng\nTất cả\nĐoán Hình\nĐoán Nhạc\nĐoán Hình\n#QZA6BB\nAudit Quiz\nAA\nChủ phòng: Audit Admin\n1 / 20 người\nTham gia\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Bảng Điều Khiển",
+      "",
+      "",
+      "Vào phòng",
+      "",
+      "Tạo Phòng Chơi",
+      "Vào lại",
+      "Sảnh Phòng Đấu (1)",
+      "Bảng Xếp Hạng",
+      "Tất cả",
+      "Đoán Hình",
+      "Đoán Nhạc",
+      "Tham gia",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/sam",
+    "url": "http://127.0.0.1:5173/games/sam",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nĐánh Sâm\nAA\nThoát\nĐánh Sâm\nDÂN GIAN\nAA\nAudit Admin\nEditor\nTRÒ CHƠI NỘI BỘ WORKRANK\nĐánh Sâm Lốc\n\nTrò chơi bài dân gian 2–4 người chơi theo lượt thời gian thực server-authoritative\n\nLuật chơi\nLuyện tập Bot\nBot Test\nTạo phòng mới\nTỔNG ĐIỂM SÂM\n0\nTRẬN ĐÃ CHƠI\n0\nTỈ LỆ THẮNG\n0%\n0 trận thắng\nCHUỖI THẮNG CAO NHẤT\n0 trận\nSảnh Chờ\nBảng Xếp Hạng\nHướng Dẫn & Luật\nChưa có phòng nào đang mở\n\nHãy là người đầu tiên tạo phòng Đánh Sâm và mời các đồng nghiệp cùng tham gia!\n\nTạo phòng ngay\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Thoát",
+      " Luật chơi",
+      " Luyện tập Bot",
+      " Bot Test",
+      " Tạo phòng mới",
+      "Sảnh Chờ",
+      "Bảng Xếp Hạng",
+      "Hướng Dẫn & Luật",
+      "Tạo phòng ngay",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/typing",
+    "url": "http://127.0.0.1:5173/games/typing",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nWorkRank Typing Battle\nAA\nWorkRank Typing Battle\nĐấu Trường Gõ Phím Mạng Xã Hội\n\nBài thi chuẩn không dấu chấm phẩy · Luyện tập và thi đấu theo mốc 2 phút hoặc 5 phút · Tích hợp BXH công ty.\n\nBest WPM: 0\nChính xác: 100%\nChiến thắng: 0\nTích lũy: +0 XP\nCơ Blue (Tách Tách)\nCơ Panda (Thock Đầm)\nCơ Red (Linear Êm)\nLuyện Gõ Theo Giờ (2p / 5p)\nĐấu Trường Trực Tuyến (PvP)\nBảng Xếp Hạng\nMốc thời gian:\n30s\n1 Phút\n2 Phút (Chuẩn)\n5 Phút (Bền bỉ)\n✓ Tính BXH cá nhân (≥ 2p)\nKhông chấm phẩy\nThử bài mới\n(Esc)\nẨn phím\nTHỜI GIAN CÒN LẠI\n02:00\nTỐC ĐỘ GÕ\n0 WPM\nCHÍNH XÁC\n100%\nLỖI SAI\n0\nTỪ ĐÃ HOÀN THÀNH\n0 từ\nCÂU HOÀN THÀNH\n0 câu\nđ\nấ\nu\nt\nr\nư\nờ\nn\ng\nđ\ná\nn\nh\nm\ná\ny\nk\nế\nt\nn\nố\ni\nh\nà\nn\ng\nn\ng\nà\nn\nt\nu\ny\nể\nn\nt\nh\nủ\nt\nà\ni\nb\na\nc\nù\nn\ng\ns\no\nt\nà\ni\nt\nố\nc\nđ\nộ\nđ\nộ\nc\nh\ní\nn\nh\nx\ná\nc\nv\nà\nk\nh\nả\nn\nă\nn\ng\np\nh\nả\nn\nx\nạ\nn\nh\na\nn\nh\nn\nh\nạ\ny\nt\nr\nê\nn\nt\nừ\nn\ng\np\nh\ní\nm\nb\nấ\nm\nb\nạ\nn\ns\nở\nh\nữ\nu\nn\nh\nữ\nn\ng\nđ\ni\nể\nm\nm\nạ\nn\nh\nđ\nộ\nc\nn\nh\nấ\nt\nv\nô\nn\nh\nị\nh\nã\ny\nt\nự\nt\ni\nn\np\nh\ná\nt\nh\nu\ny\nt\nh\nế\nm\nạ\nn\nh\nđ\nó\nđ\nể\nt\nạ\no\nr\na\nn\nh\nữ\nn\ng\ng\ni\ná\nt\nr\nị\nt\nố\nt\nđ\nẹ\np\nc\nh\no\nc\nộ\nn\ng\nđ\nồ\nn\ng\nv\nà\nx\nã\nh\nộ\ni\nx\nu\nn\ng\nq\nu\na\nn\nh\nc\nó\nn\nh\nữ\nn\ng\nn\ng\nư\nờ\ni\nđ\nồ\nn\ng\nn\ng\nh\ni\nệ\np\nl\nu\nô\nn\ns\nẵ\nn\nl\nò\nn\ng\ng\ni\nú\np\nđ\nỡ\nc\nh\ni\na\ns\nẻ\nk\ni\nn\nh\nn\ng\nh\ni\nệ\nm\nv\nà\nc\nù\nn\ng\nn\nh\na\nu\nv\nư\nợ\nt\nq\nu\na\nk\nh\nó\nk\nh\nă\nn\nl\nà\nđ\ni\nề\nu\nm\na\ny\nm\nắ\nn\nl\nớ\nn\nn\nh\nấ\nt\nt\nr\no\nn\ng\ns\nự\nn\ng\nh\ni\nệ\np\nn\nụ\nc\nư\nờ\ni\nr\nạ\nn\ng\nr\nỡ\ná\nn\nh\nm\nắ\nt\nấ\nm\ná\np\nt\nì\nn\nh\nb\nạ\nn\nc\nh\nâ\nn\nt\nh\nà\nn\nh\ns\nự\ns\nẻ\nc\nh\ni\na\nk\nị\np\nt\nh\nờ\ni\nl\nu\nô\nn\nl\nà\nl\ni\nề\nu\nt\nh\nu\nố\nc\nq\nu\ný\ng\ni\ná\nn\nh\nấ\nt\nx\nu\na\nt\na\nn\nm\nọ\ni\nm\nệ\nt\nm\nỏ\ni\nt\nr\no\nn\ng\nc\nu\nộ\nc\ns\nố\nn\ng\nm\nộ\nt\nb\nu\nổ\ni\nh\nọ\np\nt\nh\nà\nn\nh\nc\nô\nn\ng\nl\nà\nb\nu\nổ\ni\nh\nọ\np\nđ\ni\nt\nh\nẳ\nn\ng\nv\nà\no\nt\nr\nọ\nn\ng\nt\nâ\nm\nv\nấ\nn\nđ\nề\nđ\nư\na\nr\na\ng\ni\nả\ni\np\nh\ná\np\nr\nõ\nr\nà\nn\ng\nv\nà\np\nh\nâ\nn\nc\nô\nn\ng\nn\nh\ni\nệ\nm\nv\nụ\nc\nụ\nt\nh\nể\nc\nh\no\nt\nừ\nn\ng\nt\nh\nà\nn\nh\nv\ni\nê\nn\nt\nh\na\nm\ng\ni\na\nđ\no\nà\nn\nk\nế\nt\nt\nạ\no\nn\nê\nn\ns\nứ\nc\nm\nạ\nn\nh\nv\nô\nđ\nị\nc\nh\nt\nậ\np\nt\nh\nể\nđ\nồ\nn\ng\nl\nò\nn\ng\nc\nh\nu\nn\ng\ns\nứ\nc\nv\nư\nợ\nt\nq\nu\na\nm\nọ\ni\nr\nà\no\nc\nả\nn\nđ\nư\na\nt\nổ\nc\nh\nứ\nc\np\nh\ná\nt\nt\nr\ni\nể\nn\nv\nữ\nn\ng\nm\nạ\nn\nh\nv\nà\nv\nư\nơ\nn\nx\na\nh\nơ\nn\nn\nữ\na\ns\ná\nc\nh\nl\nà\nk\nh\no\nt\nà\nn\ng\nt\nr\ni\nt\nh\nứ\nc\nv\nô\nt\nậ\nn\nc\nủ\na\nn\nh\nâ\nn\nl\no\nạ\ni\nđ\nọ\nc\ns\ná\nc\nh\ng\ni\nú\np\nm\nở\nr\nộ\nn\ng\nt\nầ\nm\nh\ni\nể\nu\nb\ni\nế\nt\nn\nu\nô\ni\nd\nư\nỡ\nn\ng\nt\nâ\nm\nh\nồ\nn\nv\nà\nh\no\nà\nn\nt\nh\ni\nệ\nn\nn\nh\nâ\nn\nc\ná\nc\nh\nc\nủ\na\nm\nỗ\ni\nc\no\nn\nn\ng\nư\nờ\ni\nt\nh\nà\nn\nh\nc\nô\nn\ng\nk\nh\nô\nn\ng\nđ\nế\nn\nt\nừ\ns\nự\nm\na\ny\nm\nắ\nn\nc\nh\nố\nc\nl\ná\nt\nm\nà\nl\nà\nk\nế\nt\nq\nu\nả\nc\nủ\na\nc\nh\nu\nỗ\ni\nn\ng\nà\ny\nm\ni\nệ\nt\nm\nà\ni\nr\nè\nn\nl\nu\ny\nệ\nn\nk\nỷ\nl\nu\nậ\nt\nb\nả\nn\nt\nh\nâ\nn\nv\nà\nk\nh\nô\nn\ng\nb\na\no\ng\ni\nờ\nb\nỏ\nc\nu\nộ\nc\ng\nõ\np\nh\ní\nm\nm\nư\nờ\ni\nn\ng\nó\nn\nt\nh\nu\nầ\nn\nt\nh\nụ\nc\nn\nh\nư\nm\nộ\nt\nn\ng\nh\nệ\ns\nĩ\nl\nư\nớ\nt\nt\na\ny\nt\nr\nê\nn\np\nh\ní\nm\nđ\nà\nn\nd\nư\nơ\nn\ng\nc\nầ\nm\ng\ni\nú\np\nb\nạ\nn\nh\ni\nệ\nn\nt\nh\nự\nc\nh\nó\na\nd\nò\nn\ng\ns\nu\ny\nn\ng\nh\nĩ\nt\nh\nà\nn\nh\nv\nă\nn\nb\nả\nn\nv\nớ\ni\nt\nố\nc\nđ\nộ\ná\nn\nh\ns\ná\nn\ng\nm\nặ\nt\nt\nr\nờ\ni\nm\nọ\nc\nc\nh\ni\nm\nh\nó\nt\nc\nh\nà\no\nn\ng\nà\ny\nm\nớ\ni\nb\nì\nn\nh\nm\ni\nn\nh\nr\nự\nc\nr\nỡ\nh\no\na\nc\nỏ\nn\ng\ná\nt\nh\nư\nơ\nn\ng\ng\ni\nó\nn\nh\nẹ\nt\nh\nổ\ni\nq\nu\na\nc\nà\nn\nh\nl\ná\nm\na\nn\ng\nt\nh\ne\no\nk\nh\nô\nn\ng\nk\nh\ní\nt\nr\no\nn\ng\nl\nà\nn\nh\nd\nễ\nc\nh\nị\nu\nk\nh\nô\nn\ng\nn\ng\nừ\nn\ng\nh\nọ\nc\nh\nỏ\ni\nn\nh\nữ\nn\ng\nk\nỹ\nn\nă\nn\ng\nm\nớ\ni\nv\nà\nc\nh\nủ\nđ\nộ\nn\ng\nđ\nó\nn\nn\nh\nậ\nn\nt\nh\nử\nt\nh\ná\nc\nh\nk\nh\nó\nk\nh\nă\nn\ng\ni\nú\np\nb\nạ\nn\nn\nh\na\nn\nh\nc\nh\nó\nn\ng\nt\nr\nở\nt\nh\nà\nn\nh\nn\ng\nư\nờ\ni\nd\nẫ\nn\nđ\nầ\nu\nt\nr\no\nn\ng\nl\nĩ\nn\nh\nv\nự\nc\nc\nủ\na\nm\nì\nn\nh\nđ\ni\nl\nà\nm\nv\nớ\ni\nt\nâ\nm\nt\nh\nế\nv\nu\ni\nv\nẻ\nk\nh\nô\nn\ng\nc\ná\nu\ng\ni\nậ\nn\nk\nh\ni\nk\nh\ná\nc\nh\nh\nà\nn\ng\ny\nê\nu\nc\nầ\nu\nc\nh\nỉ\nn\nh\ns\nử\na\nb\nả\nn\nv\nẽ\nn\nh\ni\nề\nu\nl\nầ\nn\nv\nì\nm\nỗ\ni\nl\nầ\nn\ns\nử\na\nđ\nổ\ni\nl\nà\nm\nộ\nt\nl\nầ\nn\nn\nâ\nn\ng\nc\na\no\nt\na\ny\nn\ng\nh\nề\nđ\ni\nê\nu\nl\nu\ny\nệ\nn\nb\nữ\na\nc\nơ\nm\ng\ni\na\nđ\nì\nn\nh\nấ\nm\nc\nú\nn\ng\nv\nớ\ni\nb\ná\nt\nc\na\nn\nh\nr\na\nu\nm\nu\nố\nn\ng\nl\nu\nộ\nc\nc\nù\nn\ng\nđ\nĩ\na\nc\nà\np\nh\ná\no\ng\ni\nò\nn\nt\na\nn\nl\nu\nô\nn\nl\nà\nk\ný\nứ\nc\nt\nh\ni\nê\nn\ng\nl\ni\nê\nn\ng\nấ\nm\ná\np\nn\nh\nấ\nt\nc\nủ\na\nm\nỗ\ni\nn\ng\nư\nờ\ni\nc\no\nn\nx\na\nx\nứ\nc\nả\nm\ng\ni\ná\nc\nc\nh\nạ\ny\nđ\nu\na\nc\nù\nn\ng\nt\nh\nờ\ni\ng\ni\na\nn\nđ\nể\nn\nộ\np\nb\nà\ni\nh\no\nà\nn\nc\nh\nỉ\nn\nh\nt\nr\nư\nớ\nc\nm\nư\nờ\ni\nh\na\ni\ng\ni\nờ\nđ\nê\nm\nm\na\nn\ng\nl\nạ\ni\ns\nự\nh\nồ\ni\nh\nộ\np\nt\nộ\nt\nc\nù\nn\ng\nn\nh\nư\nn\ng\nn\ni\nề\nm\nv\nu\ni\nk\nh\ni\nh\no\nà\nn\nt\nh\nà\nn\nh\nx\nu\nấ\nt\ns\nắ\nc\nl\nà\nv\nô\ng\ni\ná\nt\ni\nế\nn\ng\ns\nó\nn\ng\nv\nỗ\nr\nì\nr\nà\no\nb\nê\nn\nb\nờ\nb\ni\nể\nn\nx\na\nn\nh\nc\ná\nt\nt\nr\nắ\nn\ng\nn\nắ\nn\ng\nv\nà\nn\ng\nc\nù\nn\ng\nn\nh\nữ\nn\ng\nh\nà\nn\ng\nd\nừ\na\nn\ng\nh\ni\nê\nn\ng\nb\nó\nn\ng\nt\nạ\no\nn\nê\nn\nb\nứ\nc\nt\nr\na\nn\nh\nt\nh\ni\nê\nn\nn\nh\ni\nê\nn\nt\nu\ny\nệ\nt\nm\nỹ\nc\nủ\na\nb\ni\nể\nn\nđ\nả\no\nq\nu\nê\nh\nư\nơ\nn\ng\nn\nh\ni\nề\nu\nn\ng\nư\nờ\ni\nt\nh\ní\nc\nh\nk\nh\no\ne\nn\nh\nà\nc\na\no\nc\nử\na\nr\nộ\nn\ng\nc\nò\nn\nt\nô\ni\nc\nh\nỉ\nt\nh\ní\nc\nh\nt\nự\nh\nà\no\nv\nì\nh\nô\nm\nn\na\ny\nđ\nã\nh\no\nà\nn\nt\nh\nà\nn\nh\nx\no\nn\ng\nm\nọ\ni\nk\nế\nh\no\nạ\nc\nh\nc\nô\nn\ng\nv\ni\nệ\nc\ns\nớ\nm\nh\nơ\nn\nd\nự\nk\ni\nế\nn\nm\nộ\nt\nt\ni\nế\nn\ng\nđ\nồ\nn\ng\nh\nồ\nm\nỗ\ni\nn\ng\nà\ny\nt\ní\nc\nh\nl\nũ\ny\nt\nh\nê\nm\nm\nộ\nt\nc\nh\nú\nt\nk\ni\nế\nn\nt\nh\nứ\nc\nr\nè\nn\nl\nu\ny\nệ\nn\nt\nh\nê\nm\nm\nộ\nt\nc\nh\nú\nt\nk\nỹ\nn\nă\nn\ng\ns\na\nu\nm\nộ\nt\nn\nă\nm\nb\nạ\nn\ns\nẽ\nn\nh\nì\nn\nl\nạ\ni\nv\nà\nb\nấ\nt\nn\ng\nờ\nt\nr\nư\nớ\nc\ns\nự\nt\nr\nư\nở\nn\ng\nt\nh\nà\nn\nh\nv\nư\nợ\nt\nb\nậ\nc\nc\nủ\na\nb\nả\nn\nt\nh\nâ\nn\nh\nư\nơ\nn\ng\nt\nh\nơ\nm\nc\nủ\na\nl\ny\nc\nà\np\nh\nê\ns\nữ\na\nđ\ná\nb\nu\nổ\ni\ns\ná\nn\ng\nđ\ná\nn\nh\nt\nh\nứ\nc\nm\nọ\ni\ng\ni\ná\nc\nq\nu\na\nn\ng\ni\nú\np\nt\ni\nn\nh\nt\nh\nầ\nn\ns\nả\nn\ng\nk\nh\no\ná\ni\nv\nà\ns\nẵ\nn\ns\nà\nn\ng\nb\nù\nn\ng\nn\nổ\nc\nù\nn\ng\nn\nh\nữ\nn\ng\ný\nt\nư\nở\nn\ng\ns\ná\nn\ng\nt\nạ\no\nđ\nộ\nc\nđ\ná\no\nt\nr\nu\ny\nề\nn\nt\nh\nố\nn\ng\nt\nô\nn\ns\nư\nt\nr\nọ\nn\ng\nđ\nạ\no\nv\nà\nt\ni\nn\nh\nt\nh\nầ\nn\nh\ni\nế\nu\nh\nọ\nc\nn\ng\nh\nì\nn\nn\nă\nm\nc\nủ\na\nd\nâ\nn\nt\nộ\nc\nl\nà\nn\ng\nọ\nn\nđ\nu\nố\nc\ns\ná\nn\ng\ns\no\ni\nđ\nư\nờ\nn\ng\nc\nh\no\nc\ná\nc\nt\nh\nế\nh\nệ\nt\nr\nẻ\nv\nư\nơ\nn\nt\nầ\nm\nt\nh\nế\ng\ni\nớ\ni\nd\nò\nn\ng\ns\nô\nn\ng\nm\nê\nk\nô\nn\ng\nm\nà\nu\nm\nỡ\nb\nồ\ni\nđ\nắ\np\np\nh\nù\ns\na\nc\nh\no\nn\nh\nữ\nn\ng\nc\ná\nn\nh\nđ\nồ\nn\ng\nl\nú\na\nc\nh\ní\nn\nv\nà\nn\ng\nư\nơ\nm\nt\nr\nĩ\nu\nh\nạ\nt\nm\na\nn\ng\nl\nạ\ni\nm\nù\na\nm\nà\nn\ng\nb\nộ\ni\nt\nh\nu\nc\nh\no\nb\nà\nc\no\nn\nn\nô\nn\ng\nd\nâ\nn\nm\ni\nề\nn\nt\nâ\ny\nđ\nê\nm\nm\nu\nộ\nn\nl\nư\nớ\nt\nx\ne\nm\nn\nh\nữ\nn\ng\nd\nò\nn\ng\nt\nâ\nm\ns\nự\nc\nh\nâ\nn\nt\nh\nà\nn\nh\nt\nh\nấ\ny\na\ni\nc\nũ\nn\ng\nđ\na\nn\ng\nâ\nm\nt\nh\nầ\nm\nn\nỗ\nl\nự\nc\nt\nừ\nn\ng\nn\ng\nà\ny\nđ\nể\nx\nâ\ny\nd\nự\nn\ng\nt\nư\nơ\nn\ng\nl\na\ni\nt\nư\nơ\ni\ns\ná\nn\ng\nv\nà\nấ\nm\nn\no\nh\nơ\nn\nq\nu\ná\nk\nh\nứ\nđ\nã\nq\nu\na\nđ\ni\nt\nư\nơ\nn\ng\nl\na\ni\nc\nh\nư\na\nt\nớ\ni\nh\nã\ny\nd\nà\nn\nh\nt\nr\nọ\nn\nv\nẹ\nn\ns\nự\nt\nậ\np\nt\nr\nu\nn\ng\nv\nà\nt\nâ\nm\nh\nu\ny\nế\nt\nc\nh\no\nt\nừ\nn\ng\nv\ni\nệ\nc\nn\nh\nỏ\nb\nạ\nn\nđ\na\nn\ng\nl\nà\nm\nn\ng\na\ny\nt\nr\no\nn\ng\ng\ni\nâ\ny\np\nh\nú\nt\nh\ni\nệ\nn\nt\nạ\ni\nđ\nấ\nt\nn\nư\nớ\nc\nv\ni\nệ\nt\nn\na\nm\ng\nấ\nm\nv\nó\nc\nt\nư\nơ\ni\nđ\nẹ\np\nt\nr\nả\ni\nd\nà\ni\nt\nừ\nả\ni\nn\na\nm\nq\nu\na\nn\nđ\nế\nn\nm\nũ\ni\nc\nà\nm\na\nu\nv\nớ\ni\nm\nu\nô\nn\nv\nà\nn\nd\na\nn\nh\nl\na\nm\nt\nh\nắ\nn\ng\nc\nả\nn\nh\nv\nà\nc\no\nn\nn\ng\nư\nờ\ni\nt\nh\nâ\nn\nt\nh\ni\nệ\nn\nh\ni\nế\nu\nk\nh\ná\nc\nh\nm\nù\na\nt\nh\nu\nh\nà\nn\nộ\ni\nt\nh\nơ\nm\nn\nồ\nn\ng\nm\nù\ni\nh\no\na\ns\nữ\na\nc\nù\nn\ng\nn\nh\nữ\nn\ng\nc\no\nn\np\nh\nố\nc\nổ\nk\ní\nn\nh\nr\nê\nu\np\nh\no\nn\ng\nđ\nó\nn\nt\nừ\nn\ng\nc\nơ\nn\ng\ni\nó\nh\ne\no\nm\na\ny\ns\ne\nl\nạ\nn\nh\nl\nà\nm\nx\na\no\nx\nu\ny\nế\nn\nl\nò\nn\ng\nn\ng\nư\nờ\ni\np\nh\nư\nơ\nn\ng\nx\na\nđ\nô\ni\nb\nà\nn\nt\na\ny\nu\ny\nể\nn\nc\nh\nu\ny\nể\nn\nl\nư\nớ\nt\nn\nh\nẹ\nt\nr\nê\nn\nt\nừ\nn\ng\np\nh\ní\nm\nb\nấ\nm\nt\nạ\no\nn\nê\nn\nn\nh\nữ\nn\ng\nâ\nm\nt\nh\na\nn\nh\nl\ná\nc\nh\nc\ná\nc\nh\ng\ni\nò\nn\ng\ni\nã\nm\na\nn\ng\nl\nạ\ni\nc\nả\nm\ng\ni\ná\nc\nt\nh\ní\nc\nh\nt\nh\nú\nv\nà\ns\na\ny\nm\nê\nb\nấ\nt\nt\nậ\nn\nl\nu\ny\nệ\nn\nt\nậ\np\ng\nõ\nn\nh\na\nn\nh\nm\nỗ\ni\nn\ng\nà\ny\ng\ni\nú\np\nt\nă\nn\ng\nc\nư\nờ\nn\ng\nk\nh\nả\nn\nă\nn\ng\nt\nậ\np\nt\nr\nu\nn\ng\np\nh\nả\nn\nx\nạ\nn\nã\no\nb\nộ\nv\nà\nn\nâ\nn\ng\nc\na\no\nn\nă\nn\ng\ns\nu\nấ\nt\nl\nà\nm\nv\ni\nệ\nc\nv\nư\nợ\nt\nb\nậ\nc\nt\nr\no\nn\ng\nt\nh\nờ\ni\nđ\nạ\ni\ns\nố\nm\nọ\ni\ng\ni\nớ\ni\nh\nạ\nn\ns\ni\nn\nh\nr\na\nl\nà\nđ\nể\nt\nh\nử\nt\nh\ná\nc\nh\ný\nc\nh\ní\nk\ni\nê\nn\nđ\nị\nn\nh\nv\nà\nl\nò\nn\ng\nd\nũ\nn\ng\nc\nả\nm\nc\nủ\na\nn\nh\nữ\nn\ng\na\ni\nk\nh\na\no\nk\nh\ná\nt\nv\nư\nơ\nn\nt\nớ\ni\nđ\nỉ\nn\nh\nc\na\no\nt\nh\nà\nn\nh\nc\nô\nn\ng\nt\nr\no\nn\ng\nc\nu\nộ\nc\nđ\nờ\ni\nc\nh\nữ\na\nl\nà\nn\nh\nt\nâ\nm\nh\nồ\nn\nb\nằ\nn\ng\nm\nộ\nt\nc\nh\né\nn\nt\nr\nà\nấ\nm\nv\nà\ng\ná\nc\nl\nạ\ni\nm\nọ\ni\nl\no\nt\no\na\nn\nc\nô\nn\ng\nv\ni\nệ\nc\ns\na\nu\ng\ni\nờ\nh\nà\nn\nh\nc\nh\ní\nn\nh\nđ\nể\nt\nậ\nn\nh\nư\nở\nn\ng\nc\nu\nộ\nc\ns\nố\nn\ng\nb\nì\nn\nh\ny\nê\nn\nb\nê\nn\ng\ni\na\nđ\nì\nn\nh\nn\ng\nư\nờ\ni\nt\nh\nâ\nn\nh\nệ\nt\nh\nố\nn\ng\nm\ná\ny\nc\nh\nủ\nt\nh\nế\nh\nệ\nm\nớ\ni\nc\nh\no\np\nh\né\np\nt\nr\nu\ny\nề\nn\nt\nả\ni\nd\nữ\nl\ni\nệ\nu\nv\nà\nc\nậ\np\nn\nh\nậ\nt\nb\nả\nn\ng\nx\nế\np\nh\nạ\nn\ng\nt\nh\ni\nđ\nấ\nu\nc\nủ\na\nh\nà\nn\ng\nv\nạ\nn\nn\ng\nư\nờ\ni\nd\nù\nn\ng\nt\nr\no\nn\ng\nc\nh\nớ\np\nm\nắ\nt\nk\nh\nô\nn\ng\nh\nề\nc\nh\nậ\nm\nt\nr\nễ\nm\nộ\nt\nl\nờ\ni\nk\nh\ne\nn\nn\ng\nợ\ni\nv\nà\nv\nà\ni\nc\nâ\nu\nđ\nộ\nn\ng\nv\ni\nê\nn\nc\nh\nâ\nn\nt\nh\nà\nn\nh\nc\nó\nt\nh\nể\nt\ni\nế\np\nt\nh\nê\nm\nn\ng\nu\nồ\nn\nn\nă\nn\ng\nl\nư\nợ\nn\ng\nd\nồ\ni\nd\nà\no\nc\nh\no\nb\nạ\nn\nb\nè\nđ\nồ\nn\ng\nn\ng\nh\ni\nệ\np\nt\ni\nế\np\nt\nụ\nc\nc\nố\nn\ng\nh\ni\nế\nn\nh\nế\nt\nm\nì\nn\nh\nn\ng\nư\nờ\ni\nk\ni\nê\nn\nt\nr\nì\nđ\ni\nđ\nế\nn\nc\nù\nn\ng\nl\nu\nô\nn\nc\nh\ni\nế\nn\nt\nh\nắ\nn\ng\nn\ng\nư\nờ\ni\nc\nó\nt\nà\ni\nn\nă\nn\ng\nn\nh\nư\nn\ng\nd\nễ\nn\nả\nn\nl\nò\nn\ng\nt\nr\nư\nớ\nc\ns\nó\nn\ng\ng\ni\nó\nt\nh\nử\nt\nh\ná\nc\nh\nk\nh\nắ\nc\nn\ng\nh\ni\nệ\nt\nc\nủ\na\nc\nu\nộ\nc\ns\nố\nn\ng\nn\nh\nữ\nn\ng\nc\nâ\nu\nc\nh\nu\ny\nệ\nn\nđ\nờ\ni\nt\nh\nư\nờ\nn\ng\ng\ni\nả\nn\nd\nị\nv\nà\ný\nn\ng\nh\nĩ\na\nt\nr\nê\nn\nm\nạ\nn\ng\nl\nu\nô\nn\nt\nh\nu\nh\nú\nt\nh\nà\nn\ng\nt\nr\ni\nệ\nu\nn\ng\nư\nờ\ni\nx\ne\nm\nv\nà\nm\na\nn\ng\nl\nạ\ni\nn\ni\nề\nm\nv\nu\ni\ns\nả\nn\ng\nk\nh\no\ná\ni\ns\na\nu\nc\nh\nu\nỗ\ni\nn\ng\nà\ny\nb\nậ\nn\nr\nộ\nn\nt\nự\ng\ni\ná\nc\nq\nu\nả\nn\nl\ný\nt\nh\nờ\ni\ng\ni\na\nn\nv\nà\nh\no\nà\nn\nt\nh\nà\nn\nh\nt\nr\ná\nc\nh\nn\nh\ni\nệ\nm\nđ\nư\nợ\nc\ng\ni\na\no\nl\nà\nt\nh\nư\nớ\nc\nđ\no\nc\nh\ní\nn\nh\nx\ná\nc\nn\nh\nấ\nt\nc\nh\no\ns\nự\nc\nh\nu\ny\nê\nn\nn\ng\nh\ni\nệ\np\nc\nủ\na\nm\nộ\nt\nn\nh\nâ\nn\ns\nự\nt\nà\ni\nn\nă\nn\ng\nt\nr\no\nn\ng\nt\nậ\np\nt\nh\nể\nt\nr\ní\nt\nu\nệ\nn\nh\nâ\nn\nt\nạ\no\nđ\na\nn\ng\nt\nh\na\ny\nđ\nổ\ni\nc\ná\nc\nh\nt\nh\nế\ng\ni\nớ\ni\nv\nậ\nn\nh\nà\nn\nh\ng\ni\nú\np\nc\no\nn\nn\ng\nư\nờ\ni\ng\ni\nả\ni\nq\nu\ny\nế\nt\nc\nô\nn\ng\nv\ni\nệ\nc\nn\nh\na\nn\nh\nc\nh\nó\nn\ng\nv\nà\nt\nậ\np\nt\nr\nu\nn\ng\nv\nà\no\nt\nư\nd\nu\ny\ns\ná\nn\ng\nt\nạ\no\nđ\nỉ\nn\nh\nc\na\no\ns\nu\ny\nn\ng\nh\nĩ\nt\ní\nc\nh\nc\nự\nc\nh\nà\nn\nh\nđ\nộ\nn\ng\nq\nu\ny\nế\nt\nđ\no\ná\nn\nv\nư\nợ\nt\nq\nu\na\nt\nh\nử\nt\nh\ná\nc\nh\ng\nặ\nt\nh\ná\ni\nt\nh\nà\nn\nh\nc\nô\nn\ng\nc\nu\nộ\nc\ns\nố\nn\ng\nt\nr\nà\nn\nđ\nầ\ny\nn\ni\nề\nm\nv\nu\ni\nv\nà\ný\nn\ng\nh\nĩ\na\nb\nê\nn\nn\nh\nữ\nn\ng\nn\ng\nư\nờ\ni\nt\nh\nâ\nn\ny\nê\nu\nt\nậ\np\nt\nr\nu\nn\ng\nc\na\no\nđ\nộ\np\nh\nả\nn\nx\nạ\nn\nh\nạ\ny\nb\né\nn\nb\nà\nn\nt\na\ny\nk\nh\né\no\nl\né\no\np\nh\ní\nm\nb\nấ\nm\nn\nh\nị\np\nn\nh\nà\nn\ng\nc\nh\nu\nẩ\nn\nx\ná\nc\nt\nừ\nn\ng\nc\nh\nữ\nr\nè\nn\nl\nu\ny\nệ\nn\nk\ni\nê\nn\nt\nr\nì\nm\nỗ\ni\nn\ng\nà\ny\nđ\nể\nđ\nạ\nt\nt\nh\nà\nn\nh\nt\ní\nc\nh\nc\na\no\nn\nh\nấ\nt\nBÀN PHÍM TRỰC QUAN\nPhím mục tiêu:\nđ\n~\n`\n!\n1\n@\n2\n#\n3\n$\n4\n%\n5\n^\n6\n&\n7\n*\n8\n(\n9\n)\n0\n_\n-\n+\n=\nBackspace\nTab\nQ\nW\nE\nR\nT\nY\nU\nI\nO\nP\n{\n[\n}\n]\n|\n\\\nCaps\nA\nS\nD\nF\nG\nH\nJ\nK\nL\n:\n;\n\"\n'\nEnter\nShift\nZ\nX\nC\nV\nB\nN\nM\n<\n,\n>\n.\n?\n/\nShift\nCtrl\nAlt\nSPACEBAR\nAlt\nCtrl\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "",
+      "Luyện Gõ Theo Giờ (2p / 5p)",
+      "Đấu Trường Trực Tuyến (PvP)",
+      "Bảng Xếp Hạng",
+      "30s",
+      "1 Phút",
+      "2 Phút (Chuẩn)",
+      "5 Phút (Bền bỉ)",
+      " Thử bài mới (Esc)",
+      "Ẩn phím",
+      "~`",
+      "!1",
+      "@2",
+      "#3",
+      "$4",
+      "%5",
+      "^6",
+      "&7",
+      "*8",
+      "(9",
+      ")0",
+      "_-",
+      "+=",
+      "Backspace",
+      "Tab",
+      "Q",
+      "W",
+      "E",
+      "R",
+      "T",
+      "Y",
+      "U",
+      "I",
+      "O",
+      "P",
+      "{[",
+      "}]",
+      "|\\",
+      "Caps",
+      "A",
+      "S",
+      "D",
+      "F",
+      "G",
+      "H",
+      "J",
+      "K",
+      "L",
+      ":;",
+      "\"'",
+      "Enter",
+      "Shift",
+      "Z",
+      "X",
+      "C",
+      "V",
+      "B",
+      "N",
+      "M",
+      "<,",
+      ">.",
+      "?/",
+      "Shift",
+      "Ctrl",
+      "Alt",
+      "SPACEBAR",
+      "Alt",
+      "Ctrl",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 515
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 515
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/games/drawing",
+    "url": "http://127.0.0.1:5173/games/drawing",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nGóc Sáng Tạo (Game Vẽ)\nAA\nTrò chơi\nGÓC SÁNG TẠO\nGame Vẽ Tranh WorkRank\nXem góc sáng tạo trên Home\nHoàn thành tác phẩm\n87%\nCọ\nTẩy\nDi chuyển\nĐổ màu\nNét:\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Hoàn thành tác phẩm",
+      "",
+      "",
+      "",
+      "Cọ",
+      "Tẩy",
+      "Di chuyển",
+      "Đổ màu",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/kpi",
+    "url": "http://127.0.0.1:5173/admin/kpi",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý KPI & Phòng Ban\nAA\nWORKRANK KPI FOUNDATION\nQuản Lý Phòng Ban & Chỉ Tiêu KPI\n\nCấu hình danh mục KPI cho CONTENT & EDIT, thiết lập mục tiêu và ghi nhận kết quả thực tế.\n\nLàm mới\nQuản Lý KPI\n1\nPhòng Ban\n1\nKết Quả & Tiến Độ\n0\nNhật Ký & Lịch Sử\n0\nProduction KPI\nTất cả phòng ban\nPhòng Audit (AUDIT)\nThêm Chỉ Tiêu KPI\nMã & Tên KPI\tPhòng Ban\tMục Tiêu Mặc Định\tChu Kỳ\tNguồn Dữ Liệu\tTrạng Thái\tThao Tác\n\nVideo Audit\nAUDIT_VIDEO\n\tPhòng Audit\t10 video\tHàng tháng\tMANUAL\tĐANG BẬT\t\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Làm mới",
+      "Quản Lý KPI1",
+      "Phòng Ban1",
+      "Kết Quả & Tiến Độ0",
+      "Nhật Ký & Lịch Sử0",
+      "Production KPI",
+      "Thêm Chỉ Tiêu KPI",
+      "ĐANG BẬT",
+      "",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 648
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 648
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/privileges",
+    "url": "http://127.0.0.1:5173/admin/privileges",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý Nhân Sự & Đặc Quyền\nAA\nQUẢN TRỊ NHÂN SỰ & ĐẶC QUYỀN VẬN HÀNH\nNhân sự, Chức danh & Danh hiệu Vinh danh\n\nQuản lý hồ sơ nhân viên, phân quyền RBAC, cấp tích xanh (Verified), Dev badge, chức danh công tác và trao giải thưởng MVP / Champion.\n\nTỔNG NHÂN SỰ\n8\nTÍCH XANH\n4\nDEV TEAM\n0\nQUẢN TRỊ VIÊN\n1\nTrao Cúp MVP\nThêm Nhân Sự Mới\nTất cả\nCó tích xanh\nDeveloper\nQuản trị viên\nChưa định danh\nLàm mới\nAS\nAudit 2048 Stats\nWR-0042 · audit-stats-1792199699839@example.test\nEditor\nMedia & Content\nSửa\nCấp Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\n\ud83eP\n🤖 AI Alex (Tài Phiệt)\nWR-0041 · ai_alex@capitalboard.internal\nEditor\nFinance Core\nSửa\nGỡ Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\n\ud83eS\n🤖 AI Mia (Bất Động Sản)\nWR-0040 · ai_mia@capitalboard.internal\nEditor\nReal Estate Growth\nSửa\nGỡ Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\n\ud83eL\n🤖 AI Tony (Chiến Lược)\nWR-0039 · ai_tony@capitalboard.internal\nEditor\nMedia & Strategy\nSửa\nGỡ Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\nKA\nKiểm thử Tiếng Việt Nguyễn Văn An\nWR-0038 · audit-staff@example.test\nEditor\nMedia & Content\nSửa\nCấp Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\nAB\nAudit Bob\nWR-0037 · audit-bob@example.test\nEditor\nMedia & Content\nSửa\nCấp Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\nAA\nAudit Alice\nWR-0036 · audit-alice@example.test\nEditor\nMedia & Content\nSửa\nCấp Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\nAA\nAudit Admin\nADMIN\nWR-0035 · audit-admin@example.test\nEditor\nManagement\nSửa\nGỡ Tích Xanh\nCấp Dev\nTrao MVP\nTrao Cúp\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      " Trao Cúp MVP",
+      " Thêm Nhân Sự Mới",
+      "Tất cả",
+      "Có tích xanh",
+      "Developer",
+      "Quản trị viên",
+      "Chưa định danh",
+      "Làm mới",
+      " Sửa",
+      "Cấp Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Gỡ Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Gỡ Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Gỡ Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Cấp Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Cấp Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Cấp Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      " Sửa",
+      "Gỡ Tích Xanh",
+      "Cấp Dev",
+      "Trao MVP",
+      "Trao Cúp",
+      "",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/teams-youtube",
+    "url": "http://127.0.0.1:5173/admin/teams-youtube",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý Đội Nhóm & Kênh YouTube\nAA\nHỆ THỐNG YOUTUBE TOÀN CÔNG TY\nQuản Lý & Phân Tầng Dữ Liệu YouTube\n\nMô hình phân cấp: Công ty (Company Total) → Đội nhóm (Team Total) → Kênh (Channel Total).\n\nCần sync: 10 giờ trước\nLàm mới\nTỔNG LƯỢT XEM\n1K\nChưa đủ dữ liệu tăng trưởng\nTỔNG SUBSCRIBERS\n100\nNgười theo dõi toàn hệ thống\nTỔNG KÊNH YOUTUBE\n1\n100% kênh đã gán đội\nĐỘI NHÓM PHỤ TRÁCH\n1\nPhòng ban & Production Teams\nKênh YouTube & Đồng Bộ (1)\nĐội Nhóm & Phòng Ban (1)\nĐồng Bộ Tất Cả Kênh\nThêm Kênh YouTube\nPHÂN BỔ KÊNH THEO ĐỘI NHÓM\nBấm vào thẻ đội để lọc danh sách kênh bên dưới\nTất Cả Kênh\n1\n1K views\nĐội Audit Việt Nam\n1\n1K views ·\nChưa Gán Đội\n0\n0 views (Tính vào Cty)\nĐội:\nTất cả đội (1)\nĐội Audit Việt Nam (1)\nChưa gán đội (0)\nTất cả trạng thái\nĐã sync\nCần sync\nLỗi sync\nKÊNH YOUTUBE\tĐỘI PHỤ TRÁCH\tLƯỢT XEM (VIEWS)\tĐĂNG KÝ (SUBS)\tTRẠNG THÁI SYNC\tTHAO TÁC\n\nKênh Audit\nID: UC_audit_fixture\n\t\n-- Chưa gán đội (Độc lập) --\nĐội Audit Việt Nam ()\n\t1K\t100\t\nCần Sync lại\n10 giờ trước\n\t\nSync\nChi tiết\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Làm mới",
+      "Kênh YouTube & Đồng Bộ (1)",
+      "Đội Nhóm & Phòng Ban (1)",
+      "Đồng Bộ Tất Cả Kênh",
+      " Thêm Kênh YouTube",
+      "Tất cả trạng thái",
+      "Đã sync",
+      "Cần sync",
+      "Lỗi sync",
+      "Sync",
+      "Chi tiết",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 433
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 433
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/competition/seasons",
+    "url": "http://127.0.0.1:5173/admin/competition/seasons",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý Mùa Giải\nAA\nQuản Lý Mùa Giải & Vinh Danh\n\nThiết lập lịch trình, đội tham gia, đóng băng kết quả, và quản lý vinh danh trang chủ các năm.\n\nTrao Cúp MVP\nTạo Mùa Giải Mới\nQuản Lý Mùa Giải (1)\nVinh Danh Trang Chủ & Lịch Sử (0)\nTất cả (1)\nĐang diễn ra\nSắp diễn ra\nTạm dừng\nĐã hoàn thành\nBản nháp\nACTIVE\nMONTHLY\n• Slug: audit-october\nMùa Audit Tháng 10\n\nChưa có mô tả\n\nBắt đầu:\n10/1/2026, 8:00:00 AM\nKết thúc:\n10/31/2026, 6:00:00 PM\nGrace:\n2 giờ\nĐội tham gia:\n1 đội\n+ Đội\nTạm dừng\nKết thúc & Đóng băng\nTrao Cúp MVP\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      " Trao Cúp MVP",
+      " Tạo Mùa Giải Mới",
+      "",
+      "Quản Lý Mùa Giải (1)",
+      "Vinh Danh Trang Chủ & Lịch Sử (0)",
+      "Tất cả (1)",
+      "Đang diễn ra",
+      "Sắp diễn ra",
+      "Tạm dừng",
+      "Đã hoàn thành",
+      "Bản nháp",
+      " + Đội",
+      " Tạm dừng",
+      " Kết thúc & Đóng băng",
+      " Trao Cúp MVP",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 570
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 570
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/competition/rules",
+    "url": "http://127.0.0.1:5173/admin/competition/rules",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nRule Builder & Mô Phỏng\nAA\nQuy tắc thi đấu\n\nBộ quy tắc, phiên bản và mô phỏng tính điểm.\n\nVận hành hệ thống\nCompany Analytics\nRule Sets (1)\nState Monitor (0)\nScore Inspector\nDanh Sách Bộ Quy Tắc (Rule Sets)\nTạo Rule Set Mới\nAudit Rule Set\naudit_rules_ui\nChưa có bản Publish\n\nKhông có mô tả\n\nTổng số phiên bản: 0 | Đang dùng bởi: 0 mùa giải\nMở Visual Builder\nDiff\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Company Analytics",
+      "Rule Sets (1)",
+      "State Monitor (0)",
+      "Score Inspector",
+      " Tạo Rule Set Mới",
+      " Mở Visual Builder",
+      " Diff",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 502
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 502
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/competition/grand",
+    "url": "http://127.0.0.1:5173/admin/competition/grand",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý Giải Vô Địch Năm\nAA\nQuản Lý Grand Championship\n\nHệ thống giải vô địch toàn năm, phân phối Grand Points từ các Seasons và bảng xếp hạng tổng kết.\n\nLàm mới\nTạo Grand Championship\nTất cả\nBản nháp\nĐã lên lịch\nĐang diễn ra\nĐã kết thúc\nLưu trữ\nNĂM 2026\nAudit Grand 2026\nACTIVE\nSlug: audit-grand-2026\nThời gian: 1/1/2026 — 31/12/2026\nƯu tiên Tiebreak:\nĐóng & Đóng Băng Kết Quả\n+ Ghép Season\nĐiều chỉnh Điểm\nCác Mùa Giải Đã Ghép (1):\nMùa Audit Tháng 10\nACTIVE\n1/10/2026 - 31/10/2026\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      " Làm mới",
+      " Tạo Grand Championship",
+      "Tất cả",
+      "Bản nháp",
+      "Đã lên lịch",
+      "Đang diễn ra",
+      "Đã kết thúc",
+      "Lưu trữ",
+      "Đóng & Đóng Băng Kết Quả",
+      "+ Ghép Season",
+      "Điều chỉnh Điểm",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 515
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 515
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/operations",
+    "url": "http://127.0.0.1:5173/admin/operations",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nGiám Sát & Nhật Ký Kiểm Toán\nAA\nTRUNG TÂM KIỂM TOÁN & GIÁM SÁT VẬN HÀNH\nGiám Sát Vận Hành & Nhật Ký Kiểm Toán\n\nTheo dõi sức khỏe hệ thống, hàng đợi sự kiện YouTube/Production, độ trễ Bảng Xếp Hạng và tra cứu toàn bộ Audit Logs.\n\nTRẠNG THÁI VẬN HÀNH\nCần Chú Ý\nSỰ KIỆN XỬ LÝ\n2\nNHẬT KÝ AUDIT\n8\nSức Khỏe Hệ Thống\nNhật Ký Kiểm Toán (8)\nHàng Đợi Sự Kiện (2)\nĐồng Bộ Bảng Xếp Hạng\nAPI & Competition Engine\nHOẠT ĐỘNG\nTrạng thái worker:\nSẵn sàng (Online)\nXử lý sự kiện:\nRealtime Stream\nCơ chế chấm điểm:\nYouTube Views Direct\nDatabase & Outbox Queue\nTỐT\nHàng đợi Outbox chờ xử lý:\n0\nSự kiện lỗi (Failed):\n0\nBảo vệ bất biến (Immutable):\nBật (Append-Only)\nYouTube Data API v3\nKẾT NỐI\nTỷ lệ thành công:\n100%\nKênh lỗi đồng bộ:\n0\nĐồng bộ gần nhất:\n21:26 16/10/2026\nWeb Service & Keep-Alive\nONLINE\nKeep-alive gần nhất:\nChưa có ping\nTổng lượt Ping nhận:\n0\nTần suất khuyến nghị:\n10 phút / lần\nTrạng Thái Bản Sao Bảng Xếp Hạng (Read Model Projections)\nProjections là bảng dữ liệu tối ưu đọc thời gian thực để người dùng xem bảng xếp hạng ngay lập tức.\nKiểm tra độ lệch (Drift Check)\nĐỘ LỆCH DỮ LIỆU (LAG / DRIFT)\n0% — Đồng bộ 100%\nBẢN GHI ĐỘI (SEASON PROJECTION)\n0\nBẢN GHI CÁ NHÂN (INDIVIDUAL PROJECTION)\n0\nSỔ CÁI ĐIỂM SỐ (SCORE LEDGER)\n0 bản ghi\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Sức Khỏe Hệ Thống",
+      "Nhật Ký Kiểm Toán (8)",
+      "Hàng Đợi Sự Kiện (2)",
+      "Đồng Bộ Bảng Xếp Hạng",
+      "",
+      " Kiểm tra độ lệch (Drift Check)",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 696
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 696
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/admin/quiz",
+    "url": "http://127.0.0.1:5173/admin/quiz",
+    "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nQuản Lý Quiz Game\nAA\nADMIN\nTRÒ CHƠI\nQUIZ\nQuản Lý Quiz & Bộ Câu Hỏi\n\nThiết kế bộ câu hỏi, quản lý đa phương tiện (Hình ảnh / Âm thanh), cấu hình thời gian và chia sẻ mã quiz.\n\nNhập mã Share\nImport Quiz\nTạo Quiz Mới\nTỔNG BỘ QUIZ\n1\nTỔNG CÂU HỎI ĐÃ TẠO\n3\nQUIZ ĐANG KÍCH HOẠT\n1\nTất cả trạng thái\nĐã xuất bản (Published)\nBản nháp (Draft)\nLưu trữ (Archived)\nChung\nPUBLISHED\nAudit Quiz Việt Nam\n\nChưa có mô tả cho bộ câu hỏi này.\n\n3 câu hỏi\nWRF83DFA\nMở câu hỏi\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm",
+    "buttons": [
+      "Giải Đấu & Thi ĐuaThi Đua",
+      "Cộng tác",
+      "Trò ChơiGiải Trí",
+      "Quản Trị Hệ ThốngQuản Trị",
+      "Tài Khoản & Cài Đặt",
+      "",
+      "",
+      "AA",
+      "Nhập mã Share",
+      "Import Quiz",
+      "Tạo Quiz Mới",
+      "",
+      "",
+      "WRF83DFA",
+      "Mở câu hỏi",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Thành Viên & Đội Nhóm"
+    ],
+    "errors": [],
+    "geometry": [
+      {
+        "width": 1920,
+        "documentWidth": 1920,
+        "mains": [
+          {
+            "client": 1680,
+            "scroll": 1680
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "documentWidth": 1440,
+        "mains": [
+          {
+            "client": 1200,
+            "scroll": 1200
+          }
+        ]
+      },
+      {
+        "width": 1280,
+        "documentWidth": 1280,
+        "mains": [
+          {
+            "client": 1040,
+            "scroll": 1040
+          }
+        ]
+      },
+      {
+        "width": 1024,
+        "documentWidth": 1024,
+        "mains": [
+          {
+            "client": 1024,
+            "scroll": 1024
+          }
+        ]
+      },
+      {
+        "width": 768,
+        "documentWidth": 768,
+        "mains": [
+          {
+            "client": 768,
+            "scroll": 768
+          }
+        ]
+      },
+      {
+        "width": 430,
+        "documentWidth": 430,
+        "mains": [
+          {
+            "client": 430,
+            "scroll": 430
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "documentWidth": 390,
+        "mains": [
+          {
+            "client": 390,
+            "scroll": 390
+          }
+        ]
+      }
+    ]
+  }
+]

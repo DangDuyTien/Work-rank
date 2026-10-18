@@ -215,4 +215,12 @@ describe('Individual Ranking 0-Points Tie-Breaker (createdAt ASC)', () => {
     // Remaining 0-point users still maintain tie-break order
     assert.ok(oldestItem.rank < middleItem.rank);
   });
+
+  it('5. Projection reconciliation removes a member absent from authoritative ranking', async () => {
+    await projector.projectSeasonIndividualLeaderboard(testSeason.id);
+    await SeasonTeamMember.destroy({ where: { seasonId: testSeason.id, userId: userNewest.id } });
+    await projector.projectSeasonIndividualLeaderboard(testSeason.id);
+    const stale = await SeasonIndividualLeaderboardProjection.findOne({ where: { seasonId: testSeason.id, userId: userNewest.id } });
+    assert.equal(stale, null);
+  });
 });

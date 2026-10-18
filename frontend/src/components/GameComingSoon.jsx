@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Gamepad2,
   Keyboard,
-  LayoutGrid,
   Sparkles,
   Club,
   ArrowLeft,
@@ -17,8 +16,6 @@ import { Button } from './ui';
 const GAME_ICONS = {
   typing_battle: Keyboard,
   typing: Keyboard,
-  capital_board: Gamepad2,
-  game_2048: LayoutGrid,
   quiz: Sparkles,
   sam: Club,
 };

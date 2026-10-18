@@ -188,7 +188,18 @@ async function deleteUserAccount({ targetUserId, actorUser, isSelfDelete = false
     const io = req?.app?.get('io') || competitionRealtime.getIo();
     if (io) {
       io.emit('user:deleted', { userId: target.id });
-      io.to(`user:${target.id}`).emit('auth:revoked', { message: 'Tài khoản đã bị xóa.' });
+      const registerSockets = require('../sockets');
+      if (typeof registerSockets.evictUserSockets === 'function') {
+        registerSockets.evictUserSockets(io, target.id, 'Tài khoản đã bị xóa.');
+      } else {
+        io.to(`user:${target.id}`).emit('auth:revoked', { message: 'Tài khoản đã bị xóa.' });
+        if (typeof io.in === 'function') {
+          const userRoom = io.in(`user:${target.id}`);
+          if (userRoom && typeof userRoom.disconnectSockets === 'function') {
+            userRoom.disconnectSockets(true);
+          }
+        }
+      }
       if (oldTeamId) {
         io.emit('team:membership:updated', {
           userId: target.id,

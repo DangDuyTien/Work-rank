@@ -14,7 +14,9 @@
 
 const { Op, fn, col } = require('sequelize');
 const sequelize = require('../../config/database');
-const { CompetitionEvent, CompetitionAuditLog } = require('../../models');
+const { CompetitionEvent, CompetitionAuditLog, EventOutbox } = require('../../models');
+const competitionEngineWorker = require('./competitionEngine.worker');
+const outboxDispatcherWorker = require('../../workers/outboxDispatcher.worker');
 
 /**
  * Retrieve high-level integration health metrics and status counts.
@@ -22,7 +24,7 @@ const { CompetitionEvent, CompetitionAuditLog } = require('../../models');
 async function getIntegrationHealth() {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // 1. Total counts by status
+  // 1. Total counts by status in competition_events
   const statusCounts = await CompetitionEvent.findAll({
     attributes: ['status', [fn('COUNT', col('event_id')), 'count']],
     group: ['status'],
@@ -36,7 +38,22 @@ async function getIntegrationHealth() {
     totalEvents += Number(row.count);
   }
 
-  // 2. Counts by source module
+  // 2. Outbox status counts
+  const outboxMap = { PENDING: 0, DISPATCHED: 0, FAILED: 0 };
+  try {
+    const outboxCounts = await EventOutbox.findAll({
+      attributes: ['status', [fn('COUNT', col('id')), 'count']],
+      group: ['status'],
+      raw: true,
+    });
+    for (const row of outboxCounts) {
+      outboxMap[row.status] = Number(row.count);
+    }
+  } catch (_) {
+    // Graceful fallback if table is unavailable in mock environment
+  }
+
+  // 3. Counts by source module
   const sourceModuleCounts = await CompetitionEvent.findAll({
     attributes: ['sourceModule', [fn('COUNT', col('event_id')), 'count']],
     group: ['sourceModule'],
@@ -49,12 +66,12 @@ async function getIntegrationHealth() {
     sourceMap[src] = Number(row.count);
   }
 
-  // 3. 24-hour volume
+  // 4. 24-hour volume
   const volume24h = await CompetitionEvent.count({
     where: { occurredAt: { [Op.gte]: oneDayAgo } },
   });
 
-  // 4. Recent failed events
+  // 5. Recent failed events
   const recentFailures = await CompetitionEvent.findAll({
     where: { status: 'FAILED' },
     order: [['failed_at', 'DESC'], ['occurred_at', 'DESC']],
@@ -64,8 +81,41 @@ async function getIntegrationHealth() {
 
   const failureRate = totalEvents > 0 ? ((statusMap.FAILED / totalEvents) * 100).toFixed(2) : '0.00';
 
+  // 6. Oldest pending event age in seconds
+  let oldestPendingAgeSeconds = 0;
+  if (statusMap.PENDING > 0) {
+    const oldestPending = await CompetitionEvent.findOne({
+      where: { status: 'PENDING' },
+      order: [['received_at', 'ASC']],
+      attributes: ['receivedAt'],
+    });
+    if (oldestPending && oldestPending.receivedAt) {
+      oldestPendingAgeSeconds = Math.max(
+        0,
+        Math.floor((Date.now() - new Date(oldestPending.receivedAt).getTime()) / 1000)
+      );
+    }
+  }
+
+  // 7. Worker statuses
+  const workers = {
+    competitionEngine: typeof competitionEngineWorker.getStatus === 'function' ? competitionEngineWorker.getStatus() : null,
+    outboxDispatcher: typeof outboxDispatcherWorker.getStatus === 'function' ? outboxDispatcherWorker.getStatus() : null,
+  };
+
+  // 8. Health status calculation
+  // Status is DEGRADED if:
+  // - Failed events exist in competition_events or event_outbox
+  // - Oldest pending event age exceeds 60 seconds SLA
+  // - Pending events exist while competition engine worker is not running
+  const hasFailedEvents = statusMap.FAILED > 0 || outboxMap.FAILED > 0;
+  const isBacklogStale = oldestPendingAgeSeconds > 60;
+  const isWorkerStalled = Boolean(statusMap.PENDING > 0 && workers.competitionEngine && !workers.competitionEngine.running);
+
+  const isDegraded = hasFailedEvents || isBacklogStale || isWorkerStalled;
+
   return {
-    status: statusMap.FAILED > 0 ? 'DEGRADED' : 'HEALTHY',
+    status: isDegraded ? 'DEGRADED' : 'HEALTHY',
     summary: {
       totalEvents,
       volume24h,
@@ -74,7 +124,14 @@ async function getIntegrationHealth() {
       failedCount: statusMap.FAILED,
       ignoredCount: statusMap.IGNORED,
       failureRate: `${failureRate}%`,
+      oldestPendingAgeSeconds,
+      outbox: {
+        pendingCount: outboxMap.PENDING,
+        dispatchedCount: outboxMap.DISPATCHED,
+        failedCount: outboxMap.FAILED,
+      },
     },
+    workers,
     bySourceModule: sourceMap,
     recentFailures,
     checkedAt: new Date(),

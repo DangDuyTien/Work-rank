@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Gamepad2,
-  LayoutGrid,
   Sparkles,
   Club,
   Keyboard,
@@ -22,8 +21,6 @@ import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../c
 const GAME_ICONS = {
   typing_battle: Keyboard,
   typing: Keyboard,
-  capital_board: Gamepad2,
-  game_2048: LayoutGrid,
   quiz: Sparkles,
   sam: Club,
   drawing: Palette,
@@ -45,22 +42,6 @@ const DEFAULT_GAMES = [
     description: 'Không gian sáng tạo vẽ tranh nghệ thuật trên canvas siêu lớn & chia sẻ lên trang chủ WorkRank.',
     icon: 'Palette',
     route: '/games/drawing',
-  },
-  {
-    gameKey: 'capital_board',
-    name: 'Cờ Tỷ Phú',
-    status: 'AVAILABLE',
-    description: 'Trò chơi bàn cờ tỷ phú kinh doanh và đầu tư bất động sản thời gian thực.',
-    icon: 'Gamepad2',
-    route: '/games/capital-board',
-  },
-  {
-    gameKey: 'game_2048',
-    name: '2048',
-    status: 'AVAILABLE',
-    description: 'Trò chơi ghép số 2048 trí tuệ, thử thách tư duy và bảng xếp hạng công ty.',
-    icon: 'LayoutGrid',
-    route: '/games/2048',
   },
   {
     gameKey: 'sam',
@@ -98,7 +79,7 @@ export default function GameHub() {
           return {
             ...def,
             ...serverGame,
-            route: serverGame.route || def.route || (def.gameKey === 'capital_board' ? '/games/capital-board' : `/games/${def.gameKey}`),
+            route: serverGame.route || def.route || `/games/${def.gameKey}`,
           };
         });
 

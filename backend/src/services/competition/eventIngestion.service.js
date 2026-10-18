@@ -47,6 +47,24 @@ async function publishEvent(eventDescriptor, options = {}) {
   }
 
   const normalized = validation.normalized;
+
+  // 2. Caller Authority & Actor Verification
+  const caller = options.caller;
+  if (caller) {
+    const isAdmin = caller.role === 'admin';
+    const isSelf = normalized.actorId && Number(normalized.actorId) === Number(caller.id);
+    const isAuthorizedKudosReceived =
+      normalized.eventType === 'KUDOS_RECEIVED' &&
+      normalized.payload?.senderId &&
+      Number(normalized.payload.senderId) === Number(caller.id);
+
+    if (!isAdmin && !isSelf && !isAuthorizedKudosReceived) {
+      const err = new Error(`Forbidden: User #${caller.id} cannot publish event for actor #${normalized.actorId}`);
+      err.status = 403;
+      throw err;
+    }
+  }
+
   const { transaction, useOutbox = false } = options;
 
   if (useOutbox) {

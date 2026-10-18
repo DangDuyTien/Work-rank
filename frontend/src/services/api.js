@@ -1,28 +1,124 @@
 import axios from 'axios';
-import { clearCache, invalidateCache } from './cache';
+import { clearCache, invalidateCache } from './cache.js';
 
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '',
-});
+const apiBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '';
+const api = axios.create({ baseURL: apiBaseUrl });
 
 const AUTH_UPDATED_EVENT = 'workrank:auth-updated';
 const AUTH_EXPIRED_EVENT = 'workrank:auth-expired';
+export const AUTH_CHANNEL_NAME = 'workrank:auth';
+
+let authChannel = null;
+try {
+  if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+    authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+    if (typeof authChannel.unref === 'function') {
+      authChannel.unref();
+    }
+  }
+} catch {
+  authChannel = null;
+}
+
+export function broadcastAuth(type, payload = {}) {
+  if (!authChannel) return;
+  try {
+    authChannel.postMessage({ type, timestamp: Date.now(), ...payload });
+  } catch {
+    // Ignore postMessage failure in restricted contexts
+  }
+}
+
+let activeReactUser = null;
+
+export function setActiveReactUser(user) {
+  activeReactUser = user || null;
+}
+
+export function getActiveReactUser() {
+  return activeReactUser;
+}
+
 let refreshPromise = null;
 
-function storeAuth(data) {
+function parseJwtUserId(token) {
+  if (!token || typeof token !== 'string') return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    return payload.sub || payload.id || payload.userId || null;
+  } catch {
+    return null;
+  }
+}
+
+function storeAuth(data, options = {}) {
   const token = data.accessToken || data.token;
+  const refreshToken = data.refreshToken;
+  const user = data.user || null;
+  const parsedUserId = parseJwtUserId(token);
+  const userId = user?.id ? String(user.id) : (parsedUserId ? String(parsedUserId) : localStorage.getItem('workrank_active_user_id'));
+
   if (token) localStorage.setItem('token', token);
-  if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-  if (token) window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token } }));
+  if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+  if (userId) localStorage.setItem('workrank_active_user_id', String(userId));
+  localStorage.setItem('workrank_token_issued_at', String(Date.now()));
+
+  const sessionGeneration = Date.now();
+  const session = {
+    userId: userId ? String(userId) : null,
+    token: token || null,
+    sessionGeneration,
+  };
+  localStorage.setItem('workrank_session', JSON.stringify(session));
+
+  const eventType = options.isRefresh ? 'AUTH_REFRESHED' : 'AUTH_LOGIN';
+
+  if (token) {
+    window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, {
+      detail: { token, userId, user, isRefresh: Boolean(options.isRefresh) }
+    }));
+    broadcastAuth(eventType, {
+      token,
+      refreshToken,
+      userId,
+      user,
+      sessionGeneration,
+    });
+  }
   return token;
 }
 
 function clearAuth(options = {}) {
+  const currentUserId = localStorage.getItem('workrank_active_user_id');
   clearCache();
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('workrank_active_user_id');
+  localStorage.removeItem('workrank_session');
+  localStorage.removeItem('workrank_token_issued_at');
+
+  if (currentUserId) {
+    try {
+      localStorage.removeItem(`workrank:notifications:${currentUserId}`);
+    } catch {}
+  }
   window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT, { detail: { token: null } }));
+  broadcastAuth('AUTH_LOGOUT', {
+    sessionGeneration: Date.now(),
+    message: options.message || null,
+  });
+
   if (options.expired) {
     window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, {
       detail: {
@@ -38,17 +134,44 @@ function isAccountLockedResponse(err) {
 }
 
 function isAuthEndpoint(url = '') {
-  return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token'].some((path) => String(url).includes(path));
+  return ['/api/auth/login', '/api/auth/register', '/api/auth/refresh-token', '/api/auth/google/exchange', '/api/auth/google/link'].some((path) => String(url).includes(path));
+}
+
+async function executeRefreshPost() {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) throw new Error('Missing refresh token');
+
+  return axios.post('/api/auth/refresh-token', { refreshToken }, {
+    baseURL: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '',
+  }).then((res) => storeAuth(res.data, { isRefresh: true }));
 }
 
 async function refreshStoredAuth() {
   const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) throw new Error('Missing refresh token');
 
+  // Cross-tab deduplication via Web Locks API
+  if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+    return navigator.locks.request('workrank_auth_refresh_lock', async () => {
+      const lastIssuedAt = Number(localStorage.getItem('workrank_token_issued_at') || 0);
+      const currentToken = localStorage.getItem('token');
+      // If refreshed within the last 5 seconds and token exists, reuse without redundant API call
+      if (currentToken && Date.now() - lastIssuedAt < 5000) {
+        return currentToken;
+      }
+
+      if (!refreshPromise) {
+        refreshPromise = executeRefreshPost().finally(() => {
+          refreshPromise = null;
+        });
+      }
+      return refreshPromise;
+    });
+  }
+
+  // Fallback to local promise coalescing
   if (!refreshPromise) {
-    refreshPromise = axios.post('/api/auth/refresh-token', { refreshToken }, {
-      baseURL: import.meta.env.VITE_API_URL || '',
-    }).then((res) => storeAuth(res.data)).finally(() => {
+    refreshPromise = executeRefreshPost().finally(() => {
       refreshPromise = null;
     });
   }
@@ -168,6 +291,15 @@ function normalizeChatMessage(row = {}) {
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  const storedUserId = localStorage.getItem('workrank_active_user_id');
+
+  // Verify active React user matches stored user ID to prevent split-brain requests
+  if (activeReactUser && storedUserId && String(activeReactUser.id) !== String(storedUserId)) {
+    window.dispatchEvent(new CustomEvent('workrank:auth-drift-detected', {
+      detail: { currentUserId: activeReactUser.id, storedUserId },
+    }));
+  }
+
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -213,6 +345,23 @@ export const auth = {
     storeAuth(res.data);
     return res;
   },
+  googleStartUrl: (returnTo) => {
+    const baseUrl = apiBaseUrl || window.location.origin;
+    const url = new URL('/api/auth/google', baseUrl);
+    if (returnTo) url.searchParams.set('returnTo', returnTo);
+    return url.toString();
+  },
+  checkGoogleAvailability: () => api.get('/api/health'),
+  exchangeGoogleTicket: async (ticket) => {
+    const res = await api.post('/api/auth/google/exchange', { ticket });
+    if (res.data?.accessToken) storeAuth(res.data);
+    return res;
+  },
+  linkGoogleAccount: async (ticket, password) => {
+    const res = await api.post('/api/auth/google/link', { ticket, password });
+    storeAuth(res.data);
+    return res;
+  },
   refreshSession: refreshStoredAuth,
   clearLocalSession: clearAuth,
   logout: async () => {
@@ -230,7 +379,13 @@ export const auth = {
     invalidateCache('rankings');
     return res;
   },
-  changePassword: (data) => api.patch('/api/auth/password', data),
+  changePassword: async (data) => {
+    const res = await api.patch('/api/auth/password', data);
+    if (res.data?.accessToken || res.data?.token) {
+      storeAuth(res.data);
+    }
+    return res.data || res;
+  },
   changeEmail: async (data) => {
     const res = await api.patch('/api/auth/email', data);
     if (res.data?.accessToken) {
@@ -517,6 +672,11 @@ export const users = {
       ...res,
       data: normalizeUserSummary(user),
     };
+  },
+  updateOnboarding: async (id, data) => {
+    // Keep onboarding on the authenticated profile endpoint so the UI can
+    // adopt the returned canonical user payload without a second fetch.
+    return users.updateProfile(id, data);
   },
   getRecognitions: async (id) => {
     const res = await api.get(`/api/users/${id}/recognitions`);
@@ -988,69 +1148,6 @@ export const rankings = {
   },
 };
 
-export const capitalBoardGame = {
-  listRooms: async (params = {}) => {
-    const res = await api.get('/api/games/rooms', { params });
-    return res.data?.data || [];
-  },
-  getActiveRoom: async () => {
-    const res = await api.get('/api/games/active-room');
-    return res.data?.data || null;
-  },
-  getRoom: async (id) => {
-    const res = await api.get(`/api/games/rooms/${id}`);
-    return res.data?.data || null;
-  },
-  createRoom: async (data) => {
-    const res = await api.post('/api/games/rooms', data);
-    return res.data?.data || null;
-  },
-  createPracticeRoom: async (botCount = 3) => {
-    const res = await api.post('/api/games/practice', { botCount });
-    return res.data?.data || null;
-  },
-  joinRoom: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/join`);
-    return res.data?.data || null;
-  },
-  leaveRoom: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/leave`);
-    return res.data?.data || null;
-  },
-  addBot: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/bots`);
-    return res.data?.data || null;
-  },
-  removeBot: async (id, botUserId) => {
-    const res = await api.delete(`/api/games/rooms/${id}/bots/${botUserId}`);
-    return res.data?.data || null;
-  },
-  startGame: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/start`);
-    return res.data?.data || null;
-  },
-  rollDice: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/roll`);
-    return res.data?.data || null;
-  },
-  buyProperty: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/buy`);
-    return res.data?.data || null;
-  },
-  endTurn: async (id) => {
-    const res = await api.post(`/api/games/rooms/${id}/end-turn`);
-    return res.data?.data || null;
-  },
-  getLeaderboard: async (params = {}) => {
-    const res = await api.get('/api/games/leaderboard', { params });
-    return res.data?.data || res.data || { items: [], myProfile: null };
-  },
-  getMyHistory: async (params = {}) => {
-    const res = await api.get('/api/games/history', { params });
-    return res.data?.data || res.data || [];
-  },
-};
-
 export const quizGame = {
   listRooms: async (params = {}) => {
     const res = await api.get('/api/games/quiz/rooms', { params });
@@ -1186,33 +1283,6 @@ export const quizAdmin = {
   exportQuizSetUrl: (id, format = 'json') => `/api/admin/quiz/sets/${id}/export?format=${format}`,
   getSharedQuizSet: async (code) => {
     const res = await api.get(`/api/admin/quiz/share/${code}`);
-    return res.data?.data || null;
-  },
-};
-
-export const game2048 = {
-  startSession: async (data = {}) => {
-    const res = await api.post('/api/games/2048/start', data);
-    return res.data?.data || null;
-  },
-  checkpoint: async (data) => {
-    const res = await api.post('/api/games/2048/checkpoint', data);
-    return res.data?.data || null;
-  },
-  submitScore: async (data) => {
-    const res = await api.post('/api/games/2048/submit', data);
-    return res.data?.data || null;
-  },
-  getActiveSession: async () => {
-    const res = await api.get('/api/games/2048/active-session');
-    return res.data?.data || null;
-  },
-  getLeaderboard: async (params = {}) => {
-    const res = await api.get('/api/games/2048/leaderboard', { params });
-    return res.data || { data: [], myStats: null };
-  },
-  getMyStats: async () => {
-    const res = await api.get('/api/games/2048/my-stats');
     return res.data?.data || null;
   },
 };

@@ -72,6 +72,7 @@ export default function AdminOperations() {
   };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   // Tab 1: System Health Data
   const [integrationHealth, setIntegrationHealth] = useState(null);
@@ -125,15 +126,24 @@ export default function AdminOperations() {
         competition.adminGetIntegrationHealth().catch(() => null),
         youtube.adminGetHealth().catch(() => null),
         competition.adminGetProjectionsStatus().catch(() => null),
-        competition.adminListAuditLogs({ limit: 100 }).catch(() => []),
-        competition.adminListIntegrationEvents({ limit: 100 }).catch(() => ({ events: [] })),
+        competition.adminListAuditLogs({ limit: 100 }).catch(() => null),
+        competition.adminListIntegrationEvents({ limit: 100 }).catch(() => null),
       ]);
 
-      setIntegrationHealth(intHealthRes);
-      setYtHealth(ytHealthRes);
-      setProjectionsStatus(projStatusRes);
-      setAuditLogs(Array.isArray(logsRes) ? logsRes : logsRes?.logs || []);
-      setEvents(eventsRes.events || []);
+      const integration = intHealthRes && typeof intHealthRes === 'object' ? intHealthRes : null;
+      const youtubeHealth = ytHealthRes && typeof ytHealthRes === 'object' ? ytHealthRes : null;
+      const projections = projStatusRes && typeof projStatusRes === 'object' ? projStatusRes : null;
+      const audit = Array.isArray(logsRes) ? logsRes : Array.isArray(logsRes?.logs) ? logsRes.logs : null;
+      const eventList = Array.isArray(eventsRes?.events) ? eventsRes.events : null;
+
+      setIntegrationHealth(integration);
+      setYtHealth(youtubeHealth);
+      setProjectionsStatus(projections);
+      setAuditLogs(audit || []);
+      setEvents(eventList || []);
+      setLoadError(!integration || !youtubeHealth || !projections || !audit || !eventList
+        ? 'Một hoặc nhiều nguồn giám sát không phản hồi hoặc trả về dữ liệu không xác định. Các số liệu chưa biết được giữ nguyên.'
+        : '');
     } catch (err) {
       toast.error(parseApiError(err, 'Không thể tải dữ liệu giám sát vận hành.'));
     } finally {
@@ -259,7 +269,13 @@ export default function AdminOperations() {
     );
   }
 
-  const isHealthy = integrationHealth?.outbox?.failedCount === 0 && ytHealth?.status !== 'ERROR';
+  const isHealthy = integrationHealth?.status === 'HEALTHY'
+    && ytHealth?.health === 'FRESH'
+    && (integrationHealth?.summary?.failedCount || 0) === 0
+    && (integrationHealth?.summary?.outbox?.failedCount || 0) === 0;
+  const unknownHealth = !integrationHealth || !ytHealth;
+  const outbox = integrationHealth?.summary?.outbox;
+  const tableStats = projectionsStatus?.tableStats;
 
   return (
     <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -282,8 +298,8 @@ export default function AdminOperations() {
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 130 }}>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Trạng Thái Vận Hành</div>
             <strong style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, fontSize: 16, color: isHealthy ? '#16a34a' : '#ea580c', fontWeight: 700 }}>
-              {isHealthy ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-              {isHealthy ? 'Ổn Định' : 'Cần Chú Ý'}
+              {unknownHealth ? '—' : (isHealthy ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />)}
+              {unknownHealth ? '—' : (isHealthy ? 'Ổn Định' : 'Cần Chú Ý')}
             </strong>
           </div>
           <div style={{ ...CARD, padding: '10px 14px', minWidth: 120 }}>
@@ -345,9 +361,11 @@ export default function AdminOperations() {
       </div>
 
       <TabTransition key={activeTab} minHeight={450}>
-        {/* ══════════════════════════════════════════════════════════════════════
-            TAB 1: SYSTEM HEALTH & METRICS
-           ══════════════════════════════════════════════════════════════════════ */}
+        {loadError && (
+          <div role="status" className="motion-slide-down" style={{ ...CARD, padding: 12, color: 'var(--text-secondary)', background: 'var(--surface-soft)' }}>
+            {loadError}
+          </div>
+        )}
         {activeTab === 'health' && (
           <div style={{ display: 'grid', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
@@ -387,22 +405,22 @@ export default function AdminOperations() {
                   </div>
                   <span style={{
                     fontSize: 10, padding: '2px 8px',
-                    background: integrationHealth?.outbox?.pendingCount > 10 ? '#fef3c7' : '#dcfce7',
-                    color: integrationHealth?.outbox?.pendingCount > 10 ? 'var(--accent)' : '#16a34a',
+                    background: outbox?.pendingCount > 10 ? '#fef3c7' : 'var(--surface-soft)',
+                    color: outbox ? (outbox.pendingCount > 10 ? 'var(--accent)' : '#16a34a') : 'var(--text-muted)',
                     fontWeight: 600,
                   }}>
-                    {integrationHealth?.outbox?.pendingCount > 10 ? 'CÓ HÀNG ĐỢI' : 'TỐT'}
+                    {outbox ? (outbox.pendingCount > 10 ? 'CÓ HÀNG ĐỢI' : 'TỐT') : 'CHƯA RÕ'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Hàng đợi Outbox chờ xử lý:</span>
-                    <strong>{fmtNum(integrationHealth?.outbox?.pendingCount || 0)}</strong>
+                    <strong>{outbox ? fmtNum(outbox.pendingCount) : '—'}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Sự kiện lỗi (Failed):</span>
-                    <strong style={{ color: (integrationHealth?.outbox?.failedCount || 0) > 0 ? '#dc2626' : '#16a34a' }}>
-                      {fmtNum(integrationHealth?.outbox?.failedCount || 0)}
+                    <strong style={{ color: outbox ? (outbox.failedCount > 0 ? '#dc2626' : '#16a34a') : 'var(--text-muted)' }}>
+                      {outbox ? fmtNum(outbox.failedCount) : '—'}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -426,12 +444,12 @@ export default function AdminOperations() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Tỷ lệ thành công:</span>
-                    <strong style={{ color: '#16a34a' }}>{ytHealth?.successRate || '100%'}</strong>
+                    <strong style={{ color: ytHealth?.health === 'FRESH' ? '#16a34a' : 'var(--text-muted)' }}>{ytHealth?.health || '—'}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Kênh lỗi đồng bộ:</span>
-                    <strong style={{ color: (ytHealth?.errorChannelsCount || 0) > 0 ? '#dc2626' : '#16a34a' }}>
-                      {ytHealth?.errorChannelsCount || 0}
+                    <strong style={{ color: ytHealth ? (ytHealth.failedChannels || 0) > 0 ? '#dc2626' : '#16a34a' : 'var(--text-muted)' }}>
+                      {ytHealth ? fmtNum(ytHealth.failedChannels) : '—'}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -512,13 +530,13 @@ export default function AdminOperations() {
                 <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bản ghi Đội (Season Projection)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: 'var(--text-primary)' }}>
-                    {fmtNum(projectionsStatus?.seasonTeamsCount || 0)}
+                    {fmtNum(tableStats?.season_leaderboard_projections)}
                   </strong>
                 </div>
                 <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>
                   <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bản ghi Cá Nhân (Individual Projection)</span>
                   <strong style={{ display: 'block', marginTop: 4, fontSize: 16, color: 'var(--text-primary)' }}>
-                    {fmtNum(projectionsStatus?.seasonIndividualsCount || 0)}
+                    {fmtNum(tableStats?.season_individual_leaderboard_projections)}
                   </strong>
                 </div>
                 <div style={{ padding: 12, background: 'var(--surface-soft)', border: '1px solid rgba(15,23,42,0.06)' }}>

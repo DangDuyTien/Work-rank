@@ -316,6 +316,7 @@ async function createRoom(data, requestingUser = null) {
         status: 'WAITING',
         playerType: 'HUMAN',
         isBot: false,
+        hasDeclaredSam: null,
       },
       { transaction: t }
     );

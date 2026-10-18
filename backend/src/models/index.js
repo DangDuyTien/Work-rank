@@ -1,6 +1,7 @@
 const sequelize = require('../config/database');
 const Team = require('./Team');
 const User = require('./User');
+const GoogleAuthTicket = require('./GoogleAuthTicket');
 const UserProfileImage = require('./UserProfileImage');
 const UserProfilePreference = require('./UserProfilePreference');
 const Friendship = require('./Friendship');
@@ -37,14 +38,6 @@ const GrandLeaderboardProjection = require('./GrandLeaderboardProjection');
 const GrandIndividualLeaderboardProjection = require('./GrandIndividualLeaderboardProjection');
 const CompetitionActivityProjection = require('./CompetitionActivityProjection');
 const ProjectionCheckpoint = require('./ProjectionCheckpoint');
-// Capital Board Game V1 Models
-const GameRoom = require('./GameRoom');
-const GamePlayer = require('./GamePlayer');
-const GameProperty = require('./GameProperty');
-const GameEvent = require('./GameEvent');
-const GameTransaction = require('./GameTransaction');
-const GameResult = require('./GameResult');
-const GameLeaderboardProfile = require('./GameLeaderboardProfile');
 // Quiz Game V1 Models
 const QuizSet = require('./QuizSet');
 const QuizRoom = require('./QuizRoom');
@@ -52,9 +45,6 @@ const QuizPlayer = require('./QuizPlayer');
 const QuizQuestion = require('./QuizQuestion');
 const QuizAnswer = require('./QuizAnswer');
 const QuizUserStat = require('./QuizUserStat');
-// Game 2048 V1 Models
-const Game2048Score = require('./Game2048Score');
-const Game2048UserStat = require('./Game2048UserStat');
 // Sam Game Models
 const SamRoom = require('./SamRoom');
 const SamPlayer = require('./SamPlayer');
@@ -194,28 +184,6 @@ UserRecognition.belongsTo(Season, { foreignKey: 'seasonId', as: 'season', constr
 UserRecognition.belongsTo(GrandChampionship, { foreignKey: 'grandId', as: 'grand', constraints: false });
 UserRecognition.belongsTo(User, { foreignKey: 'awardedBy', as: 'awarder', constraints: false });
 
-// Capital Board Game V1 Associations
-GameRoom.belongsTo(User, { as: 'Host', foreignKey: 'hostUserId' });
-GameRoom.belongsTo(User, { as: 'CurrentTurnPlayer', foreignKey: 'currentTurnPlayerId' });
-GameRoom.belongsTo(User, { as: 'Winner', foreignKey: 'winnerUserId' });
-GameRoom.hasMany(GamePlayer, { as: 'players', foreignKey: 'roomId' });
-GamePlayer.belongsTo(GameRoom, { as: 'room', foreignKey: 'roomId' });
-GamePlayer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-GameRoom.hasMany(GameProperty, { as: 'properties', foreignKey: 'roomId' });
-GameProperty.belongsTo(GameRoom, { as: 'room', foreignKey: 'roomId' });
-GameProperty.belongsTo(User, { as: 'owner', foreignKey: 'ownerUserId' });
-GameRoom.hasMany(GameEvent, { as: 'events', foreignKey: 'roomId' });
-GameEvent.belongsTo(GameRoom, { as: 'room', foreignKey: 'roomId' });
-GameEvent.belongsTo(User, { as: 'actor', foreignKey: 'actorUserId' });
-GameRoom.hasMany(GameTransaction, { as: 'transactions', foreignKey: 'roomId' });
-GameTransaction.belongsTo(GameRoom, { as: 'room', foreignKey: 'roomId' });
-GameTransaction.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-GameRoom.hasMany(GameResult, { as: 'results', foreignKey: 'roomId' });
-GameResult.belongsTo(GameRoom, { as: 'room', foreignKey: 'roomId' });
-GameResult.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-User.hasOne(GameLeaderboardProfile, { as: 'gameProfile', foreignKey: 'userId' });
-GameLeaderboardProfile.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
 // Quiz Game Associations
 QuizSet.hasMany(QuizQuestion, { as: 'questions', foreignKey: 'quizSetId' });
 QuizQuestion.belongsTo(QuizSet, { as: 'quizSet', foreignKey: 'quizSetId' });
@@ -238,13 +206,6 @@ QuizAnswer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 User.hasOne(QuizUserStat, { as: 'quizStats', foreignKey: 'userId' });
 QuizUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-// Game 2048 V1 Associations
-User.hasMany(Game2048Score, { as: 'game2048Scores', foreignKey: 'userId' });
-Game2048Score.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-User.hasOne(Game2048UserStat, { as: 'game2048Stats', foreignKey: 'userId' });
-Game2048UserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 // Sam Game Associations
 SamRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
@@ -325,6 +286,7 @@ module.exports = {
   sequelize,
   Team,
   User,
+  GoogleAuthTicket,
   UserProfileImage,
   UserProfilePreference,
   Friendship,
@@ -366,14 +328,6 @@ module.exports = {
   YouTubeChannel,
   YouTubeChannelMetric,
   TeamYouTubeSummary,
-  // Capital Board Game V1
-  GameRoom,
-  GamePlayer,
-  GameProperty,
-  GameEvent,
-  GameTransaction,
-  GameResult,
-  GameLeaderboardProfile,
   // Quiz Game V1
   QuizSet,
   QuizRoom,
@@ -381,9 +335,6 @@ module.exports = {
   QuizQuestion,
   QuizAnswer,
   QuizUserStat,
-  // Game 2048 V1
-  Game2048Score,
-  Game2048UserStat,
   // Sam Game V1
   SamRoom,
   SamPlayer,

@@ -32,7 +32,7 @@ app.use(helmet({
   },
   crossOriginEmbedderPolicy: false,
 }));
-app.use(morgan('combined', { skip: (req) => req.path.startsWith('/health') || req.path.startsWith('/api/health') }));
+app.use(morgan('combined', { skip: (req) => req.path.startsWith('/health') || req.path.startsWith('/api/health') || req.path === '/api/auth/google/callback' }));
 app.use(cors(corsOptions));
 app.use(express.json({
   limit: '25mb',

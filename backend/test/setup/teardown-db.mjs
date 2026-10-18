@@ -28,7 +28,20 @@ import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 const here = path.dirname(fileURLToPath(import.meta.url));
+
+// Ensure NODE_ENV is set to test
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+
+// Fail-closed guard check BEFORE loading any models or initiating database connections
+const env = require(path.resolve(here, '../../src/config/env'));
+const { assertSafeTestDatabase } = require(path.resolve(here, '../../src/config/env'));
+assertSafeTestDatabase(env);
+
 const { sequelize } = require(path.resolve(here, '../../src/models'));
+
+if (sequelize.getDialect() === 'sqlite') {
+  await sequelize.sync();
+}
 
 after(async () => {
   try {

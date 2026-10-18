@@ -1,0 +1,175 @@
+[
+  {
+    "name": "cross-tab-account-mismatch",
+    "value": {
+      "tabAVisible": true,
+      "requestIdentity": {
+        "id": 37,
+        "name": "Audit Bob"
+      }
+    }
+  },
+  {
+    "name": "modal-focus",
+    "value": {
+      "insideDialog": false,
+      "active": {
+        "tag": "BUTTON",
+        "text": "Luật Chơi"
+      }
+    }
+  },
+  {
+    "name": "modal-escape",
+    "value": {
+      "dialogs": 0
+    }
+  },
+  {
+    "name": "arena-title-style",
+    "value": [
+      {
+        "text": " Mùa Audit Tháng 10",
+        "color": "rgb(17, 17, 17)",
+        "parentBg": "rgb(20, 20, 20)"
+      }
+    ]
+  },
+  {
+    "name": "arena-overflow-elements",
+    "value": []
+  },
+  {
+    "name": "drawing-publish",
+    "value": {
+      "text": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nDanh mục trò chơi\nWorkRank Typing Battle\nMỚI\nCờ Tỷ Phú\n2048\nĐánh Sâm\nMỚI\nĐoán Hình & Đoán Nhạc\nLIVE\nGóc Sáng Tạo (Game Vẽ)\nMỚI\nQuản Trị Hệ Thống\nQuản Trị\nQuản Lý KPI & Phòng Ban\nMỚI\nQuản Lý Quiz Game\nQuản Lý Nhân Sự & Đặc Quyền\nQuản Lý Đội Nhóm & Kênh YouTube\nQuản Lý Mùa Giải\nRule Builder & Mô Phỏng\nQuản Lý Giải Vô Địch Năm\nGiám Sát & Nhật Ký Kiểm Toán\nTài Khoản & Cài Đặt\nHồ Sơ Cá Nhân\nCài đặt tài khoản\nAA\nAudit Admin\nEditor\nGóc Sáng Tạo (Game Vẽ)\nAA\nTrò chơi\nGÓC SÁNG TẠO\nGame Vẽ Tranh WorkRank\nXem góc sáng tạo trên Home\nHoàn thành tác phẩm\n87%\nCọ\nTẩy\nDi chuyển\nĐổ màu\nNét:\n© 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng.\nChính sách bảo mật\nĐiều khoản dịch vụ\nTài liệu API\nĐồng nghiệp\nDanh bạ nội bộ\nĐANG HOẠT ĐỘNG\nChưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp.\nThành Viên & Đội Nhóm\nXem trước tác phẩm & Hoàn thành\nTác phẩm đã được lưu thành công!\n\nTác phẩm của bạn đã được đưa vào Thư Viện Tranh. Mọi người trong công ty có thể chiêm ngưỡng và thả tim cho bạn!\n\nTác phẩm Audit Việt Nam 17/10\nTác giả: Audit Admin\nVẽ tác phẩm mới 🎨\nXem Thư Viện Tranh trên Home"
+    }
+  },
+  {
+    "name": "typing-create",
+    "value": {
+      "status": 201,
+      "data": {
+        "room": {
+          "id": 2,
+          "code": "TYPE-VP7R",
+          "title": "Audit Reload 17/10",
+          "hostUserId": 36,
+          "mode": "1V1",
+          "matchType": "RANKED",
+          "status": "WAITING",
+          "maxPlayers": 2,
+          "challengeId": null,
+          "targetWordCount": 93,
+          "challengeText": "mùa thu hà nội thơm nồng mùi hoa sữa cùng những con phố cổ kính rêu phong đón từng cơn gió heo may se lạnh làm xao xuyến lòng người phương xa đấu trường đánh máy kết nối hàng ngàn tuyển thủ tài ba cùng so tài tốc độ độ chính xác và khả năng phản xạ nhanh nhạy trên từng phím bấm có những người đồng nghiệp luôn sẵn lòng giúp đỡ chia sẻ kinh nghiệm và cùng nhau vượt qua khó khăn là điều may mắn lớn nhất trong sự nghiệp",
+          "difficulty": "MEDIUM",
+          "startAt": null,
+          "startedAt": null,
+          "finishedAt": null,
+          "durationLimitSeconds": 30,
+          "winnerTeam": "NONE",
+          "winnerUserId": null,
+          "isTest": false,
+          "createdAt": "2026-10-17T01:16:46.000Z",
+          "updatedAt": "2026-10-17T01:16:46.000Z",
+          "host": {
+            "id": 36,
+            "name": "Audit Alice",
+            "email": "audit-alice@example.test",
+            "jobTitle": "Nhân viên",
+            "department": "Media & Content",
+            "role": "user"
+          },
+          "players": [
+            {
+              "id": 3,
+              "roomId": 2,
+              "userId": 36,
+              "team": "NONE",
+              "seatIndex": 0,
+              "isReady": false,
+              "status": "WAITING",
+              "progressPct": 0,
+              "typedChars": 0,
+              "wpm": 0,
+              "accuracy": 100,
+              "errorCount": 0,
+              "completionTimeMs": null,
+              "individualRank": null,
+              "scoreDelta": 0,
+              "performanceScore": 0,
+              "isBot": false,
+              "botName": null,
+              "botTargetWpm": null,
+              "finalPayload": null,
+              "createdAt": "2026-10-17T01:16:46.000Z",
+              "updatedAt": "2026-10-17T01:16:46.000Z",
+              "user": {
+                "id": 36,
+                "name": "Audit Alice",
+                "email": "audit-alice@example.test",
+                "jobTitle": "Nhân viên",
+                "department": "Media & Content",
+                "teamId": 5,
+                "role": "user"
+              }
+            }
+          ],
+          "challenge": null,
+          "result": null,
+          "spectatorCount": 0,
+          "spectators": []
+        },
+        "players": [
+          {
+            "id": 3,
+            "roomId": 2,
+            "userId": 36,
+            "team": "NONE",
+            "seatIndex": 0,
+            "isReady": false,
+            "status": "WAITING",
+            "progressPct": 0,
+            "typedChars": 0,
+            "wpm": 0,
+            "accuracy": 100,
+            "errorCount": 0,
+            "completionTimeMs": null,
+            "individualRank": null,
+            "scoreDelta": 0,
+            "performanceScore": 0,
+            "isBot": false,
+            "botName": null,
+            "botTargetWpm": null,
+            "finalPayload": null,
+            "createdAt": "2026-10-17T01:16:46.000Z",
+            "updatedAt": "2026-10-17T01:16:46.000Z",
+            "user": {
+              "id": 36,
+              "name": "Audit Alice",
+              "email": "audit-alice@example.test",
+              "jobTitle": "Nhân viên",
+              "department": "Media & Content",
+              "teamId": 5,
+              "role": "user"
+            }
+          }
+        ],
+        "challenge": null,
+        "result": null,
+        "spectatorCount": 0,
+        "spectators": []
+      }
+    }
+  },
+  {
+    "name": "typing-inputs",
+    "value": {
+      "inputs": 0
+    }
+  },
+  {
+    "name": "typing-recovery-script-error",
+    "value": "locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('textarea').first()\u001b[22m\n"
+  }
+]

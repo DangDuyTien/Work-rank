@@ -20,7 +20,7 @@ async function mockOperations(page, traceStatus = 200) {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
     let json = { data: [] };
-    if (pathname === '/api/auth/me') json = { user: { id: 1, name: 'Admin', email: 'admin@example.test', role: 'admin' } };
+    if (pathname.endsWith('/api/auth/me')) json = { user: { id: 1, name: 'Admin', email: 'admin@example.test', role: 'admin' } };
     if (pathname === '/api/friends/requests') json = { incoming: [], outgoing: [] };
     if (pathname === '/api/chats/unread-counts') json = { data: {} };
     if (pathname === '/api/competition/admin/integration/health') json = { outbox: { failedCount: 1 } };

@@ -83,7 +83,7 @@ module.exports = {
           allowNull: false,
           defaultValue: 'WAITING',
         },
-        has_declared_sam: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+        has_declared_sam: { type: Sequelize.BOOLEAN, allowNull: true, defaultValue: null },
         is_bao_mot: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
         score_delta: { type: Sequelize.INTEGER, allowNull: false, defaultValue: 0 },
         rank: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },

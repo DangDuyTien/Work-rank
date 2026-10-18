@@ -124,13 +124,9 @@ export const CATEGORIZED_JOB_TITLES = [
 
 export const CATEGORIZED_DEPARTMENTS = [
   'Media & Content',
-  'Phòng Sản Xuất Video',
-  'Phòng Truyền Thông',
-  'Engineering Core',
-  'Phòng Kỹ Thuật & Hệ Thống',
-  'Community & Growth',
-  'Ban Giám Đốc',
+  'Editor',
   'Phòng Hành Chính Nhân Sự',
+  'Ban Giám Đốc',
 ];
 
 /**

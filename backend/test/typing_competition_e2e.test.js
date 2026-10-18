@@ -156,6 +156,7 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
         title: '1v1 High Speed Duel',
         mode: '1V1',
         matchType: 'RANKED',
+        durationLimitSeconds: 120,
       });
 
     assert.equal(createRes.status, 201);
@@ -199,7 +200,7 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
       .send({
         typedChars: textLen,
         errorCount: 0,
-        clientDurationMs: 25000,
+        clientDurationMs: 60000,
       });
 
     // Player 2 finishes slightly later
@@ -209,7 +210,7 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
       .send({
         typedChars: textLen,
         errorCount: 3,
-        clientDurationMs: 35000,
+        clientDurationMs: 60000,
       });
 
     assert.equal(finish2Res.status, 200);
