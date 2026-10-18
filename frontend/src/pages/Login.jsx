@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
-  LogIn,
-  UserPlus,
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Eye,
-  EyeOff,
   Lock,
-  Mail,
-  UserRound,
   Loader2,
-  HelpCircle,
-  X,
   LogOut,
 } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
@@ -55,821 +47,148 @@ function MvpVisualAward({ data, loading, error, retry }) {
 }
 
 function GoogleMark() {
-  return <img src="/google-g-logo.png" alt="" aria-hidden="true" style={{ width: 20, height: 20.4, flexShrink: 0 }} />;
+  return <img src="/google-g-logo.png" alt="" aria-hidden="true" width="20" height="20" />;
 }
+
+function safeInternalPath(value) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\') || /[\u0000-\u001f]/.test(value) || value.length > 2048) return '/dashboard';
+  try {
+    const url = new URL(value, 'https://workrank.invalid');
+    return url.origin === 'https://workrank.invalid' ? `${url.pathname}${url.search}${url.hash}` : '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
+}
+
+const GOOGLE_ERRORS = {
+  cancelled: 'Bạn đã hủy đăng nhập Google. Hãy thử lại khi sẵn sàng.',
+  not_configured: 'Đăng nhập Google chưa được cấu hình. Vui lòng liên hệ quản trị viên.',
+  invalid_state: 'Phiên đăng nhập Google đã hết hạn. Vui lòng thử lại.',
+  google_failed: 'Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.',
+  account_locked: 'Tài khoản WorkRank đã bị khóa. Vui lòng liên hệ quản trị viên.',
+};
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUser, logout } = useAuth();
   const spotlight = usePublicSpotlight();
+  const ticketRef = useRef(null);
+  const passwordRef = useRef(null);
+  const [busy, setBusy] = useState(location.pathname === '/auth/google/callback');
+  const [error, setError] = useState('');
+  const [linkTicket, setLinkTicket] = useState('');
+  const [linkEmail, setLinkEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const query = new URLSearchParams(location.search);
+  const from = location.state?.from;
+  const intendedPath = safeInternalPath(query.get('returnTo') || (from?.pathname ? `${from.pathname}${from.search || ''}${from.hash || ''}` : '/dashboard'));
 
   useEffect(() => {
     const authError = new URLSearchParams(location.search).get('authError');
-    if (authError) setError({ cancelled: 'Bạn đã hủy đăng nhập Google.', not_configured: 'Đăng nhập Google chưa được cấu hình.', invalid_state: 'Phiên Google không còn hợp lệ.', google_failed: 'Không thể hoàn tất đăng nhập Google.' }[authError] || 'Đăng nhập Google thất bại.');
+    if (authError) setError(GOOGLE_ERRORS[authError] || 'Đăng nhập Google thất bại. Vui lòng thử lại.');
     if (location.pathname !== '/auth/google/callback') return;
+
     const ticket = new URLSearchParams(location.hash.slice(1)).get('ticket');
-    if (!ticket || googleTicketRef.current === ticket) return;
-    googleTicketRef.current = ticket;
-    setGoogleBusy(true);
+    if (!ticket) {
+      setBusy(false);
+      setError('Không tìm thấy phiên đăng nhập Google. Vui lòng thử lại.');
+      return;
+    }
+    if (ticketRef.current === ticket) return;
+    ticketRef.current = ticket;
+    window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
+    setBusy(true);
     auth.exchangeGoogleTicket(ticket).then((response) => {
       if (response.data?.linkRequired) {
-        setGoogleLinkTicket(response.data.linkTicket);
-        setGoogleLinkEmail(response.data.email || '');
-        setNotice('Email Google đã có tài khoản WorkRank. Nhập mật khẩu cũ để liên kết.');
+        setLinkTicket(response.data.linkTicket);
+        setLinkEmail(response.data.email || '');
       } else {
         setUser(response.data.user);
-        navigate(response.data.redirectTo || '/dashboard', { replace: true });
+        navigate(safeInternalPath(response.data.redirectTo), { replace: true });
       }
-    }).catch((err) => setError(err.response?.data?.message || 'Không thể hoàn tất đăng nhập Google.')).finally(() => setGoogleBusy(false));
+    }).catch((err) => {
+      setError(err.response?.data?.message || 'Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.');
+    }).finally(() => setBusy(false));
   }, [location.hash, location.pathname, location.search, navigate, setUser]);
 
-  const handleGoogleLogin = async () => {
-    setGoogleBusy(true);
+  useEffect(() => {
+    if (linkTicket && !busy) passwordRef.current?.focus();
+  }, [linkTicket, busy]);
+
+  const startGoogle = async () => {
+    if (busy) return;
+    setBusy(true);
     setError('');
     try {
       await auth.checkGoogleAvailability();
-      window.location.assign(auth.googleStartUrl('/dashboard'));
+      window.location.assign(auth.googleStartUrl(intendedPath));
     } catch (err) {
-      setGoogleBusy(false);
-      setError(err.response?.data?.message || 'Đăng nhập Google hiện không khả dụng.');
+      setBusy(false);
+      setError(err.response?.data?.message || 'Không thể kết nối tới WorkRank. Hãy kiểm tra mạng rồi thử lại.');
     }
   };
 
-  const handleGoogleLink = async (event) => {
+  const linkGoogle = async (event) => {
     event.preventDefault();
-    setGoogleBusy(true);
+    if (busy || !linkTicket) return;
+    setBusy(true);
+    setError('');
     try {
-      const response = await auth.linkGoogleAccount(googleLinkTicket, password);
+      const response = await auth.linkGoogleAccount(linkTicket, password);
+      setPassword('');
       setUser(response.data.user);
-      navigate(response.data.redirectTo || '/dashboard', { replace: true });
+      navigate(safeInternalPath(response.data.redirectTo), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'Không thể liên kết tài khoản Google.');
+      setError(err.response?.data?.message || 'Không thể liên kết tài khoản. Hãy kiểm tra mật khẩu rồi thử lại.');
     } finally {
-      setGoogleBusy(false);
-    }
-  };
-
-
-
-  const [isRegister, setIsRegister] = useState(() => new URLSearchParams(location.search).get('mode') === 'register');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-  const passwordHelpRef = useRef(null);
-  const googleTicketRef = useRef('');
-  const [googleBusy, setGoogleBusy] = useState(false);
-  const [googleLinkTicket, setGoogleLinkTicket] = useState('');
-  const [googleLinkEmail, setGoogleLinkEmail] = useState('');
-
-  useEffect(() => {
-    if (!showForgotPasswordModal) return undefined;
-    const dialog = passwordHelpRef.current;
-    const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    const buttons = dialog.querySelectorAll('button');
-    buttons[0]?.focus();
-    document.body.style.overflow = 'hidden';
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') setShowForgotPasswordModal(false);
-      if (event.key !== 'Tab') return;
-      const first = buttons[0];
-      const last = buttons[buttons.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    dialog.addEventListener('keydown', onKeyDown);
-    return () => {
-      dialog.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, [showForgotPasswordModal]);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setIsRegister(params.get('mode') === 'register');
-    const message = sessionStorage.getItem('workrank_auth_message');
-    const logoutNotice = sessionStorage.getItem('workrank_auth_notice');
-    if (message) {
-      setError(message);
-      sessionStorage.removeItem('workrank_auth_message');
-    }
-    if (logoutNotice) {
-      setNotice(logoutNotice);
-      sessionStorage.removeItem('workrank_auth_notice');
-    }
-
-  }, [location.search]);
-
-  const switchMode = (mode) => {
-    setIsRegister(mode);
-    setError('');
-    setNotice('');
-    const params = new URLSearchParams(location.search);
-    if (mode) {
-      params.set('mode', 'register');
-    } else {
-      params.delete('mode');
-    }
-    navigate({ search: params.toString() }, { replace: true, state: location.state });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setNotice('');
-
-    if (isRegister) {
-      if (!name.trim()) {
-        setError('Vui lòng nhập họ và tên');
-        return;
-      }
-      if (!password) {
-        setError('Vui lòng nhập mật khẩu');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('Mật khẩu xác nhận không khớp');
-        return;
-      }
-    }
-
-    setLoading(true);
-    try {
-      if (isRegister) {
-        const res = await auth.register({
-          name: name.trim(),
-          email: email.trim(),
-          password,
-        });
-        if (res.data?.user) {
-          setUser(res.data.user);
-          navigate('/dashboard');
-        } else {
-          setNotice('Đăng ký thành công! Vui lòng đăng nhập.');
-          setIsRegister(false);
-        }
-      } else {
-        const res = await auth.login({
-          email: email.trim(),
-          password,
-        });
-        if (res.data?.user) {
-          setUser(res.data.user);
-          const requested = location.state?.from;
-          const from = requested?.pathname?.startsWith('/')
-            ? `${requested.pathname}${requested.search || ''}${requested.hash || ''}`
-            : '/dashboard';
-          navigate(from, { replace: true });
-        }
-      }
-    } catch (err) {
-      const msg = err.response?.data?.error || err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại';
-      setError(msg);
-    } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
     <main className="login-page-wrapper public-auth-page">
       <div className="public-auth-shell">
-        <Reveal delay={0} className={`public-auth-form-panel ${isRegister ? 'is-register' : ''}`}>
+        <Reveal delay={0} className="public-auth-form-panel">
           <Link className="public-auth-mobile-brand public-editorial-brand" to="/" aria-label="WorkRank — Trang chủ">
             <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
           </Link>
-          {/* Active session banner */}
-          {user && (
-            <div
-              aria-hidden={isRegister}
-              inert={isRegister ? '' : undefined}
-              style={{
-                marginBottom: 20,
-                padding: '14px 16px',
-                background: 'rgba(180,83,9,0.06)',
-                border: '1px solid rgba(180,83,9,0.25)',
-                borderRadius: 8,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <CheckCircle2 size={18} color="var(--accent)" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Bạn đang đăng nhập
-                </span>
-              </div>
-
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
-                Tài khoản: <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{user.name}</strong> ({user.email})
-              </div>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => navigate('/dashboard')}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    padding: '9px 14px',
-                    background: 'var(--primary)',
-                    color: 'var(--surface)',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'background var(--motion-fast) var(--ease-standard)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary-hover)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
-                >
-                  <span>Mở Dashboard</span>
-                  <ArrowRight size={14} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={logout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '9px 12px',
-                    background: 'var(--surface)',
-                    color: 'var(--danger)',
-                    border: '1px solid rgba(185,28,28,0.25)',
-                    borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'background var(--motion-fast) var(--ease-standard)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(185,28,28,0.04)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface)'; }}
-                >
-                  <LogOut size={13} />
-                  <span>Đăng xuất</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Mode Switcher Tabs */}
-          <div className="public-auth-mode-tabs"
-            style={{
-              position: 'relative',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              background: 'var(--background)',
-              padding: 4,
-              borderRadius: 8,
-              marginBottom: 24,
-              border: '1px solid rgba(0,0,0,0.06)',
-            }}
-          >
-            {/* Sliding Pill Indicator */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                top: 4,
-                bottom: 4,
-                left: 4,
-                width: 'calc(50% - 4px)',
-                background: 'var(--surface)',
-                borderRadius: 6,
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-                transform: `translateX(${isRegister ? '100%' : '0%'})`,
-                transition: 'transform var(--motion-normal) var(--ease-spring)',
-                pointerEvents: 'none',
-              }}
-            />
-
-            <button
-              type="button"
-              aria-pressed={!isRegister}
-              onClick={() => switchMode(false)}
-              className="public-auth-mode-tab"
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                padding: '9px',
-                background: 'transparent',
-                color: !isRegister ? 'var(--text-primary)' : 'var(--text-secondary)',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'color var(--motion-fast) ease',
-              }}
-            >
-              <LogIn size={15} />
-              <span>Đăng nhập</span>
-            </button>
-
-            <button
-              type="button"
-              aria-pressed={isRegister}
-              onClick={() => switchMode(true)}
-              className="public-auth-mode-tab"
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                padding: '9px',
-                background: 'transparent',
-                color: isRegister ? 'var(--text-primary)' : 'var(--text-secondary)',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'color var(--motion-fast) ease',
-              }}
-            >
-              <UserPlus size={15} />
-              <span>Đăng ký</span>
-            </button>
+          <div className="public-auth-form-heading google-auth-heading">
+            <h1>{linkTicket ? 'Liên kết tài khoản WorkRank' : 'Chào mừng đến WorkRank.'}</h1>
+            <p>{linkTicket ? 'Xác minh tài khoản hiện có để giữ nguyên dữ liệu và quyền truy cập.' : 'Đăng nhập nhanh và an toàn bằng tài khoản Google.'}</p>
           </div>
 
-          {/* Form Header with Smooth Crossfade */}
-          <div className="public-auth-form-heading" aria-live="polite" style={{ position: 'relative' }}>
-            <div
-              aria-hidden={isRegister}
-              inert={isRegister ? '' : undefined}
-              style={{
-                gridRow: '1',
-                gridColumn: '1',
-                opacity: !isRegister ? 1 : 0,
-                transform: !isRegister ? 'none' : 'translateY(-6px)',
-                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
-                pointerEvents: !isRegister ? 'auto' : 'none',
-              }}
-            >
-              <h1>Chào mừng trở lại.</h1>
+          {user && !linkTicket && <div className="google-auth-session">
+            <div className="google-auth-session-copy"><CheckCircle2 size={18} /><span>Đang đăng nhập với <strong>{user.name}</strong> ({user.email})</span></div>
+            <div className="google-auth-session-actions">
+              <button className="google-auth-secondary" type="button" onClick={() => navigate('/dashboard')}><ArrowRight size={15} /> Mở Dashboard</button>
+              <button className="google-auth-logout" type="button" onClick={() => logout()}><LogOut size={15} /> Đăng xuất</button>
             </div>
-            <div
-              aria-hidden={!isRegister}
-              inert={!isRegister ? '' : undefined}
-              style={{
-                gridRow: '1',
-                gridColumn: '1',
-                opacity: isRegister ? 1 : 0,
-                transform: isRegister ? 'none' : 'translateY(6px)',
-                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
-                pointerEvents: isRegister ? 'auto' : 'none',
-              }}
-            >
-              <h1>Tham gia 3WIN MEDIA.</h1>
-            </div>
+          </div>}
 
-            <div
-              aria-hidden={isRegister}
-              inert={isRegister ? '' : undefined}
-              style={{
-                gridRow: '2',
-                gridColumn: '1',
-                opacity: !isRegister ? 1 : 0,
-                transform: !isRegister ? 'none' : 'translateY(-4px)',
-                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
-                pointerEvents: !isRegister ? 'auto' : 'none',
-              }}
-            >
-              <p>Đăng nhập để tiếp tục hành trình cùng đội của bạn.</p>
-            </div>
-            <div
-              aria-hidden={!isRegister}
-              inert={!isRegister ? '' : undefined}
-              style={{
-                gridRow: '2',
-                gridColumn: '1',
-                opacity: isRegister ? 1 : 0,
-                transform: isRegister ? 'none' : 'translateY(4px)',
-                transition: 'opacity var(--motion-normal) var(--ease-spring), transform var(--motion-normal) var(--ease-spring)',
-                pointerEvents: isRegister ? 'auto' : 'none',
-              }}
-            >
-              <p>Tạo tài khoản để cùng đội ghi dấu những thành tích mới.</p>
-            </div>
+          <div className="google-auth-feedback-slot" aria-live="polite">
+            {error && <div className="google-auth-error" role="alert"><AlertCircle size={17} /><span>{error}</span></div>}
+            {busy && !linkTicket && <div className="google-auth-pending" role="status"><Loader2 className="google-auth-spinner" size={19} /> Đang xác minh với Google…</div>}
           </div>
 
-          {/* Flash Notice */}
-          {notice && (
-            <div
-              className="motion-slide-down"
-              role="status"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                color: 'var(--success)',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 16,
-              }}
-            >
-              <CheckCircle2 size={16} />
-              <span>{notice}</span>
-            </div>
-          )}
-
-          {/* Flash Error */}
-          {error && (
-            <div
-              className="motion-slide-down"
-              role="alert"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 8,
-                padding: '10px 14px',
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                color: 'var(--danger)',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                lineHeight: 1.5,
-                marginBottom: 16,
-              }}
-            >
-              <AlertCircle size={16} style={{ marginTop: 2, flexShrink: 0 }} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Auth Form */}
-          <form className="public-auth-fields" aria-label={isRegister ? 'Đăng ký thành viên' : 'Đăng nhập WorkRank'} onSubmit={handleSubmit}>
-            {/* Name Field (Register only) */}
-            <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
-              <fieldset disabled={!isRegister} className="public-auth-field-inner">
-                <label htmlFor="auth-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
-                  Họ và tên *
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <UserRound size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-                  <input
-                    id="auth-name"
-                    autoComplete="name"
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: Nguyễn Văn A"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px 10px 38px',
-                      borderRadius: 8,
-                      border: '1px solid rgba(0,0,0,0.14)',
-                      fontSize: 14,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      background: 'var(--surface)',
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                </div>
-              </fieldset>
-            </div>
-
-            {/* Email / Identifier Field */}
-            <div>
-              <label htmlFor="auth-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
-                Email hoặc Tên đăng nhập *
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  id="auth-email"
-                  type={isRegister ? 'email' : 'text'}
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Nhập email hoặc tên đăng nhập"
-                  autoComplete="username"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 38px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(0,0,0,0.14)',
-                    fontSize: 14,
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    background: 'var(--surface)',
-                    color: 'var(--text-primary)',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label htmlFor="auth-password" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Mật khẩu *
-                </label>
-
-                {!isRegister && (
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPasswordModal(true)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      padding: 0,
-                    }}
-                  >
-                    Quên mật khẩu?
-                  </button>
-                )}
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  id="auth-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isRegister ? 'Tối thiểu 6 ký tự' : 'Nhập mật khẩu của bạn'}
-                  autoComplete={isRegister ? 'new-password' : 'current-password'}
-                  style={{
-                    width: '100%',
-                    padding: '10px 40px 10px 38px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(0,0,0,0.14)',
-                    fontSize: 14,
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    background: 'var(--surface)',
-                    color: 'var(--text-primary)',
-                  }}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    padding: 4,
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password Field (Register only) */}
-            <div className={`public-auth-field-collapse ${isRegister ? 'is-open' : ''}`} aria-hidden={!isRegister} inert={!isRegister ? '' : undefined}>
-              <fieldset disabled={!isRegister} className="public-auth-field-inner">
-                <label htmlFor="auth-confirm-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
-                  Xác nhận mật khẩu *
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-                  <input
-                    id="auth-confirm-password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Nhập lại mật khẩu để xác nhận"
-                    autoComplete="new-password"
-                    style={{
-                      width: '100%',
-                      padding: '10px 40px 10px 38px',
-                      borderRadius: 8,
-                      border: '1px solid rgba(0,0,0,0.14)',
-                      fontSize: 14,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      background: 'var(--surface)',
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                  <button
-                    type="button"
-                    aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
-                    aria-pressed={showConfirmPassword}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      padding: 4,
-                    }}
-                  >
-                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </fieldset>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                padding: '12px 20px',
-                background: 'var(--primary)',
-                color: 'var(--surface)',
-                border: 'none',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
-                marginTop: 8,
-                transition: 'background var(--motion-fast) var(--ease-standard), transform var(--motion-instant) var(--ease-standard)',
-              }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = 'var(--primary-hover)'; }}
-              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = 'var(--primary)'; }}
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                  <span>Đang xử lý...</span>
-                </>
-              ) : isRegister ? (
-                <>
-                  <span>Tạo Tài Khoản Mới</span>
-                  <UserPlus size={16} />
-                </>
-              ) : (
-                <>
-                  <span>Đăng Nhập Vào Hệ Thống</span>
-                  <ArrowRight size={16} />
-                </>
-              )}
+          {linkTicket ? <form className="google-auth-link-form" onSubmit={linkGoogle}>
+            <div className="google-auth-link-explainer"><Lock size={17} /><span>Email <strong>{linkEmail}</strong> đã có tài khoản WorkRank. Nhập mật khẩu WorkRank cũ để xác minh quyền sở hữu và liên kết Google.</span></div>
+            <label htmlFor="google-link-password">Mật khẩu WorkRank hiện tại</label>
+            <input id="google-link-password" ref={passwordRef} type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required disabled={busy} />
+            <button className="google-auth-button" type="submit" disabled={busy || !password}>{busy ? <Loader2 className="google-auth-spinner" size={19} /> : <Lock size={19} />} Xác minh và liên kết</button>
+            <p className="google-auth-help">Chỉ liên kết sau khi mật khẩu được xác minh. Nếu quên mật khẩu, liên hệ quản trị viên WorkRank.</p>
+            <button className="google-auth-restart" type="button" disabled={busy} onClick={() => { setLinkTicket(''); setPassword(''); navigate('/login', { replace: true }); }}>Dùng tài khoản Google khác</button>
+          </form> : <div className="google-auth-actions">
+            <button className="google-auth-button" type="button" onClick={startGoogle} disabled={busy} aria-label="Tiếp tục với Google">
+              {busy ? <Loader2 className="google-auth-spinner" size={20} /> : <GoogleMark />}<span>{busy ? 'Đang đăng nhập…' : 'Tiếp tục với Google'}</span>
             </button>
-          </form>
-
-          <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontSize: 12 }}><span style={{ flex: 1, height: 1, background: 'var(--border)' }} /> hoặc <span style={{ flex: 1, height: 1, background: 'var(--border)' }} /></div>
-            <button type="button" onClick={handleGoogleLogin} disabled={googleBusy} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '11px 12px', background: '#fff', color: '#1f1f1f', border: '1px solid #747775', borderRadius: 8, fontWeight: 600, cursor: googleBusy ? 'wait' : 'pointer' }}>
-              {googleBusy ? <Loader2 size={18} /> : <GoogleMark />} Tiếp tục với Google
-            </button>
-            {googleLinkTicket && <form onSubmit={handleGoogleLink} style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}><small>Email {googleLinkEmail} đã tồn tại. Nhập mật khẩu WorkRank để liên kết:</small><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /><button type="submit" disabled={googleBusy}>Xác minh và liên kết</button></form>}
-          </div>
-
-          <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
-            {isRegister ? 'Đã có tài khoản thành viên?' : 'Chưa có tài khoản trên hệ thống?'}{' '}
-            <button
-              type="button"
-              onClick={() => switchMode(!isRegister)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--accent)',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: 0,
-                textDecoration: 'underline',
-              }}
-            >
-              {isRegister ? 'Đăng nhập ngay' : 'Đăng ký tài khoản'}
-            </button>
-          </div>
+            <p className="google-auth-caption">Bạn sẽ được chuyển tới Google để chọn tài khoản.</p>
+          </div>}
+          <div className="google-auth-footer"><span>Tiếp tục đồng nghĩa với việc sử dụng tài khoản Google để truy cập WorkRank.</span><Link to="/">Về trang chủ</Link></div>
         </Reveal>
         <MvpVisualAward {...spotlight} />
       </div>
-
-      {/* ── FORGOT PASSWORD / ADMIN CONTACT MODAL ── */}
-      {showForgotPasswordModal && (
-        <div
-          onClick={(event) => { if (event.target === event.currentTarget) setShowForgotPasswordModal(false); }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(2px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 16,
-          }}
-        >
-          <div
-            ref={passwordHelpRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="password-help-title"
-            style={{
-              background: 'var(--surface)',
-              borderRadius: 10,
-              border: '1px solid rgba(0,0,0,0.08)',
-              padding: 24,
-              width: '100%',
-              maxWidth: 440,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-              position: 'relative',
-              maxHeight: 'calc(100svh - 32px)',
-              overflowY: 'auto',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                <HelpCircle size={20} color="var(--accent)" />
-                <span id="password-help-title">Hướng Dẫn Cấp Lại Mật Khẩu</span>
-              </div>
-              <button
-                type="button"
-                aria-label="Đóng hướng dẫn cấp lại mật khẩu"
-                onClick={() => setShowForgotPasswordModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              <p style={{ margin: '0 0 12px' }}>
-                Nhằm đảm bảo an toàn dữ liệu và tuân thủ chính sách bảo mật nội bộ của <strong>WorkRank</strong>, mật khẩu tài khoản được quản lý tập trung.
-              </p>
-              <div style={{ background: 'var(--background)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Quy trình hỗ trợ:</div>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <li>Liên hệ trực tiếp Quản Trị Viên (Admin) của tổ chức.</li>
-                  <li>Hoặc gửi yêu cầu qua kênh Kỹ thuật / Nhân sự nội bộ.</li>
-                  <li>Admin sẽ xác thực danh tính và cập nhật mật khẩu mới cho bạn.</li>
-                </ul>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowForgotPasswordModal(false)}
-              style={{
-                width: '100%',
-                padding: '11px',
-                background: 'var(--primary)',
-                color: 'var(--surface)',
-                border: 'none',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'background var(--motion-fast) var(--ease-standard)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--primary-hover)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
-            >
-              Đã hiểu & Đóng
-            </button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
