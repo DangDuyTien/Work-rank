@@ -1,0 +1,202 @@
+{
+  "current": {
+    "tests": 687,
+    "pass": 640,
+    "fail": 38,
+    "cancelled": 8,
+    "skipped": 1
+  },
+  "HEAD_baseline_16_failing_files": {
+    "tests": 108,
+    "pass": 62,
+    "fail": 38,
+    "cancelled": 8,
+    "skipped": 0
+  },
+  "baselineCommit": "51ecf01ed127c7298890bc8edac5e2f12364e5f2",
+  "NEW_REGRESSION": [],
+  "STILL_FAILING": [
+    {
+      "file": "test/capital_board_game_e2e.test.js",
+      "test": "test/capital_board_game_e2e.test.js"
+    },
+    {
+      "file": "test/capital_board_room_listing.test.js",
+      "test": "test/capital_board_room_listing.test.js"
+    },
+    {
+      "file": "test/competition_phase3.test.js",
+      "test": "Concurrent increment attempt raises lock conflict or serializes correctly"
+    },
+    {
+      "file": "test/competition_phase5_hardening.test.js",
+      "test": "Concurrent FINISH requests: exactly 1 succeeds and creates 1 frozen result"
+    },
+    {
+      "file": "test/competition_phase5_hardening.test.js",
+      "test": "Concurrent settlements execute safely with zero duplicate ledger rows"
+    },
+    {
+      "file": "test/competition_phase9_performance.test.js",
+      "test": "5 concurrent settlement requests for same season execute safely with 0 duplicate Grand Points"
+    },
+    {
+      "file": "test/competition_phase9_security.test.js",
+      "test": "Handles deep JSON and extreme arrays without crashing the process"
+    },
+    {
+      "file": "test/competition_phase9_security.test.js",
+      "test": "Rejects event ingestion with non-numeric schemaVersion safely"
+    },
+    {
+      "file": "test/competition_phase9_security.test.js",
+      "test": "Rejects event ingestion with null payload safely (400 Bad Request)"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "1. Start Session: Authenticated user receives valid gameSessionId and active record created"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "10. Authentication Security: Anonymous users are rejected with 401"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "2. Score Submission on Game Over: Final score updates personal best and records history"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "3. REQUIRED: Exit Before Game Over persists score (Score = 500, Status = ABANDONED)"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "4. REQUIRED: Exit with Score = 8,420 persists 8,420 to DB and updates career best"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "5. REQUIRED: Personal Best Comparison Logic: Best = 10,000, Current = 8,420 -> Best remains 10,000; Current = 12,000 -> Best = 12,000"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "6. Mid-game Checkpoint & Active Session Recovery"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "7. Idempotency: Duplicate Exit submit does not double-count or create duplicates"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "8. Anti-Cheat Validation: Rejects implausible or fake scores"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "9. Company-wide Leaderboard reflects scores saved on Exit without Game Over"
+    },
+    {
+      "file": "test/game2048_e2e.test.js",
+      "test": "Comprehensive 2048 Game Score Persistence & E2E Test Suite"
+    },
+    {
+      "file": "test/game2048_route_persistence.test.js",
+      "test": "1. Moves that do not increase score (merges vs slides) are persisted via checkpoint"
+    },
+    {
+      "file": "test/game2048_route_persistence.test.js",
+      "test": "2. Audit Repro: 176 points / 30 moves -> 240 points / 45 moves preserved on SPA unmount flush"
+    },
+    {
+      "file": "test/game2048_route_persistence.test.js",
+      "test": "3. Zero-loss on leaving page in < 25s: immediate flush retains score delta under 500"
+    },
+    {
+      "file": "test/game2048_route_persistence.test.js",
+      "test": "4. Invariant: Retain BUG-001 session ownership isolation across route transitions"
+    },
+    {
+      "file": "test/game2048_route_persistence.test.js",
+      "test": "BUG-008: 2048 Route Navigation & Move Persistence Test Suite"
+    },
+    {
+      "file": "test/game2048_session_ownership.test.js",
+      "test": "BUG-001: 2048 Session Ownership & Authorization Test Suite"
+    },
+    {
+      "file": "test/game2048_session_ownership.test.js",
+      "test": "Test A: User A starts session. User B attempts POST /checkpoint with A's gameSessionId -> Returns 403 Forbidden"
+    },
+    {
+      "file": "test/game2048_session_ownership.test.js",
+      "test": "Test B: User A starts session. User B attempts POST /submit with A's gameSessionId -> Returns 403 Forbidden"
+    },
+    {
+      "file": "test/game2048_session_ownership.test.js",
+      "test": "Test C: Random uninitiated gameSessionId to checkpoint/submit -> Returns 404 Not Found (no new DB record created)"
+    },
+    {
+      "file": "test/game2048_session_ownership.test.js",
+      "test": "Test D: User C plays and finishes -> stats increment totalGames by 1"
+    },
+    {
+      "file": "test/game_catalog.test.js",
+      "test": "2. Game Coming Soon Enforcement: Non-admin blocked when game is COMING_SOON, Admin allowed"
+    },
+    {
+      "file": "test/integration.test.js",
+      "test": "test/integration.test.js"
+    },
+    {
+      "file": "test/mvp_cup_comprehensive_e2e.test.js",
+      "test": "Case E & F: Double-Click / Concurrent Award - exactly 1 succeeds"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "1. Returns ROOM_NOT_FOUND when room does not exist"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "2. Grants player access to room host / participant"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "3. Rejects non-participating user in WAITING room (FORBIDDEN 403)"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "4. Grants spectator access to outside user ONLY when room is actively PLAYING"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "5. Rejects non-admin user trying to access isTest bot room (FORBIDDEN 403)"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "6. Allows admin user to access isTest bot room"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "7. Supports Quiz Room authorization: Member allowed, non-member rejected in WAITING room"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "8. Supports Capital Board Room authorization: Member allowed, non-member rejected in WAITING room"
+    },
+    {
+      "file": "test/socket_room_auth.test.js",
+      "test": "Socket Game Room Authorization Test Suite"
+    },
+    {
+      "file": "test/stage_d_adversarial_security.test.js",
+      "test": "test/stage_d_adversarial_security.test.js"
+    },
+    {
+      "file": "test/uno_engine.test.js",
+      "test": "test/uno_engine.test.js"
+    },
+    {
+      "file": "test/uno_game_integration.test.js",
+      "test": "test/uno_game_integration.test.js"
+    }
+  ],
+  "RESOLVED_BASELINE_FAILURES": [],
+  "note": "Node reports failed parent suites too; 45 entries are not 45 individual failing tests. 38 failed + 8 cancelled are the authoritative runner counts."
+}

@@ -70,6 +70,7 @@ const TypingRoom = require('./TypingRoom');
 const TypingPlayer = require('./TypingPlayer');
 const TypingMatchResult = require('./TypingMatchResult');
 const TypingUserStat = require('./TypingUserStat');
+const TypingPracticeAttempt = require('./TypingPracticeAttempt');
 // Creative Corner Drawing Models
 const Drawing = require('./Drawing');
 const DrawingLike = require('./DrawingLike');
@@ -360,6 +361,7 @@ module.exports = {
   TypingPlayer,
   TypingMatchResult,
   TypingUserStat,
+  TypingPracticeAttempt,
   // Creative Corner Drawing Models
   Drawing,
   DrawingLike,

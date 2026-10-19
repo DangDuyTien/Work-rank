@@ -1,0 +1,221 @@
+{
+  "started": "2026-10-19T03:36:41.978Z",
+  "mockedRequests": 0,
+  "checks": [
+    {
+      "name": "Positional typo and Backspace correction",
+      "status": "PASS",
+      "evidence": "abxdef marks only x; ab+cdef clears all red positions"
+    },
+    {
+      "name": "Vietnamese and paced typing 60/100/150/210 WPM",
+      "status": "PASS",
+      "evidence": "Exact NFC text and marker index checked after every pace"
+    },
+    {
+      "name": "Vietnamese native composition",
+      "status": "PASS",
+      "evidence": "Chromium IME composition/commit retains native caret and editable text"
+    },
+    {
+      "name": "Long passage line tracking and auto-scroll",
+      "status": "PASS",
+      "evidence": {
+        "scrollTop": 247,
+        "visible": true,
+        "index": 534
+      }
+    },
+    {
+      "name": "Practice reload",
+      "status": "PASS",
+      "evidence": {
+        "retainedCharacters": 534
+      }
+    },
+    {
+      "name": "Responsive 390px",
+      "status": "PASS",
+      "evidence": {
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "markerVisible": true,
+        "nativeWidth": 328
+      }
+    },
+    {
+      "name": "Responsive 430px",
+      "status": "PASS",
+      "evidence": {
+        "clientWidth": 430,
+        "scrollWidth": 430,
+        "markerVisible": true,
+        "nativeWidth": 368
+      }
+    },
+    {
+      "name": "Responsive 768px",
+      "status": "PASS",
+      "evidence": {
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "markerVisible": true,
+        "nativeWidth": 671.9375
+      }
+    },
+    {
+      "name": "Room broadcasts cannot hijack a parallel practice tab",
+      "status": "PASS",
+      "evidence": "Practice keeps its own text, attempt and screen when another room is created"
+    },
+    {
+      "name": "Real socket live ranking prioritizes accurate B over faster inaccurate A",
+      "status": "PASS",
+      "evidence": [
+        {
+          "userId": 1,
+          "wpm": 54,
+          "accuracy": 50.7,
+          "liveRank": null
+        },
+        {
+          "userId": 2,
+          "wpm": 78.1,
+          "accuracy": 100,
+          "liveRank": 1
+        }
+      ]
+    },
+    {
+      "name": "Room offline/reconnect/reload retains exact text",
+      "status": "PASS",
+      "evidence": {
+        "characters": 67
+      }
+    },
+    {
+      "name": "Real spectator",
+      "status": "PASS",
+      "evidence": "Live server standings visible with no gameplay input"
+    },
+    {
+      "name": "Timeout settles before winner; final rank/rewards/retry",
+      "status": "PASS",
+      "evidence": [
+        {
+          "userId": 1,
+          "individualRank": null,
+          "wpm": 15.2,
+          "accuracy": 50.7,
+          "scoreDelta": 0,
+          "isWinner": false
+        },
+        {
+          "userId": 2,
+          "individualRank": 1,
+          "wpm": 26.8,
+          "accuracy": 100,
+          "scoreDelta": 31,
+          "isWinner": true
+        }
+      ]
+    },
+    {
+      "name": "Real 120-second practice, forged metrics ignored, duplicate finish no XP",
+      "status": "PASS",
+      "evidence": {
+        "wpm": 53.4,
+        "accuracy": 100,
+        "awardedXp": 11,
+        "recorded": true
+      }
+    },
+    {
+      "name": "Continuous typing cannot postpone the 30-second deadline",
+      "status": "PASS",
+      "evidence": {
+        "characters": 291,
+        "elapsedMs": 30244
+      }
+    },
+    {
+      "name": "Burst input, rapid Backspace and native paste blocking",
+      "status": "PASS",
+      "evidence": "No dropped Unicode; paste leaves text unchanged"
+    },
+    {
+      "name": "Instant real HTTP finish cannot turn 1ms into a rewardable run",
+      "status": "PASS",
+      "evidence": "20 copied characters before one second: no winner and no reward"
+    },
+    {
+      "name": "Legacy metric-only practice request rejected by real server",
+      "status": "PASS",
+      "evidence": "HTTP 400 without server-issued attemptId"
+    }
+  ],
+  "performance": [
+    {
+      "targetWpm": 60,
+      "observedWpm": 60,
+      "characters": 32,
+      "dropped": 0,
+      "p95CommitMs": 12.799999982118607,
+      "maxCommitMs": 13,
+      "p95TwoFramePaintMs": 31.099999994039536
+    },
+    {
+      "targetWpm": 100,
+      "observedWpm": 100,
+      "characters": 32,
+      "dropped": 0,
+      "p95CommitMs": 11.099999994039536,
+      "maxCommitMs": 11.399999976158142,
+      "p95TwoFramePaintMs": 29.80000001192093
+    },
+    {
+      "targetWpm": 150,
+      "observedWpm": 149,
+      "characters": 32,
+      "dropped": 0,
+      "p95CommitMs": 11,
+      "maxCommitMs": 11,
+      "p95TwoFramePaintMs": 29
+    },
+    {
+      "targetWpm": 210,
+      "observedWpm": 209,
+      "characters": 32,
+      "dropped": 0,
+      "p95CommitMs": 11.199999988079071,
+      "maxCommitMs": 11.5,
+      "p95TwoFramePaintMs": 30.099999994039536
+    }
+  ],
+  "errors": [],
+  "longTasksDuringProfile": [],
+  "practiceResponse": {
+    "metricVersion": 2,
+    "typedChars": 534,
+    "correctChars": 534,
+    "errorCount": 0,
+    "currentIncorrectChars": 0,
+    "accuracy": 100,
+    "progressPct": 8.4,
+    "rawWpm": 53.4,
+    "wpm": 53.4,
+    "completed": false,
+    "validSubmission": true,
+    "eligible": true,
+    "performanceScore": 82.8,
+    "completionTimeMs": 120000,
+    "invalidReason": null,
+    "attemptId": "8bf16ee8-bb76-448c-ba13-c8314f53e271",
+    "recorded": true,
+    "awardedXp": 11,
+    "reason": null,
+    "message": "Máy chủ đã xác minh thành tích luyện tập và ghi nhận một lần."
+  },
+  "status": "PASS",
+  "finished": "2026-10-19T03:39:17.786Z"
+}

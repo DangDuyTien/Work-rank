@@ -224,6 +224,7 @@ test('Typing Battle — Live Spectator Mode Integration Test', async (t) => {
     assert.ok(specHttp.body.spectators.some((s) => Number(s.userId) === Number(sD.id)));
 
     // 7. Player A types -> Spectator C & D receive progressBatch with typedChars
+    await TypingRoom.update({ startedAt: new Date(Date.now() - 3000) }, { where: { id: roomId } });
     const batchPromiseOnC = waitForEvent(socketC, 'typing:progressBatch');
     socketA.emit('typing:progress', {
       roomId,

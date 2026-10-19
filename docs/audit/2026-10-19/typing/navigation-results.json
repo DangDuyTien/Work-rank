@@ -1,0 +1,18 @@
+{
+  "mockedRequests": 0,
+  "checks": [
+    {
+      "name": "First Vietnamese IME word starts server clock before commit and is not marked as paste",
+      "status": "PASS"
+    },
+    {
+      "name": "SPA practice to active room resets clock/text/revision to the correct run",
+      "status": "PASS"
+    },
+    {
+      "name": "Same-room rematch does not restore a previous run draft",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

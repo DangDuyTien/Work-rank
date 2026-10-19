@@ -1,0 +1,84 @@
+{
+  "practiceExploit": {
+    "firstRecorded": true,
+    "retryRecorded": true,
+    "bestWpm": 249,
+    "xp": [
+      40,
+      40
+    ]
+  },
+  "characterBaseline": {
+    "currentCarets": 1,
+    "typedGlyphStyles": [
+      {
+        "text": "a",
+        "weight": "700",
+        "padding": "0px",
+        "color": "rgb(17, 17, 17)"
+      },
+      {
+        "text": "b",
+        "weight": "700",
+        "padding": "0px",
+        "color": "rgb(17, 17, 17)"
+      },
+      {
+        "text": "c",
+        "weight": "700",
+        "padding": "0px 1px",
+        "color": "rgb(220, 38, 38)"
+      },
+      {
+        "text": "d",
+        "weight": "700",
+        "padding": "0px",
+        "color": "rgb(17, 17, 17)"
+      },
+      {
+        "text": "e",
+        "weight": "700",
+        "padding": "0px",
+        "color": "rgb(17, 17, 17)"
+      },
+      {
+        "text": "f",
+        "weight": "700",
+        "padding": "0px",
+        "color": "rgb(17, 17, 17)"
+      },
+      {
+        "text": "v",
+        "weight": "500",
+        "padding": "0px",
+        "color": "rgb(148, 163, 184)"
+      },
+      {
+        "text": "ị",
+        "weight": "500",
+        "padding": "0px",
+        "color": "rgb(148, 163, 184)"
+      }
+    ],
+    "height": 102
+  },
+  "players": [
+    {
+      "userId": 1,
+      "wpm": 59.8,
+      "accuracy": 85.7,
+      "progressPct": 0.1,
+      "liveRank": null,
+      "performanceScore": 0
+    },
+    {
+      "userId": 2,
+      "wpm": 34.9,
+      "accuracy": 100,
+      "progressPct": 0.1,
+      "liveRank": null,
+      "performanceScore": 0
+    }
+  ],
+  "faults": []
+}

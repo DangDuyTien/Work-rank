@@ -22,6 +22,7 @@ const typingGameService = require('../src/services/typingGame.service');
 const { canAccessGameRoom } = require('../src/services/gameRoomAuth.service');
 
 function createInputText(target, errorCount = 0) {
+  target = Array.from(target).slice(0, 300).join(''); // Human-plausible fixture under the production speed cap.
   const characters = String(target || '').split('');
   let inserted = 0;
   for (let index = 0; index < characters.length && inserted < errorCount; index += 1) {
@@ -370,34 +371,7 @@ test.describe('Multiplayer Deep-Audit Test Suite: Game Sâm & Typing Battle', ()
     await typingGameService.leaveRoom(roomId, userD.id);
   });
 
-  test('2.3. Typing Practice Result: Test duration requirement (>= 120s for personal BXH)', async () => {
-    // 30s test: should NOT be recorded to leaderboard
-    const res30s = await typingGameService.submitPracticeResult(
-      {
-        durationLimitSeconds: 30,
-        wpm: 85,
-        accuracy: 98,
-        typedChars: 200,
-        errorCount: 2,
-      },
-      userA
-    );
-    assert.equal(res30s.recorded, false);
-    assert.equal(res30s.reason, 'DURATION_LESS_THAN_2_MINUTES');
-
-    // 120s (2 min) test: MUST be recorded to leaderboard & personal stats
-    const res120s = await typingGameService.submitPracticeResult(
-      {
-        durationLimitSeconds: 120,
-        wpm: 92,
-        accuracy: 99,
-        typedChars: 800,
-        errorCount: 3,
-      },
-      userA
-    );
-    assert.equal(res120s.recorded, true);
-    assert.ok(res120s.awardedXp > 0, 'XP points awarded');
-    assert.equal(res120s.stats.bestWpm >= 92, true);
+  test('2.3. Practice cannot record client-declared metrics without a server attempt', async () => {
+    await assert.rejects(() => typingGameService.submitPracticeResult({ durationLimitSeconds: 120, wpm: 249, accuracy: 100, typedChars: 800 }, userA), /attemptId/);
   });
 });

@@ -20,6 +20,7 @@ const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
 
 function createInputText(target, errorCount = 0) {
+  target = Array.from(target).slice(0, 300).join(''); // Human-plausible fixture under the production speed cap.
   const characters = String(target || '').split('');
   let inserted = 0;
   for (let index = 0; index < characters.length && inserted < errorCount; index += 1) {
@@ -32,6 +33,11 @@ function createInputText(target, errorCount = 0) {
 
 async function setServerElapsed(roomId, elapsedMs = 30000) {
   await TypingRoom.update({ startedAt: new Date(Date.now() - elapsedMs) }, { where: { id: roomId } });
+}
+
+async function matchLedgerKey(roomId, userId) {
+  const row = await TypingRoom.findByPk(roomId);
+  return `typing_match:${roomId}:${new Date(row.startedAt).getTime()}:${userId}`;
 }
 
 test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async (t) => {
@@ -234,7 +240,7 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
     const ledgerUser1 = await ScoreLedger.findOne({
       where: {
         userId: user1.id,
-        idempotencyKey: `typing_match:${roomId}:${user1.id}`,
+        idempotencyKey: await matchLedgerKey(roomId, user1.id),
       },
     });
 

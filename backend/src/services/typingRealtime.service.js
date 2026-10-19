@@ -113,9 +113,14 @@ function emitSpectatorCount(roomId) {
 
 function emitToRoom(roomId, eventName, payload) {
   if (!ioInstance) return;
+  if (eventName === 'typing:roomListChanged') {
+    ioInstance.emit(eventName, { roomId: Number(roomId) });
+    return;
+  }
   ioInstance.to(roomChannel(roomId)).emit(eventName, payload);
-  if (eventName === 'typing:roomUpdated' || eventName === 'typing:roomListChanged') {
-    ioInstance.emit(eventName, payload);
+  if (eventName === 'typing:roomUpdated') {
+    // Lobby subscribers need only an invalidation, never another room's state.
+    ioInstance.emit('typing:roomListChanged', { roomId: Number(roomId) });
   }
 }
 

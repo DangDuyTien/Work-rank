@@ -1494,6 +1494,10 @@ export const gameCatalogApi = {
 };
 
 export const typingGameApi = {
+  createPracticeAttempt: async (data) => (await api.post('/api/games/typing/practice/attempts', data)).data,
+  activePracticeAttempt: async () => (await api.get('/api/games/typing/practice/active')).data,
+  updatePracticeProgress: async (id, data) => (await api.post(`/api/games/typing/practice/attempts/${id}/progress`, data)).data,
+
   getStatus: async () => {
     const res = await api.get('/api/games/typing/status');
     return res.data;

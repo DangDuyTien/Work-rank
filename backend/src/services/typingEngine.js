@@ -105,7 +105,7 @@ function validateSubmissionPlausibility({
   if (!Number.isFinite(serverElapsedMs) || serverElapsedMs <= 0) {
     return { valid: false, reason: 'Thời gian máy chủ không hợp lệ', wpm: 0, accuracy: 0.0 };
   }
-  const effectiveDurationMs = Math.max(1000, serverElapsedMs);
+  const effectiveDurationMs = serverElapsedMs;
 
   if (effectiveDurationMs < 1000) {
     return { valid: false, reason: 'Thời gian hoàn thành quá ngắn bất thường', wpm: 0, accuracy: 0.0 };
@@ -116,7 +116,7 @@ function validateSubmissionPlausibility({
   const accuracy = calculateAccuracy(safeTyped, errorCount);
 
   // Anti-cheat: Speed limit ceiling check
-  const effectiveMaxWpm = maxWpmCap || (process.env.NODE_ENV === 'test' ? 1000 : MAX_HUMAN_WPM_CAP);
+  const effectiveMaxWpm = maxWpmCap || MAX_HUMAN_WPM_CAP;
   if (wpm > effectiveMaxWpm) {
     return {
       valid: false,
@@ -127,7 +127,7 @@ function validateSubmissionPlausibility({
   }
 
   // Minimum time per character check (less than 25ms per character is inhuman)
-  const minMsPerChar = process.env.NODE_ENV === 'test' ? 5 : 25;
+  const minMsPerChar = 25;
   const msPerChar = effectiveDurationMs / Math.max(1, safeTyped);
   if (safeTyped > 30 && msPerChar < minMsPerChar) {
     return {
@@ -304,7 +304,9 @@ function calculateTeamMatchResult(players) {
     );
     if (rankedMembers.length === 0) return 0;
     const totalScore = rankedMembers.reduce((sum, player) => sum + Number(player.performanceScore || 0), 0);
-    return Math.round((totalScore / rankedMembers.length) * 10) / 10;
+    // AFK/invalid members contribute zero; dropping them from the denominator
+    // would reward a team for not participating.
+    return Math.round((totalScore / teamMembers.length) * 10) / 10;
   }
 
   const teamAScore = getTeamMetrics(teamAPlayers);

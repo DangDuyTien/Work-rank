@@ -30,6 +30,11 @@ function typeWithErrors(target, errorCount) {
   return characters.join('');
 }
 
+async function matchLedgerKey(roomId, userId) {
+  const row = await TypingRoom.findByPk(roomId);
+  return `typing_match:${roomId}:${new Date(row.startedAt).getTime()}:${userId}`;
+}
+
 test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Scoring Integrity Suite', async (t) => {
   let userAlice, userBob, userCharlie;
   let tokenAlice, tokenBob, tokenCharlie;
@@ -158,7 +163,7 @@ test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Sc
       .post(`/api/games/typing/rooms/${roomId}/start`)
       .set('Authorization', `Bearer ${tokenAlice}`);
     const challengeText = startRes.body.room.challengeText;
-    await TypingRoom.update({ startedAt: new Date(Date.now() - 30000) }, { where: { id: roomId } });
+    await TypingRoom.update({ startedAt: new Date(Date.now() - 25000) }, { where: { id: roomId } });
 
     // Count-only payloads cannot spoof authoritative input progress.
     await request(app)
@@ -281,7 +286,7 @@ test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Sc
       .post(`/api/games/typing/rooms/${roomId}/finish`)
       .set('Authorization', `Bearer ${tokenCharlie}`)
       .send({
-        typedText: typeWithErrors(startRes.body.room.challengeText, 1),
+        typedText: typeWithErrors(startRes.body.room.challengeText.slice(0, 300), 1),
         inputRevision: 1,
       });
 
@@ -304,12 +309,12 @@ test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Sc
 
     // Verify ScoreLedger: Bob must NOT have a ScoreLedger row, Charlie MUST
     const ledgerBob = await ScoreLedger.findOne({
-      where: { userId: userBob.id, idempotencyKey: `typing_match:${roomId}:${userBob.id}` },
+      where: { userId: userBob.id, idempotencyKey: await matchLedgerKey(roomId, userBob.id) },
     });
     assert.equal(ledgerBob, null, 'No ScoreLedger row should be created for 0-point AFK player');
 
     const ledgerCharlie = await ScoreLedger.findOne({
-      where: { userId: userCharlie.id, idempotencyKey: `typing_match:${roomId}:${userCharlie.id}` },
+      where: { userId: userCharlie.id, idempotencyKey: await matchLedgerKey(roomId, userCharlie.id) },
     });
     assert.ok(ledgerCharlie, 'ScoreLedger row must exist for legitimate winner');
     assert.equal(ledgerCharlie.pointsDelta, playerCharlie.scoreDelta);
@@ -369,7 +374,7 @@ test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Sc
     assert.equal(bobPlayer.scoreDelta, 0, 'Bob must receive 0 points');
 
     const ledgers = await ScoreLedger.findAll({
-      where: { idempotencyKey: [`typing_match:${roomId}:${userAlice.id}`, `typing_match:${roomId}:${userBob.id}`] },
+      where: { idempotencyKey: [await matchLedgerKey(roomId, userAlice.id), await matchLedgerKey(roomId, userBob.id)] },
     });
     assert.equal(ledgers.length, 0, 'No ScoreLedger rows should be created when both players are AFK');
   });
@@ -427,7 +432,7 @@ test('BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Sc
 
     for (const player of [userAlice, userBob]) {
       assert.equal(
-        await ScoreLedger.count({ where: { idempotencyKey: `typing_match:${roomId}:${player.id}` } }),
+        await ScoreLedger.count({ where: { idempotencyKey: await matchLedgerKey(roomId, player.id) } }),
         1,
         'Each player can produce at most one authoritative match ledger entry'
       );

@@ -148,3 +148,8 @@ module.exports = {
   getChallenges,
 };
 
+
+const practice = require('../services/typingPractice.service');
+module.exports.createPractice = async (req, res) => res.status(201).json(await practice.create(req.body, req.user));
+module.exports.activePractice = async (req, res) => res.json({ attempt: await practice.active(req.user.id) });
+module.exports.practiceProgress = async (req, res) => res.json(await practice.progress(req.params.attemptId, req.user.id, req.body));

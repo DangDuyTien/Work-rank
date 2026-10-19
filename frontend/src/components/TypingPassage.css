@@ -1,0 +1,24 @@
+.typing-position { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; margin-bottom:10px; color:var(--text-secondary); font-size:12px; font-variant-numeric:tabular-nums; }
+.typing-position strong { color:var(--accent); }
+.typing-passage-viewport { height:160px; padding:16px 20px; overflow:hidden; background:var(--surface); border:1px solid var(--border-strong); border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:clamp(20px,2.1vw,24px); line-height:40px; font-weight:500; white-space:pre-wrap; overflow-wrap:anywhere; cursor:text; text-align:left; scroll-behavior:auto; }
+.typing-passage-viewport.is-focused { border-color:var(--accent); outline:2px solid var(--accent-soft); outline-offset:1px; }
+.typing-word { border-radius:3px; }
+.typing-word.is-current-word { background:var(--accent-soft); }
+.typing-character { position:relative; font:inherit; padding:0; margin:0; border:0; }
+.typing-character.is-correct { color:var(--text-muted); }
+.typing-character.is-incorrect { color:#b91c1c; background:rgba(220,38,38,.15); text-decoration:underline; text-decoration-color:#b91c1c; }
+.typing-character.is-remaining { color:var(--text-secondary); }
+.typing-character.is-current { color:var(--text-primary); background:var(--accent-soft); box-shadow:inset 0 -3px var(--accent); }
+.typing-character.is-current::before { content:''; position:absolute; width:2px; left:0; top:0; bottom:0; background:var(--accent); }
+@media (max-width:430px) { .typing-passage-viewport { padding:16px 12px; font-size:20px; } .typing-position { font-size:11px; gap:6px 12px; } }
+.typing-live-standings { margin:0 0 16px; overflow-x:auto; font-size:12px; }
+.typing-live-standings table { width:100%; border-collapse:collapse; margin-top:8px; }
+.typing-live-standings th,.typing-live-standings td { text-align:left; padding:6px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
+.typing-live-standings tr.is-me { background:var(--accent-soft); }
+/* Grid min-content sizing otherwise lets the toolbar push the whole passage
+   outside the viewport, hidden by the app shell's overflow clipping. */
+.typing-page { grid-template-columns:minmax(0,1fr); min-width:0; }
+.typing-page > *, .typing-page .tab-transition, .typing-page .ui-card { min-width:0; max-width:100%; }
+.typing-passage { min-width:0; max-width:100%; }
+@media (max-width:430px) { .typing-page .ui-card { padding:16px !important; } }
+.typing-entry { position:relative; min-width:0; }

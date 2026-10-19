@@ -26,6 +26,8 @@ test('typing metrics and ranking use bounded server-authoritative inputs', async
   });
 
   await t.test('client duration cannot override server elapsed time', () => {
+    const instant = typingEngine.validateSubmissionPlausibility({ challengeLength: 100, typedChars: 20, durationMs: 1, errorCount: 0 });
+    assert.equal(instant.valid, false, 'A one-millisecond server run must not be rounded up into a rewardable result');
     const baseline = typingEngine.validateSubmissionPlausibility({
       challengeLength: 500,
       typedChars: 100,

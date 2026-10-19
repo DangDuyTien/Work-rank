@@ -16,6 +16,8 @@ const {
 } = require('../models');
 
 const typingEngine = require('./typingEngine');
+const typingTransaction = require('./typingTransaction');
+const { measureInput, chars } = require('./typingMetrics');
 const typingRealtime = require('./typingRealtime.service');
 const { seedTypingChallenges } = require('../seeders/typingChallenges.seeder');
 const projector = require('./competition/competitionReadModel.projector');
@@ -32,6 +34,7 @@ const {
 // In-memory timers for countdowns & auto-forfeits
 const startCountdownTimers = new Map();
 const matchDeadlineTimers = new Map();
+const liveMetricTimers = new Map();
 const matchFinalizationPromises = new Map();
 const TYPING_DRAFT_KEY = '_typingDraft';
 
@@ -57,18 +60,34 @@ function withTypingDraft(player, text, revision, valid = true) {
 }
 
 function deriveTypingInput(challengeText, submittedText) {
-  const target = String(challengeText || '').normalize('NFC');
-  const input = String(submittedText || '').normalize('NFC').slice(0, target.length);
-  let errorCount = 0;
-  for (let index = 0; index < input.length; index += 1) {
-    if (input[index].toLocaleLowerCase() !== target[index].toLocaleLowerCase()) errorCount += 1;
+  if (chars(submittedText).length > chars(challengeText).length) throw new ValidationError('Nội dung gõ vượt quá bài thi');
+  const measured = measureInput(challengeText, submittedText, 60000);
+  return { text: measured.text, typedChars: measured.typedChars, errorCount: measured.errorCount, accuracy: measured.accuracy };
+}
+
+function liveStandings(room, players) {
+  const elapsed = Math.min(Math.max(1, Date.now() - new Date(room.startedAt || Date.now()).getTime()), Number(room.durationLimitSeconds || 120) * 1000);
+  const rows = players.map((p) => {
+    const draft = getTypingDraft(p);
+    const duration = p.status === 'FINISHED' ? Number(p.completionTimeMs || elapsed) : elapsed;
+    const metrics = measureInput(room.challengeText, draft.text || '', duration, room.difficulty);
+    if (draft.cheatDetected) { metrics.validSubmission = false; metrics.eligible = false; metrics.performanceScore = 0; }
+    return { userId: Number(p.userId), ...metrics, text: undefined, inputRevision: Number(draft.revision || 0) };
+  }).sort(typingEngine.compareTypingResults);
+  return rows.map((r, i) => ({ ...r, liveRank: r.eligible ? i + 1 : null }));
+}
+
+async function broadcastLiveMetrics(roomId) {
+  const detail = await getRoomDetail(roomId);
+  if (detail.room.status !== 'PLAYING') {
+    clearInterval(liveMetricTimers.get(Number(roomId)));
+    liveMetricTimers.delete(Number(roomId));
+    return;
   }
-  return {
-    text: input,
-    typedChars: input.length,
-    errorCount,
-    accuracy: typingEngine.calculateAccuracy(input.length, errorCount),
-  };
+  for (const p of detail.players) {
+    const { inputText, finalPayload, user, ...publicMetrics } = p;
+    typingRealtime.queueProgressUpdate(roomId, p.userId, publicMetrics);
+  }
 }
 
 // Helper to generate 4-character uppercase alphanumeric room code
@@ -226,6 +245,7 @@ async function listRooms(filters = {}) {
     const data = r.toJSON();
     return {
       ...data,
+      players: (data.players || []).map(({ finalPayload, ...p }) => p),
       playerCount: data.players ? data.players.length : 0,
       spectatorCount: typingRealtime.getSpectatorCount(r.id),
     };
@@ -234,7 +254,7 @@ async function listRooms(filters = {}) {
 
 // Helper to construct a rich continuous stream of words without any punctuation for timed tests
 async function buildContinuousChallengeText({ durationLimitSeconds = 120, difficulty = 'MEDIUM', language = 'VI' }) {
-  const targetWords = Math.max(80, Math.round((Number(durationLimitSeconds) / 60) * 120)); // ~120 words per minute of test
+  const targetWords = Math.max(200, Math.round((Number(durationLimitSeconds) / 60) * 300)); // ~120 words per minute of test
   let challenges = [];
   try {
     challenges = await TypingChallenge.findAll({
@@ -261,10 +281,7 @@ async function buildContinuousChallengeText({ durationLimitSeconds = 120, diffic
   while (words < targetWords && idx < 30) {
     const pick = shuffled[idx % shuffled.length];
     const text = (pick.content || '')
-      .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'<>]/g, '')
-      .replace(/\s+/g, ' ')
-      .toLowerCase()
-      .trim();
+      .normalize('NFC');
     if (text) {
       combined = combined ? `${combined} ${text}` : text;
       words = combined.split(/\s+/).length;
@@ -309,10 +326,7 @@ async function createRoom(data, requestingUser) {
       selectedChallenge = await TypingChallenge.findByPk(challengeId);
       if (selectedChallenge) {
         challengeText = (selectedChallenge.content || '')
-          .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'<>]/g, '')
-          .replace(/\s+/g, ' ')
-          .toLowerCase()
-          .trim();
+          .normalize('NFC');
       }
     } catch (err) {
       console.warn('[TypingService] findByPk challenge error:', err.message);
@@ -328,7 +342,7 @@ async function createRoom(data, requestingUser) {
   }
 
   const code = generateRoomCode();
-  const result = await sequelize.transaction(async (t) => {
+  const result = await typingTransaction(async (t) => {
     await cleanupStaleTypingRooms(t);
 
     // Clean up any old WAITING seat for this user and mark orphaned rooms abandoned
@@ -433,7 +447,7 @@ async function joinRoom(roomId, userId) {
     throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
-  const joinResult = await sequelize.transaction(async (t) => {
+  const joinResult = await typingTransaction(async (t) => {
     // 1. Clean up any stale waiting seats the user might have in other rooms
     const oldWaiting = await TypingPlayer.findAll({
       where: { userId: Number(userId), status: 'WAITING', roomId: { [Op.ne]: Number(roomId) } },
@@ -724,7 +738,7 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
     await room.save();
   }
 
-  await sequelize.transaction(async (t) => {
+  await typingTransaction(async (t) => {
     for (const p of room.players) {
       p.status = 'TYPING';
       p.progressPct = 0;
@@ -758,6 +772,17 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
   });
 
   // Schedule auto-finish if match duration limit is reached
+  if (liveMetricTimers.has(room.id)) clearInterval(liveMetricTimers.get(room.id));
+  let updating = false;
+  const liveTimer = setInterval(async () => {
+    if (updating) return;
+    updating = true;
+    try { await broadcastLiveMetrics(room.id); }
+    catch (error) { console.error('Typing live metrics:', error.message); }
+    finally { updating = false; }
+  }, 1000);
+  liveTimer.unref?.();
+  liveMetricTimers.set(room.id, liveTimer);
   const matchTimer = setTimeout(() => {
     finalizeMatch(room.id).catch((e) => console.error('Match timeout error:', e.message));
   }, (room.durationLimitSeconds + 3) * 1000);
@@ -769,12 +794,13 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
 async function updateProgress(roomId, userId, data) {
   if (typeof data?.typedText !== 'string') return;
   let update = null;
-  await sequelize.transaction(async (transaction) => {
+  await typingTransaction(async (transaction) => {
     const room = await TypingRoom.findByPk(roomId, {
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
     if (!room || room.status !== 'PLAYING') return;
+    if (Date.now() > new Date(room.startedAt).getTime() + Number(room.durationLimitSeconds) * 1000) return;
 
     const player = await TypingPlayer.findOne({
       where: { roomId, userId },
@@ -792,7 +818,7 @@ async function updateProgress(roomId, userId, data) {
     if (nextRevision <= currentRevision) return;
 
     const metrics = deriveTypingInput(room.challengeText, data.typedText);
-    const totalLength = Math.max(1, String(room.challengeText || '').length);
+    const totalLength = Math.max(1, chars(room.challengeText).length);
     const progressPct = Math.min(100, Math.round((metrics.typedChars / totalLength) * 1000) / 10);
     const serverStartedAt = new Date(room.startedAt || 0).getTime();
     const serverDurationMs = Date.now() - serverStartedAt;
@@ -809,6 +835,7 @@ async function updateProgress(roomId, userId, data) {
     player.accuracy = metrics.accuracy;
     player.errorCount = metrics.errorCount;
     withTypingDraft(player, metrics.text, nextRevision, plausibility.valid);
+    player.performanceScore = plausibility.valid && metrics.typedChars >= 20 ? typingEngine.computeBasePerformanceScore({ wpm: player.wpm, accuracy: metrics.accuracy, errorCount: metrics.errorCount, completed: progressPct >= 90, difficulty: room.difficulty }) : 0;
     await player.save({ transaction });
     update = {
       userId: Number(userId),
@@ -821,7 +848,9 @@ async function updateProgress(roomId, userId, data) {
     };
   });
 
-  if (update) typingRealtime.queueProgressUpdate(roomId, userId, update);
+  if (update) {
+    await broadcastLiveMetrics(roomId);
+  }
 }
 
 // ── MATCH COMPLETION & SCORING SETTLE ──
@@ -852,7 +881,8 @@ async function submitFinish(roomId, userId, data) {
   const suppliedRevision = Number(data?.inputRevision);
   const hasSuppliedRevision = Number.isSafeInteger(suppliedRevision) && suppliedRevision >= 0;
   const storedRevision = Number.isSafeInteger(Number(storedDraft.revision)) ? Number(storedDraft.revision) : 0;
-  const submittedSnapshotIsStale = hasSuppliedRevision && suppliedRevision < storedRevision;
+  const deadlinePassed = Date.now() > new Date(room.startedAt).getTime() + Number(room.durationLimitSeconds) * 1000 + 3000;
+  const submittedSnapshotIsStale = deadlinePassed || (hasSuppliedRevision && suppliedRevision < storedRevision);
   const submittedText = submittedSnapshotIsStale
     ? (typeof storedDraft.text === 'string' ? storedDraft.text : null)
     : (typeof data?.typedText === 'string'
@@ -864,11 +894,11 @@ async function submitFinish(roomId, userId, data) {
   const metrics = deriveTypingInput(room.challengeText, submittedText);
   const safeChars = metrics.typedChars;
   const effectiveErrorCount = metrics.errorCount;
-  const challengeLen = Math.max(1, String(room.challengeText || '').length);
+  const challengeLen = Math.max(1, chars(room.challengeText).length);
   const startedAtMs = new Date(room.startedAt || 0).getTime();
   const measuredServerDuration = Date.now() - startedAtMs;
   const durationLimitMs = Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000);
-  const effectiveDuration = Math.min(Math.max(1000, measuredServerDuration), durationLimitMs);
+  const effectiveDuration = Math.min(Math.max(0, measuredServerDuration), durationLimitMs);
 
   // Anti-cheat verification retains the client-reported duration for compatibility; completion time is server bounded.
   const plausibility = typingEngine.validateSubmissionPlausibility({
@@ -967,6 +997,11 @@ async function finalizeMatch(roomId) {
 }
 
 async function finalizeMatchOnce(roomId) {
+  roomId = Number(roomId);
+  if (liveMetricTimers.has(roomId)) {
+    clearInterval(liveMetricTimers.get(roomId));
+    liveMetricTimers.delete(roomId);
+  }
   if (matchDeadlineTimers.has(roomId)) {
     clearTimeout(matchDeadlineTimers.get(roomId));
     matchDeadlineTimers.delete(roomId);
@@ -1006,17 +1041,14 @@ async function finalizeMatchOnce(roomId) {
       Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000)
     );
     const draft = getTypingDraft(player);
-    const completed = (player.progressPct || 0) >= 90;
-    if (!player.typedChars) player.accuracy = 0;
-    if (!player.performanceScore && (player.typedChars || 0) >= 20 && draft.valid !== false) {
-      player.performanceScore = typingEngine.computeBasePerformanceScore({
-        wpm: player.wpm || 0,
-        accuracy: player.accuracy ?? 0,
-        errorCount: player.errorCount || 0,
-        completed,
-        difficulty: room.difficulty,
-      });
-    }
+    const metrics = measureInput(room.challengeText, draft.text || '', player.completionTimeMs, room.difficulty);
+    player.typedChars = metrics.typedChars;
+    player.errorCount = metrics.errorCount;
+    player.accuracy = metrics.accuracy;
+    player.wpm = metrics.wpm;
+    player.progressPct = metrics.progressPct;
+    player.performanceScore = draft.cheatDetected ? 0 : metrics.performanceScore;
+    withTypingDraft(player, metrics.text, Number(draft.revision || 0), metrics.validSubmission && !draft.cheatDetected);
   }
 
   const eligibleForRanking = (player) =>
@@ -1033,7 +1065,7 @@ async function finalizeMatchOnce(roomId) {
     completed: (b.progressPct || 0) >= 90,
   }));
   finalRanking.forEach((player, index) => {
-    player.individualRank = index + 1;
+    player.individualRank = eligibleForRanking(player) ? index + 1 : null;
   });
 
   // Resolve Team Results or Solo/1v1 winners
@@ -1060,7 +1092,7 @@ async function finalizeMatchOnce(roomId) {
   const playerResultList = [];
   let claimedFinalization = false;
 
-  await sequelize.transaction(async (t) => {
+  await typingTransaction(async (t) => {
     // Claim the finalization inside the same transaction as stat, ledger, and result
     // writes. Concurrent finish/retry calls can settle a room only once; a rollback
     // leaves it PLAYING so a later retry can safely complete the work.
@@ -1149,7 +1181,7 @@ async function finalizeMatchOnce(roomId) {
 
       // 2. Insert into ScoreLedger (Immutable Ledger for WorkRank Company BXH)
       if (awardedPoints > 0 && room.matchType === 'RANKED') {
-        const idempotencyKey = `typing_match:${room.id}:${player.userId}`;
+        const idempotencyKey = `typing_match:${room.id}:${new Date(room.startedAt).getTime()}:${player.userId}`;
         const existingLedger = await ScoreLedger.findOne({
           where: { idempotencyKey, effectType: 'INDIVIDUAL_XP' },
           transaction: t,
@@ -1227,6 +1259,10 @@ async function finalizeMatchOnce(roomId) {
       await stat.save({ transaction: t });
 
       playerResultList.push({
+        metricVersion: 2,
+        validSubmission: getTypingDraft(player).valid !== false,
+        rawWpm: typingEngine.calculateWPM(player.typedChars, player.completionTimeMs),
+        correctChars: player.typedChars - player.errorCount,
         userId: player.userId,
         name: player.user?.name || `Player #${player.userId}`,
         team: player.team,
@@ -1304,6 +1340,9 @@ async function getRoomDetail(roomId, requestingUserId = null) {
   if (!room) throw new NotFoundError('Phòng thi đấu không tồn tại');
 
   const data = room.toJSON();
+  const latestResult = await TypingMatchResult.findOne({ where: { roomId: room.id }, order: [['id', 'DESC']] });
+  data.result = room.status === 'FINISHED' ? latestResult?.toJSON() || null : null;
+  const live = room.status === 'PLAYING' ? liveStandings(room, room.players) : [];
   data.players = (data.players || []).map((player) => {
     const draft = player.finalPayload && typeof player.finalPayload === 'object'
       ? player.finalPayload[TYPING_DRAFT_KEY]
@@ -1315,6 +1354,7 @@ async function getRoomDetail(roomId, requestingUserId = null) {
     const isOwner = requestingUserId && Number(player.userId) === Number(requestingUserId);
     return {
       ...player,
+      ...(live.find((r) => r.userId === Number(player.userId)) || {}),
       inputRevision: Number(draft?.revision || 0),
       ...(isOwner && typeof draft?.text === 'string' ? { inputText: draft.text } : {}),
       finalPayload: publicPayload && Object.keys(publicPayload).length ? publicPayload : null,
@@ -1342,24 +1382,28 @@ async function getMyStats(userId) {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
 
-  const [stat] = await TypingUserStat.findOrCreate({
+  const [stat] = await typingTransaction((transaction) => TypingUserStat.findOrCreate({
     where: { userId },
     defaults: {
       userId,
       dailyResetDate: todayStr,
     },
-  });
+    transaction,
+  }));
 
+  const verified = (await require('./typingVerifiedRecords')()).get(Number(userId));
   return {
+    verificationStatus: 'VERIFIED_RESULTS_ONLY',
+    hasUnverifiableHistory: Number(stat.bestWpm || 0) > Number(verified?.bestWpm || 0),
     userId: stat.userId,
     totalMatches: stat.totalMatches,
     rankedMatches: stat.rankedMatches,
     practiceMatches: stat.practiceMatches,
     winsCount: stat.winsCount,
     teamWinsCount: stat.teamWinsCount,
-    bestWpm: Number(stat.bestWpm || 0),
+    bestWpm: Number(verified?.bestWpm || 0),
     avgWpm: Number(stat.avgWpm || 0),
-    bestAccuracy: Number(stat.bestAccuracy || 0),
+    bestAccuracy: Number(verified?.bestAccuracy || 0),
     avgAccuracy: Number(stat.avgAccuracy || 0),
     currentWinStreak: stat.currentWinStreak,
     maxWinStreak: stat.maxWinStreak,
@@ -1371,50 +1415,13 @@ async function getMyStats(userId) {
 }
 
 async function getTypingLeaderboard({ limit = 50, currentUserId = null } = {}) {
-  const cleanLimit = Math.min(100, Math.max(1, Number(limit) || 50));
-
-  const stats = await TypingUserStat.findAll({
-    where: {
-      bestWpm: { [Op.gt]: 0 },
-    },
-    include: [
-      {
-        model: User,
-        as: 'user',
-        attributes: ['id', 'name', 'email', 'jobTitle', 'department', 'teamId'],
-        include: [{ model: Team, attributes: ['id', 'name'] }],
-      },
-    ],
-    order: [
-      ['bestWpm', 'DESC'],
-      ['bestAccuracy', 'DESC'],
-      ['winsCount', 'DESC'],
-    ],
-    limit: cleanLimit,
-  });
-
-  const formatted = stats.map((item, idx) => ({
-    rank: idx + 1,
-    userId: item.userId,
-    user: item.user,
-    teamName: item.user?.Team?.name || '—',
-    bestWpm: Number(item.bestWpm || 0),
-    avgWpm: Number(item.avgWpm || 0),
-    bestAccuracy: Number(item.bestAccuracy || 100),
-    winsCount: item.winsCount,
-    totalMatches: item.totalMatches,
-    totalPoints: Number(item.totalWorkRankPointsEarned || 0),
-  }));
-
-  let myStats = null;
-  if (currentUserId) {
-    myStats = await getMyStats(currentUserId);
-  }
-
-  return {
-    leaderboard: formatted,
-    myStats,
-  };
+  const records = await require('./typingVerifiedRecords')();
+  const ordered = [...records.entries()].map(([userId, r]) => ({ ...r.best, userId, bestWpm: r.best.wpm, bestAccuracy: r.best.accuracy, verifiedBestWpm: r.bestWpm })).sort(typingEngine.compareTypingResults);
+  const ids = ordered.map((r) => r.userId);
+  const users = ids.length ? await User.findAll({ where: { id: ids, status: 'active' }, attributes: ['id', 'name', 'jobTitle', 'department', 'teamId'], include: [{ model: Team, attributes: ['id', 'name'] }] }) : [];
+  const active = ordered.filter((r) => users.some((u) => Number(u.id) === r.userId));
+  const ranked = active.map((r, i) => ({ ...r, rank: i + 1, user: users.find((u) => Number(u.id) === r.userId), teamName: users.find((u) => Number(u.id) === r.userId)?.Team?.name || '—' }));
+  return { verificationStatus: 'VERIFIED_RESULTS_ONLY', leaderboard: ranked.slice(0, Math.min(100, Math.max(1, Number(limit) || 50))), myPosition: ranked.find((r) => r.userId === Number(currentUserId)) || null, myStats: currentUserId ? await getMyStats(currentUserId) : null };
 }
 
 async function resetRoom(roomId, requestingUserId) {
@@ -1435,7 +1442,7 @@ async function resetRoom(roomId, requestingUserId) {
     language: room.language || 'VI',
   });
 
-  await sequelize.transaction(async (t) => {
+  await typingTransaction(async (t) => {
     room.status = 'WAITING';
     room.startAt = null;
     room.startedAt = null;
@@ -1487,142 +1494,10 @@ async function getChallenges(filters = {}) {
   });
 }
 
-/**
- * Records practice test result to individual leaderboard and stats IF test is >= 2 minutes (120s).
- */
+/** Legacy route now requires a server-issued attempt; client metric-only requests cannot score. */
 async function submitPracticeResult(data, requestingUser) {
-  const userId = Number(requestingUser ? requestingUser.id : data.userId);
-  if (!userId || isNaN(userId)) {
-    throw new UnauthorizedError('Yêu cầu đăng nhập để ghi nhận kết quả');
-  }
-
-  const {
-    durationLimitSeconds = 120,
-    wpm = 0,
-    accuracy = 100,
-    typedChars = 0,
-    errorCount = 0,
-    elapsedSeconds = 120,
-  } = data;
-
-  const duration = Number(durationLimitSeconds) || 120;
-  const cleanElapsed = Number(elapsedSeconds) || duration;
-  const cleanWpm = Number(wpm) || 0;
-  const cleanAccuracy = Number(accuracy) || 0;
-  const cleanTypedChars = Number(typedChars) || 0;
-  const cleanErrorCount = Number(errorCount) || 0;
-
-  // Condition: Only tests of 2 minutes (120s) or more are counted toward individual leaderboard
-  if (duration < 120) {
-    return {
-      recorded: false,
-      reason: 'DURATION_LESS_THAN_2_MINUTES',
-      message: 'Thành tích chỉ được tính vào BXH cá nhân khi gõ từ 2 phút trở lên',
-      stats: await getMyStats(userId),
-    };
-  }
-
-  // Anti-cheat verification
-  if (cleanWpm > 280) {
-    console.warn(`[Practice Anti-Cheat] User #${userId} submitted unrealistic WPM ${cleanWpm}`);
-    return {
-      recorded: false,
-      reason: 'SPEED_LIMIT_EXCEEDED',
-      message: 'Tốc độ vượt quá giới hạn lý thuyết',
-      stats: await getMyStats(userId),
-    };
-  }
-
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-
-  const activeSeason = await Season.findOne({
-    where: { status: 'ACTIVE' },
-    order: [['id', 'DESC']],
-  });
-
-  const [stat] = await TypingUserStat.findOrCreate({
-    where: { userId },
-    defaults: {
-      userId,
-      dailyResetDate: todayStr,
-    },
-  });
-
-  if (stat.dailyResetDate !== todayStr) {
-    stat.dailyResetDate = todayStr;
-    stat.dailyRankedCount = 0;
-    stat.dailyPointsEarned = 0;
-  }
-
-  // Update stats
-  stat.totalMatches += 1;
-  stat.practiceMatches += 1;
-
-  let isNewBestWpm = false;
-  if (cleanWpm > Number(stat.bestWpm || 0)) {
-    stat.bestWpm = cleanWpm;
-    isNewBestWpm = true;
-  }
-
-  if (cleanAccuracy > Number(stat.bestAccuracy || 0)) {
-    stat.bestAccuracy = cleanAccuracy;
-  }
-
-  if (cleanAccuracy >= 100 && cleanTypedChars >= 100) {
-    stat.perfectRunsCount += 1;
-  }
-
-  stat.totalCharsTyped = Number(stat.totalCharsTyped || 0) + cleanTypedChars;
-  stat.totalErrors = Number(stat.totalErrors || 0) + cleanErrorCount;
-  stat.lastPlayedAt = now;
-
-  // Calculate rolling average
-  const prevCount = Math.max(0, stat.totalMatches - 1);
-  stat.avgWpm = prevCount > 0 ? Math.round(((stat.avgWpm * prevCount + cleanWpm) / stat.totalMatches) * 10) / 10 : cleanWpm;
-  stat.avgAccuracy = prevCount > 0 ? Math.round(((stat.avgAccuracy * prevCount + cleanAccuracy) / stat.totalMatches) * 10) / 10 : cleanAccuracy;
-
-  // Award practice XP (5-40 XP based on performance and test length)
-  const awardedXp = Math.min(40, Math.max(5, Math.round((cleanWpm * (cleanAccuracy / 100) * (duration / 60)) / 10)));
-  stat.totalWorkRankPointsEarned = Number(stat.totalWorkRankPointsEarned || 0) + awardedXp;
-
-  await stat.save();
-
-  // Insert into ScoreLedger for personal recognition
-  if (awardedXp > 0) {
-    const user = await User.findByPk(userId);
-    const idempotencyKey = `typing_practice:${userId}:${Date.now()}`;
-    await ScoreLedger.create({
-      idempotencyKey,
-      effectType: 'INDIVIDUAL_XP',
-      pointsDelta: awardedXp,
-      userId,
-      teamId: user?.teamId || null,
-      seasonId: activeSeason ? activeSeason.id : null,
-      eventId: crypto.randomUUID(),
-      reason: `Luyện tập Đánh Máy (${duration >= 60 ? `${duration / 60}p` : `${duration}s`}) WPM: ${cleanWpm}, Acc: ${cleanAccuracy}%`,
-      metadata: {
-        type: 'PRACTICE',
-        duration,
-        wpm: cleanWpm,
-        accuracy: cleanAccuracy,
-        isNewBestWpm,
-      },
-    }).catch((err) => console.warn('[Practice ScoreLedger warning]:', err.message));
-  }
-
-  // Re-project individual leaderboard
-  if (activeSeason) {
-    projector.projectSeasonIndividualLeaderboard(activeSeason.id).catch(() => {});
-  }
-
-  return {
-    recorded: true,
-    awardedXp,
-    isNewBestWpm,
-    stats: await getMyStats(userId),
-    message: isNewBestWpm ? 'Đã phá kỷ lục Best WPM cá nhân và cập nhật BXH!' : 'Thành tích đã được ghi nhận vào BXH cá nhân!',
-  };
+  if (!data?.attemptId) throw new ValidationError('Thiếu attemptId do máy chủ cấp. Hãy bắt đầu lượt luyện tập mới.');
+  return require('./typingPractice.service').finish(data.attemptId, requestingUser.id, data);
 }
 
 async function getActiveRoom(userId) {
@@ -1651,6 +1526,7 @@ async function getActiveRoom(userId) {
 
 module.exports = {
   ensureChallengesExist,
+  buildContinuousChallengeText,
   listRooms,
   createRoom,
   quickMatch,

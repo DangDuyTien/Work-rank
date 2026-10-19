@@ -6,6 +6,7 @@ const {
   TypingPlayer,
   TypingMatchResult,
   TypingUserStat,
+  TypingPracticeAttempt,
 } = require('../models');
 const { seedTypingChallenges } = require('../seeders/typingChallenges.seeder');
 
@@ -20,6 +21,7 @@ async function ensureTypingSchema(sequelize) {
     await TypingPlayer.sync();
     await TypingMatchResult.sync();
     await TypingUserStat.sync();
+    await TypingPracticeAttempt.sync();
 
     // 2. Ensure initial challenges exist
     const count = await TypingChallenge.count();
