@@ -5,6 +5,7 @@ const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
 const samRealtime = require('../services/samRealtime.service');
 const typingRealtime = require('../services/typingRealtime.service');
+const { canAccessGameRoom } = require('../services/gameRoomAuth.service');
 
 function emitPresence(io, user, status) {
   const payload = {
