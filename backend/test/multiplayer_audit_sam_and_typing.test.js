@@ -21,6 +21,17 @@ const samGameService = require('../src/services/samGame.service');
 const typingGameService = require('../src/services/typingGame.service');
 const { canAccessGameRoom } = require('../src/services/gameRoomAuth.service');
 
+function createInputText(target, errorCount = 0) {
+  const characters = String(target || '').split('');
+  let inserted = 0;
+  for (let index = 0; index < characters.length && inserted < errorCount; index += 1) {
+    if (/\s/.test(characters[index])) continue;
+    characters[index] = characters[index] === 'x' ? 'y' : 'x';
+    inserted += 1;
+  }
+  return characters.join('');
+}
+
 test.describe('Multiplayer Deep-Audit Test Suite: Game Sâm & Typing Battle', () => {
   let userA, userB, userC, userD, userE;
 
@@ -278,31 +289,28 @@ test.describe('Multiplayer Deep-Audit Test Suite: Game Sâm & Typing Battle', ()
     assert.equal(started.room.status, 'PLAYING');
     assert.ok(started.room.challengeText, 'Challenge text must be present');
     const challengeLen = started.room.challengeText.length;
+    await TypingRoom.update({ startedAt: new Date(Date.now() - 30000) }, { where: { id: roomId } });
 
     // 8. Submit Typing Progress
     await typingGameService.updateProgress(roomId, userA.id, {
-      typedChars: Math.floor(challengeLen * 0.5),
-      errorCount: 1,
-      clientDurationMs: 15000,
+      typedText: createInputText(started.room.challengeText.slice(0, Math.floor(challengeLen * 0.5)), 1),
+      inputRevision: 1,
     });
     await typingGameService.updateProgress(roomId, userB.id, {
-      typedChars: Math.floor(challengeLen * 0.4),
-      errorCount: 2,
-      clientDurationMs: 15000,
+      typedText: createInputText(started.room.challengeText.slice(0, Math.floor(challengeLen * 0.4)), 2),
+      inputRevision: 1,
     });
 
     // 9. Client A Finishes First
     const finishA = await typingGameService.submitFinish(roomId, userA.id, {
-      typedChars: challengeLen,
-      errorCount: 2,
-      clientDurationMs: 30000,
+      typedText: createInputText(started.room.challengeText, 2),
+      inputRevision: 2,
     });
 
     // 10. Client B Finishes
     const finalResult = await typingGameService.submitFinish(roomId, userB.id, {
-      typedChars: challengeLen,
-      errorCount: 5,
-      clientDurationMs: 35000,
+      typedText: createInputText(started.room.challengeText, 5),
+      inputRevision: 2,
     });
 
     assert.equal(finalResult.room.status, 'FINISHED');

@@ -227,9 +227,8 @@ test('Typing Battle — Live Spectator Mode Integration Test', async (t) => {
     const batchPromiseOnC = waitForEvent(socketC, 'typing:progressBatch');
     socketA.emit('typing:progress', {
       roomId,
-      typedChars: 25,
-      errorCount: 1,
-      clientDurationMs: 5000,
+      typedText: startRes.body.room.challengeText.slice(0, 25),
+      inputRevision: 1,
     });
 
     const progressBatch = await batchPromiseOnC;

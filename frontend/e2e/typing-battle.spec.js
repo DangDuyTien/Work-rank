@@ -184,7 +184,11 @@ async function setupTypingBattleMocks(page, options = {}) {
 
     if (url.pathname.includes('/api/games/typing/challenges')) {
       await route.fulfill({
-        json: { challenges: mockChallenges },
+        json: {
+          challenges: options.challengeText
+            ? [{ id: 99, title: 'Input regression', content: options.challengeText }]
+            : mockChallenges,
+        },
       });
       return;
     }
@@ -283,6 +287,68 @@ async function setupTypingBattleMocks(page, options = {}) {
 }
 
 test.describe('WorkRank Typing Battle — Deep Team Match UX Redesign', () => {
+  test('input feedback stays key-local after a typo and backspace correction', async ({ page }) => {
+    await setupTypingBattleMocks(page, {
+      challengeText: 'abcdef '.repeat(40),
+    });
+    await page.goto('/games/typing');
+
+    const arena = page.locator('.workrank-typing-text-arena');
+    await expect(arena).toBeVisible();
+    await arena.click();
+    await page.keyboard.type('abx', { delay: 0 });
+
+    await page.keyboard.down('d');
+    await page.waitForTimeout(60);
+    const correctKeyBackground = await page
+      .locator('.workrank-minimal-keyboard button[aria-label="D"]')
+      .evaluate((key) => key.style.background);
+    await page.keyboard.up('d');
+
+    await page.keyboard.type('ef', { delay: 0 });
+    const input = page.locator('input[type="text"]').last();
+    await expect(input).toHaveValue('abxdef');
+    const initialHighlights = await arena.evaluate((node) =>
+      [...node.querySelectorAll('span')]
+        .filter((span) => span.children.length === 0 && span.textContent.length === 1)
+        .slice(0, 6)
+        .map((span) => ({ text: span.textContent, style: span.getAttribute('style') || '' }))
+    );
+
+    expect(correctKeyBackground).not.toMatch(/#dc2626|220, 38, 38/i);
+    expect(initialHighlights.map((item) => item.style.includes('background: rgba(220, 38, 38, 0.14)')))
+      .toEqual([false, false, true, false, false, false]);
+
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('cdef', { delay: 0 });
+    await expect(input).toHaveValue('abcdef');
+
+    const correctedHighlights = await arena.evaluate((node) =>
+      [...node.querySelectorAll('span')]
+        .filter((span) => span.children.length === 0 && span.textContent.length === 1)
+        .slice(0, 6)
+        .map((span) => span.getAttribute('style') || '')
+    );
+    expect(correctedHighlights.every((style) => !style.includes('background: rgba(220, 38, 38, 0.14)'))).toBe(true);
+  });
+
+  test('fast keyboard input preserves every character without waiting on network updates', async ({ page }) => {
+    const target = 'workranktypingbattle'.repeat(20);
+    await setupTypingBattleMocks(page, { challengeText: target });
+    await page.goto('/games/typing');
+
+    const arena = page.locator('.workrank-typing-text-arena');
+    await expect(arena).toBeVisible();
+    await arena.click();
+    await page.keyboard.type(target, { delay: 0 });
+
+    await expect(page.locator('input[type="text"]').last()).toHaveValue(target);
+    await expect(arena.locator('span').filter({ hasText: /^w$/ }).first()).toBeVisible();
+  });
+
   test('1. Hub & Practice Mode: renders header stats, duration controls, and rolling typing text stage', async ({ page }) => {
     await setupTypingBattleMocks(page);
     await page.goto('/games/typing');

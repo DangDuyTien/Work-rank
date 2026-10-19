@@ -140,7 +140,7 @@ module.exports = {
         progress_pct: { type: Sequelize.FLOAT, allowNull: false, defaultValue: 0 },
         typed_chars: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
         wpm: { type: Sequelize.FLOAT, allowNull: false, defaultValue: 0 },
-        accuracy: { type: Sequelize.FLOAT, allowNull: false, defaultValue: 100.0 },
+        accuracy: { type: Sequelize.FLOAT, allowNull: false, defaultValue: 0 },
         error_count: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
         completion_time_ms: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
         individual_rank: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },

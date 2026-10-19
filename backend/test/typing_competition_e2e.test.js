@@ -19,6 +19,21 @@ const app = require('../src/app');
 const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
 
+function createInputText(target, errorCount = 0) {
+  const characters = String(target || '').split('');
+  let inserted = 0;
+  for (let index = 0; index < characters.length && inserted < errorCount; index += 1) {
+    if (/\s/.test(characters[index])) continue;
+    characters[index] = characters[index] === 'x' ? 'y' : 'x';
+    inserted += 1;
+  }
+  return characters.join('');
+}
+
+async function setServerElapsed(roomId, elapsedMs = 30000) {
+  await TypingRoom.update({ startedAt: new Date(Date.now() - elapsedMs) }, { where: { id: roomId } });
+}
+
 test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async (t) => {
   let user1, user2, user3, user4;
   let token1, token2, token3, token4;
@@ -121,13 +136,13 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
 
     // Update progress
     const textLen = startRes.body.room.challengeText.length;
+    await setServerElapsed(roomId, 30000);
     const progRes = await request(app)
       .post(`/api/games/typing/rooms/${roomId}/progress`)
       .set('Authorization', `Bearer ${token1}`)
       .send({
-        typedChars: Math.floor(textLen / 2),
-        errorCount: 1,
-        clientDurationMs: 15000,
+        typedText: createInputText(startRes.body.room.challengeText.slice(0, Math.floor(textLen / 2)), 1),
+        inputRevision: 1,
       });
 
     assert.equal(progRes.status, 200);
@@ -137,9 +152,8 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
       .post(`/api/games/typing/rooms/${roomId}/finish`)
       .set('Authorization', `Bearer ${token1}`)
       .send({
-        typedChars: textLen,
-        errorCount: 1,
-        clientDurationMs: 30000,
+        typedText: createInputText(startRes.body.room.challengeText, 1),
+        inputRevision: 2,
       });
 
     assert.equal(finishRes.status, 200);
@@ -192,15 +206,15 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
     assert.equal(startRes.status, 200);
     assert.equal(startRes.body.room.status, 'PLAYING');
     const textLen = startRes.body.room.challengeText.length;
+    await setServerElapsed(roomId, 60000);
 
     // Player 1 finishes fast (Winner)
     await request(app)
       .post(`/api/games/typing/rooms/${roomId}/finish`)
       .set('Authorization', `Bearer ${token1}`)
       .send({
-        typedChars: textLen,
-        errorCount: 0,
-        clientDurationMs: 60000,
+        typedText: createInputText(startRes.body.room.challengeText, 0),
+        inputRevision: 1,
       });
 
     // Player 2 finishes slightly later
@@ -208,9 +222,8 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
       .post(`/api/games/typing/rooms/${roomId}/finish`)
       .set('Authorization', `Bearer ${token2}`)
       .send({
-        typedChars: textLen,
-        errorCount: 3,
-        clientDurationMs: 60000,
+        typedText: createInputText(startRes.body.room.challengeText, 3),
+        inputRevision: 1,
       });
 
     assert.equal(finish2Res.status, 200);
@@ -271,12 +284,13 @@ test('Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite', async
     // Start
     const startRes = await request(app).post(`/api/games/typing/rooms/${roomId}/start`).set('Authorization', `Bearer ${token1}`);
     const textLen = startRes.body.room.challengeText.length;
+    await setServerElapsed(roomId, 60000);
 
     // All finish
-    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token1}`).send({ typedChars: textLen, errorCount: 0, clientDurationMs: 20000 });
-    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token2}`).send({ typedChars: textLen, errorCount: 1, clientDurationMs: 22000 });
-    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token3}`).send({ typedChars: textLen, errorCount: 4, clientDurationMs: 35000 });
-    const finishRes = await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token4}`).send({ typedChars: textLen, errorCount: 5, clientDurationMs: 40000 });
+    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token1}`).send({ typedText: createInputText(startRes.body.room.challengeText, 0), inputRevision: 1 });
+    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token2}`).send({ typedText: createInputText(startRes.body.room.challengeText, 1), inputRevision: 1 });
+    await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token3}`).send({ typedText: createInputText(startRes.body.room.challengeText, 4), inputRevision: 1 });
+    const finishRes = await request(app).post(`/api/games/typing/rooms/${roomId}/finish`).set('Authorization', `Bearer ${token4}`).send({ typedText: createInputText(startRes.body.room.challengeText, 5), inputRevision: 1 });
 
     assert.equal(finishRes.status, 200);
     assert.equal(finishRes.body.room.status, 'FINISHED');

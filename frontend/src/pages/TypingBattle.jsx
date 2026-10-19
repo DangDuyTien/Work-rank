@@ -416,6 +416,17 @@ const generatePracticeStream = (challenges) => {
     .join(' ');
 };
 
+function countCurrentTextErrors(value, target) {
+  const input = String(value || '').normalize('NFC');
+  const challenge = String(target || '').normalize('NFC');
+  let errors = 0;
+  const comparedLength = Math.min(input.length, challenge.length);
+  for (let index = 0; index < comparedLength; index += 1) {
+    if (input[index].toLocaleLowerCase() !== challenge[index].toLocaleLowerCase()) errors += 1;
+  }
+  return errors;
+}
+
 function Badge({ variant = 'neutral', children, style }) {
   const styles = {
     success: { bg: 'var(--success-soft, rgba(21, 128, 61, 0.08))', color: 'var(--success, #15803d)', border: '1px solid var(--success-border, rgba(21, 128, 61, 0.25))' },
@@ -531,7 +542,7 @@ function SpectatorTypingStream({ player, challengeText, teamColor = '#0284c7', t
             {player?.wpm || 0} WPM
           </span>
           <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
-            {player?.accuracy || 100}% chính xác
+            {(player?.accuracy ?? 0)}% chính xác
           </span>
           {isFinished && (
             <Badge variant="success">🏁 Xong</Badge>
@@ -632,13 +643,13 @@ function getDraftStorageKey(roomId, userId) {
   return `workrank:typing:draft:${roomId}:${userId}`;
 }
 
-function saveTypingDraft(roomId, userId, text, errors = 0) {
+function saveTypingDraft(roomId, userId, text, errors = 0, revision = 0) {
   const key = getDraftStorageKey(roomId, userId);
   if (!key) return;
   try {
     sessionStorage.setItem(
       key,
-      JSON.stringify({ text, errorCount: errors, savedAt: Date.now() })
+      JSON.stringify({ text, errorCount: errors, revision, savedAt: Date.now() })
     );
   } catch {}
 }
@@ -731,7 +742,7 @@ export default function TypingBattle() {
   const [typedText, setTypedText] = useState('');
   const [errorCount, setErrorCount] = useState(0);
   const [liveWpm, setLiveWpm] = useState(0);
-  const [liveAccuracy, setLiveAccuracy] = useState(100);
+  const [liveAccuracy, setLiveAccuracy] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(120);
@@ -746,8 +757,26 @@ export default function TypingBattle() {
   const wordsContainerRef = useRef(null);
   const wordRefs = useRef([]);
   const inputRef = useRef(null);
+  const inputRevisionRef = useRef(0);
+  const progressEmitRef = useRef({ timer: null, payload: null });
   const timerRef = useRef(null);
   const activeCharRef = useRef(null);
+
+  const queueTypingProgress = useCallback((payload) => {
+    const pending = progressEmitRef.current;
+    pending.payload = payload;
+    if (pending.timer) return;
+    pending.timer = setTimeout(() => {
+      const latest = pending.payload;
+      pending.timer = null;
+      pending.payload = null;
+      if (socket && latest) socket.emit('typing:progress', latest);
+    }, 120);
+  }, [socket]);
+
+  useEffect(() => () => {
+    if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
+  }, []);
 
   // Challenge text determination
   const challengeText = useMemo(() => {
@@ -953,21 +982,25 @@ export default function TypingBattle() {
           const myPlayer = (data.players || []).find((p) => Number(p.userId) === Number(user?.id));
           if (myPlayer) {
             const draft = loadTypingDraft(roomIdToFetch, user?.id);
+            const target = sanitizeChallengeText(data.room.challengeText || '');
+            const serverRevision = Number(myPlayer.inputRevision || 0);
+            const draftRevision = Number(draft?.revision || 0);
             let textToRestore = '';
-            let errorsToRestore = 0;
-            if (draft && typeof draft.text === 'string' && draft.text.length >= (myPlayer.typedChars || 0)) {
+            if (draft && typeof draft.text === 'string' && draftRevision >= serverRevision) {
               textToRestore = draft.text;
-              errorsToRestore = draft.errorCount || 0;
+            } else if (typeof myPlayer.inputText === 'string') {
+              textToRestore = myPlayer.inputText;
             } else if ((myPlayer.typedChars || 0) > 0 && data.room.challengeText) {
-              textToRestore = sanitizeChallengeText(data.room.challengeText).slice(0, myPlayer.typedChars);
-              errorsToRestore = myPlayer.errorCount || 0;
-              saveTypingDraft(roomIdToFetch, user?.id, textToRestore, errorsToRestore);
+              textToRestore = target.slice(0, myPlayer.typedChars);
             }
-            if (textToRestore) {
+            inputRevisionRef.current = Math.max(serverRevision, draftRevision);
+            const errorsToRestore = countCurrentTextErrors(textToRestore, target);
+            saveTypingDraft(roomIdToFetch, user?.id, textToRestore, errorsToRestore, inputRevisionRef.current);
+            if (textToRestore || myPlayer.typedChars === 0) {
               setTypedText(textToRestore);
               setErrorCount(errorsToRestore);
-              if (myPlayer.wpm) setLiveWpm(myPlayer.wpm);
-              if (myPlayer.accuracy) setLiveAccuracy(myPlayer.accuracy);
+              setLiveWpm(Number(myPlayer.wpm) || 0);
+      setLiveAccuracy(Number(myPlayer.accuracy) || 0);
               setTimeout(() => {
                 if (inputRef.current) {
                   inputRef.current.focus();
@@ -1059,24 +1092,28 @@ export default function TypingBattle() {
           const myPlayer = data.players.find((p) => Number(p.userId) === Number(user?.id));
           if (myPlayer) {
             setTypedText((currentTyped) => {
-              if (currentTyped && currentTyped.length >= (myPlayer.typedChars || 0)) {
+              const serverRevision = Number(myPlayer.inputRevision || 0);
+              if (currentTyped && inputRevisionRef.current >= serverRevision) {
                 return currentTyped;
               }
               const draft = loadTypingDraft(data.room.id, user?.id);
               let textToRestore = '';
-              let errorsToRestore = 0;
-              if (draft && typeof draft.text === 'string' && draft.text.length >= (myPlayer.typedChars || 0)) {
+              const draftRevision = Number(draft?.revision || 0);
+              const target = sanitizeChallengeText(data.room?.challengeText || '');
+              if (draft && typeof draft.text === 'string' && draftRevision >= serverRevision) {
                 textToRestore = draft.text;
-                errorsToRestore = draft.errorCount || 0;
+              } else if (typeof myPlayer.inputText === 'string') {
+                textToRestore = myPlayer.inputText;
               } else if ((myPlayer.typedChars || 0) > 0 && data.room?.challengeText) {
-                textToRestore = sanitizeChallengeText(data.room.challengeText).slice(0, myPlayer.typedChars);
-                errorsToRestore = myPlayer.errorCount || 0;
-                saveTypingDraft(data.room.id, user?.id, textToRestore, errorsToRestore);
+                textToRestore = target.slice(0, myPlayer.typedChars);
               }
-              if (textToRestore) {
+              inputRevisionRef.current = Math.max(serverRevision, draftRevision);
+              const errorsToRestore = countCurrentTextErrors(textToRestore, target);
+              saveTypingDraft(data.room.id, user?.id, textToRestore, errorsToRestore, inputRevisionRef.current);
+              if (textToRestore || myPlayer.typedChars === 0) {
                 setErrorCount(errorsToRestore);
-                if (myPlayer.wpm) setLiveWpm(myPlayer.wpm);
-                if (myPlayer.accuracy) setLiveAccuracy(myPlayer.accuracy);
+                setLiveWpm(Number(myPlayer.wpm) || 0);
+      setLiveAccuracy(Number(myPlayer.accuracy) || 0);
                 setTimeout(() => {
                   if (inputRef.current) {
                     inputRef.current.focus();
@@ -1137,11 +1174,12 @@ export default function TypingBattle() {
       if (data?.room) setRoom(data.room);
       if (data?.players) setPlayers(data.players);
       clearTypingDraft(data?.room?.id || room?.id, user?.id);
+      inputRevisionRef.current = 0;
       setTypedText('');
       setScrollOffsetY(0);
       setErrorCount(0);
       setLiveWpm(0);
-      setLiveAccuracy(100);
+      setLiveAccuracy(0);
       setStartTime(Date.now());
       setTimeElapsed(0);
       const duration = data.durationLimitSeconds || data.room?.durationLimitSeconds || 120;
@@ -1184,8 +1222,9 @@ export default function TypingBattle() {
               individualRank: data.individualRank,
               wpm: data.wpm,
               accuracy: data.accuracy,
+              typedChars: data.typedChars ?? p.typedChars,
+              progressPct: data.progressPct ?? p.progressPct,
               completionTimeMs: data.completionTimeMs,
-              progressPct: 100,
             };
           }
           return p;
@@ -1216,11 +1255,12 @@ export default function TypingBattle() {
 
     const handleRoomReset = (data) => {
       clearTypingDraft(data?.room?.id || room?.id, user?.id);
+      inputRevisionRef.current = 0;
       setTypedText('');
       setScrollOffsetY(0);
       setErrorCount(0);
       setLiveWpm(0);
-      setLiveAccuracy(100);
+      setLiveAccuracy(0);
       setStartTime(null);
       setTimeElapsed(0);
       setIsFinished(false);
@@ -1330,18 +1370,17 @@ export default function TypingBattle() {
           if (soundEnabled) typingSound.playWin();
 
           if (socket && room?.id && room?.status === 'PLAYING') {
-            const myPlayer = (players || []).find((p) => Number(p.userId) === Number(user?.id));
-            const safeChars = Math.max(typedText.length, myPlayer?.typedChars || 0);
+            if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
+            progressEmitRef.current = { timer: null, payload: null };
             socket.emit('typing:finish', {
               roomId: room.id,
-              typedChars: safeChars,
-              errorCount,
-              clientDurationMs: elapsedSec * 1000,
+              typedText,
+              inputRevision: inputRevisionRef.current,
             });
             clearTypingDraft(room.id, user?.id);
           } else if (!room && user) {
             // Check if duration qualifies for individual leaderboard (>= 2 minutes / 120 seconds)
-            const finalAccuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 100)) : 100;
+            const finalAccuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 100)) : 0;
             if (selectedDuration >= 120) {
               typingGameApi
                 .submitPracticeResult({
@@ -1379,7 +1418,7 @@ export default function TypingBattle() {
   }, [
     startTime,
     isFinished,
-    typedText.length,
+    typedText,
     errorCount,
     sessionCompletedChars,
     sessionCompletedErrors,
@@ -1401,12 +1440,13 @@ export default function TypingBattle() {
   };
 
   const handleRestartPractice = () => {
+    inputRevisionRef.current = 0;
     setPracticeStreamText(generatePracticeStream(practiceChallenges));
     setTypedText('');
     setScrollOffsetY(0);
     setErrorCount(0);
     setLiveWpm(0);
-    setLiveAccuracy(100);
+    setLiveAccuracy(0);
     setStartTime(null);
     setTimeElapsed(0);
     setTimeRemaining(effectiveTotalDuration);
@@ -1434,36 +1474,32 @@ export default function TypingBattle() {
 
     const val = e.target.value;
     const prevVal = typedText;
+    const now = Date.now();
+    const effectiveStartTime = startTime || now;
 
     // Start timer on first keystroke
     if (!startTime && (val.length > 0 || sessionCompletedChars > 0)) {
-      setStartTime(Date.now());
+      setStartTime(effectiveStartTime);
     }
 
     // Compare typed text with challenge prefix (case-insensitive so user can type seamlessly without shift/capslock)
-    let errors = 0;
-    const minLen = Math.min(val.length, challengeText.length);
-    for (let i = 0; i < minLen; i++) {
-      if (val[i].toLowerCase() !== challengeText[i].toLowerCase()) {
-        errors++;
-      }
-    }
+    const errors = countCurrentTextErrors(val, challengeText);
+    const isAppending = val.length > prevVal.length;
+    const lastTypedChar = isAppending ? val[val.length - 1] : '';
+    const targetChar = isAppending ? challengeText[val.length - 1] : '';
+    const lastKeyCorrect = Boolean(lastTypedChar && targetChar && lastTypedChar.toLocaleLowerCase() === targetChar.toLocaleLowerCase());
 
     setErrorCount(errors);
-
-    const isCorrectSoFar = errors === 0;
-    const feedback = isCorrectSoFar ? 'correct' : 'error';
-    setLastFeedback(feedback);
+    // Key feedback is local to the newest character; an earlier typo must not color later correct keys as errors.
+    setLastFeedback(isAppending ? (lastKeyCorrect ? 'correct' : 'error') : null);
 
     // Audio mechanical switch trigger: "Tách tách" mechanical switch on hit, gentle thud on error
     if (soundEnabled) {
       if (val.length < prevVal.length) {
         // Backspace / character deletion
         typingSound.playKey('Backspace', true);
-      } else if (val.length > 0) {
-        const lastTypedChar = val[val.length - 1];
-        const targetChar = challengeText[val.length - 1];
-        if (lastTypedChar?.toLowerCase() === targetChar?.toLowerCase() && errors === 0) {
+      } else if (isAppending) {
+        if (lastKeyCorrect) {
           typingSound.playKey(lastTypedChar);
         } else {
           // Play pleasant library-grade mechanical error sound
@@ -1477,20 +1513,35 @@ export default function TypingBattle() {
       setPracticeStreamText((prev) => `${prev} ${generatePracticeStream(practiceChallenges)}`);
     }
 
+    const inputRevision = room?.id ? inputRevisionRef.current + 1 : inputRevisionRef.current;
+    if (room?.id) inputRevisionRef.current = inputRevision;
+
+    // Compute local metrics immediately; network progress is coalesced separately from the controlled input.
+    const totalChars = sessionCompletedChars + val.length;
+    const totalErrors = sessionCompletedErrors + errors;
+    const accuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 100)) : 0;
+    setLiveAccuracy(accuracy);
+
+    const elapsedMs = Math.max(1, now - effectiveStartTime);
+    const minutes = Math.max(0.01, elapsedMs / 60000);
+    const correctChars = Math.max(0, totalChars - totalErrors);
+    const wpm = Math.round((correctChars / 5) / minutes);
+    setLiveWpm(wpm);
+
     // When the user finishes typing the entire challenge text in multiplayer room:
     if (room && room.status === 'PLAYING' && val.length >= challengeText.length) {
-      const finalErrors = errors;
       setTypedText(val);
       setIsFinished(true);
       setShowResultModal(true);
+      if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
+      progressEmitRef.current = { timer: null, payload: null };
       clearTypingDraft(room.id, user?.id);
       if (soundEnabled) typingSound.playWin();
       if (socket && room.id) {
         socket.emit('typing:finish', {
           roomId: room.id,
-          typedChars: val.length,
-          errorCount: finalErrors,
-          clientDurationMs: startTime ? Date.now() - startTime : 1000,
+          typedText: val,
+          inputRevision,
         });
       }
       return;
@@ -1498,26 +1549,15 @@ export default function TypingBattle() {
 
     setTypedText(val);
     if (room?.id && user?.id) {
-      saveTypingDraft(room.id, user.id, val, errors);
+      saveTypingDraft(room.id, user.id, val, errors, inputRevision);
     }
-
-    // Compute real-time cumulative statistics
-    const totalChars = sessionCompletedChars + val.length;
-    const totalErrors = sessionCompletedErrors + errors;
-    const accuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 100)) : 100;
-    setLiveAccuracy(accuracy);
-
-    const elapsedMs = startTime ? Date.now() - startTime : 1;
-    const minutes = Math.max(0.01, elapsedMs / 60000);
-    const correctChars = Math.max(0, totalChars - totalErrors);
-    const words = correctChars / 5;
-    const wpm = Math.round(words / minutes);
-    setLiveWpm(wpm);
 
     // Emit live progress if inside an active multiplayer room
     if (socket && room?.id && room?.status === 'PLAYING') {
-      socket.emit('typing:progress', {
+      queueTypingProgress({
         roomId: room.id,
+        typedText: val,
+        inputRevision,
         typedChars: val.length,
         errorCount: errors,
         wpm,
@@ -1820,7 +1860,7 @@ export default function TypingBattle() {
       const isMe = Number(p.userId) === Number(user?.id);
       const typedChars = isMe ? Math.max(p.typedChars || 0, typedText.length) : (p.typedChars || 0);
       const wpm = isMe ? liveWpm : (p.wpm || 0);
-      const accuracy = isMe ? liveAccuracy : (p.accuracy !== undefined ? p.accuracy : 100);
+      const accuracy = isMe ? liveAccuracy : (p.accuracy ?? 0);
       const wordsTyped = Math.round(typedChars / 5);
       const totalWords = Math.max(1, Math.round(challengeText.length / 5));
       const progressPct = isMe
@@ -2135,7 +2175,7 @@ export default function TypingBattle() {
                   {p.user?.name || `Player #${p.userId}`} {isMe && '(Bạn)'}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                  {p.accuracy || 100}% chính xác
+                  {(p.accuracy ?? 0)}% chính xác
                 </div>
               </div>
             </div>
@@ -2240,13 +2280,22 @@ export default function TypingBattle() {
         user: r.user || pAug?.user,
         team: r.team || pAug?.team,
         wpm: r.wpm !== undefined ? r.wpm : (pAug?.wpm || 0),
-        accuracy: r.accuracy !== undefined ? r.accuracy : (pAug?.accuracy || 100),
+        accuracy: r.accuracy !== undefined ? r.accuracy : (pAug?.accuracy ?? 0),
         typedChars: r.typedChars !== undefined ? r.typedChars : (pAug?.typedChars || 0),
         wordsTyped: Math.round((r.typedChars !== undefined ? r.typedChars : (pAug?.typedChars || 0)) / 5),
         scoreDelta: r.scoreDelta !== undefined ? r.scoreDelta : (r.pointsAwarded || 0),
         isWinner: r.isWinner !== undefined ? r.isWinner : (isTeamMatch ? r.team === winningTeam : false),
       };
-    }).sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
+    }).sort((a, b) => {
+      const rankA = Number(a.individualRank);
+      const rankB = Number(b.individualRank);
+      if (Number.isFinite(rankA) && Number.isFinite(rankB) && rankA !== rankB) return rankA - rankB;
+      if (Number.isFinite(rankA) !== Number.isFinite(rankB)) return Number.isFinite(rankA) ? -1 : 1;
+      return (Number(b.performanceScore) || 0) - (Number(a.performanceScore) || 0)
+        || (Number(b.accuracy) || 0) - (Number(a.accuracy) || 0)
+        || (Number(b.wpm) || 0) - (Number(a.wpm) || 0)
+        || Number(a.userId || 0) - Number(b.userId || 0);
+    });
 
     const matchMvp = allStandings[0] || null;
 
@@ -3359,7 +3408,7 @@ export default function TypingBattle() {
                             {p.wpm || 0} WPM
                           </td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--success, #15803d)' }}>
-                            {p.accuracy || 100}%
+                            {p.accuracy ?? 0}%
                           </td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                             {p.wordsTyped || Math.round((p.typedChars || 0) / 5)} từ
@@ -3379,11 +3428,11 @@ export default function TypingBattle() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>TỐC ĐỘ GÕ</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent, #b45309)', marginTop: 2 }}>{myResult?.wpm || liveWpm} WPM</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent, #b45309)', marginTop: 2 }}>{myResult?.wpm ?? liveWpm} WPM</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>CHÍNH XÁC</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--success, #15803d)', marginTop: 2 }}>{myResult?.accuracy || liveAccuracy}%</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--success, #15803d)', marginTop: 2 }}>{myResult?.accuracy ?? liveAccuracy}%</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>SỐ TỪ GÕ</div>
@@ -3402,7 +3451,7 @@ export default function TypingBattle() {
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>CHÍNH XÁC CAO NHẤT</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--success, #15803d)', marginTop: 2 }}>{matchMvp?.accuracy || 100}%</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--success, #15803d)', marginTop: 2 }}>{matchMvp?.accuracy ?? 0}%</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>KHÁN GIẢ THEO DÕI</div>

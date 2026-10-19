@@ -32,6 +32,44 @@ const {
 // In-memory timers for countdowns & auto-forfeits
 const startCountdownTimers = new Map();
 const matchDeadlineTimers = new Map();
+const matchFinalizationPromises = new Map();
+const TYPING_DRAFT_KEY = '_typingDraft';
+
+function getTypingDraft(player) {
+  const payload = player?.finalPayload;
+  return payload && typeof payload === 'object' && !Array.isArray(payload)
+    ? payload[TYPING_DRAFT_KEY] || {}
+    : {};
+}
+
+function withTypingDraft(player, text, revision, valid = true) {
+  const payload = player.finalPayload && typeof player.finalPayload === 'object' && !Array.isArray(player.finalPayload)
+    ? player.finalPayload
+    : {};
+  player.finalPayload = {
+    ...payload,
+    [TYPING_DRAFT_KEY]: {
+      text,
+      revision,
+      valid,
+    },
+  };
+}
+
+function deriveTypingInput(challengeText, submittedText) {
+  const target = String(challengeText || '').normalize('NFC');
+  const input = String(submittedText || '').normalize('NFC').slice(0, target.length);
+  let errorCount = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    if (input[index].toLocaleLowerCase() !== target[index].toLocaleLowerCase()) errorCount += 1;
+  }
+  return {
+    text: input,
+    typedChars: input.length,
+    errorCount,
+    accuracy: typingEngine.calculateAccuracy(input.length, errorCount),
+  };
+}
 
 // Helper to generate 4-character uppercase alphanumeric room code
 function generateRoomCode() {
@@ -339,7 +377,7 @@ async function createRoom(data, requestingUser) {
         progressPct: 0,
         typedChars: 0,
         wpm: 0,
-        accuracy: 100.0,
+        accuracy: 0,
         errorCount: 0,
       },
       { transaction: t }
@@ -464,7 +502,7 @@ async function joinRoom(roomId, userId) {
         progressPct: 0,
         typedChars: 0,
         wpm: 0,
-        accuracy: 100.0,
+        accuracy: 0,
         errorCount: 0,
       },
       { transaction: t }
@@ -692,8 +730,9 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
       p.progressPct = 0;
       p.typedChars = 0;
       p.wpm = 0;
-      p.accuracy = 100.0;
+      p.accuracy = 0;
       p.errorCount = 0;
+      p.finalPayload = { [TYPING_DRAFT_KEY]: { text: '', revision: 0, valid: true } };
       p.completionTimeMs = null;
       p.individualRank = null;
       p.scoreDelta = 0;
@@ -728,90 +767,114 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
 }
 
 async function updateProgress(roomId, userId, data) {
-  const { typedChars = 0, errorCount = 0, clientDurationMs = 0 } = data;
+  if (typeof data?.typedText !== 'string') return;
+  let update = null;
+  await sequelize.transaction(async (transaction) => {
+    const room = await TypingRoom.findByPk(roomId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!room || room.status !== 'PLAYING') return;
 
-  const room = await TypingRoom.findByPk(roomId, {
-    include: [{ model: TypingPlayer, as: 'players' }],
+    const player = await TypingPlayer.findOne({
+      where: { roomId, userId },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!player || player.status !== 'TYPING') return;
+
+    const currentDraft = getTypingDraft(player);
+    const currentRevision = Number.isSafeInteger(Number(currentDraft.revision)) ? Number(currentDraft.revision) : 0;
+    const suppliedRevision = Number(data.inputRevision);
+    const nextRevision = Number.isSafeInteger(suppliedRevision) && suppliedRevision >= 0
+      ? suppliedRevision
+      : currentRevision + 1;
+    if (nextRevision <= currentRevision) return;
+
+    const metrics = deriveTypingInput(room.challengeText, data.typedText);
+    const totalLength = Math.max(1, String(room.challengeText || '').length);
+    const progressPct = Math.min(100, Math.round((metrics.typedChars / totalLength) * 1000) / 10);
+    const serverStartedAt = new Date(room.startedAt || 0).getTime();
+    const serverDurationMs = Date.now() - serverStartedAt;
+    const plausibility = typingEngine.validateSubmissionPlausibility({
+      challengeLength: totalLength,
+      typedChars: metrics.typedChars,
+      durationMs: serverDurationMs,
+      errorCount: metrics.errorCount,
+    });
+
+    player.typedChars = metrics.typedChars;
+    player.progressPct = progressPct;
+    player.wpm = plausibility.valid ? plausibility.wpm : 0;
+    player.accuracy = metrics.accuracy;
+    player.errorCount = metrics.errorCount;
+    withTypingDraft(player, metrics.text, nextRevision, plausibility.valid);
+    await player.save({ transaction });
+    update = {
+      userId: Number(userId),
+      progressPct,
+      typedChars: metrics.typedChars,
+      wpm: player.wpm,
+      accuracy: metrics.accuracy,
+      errorCount: metrics.errorCount,
+      team: player.team,
+    };
   });
 
-  if (!room || room.status !== 'PLAYING') return;
-
-  const player = room.players.find((p) => Number(p.userId) === Number(userId));
-  if (!player || player.status !== 'TYPING') return;
-
-  const incomingChars = Math.floor(Number(typedChars) || 0);
-  const safeChars = Math.max(player.typedChars || 0, incomingChars);
-
-  const totalLength = room.challengeText ? room.challengeText.length : 100;
-  const progressPct = Math.min(100, Math.round((safeChars / totalLength) * 1000) / 10);
-
-  const serverDurationMs = room.startedAt ? Date.now() - new Date(room.startedAt).getTime() : 1000;
-  const effectiveDuration = serverDurationMs;
-
-  const wpm = typingEngine.calculateWPM(safeChars, effectiveDuration);
-  const effectiveErrors = incomingChars >= (player.typedChars || 0)
-    ? (Number(errorCount) || 0)
-    : (player.errorCount || 0);
-  const accuracy = typingEngine.calculateAccuracy(safeChars, safeChars, effectiveErrors);
-
-  player.typedChars = safeChars;
-  player.progressPct = Math.max(player.progressPct || 0, progressPct);
-  player.wpm = wpm;
-  player.accuracy = accuracy;
-  player.errorCount = effectiveErrors;
-  await player.save();
-
-  // Queue throttled progress broadcast
-  typingRealtime.queueProgressUpdate(roomId, userId, {
-    userId: Number(userId),
-    progressPct: player.progressPct,
-    typedChars: safeChars,
-    wpm,
-    accuracy,
-    errorCount: effectiveErrors,
-    team: player.team,
-  });
+  if (update) typingRealtime.queueProgressUpdate(roomId, userId, update);
 }
 
 // ── MATCH COMPLETION & SCORING SETTLE ──
 
 async function submitFinish(roomId, userId, data) {
-  const { typedChars = 0, errorCount = 0, clientDurationMs = 0, finalPayload = {} } = data;
+  const { clientDurationMs = 0, finalPayload = {} } = data || {};
 
   const room = await TypingRoom.findByPk(roomId, {
     include: [{ model: TypingPlayer, as: 'players' }],
   });
 
-  if (!room || room.status !== 'PLAYING') {
-    throw new ConflictError('Trận đấu đã kết thúc hoặc không trong trạng thái đang thi đấu');
-  }
-
+  if (!room) throw new NotFoundError('Phòng thi đấu không tồn tại');
   const player = room.players.find((p) => Number(p.userId) === Number(userId));
   if (!player) throw new NotFoundError('Không tìm thấy người chơi trong phòng');
+
+  if (room.status !== 'PLAYING') {
+    if (room.status === 'FINISHED' && player.status === 'FINISHED') {
+      return getRoomDetail(room.id, userId);
+    }
+    throw new ConflictError('Trận đấu đã kết thúc hoặc không trong trạng thái đang thi đấu');
+  }
 
   if (player.status === 'FINISHED') {
     return getRoomDetail(room.id, userId);
   }
 
-  const incomingChars = Math.floor(Number(typedChars) || 0);
-  const safeChars = Math.max(player.typedChars || 0, incomingChars);
-  const effectiveErrorCount = incomingChars >= (player.typedChars || 0)
-    ? (Number(errorCount) || 0)
-    : (player.errorCount || 0);
-
-  const serverDurationMs = room.startedAt ? Date.now() - new Date(room.startedAt).getTime() : 1000;
-  const reportedDurationMs = Math.max(0, Number(clientDurationMs) || 0);
-  const effectiveDuration = Math.min(
-    Math.max(1000, serverDurationMs, reportedDurationMs),
-    Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000)
-  );
-  const challengeLen = room.challengeText ? room.challengeText.length : (safeChars || 100);
+  const storedDraft = getTypingDraft(player);
+  const suppliedRevision = Number(data?.inputRevision);
+  const hasSuppliedRevision = Number.isSafeInteger(suppliedRevision) && suppliedRevision >= 0;
+  const storedRevision = Number.isSafeInteger(Number(storedDraft.revision)) ? Number(storedDraft.revision) : 0;
+  const submittedSnapshotIsStale = hasSuppliedRevision && suppliedRevision < storedRevision;
+  const submittedText = submittedSnapshotIsStale
+    ? (typeof storedDraft.text === 'string' ? storedDraft.text : null)
+    : (typeof data?.typedText === 'string'
+      ? data.typedText
+      : (typeof storedDraft.text === 'string' ? storedDraft.text : null));
+  if (submittedText === null) {
+    throw new ValidationError('Thiếu nội dung đã gõ để máy chủ xác minh kết quả');
+  }
+  const metrics = deriveTypingInput(room.challengeText, submittedText);
+  const safeChars = metrics.typedChars;
+  const effectiveErrorCount = metrics.errorCount;
+  const challengeLen = Math.max(1, String(room.challengeText || '').length);
+  const startedAtMs = new Date(room.startedAt || 0).getTime();
+  const measuredServerDuration = Date.now() - startedAtMs;
+  const durationLimitMs = Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000);
+  const effectiveDuration = Math.min(Math.max(1000, measuredServerDuration), durationLimitMs);
 
   // Anti-cheat verification retains the client-reported duration for compatibility; completion time is server bounded.
   const plausibility = typingEngine.validateSubmissionPlausibility({
     challengeLength: challengeLen,
     typedChars: safeChars,
-    durationMs: serverDurationMs,
+    durationMs: effectiveDuration,
     clientDurationMs,
     errorCount: effectiveErrorCount,
   });
@@ -820,15 +883,13 @@ async function submitFinish(roomId, userId, data) {
     console.warn(`[Typing Anti-Cheat Warning] User #${userId} in Room #${roomId} rejected: ${plausibility.reason}`);
   }
 
-  const finalWpm = plausibility.wpm;
-  const finalAcc = plausibility.accuracy;
+  const finalWpm = plausibility.valid ? plausibility.wpm : 0;
+  const finalAcc = metrics.accuracy;
 
   const finishedCount = room.players.filter((p) => p.status === 'FINISHED').length;
 
-  // Completion check: only completed if safeChars >= targetWordCount * 4 (or minimum 90% challenge length)
-  const targetChars = room.targetWordCount && room.targetWordCount > 0
-    ? Math.min(room.targetWordCount * 4, Math.floor(challengeLen * 0.9))
-    : Math.floor(challengeLen * 0.9);
+  // Completion is based on reaching 90% of the challenge text, matching the existing product rule.
+  const targetChars = Math.ceil(challengeLen * 0.9);
   const isCompleted = safeChars >= targetChars;
 
   // Minimum participation threshold: minimum 20 chars and passing anti-cheat plausibility
@@ -851,7 +912,17 @@ async function submitFinish(roomId, userId, data) {
         difficulty: room.difficulty,
       })
     : 0;
-  player.finalPayload = finalPayload;
+  const finalRevision = hasSuppliedRevision
+    ? Math.max(suppliedRevision, storedRevision)
+    : storedRevision;
+  player.finalPayload = {
+    ...(finalPayload && typeof finalPayload === 'object' && !Array.isArray(finalPayload) ? finalPayload : {}),
+    [TYPING_DRAFT_KEY]: {
+      text: metrics.text,
+      revision: finalRevision,
+      valid: plausibility.valid,
+    },
+  };
   await player.save();
 
   typingRealtime.emitToRoom(room.id, 'typing:playerFinished', {
@@ -860,12 +931,16 @@ async function submitFinish(roomId, userId, data) {
     individualRank: player.individualRank,
     wpm: finalWpm,
     accuracy: finalAcc,
+    progressPct: player.progressPct,
+    typedChars: player.typedChars,
     completionTimeMs: effectiveDuration,
   });
 
   // If all players are now finished, finalize match
-  const remainingTyping = room.players.filter((p) => p.id !== player.id && p.status === 'TYPING');
-  if (remainingTyping.length === 0) {
+  // Read the committed state after saving this player's finish. Two players can finish
+  // simultaneously, so the pre-save room snapshot is not a reliable completion check.
+  const remainingTyping = await TypingPlayer.count({ where: { roomId, status: 'TYPING' } });
+  if (remainingTyping === 0) {
     return finalizeMatch(room.id);
   }
 
@@ -876,6 +951,22 @@ async function submitFinish(roomId, userId, data) {
  * Finalizes the match, computes winner, settles scores into ScoreLedger, and awards stats.
  */
 async function finalizeMatch(roomId) {
+  const key = String(roomId);
+  const inFlight = matchFinalizationPromises.get(key);
+  if (inFlight) return inFlight;
+
+  const finalization = finalizeMatchOnce(roomId);
+  matchFinalizationPromises.set(key, finalization);
+  try {
+    return await finalization;
+  } finally {
+    if (matchFinalizationPromises.get(key) === finalization) {
+      matchFinalizationPromises.delete(key);
+    }
+  }
+}
+
+async function finalizeMatchOnce(roomId) {
   if (matchDeadlineTimers.has(roomId)) {
     clearTimeout(matchDeadlineTimers.get(roomId));
     matchDeadlineTimers.delete(roomId);
@@ -914,16 +1005,36 @@ async function finalizeMatch(roomId) {
       Math.max(1000, room.startedAt ? now.getTime() - new Date(room.startedAt).getTime() : 1000),
       Math.max(1000, Number(room.durationLimitSeconds || 0) * 1000)
     );
-    if (!player.performanceScore && (player.typedChars || 0) >= 20) {
+    const draft = getTypingDraft(player);
+    const completed = (player.progressPct || 0) >= 90;
+    if (!player.typedChars) player.accuracy = 0;
+    if (!player.performanceScore && (player.typedChars || 0) >= 20 && draft.valid !== false) {
       player.performanceScore = typingEngine.computeBasePerformanceScore({
         wpm: player.wpm || 0,
-        accuracy: player.accuracy || 0,
+        accuracy: player.accuracy ?? 0,
         errorCount: player.errorCount || 0,
-        completed: (player.progressPct || 0) >= 90,
+        completed,
         difficulty: room.difficulty,
       });
     }
   }
+
+  const eligibleForRanking = (player) =>
+    (player.typedChars || 0) >= 20
+    && (player.performanceScore || 0) > 0
+    && getTypingDraft(player).valid !== false;
+  const finalRanking = [...room.players].sort((a, b) => typingEngine.compareTypingResults({
+    ...a.toJSON(),
+    eligible: eligibleForRanking(a),
+    completed: (a.progressPct || 0) >= 90,
+  }, {
+    ...b.toJSON(),
+    eligible: eligibleForRanking(b),
+    completed: (b.progressPct || 0) >= 90,
+  }));
+  finalRanking.forEach((player, index) => {
+    player.individualRank = index + 1;
+  });
 
   // Resolve Team Results or Solo/1v1 winners
   let winnerTeam = 'NONE';
@@ -933,38 +1044,41 @@ async function finalizeMatch(roomId) {
     const teamResult = typingEngine.calculateTeamMatchResult(room.players);
     winnerTeam = teamResult.winnerTeam;
   } else if (room.mode === '1V1') {
-    // Only players who met the minimum participation threshold (typedChars >= 20) are eligible to win
-    const eligiblePlayers = room.players.filter((p) => (p.typedChars || 0) >= 20 && (p.performanceScore || 0) > 0);
-    if (eligiblePlayers.length > 0) {
-      const sorted = [...eligiblePlayers].sort((a, b) => {
-        const aCompleted = (a.progressPct || 0) >= 90;
-        const bCompleted = (b.progressPct || 0) >= 90;
-        if (aCompleted && !bCompleted) return -1;
-        if (bCompleted && !aCompleted) return 1;
-        if (aCompleted && bCompleted && a.completionTimeMs && b.completionTimeMs) {
-          return a.completionTimeMs - b.completionTimeMs;
-        }
-        return (b.performanceScore || 0) - (a.performanceScore || 0) || (b.typedChars || 0) - (a.typedChars || 0);
-      });
-      winnerUserId = sorted[0]?.userId || null;
-    } else {
-      winnerUserId = null;
-    }
+    const winner = finalRanking.find(eligibleForRanking);
+    winnerUserId = winner?.userId || null;
   } else if (room.mode === 'SOLO') {
     const p = room.players[0];
-    winnerUserId = (p && (p.typedChars || 0) >= 20 && (p.performanceScore || 0) > 0) ? p.userId : null;
+    winnerUserId = p && eligibleForRanking(p) ? p.userId : null;
   }
 
   room.status = 'FINISHED';
   room.finishedAt = now;
   room.winnerTeam = winnerTeam;
   room.winnerUserId = winnerUserId;
-  await room.save();
 
   // Compute individual points & update ScoreLedger atomically
   const playerResultList = [];
+  let claimedFinalization = false;
 
   await sequelize.transaction(async (t) => {
+    // Claim the finalization inside the same transaction as stat, ledger, and result
+    // writes. Concurrent finish/retry calls can settle a room only once; a rollback
+    // leaves it PLAYING so a later retry can safely complete the work.
+    const [claimedRows] = await TypingRoom.update(
+      {
+        status: 'FINISHED',
+        finishedAt: now,
+        winnerTeam,
+        winnerUserId,
+      },
+      {
+        where: { id: room.id, status: 'PLAYING' },
+        transaction: t,
+      }
+    );
+    if (Number(claimedRows) !== 1) return;
+    claimedFinalization = true;
+
     for (const player of room.players) {
       if (!player.userId) continue;
 
@@ -976,10 +1090,10 @@ async function finalizeMatch(roomId) {
         }
         const pChars = player.typedChars || 0;
         const pCompleted = (player.progressPct || 0) >= 90;
-        if (!player.performanceScore && pChars >= 20) {
+        if (!player.performanceScore && pChars >= 20 && getTypingDraft(player).valid !== false) {
           player.performanceScore = typingEngine.computeBasePerformanceScore({
             wpm: player.wpm || 0,
-            accuracy: player.accuracy || 0,
+            accuracy: player.accuracy ?? 0,
             errorCount: player.errorCount || 0,
             completed: pCompleted,
             difficulty: room.difficulty,
@@ -987,7 +1101,7 @@ async function finalizeMatch(roomId) {
         }
       }
 
-      const meetsParticipation = (player.typedChars || 0) >= 20 && (player.performanceScore || 0) > 0;
+      const meetsParticipation = eligibleForRanking(player);
 
       // 1. Fetch or create User Typing Stat
       const [stat] = await TypingUserStat.findOrCreate({
@@ -1121,6 +1235,10 @@ async function finalizeMatch(roomId) {
         accuracy: player.accuracy,
         errorCount: player.errorCount,
         completionTimeMs: player.completionTimeMs,
+        typedChars: player.typedChars,
+        progressPct: player.progressPct,
+        completed: (player.progressPct || 0) >= 90,
+        eligible: meetsParticipation,
         scoreDelta: awardedPoints,
         isWinner,
         performanceScore: player.performanceScore,
@@ -1144,6 +1262,10 @@ async function finalizeMatch(roomId) {
       { transaction: t }
     );
   });
+
+  if (!claimedFinalization) return getRoomDetail(roomId);
+
+  playerResultList.sort(typingEngine.compareTypingResults);
 
   // Re-project company leaderboard so point changes appear immediately on BXH
   if (activeSeason) {
@@ -1182,6 +1304,22 @@ async function getRoomDetail(roomId, requestingUserId = null) {
   if (!room) throw new NotFoundError('Phòng thi đấu không tồn tại');
 
   const data = room.toJSON();
+  data.players = (data.players || []).map((player) => {
+    const draft = player.finalPayload && typeof player.finalPayload === 'object'
+      ? player.finalPayload[TYPING_DRAFT_KEY]
+      : null;
+    const publicPayload = player.finalPayload && typeof player.finalPayload === 'object'
+      ? { ...player.finalPayload }
+      : null;
+    if (publicPayload) delete publicPayload[TYPING_DRAFT_KEY];
+    const isOwner = requestingUserId && Number(player.userId) === Number(requestingUserId);
+    return {
+      ...player,
+      inputRevision: Number(draft?.revision || 0),
+      ...(isOwner && typeof draft?.text === 'string' ? { inputText: draft.text } : {}),
+      finalPayload: publicPayload && Object.keys(publicPayload).length ? publicPayload : null,
+    };
+  });
   const spectatorCount = typingRealtime.getSpectatorCount(room.id);
   const spectators = typingRealtime.getSpectatorsList(room.id);
 
@@ -1221,8 +1359,8 @@ async function getMyStats(userId) {
     teamWinsCount: stat.teamWinsCount,
     bestWpm: Number(stat.bestWpm || 0),
     avgWpm: Number(stat.avgWpm || 0),
-    bestAccuracy: Number(stat.bestAccuracy || 100),
-    avgAccuracy: Number(stat.avgAccuracy || 100),
+    bestAccuracy: Number(stat.bestAccuracy || 0),
+    avgAccuracy: Number(stat.avgAccuracy || 0),
     currentWinStreak: stat.currentWinStreak,
     maxWinStreak: stat.maxWinStreak,
     perfectRunsCount: stat.perfectRunsCount,
@@ -1314,7 +1452,7 @@ async function resetRoom(roomId, requestingUserId) {
       p.progressPct = 0;
       p.typedChars = 0;
       p.wpm = 0;
-      p.accuracy = 100.0;
+      p.accuracy = 0;
       p.errorCount = 0;
       p.completionTimeMs = null;
       p.individualRank = null;
