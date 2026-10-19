@@ -45,6 +45,7 @@ import { useGameAvailability } from '../hooks/useGameAvailability';
 import GameComingSoon from '../components/GameComingSoon';
 import VisualKeyboard from '../components/game/VisualKeyboard';
 import { typingSound } from '../utils/typingSound';
+import { graphemeCount, graphemes, normalizeText, sameCharacter } from '../utils/typingText';
 import {
   PageShell,
   PageHeader,
@@ -400,8 +401,8 @@ const DEFAULT_PRACTICE_CHALLENGES = [
 
 
 // Helper to clean & sanitize challenge text to standard lowercase Vietnamese without punctuation
-const sanitizeChallengeText = (text) => String(text || '').normalize('NFC');
-const charCount = (text) => Array.from(String(text || '').normalize('NFC')).length;
+const sanitizeChallengeText = (text) => normalizeText(text);
+const charCount = (text) => graphemeCount(text);
 // Helper to generate a continuous stream of words from challenges for uninterrupted typing
 const generatePracticeStream = (challenges) => {
   const list = challenges && challenges.length > 0 ? challenges : DEFAULT_PRACTICE_CHALLENGES;
@@ -413,12 +414,12 @@ const generatePracticeStream = (challenges) => {
 };
 
 function countCurrentTextErrors(value, target) {
-  const input = Array.from(String(value || '').normalize('NFC'));
-  const challenge = Array.from(String(target || '').normalize('NFC'));
+  const input = graphemes(value);
+  const challenge = graphemes(target);
   let errors = 0;
   const comparedLength = Math.min(input.length, challenge.length);
   for (let index = 0; index < comparedLength; index += 1) {
-    if (input[index].toLocaleLowerCase() !== challenge[index].toLocaleLowerCase()) errors += 1;
+    if (!sameCharacter(input[index], challenge[index])) errors += 1;
   }
   return errors;
 }
@@ -457,7 +458,7 @@ function SpectatorTypingStream({ player, challengeText, teamColor = '#0284c7', t
   const cursorRef = useRef(null);
   const [scrollOffsetY, setScrollOffsetY] = useState(0);
 
-  const target = Array.from(challengeText);
+  const target = graphemes(challengeText);
   const typedChars = Math.min(target.length, player?.typedChars || 0);
   const isFinished = player?.status === 'FINISHED' || typedChars >= target.length;
 
@@ -624,7 +625,7 @@ function SpectatorTypingStream({ player, challengeText, teamColor = '#0284c7', t
       {/* Bottom Mini Telemetry: Progress track & Error count */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-muted)' }}>
         <div>
-          Tiến độ: <strong style={{ color: teamColor }}>{player?.progressPct || 0}%</strong> ({Math.round(typedChars / 5)} / {Math.round(challengeText.length / 5)} từ)
+          Tiến độ: <strong style={{ color: teamColor }}>{player?.progressPct || 0}%</strong> ({Math.round(typedChars / 5)} / {Math.round(charCount(challengeText) / 5)} từ)
         </div>
         <div>
           Lỗi: <strong style={{ color: (player?.errorCount || 0) > 0 ? '#dc2626' : 'var(--text-muted)' }}>{player?.errorCount || 0}</strong>
@@ -759,6 +760,8 @@ export default function TypingBattle() {
   const inputRevisionRef = useRef(0);
   const typedTextRef = useRef('');
   const compositionRef = useRef(false);
+  const lastCommittedInputRef = useRef('');
+  const compositionEndTimerRef = useRef(null);
   const activeMatchKeyRef = useRef(null);
   const practiceAttemptRef = useRef(null);
   const [practiceLoading, setPracticeLoading] = useState(false);
@@ -801,6 +804,7 @@ export default function TypingBattle() {
 
   useEffect(() => () => {
     if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
+    if (compositionEndTimerRef.current) cancelAnimationFrame(compositionEndTimerRef.current);
   }, []);
 
   // Challenge text determination
@@ -811,7 +815,7 @@ export default function TypingBattle() {
     return practiceStreamText;
   }, [room, practiceStreamText]);
 
-  const currentTargetChar = Array.from(challengeText)[charCount(typedText)] || '';
+  const currentTargetChar = graphemes(challengeText)[charCount(typedText)] || '';
 
   // ── 1. GLOBAL KEYBOARD EVENT LISTENERS FOR VISUAL KEYBOARD ──
   useEffect(() => {
@@ -1485,6 +1489,10 @@ export default function TypingBattle() {
   };
 
   const handleCompositionStart = () => {
+    if (compositionEndTimerRef.current) {
+      cancelAnimationFrame(compositionEndTimerRef.current);
+      compositionEndTimerRef.current = null;
+    }
     compositionRef.current = true;
     const attempt = practiceAttemptRef.current;
     if (room || !attempt || attempt.startedAt || practiceLoading) return;
@@ -1496,6 +1504,37 @@ export default function TypingBattle() {
     }).catch(() => setPracticeError('Chưa bắt đầu được đồng hồ máy chủ. Bản gõ vẫn được giữ; hãy thử đồng bộ lại.'));
   };
 
+  const handleCompositionEnd = (event) => {
+    const input = event.currentTarget;
+    compositionRef.current = false;
+    // Let the browser commit the composition first. The following native input
+    // event is the canonical source; RAF is only a fallback for engines that
+    // omit it, and duplicate values are ignored by lastCommittedInputRef.
+    if (compositionEndTimerRef.current) cancelAnimationFrame(compositionEndTimerRef.current);
+    compositionEndTimerRef.current = requestAnimationFrame(() => {
+      compositionEndTimerRef.current = null;
+      const value = input.value;
+      const end = value.length;
+      if (input.selectionStart !== end || input.selectionEnd !== end) input.setSelectionRange(end, end);
+      if (value !== lastCommittedInputRef.current) {
+        handleInputChange({ target: input, nativeEvent: { isComposing: false } });
+      }
+    });
+  };
+
+  const handleInputBeforeInput = (event) => {
+    const input = event.currentTarget;
+    const nativeEvent = event.nativeEvent;
+    if (compositionRef.current || nativeEvent?.isComposing) return;
+    const inputType = nativeEvent?.inputType || '';
+    if (!inputType.startsWith('insert') && !inputType.startsWith('delete')) return;
+    const end = input.value.length;
+    if (input.selectionStart !== end || input.selectionEnd !== end) {
+      event.preventDefault();
+      input.setSelectionRange(end, end);
+    }
+  };
+
   // ── 6. INPUT ENGINE (FULL VIETNAMESE TELEX / VNI SUPPORT) ──
   const handleInputChange = (e) => {
     if (isFinished || (room && room.status !== 'PLAYING') || (!room && (practiceLoading || !practiceAttemptRef.current))) return;
@@ -1503,23 +1542,27 @@ export default function TypingBattle() {
     const val = e.target.value.normalize('NFC');
     const prevVal = typedTextRef.current;
     typedTextRef.current = val;
+    // Composition updates are display-only. The committed native input event is
+    // processed once after composition ends; never score intermediate Telex/VNI.
     if (e.nativeEvent?.isComposing || compositionRef.current) { setTypedText(val); return; }
+    if (val === lastCommittedInputRef.current && val === prevVal) return;
+    lastCommittedInputRef.current = val;
     const now = Date.now();
     const effectiveStartTime = startTime || now;
 
     // Start timer on first keystroke
-    if (!startTime && (val.length > 0 || sessionCompletedChars > 0)) {
+    if (!startTime && (charCount(val) > 0 || sessionCompletedChars > 0)) {
       setStartTime(effectiveStartTime);
     }
 
     // Compare typed text with challenge prefix (case-insensitive so user can type seamlessly without shift/capslock)
     const errors = countCurrentTextErrors(val, challengeText);
-    const valueChars = Array.from(val);
-    const targetChars = Array.from(challengeText);
+    const valueChars = graphemes(val);
+    const targetChars = graphemes(challengeText);
     const isAppending = valueChars.length > charCount(prevVal);
     const lastTypedChar = isAppending ? valueChars[valueChars.length - 1] : '';
     const targetChar = isAppending ? targetChars[valueChars.length - 1] : '';
-    const lastKeyCorrect = Boolean(lastTypedChar && targetChar && lastTypedChar.toLocaleLowerCase() === targetChar.toLocaleLowerCase());
+    const lastKeyCorrect = Boolean(lastTypedChar && targetChar && sameCharacter(lastTypedChar, targetChar));
 
     setErrorCount(errors);
     // Key feedback is local to the newest character; an earlier typo must not color later correct keys as errors.
@@ -1527,7 +1570,7 @@ export default function TypingBattle() {
 
     // Audio mechanical switch trigger: "Tách tách" mechanical switch on hit, gentle thud on error
     if (soundEnabled) {
-      if (val.length < prevVal.length) {
+      if (charCount(val) < charCount(prevVal)) {
         // Backspace / character deletion
         typingSound.playKey('Backspace', true);
       } else if (isAppending) {
@@ -1541,7 +1584,7 @@ export default function TypingBattle() {
     }
 
     // Practice Mode: seamless continuous stream extension if near the end
-    if (!room && !practiceAttemptRef.current && challengeText.length - val.length < 150) {
+    if (!room && !practiceAttemptRef.current && challengeText.length - charCount(val) < 150) {
       setPracticeStreamText((prev) => `${prev} ${generatePracticeStream(practiceChallenges)}`);
     }
 
@@ -1731,12 +1774,12 @@ export default function TypingBattle() {
       const wpm = p.wpm || 0;
       const accuracy = p.accuracy ?? 0;
       const wordsTyped = Math.round(typedChars / 5);
-      const totalWords = Math.max(1, Math.round(challengeText.length / 5));
+      const totalWords = Math.max(1, Math.round(charCount(challengeText) / 5));
       const progressPct = isMe
         ? Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))
         : (p.progressPct !== undefined
           ? p.progressPct
-          : Math.min(100, Math.round(((p.typedChars || 0) / Math.max(1, challengeText.length)) * 100)));
+          : Math.min(100, Math.round(((p.typedChars || 0) / Math.max(1, charCount(challengeText))) * 100)));
       return {
         ...p,
         isMe,
@@ -2128,7 +2171,7 @@ export default function TypingBattle() {
               }}
             />
             <span style={{ position: 'absolute', right: 10, top: 2, fontSize: 10, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {Math.round(typedText.length / 5)} / {Math.round(challengeText.length / 5)} từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
+              {Math.round(charCount(typedText) / 5)} / {Math.round(charCount(challengeText) / 5)} từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
             </span>
           </div>
         </div>
@@ -3002,7 +3045,7 @@ export default function TypingBattle() {
                       Lỗi: <strong style={{ color: errorCount > 0 ? '#dc2626' : 'var(--text-primary)', fontSize: 18 }}>{errorCount}</strong>
                     </span>
                     <span>
-                      Tiến độ bài thi: <strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>{Math.round(typedText.length / 5)} / {Math.round(challengeText.length / 5)}</strong> từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
+                      Tiến độ bài thi: <strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>{Math.round(charCount(typedText) / 5)} / {Math.round(charCount(challengeText) / 5)}</strong> từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
                     </span>
                   </div>
 
@@ -3033,7 +3076,8 @@ export default function TypingBattle() {
                   autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
                   onChange={handleInputChange}
                 onCompositionStart={handleCompositionStart}
-                onCompositionEnd={(e) => { compositionRef.current = false; handleInputChange(e); }}
+                                 onBeforeInput={handleInputBeforeInput}
+                 onCompositionEnd={handleCompositionEnd}
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => setIsInputFocused(false)}
                   onPaste={(e) => {
@@ -3737,7 +3781,8 @@ export default function TypingBattle() {
                 autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
                 onChange={handleInputChange}
                 onCompositionStart={handleCompositionStart}
-                onCompositionEnd={(e) => { compositionRef.current = false; handleInputChange(e); }}
+                                 onBeforeInput={handleInputBeforeInput}
+                 onCompositionEnd={handleCompositionEnd}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 onPaste={(e) => e.preventDefault()}

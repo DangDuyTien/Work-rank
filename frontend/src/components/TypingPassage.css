@@ -1,6 +1,6 @@
 .typing-position { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; margin-bottom:10px; color:var(--text-secondary); font-size:12px; font-variant-numeric:tabular-nums; }
 .typing-position strong { color:var(--accent); }
-.typing-passage-viewport { height:160px; padding:16px 20px; overflow:hidden; background:var(--surface); border:1px solid var(--border-strong); border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:clamp(20px,2.1vw,24px); line-height:40px; font-weight:500; white-space:pre-wrap; overflow-wrap:anywhere; cursor:text; text-align:left; scroll-behavior:auto; }
+.typing-passage-viewport { height:160px; padding:16px 20px; overflow:hidden; background:var(--surface); border:1px solid var(--border-strong); border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:clamp(20px,2.1vw,24px); line-height:40px; font-weight:500; white-space:pre-wrap; overflow-wrap:anywhere; cursor:text; text-align:left; scroll-behavior:auto; overscroll-behavior:contain; contain:layout paint; }
 .typing-passage-viewport.is-focused { border-color:var(--accent); outline:2px solid var(--accent-soft); outline-offset:1px; }
 .typing-word { border-radius:3px; }
 .typing-word.is-current-word { background:var(--accent-soft); }

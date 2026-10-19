@@ -1,13 +1,12 @@
 import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import './TypingPassage.css';
+import { graphemes, normalizeText, sameCharacter } from '../utils/typingText';
 
-const Word = memo(function Word({ text, offset, input, current }) {
-  const target = Array.from(text);
-  const typed = Array.from(input);
-  return <span className={`typing-word${current >= offset && current < offset + target.length ? ' is-current-word' : ''}`} data-word-start={offset}>
-    {target.map((char, i) => {
+const Word = memo(function Word({ chars, offset, typed, current }) {
+  const typedChars = useMemo(() => graphemes(typed), [typed]);
+  return <span className={`typing-word${current >= offset && current < offset + chars.length ? ' is-current-word' : ''}`} data-word-start={offset}>
+    {chars.map((char, i) => {
       const index = offset + i;
-      const state = i < typed.length ? (typed[i].toLocaleLowerCase() === char.toLocaleLowerCase() ? 'correct' : 'incorrect') : index === current ? 'current' : 'remaining';
+      const state = i < typedChars.length ? (sameCharacter(typedChars[i], char) ? 'correct' : 'incorrect') : index === current ? 'current' : 'remaining';
       return <span key={i} data-char-index={index} data-state={state} aria-current={state === 'current' ? 'location' : undefined} className={`typing-character is-${state}`}>{char}</span>;
     })}
   </span>;
@@ -16,19 +15,20 @@ const Word = memo(function Word({ text, offset, input, current }) {
 // A long passage can contain thousands of words. Reconcile only the edited
 // block on each key, while the other blocks retain their React subtree.
 const Block = memo(function Block({ tokens, offset, input, current }) {
-  const typed = Array.from(input);
-  return <span>{tokens.map((token) => <Word key={token.offset} text={token.text} offset={token.offset} input={typed.slice(token.offset - offset, token.offset - offset + token.length).join('')} current={current >= token.offset && current < token.offset + token.length ? current : -1} />)}</span>;
+  return <span>{tokens.map((token) => <Word key={token.offset} chars={token.chars} offset={token.offset} typed={input.slice(token.offset - offset, token.offset - offset + token.length)} current={current >= token.offset && current < token.offset + token.length ? current : -1} />)}</span>;
 });
 
 export default memo(function TypingPassage({ challenge, typedText, focused, finished, onFocusInput }) {
   const viewport = useRef(null);
   const [line, setLine] = useState(1);
-  const target = useMemo(() => String(challenge || '').normalize('NFC'), [challenge]);
-  const input = useMemo(() => Array.from(String(typedText || '').normalize('NFC')), [typedText]);
+  const target = useMemo(() => normalizeText(challenge), [challenge]);
+  const targetChars = useMemo(() => graphemes(target), [target]);
+  const input = useMemo(() => graphemes(typedText), [typedText]);
   const tokens = useMemo(() => {
     let offset = 0;
     return (target.match(/\S+\s*|\s+/gu) || []).map((text) => {
-      const token = { text, offset, length: Array.from(text).length };
+      const chars = graphemes(text);
+      const token = { text, chars, offset, length: chars.length };
       offset += token.length;
       return token;
     });
@@ -42,35 +42,51 @@ export default memo(function TypingPassage({ challenge, typedText, focused, fini
     }
     return result;
   }, [tokens]);
-  const current = Math.min(input.length, Array.from(target).length);
+  const current = Math.min(input.length, targetChars.length);
   const wordIndex = Math.max(0, tokens.findIndex((token) => current < token.offset + token.length));
   useLayoutEffect(() => {
     const box = viewport.current;
-    if (!box) return;
+    if (!box) return undefined;
+    let frame = 0;
     const track = () => {
-      const marker = box.querySelector('[data-state="current"]') || box.querySelector('.typing-end');
-      if (!marker) return;
-      const boxRect = box.getBoundingClientRect();
-      const markerRect = marker.getBoundingClientRect();
-      const top = markerRect.top - boxRect.top + box.scrollTop;
-      setLine(Math.max(1, Math.floor((top - 16) / 40) + 1));
-      const desired = Math.max(0, top - 56);
-      if (markerRect.bottom > boxRect.bottom - 40 || markerRect.top < boxRect.top + 12) box.scrollTop = desired;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const marker = box.querySelector('[data-state="current"]') || box.querySelector('.typing-end');
+        if (!marker) return;
+        const boxRect = box.getBoundingClientRect();
+        const markerRect = marker.getBoundingClientRect();
+        const style = window.getComputedStyle(box);
+        const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) || 40;
+        const paddingTop = parseFloat(style.paddingTop) || 0;
+        const top = markerRect.top - boxRect.top + box.scrollTop;
+        const nextLine = Math.max(1, Math.floor((top - paddingTop) / lineHeight) + 1);
+        setLine((previous) => previous === nextLine ? previous : nextLine);
+
+        const topInset = Math.min(12, lineHeight / 3);
+        const bottomInset = Math.min(lineHeight, box.clientHeight / 3);
+        if (markerRect.bottom > boxRect.bottom - bottomInset || markerRect.top < boxRect.top + topInset) {
+          const desired = Math.max(0, top - lineHeight);
+          if (Math.abs(box.scrollTop - desired) > 1) box.scrollTop = desired;
+        }
+      });
     };
     track();
     const resize = new ResizeObserver(track);
     resize.observe(box);
-    return () => resize.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+    };
   }, [current, target]);
   return <div className="typing-passage" onClick={onFocusInput}>
     <div className="typing-position" aria-live="off" data-testid="typing-position">
-      <strong>{finished ? 'Đã kết thúc' : `Ký tự ${Math.min(current + 1, Array.from(target).length)} / ${Array.from(target).length}`}</strong>
+      <strong>{finished ? 'Đã kết thúc' : `Ký tự ${Math.min(current + 1, targetChars.length)} / ${targetChars.length}`}</strong>
       <span>Từ {wordIndex + 1} · Dòng {line}</span>
       {!focused && !finished && <span>Bấm vào đoạn văn để tiếp tục gõ</span>}
     </div>
     <div ref={viewport} className={`workrank-typing-text-arena typing-passage-viewport${focused ? ' is-focused' : ''}`} role="region" aria-label="Đoạn văn luyện gõ" tabIndex={-1}>
       {blocks.map((block) => <Block key={block.offset} tokens={block.tokens} offset={block.offset} input={input.slice(block.offset, block.end).join('')} current={current >= block.offset && current < block.end ? current : -1} />)}
-      <span className="typing-end" aria-hidden="true">{current >= Array.from(target).length ? ' ✓' : ''}</span>
+      <span className="typing-end" aria-hidden="true">{current >= targetChars.length ? ' ✓' : ''}</span>
     </div>
   </div>;
 });

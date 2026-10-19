@@ -892,8 +892,8 @@ async function submitFinish(roomId, userId, data) {
     throw new ValidationError('Thiếu nội dung đã gõ để máy chủ xác minh kết quả');
   }
   const metrics = deriveTypingInput(room.challengeText, submittedText);
-  const safeChars = metrics.typedChars;
-  const effectiveErrorCount = metrics.errorCount;
+  let safeChars = metrics.typedChars;
+  let effectiveErrorCount = metrics.errorCount;
   const challengeLen = Math.max(1, chars(room.challengeText).length);
   const startedAtMs = new Date(room.startedAt || 0).getTime();
   const measuredServerDuration = Date.now() - startedAtMs;
@@ -913,17 +913,17 @@ async function submitFinish(roomId, userId, data) {
     console.warn(`[Typing Anti-Cheat Warning] User #${userId} in Room #${roomId} rejected: ${plausibility.reason}`);
   }
 
-  const finalWpm = plausibility.valid ? plausibility.wpm : 0;
-  const finalAcc = metrics.accuracy;
+  let finalWpm = plausibility.valid ? plausibility.wpm : 0;
+  let finalAcc = metrics.accuracy;
 
   const finishedCount = room.players.filter((p) => p.status === 'FINISHED').length;
 
   // Completion is based on reaching 90% of the challenge text, matching the existing product rule.
   const targetChars = Math.ceil(challengeLen * 0.9);
-  const isCompleted = safeChars >= targetChars;
+  let isCompleted = safeChars >= targetChars;
 
   // Minimum participation threshold: minimum 20 chars and passing anti-cheat plausibility
-  const meetsParticipation = safeChars >= 20 && plausibility.valid;
+  let meetsParticipation = safeChars >= 20 && plausibility.valid;
 
   player.status = 'FINISHED';
   player.progressPct = Math.min(100, Math.round((safeChars / Math.max(1, challengeLen)) * 100));
@@ -942,16 +942,49 @@ async function submitFinish(roomId, userId, data) {
         difficulty: room.difficulty,
       })
     : 0;
-  const finalRevision = hasSuppliedRevision
+  let finalRevision = hasSuppliedRevision
     ? Math.max(suppliedRevision, storedRevision)
     : storedRevision;
+  let finalText = metrics.text;
+  let finalValid = plausibility.valid;
+  // Re-read the persisted draft at the finish boundary. A throttled socket update
+  // may have arrived after the initial room snapshot; do not persist older text.
+  const latestPlayer = await TypingPlayer.findByPk(player.id);
+  const latestDraft = getTypingDraft(latestPlayer);
+  const latestRevision = Number.isSafeInteger(Number(latestDraft.revision)) ? Number(latestDraft.revision) : 0;
+  if (latestPlayer && latestRevision > finalRevision && typeof latestDraft.text === 'string') {
+    const latestMetrics = deriveTypingInput(room.challengeText, latestDraft.text);
+    const latestPlausibility = typingEngine.validateSubmissionPlausibility({
+      challengeLength: challengeLen,
+      typedChars: latestMetrics.typedChars,
+      durationMs: effectiveDuration,
+      clientDurationMs,
+      errorCount: latestMetrics.errorCount,
+    });
+    safeChars = latestMetrics.typedChars;
+    effectiveErrorCount = latestMetrics.errorCount;
+    finalWpm = latestPlausibility.valid ? latestPlausibility.wpm : 0;
+    finalAcc = latestMetrics.accuracy;
+    player.typedChars = safeChars;
+    player.progressPct = Math.min(100, Math.round((safeChars / Math.max(1, challengeLen)) * 100));
+    player.wpm = finalWpm;
+    player.accuracy = finalAcc;
+    player.errorCount = effectiveErrorCount;
+    player.performanceScore = safeChars >= 20 && latestPlausibility.valid
+      ? typingEngine.computeBasePerformanceScore({ wpm: finalWpm, accuracy: finalAcc, errorCount: effectiveErrorCount, completed: safeChars >= targetChars, difficulty: room.difficulty })
+      : 0;
+    finalRevision = latestRevision;
+    finalText = latestMetrics.text;
+    finalValid = latestPlausibility.valid;
+    isCompleted = safeChars >= targetChars;
+    meetsParticipation = safeChars >= 20 && latestPlausibility.valid;
+    player.performanceScore = meetsParticipation
+      ? typingEngine.computeBasePerformanceScore({ wpm: finalWpm, accuracy: finalAcc, errorCount: effectiveErrorCount, completed: isCompleted, difficulty: room.difficulty })
+      : 0;
+  }
   player.finalPayload = {
     ...(finalPayload && typeof finalPayload === 'object' && !Array.isArray(finalPayload) ? finalPayload : {}),
-    [TYPING_DRAFT_KEY]: {
-      text: metrics.text,
-      revision: finalRevision,
-      valid: plausibility.valid,
-    },
+    [TYPING_DRAFT_KEY]: { text: finalText, revision: finalRevision, valid: finalValid },
   };
   await player.save();
 
