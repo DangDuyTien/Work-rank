@@ -1,5 +1,6 @@
 import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { graphemes, normalizeText, sameCharacter } from '../utils/typingText';
+import './TypingPassage.css';
 
 const Word = memo(function Word({ chars, offset, typed, current }) {
   const typedChars = useMemo(() => graphemes(typed), [typed]);
