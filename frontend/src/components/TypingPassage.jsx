@@ -19,12 +19,17 @@ const Block = memo(function Block({ tokens, offset, input, current }) {
   return <span>{tokens.map((token) => <Word key={token.offset} chars={token.chars} offset={token.offset} typed={input.slice(token.offset - offset, token.offset - offset + token.length)} current={current >= token.offset && current < token.offset + token.length ? current : -1} />)}</span>;
 });
 
-export default memo(function TypingPassage({ challenge, typedText, focused, finished, onFocusInput }) {
+export default memo(function TypingPassage({ challenge, typedText, inputChars, focused, finished, onFocusInput }) {
   const viewport = useRef(null);
   const [line, setLine] = useState(1);
   const target = useMemo(() => normalizeText(challenge), [challenge]);
   const targetChars = useMemo(() => graphemes(target), [target]);
-  const input = useMemo(() => graphemes(typedText), [typedText]);
+  // Local-first: the session already owns the segmented input. Fall back to
+  // segmenting the raw string only when no precomputed graphemes are provided.
+  const input = useMemo(
+    () => (Array.isArray(inputChars) ? inputChars : graphemes(typedText || '')),
+    [inputChars, typedText]
+  );
   const tokens = useMemo(() => {
     let offset = 0;
     return (target.match(/\S+\s*|\s+/gu) || []).map((text) => {

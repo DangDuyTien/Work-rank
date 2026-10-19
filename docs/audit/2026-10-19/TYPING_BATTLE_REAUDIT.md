@@ -95,7 +95,9 @@ Thêm `typing_practice_attempts` và migration tương ứng. Server chọn chal
 
 Chỉ lượt đủ ít nhất 120 giây theo server, eligible, valid mới ghi Best/BXH và XP. 30/60 giây vẫn luyện được nhưng không ghi reward. FINISHED attempt trả lại cùng result; khóa attempt/stat và ledger key `typing_practice_attempt:<uuid>` trong cùng transaction. Input muộn quá grace không được bổ sung text mới. Tăng text vượt khả năng giữa các lần sync bị đánh invalid; composition có clock server từ lúc bắt đầu.
 
-BXH và Best WPM lấy từ result đã xác minh `metricVersion=2`; cached best cũ không được làm nguồn authority. Nếu cached cũ lớn hơn verified best, API/UI báo lịch sử chưa xác minh. **XP và trung bình lịch sử cũ chưa được backfill/thu hồi**; cần audit dữ liệu sản xuất riêng trước khi hiệu chỉnh ledger bất biến. Không xóa hoặc reverse điểm lịch sử trong đợt này.
+BXH và Best WPM lấy từ result đã xác minh `metricVersion=2`; cached best cũ không được làm nguồn authority. Nếu cached cũ lớn hơn verified best, API/UI báo lịch sử chưa xác minh.
+
+> **Cập nhật 2026-10-19 (xem `TYPING_SOLO_LOCAL_FIRST_REMEDIATION.md`):** `metricVersion=2` ở đây là bug — metric hiện tại là v3. Filter verified và result trận đã sửa dùng `METRIC_VERSION`; result v2 cũ bị coi là chưa xác minh (đúng chính sách), cần thông báo product trước khi release. **XP và trung bình lịch sử cũ chưa được backfill/thu hồi**; cần audit dữ liệu sản xuất riêng trước khi hiệu chỉnh ledger bất biến. Không xóa hoặc reverse điểm lịch sử trong đợt này.
 
 Anti-cheat là kiểm tra plausibility và server-time, không thể chứng minh một client tùy biến là con người chỉ từ text hợp lệ gửi đúng nhịp. Không tuyên bố chống bot tuyệt đối.
 

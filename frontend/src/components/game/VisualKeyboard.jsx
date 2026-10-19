@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Delete,
   CornerDownLeft,
@@ -6,7 +6,6 @@ import {
   ArrowRightToLine,
   Lock,
   Keyboard,
-  CheckCircle2,
 } from 'lucide-react';
 
 /**
@@ -163,35 +162,215 @@ export function getTargetKeyCodes(targetChar) {
   return [];
 }
 
+const EMPTY_KEYS = new Set();
+const FALLBACK_TELEMETRY = {
+  subscribe: () => () => {},
+  getState: () => ({ currentChar: '', keyFeedback: null }),
+};
+
+function renderKeyIcon(iconName, isPressed) {
+  const iconColor = isPressed ? '#ffffff' : 'currentColor';
+  switch (iconName) {
+    case 'backspace':
+      return <Delete size={13} style={{ color: iconColor }} />;
+    case 'enter':
+      return <CornerDownLeft size={13} style={{ color: iconColor }} />;
+    case 'shift':
+      return <ArrowBigUp size={13} style={{ color: iconColor }} />;
+    case 'tab':
+      return <ArrowRightToLine size={12} style={{ color: iconColor }} />;
+    case 'lock':
+      return <Lock size={11} style={{ color: iconColor }} />;
+    default:
+      return null;
+  }
+}
+
+// One memoized keycap: a keystroke only re-renders the pressed/target keys.
+const Keycap = memo(function Keycap({ keyDef, isPressed, isTarget, feedback, onPress }) {
+  // Clean, theme-synchronized keycap styling
+  let bg = 'var(--surface, #ffffff)';
+  let color = 'var(--text-primary, #111111)';
+  let borderColor = 'rgba(0, 0, 0, 0.1)';
+  let borderBottom = '2px solid rgba(0, 0, 0, 0.16)';
+  let transform = 'translateY(0px)';
+  let boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)';
+
+  if (isPressed) {
+    if (feedback === 'error') {
+      bg = '#dc2626';
+      color = '#ffffff';
+      borderColor = '#b91c1c';
+      borderBottom = '1px solid #991b1b';
+      transform = 'translateY(1.5px)';
+      boxShadow = '0 0 8px rgba(220, 38, 38, 0.35)';
+    } else {
+      bg = 'var(--accent, #b45309)';
+      color = '#ffffff';
+      borderColor = '#92400e';
+      borderBottom = '1px solid #78350f';
+      transform = 'translateY(1.5px)';
+      boxShadow = '0 0 8px rgba(180, 83, 9, 0.35)';
+    }
+  } else if (isTarget) {
+    bg = 'var(--accent-soft, rgba(180, 83, 9, 0.1))';
+    color = 'var(--accent, #b45309)';
+    borderColor = 'var(--accent, #b45309)';
+    borderBottom = '2px solid var(--accent, #b45309)';
+  } else if (keyDef.isSpecial) {
+    bg = 'var(--surface-muted, #eceae4)';
+    color = 'var(--text-secondary, #555555)';
+    borderColor = 'rgba(0, 0, 0, 0.08)';
+    borderBottom = '2px solid rgba(0, 0, 0, 0.14)';
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onPress(keyDef)}
+      tabIndex={-1}
+      aria-label={keyDef.label}
+      style={{
+        flex: keyDef.width || 1,
+        minWidth: 0,
+        height: 38,
+        padding: '2px 4px',
+        background: bg,
+        color,
+        border: `1px solid ${borderColor}`,
+        borderBottom,
+        borderRadius: 6,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        fontSize: keyDef.isSpecial ? 10.5 : 12,
+        fontWeight: isPressed || isTarget ? 700 : 600,
+        cursor: 'pointer',
+        transform,
+        boxShadow,
+        position: 'relative',
+        outline: 'none',
+        transition:
+          'transform var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
+      }}
+    >
+      {/* Secondary Shift Label */}
+      {keyDef.shiftLabel && (
+        <span
+          style={{
+            fontSize: 8.5,
+            lineHeight: 1,
+            color: isPressed ? '#ffffff' : 'var(--text-muted, #777777)',
+            marginBottom: 1,
+            opacity: 0.85,
+          }}
+        >
+          {keyDef.shiftLabel}
+        </span>
+      )}
+
+      {/* Main Key Label with Library Icons */}
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 3,
+          lineHeight: 1.1,
+          letterSpacing: keyDef.isSpecial ? '-0.02em' : '0.02em',
+        }}
+      >
+        {keyDef.icon && renderKeyIcon(keyDef.icon, isPressed)}
+        {keyDef.label}
+      </span>
+
+      {/* Tactile Home Row Minimal Dash on F & J */}
+      {keyDef.hasHomeBump && (
+        <span
+          style={{
+            position: 'absolute',
+            bottom: 3,
+            width: 8,
+            height: 1.5,
+            background: isPressed ? '#ffffff' : 'var(--accent, #b45309)',
+            borderRadius: 1,
+            opacity: 0.8,
+          }}
+        />
+      )}
+
+      {/* Target Minimal Indicator Dot */}
+      {isTarget && !isPressed && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 3,
+            right: 3,
+            width: 4,
+            height: 4,
+            borderRadius: '50%',
+            background: 'var(--accent, #b45309)',
+          }}
+        />
+      )}
+    </button>
+  );
+});
+
 /**
  * Minimalist Keyboard Component perfectly synchronized with WorkRank Theme Palette
  * (Uses WorkRank's CSS design tokens: --surface, --surface-soft, --border, --accent, --text-primary)
+ *
+ * Self-contained: owns its active-key listeners (enabled only while playing) and
+ * subscribes to the typing telemetry store for the target char / key feedback, so
+ * a keystroke never re-renders the whole page.
  */
-export default function VisualKeyboard({
-  activeKeys = new Set(),
-  targetChar = '',
-  lastFeedback = null, // 'correct' | 'error' | null
-  onKeyClick = null,
-}) {
-  const targetCodes = useMemo(() => getTargetKeyCodes(targetChar), [targetChar]);
+export default memo(function VisualKeyboard({ telemetry = null, enabled = true, onKeyClick = null }) {
+  const store = telemetry || FALLBACK_TELEMETRY;
+  const live = useSyncExternalStore(store.subscribe, store.getState, store.getState);
+  const targetChar = live.currentChar || '';
+  const keyFeedback = live.keyFeedback || null;
 
-  const renderKeyIcon = (iconName, isPressed) => {
-    const iconColor = isPressed ? '#ffffff' : 'currentColor';
-    switch (iconName) {
-      case 'backspace':
-        return <Delete size={13} style={{ color: iconColor }} />;
-      case 'enter':
-        return <CornerDownLeft size={13} style={{ color: iconColor }} />;
-      case 'shift':
-        return <ArrowBigUp size={13} style={{ color: iconColor }} />;
-      case 'tab':
-        return <ArrowRightToLine size={12} style={{ color: iconColor }} />;
-      case 'lock':
-        return <Lock size={11} style={{ color: iconColor }} />;
-      default:
-        return null;
+  const [activeKeys, setActiveKeys] = useState(EMPTY_KEYS);
+  const onClickRef = useRef(onKeyClick);
+  onClickRef.current = onKeyClick;
+  const pressKey = useCallback((keyDef) => onClickRef.current?.(keyDef), []);
+
+  useEffect(() => {
+    if (!enabled) {
+      setActiveKeys((prev) => (prev.size ? EMPTY_KEYS : prev));
+      return undefined;
     }
-  };
+    const handleKeyDown = (e) => {
+      setActiveKeys((prev) => {
+        if (prev.has(e.code)) return prev;
+        const next = new Set(prev);
+        next.add(e.code);
+        return next;
+      });
+    };
+    const handleKeyUp = (e) => {
+      setActiveKeys((prev) => {
+        if (!prev.has(e.code)) return prev;
+        const next = new Set(prev);
+        next.delete(e.code);
+        return next;
+      });
+    };
+    const handleBlur = () => setActiveKeys((prev) => (prev.size ? EMPTY_KEYS : prev));
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [enabled]);
+
+  const targetCodes = useMemo(() => getTargetKeyCodes(targetChar), [targetChar]);
+  const hasPressedKey = activeKeys.size > 0;
 
   return (
     <div
@@ -231,8 +410,8 @@ export default function VisualKeyboard({
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: activeKeys.size > 0 ? 'var(--accent, #b45309)' : 'var(--success, #15803d)',
-              boxShadow: activeKeys.size > 0 ? '0 0 6px var(--accent, #b45309)' : 'none',
+              background: hasPressedKey ? 'var(--accent, #b45309)' : 'var(--success, #15803d)',
+              boxShadow: hasPressedKey ? '0 0 6px var(--accent, #b45309)' : 'none',
               transition: 'background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
             }}
           />
@@ -275,148 +454,27 @@ export default function VisualKeyboard({
             width: '100%',
           }}
         >
-          {row.map((key) => {
+          {row.map((keyDef) => {
             const isPressed =
-              activeKeys.has(key.code) ||
-              (key.code === 'ShiftLeft' && activeKeys.has('ShiftRight')) ||
-              (key.code === 'ShiftRight' && activeKeys.has('ShiftLeft')) ||
-              (key.code === 'ControlLeft' && activeKeys.has('ControlRight')) ||
-              (key.code === 'ControlRight' && activeKeys.has('ControlLeft'));
-
-            const isTarget = targetCodes.includes(key.code);
-
-            // Clean, theme-synchronized keycap styling
-            let bg = 'var(--surface, #ffffff)';
-            let color = 'var(--text-primary, #111111)';
-            let borderColor = 'rgba(0, 0, 0, 0.1)';
-            let borderBottom = '2px solid rgba(0, 0, 0, 0.16)';
-            let transform = 'translateY(0px)';
-            let boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)';
-
-            if (isPressed) {
-              if (lastFeedback === 'error') {
-                bg = '#dc2626';
-                color = '#ffffff';
-                borderColor = '#b91c1c';
-                borderBottom = '1px solid #991b1b';
-                transform = 'translateY(1.5px)';
-                boxShadow = '0 0 8px rgba(220, 38, 38, 0.35)';
-              } else {
-                bg = 'var(--accent, #b45309)';
-                color = '#ffffff';
-                borderColor = '#92400e';
-                borderBottom = '1px solid #78350f';
-                transform = 'translateY(1.5px)';
-                boxShadow = '0 0 8px rgba(180, 83, 9, 0.35)';
-              }
-            } else if (isTarget) {
-              bg = 'var(--accent-soft, rgba(180, 83, 9, 0.1))';
-              color = 'var(--accent, #b45309)';
-              borderColor = 'var(--accent, #b45309)';
-              borderBottom = '2px solid var(--accent, #b45309)';
-            } else if (key.isSpecial) {
-              bg = 'var(--surface-muted, #eceae4)';
-              color = 'var(--text-secondary, #555555)';
-              borderColor = 'rgba(0, 0, 0, 0.08)';
-              borderBottom = '2px solid rgba(0, 0, 0, 0.14)';
-            }
+              activeKeys.has(keyDef.code) ||
+              (keyDef.code === 'ShiftLeft' && activeKeys.has('ShiftRight')) ||
+              (keyDef.code === 'ShiftRight' && activeKeys.has('ShiftLeft')) ||
+              (keyDef.code === 'ControlLeft' && activeKeys.has('ControlRight')) ||
+              (keyDef.code === 'ControlRight' && activeKeys.has('ControlLeft'));
 
             return (
-              <button
-                key={key.code}
-                type="button"
-                onClick={() => onKeyClick && onKeyClick(key)}
-                tabIndex={-1}
-                aria-label={key.label}
-                style={{
-                  flex: key.width || 1,
-                  minWidth: 0,
-                  height: 38,
-                  padding: '2px 4px',
-                  background: bg,
-                  color,
-                  border: `1px solid ${borderColor}`,
-                  borderBottom,
-                  borderRadius: 6,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  fontSize: key.isSpecial ? 10.5 : 12,
-                  fontWeight: isPressed || isTarget ? 700 : 600,
-                  cursor: 'pointer',
-                  transform,
-                  boxShadow,
-                  position: 'relative',
-                  outline: 'none',
-                  transition:
-                    'transform var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
-                }}
-              >
-                {/* Secondary Shift Label */}
-                {key.shiftLabel && (
-                  <span
-                    style={{
-                      fontSize: 8.5,
-                      lineHeight: 1,
-                      color: isPressed ? '#ffffff' : 'var(--text-muted, #777777)',
-                      marginBottom: 1,
-                      opacity: 0.85,
-                    }}
-                  >
-                    {key.shiftLabel}
-                  </span>
-                )}
-
-                {/* Main Key Label with Library Icons */}
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 3,
-                    lineHeight: 1.1,
-                    letterSpacing: key.isSpecial ? '-0.02em' : '0.02em',
-                  }}
-                >
-                  {key.icon && renderKeyIcon(key.icon, isPressed)}
-                  {key.label}
-                </span>
-
-                {/* Tactile Home Row Minimal Dash on F & J */}
-                {key.hasHomeBump && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      bottom: 3,
-                      width: 8,
-                      height: 1.5,
-                      background: isPressed ? '#ffffff' : 'var(--accent, #b45309)',
-                      borderRadius: 1,
-                      opacity: 0.8,
-                    }}
-                  />
-                )}
-
-                {/* Target Minimal Indicator Dot */}
-                {isTarget && !isPressed && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 3,
-                      right: 3,
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                      background: 'var(--accent, #b45309)',
-                    }}
-                  />
-                )}
-              </button>
+              <Keycap
+                key={keyDef.code}
+                keyDef={keyDef}
+                isPressed={isPressed}
+                isTarget={targetCodes.includes(keyDef.code)}
+                feedback={isPressed ? keyFeedback : null}
+                onPress={pressKey}
+              />
             );
           })}
         </div>
       ))}
     </div>
   );
-}
+});

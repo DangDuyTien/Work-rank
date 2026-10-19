@@ -39,13 +39,15 @@ import {
   AlertTriangle,
   Radio,
 } from 'lucide-react';
-import { typingGameApi } from '../services/api';
+import { typingGameApi, sendTypingProgressKeepalive } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useGameAvailability } from '../hooks/useGameAvailability';
 import GameComingSoon from '../components/GameComingSoon';
 import VisualKeyboard from '../components/game/VisualKeyboard';
 import { typingSound } from '../utils/typingSound';
 import { graphemeCount, graphemes, normalizeText, sameCharacter } from '../utils/typingText';
+import { createTypingSession } from '../utils/typingSession';
+import { createTypingTelemetry } from '../utils/typingTelemetry';
 import {
   PageShell,
   PageHeader,
@@ -400,6 +402,12 @@ const DEFAULT_PRACTICE_CHALLENGES = [
 
 
 
+// Local-first sync cadences: progress leaves the client at a human pace, never
+// between a keypress and its paint. Server remains the authority for scores.
+const PRACTICE_SYNC_CADENCE_MS = 1500;
+const ROOM_SYNC_CADENCE_MS = 1000;
+const DRAFT_SAVE_THROTTLE_MS = 1000;
+
 // Helper to clean & sanitize challenge text to standard lowercase Vietnamese without punctuation
 const sanitizeChallengeText = (text) => normalizeText(text);
 const charCount = (text) => graphemeCount(text);
@@ -729,17 +737,10 @@ export default function TypingBattle() {
     }
   };
 
-  // Active Key Tracking for On-Screen Keyboard
-  const [activeKeyCodes, setActiveKeyCodes] = useState(new Set());
-  const [lastFeedback, setLastFeedback] = useState(null); // 'correct' | 'error' | null
-
   // In-Game Typing State (Shared between Practice and Room Play)
-  const [practiceChallenges, setPracticeChallenges] = useState(DEFAULT_PRACTICE_CHALLENGES);
   const [practiceStreamText, setPracticeStreamText] = useState(() => generatePracticeStream(DEFAULT_PRACTICE_CHALLENGES));
-  const [sessionCompletedChars, setSessionCompletedChars] = useState(0);
-  const [sessionCompletedErrors, setSessionCompletedErrors] = useState(0);
-  const [sessionSentencesCount, setSessionSentencesCount] = useState(0);
   const [typedText, setTypedText] = useState('');
+  const [typedCharCount, setTypedCharCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [liveWpm, setLiveWpm] = useState(0);
   const [liveAccuracy, setLiveAccuracy] = useState(0);
@@ -752,10 +753,7 @@ export default function TypingBattle() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [practiceSubmissionResult, setPracticeSubmissionResult] = useState(null);
 
-  // 2-Line Smooth Rolling Window State & Refs
-  const [scrollOffsetY, setScrollOffsetY] = useState(0);
-  const wordsContainerRef = useRef(null);
-  const wordRefs = useRef([]);
+  // Typing engine refs (local-first: keystrokes never await the network)
   const inputRef = useRef(null);
   const inputRevisionRef = useRef(0);
   const typedTextRef = useRef('');
@@ -767,9 +765,26 @@ export default function TypingBattle() {
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [practiceError, setPracticeError] = useState(null);
   const finishPendingRef = useRef(null);
-  const progressEmitRef = useRef({ timer: null, payload: null });
   const timerRef = useRef(null);
-  const activeCharRef = useRef(null);
+  const lastTickSecondRef = useRef(0);
+
+  // Local-first typing session: owns the incremental error map and the current
+  // char for the challenge text in play. Keystrokes never wait for the network.
+  const sessionRef = useRef({ target: null, session: null });
+  const getSession = useCallback((target) => {
+    const cached = sessionRef.current;
+    if (cached.session && cached.target === target) return cached.session;
+    const session = createTypingSession(target);
+    sessionRef.current = { target, session };
+    return session;
+  }, []);
+  const telemetry = useMemo(() => createTypingTelemetry(), []);
+
+  // Deferred sync scheduler: progress leaves the client at a human cadence,
+  // never between a keypress and its paint. Failures keep the payload pending.
+  const progressEmitRef = useRef({ timer: null, payload: null, lastAttempt: 0 });
+  // Draft persistence is throttled so sessionStorage writes stay off the hot path.
+  const draftRef = useRef({ timer: null, writer: null });
 
   // Keep the native caret/composition intact. The input also needs a real width:
   // Chromium insertText on a 1px input resets selection to zero for Vietnamese.
@@ -781,31 +796,126 @@ export default function TypingBattle() {
     input.setSelectionRange(typedText.length, typedText.length);
   }, [typedText, room?.id, activeTab]);
 
-  const queueTypingProgress = useCallback((payload) => {
-    const pending = progressEmitRef.current;
-    pending.payload = payload;
-    if (pending.timer) return;
-    pending.timer = setTimeout(() => {
-      const latest = pending.payload;
-      pending.timer = null;
-      pending.payload = null;
-      if (!latest) return;
-      if (latest.attemptId) {
-        typingGameApi.updatePracticeProgress(latest.attemptId, latest).then((a) => {
-          if (practiceAttemptRef.current?.attemptId !== a.attemptId) return;
-          const firstServerClock = !practiceAttemptRef.current.startedAt && a.startedAt;
-          practiceAttemptRef.current = { ...practiceAttemptRef.current, ...a };
-          if (firstServerClock) setStartTime(new Date(a.startedAt).getTime() + Date.now() - new Date(a.serverNow).getTime());
-        }).catch(() => setPracticeError('Chưa đồng bộ được bản gõ. Bản nháp vẫn được giữ trên trình duyệt.'));
-      } else if (socket?.connected) socket.emit('typing:progress', latest);
-      else typingGameApi.updateProgress(latest.roomId, latest).catch(() => {});
-    }, 120);
+  const flushTypingProgress = useCallback(({ force = false, keepalive = false } = {}) => {
+    const state = progressEmitRef.current;
+    if (state.timer) {
+      clearTimeout(state.timer);
+      state.timer = null;
+    }
+    const payload = state.payload;
+    if (!payload) return;
+    const cadence = payload.attemptId ? PRACTICE_SYNC_CADENCE_MS : ROOM_SYNC_CADENCE_MS;
+    const wait = cadence - (Date.now() - state.lastAttempt);
+    if (!force && wait > 0) {
+      state.timer = setTimeout(() => {
+        state.timer = null;
+        flushTypingProgress();
+      }, wait);
+      return;
+    }
+    state.payload = null;
+    state.lastAttempt = Date.now();
+    const requeue = () => {
+      if (!progressEmitRef.current.payload) progressEmitRef.current.payload = payload;
+      if (!progressEmitRef.current.timer) {
+        progressEmitRef.current.timer = setTimeout(() => {
+          progressEmitRef.current.timer = null;
+          flushTypingProgress();
+        }, cadence);
+      }
+    };
+    if (payload.attemptId) {
+      typingGameApi.updatePracticeProgress(payload.attemptId, payload).then((a) => {
+        const attempt = practiceAttemptRef.current;
+        if (!attempt || attempt.attemptId !== a.attemptId) return;
+        const firstServerClock = !attempt.startedAt && a.startedAt;
+        practiceAttemptRef.current = { ...attempt, ...a };
+        if (firstServerClock) setStartTime(new Date(a.startedAt).getTime() + Date.now() - new Date(a.serverNow).getTime());
+      }).catch(requeue);
+    } else if (keepalive) {
+      sendTypingProgressKeepalive(payload);
+    } else if (socket?.connected) {
+      socket.emit('typing:progress', payload);
+    } else {
+      typingGameApi.updateProgress(payload.roomId, payload).catch(requeue);
+    }
   }, [socket]);
+
+  const queueTypingProgress = useCallback((payload) => {
+    const state = progressEmitRef.current;
+    state.payload = payload;
+    if (state.timer) return;
+    const cadence = payload.attemptId ? PRACTICE_SYNC_CADENCE_MS : ROOM_SYNC_CADENCE_MS;
+    const wait = Math.max(0, cadence - (Date.now() - state.lastAttempt));
+    state.timer = setTimeout(() => {
+      state.timer = null;
+      flushTypingProgress();
+    }, wait);
+  }, [flushTypingProgress]);
+
+  const queueDraftSave = useCallback((writer) => {
+    const state = draftRef.current;
+    state.writer = writer;
+    if (state.timer) return;
+    state.timer = setTimeout(() => {
+      state.timer = null;
+      const pendingWriter = state.writer;
+      state.writer = null;
+      if (pendingWriter) pendingWriter();
+    }, DRAFT_SAVE_THROTTLE_MS);
+  }, []);
+
+  const flushDrafts = useCallback(() => {
+    const state = draftRef.current;
+    if (state.timer) {
+      clearTimeout(state.timer);
+      state.timer = null;
+    }
+    const writer = state.writer;
+    state.writer = null;
+    if (writer) writer();
+  }, []);
+
+  const resetTypingSession = useCallback((text, target) => {
+    const session = getSession(target);
+    const snap = session.reset(text);
+    typedTextRef.current = text;
+    lastCommittedInputRef.current = text;
+    setTypedText(text);
+    setTypedCharCount(snap.charCount);
+    setErrorCount(snap.errorCount);
+    telemetry.patch({
+      charCount: snap.charCount,
+      errorCount: snap.errorCount,
+      currentChar: snap.currentChar,
+      targetLength: snap.targetLength,
+      keyFeedback: null,
+    });
+    return snap;
+  }, [getSession, telemetry]);
 
   useEffect(() => () => {
     if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
+    if (draftRef.current.timer) clearTimeout(draftRef.current.timer);
     if (compositionEndTimerRef.current) cancelAnimationFrame(compositionEndTimerRef.current);
   }, []);
+
+  // Flush draft + pending progress when the tab hides or unloads.
+  useEffect(() => {
+    const flushOnHide = () => {
+      flushDrafts();
+      flushTypingProgress({ force: true, keepalive: true });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushOnHide();
+    };
+    window.addEventListener('pagehide', flushOnHide);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flushOnHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [flushDrafts, flushTypingProgress]);
 
   // Challenge text determination
   const challengeText = useMemo(() => {
@@ -815,17 +925,14 @@ export default function TypingBattle() {
     return practiceStreamText;
   }, [room, practiceStreamText]);
 
-  const currentTargetChar = graphemes(challengeText)[charCount(typedText)] || '';
+  // The active session mirrors the challenge currently rendered. A new session
+  // is created (empty) only when the challenge text itself changes.
+  const session = getSession(challengeText);
+  const inputChars = session.getDisplayChars();
 
-  // ── 1. GLOBAL KEYBOARD EVENT LISTENERS FOR VISUAL KEYBOARD ──
+  // ── 1. GLOBAL KEYBOARD EVENT LISTENERS (SHORTCUTS & AUTOFOCUS) ──
   useEffect(() => {
     const handleKeyDown = (e) => {
-      setActiveKeyCodes((prev) => {
-        const next = new Set(prev);
-        next.add(e.code);
-        return next;
-      });
-
       // Restart shortcut: Escape when in practice mode
       if (e.key === 'Escape' && activeTab === 'practice' && !room) {
         e.preventDefault();
@@ -842,20 +949,8 @@ export default function TypingBattle() {
       }
     };
 
-    const handleKeyUp = (e) => {
-      setActiveKeyCodes((prev) => {
-        const next = new Set(prev);
-        next.delete(e.code);
-        return next;
-      });
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTab, room]);
 
   // ── 2. FETCH INITIAL DATA & CHALLENGES ──
@@ -880,7 +975,6 @@ export default function TypingBattle() {
           ...c,
           content: sanitizeChallengeText(c.content),
         }));
-        setPracticeChallenges(cleanChallenges);
         if (!practiceAttemptRef.current) setPracticeStreamText(generatePracticeStream(cleanChallenges));
       }
     } catch {
@@ -906,19 +1000,18 @@ export default function TypingBattle() {
       const localWins = draft && Number(draft.revision) >= Number(a.inputRevision);
       const text = (localWins ? draft.text : a.typedText) || '';
       inputRevisionRef.current = Math.max(Number(draft?.revision || 0), Number(a.inputRevision || 0));
-      typedTextRef.current = text;
-      setTypedText(text);
+      const snap = resetTypingSession(text, a.challengeText);
       setPracticeStreamText(a.challengeText);
       setSelectedDuration(a.durationLimitSeconds);
-      setErrorCount(countCurrentTextErrors(text, a.challengeText));
       const serverStart = a.startedAt ? new Date(a.startedAt).getTime() + Date.now() - new Date(a.serverNow).getTime() : null;
       const elapsed = serverStart ? Math.max(0, (Date.now() - serverStart) / 1000) : 0;
-      const correct = charCount(text) - countCurrentTextErrors(text, a.challengeText);
+      const correct = Math.max(0, snap.charCount - snap.errorCount);
+      lastTickSecondRef.current = Math.floor(elapsed);
       setStartTime(serverStart);
       setTimeElapsed(Math.floor(elapsed));
       setTimeRemaining(Math.max(0, a.durationLimitSeconds - Math.floor(elapsed)));
       setLiveWpm(elapsed > 0 ? Math.round(correct / 5 / (Math.max(1, elapsed) / 60) * 10) / 10 : 0);
-      setLiveAccuracy(charCount(text) ? Math.round(correct / charCount(text) * 1000) / 10 : 0);
+      setLiveAccuracy(snap.charCount ? Math.round(correct / snap.charCount * 1000) / 10 : 0);
       setIsFinished(false);
       setPracticeSubmissionResult(null);
       setShowResultModal(false);
@@ -929,7 +1022,7 @@ export default function TypingBattle() {
     } finally {
       if (requestId === practicePrepareId.current) setPracticeLoading(false);
     }
-  }, [user?.id, queueTypingProgress]);
+  }, [user?.id, queueTypingProgress, resetTypingSession]);
 
   useEffect(() => {
     if (!urlRoomId && activeTab === 'practice') preparePractice(false);
@@ -1003,11 +1096,9 @@ export default function TypingBattle() {
             const errorsToRestore = countCurrentTextErrors(textToRestore, target);
             saveTypingDraft(roomIdToFetch, user?.id, textToRestore, errorsToRestore, inputRevisionRef.current, data.room.startedAt);
             if (textToRestore || myPlayer.typedChars === 0) {
-              typedTextRef.current = textToRestore;
-              setTypedText(textToRestore);
-              setErrorCount(errorsToRestore);
+              resetTypingSession(textToRestore, target);
               setLiveWpm(Number(myPlayer.wpm) || 0);
-      setLiveAccuracy(Number(myPlayer.accuracy) || 0);
+              setLiveAccuracy(Number(myPlayer.accuracy) || 0);
             }
           }
         } else if (data.room.status === 'FINISHED') {
@@ -1020,7 +1111,7 @@ export default function TypingBattle() {
     } finally {
       setLoading(false);
     }
-  }, [navigate, user?.id, isSpectateRoute]);
+  }, [navigate, user?.id, isSpectateRoute, resetTypingSession]);
 
   const handleJoinExistingRoom = async (targetRoomId) => {
     try {
@@ -1094,9 +1185,7 @@ export default function TypingBattle() {
           if (activeMatchKeyRef.current !== key) {
             activeMatchKeyRef.current = key;
             inputRevisionRef.current = 0;
-            typedTextRef.current = '';
-            setTypedText('');
-            setErrorCount(0);
+            resetTypingSession('', sanitizeChallengeText(data.room.challengeText || ''));
             setIsFinished(false);
             setCountdownNumber(null);
             setStartTime(new Date(data.room.startedAt).getTime());
@@ -1110,11 +1199,8 @@ export default function TypingBattle() {
           const myPlayer = data.players.find((p) => Number(p.userId) === Number(user?.id));
           if (myPlayer) {
             if (myPlayer.status === 'FINISHED') setIsFinished(true);
-            setTypedText((currentTyped) => {
-              const serverRevision = Number(myPlayer.inputRevision || 0);
-              if (inputRevisionRef.current >= serverRevision) {
-                return currentTyped;
-              }
+            const serverRevision = Number(myPlayer.inputRevision || 0);
+            if (inputRevisionRef.current < serverRevision) {
               const draft = loadTypingDraft(data.room.id, user?.id, data.room.startedAt);
               let textToRestore = '';
               const draftRevision = Number(draft?.revision || 0);
@@ -1130,14 +1216,11 @@ export default function TypingBattle() {
               const errorsToRestore = countCurrentTextErrors(textToRestore, target);
               saveTypingDraft(data.room.id, user?.id, textToRestore, errorsToRestore, inputRevisionRef.current, data.room.startedAt);
               if (textToRestore || myPlayer.typedChars === 0) {
-                setErrorCount(errorsToRestore);
+                resetTypingSession(textToRestore, target);
                 setLiveWpm(Number(myPlayer.wpm) || 0);
-      setLiveAccuracy(Number(myPlayer.accuracy) || 0);
-                typedTextRef.current = textToRestore;
-                return textToRestore;
+                setLiveAccuracy(Number(myPlayer.accuracy) || 0);
               }
-              return currentTyped;
-            });
+            }
           }
         }
       }
@@ -1199,12 +1282,10 @@ export default function TypingBattle() {
       if (data?.players) setPlayers(data.players);
       clearTypingDraft(data?.room?.id || room?.id, user?.id);
       inputRevisionRef.current = 0;
-      typedTextRef.current = '';
-      setTypedText('');
-      setScrollOffsetY(0);
-      setErrorCount(0);
+      resetTypingSession('', sanitizeChallengeText(data.room?.challengeText || challengeText));
       setLiveWpm(0);
       setLiveAccuracy(0);
+      lastTickSecondRef.current = 0;
       setStartTime(new Date(data.room?.startedAt || data.startedAt || Date.now()).getTime());
       setTimeElapsed(0);
       const duration = data.durationLimitSeconds || data.room?.durationLimitSeconds || 120;
@@ -1287,12 +1368,10 @@ export default function TypingBattle() {
       if (!belongsToCurrentRoom(data)) return;
       clearTypingDraft(data?.room?.id || room?.id, user?.id);
       inputRevisionRef.current = 0;
-      typedTextRef.current = '';
-      setTypedText('');
-      setScrollOffsetY(0);
-      setErrorCount(0);
+      resetTypingSession('', sanitizeChallengeText(data.room?.challengeText || challengeText));
       setLiveWpm(0);
       setLiveAccuracy(0);
+      lastTickSecondRef.current = 0;
       setStartTime(null);
       setTimeElapsed(0);
       setIsFinished(false);
@@ -1351,7 +1430,7 @@ export default function TypingBattle() {
       socket.off('typing:roomReset', handleRoomReset);
       socket.off('typing:roomListChanged', handleRoomListChanged);
     };
-  }, [socket, room?.id, urlRoomId, soundEnabled, fetchHubData, isSpectator]);
+  }, [socket, room?.id, urlRoomId, soundEnabled, fetchHubData, isSpectator, queueTypingProgress, resetTypingSession, challengeText]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -1373,8 +1452,12 @@ export default function TypingBattle() {
 
   const finishCurrentRun = useCallback(async (text = typedTextRef.current, revision = inputRevisionRef.current) => {
     if (finishPendingRef.current) return finishPendingRef.current;
+    // The final submit carries the full text; cancel the deferred queue and
+    // persist the local draft so nothing is lost if the request fails.
+    flushDrafts();
     if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
-    progressEmitRef.current = { timer: null, payload: null };
+    progressEmitRef.current.timer = null;
+    progressEmitRef.current.payload = null;
     setIsFinished(true);
     setPracticeError(null);
     const work = (async () => {
@@ -1403,7 +1486,7 @@ export default function TypingBattle() {
     })();
     finishPendingRef.current = work;
     return work;
-  }, [room?.id, user?.id, fetchHubData]);
+  }, [room?.id, user?.id, fetchHubData, flushDrafts]);
 
   // ── 4. TIME-BASED TEST ENGINE (COUNTDOWN & TIMEOUT FINALIZER) ──
   const effectiveTotalDuration = room?.durationLimitSeconds || selectedDuration;
@@ -1415,17 +1498,26 @@ export default function TypingBattle() {
         const elapsedSec = Math.max(1, Math.floor((now - startTime) / 1000));
         const remSec = Math.max(0, effectiveTotalDuration - elapsedSec);
 
-        setTimeElapsed(elapsedSec);
-        setTimeRemaining(remSec);
+        // Clock state commits only when the displayed second actually changes.
+        setTimeElapsed((prev) => (prev === elapsedSec ? prev : elapsedSec));
+        setTimeRemaining((prev) => (prev === remSec ? prev : remSec));
 
-        // Recalculate live cumulative WPM: (cumulative correct chars / 5) / elapsed minutes
-        const totalChars = charCount(typedTextRef.current);
-        const totalErrors = countCurrentTextErrors(typedTextRef.current, challengeText);
-        const correctChars = Math.max(0, totalChars - totalErrors);
-        const words = correctChars / 5;
-        const minutes = Math.max(1000, now - startTime) / 60000;
-        const currentWpm = minutes > 0 ? Math.round(words / minutes * 10) / 10 : 0;
-        setLiveWpm(currentWpm);
+        // Live WPM/accuracy refresh once per second from the local session.
+        if (lastTickSecondRef.current !== elapsedSec) {
+          lastTickSecondRef.current = elapsedSec;
+          const snap = sessionRef.current.session?.getSnapshot();
+          const totalChars = snap ? snap.charCount : charCount(typedTextRef.current);
+          const totalErrors = snap ? snap.errorCount : 0;
+          const correctChars = Math.max(0, totalChars - totalErrors);
+          const words = correctChars / 5;
+          const minutes = Math.max(1000, now - startTime) / 60000;
+          const currentWpm = minutes > 0 ? Math.round(words / minutes * 10) / 10 : 0;
+          setLiveWpm((prev) => (prev === currentWpm ? prev : currentWpm));
+          setLiveAccuracy((prev) => {
+            const nextAccuracy = totalChars > 0 ? Math.max(0, Math.round((correctChars / totalChars) * 1000) / 10) : 0;
+            return prev === nextAccuracy ? prev : nextAccuracy;
+          });
+        }
 
         // Auto Finish when Countdown reaches 0 (Time's Up!)
         if (remSec <= 0) {
@@ -1440,7 +1532,6 @@ export default function TypingBattle() {
   }, [
     startTime,
     isFinished,
-    challengeText,
     effectiveTotalDuration,
     room?.status,
     finishCurrentRun,
@@ -1456,27 +1547,22 @@ export default function TypingBattle() {
 
   const handleRestartPractice = (duration = selectedDuration) => {
     if (progressEmitRef.current.timer) clearTimeout(progressEmitRef.current.timer);
-    progressEmitRef.current = { timer: null, payload: null };
+    progressEmitRef.current.timer = null;
+    progressEmitRef.current.payload = null;
     practiceAttemptRef.current = null;
     inputRevisionRef.current = 0;
     setPracticeStreamText('');
     preparePractice(true, typeof duration === 'number' ? duration : selectedDuration);
-    typedTextRef.current = '';
-    setTypedText('');
-    setScrollOffsetY(0);
-    setErrorCount(0);
+    resetTypingSession('', challengeText);
     setLiveWpm(0);
     setLiveAccuracy(0);
+    lastTickSecondRef.current = 0;
     setStartTime(null);
     setTimeElapsed(0);
     setTimeRemaining(effectiveTotalDuration);
-    setSessionCompletedChars(0);
-    setSessionCompletedErrors(0);
-    setSessionSentencesCount(0);
     setIsFinished(false);
     setShowResultModal(false);
     setPracticeSubmissionResult(null);
-    setLastFeedback(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
@@ -1501,7 +1587,10 @@ export default function TypingBattle() {
       if (practiceAttemptRef.current?.attemptId !== a.attemptId) return;
       practiceAttemptRef.current = { ...practiceAttemptRef.current, ...a };
       if (a.startedAt) setStartTime(new Date(a.startedAt).getTime() + Date.now() - new Date(a.serverNow).getTime());
-    }).catch(() => setPracticeError('Chưa bắt đầu được đồng hồ máy chủ. Bản gõ vẫn được giữ; hãy thử đồng bộ lại.'));
+    }).catch(() => {
+      // Local-first: the server clock sync retries with the next deferred flush;
+      // a transient failure must never interrupt typing.
+    });
   };
 
   const handleCompositionEnd = (event) => {
@@ -1536,44 +1625,60 @@ export default function TypingBattle() {
   };
 
   // ── 6. INPUT ENGINE (FULL VIETNAMESE TELEX / VNI SUPPORT) ──
+  // Local-first hot path: native value → incremental diff/score → paint.
+  // No network, storage or timer work runs between a keypress and its render.
   const handleInputChange = (e) => {
     if (isFinished || (room && room.status !== 'PLAYING') || (!room && (practiceLoading || !practiceAttemptRef.current))) return;
 
-    const val = e.target.value.normalize('NFC');
-    const prevVal = typedTextRef.current;
-    typedTextRef.current = val;
+    const session = getSession(challengeText);
+    const composing = Boolean(e.nativeEvent?.isComposing || compositionRef.current);
+    const snap = session.applyValue(e.target.value, { composing });
+
     // Composition updates are display-only. The committed native input event is
     // processed once after composition ends; never score intermediate Telex/VNI.
-    if (e.nativeEvent?.isComposing || compositionRef.current) { setTypedText(val); return; }
-    if (val === lastCommittedInputRef.current && val === prevVal) return;
+    if (snap.composing) {
+      setTypedText(snap.value);
+      return;
+    }
+    if (snap.delta.kind === 'none') {
+      lastCommittedInputRef.current = snap.value;
+      return;
+    }
+    const val = snap.value;
+    typedTextRef.current = val;
     lastCommittedInputRef.current = val;
+
     const now = Date.now();
     const effectiveStartTime = startTime || now;
+    const { delta } = snap;
 
-    // Start timer on first keystroke
-    if (!startTime && (charCount(val) > 0 || sessionCompletedChars > 0)) {
+    // Start timer on first committed keystroke
+    if (!startTime && snap.charCount > 0) {
       setStartTime(effectiveStartTime);
     }
 
-    // Compare typed text with challenge prefix (case-insensitive so user can type seamlessly without shift/capslock)
-    const errors = countCurrentTextErrors(val, challengeText);
-    const valueChars = graphemes(val);
-    const targetChars = graphemes(challengeText);
-    const isAppending = valueChars.length > charCount(prevVal);
-    const lastTypedChar = isAppending ? valueChars[valueChars.length - 1] : '';
-    const targetChar = isAppending ? targetChars[valueChars.length - 1] : '';
-    const lastKeyCorrect = Boolean(lastTypedChar && targetChar && sameCharacter(lastTypedChar, targetChar));
+    const isTypingForward = delta.kind === 'append' || delta.kind === 'replace';
+    const lastTypedChar = isTypingForward && snap.charCount > 0 ? session.getDisplayChars()[snap.charCount - 1] : '';
+    const lastKeyCorrect = isTypingForward ? delta.lastKeyCorrect : null;
 
-    setErrorCount(errors);
-    // Key feedback is local to the newest character; an earlier typo must not color later correct keys as errors.
-    setLastFeedback(isAppending ? (lastKeyCorrect ? 'correct' : 'error') : null);
+    setTypedText(val);
+    setTypedCharCount(snap.charCount);
+    setErrorCount(snap.errorCount);
+    telemetry.patch({
+      charCount: snap.charCount,
+      errorCount: snap.errorCount,
+      currentChar: snap.currentChar,
+      targetLength: snap.targetLength,
+      // Key feedback is local to the newest character; an earlier typo must not color later correct keys as errors.
+      keyFeedback: isTypingForward ? (lastKeyCorrect ? 'correct' : 'error') : null,
+    });
 
     // Audio mechanical switch trigger: "Tách tách" mechanical switch on hit, gentle thud on error
     if (soundEnabled) {
-      if (charCount(val) < charCount(prevVal)) {
+      if (delta.kind === 'delete') {
         // Backspace / character deletion
         typingSound.playKey('Backspace', true);
-      } else if (isAppending) {
+      } else if (isTypingForward) {
         if (lastKeyCorrect) {
           typingSound.playKey(lastTypedChar);
         } else {
@@ -1583,51 +1688,37 @@ export default function TypingBattle() {
       }
     }
 
-    // Practice Mode: seamless continuous stream extension if near the end
-    if (!room && !practiceAttemptRef.current && challengeText.length - charCount(val) < 150) {
-      setPracticeStreamText((prev) => `${prev} ${generatePracticeStream(practiceChallenges)}`);
-    }
-
     const inputRevision = inputRevisionRef.current + 1;
     inputRevisionRef.current = inputRevision;
 
-    // Compute local metrics immediately; network progress is coalesced separately from the controlled input.
-    const totalChars = sessionCompletedChars + charCount(val);
-    const totalErrors = sessionCompletedErrors + errors;
-    const accuracy = totalChars > 0 ? Math.max(0, Math.round(((totalChars - totalErrors) / totalChars) * 1000) / 10) : 0;
+    // Local metrics update immediately (same React batch as the paint).
+    const accuracy = snap.charCount > 0 ? Math.max(0, Math.round(((snap.charCount - snap.errorCount) / snap.charCount) * 1000) / 10) : 0;
     setLiveAccuracy(accuracy);
+    const minutes = Math.max(1000, now - effectiveStartTime) / 60000;
+    const correctChars = Math.max(0, snap.charCount - snap.errorCount);
+    setLiveWpm(Math.round((correctChars / 5) / minutes * 10) / 10);
 
-    const elapsedMs = Math.max(1, now - effectiveStartTime);
-    const minutes = Math.max(1000, elapsedMs) / 60000;
-    const correctChars = Math.max(0, totalChars - totalErrors);
-    const wpm = Math.round((correctChars / 5) / minutes * 10) / 10;
-    setLiveWpm(wpm);
+    // Draft persistence is throttled; the sync scheduler coalesces the network.
+    const draftWriter = () => {
+      if (!room && practiceAttemptRef.current) {
+        saveTypingDraft(`practice:${practiceAttemptRef.current.attemptId}`, user?.id, val, snap.errorCount, inputRevision);
+      } else if (room?.id && user?.id) {
+        saveTypingDraft(room.id, user.id, val, snap.errorCount, inputRevision, room.startedAt);
+      }
+    };
 
-    // When the user finishes typing the entire challenge text in multiplayer room:
-    if (room && room.status === 'PLAYING' && charCount(val) >= charCount(challengeText)) {
-      setTypedText(val);
-      saveTypingDraft(room.id, user?.id, val, errors, inputRevision, room.startedAt);
+    // When the user finishes typing the entire challenge text in a multiplayer room:
+    if (room && room.status === 'PLAYING' && snap.charCount >= snap.targetLength) {
+      draftWriter();
       finishCurrentRun(val, inputRevision);
       return;
     }
 
-    setTypedText(val);
+    queueDraftSave(draftWriter);
     if (!room && practiceAttemptRef.current) {
-      const attemptId = practiceAttemptRef.current.attemptId;
-      saveTypingDraft(`practice:${attemptId}`, user?.id, val, errors, inputRevision);
-      queueTypingProgress({ attemptId, typedText: val, inputRevision });
-    }
-    if (room?.id && user?.id) {
-      saveTypingDraft(room.id, user.id, val, errors, inputRevision, room.startedAt);
-    }
-
-    // Emit live progress if inside an active multiplayer room
-    if (room?.id && room?.status === 'PLAYING') {
-      queueTypingProgress({
-        roomId: room.id,
-        typedText: val,
-        inputRevision,
-      });
+      queueTypingProgress({ attemptId: practiceAttemptRef.current.attemptId, typedText: val, inputRevision });
+    } else if (room?.id && room?.status === 'PLAYING') {
+      queueTypingProgress({ roomId: room.id, typedText: val, inputRevision });
     }
   };
 
@@ -1737,7 +1828,7 @@ export default function TypingBattle() {
 
 
   // ── 8. ELEGANT 2-LINE TYPING ARENA (SMOOTH 2-LINE ROLLING WINDOW) ──
-  const renderedText = <TypingPassage challenge={challengeText} typedText={typedText} focused={isInputFocused} finished={isFinished} onFocusInput={() => inputRef.current?.focus()} />;
+  const renderedText = <TypingPassage challenge={challengeText} typedText={typedText} inputChars={inputChars} focused={isInputFocused} finished={isFinished} onFocusInput={() => inputRef.current?.focus()} />;
 
   // Coming Soon Screen Guard
   if (isComingSoon) {
@@ -1776,7 +1867,7 @@ export default function TypingBattle() {
       const wordsTyped = Math.round(typedChars / 5);
       const totalWords = Math.max(1, Math.round(charCount(challengeText) / 5));
       const progressPct = isMe
-        ? Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))
+        ? Math.min(100, Math.round((typedCharCount / Math.max(1, charCount(challengeText))) * 100))
         : (p.progressPct !== undefined
           ? p.progressPct
           : Math.min(100, Math.round(((p.typedChars || 0) / Math.max(1, charCount(challengeText))) * 100)));
@@ -2165,13 +2256,13 @@ export default function TypingBattle() {
             <div
               style={{
                 height: '100%',
-                width: `${Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%`,
+                width: `${Math.min(100, Math.round((typedCharCount / Math.max(1, charCount(challengeText))) * 100))}%`,
                 background: 'linear-gradient(90deg, var(--accent, #b45309), #d97706)',
                 transition: 'width var(--motion-fast) var(--ease-standard)',
               }}
             />
             <span style={{ position: 'absolute', right: 10, top: 2, fontSize: 10, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {Math.round(charCount(typedText) / 5)} / {Math.round(charCount(challengeText) / 5)} từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
+              {Math.round(typedCharCount / 5)} / {Math.round(charCount(challengeText) / 5)} từ ({Math.min(100, Math.round((typedCharCount / Math.max(1, charCount(challengeText))) * 100))}%)
             </span>
           </div>
         </div>
@@ -3045,7 +3136,7 @@ export default function TypingBattle() {
                       Lỗi: <strong style={{ color: errorCount > 0 ? '#dc2626' : 'var(--text-primary)', fontSize: 18 }}>{errorCount}</strong>
                     </span>
                     <span>
-                      Tiến độ bài thi: <strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>{Math.round(charCount(typedText) / 5)} / {Math.round(charCount(challengeText) / 5)}</strong> từ ({Math.min(100, Math.round((charCount(typedText) / Math.max(1, charCount(challengeText))) * 100))}%)
+                      Tiến độ bài thi: <strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>{Math.round(typedCharCount / 5)} / {Math.round(charCount(challengeText) / 5)}</strong> từ ({Math.min(100, Math.round((typedCharCount / Math.max(1, charCount(challengeText))) * 100))}%)
                     </span>
                   </div>
 
@@ -3105,9 +3196,8 @@ export default function TypingBattle() {
                 {showKeyboard && (
                   <div style={{ marginTop: 18 }}>
                     <VisualKeyboard
-                      activeKeys={activeKeyCodes}
-                      targetChar={currentTargetChar}
-                      lastFeedback={lastFeedback}
+                      telemetry={telemetry}
+                      enabled={!isFinished && !isSpectator && room?.status === 'PLAYING'}
                       onKeyClick={handleVirtualKeyClick}
                     />
                   </div>
@@ -3353,7 +3443,7 @@ export default function TypingBattle() {
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>SỐ TỪ GÕ</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{Math.round((myResult?.typedChars ?? charCount(typedText)) / 5)} từ</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{Math.round((myResult?.typedChars ?? typedCharCount) / 5)} từ</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ĐIỂM WORKRANK</div>
@@ -3751,15 +3841,15 @@ export default function TypingBattle() {
 
                 <div style={{ borderLeft: '1px solid var(--border, rgba(0, 0, 0, 0.08))', paddingLeft: 20 }}>
                   <span style={{ fontSize: 10, letterSpacing: '0.05em', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>LỖI SAI</span>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: (sessionCompletedErrors + errorCount) > 0 ? '#dc2626' : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
-                    {sessionCompletedErrors + errorCount}
+                  <div style={{ fontSize: 26, fontWeight: 800, color: errorCount > 0 ? '#dc2626' : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
+                    {errorCount}
                   </div>
                 </div>
 
                 <div style={{ borderLeft: '1px solid var(--border, rgba(0, 0, 0, 0.08))', paddingLeft: 20 }}>
                   <span style={{ fontSize: 10, letterSpacing: '0.05em', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>TỪ QUY ĐỔI (5 KÝ TỰ)</span>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
-                    {Math.round((sessionCompletedChars + charCount(typedText)) / 5)} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>từ</span>
+                    {Math.round(typedCharCount / 5)} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>từ</span>
                   </div>
                 </div>
 
@@ -3806,9 +3896,8 @@ export default function TypingBattle() {
               {showKeyboard && (
                 <div style={{ marginTop: 20 }}>
                   <VisualKeyboard
-                    activeKeys={activeKeyCodes}
-                    targetChar={currentTargetChar}
-                    lastFeedback={lastFeedback}
+                    telemetry={telemetry}
+                    enabled={!isFinished && !room && !practiceLoading}
                     onKeyClick={handleVirtualKeyClick}
                   />
                 </div>
@@ -3889,11 +3978,11 @@ export default function TypingBattle() {
                   </div>
                   <div style={{ padding: '12px 8px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>TỔNG TỪ GÕ</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{Math.round((sessionCompletedChars + charCount(typedText)) / 5)}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{Math.round(typedCharCount / 5)}</div>
                   </div>
                   <div style={{ padding: '12px 8px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>LỖI SAI</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: (sessionCompletedErrors + errorCount) > 0 ? '#dc2626' : 'var(--text-primary)', marginTop: 2 }}>{sessionCompletedErrors + errorCount}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: errorCount > 0 ? '#dc2626' : 'var(--text-primary)', marginTop: 2 }}>{errorCount}</div>
                   </div>
                   <div style={{ padding: '12px 8px', background: 'var(--surface-soft, #f0eee9)', borderRadius: 8, border: '1px solid var(--border, rgba(0, 0, 0, 0.08))' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>XP TÍCH LŨY</div>

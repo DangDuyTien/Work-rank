@@ -17,7 +17,7 @@ const {
 
 const typingEngine = require('./typingEngine');
 const typingTransaction = require('./typingTransaction');
-const { measureInput, chars } = require('./typingMetrics');
+const { measureInput, chars, METRIC_VERSION } = require('./typingMetrics');
 const typingRealtime = require('./typingRealtime.service');
 const { seedTypingChallenges } = require('../seeders/typingChallenges.seeder');
 const projector = require('./competition/competitionReadModel.projector');
@@ -1292,7 +1292,7 @@ async function finalizeMatchOnce(roomId) {
       await stat.save({ transaction: t });
 
       playerResultList.push({
-        metricVersion: 2,
+        metricVersion: METRIC_VERSION,
         validSubmission: getTypingDraft(player).valid !== false,
         rawWpm: typingEngine.calculateWPM(player.typedChars, player.completionTimeMs),
         correctChars: player.typedChars - player.errorCount,

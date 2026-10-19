@@ -1576,6 +1576,30 @@ export const typingGameApi = {
   },
 };
 
+/**
+ * Best-effort final progress flush used when the tab is hidden/unloaded.
+ * `keepalive` lets the request outlive the page; no response is awaited.
+ */
+export function sendTypingProgressKeepalive(payload) {
+  if (!payload) return;
+  const path = payload.attemptId
+    ? `/api/games/typing/practice/attempts/${payload.attemptId}/progress`
+    : `/api/games/typing/rooms/${payload.roomId}/progress`;
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('token');
+  if (token) headers.Authorization = `Bearer ${token}`;
+  try {
+    fetch(`${apiBaseUrl}${path}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      keepalive: true,
+    });
+  } catch {
+    // Ignored: the throttled retry path owns reliability.
+  }
+}
+
 export const drawingApi = {
   getSettings: async () => {
     const res = await api.get('/api/drawings/settings');
