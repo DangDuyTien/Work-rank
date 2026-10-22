@@ -1,6 +1,7 @@
-import { WORD_BANK } from './words.mjs';
+import { CHALLENGES, COMPUTER_SEQUENCE_LIMIT, entriesForDifficulty, tierForIndex } from './vocabulary/index.mjs';
+import { ARCADE_GAME_TYPES } from '../gameRegistry.mjs';
 
-export const GAME_TYPES = ['computer_rush', 'direction_rush', 'memory_flash'];
+export const GAME_TYPES = ARCADE_GAME_TYPES;
 export const CAPACITY = Object.freeze({ SOLO: 1, DUO: 2, TRIO: 3 });
 export const RULES_VERSION = 3;
 export const rulesVersionFor = game => game === 'direction_rush' ? 3 : 2;
@@ -21,6 +22,152 @@ function random(seed, index) {
     return ((x ^ x >>> 14) >>> 0) / 4294967296;
   };
 }
+
+/**
+ * Computer Rush — shuffle bag tất định.
+ *
+ * Vì sao không dùng random-with-replacement như trước:
+ * - 2.817 từ nhưng mỗi trận ~50 lượt; chọn độc lập vẫn lặp trong cùng trận.
+ * - Shuffle một lần rồi tiêu thụ tuần tự bảo đảm KHÔNG lặp cho tới khi hết bag,
+ *   đồng thời giữ nguyên tính thuần tuý: cùng (seed, difficulty, rulesVersion)
+ *   → cùng chuỗi trên client và server, nên replay chấm điểm vẫn khớp.
+ */
+function seededRng(seedText) {
+  let h = 2166136261;
+  for (const c of String(seedText)) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => {
+    h += 0x6D2B79F5;
+    let x = Math.imul(h ^ h >>> 15, 1 | h);
+    x ^= x + Math.imul(x ^ x >>> 7, 61 | x);
+    return ((x ^ x >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function shuffled(list, rng) {
+  const copy = list.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+const FAMILY_GAP = 6;
+
+function takeWithFamilyGap(bucket, cursor, recentFamilies) {
+  const start = cursor.value;
+  if (start >= bucket.length) return null;
+  const window = Math.min(bucket.length - start, 60);
+  for (let offset = 0; offset < window; offset++) {
+    const candidate = bucket[start + offset];
+    if (!recentFamilies.includes(candidate.family)) {
+      if (offset > 0) {
+        bucket[start + offset] = bucket[start];
+        bucket[start] = candidate;
+      }
+      cursor.value = start + 1;
+      return candidate;
+    }
+  }
+  // Cả cửa sổ cùng họ từ (hiếm): vẫn phải tiêu thụ để không kẹt.
+  cursor.value = start + 1;
+  return bucket[start];
+}
+
+/**
+ * Chuỗi challenge của một trận Computer Rush.
+ *
+ * Chuỗi chỉ phụ thuộc (seed, difficulty) — KHÔNG phụ thuộc rulesVersion, vì
+ * luật chơi không đổi nghĩa của từ. Nếu gắn rulesVersion vào đây thì client
+ * gọi mặc định v3 còn phòng đang chạy v2 sẽ ra hai chuỗi khác nhau và replay
+ * chấm sai.
+ *
+ * @param {string} seed
+ * @param {'mixed'|'easy'|'medium'|'hard'|'vietnamese'} difficulty
+ * @param {number} limit số challenge tối đa (512 đủ cho 60s ở nhịp nhanh nhất)
+ */
+export function buildComputerSequence(seed, difficulty = 'mixed', limit = COMPUTER_SEQUENCE_LIMIT) {
+  const pool = entriesForDifficulty(difficulty);
+  if (!pool.length) return [];
+
+  const buckets = { easy: [], medium: [], hard: [] };
+  for (const entry of pool) (buckets[entry.difficulty] || buckets.medium).push(entry);
+
+  const rng = seededRng(`${seed}|${difficulty}`);
+  for (const tier of ['easy', 'medium', 'hard']) buckets[tier] = shuffled(buckets[tier], rng);
+
+  const cursor = { easy: { value: 0 }, medium: { value: 0 }, hard: { value: 0 } };
+  const fixedTier = ['easy', 'medium', 'hard'].includes(difficulty) ? difficulty : null;
+  const out = [];
+  const recentFamilies = [];
+
+  for (let i = 0; i < limit; i++) {
+    let tier = fixedTier || tierForIndex(i);
+    if (cursor[tier].value >= buckets[tier].length) {
+      // Bag của tier đã cạn (chỉ xảy ra với limit rất lớn): lấy tier còn hàng.
+      tier = ['medium', 'easy', 'hard'].find((name) => cursor[name].value < buckets[name].length);
+      if (!tier) break;
+    }
+    const entry = takeWithFamilyGap(buckets[tier], cursor[tier], recentFamilies);
+    if (!entry) break;
+    out.push(entry);
+    recentFamilies.push(entry.family);
+    if (recentFamilies.length > FAMILY_GAP) recentFamilies.shift();
+  }
+  return out;
+}
+
+const COMPUTER_SEQUENCE_CACHE = new Map();
+const COMPUTER_SEQUENCE_CACHE_LIMIT = 8;
+
+function computerSequence(seed, difficulty) {
+  const key = `${seed}|${difficulty}`;
+  const cached = COMPUTER_SEQUENCE_CACHE.get(key);
+  if (cached) return cached;
+  const sequence = buildComputerSequence(seed, difficulty);
+  if (COMPUTER_SEQUENCE_CACHE.size >= COMPUTER_SEQUENCE_CACHE_LIMIT) {
+    COMPUTER_SEQUENCE_CACHE.delete(COMPUTER_SEQUENCE_CACHE.keys().next().value);
+  }
+  COMPUTER_SEQUENCE_CACHE.set(key, sequence);
+  return sequence;
+}
+
+/** ID các challenge đầu trận — dùng cho server chọn seed tránh lặp giữa các trận. */
+export function computerSequenceIds(seed, difficulty, limit = 60) {
+  return buildComputerSequence(seed, difficulty, limit).map((entry) => entry.id);
+}
+
+/**
+ * Chọn seed cho trận mới sao cho ít trùng với các trận gần nhất của người chơi.
+ *
+ * Seed cuối cùng vẫn là nguồn sự thật duy nhất: server lưu seed, client và
+ * replay đều dựng lại đúng chuỗi từ seed đó → Duo/Trio vẫn công bằng, không
+ * phụ thuộc lịch sử local của từng máy.
+ */
+export function chooseComputerSeed({
+  recentIds = [],
+  difficulty = 'mixed',
+  attempts = 24,
+  maxOverlap = 0,
+  limit = 60,
+  randomSeed,
+} = {}) {
+  const recent = new Set(recentIds);
+  let best = null;
+  let bestOverlap = Infinity;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const seed = randomSeed();
+    const overlap = computerSequenceIds(seed, difficulty, limit).filter((id) => recent.has(id)).length;
+    if (overlap <= maxOverlap) return seed;
+    if (overlap < bestOverlap) {
+      bestOverlap = overlap;
+      best = seed;
+    }
+  }
+  return best;
+}
+
+export const COMPUTER_VOCABULARY_SIZE = CHALLENGES.length;
 
 // MySQL JSON normalizes object-key order. Compare event contents, never their
 // serialization order, while still rejecting any changed/added field.
@@ -47,10 +194,18 @@ export function challenge(game, seed, index, difficulty = 'mixed', options = {})
   const { rulesVersion = RULES_VERSION, previousAt = 0, durationMs = 60000, previousCorrect = true } = options;
   const rng = random(seed, index);
   if (game === 'computer_rush') {
-    const mixed = rulesVersion < 2 ? ['easy', 'medium', 'hard', 'vietnamese'][Math.min(3, Math.floor(index / 5))] : index < 5 ? 'easy' : index < 12 ? 'medium' : index < 18 ? 'hard' : index % 3 === 0 ? 'medium' : 'vietnamese';
-    const category = Object.hasOwn(WORD_BANK, difficulty) ? difficulty : mixed;
-    const words = WORD_BANK[category];
-    return { word: words[Math.floor(rng() * words.length)], category };
+    const sequence = computerSequence(seed, difficulty);
+    if (!sequence.length) throw new Error('Kho từ Computer Rush rỗng');
+    // index vượt quá độ dài bag (chỉ khi limit bị hạ) → quay vòng an toàn.
+    const entry = sequence[index] || sequence[index % sequence.length];
+    return {
+      word: entry.text,
+      category: entry.category,
+      language: entry.language,
+      difficulty: entry.difficulty,
+      family: entry.family,
+      challengeId: entry.id,
+    };
   }
   if (game === 'direction_rush') {
     const direction = Object.keys(ARROWS)[Math.floor(rng() * 4)];

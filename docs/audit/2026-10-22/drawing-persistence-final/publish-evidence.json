@@ -1,0 +1,59 @@
+{
+  "capturedAt": "2026-10-22T07:42:07.473Z",
+  "mode": "publish",
+  "user": {
+    "id": 10985,
+    "email": "qa.drawing.owner@workrank.test"
+  },
+  "drawingId": 5,
+  "title": "QA Persistent 2026-10-22T07-41-36-585Z",
+  "publishStages": [
+    "Đang giữ bản nháp trên thiết bị…",
+    "Đang chuẩn bị ảnh…",
+    "Đang tải ảnh lên hệ thống…",
+    "Đã đăng lên Thư viện"
+  ],
+  "successText": "Đã đăng tranh lên Thư viện!\n\n✓ Tác phẩm #5 · Đã đọc lại bản ghi và tải ảnh thật từ kho lưu trữ\n\nTác phẩm đã có trong Thư Viện Tranh và sẽ còn ở đó sau khi tải lại trang, đổi trình duyệt hoặc khi hệ thống được deploy lại.\n\nQA Persistent 2026-10-22T07-41-36-585Z\nTác giả: QA Drawing Owner",
+  "previewSrc": "http://127.0.0.1:18900/buckets/workrank-drawings/drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png",
+  "apiDrawing": {
+    "id": 5,
+    "title": "QA Persistent 2026-10-22T07-41-36-585Z",
+    "imageUrl": "http://127.0.0.1:18900/buckets/workrank-drawings/drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png",
+    "storageProvider": "s3",
+    "storagePersistent": true,
+    "width": 1200,
+    "height": 700,
+    "visibility": "PUBLIC",
+    "status": "ACTIVE",
+    "likesCount": 0,
+    "viewsCount": 2,
+    "metadata": {
+      "drawnAt": "2026-10-22T07:41:37.021Z",
+      "checksum": "218cb8ae3d51459e5868edba4358d9217fef1dfcfad19b00cc03edee8e37816a",
+      "toolUsed": "WorkRank Creative Canvas Studio",
+      "uploadState": "CONFIRMED",
+      "validatedAt": "2026-10-22T07:41:37.088Z",
+      "exportedMime": "image/png",
+      "publicationId": "18072296-e0a5-4a4a-bc58-fea19a8a2d69"
+    },
+    "createdAt": "2026-10-22T07:41:37.000Z",
+    "updatedAt": "2026-10-22T07:41:37.000Z",
+    "hasLiked": false,
+    "author": {
+      "id": 10985,
+      "name": "QA Drawing Owner",
+      "avatarUrl": null,
+      "jobTitle": "Nhân viên",
+      "department": "Media & Content",
+      "teamName": null,
+      "isVerified": false
+    }
+  },
+  "object": {
+    "status": 200,
+    "contentType": "image/png",
+    "contentLength": 35552,
+    "sha256": "218cb8ae3d51459e5868edba4358d9217fef1dfcfad19b00cc03edee8e37816a",
+    "bytes": 35552
+  }
+}

@@ -44,6 +44,14 @@ test('drawing authorization enforces anonymous, owner, team, former and foreign 
   assert.equal((await drawingService.getGallery({ visibility: 'ALL', currentUserId: foreign.id, currentUserTeamId: teamB.id })).drawings.length, 1);
   assert.equal((await drawingService.getGallery({ visibility: 'ALL', currentUserId: former.id, currentUserTeamId: teamB.id })).drawings.length, 1);
 
+  // Fail-closed: thiếu tham số visibility (hoặc scope không hợp lệ) chỉ được trả PUBLIC.
+  assert.equal((await drawingService.getGallery({})).drawings.length, 1);
+  assert.equal((await drawingService.getGallery({ visibility: undefined })).drawings.length, 1);
+  assert.equal((await drawingService.getGallery({ visibility: 'bogus' })).drawings.length, 1);
+  assert.equal((await drawingService.getGallery({ visibility: 'TEAM' })).drawings.length, 1);
+  assert.equal((await drawingService.getGallery({ visibility: 'TEAM', currentUserId: sameTeam.id, currentUserTeamId: teamA.id })).drawings.length, 2);
+  assert.equal((await drawingService.getGallery({ visibility: 'PRIVATE' })).drawings.length, 0);
+
   await assert.rejects(() => drawingService.getById(privateDrawing.id), { status: 403 });
   await assert.doesNotReject(() => drawingService.getById(privateDrawing.id, { userId: owner.id, teamId: teamA.id }));
   await assert.doesNotReject(() => drawingService.getById(teamDrawing.id, { userId: sameTeam.id, teamId: teamA.id }));

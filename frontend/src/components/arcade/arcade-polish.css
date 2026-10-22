@@ -19,6 +19,8 @@
 .arcade-word-wrap { display: grid; place-items: center; min-height: 88px; padding: 7px 10px 0; }
 .arcade-polished .arcade-word { padding: 4px 0; white-space: pre; overflow-wrap: normal; font-size: clamp(25px, 3.5vw, 44px); letter-spacing: .035em; line-height: 1.2; }
 .arcade-polished .arcade-word.long-word { font-size: clamp(21px, 2.7vw, 32px); }
+/* Cụm 3 từ (tới 31 ký tự) phải xuống dòng thay vì tràn khỏi màn hình monitor. */
+.arcade-polished .arcade-word.wrap-word { white-space: normal; font-size: clamp(17px, 2.1vw, 26px); line-height: 1.15; }
 .arcade-word [data-char-state="pending"] { color: #80927a; }
 .arcade-word [data-char-state="correct"] { color: #235a3d; background: #d3ebc9; }
 .arcade-word [data-char-state="wrong"] { color: #a12e3c; background: #f7d7d6; text-decoration: underline wavy; text-decoration-thickness: 2px; }

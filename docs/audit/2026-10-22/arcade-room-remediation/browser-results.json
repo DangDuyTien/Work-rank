@@ -1,0 +1,219 @@
+{
+  "checks": [
+    {
+      "name": "Concurrent Computer, Direction and Memory rooms stay isolated by canonical game type",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          810
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush DUO: room reaches another browser lobby in 60ms",
+      "status": "PASS"
+    },
+    {
+      "name": "Room route redirects to its canonical game type",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          811
+        ],
+        [
+          2,
+          2,
+          633
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush TRIO: room reaches another browser lobby in 113ms",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          812
+        ],
+        [
+          2,
+          2,
+          633
+        ],
+        [
+          3,
+          3,
+          463
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush TRIO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          12280
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush DUO: room reaches another browser lobby in 61ms",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          12268
+        ],
+        [
+          2,
+          2,
+          9937
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush TRIO: room reaches another browser lobby in 115ms",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          12275
+        ],
+        [
+          2,
+          2,
+          9945
+        ],
+        [
+          3,
+          3,
+          7618
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush TRIO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          843
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash DUO: room reaches another browser lobby in 82ms",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          2,
+          843
+        ],
+        [
+          2,
+          1,
+          844
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash TRIO: room reaches another browser lobby in 108ms",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          3,
+          845
+        ],
+        [
+          2,
+          1,
+          846
+        ],
+        [
+          3,
+          2,
+          846
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash TRIO: leaderboard and personal best",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "startedAt": "2026-10-22T09:08:51.625Z",
+  "finishedAt": "2026-10-22T09:11:31.050Z"
+}

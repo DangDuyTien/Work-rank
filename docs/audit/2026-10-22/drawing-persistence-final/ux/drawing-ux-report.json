@@ -1,0 +1,135 @@
+{
+  "capturedAt": "2026-10-22T08:07:54.223Z",
+  "viewports": {
+    "390": {
+      "rect": {
+        "x": 41.26000213623047,
+        "y": 428.306884765625,
+        "width": 311.9999694824219,
+        "height": 182
+      },
+      "backing": {
+        "width": 1200,
+        "height": 700
+      },
+      "cssSize": {
+        "width": "1200px",
+        "height": "700px"
+      },
+      "dpr": 3,
+      "scrollY": 0,
+      "docScrollable": false,
+      "controlCount": 30,
+      "offscreenControls": 0,
+      "viewportShare": 0.173,
+      "backingToDeviceRatio": 1.282,
+      "canvasSharp": true,
+      "touch": {
+        "pixel": [
+          15,
+          23,
+          42,
+          255
+        ],
+        "scrollY": 0,
+        "drewAtPoint": true,
+        "scrollDelta": 0
+      }
+    },
+    "430": {
+      "rect": {
+        "x": 43.290000915527344,
+        "y": 348.7900085449219,
+        "width": 347.9999694824219,
+        "height": 202.99996948242188
+      },
+      "backing": {
+        "width": 1200,
+        "height": 700
+      },
+      "cssSize": {
+        "width": "1200px",
+        "height": "700px"
+      },
+      "dpr": 3,
+      "scrollY": 0,
+      "docScrollable": false,
+      "controlCount": 30,
+      "offscreenControls": 0,
+      "viewportShare": 0.176,
+      "backingToDeviceRatio": 1.149,
+      "canvasSharp": true,
+      "touch": {
+        "pixel": [
+          15,
+          23,
+          42,
+          255
+        ],
+        "scrollY": 0,
+        "drewAtPoint": true,
+        "scrollDelta": 0
+      }
+    },
+    "768": {
+      "rect": {
+        "x": 56.58124923706055,
+        "y": 413.73748779296875,
+        "width": 660,
+        "height": 385.00006103515625
+      },
+      "backing": {
+        "width": 1200,
+        "height": 700
+      },
+      "cssSize": {
+        "width": "1200px",
+        "height": "700px"
+      },
+      "dpr": 2,
+      "scrollY": 0,
+      "docScrollable": false,
+      "controlCount": 30,
+      "offscreenControls": 0,
+      "viewportShare": 0.323,
+      "backingToDeviceRatio": 0.909,
+      "canvasSharp": true,
+      "touch": {
+        "pixel": [
+          15,
+          23,
+          42,
+          255
+        ],
+        "scrollY": 0,
+        "drewAtPoint": true,
+        "scrollDelta": 0
+      }
+    },
+    "1440": {
+      "rect": {
+        "x": 464.8175048828125,
+        "y": 274.6768798828125,
+        "width": 756,
+        "height": 441
+      },
+      "backing": {
+        "width": 1200,
+        "height": 700
+      },
+      "cssSize": {
+        "width": "1200px",
+        "height": "700px"
+      },
+      "dpr": 1,
+      "scrollY": 0,
+      "docScrollable": false,
+      "controlCount": 30,
+      "offscreenControls": 0,
+      "viewportShare": 0.257,
+      "backingToDeviceRatio": 1.587,
+      "canvasSharp": true,
+      "touch": null
+    }
+  }
+}

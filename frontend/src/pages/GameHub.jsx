@@ -9,6 +9,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { ARCADE_GAMES } from '../games/arcade/catalog';
+import { GAME_TYPES } from '../../../shared/gameRegistry.mjs';
 import { ArcadePoster } from '../components/arcade/ArcadeArt';
 import '../components/arcade/arcade.css';
 import { gameCatalogApi } from '../services/api';
@@ -16,15 +17,14 @@ import { useAuth } from '../context/AuthContext';
 import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../components/ui';
 
 const GAME_ICONS = {
-  typing_battle: Keyboard,
-  typing: Keyboard,
-  drawing: Palette,
+  [GAME_TYPES.TYPING_BATTLE]: Keyboard,
+  [GAME_TYPES.DRAWING]: Palette,
 };
 
 const DEFAULT_GAMES = [
   ...Object.entries(ARCADE_GAMES).map(([gameKey, game]) => ({ gameKey, name: game.name, status: 'AVAILABLE', description: game.subtitle, route: `/games/arcade/${gameKey}` })),
   {
-    gameKey: 'typing_battle',
+    gameKey: GAME_TYPES.TYPING_BATTLE,
     name: 'WorkRank Typing Battle',
     status: 'AVAILABLE',
     description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
@@ -32,7 +32,7 @@ const DEFAULT_GAMES = [
     route: '/games/typing',
   },
   {
-    gameKey: 'drawing',
+    gameKey: GAME_TYPES.DRAWING,
     name: 'Góc Sáng Tạo (Game Vẽ)',
     status: 'AVAILABLE',
     description: 'Không gian sáng tạo vẽ tranh nghệ thuật trên canvas siêu lớn & chia sẻ lên trang chủ WorkRank.',

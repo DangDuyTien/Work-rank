@@ -152,18 +152,26 @@ async function getGallery({
   const safeLimit = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const offset = (safePage - 1) * safeLimit;
 
+  // Fail-closed: không truyền tham số thì chỉ trả PUBLIC. Trước đây thiếu
+  // filter nghĩa là mọi bản ghi ACTIVE (kể cả PRIVATE của người khác) đều lọt ra
+  // qua GET /api/drawings không kèm query.
+  const requestedScope = String(visibility || '').trim().toUpperCase();
+  const scope = ['PUBLIC', 'TEAM', 'PRIVATE', 'ALL'].includes(requestedScope)
+    ? requestedScope
+    : 'PUBLIC';
+
   const whereClause = {
     status: 'ACTIVE',
   };
 
-  if (visibility && visibility !== 'ALL') {
-    whereClause.visibility = visibility;
-  }
-
-  if (visibility === 'PRIVATE') {
+  if (scope === 'PRIVATE') {
     if (!currentUserId) return { drawings: [], settings: await getSettings(), pagination: { page: safePage, limit: safeLimit, total: 0, totalPages: 0 } };
+    whereClause.visibility = 'PRIVATE';
     whereClause.userId = currentUserId;
-  } else if (visibility === 'ALL' || visibility === 'TEAM') {
+  } else if (scope === 'PUBLIC') {
+    whereClause.visibility = 'PUBLIC';
+  } else {
+    // TEAM / ALL: luôn có PUBLIC; phần mở rộng phải gắn với danh tính đã đăng nhập.
     const allowedVisibility = [{ visibility: 'PUBLIC' }];
     if (isAdmin) {
       allowedVisibility.push({ visibility: 'PRIVATE' }, { visibility: 'TEAM' });
@@ -172,7 +180,6 @@ async function getGallery({
       if (currentUserTeamId) allowedVisibility.push({ visibility: 'TEAM', '$author.team_id$': currentUserTeamId });
     }
     whereClause[Op.or] = allowedVisibility;
-    delete whereClause.visibility;
   }
 
   let order = [['created_at', 'DESC']];

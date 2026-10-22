@@ -6,7 +6,7 @@ import path from 'node:path';
 const web = process.env.ARCADE_AUDIT_WEB || 'http://127.0.0.1:5277';
 const api = process.env.ARCADE_AUDIT_API || 'http://127.0.0.1:5107';
 for (const url of [web, api]) assert.equal(new URL(url).hostname, '127.0.0.1');
-const output = path.resolve('../docs/audit/2026-10-21/arcade');
+const output = path.resolve(process.env.ARCADE_AUDIT_OUTPUT || '../docs/audit/2026-10-21/arcade');
 await fs.mkdir(output, { recursive: true });
 const report = { checks: [], errors: [], startedAt: new Date().toISOString() };
 const browser = await chromium.launch({ headless: true });
@@ -62,20 +62,48 @@ const play = { computer_rush: computer, direction_rush: direction, memory_flash:
 const games = process.env.ARCADE_AUDIT_GAME ? [process.env.ARCADE_AUDIT_GAME] : Object.keys(play);
 try {
   const sessions = await Promise.all(['a', 'b', 'c'].map(identity));
+  const crossGameRooms = await Promise.all([
+    sessions[0].request('/rooms', { gameType: 'computer_rush', mode: 'DUO' }),
+    sessions[1].request('/rooms', { gameType: 'direction_rush', mode: 'DUO' }),
+    sessions[2].request('/rooms', { gameType: 'memory_flash', mode: 'TRIO' }),
+  ]);
+  for (const [index, gameType] of ['computer_rush', 'direction_rush', 'memory_flash'].entries()) {
+    const mode = index === 2 ? 'TRIO' : 'DUO';
+    const filtered = await sessions[index].request(`/rooms?gameType=${gameType}&mode=${mode}`);
+    assert.ok(filtered.rooms.some((room) => room.id === crossGameRooms[index].room.id));
+    const otherType = ['computer_rush', 'direction_rush', 'memory_flash'].find((candidate) => candidate !== gameType);
+    const isolated = await sessions[index].request(`/rooms?gameType=${otherType}&mode=${mode}`);
+    assert.ok(!isolated.rooms.some((room) => room.id === crossGameRooms[index].room.id));
+  }
+  for (let i = 0; i < crossGameRooms.length; i++) await sessions[i].request(`/rooms/${crossGameRooms[i].room.id}/leave`, {});
+  pass('Concurrent Computer, Direction and Memory rooms stay isolated by canonical game type');
+
   for (const game of games) {
     for (const mode of ['SOLO', 'DUO', 'TRIO']) {
       const count = { SOLO: 1, DUO: 2, TRIO: 3 }[mode];
       const players = sessions.slice(0, count), a = players[0];
-      await a.page.goto(web + '/games/arcade/' + game);
-      await a.page.getByRole('button', { name: mode + ' ', exact: false }).click();
+      await Promise.all(players.map(async (p) => {
+        await p.page.goto(web + '/games/arcade/' + game);
+        await p.page.getByRole('button', { name: mode + ' ', exact: false }).click();
+      }));
+      const createStartedAt = Date.now();
       await a.page.getByRole('button', { name: mode === 'SOLO' ? 'Vào chơi ngay' : `Tạo phòng ${mode}` }).click();
       await a.page.waitForURL('**/room/**');
       const roomId = a.page.url().split('/').at(-1);
+      if (mode !== 'SOLO') {
+        await players[1].page.locator('.arcade-room-list button').filter({ hasText: 'Lan' }).first().waitFor({ state: 'visible', timeout: 3000 });
+        const discoveryMs = Date.now() - createStartedAt;
+        assert.ok(discoveryMs < 3000, `room list realtime refresh took ${discoveryMs}ms`);
+        pass(`${game} ${mode}: room reaches another browser lobby in ${discoveryMs}ms`);
+      }
       for (const p of players.slice(1)) {
-        await p.page.goto(web + '/games/arcade/' + game);
-        await p.page.getByRole('button', { name: mode + ' ', exact: false }).click();
         await p.page.locator('.arcade-room-list button').filter({ hasText: 'Lan' }).first().click();
         await p.page.waitForURL('**/room/**');
+      }
+      if (game === 'computer_rush' && mode === 'DUO') {
+        await players[1].page.goto(`${web}/games/arcade/memory_flash/room/${roomId}`);
+        await players[1].page.waitForURL(`**/games/arcade/${game}/room/${roomId}`, { timeout: 5000 });
+        pass('Room route redirects to its canonical game type');
       }
       if (mode !== 'SOLO') {
         for (const p of players) await p.page.getByRole('button', { name: 'Tôi đã sẵn sàng' }).click();

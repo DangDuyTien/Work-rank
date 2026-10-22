@@ -1,0 +1,167 @@
+{
+  "capturedAt": "2026-10-22T08:14:07.195Z",
+  "devDatabase": "workrank_realtime",
+  "qaMigrationDatabase": "workrank_drawing_qa",
+  "devRows": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "title": "Bình Minh Trên Đỉnh Vinh Quang 3Win",
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "width": 1200,
+      "height": 700,
+      "status": "ACTIVE",
+      "visibility": "PUBLIC",
+      "upload_state": null,
+      "publication_id": null,
+      "created_at": "2026-10-08T08:11:01.000Z",
+      "updated_at": "2026-10-08T08:11:01.000Z"
+    },
+    {
+      "id": 2,
+      "user_id": 14,
+      "title": "Vũ Điệu Ánh Sáng Vũ Trụ (Bản Vuông)",
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "width": 800,
+      "height": 800,
+      "status": "ACTIVE",
+      "visibility": "PUBLIC",
+      "upload_state": null,
+      "publication_id": null,
+      "created_at": "2026-10-09T06:35:06.000Z",
+      "updated_at": "2026-10-09T06:35:06.000Z"
+    },
+    {
+      "id": 3,
+      "user_id": 23,
+      "title": "Mầm Xanh Hy Vọng Trên Đỉnh Cao 3Win",
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "width": 600,
+      "height": 900,
+      "status": "ACTIVE",
+      "visibility": "PUBLIC",
+      "upload_state": null,
+      "publication_id": null,
+      "created_at": "2026-10-09T06:35:06.000Z",
+      "updated_at": "2026-10-09T06:35:06.000Z"
+    },
+    {
+      "id": 4,
+      "user_id": 1,
+      "title": "Xác minh storage 14:32:11",
+      "storage_provider": "database",
+      "storage_key": null,
+      "mime_type": "image/png",
+      "size_bytes": 397061,
+      "width": 1200,
+      "height": 700,
+      "status": "ACTIVE",
+      "visibility": "PUBLIC",
+      "upload_state": null,
+      "publication_id": null,
+      "created_at": "2026-10-21T07:32:11.000Z",
+      "updated_at": "2026-10-21T19:18:09.000Z"
+    },
+    {
+      "id": 5,
+      "user_id": 10985,
+      "title": "QA Persistent 2026-10-22T07-41-36-585Z",
+      "storage_provider": "s3",
+      "storage_key": "drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png",
+      "mime_type": "image/png",
+      "size_bytes": 35552,
+      "width": 1200,
+      "height": 700,
+      "status": "DELETED",
+      "visibility": "PUBLIC",
+      "upload_state": "CONFIRMED",
+      "publication_id": "18072296-e0a5-4a4a-bc58-fea19a8a2d69",
+      "created_at": "2026-10-22T00:41:37.000Z",
+      "updated_at": "2026-10-22T00:57:13.000Z"
+    },
+    {
+      "id": 6,
+      "user_id": 10985,
+      "title": "QA Persistent 2026-10-22T07-56-32-228Z",
+      "storage_provider": "s3",
+      "storage_key": "drawings/10985/9e81ee22-06a1-454a-8f0e-7a3fa90fbc03-218cb8ae3d51.png",
+      "mime_type": "image/png",
+      "size_bytes": 35552,
+      "width": 1200,
+      "height": 700,
+      "status": "ACTIVE",
+      "visibility": "PUBLIC",
+      "upload_state": "CONFIRMED",
+      "publication_id": "9e81ee22-06a1-454a-8f0e-7a3fa90fbc03",
+      "created_at": "2026-10-22T00:56:32.000Z",
+      "updated_at": "2026-10-22T00:56:32.000Z"
+    }
+  ],
+  "qaMigrationRows": [
+    {
+      "id": 1,
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "image_missing": null
+    },
+    {
+      "id": 2,
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "image_missing": null
+    },
+    {
+      "id": 3,
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "image_missing": null
+    },
+    {
+      "id": 4,
+      "storage_provider": "s3",
+      "storage_key": "drawings/legacy/1/4-b2d48cc40803.png",
+      "mime_type": "image/png",
+      "size_bytes": 397061,
+      "image_missing": false
+    },
+    {
+      "id": 5,
+      "storage_provider": "s3",
+      "storage_key": "drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png",
+      "mime_type": "image/png",
+      "size_bytes": 35552,
+      "image_missing": true
+    },
+    {
+      "id": 6,
+      "storage_provider": "s3",
+      "storage_key": "drawings/10985/9e81ee22-06a1-454a-8f0e-7a3fa90fbc03-218cb8ae3d51.png",
+      "mime_type": "image/png",
+      "size_bytes": 35552,
+      "image_missing": null
+    },
+    {
+      "id": 7,
+      "storage_provider": null,
+      "storage_key": null,
+      "mime_type": null,
+      "size_bytes": null,
+      "image_missing": true
+    }
+  ]
+}

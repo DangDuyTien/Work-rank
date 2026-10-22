@@ -43,7 +43,6 @@ function Leaderboard({ gameType, mode, setMode }) {
 
 export default function ArcadeGame() {
   const { gameType = 'computer_rush', roomId } = useParams();
-  const game = Object.hasOwn(ARCADE_GAMES, gameType) ? ARCADE_GAMES[gameType] : null;
   const { user, socket } = useAuth();
   const navigate = useNavigate();
   const session = useArcadeSession(roomId, user.id, socket);
@@ -57,17 +56,45 @@ export default function ArcadeGame() {
   const [personal, setPersonal] = useState(null);
   useEffect(() => { setView('play'); }, [roomId, gameType]);
   useEffect(() => {
-    if (roomId || !game) return;
+    if (roomId || !ARCADE_GAMES[gameType]) return;
     let alive = true;
     const refresh = async () => {
       try {
-        const [resume, board, list] = await Promise.all([arcadeApi('/active'), arcadeApi(`/leaderboard?gameType=${gameType}&mode=${mode}&period=all&difficulty=${difficulty}`), mode === 'SOLO' ? Promise.resolve({ rooms: [] }) : arcadeApi(`/rooms?gameType=${gameType}&mode=${mode}`)]);
-        if (alive) { setActive(resume); setPersonal(board.personal); setRooms(list.rooms); }
+        const [resume, board] = await Promise.all([arcadeApi('/active'), arcadeApi(`/leaderboard?gameType=${gameType}&mode=${mode}&period=all&difficulty=${difficulty}`)]);
+        if (alive) { setActive(resume); setPersonal(board.personal); }
       } catch (e) { if (alive) setError(e.response?.data?.message || 'Không tải được phòng'); }
     };
     refresh(); const timer = setInterval(refresh, 3000);
     return () => { alive = false; clearInterval(timer); };
-  }, [roomId, gameType, mode, game, difficulty]);
+  }, [roomId, gameType, mode, difficulty]);
+  useEffect(() => {
+    if (roomId || !ARCADE_GAMES[gameType] || mode === 'SOLO') {
+      setRooms([]);
+      return undefined;
+    }
+    let alive = true;
+    const refreshRooms = async () => {
+      try {
+        const list = await arcadeApi(`/rooms?gameType=${gameType}&mode=${mode}`);
+        if (alive) setRooms(list.rooms);
+      } catch (e) {
+        if (alive) setError(e.response?.data?.message || 'Không tải được danh sách phòng');
+      }
+    };
+    const handleRoomsChanged = (event = {}) => {
+      if (!event.gameType || event.gameType === gameType) refreshRooms();
+    };
+    refreshRooms();
+    socket?.on('arcade:roomsChanged', handleRoomsChanged);
+    socket?.on('connect', refreshRooms);
+    const timer = setInterval(refreshRooms, 15000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      socket?.off('arcade:roomsChanged', handleRoomsChanged);
+      socket?.off('connect', refreshRooms);
+    };
+  }, [roomId, gameType, mode, socket]);
   useEffect(() => {
     const room = session.snapshot?.room;
     if (!roomId || !room) return;
@@ -75,6 +102,13 @@ export default function ArcadeGame() {
     arcadeApi(`/leaderboard?gameType=${room.gameType}&mode=${room.mode}&period=all&difficulty=${room.difficulty}`).then((r) => { if (alive) setPersonal(r.personal); }).catch(() => {});
     return () => { alive = false; };
   }, [roomId, session.snapshot?.room.id]);
+  useEffect(() => {
+    const roomGameType = session.snapshot?.room.gameType;
+    if (!roomId || !roomGameType || roomGameType === gameType || !ARCADE_GAMES[roomGameType]) return;
+    navigate(`/games/arcade/${roomGameType}/room/${roomId}`, { replace: true });
+  }, [roomId, gameType, session.snapshot?.room.gameType, navigate]);
+  const effective = session.snapshot?.room.gameType || gameType;
+  const game = ARCADE_GAMES[effective];
   if (!game) return <PageState type="error" message="Game không tồn tại" />;
   const open = async (joinId) => {
     if (busy) return;
@@ -99,13 +133,14 @@ export default function ArcadeGame() {
   };
   const { snapshot } = session;
   const me = snapshot?.players.find((p) => String(p.userId) === String(user.id));
-  const effective = snapshot?.room.gameType || gameType;
+  const routeMismatch = Boolean(roomId && snapshot && snapshot.room.gameType !== gameType);
   return <div className={`arcade-page ${effective}`}>
     <header className="arcade-topbar"><button type="button" onClick={exit}><ArrowLeft size={18} /><span>{roomId ? 'Rời phòng' : 'Game Center'}</span></button><span className="arcade-brand">WORK RANK <b>ARCADE</b></span><ArcadeSoundControl /><button type="button" aria-label="Lịch sử đã lưu" aria-pressed={view==='history'} disabled={snapshot?.room.status==='PLAYING'&&!me?.finishedAt} onClick={()=>setView(v=>v==='history'?'play':'history')}><History size={18}/></button><button type="button" disabled={snapshot?.room.status === 'PLAYING' && !me?.finishedAt} onClick={() => { if (snapshot) setMode(snapshot.room.mode); setView((v) => v === 'board' ? 'play' : 'board'); }} aria-pressed={view === 'board'}><Trophy size={18} /><span>BXH</span></button></header>
     {(error || session.error) && <p className="arcade-notice motion-slide-down" role="alert">{error || session.error}</p>}
     {roomId && !session.online && <p className="arcade-offline" role="status">Kết nối gián đoạn · input vẫn hoạt động · đang giữ bản lưu trên thiết bị</p>}
     <TabTransition key={view==='play' ? roomId?'room':'menu' : view} minHeight={640}>
-      {view === 'history' ? <SavedGameHistory kind="arcade" gameType={effective} onOpen={()=>setView('play')}/> : view === 'board' ? <Leaderboard gameType={effective} mode={mode} setMode={setMode} />
+      {routeMismatch ? <PageState type="loading" message="Đang mở đúng game của phòng…" />
+        : view === 'history' ? <SavedGameHistory kind="arcade" gameType={effective} onOpen={()=>setView('play')}/> : view === 'board' ? <Leaderboard gameType={effective} mode={mode} setMode={setMode} />
         : roomId ? !snapshot ? <PageState type="loading" message="Đang mở sân chơi…" />
           : snapshot.room.status === 'WAITING' ? <section className="arcade-lobby"><p className="arcade-kicker">{snapshot.room.mode} · PHÒNG CHỜ</p><h1>{game.name}</h1><p>{snapshot.room.title} · {snapshot.players.length}/{snapshot.room.capacity} người</p><div className="arcade-lobby-stage">{snapshot.players.map((p) => <div key={p.id}><PlayerAvatar2D player={p} state={p.ready ? 'ready' : 'idle'} /><span className="arcade-ready-label">{p.ready ? '✓ Sẵn sàng' : 'Đang chuẩn bị'}{String(p.userId) === String(snapshot.room.hostId) ? ' · Chủ phòng' : ''}</span></div>)}{Array.from({ length: snapshot.room.capacity - snapshot.players.length }, (_, i) => <div className="arcade-empty-seat" key={i}><Users size={40} /><span>Đợi đồng đội…</span></div>)}</div><p className="arcade-controls-info">{game.controls}</p><div className="arcade-actions"><Button onClick={() => session.action('ready', { ready: !me.ready })}>{me.ready ? 'Hủy sẵn sàng' : 'Tôi đã sẵn sàng'}</Button>{String(snapshot.room.hostId) === String(user.id) && <Button variant="secondary" disabled={snapshot.players.length !== snapshot.room.capacity || snapshot.players.some((p) => !p.ready)} onClick={() => session.action('start')}><Play size={18} /> Bắt đầu</Button>}</div></section>
           : me?.finishedAt ? <SettledResult key={snapshot.room.id} snapshot={snapshot} userId={user.id} busy={busy} onReplay={replayGame} onBoard={() => { setMode(snapshot.room.mode); setView('board'); }} />

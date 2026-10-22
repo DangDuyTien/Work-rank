@@ -60,6 +60,11 @@ const BRUSH_SIZES = [
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 700;
 const MAX_UNDO_STEPS = 25;
+// Khớp giới hạn backend (utils/imageValidation.js).
+const MAX_PUBLISH_BYTES = 8 * 1024 * 1024;
+// Tranh nét mảnh nén PNG rất tốt; chỉ khi vượt ngưỡng này mới thử WebP q=0.92
+// để không bao giờ chạm trần 8MB mà vẫn giữ chi tiết.
+const WEBP_FALLBACK_THRESHOLD = 3.5 * 1024 * 1024;
 
 export default function DrawingGame() {
   const navigate = useNavigate();
@@ -114,6 +119,9 @@ export default function DrawingGame() {
   useEffect(()=>{let active=true;drawingApi.getSettings().then(data=>{if(active)setPublishingAvailable(data.publishing?.available ?? null);}).catch(()=>{});return()=>{active=false;};},[]);
   const [draftStatus,setDraftStatus]=useState('loading'),[publishedArtwork,setPublishedArtwork]=useState(null),[uploadPercent,setUploadPercent]=useState(0),[publishStage,setPublishStage]=useState('');
   const draftTimer=useRef(null),draftReady=useRef(false),draftRevision=useRef(0),publicationId=useRef(null),draftMeta=useRef(null);
+  // Chặn double-click Publish: state isPublishing chỉ đổi sau khi React commit,
+  // nên một cú double-click rất nhanh vẫn có thể lọt hai request.
+  const publishingRef=useRef(false);
   if(!publicationId.current)publicationId.current=crypto.randomUUID();
   draftMeta.current={title:artworkTitle,visibility,tool,color,brushSize};
   const persistDraftNow=useCallback(async()=>{
@@ -133,6 +141,13 @@ export default function DrawingGame() {
   },[persistDraftNow]);
   useEffect(()=>{if(draftReady.current&&!publishedArtwork)queueDraft();},[artworkTitle,visibility,tool,color,brushSize,queueDraft,publishedArtwork]);
   useEffect(()=>()=>{clearTimeout(draftTimer.current);},[]);
+  // Chỉ cảnh báo rời trang trong khoảng debounce 400ms khi nét mới chưa kịp
+  // ghi xuống IndexedDB — không chặn người dùng bằng popup vô cớ.
+  useEffect(()=>{
+    const guard=(event)=>{if(draftStatus!=='saving')return;event.preventDefault();event.returnValue='';};
+    window.addEventListener('beforeunload',guard);
+    return()=>window.removeEventListener('beforeunload',guard);
+  },[draftStatus]);
 
 
   // Synchronize state changes to refs immediately and synchronously
@@ -776,6 +791,37 @@ export default function DrawingGame() {
     return exportCanvas;
   }, []);
 
+  /**
+   * Xuất bản đăng: PNG lossless (giữ đúng nét vẽ). Nếu PNG vượt ngưỡng, thử
+   * WebP q=0.92; nếu vẫn vượt trần 8MB thì báo lỗi rõ thay vì để backend 413.
+   */
+  const exportArtworkBlob = useCallback(async () => {
+    const exportCanvas = getCompositedCanvas();
+    if (!exportCanvas) throw new Error('Không thể xuất hình ảnh từ canvas.');
+
+    const toBlob = (type, quality) =>
+      new Promise((resolve) => exportCanvas.toBlob(resolve, type, quality));
+
+    let blob = await toBlob('image/png');
+    if (!blob) throw new Error('Không thể xuất hình ảnh từ canvas.');
+
+    if (blob.size > WEBP_FALLBACK_THRESHOLD) {
+      const webp = await toBlob('image/webp', 0.92);
+      // Safari có thể trả PNG dù xin WebP → chỉ nhận khi đúng định dạng và nhẹ hơn.
+      if (webp && webp.type === 'image/webp' && webp.size < blob.size) blob = webp;
+    }
+
+    if (blob.size > MAX_PUBLISH_BYTES) {
+      throw new Error(
+        'Tranh vượt quá 8MB nên chưa thể đăng. Hãy bớt chi tiết ảnh hoặc tải bản PNG về máy.'
+      );
+    }
+
+    const mime = blob.type || 'image/png';
+    const ext = mime === 'image/webp' ? 'webp' : mime === 'image/jpeg' ? 'jpg' : 'png';
+    return { blob, mime, ext };
+  }, [getCompositedCanvas]);
+
   // Download artwork locally as PNG
   const handleDownload = () => {
     const exportCanvas = getCompositedCanvas();
@@ -809,24 +855,19 @@ export default function DrawingGame() {
 
   // Submit & Publish to WorkRank
   const handlePublish = async () => {
-    const exportCanvas = getCompositedCanvas();
-    if (!exportCanvas) return;
+    if (publishingRef.current) return;
+    publishingRef.current = true;
 
     try {
-      setIsPublishing(true);setUploadPercent(0);setPublishStage('Đang giữ bản nháp trước khi đăng…');
+      setIsPublishing(true);setUploadPercent(0);setPublishStage('Đang giữ bản nháp trên thiết bị…');
       setErrorMessage('');
       await persistDraftNow().catch(()=>setDraftStatus('unavailable'));
 
-      const blob = await new Promise((resolve) => {
-        exportCanvas.toBlob((b) => resolve(b), 'image/png');
-      });
-
-      if (!blob) {
-        throw new Error('Không thể xuất hình ảnh từ canvas.');
-      }
+      setPublishStage('Đang chuẩn bị ảnh…');
+      const { blob, mime, ext } = await exportArtworkBlob();
 
       const formData = new FormData();
-      formData.append('image', blob, 'artwork.png');
+      formData.append('image', blob, `artwork.${ext}`);
       formData.append('publicationId',publicationId.current);
       formData.append('title', artworkTitle.trim() || 'Tác phẩm không tên');
       formData.append('width', String(CANVAS_WIDTH));
@@ -837,6 +878,7 @@ export default function DrawingGame() {
         JSON.stringify({
           drawnAt: new Date().toISOString(),
           toolUsed: 'WorkRank Creative Canvas Studio',
+          exportedMime: mime,
         })
       );
 
@@ -847,7 +889,7 @@ export default function DrawingGame() {
       const remoteUrl=resolveAssetUrl(confirmed.imageUrl);
       await new Promise((resolve,reject)=>{const image=new Image(),timer=setTimeout(()=>reject(new Error('Đã gửi tác phẩm nhưng chưa xác minh được ảnh. Hãy thử lại; bản nháp vẫn còn.')),15000);
         image.onload=()=>{clearTimeout(timer);resolve();};image.onerror=()=>{clearTimeout(timer);reject(new Error('Chưa tải lại được ảnh từ kho lưu trữ. Hãy thử lại; bản nháp vẫn còn.'));};image.src=remoteUrl;});
-      setPreviewImageUrl(remoteUrl);setArtworkTitle(confirmed.title);setPublishedArtwork(confirmed);setUploadPercent(100);setPublishStage('Đã lưu lên hệ thống');
+      setPreviewImageUrl(remoteUrl);setArtworkTitle(confirmed.title);setPublishedArtwork(confirmed);setUploadPercent(100);setPublishStage('Đã đăng lên Thư viện');
       await removeDrawingDraft(user.id).catch(()=>{});setDraftStatus('published');
       setPublishSuccess(true);
     } catch (err) {
@@ -858,6 +900,7 @@ export default function DrawingGame() {
         'Không thể chia sẻ tác phẩm. Vui lòng thử lại.';
       setErrorMessage(msg);
     } finally {
+      publishingRef.current = false;
       setIsPublishing(false);
     }
   };
@@ -901,7 +944,7 @@ export default function DrawingGame() {
         </div>
       </div>
 
-      <div className="drawing-save-hud" data-state={draftStatus} role="status"><span>{publishedArtwork?`✓ Đã lưu lên hệ thống · Tác phẩm #${publishedArtwork.id}`:draftStatus==='loading'?'Đang mở bản nháp…':draftStatus==='saving'?'Đang lưu nháp trên thiết bị…':draftStatus==='restored'?'Đã khôi phục nháp trên thiết bị · Chưa đăng':draftStatus==='unavailable'?'Không lưu được nháp trên thiết bị · Hãy tải PNG để giữ tranh':'Nháp trên thiết bị · Chưa đăng lên hệ thống'}</span><Link to="/creative-corner">Thư viện tranh →</Link></div>
+      <div className="drawing-save-hud" data-state={draftStatus} role="status"><span>{publishedArtwork?`✓ Đã đăng tranh lên Thư viện · Tác phẩm #${publishedArtwork.id}`:draftStatus==='loading'?'Đang mở bản nháp…':draftStatus==='saving'?'Đang lưu bản nháp trên thiết bị…':draftStatus==='restored'?'Đã khôi phục bản nháp trên thiết bị · Chưa đăng':draftStatus==='unavailable'?'Không lưu được bản nháp trên thiết bị · Hãy tải PNG để giữ tranh':'Đã lưu bản nháp trên thiết bị · Chưa đăng lên Thư viện'}</span><Link to="/creative-corner">Thư viện tranh →</Link></div>
       {publishingAvailable===false&&<Notice type="info">Hiện chưa thể đăng tranh lên hệ thống. Bạn vẫn có thể vẽ, giữ nháp trên thiết bị và tải bản PNG.</Notice>}
       {/* Main Drawing Stage (WHITEBOARD VIEWPORT WITH ZOOM & PAN) */}
       <div className="drawing-stage-container">
@@ -1327,7 +1370,7 @@ export default function DrawingGame() {
                 ) : (
                   <>
                     <CheckCircle2 size={16} />
-                    <span>Lưu &amp; Hoàn thành tác phẩm</span>
+                    <span>Đăng tranh lên Thư viện</span>
                   </>
                 )}
               </Button>
@@ -1338,16 +1381,17 @@ export default function DrawingGame() {
         {publishSuccess ? (
           <div className="publish-success-state">
             <CheckCircle2 size={54} className="publish-success-icon" />
-            <h2 className="publish-success-title">Đã lưu lên hệ thống!</h2>
-            <p className="drawing-publish-id">✓ Tác phẩm #{publishedArtwork?.id} · Đã đọc lại bản ghi và ảnh trên hệ thống</p>
+            <h2 className="publish-success-title">Đã đăng tranh lên Thư viện!</h2>
+            <p className="drawing-publish-id">✓ Tác phẩm #{publishedArtwork?.id} · Đã đọc lại bản ghi và tải ảnh thật từ kho lưu trữ</p>
             <p className="publish-success-desc">
-              Tác phẩm đã có trong <b>Thư Viện Tranh</b> theo quyền xem bạn đã chọn.
+              Tác phẩm đã có trong <b>Thư Viện Tranh</b> và sẽ còn ở đó sau khi tải lại trang,
+              đổi trình duyệt hoặc khi hệ thống được deploy lại.
             </p>
             <div className="publish-preview-card">
               <img src={previewImageUrl} alt={artworkTitle} className="publish-preview-img" />
               <div className="publish-preview-info">
                 <div className="publish-preview-title">{artworkTitle}</div>
-                <div className="publish-preview-author">Tác giả: {user?.name || 'Bạn'}</div>
+                <div className="publish-preview-author">Tác giả: {user?.name || 'Bạn'} · Chế độ: Công khai</div>
               </div>
             </div>
           </div>

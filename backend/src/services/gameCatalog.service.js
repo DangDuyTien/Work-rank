@@ -2,34 +2,36 @@
 
 const { GameCatalog } = require('../models');
 
-const DEFAULT_GAMES = [
-  { gameKey: 'computer_rush', name: 'Computer Rush', status: 'AVAILABLE', enabled: true, sortOrder: 3, description: 'Gõ nhanh · Giữ combo', icon: 'Monitor', route: '/games/arcade/computer_rush' },
-  { gameKey: 'direction_rush', name: 'Direction Rush', status: 'AVAILABLE', enabled: true, sortOrder: 4, description: 'Nhanh mắt · Nhanh tay', icon: 'Move', route: '/games/arcade/direction_rush' },
-  { gameKey: 'memory_flash', name: 'Memory Flash', status: 'AVAILABLE', enabled: true, sortOrder: 5, description: 'Nhìn nhanh · Nhớ chuẩn', icon: 'Brain', route: '/games/arcade/memory_flash' },
-  {
-    gameKey: 'typing_battle',
-    name: 'WorkRank Typing Battle',
-    status: 'AVAILABLE',
-    enabled: true,
-    sortOrder: 1,
-    description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
-    icon: 'Keyboard',
-    route: '/games/typing',
-  },
-  {
-    gameKey: 'drawing',
-    name: 'Góc Sáng Tạo (Game Vẽ)',
-    status: 'AVAILABLE',
-    enabled: true,
-    sortOrder: 2,
-    description: 'Không gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.',
-    icon: 'Palette',
-    route: '/games/drawing',
-  },
-];
+async function getDefaultGames() {
+  const { GAME_TYPES, ARCADE_GAME_REGISTRY } = await import('../../../shared/gameRegistry.mjs');
+  return [
+    {
+      gameKey: GAME_TYPES.TYPING_BATTLE,
+      name: 'WorkRank Typing Battle', status: 'AVAILABLE', enabled: true, sortOrder: 1,
+      description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
+      icon: 'Keyboard', route: '/games/typing',
+    },
+    {
+      gameKey: GAME_TYPES.DRAWING,
+      name: 'Góc Sáng Tạo (Game Vẽ)', status: 'AVAILABLE', enabled: true, sortOrder: 2,
+      description: 'Không gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.',
+      icon: 'Palette', route: '/games/drawing',
+    },
+    ...ARCADE_GAME_REGISTRY.map((game, index) => ({
+      gameKey: game.id,
+      name: game.name,
+      status: 'AVAILABLE',
+      enabled: true,
+      sortOrder: index + 3,
+      description: game.subtitle,
+      icon: game.icon,
+      route: `/games/arcade/${game.id}`,
+    })),
+  ];
+}
 
 async function ensureDefaultCatalog() {
-  for (const g of DEFAULT_GAMES) {
+  for (const g of await getDefaultGames()) {
     const existing = await GameCatalog.findOne({ where: { gameKey: g.gameKey } });
     if (!existing) {
       await GameCatalog.create(g).catch(() => {});
@@ -42,8 +44,9 @@ async function ensureDefaultCatalog() {
  */
 async function getCatalog() {
   await ensureDefaultCatalog().catch(() => {});
+  const defaults = await getDefaultGames();
   const games = await GameCatalog.findAll({
-    where: { gameKey: DEFAULT_GAMES.map((g) => g.gameKey) },
+    where: { gameKey: defaults.map((g) => g.gameKey) },
     order: [['sort_order', 'ASC'], ['id', 'ASC']],
   });
   return games;

@@ -1,0 +1,67 @@
+{
+  "startedAt": "2026-10-22T07:58:16.463Z",
+  "finishedAt": "2026-10-22T07:58:16.494Z",
+  "dryRun": false,
+  "provider": "s3",
+  "totals": {
+    "scanned": 7,
+    "migrated": 0,
+    "linkedExisting": 0,
+    "skipped": 5,
+    "missing": 2,
+    "failed": 0
+  },
+  "items": [
+    {
+      "drawingId": 1,
+      "userId": 1,
+      "title": "Bình Minh Trên Đỉnh Vinh Quang 3Win",
+      "status": "skipped-inline-svg",
+      "note": "SVG inline giữ nguyên trong DB (không upload SVG lên bucket public)."
+    },
+    {
+      "drawingId": 2,
+      "userId": 14,
+      "title": "Vũ Điệu Ánh Sáng Vũ Trụ (Bản Vuông)",
+      "status": "skipped-inline-svg",
+      "note": "SVG inline giữ nguyên trong DB (không upload SVG lên bucket public)."
+    },
+    {
+      "drawingId": 3,
+      "userId": 23,
+      "title": "Mầm Xanh Hy Vọng Trên Đỉnh Cao 3Win",
+      "status": "skipped-inline-svg",
+      "note": "SVG inline giữ nguyên trong DB (không upload SVG lên bucket public)."
+    },
+    {
+      "drawingId": 4,
+      "userId": 1,
+      "title": "Xác minh storage 14:32:11",
+      "status": "skipped-has-key",
+      "key": "drawings/legacy/1/4-b2d48cc40803.png"
+    },
+    {
+      "drawingId": 5,
+      "userId": 10985,
+      "title": "QA Persistent 2026-10-22T07-41-36-585Z",
+      "status": "missing-object",
+      "key": "drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png",
+      "note": "DB có key nhưng object không tồn tại trong kho đã cấu hình."
+    },
+    {
+      "drawingId": 6,
+      "userId": 10985,
+      "title": "QA Persistent 2026-10-22T07-56-32-228Z",
+      "status": "skipped-has-key",
+      "key": "drawings/10985/9e81ee22-06a1-454a-8f0e-7a3fa90fbc03-218cb8ae3d51.png"
+    },
+    {
+      "drawingId": 7,
+      "userId": 10985,
+      "title": "Legacy mất file",
+      "status": "missing-local-file",
+      "path": "/Applications/du-an/workrank/workrank-realtime/backend/uploads/drawings/khong-ton-tai.png",
+      "note": "Không tìm thấy file trên disk và không fetch được qua HTTP."
+    }
+  ]
+}

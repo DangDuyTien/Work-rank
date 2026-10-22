@@ -17,6 +17,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
@@ -309,6 +310,28 @@ test('Drawing persistent storage remediation', async (t) => {
     const found = res.body.drawings.find((d) => d.id === uploadedDrawingId);
     assert.ok(found, 'tác phẩm phải xuất hiện trong gallery');
     assert.ok(found.imageUrl.includes('/uploads/drawings/'));
+  });
+
+  await t.test('repeated publish with the same publicationId stays one artwork', async () => {
+    const publicationId = crypto.randomUUID();
+    const png = makePng(160, 120);
+    const send = () =>
+      request(app)
+        .post('/api/drawings')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .field('publicationId', publicationId)
+        .field('title', 'Bấm đăng hai lần')
+        .attach('image', png, { filename: 'double.png', contentType: 'image/png' });
+
+    const first = await send();
+    const second = await send();
+    assert.equal(first.status, 201, JSON.stringify(first.body));
+    assert.equal(second.status, 201, JSON.stringify(second.body));
+    assert.equal(second.body.drawing.id, first.body.drawing.id, 'không được tạo tác phẩm thứ hai');
+
+    const rows = await Drawing.findAll({ where: { userId: userA.id, title: 'Bấm đăng hai lần' } });
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].storageKey, (await Drawing.findByPk(first.body.drawing.id)).storageKey);
   });
 
   /* ── 4. authorization + delete lifecycle ── */

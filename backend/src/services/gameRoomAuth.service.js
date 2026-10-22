@@ -33,12 +33,14 @@ async function canAccessGameRoom({
   gameType,
   clientSpectatorHint = false,
 }) {
+  const { GAME_TYPES, canonicalGameType } = await import('../../../shared/gameRegistry.mjs');
+  gameType = canonicalGameType(gameType);
   const uid = Number(userId);
   if (!uid) {
     return { allowed: false, error: 'User ID không hợp lệ', code: 'UNAUTHORIZED', status: 401 };
   }
 
-  if (gameType === 'typing' || gameType === 'typing_battle') {
+  if (gameType === GAME_TYPES.TYPING_BATTLE) {
     let room = null;
     if (typeof roomId === 'number' || /^\d+$/.test(String(roomId))) {
       room = await TypingRoom.findByPk(Number(roomId));

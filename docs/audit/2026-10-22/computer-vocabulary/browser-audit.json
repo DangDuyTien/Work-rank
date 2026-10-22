@@ -1,0 +1,280 @@
+{
+  "capturedAt": "2026-10-22T08:54:28.683Z",
+  "solo": {
+    "matches": 6,
+    "words": 72,
+    "uniqueWords": 69,
+    "inMatchDuplicates": 0,
+    "consecutiveRepeats": [],
+    "runs": [
+      {
+        "roomId": "fb1a7a5d-c76b-4d65-89c4-4f2a49cbbd34",
+        "seed": "692e59b6997fa3ccb71359591d31bf9e",
+        "words": [
+          "ECHO",
+          "COW",
+          "STASH",
+          "PROMO",
+          "SOUR",
+          "PHIÊN BẢN",
+          "TREE",
+          "KHU RỪNG",
+          "CLOUD",
+          "BRANDING",
+          "BAG",
+          "FUN"
+        ]
+      },
+      {
+        "roomId": "8863872f-639a-481f-b1b6-111a1b69c073",
+        "seed": "6c7e4146bfe40ff7c3a14f6bf82e89ec",
+        "words": [
+          "POT",
+          "SNOW",
+          "PAY",
+          "TOY",
+          "GIFT",
+          "TUÂN THỦ",
+          "SALT",
+          "CĂN NHÀ",
+          "DISH",
+          "CÁP SẠC",
+          "GATE",
+          "HEAP"
+        ]
+      },
+      {
+        "roomId": "b3b0e6af-e40c-49f3-9b7e-1c40809c36bc",
+        "seed": "a8891d5bdd7e28341c0ffc7e6d80f0de",
+        "words": [
+          "TWIG",
+          "LADLE",
+          "DIM",
+          "YES",
+          "END",
+          "NHÁNH MÃ",
+          "ARM",
+          "ATOMIC",
+          "WAY",
+          "DỰ PHÒNG",
+          "TOSS",
+          "OCEAN"
+        ]
+      },
+      {
+        "roomId": "9484d9c9-ecce-4d17-83f6-1c28e48e617a",
+        "seed": "56856ac554bceee18a4730147f0a12fc",
+        "words": [
+          "MASK",
+          "HILL",
+          "TAP",
+          "RAW",
+          "ZOO",
+          "DUBBING",
+          "COIN",
+          "CHÌA KHÓA",
+          "BLOG",
+          "HƠI THỞ",
+          "ROOF",
+          "TRIAL"
+        ]
+      },
+      {
+        "roomId": "ade53b2e-a63b-4754-8bfe-4615bfec6246",
+        "seed": "fe2ab818a6c37f04d1c152de6d76b9a9",
+        "words": [
+          "SOFT",
+          "FILM",
+          "TOY",
+          "SOAP",
+          "ROPE",
+          "TƯƠNG TÁC",
+          "BROLL",
+          "APERTURE",
+          "CLOUD",
+          "KHUNG ẢNH",
+          "BAG",
+          "QUIET"
+        ]
+      },
+      {
+        "roomId": "b922d4b6-d993-478e-af40-097a99fc571e",
+        "seed": "a0b5b5bb23f36c26657ca0505288431c",
+        "words": [
+          "LAW",
+          "TAR",
+          "KIT",
+          "QUERY",
+          "EGG",
+          "RESPONSE",
+          "DREAM",
+          "INTERVIEW",
+          "COZY",
+          "CỬA SỔ",
+          "BAT",
+          "QUEUE"
+        ]
+      }
+    ]
+  },
+  "duo": {
+    "mode": "DUO",
+    "roomId": "f669381b-74fe-4363-8e4a-8923ec4e0f56",
+    "seed": "a80958189aa40e27969dee74bf956db9",
+    "sharedIndexes": 5,
+    "mismatches": 0,
+    "perPlayer": [
+      [
+        {
+          "index": 0,
+          "word": "TAX",
+          "overflow": false
+        },
+        {
+          "index": 1,
+          "word": "FIRE",
+          "overflow": false
+        },
+        {
+          "index": 2,
+          "word": "CROP",
+          "overflow": false
+        },
+        {
+          "index": 3,
+          "word": "FEW",
+          "overflow": false
+        },
+        {
+          "index": 4,
+          "word": "VLOG",
+          "overflow": false
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "word": "TAX",
+          "overflow": false
+        },
+        {
+          "index": 1,
+          "word": "FIRE",
+          "overflow": false
+        },
+        {
+          "index": 2,
+          "word": "CROP",
+          "overflow": false
+        },
+        {
+          "index": 3,
+          "word": "FEW",
+          "overflow": false
+        },
+        {
+          "index": 4,
+          "word": "VLOG",
+          "overflow": false
+        }
+      ]
+    ]
+  },
+  "trio": {
+    "mode": "TRIO",
+    "roomId": "4519a065-4e1e-4fb6-be12-7ca8f1c48391",
+    "seed": "c151af70fa118360bb5d8c780697f1d3",
+    "sharedIndexes": 5,
+    "mismatches": 0,
+    "perPlayer": [
+      [
+        {
+          "index": 0,
+          "word": "LAYER",
+          "overflow": false
+        },
+        {
+          "index": 1,
+          "word": "SHADE",
+          "overflow": false
+        },
+        {
+          "index": 2,
+          "word": "POP",
+          "overflow": false
+        },
+        {
+          "index": 3,
+          "word": "GATE",
+          "overflow": false
+        },
+        {
+          "index": 4,
+          "word": "SORT",
+          "overflow": false
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "word": "LAYER",
+          "overflow": false
+        },
+        {
+          "index": 1,
+          "word": "SHADE",
+          "overflow": false
+        },
+        {
+          "index": 2,
+          "word": "POP",
+          "overflow": false
+        },
+        {
+          "index": 3,
+          "word": "GATE",
+          "overflow": false
+        },
+        {
+          "index": 4,
+          "word": "SORT",
+          "overflow": false
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "word": "LAYER",
+          "overflow": false
+        },
+        {
+          "index": 1,
+          "word": "SHADE",
+          "overflow": false
+        },
+        {
+          "index": 2,
+          "word": "POP",
+          "overflow": false
+        },
+        {
+          "index": 3,
+          "word": "GATE",
+          "overflow": false
+        },
+        {
+          "index": 4,
+          "word": "SORT",
+          "overflow": false
+        }
+      ]
+    ]
+  },
+  "verdict": {
+    "soloUniqueRatio": 0.9583333333333334,
+    "soloInMatchDuplicates": 0,
+    "consecutiveRepeatCount": 0,
+    "duoMismatches": 0,
+    "trioMismatches": 0
+  }
+}

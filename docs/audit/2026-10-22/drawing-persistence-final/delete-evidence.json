@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-10-22T07:57:13.738Z",
+  "mode": "delete",
+  "drawingId": 5,
+  "before": {
+    "imageUrl": "http://127.0.0.1:18900/buckets/workrank-drawings/drawings/10985/18072296-e0a5-4a4a-bc58-fea19a8a2d69-218cb8ae3d51.png"
+  },
+  "deleteStatus": 200,
+  "deleteBody": {
+    "success": true,
+    "drawingId": 5,
+    "alreadyDeleted": false
+  },
+  "getAfterStatus": 404,
+  "objectAfter": {
+    "status": 404,
+    "contentType": null,
+    "contentLength": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

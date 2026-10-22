@@ -154,3 +154,63 @@ test('Result PB is server-computed, isolated by configuration, and remains stabl
     await service.leave(next.room.id, users[3].id);
   }
 });
+
+test('Room creation keeps the host membership atomic and broadcasts authoritative list invalidation', async () => {
+  const emitted = [];
+  service.start({ to: (channel) => ({ emit: (event, payload) => emitted.push({ channel, event, payload }) }) });
+  try {
+    for (const gameType of ['computer_rush', 'direction_rush', 'memory_flash']) {
+      const created = await service.create({ gameType, mode: 'DUO' }, users[0]);
+      const players = await Player.findAll({ where: { roomId: created.room.id } });
+      assert.equal(players.length, 1);
+      assert.equal(String(players[0].userId), String(users[0].id));
+      assert.equal(String(created.room.hostId), String(users[0].id));
+      assert.ok(emitted.some((event) => event.event === 'arcade:roomsChanged' && event.payload.gameType === gameType));
+      const listed = await service.list(gameType, 'DUO');
+      assert.equal(listed.find((room) => room.id === created.room.id)?.capacity, 2);
+      await service.leave(created.room.id, users[0].id);
+    }
+  } finally {
+    service.stop();
+  }
+});
+
+test('Duplicate create and join are idempotent; concurrent Trio joins cannot exceed capacity', async () => {
+  const creates = await Promise.allSettled([
+    service.create({ gameType: 'computer_rush', mode: 'DUO' }, users[0]),
+    service.create({ gameType: 'computer_rush', mode: 'DUO' }, users[0]),
+  ]);
+  const created = creates.filter((result) => result.status === 'fulfilled');
+  assert.equal(created.length, 1);
+  assert.equal(creates.filter((result) => result.status === 'rejected').length, 1);
+  const duo = created[0].value;
+  await Promise.all([service.join(duo.room.id, users[1].id), service.join(duo.room.id, users[1].id)]);
+  assert.equal(await Player.count({ where: { roomId: duo.room.id } }), 2);
+  await service.leave(duo.room.id, users[0].id);
+  await service.leave(duo.room.id, users[1].id);
+
+  const trio = await service.create({ gameType: 'memory_flash', mode: 'TRIO' }, users[0]);
+  await service.join(trio.room.id, users[1].id);
+  const raced = await Promise.allSettled([
+    service.join(trio.room.id, users[2].id),
+    service.join(trio.room.id, users[3].id),
+  ]);
+  assert.equal(raced.filter((result) => result.status === 'fulfilled').length, 1);
+  assert.equal(raced.filter((result) => result.status === 'rejected').length, 1);
+  assert.equal(await Player.count({ where: { roomId: trio.room.id } }), 3);
+  await service.leave(trio.room.id, users[0].id);
+  for (const player of await Player.findAll({ where: { roomId: trio.room.id } })) await service.leave(trio.room.id, player.userId);
+});
+
+test('20 create and leave cycles per new game leave no public or membership ghosts', async () => {
+  for (const gameType of ['computer_rush', 'direction_rush', 'memory_flash']) {
+    for (let iteration = 0; iteration < 20; iteration++) {
+      const created = await service.create({ gameType, mode: 'DUO' }, users[0]);
+      assert.equal(await Player.count({ where: { roomId: created.room.id, userId: users[0].id } }), 1);
+      await service.leave(created.room.id, users[0].id);
+      assert.equal((await Room.findByPk(created.room.id)).status, 'CLOSED');
+      assert.equal(await Player.count({ where: { roomId: created.room.id } }), 0);
+      assert.ok(!(await service.list(gameType, 'DUO')).some((room) => room.id === created.room.id));
+    }
+  }
+});

@@ -2,6 +2,8 @@
 
 Ngày kiểm tra: 22/10/2026. Hiện chủ dự án chưa có kho ảnh production. Code hỗ trợ S3-compatible; dịch vụ S3 trên máy kiểm thử chỉ dùng QA, không phải kho production.
 
+> Đã chạy nghiệm thu end-to-end (publish → object → DB → browser khác → clear storage → restart → xóa `uploads` + restart) trên SeaweedFS S3-compatible. Xem [DRAWING_PERSISTENT_STORAGE_FINAL_REMEDIATION.md](audit/2026-10-22/DRAWING_PERSISTENT_STORAGE_FINAL_REMEDIATION.md) và harness `frontend/scripts/drawing-storage-acceptance.mjs` (publish/read/delete) để chạy lại trên bucket thật.
+
 ## Hành vi hiện tại
 
 - Vẽ, undo/redo và tải PNG dùng được khi chưa có kho ảnh.
