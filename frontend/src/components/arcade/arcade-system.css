@@ -1,0 +1,40 @@
+/* Shared motion contract: micro 100ms, gameplay 180ms, major 340/420ms.
+   Reuses WorkRank tokens; no queued animation or moving text layout. */
+.arcade-sound-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: 1px solid #ccd4c6; border-radius: 10px; background: #fffdf6; color: var(--arcade-accent); }
+.arcade-countdown>span { animation: arcade-count-beat var(--motion-fast) var(--ease-spring) both; }
+.arcade-player[data-state="action"] .arcade-body i { animation: arcade-type-hands var(--motion-instant) var(--ease-standard) 2; }
+.arcade-page .arcade-polished .arcade-player[data-state="correct"] .arcade-actor, .arcade-page .arcade-polished .arcade-player[data-state="wrong"] .arcade-actor, .arcade-page .arcade-polished .arcade-player[data-state="combo"] .arcade-actor { animation-duration: var(--motion-fast); }
+.arcade-player[data-state="ready"] .arcade-actor { transform: translateY(-2px); }
+.arcade-player[data-state="lose"] .arcade-body { transform: rotate(-3deg); }
+.arcade-player[data-state="finish"] .arcade-actor { animation: arcade-finish-hop var(--motion-layout) var(--ease-spring) both; }
+.arcade-player[data-state="combo"] .arcade-actor::after { content: '✦'; position: absolute; left: -12px; top: 40px; color: #b98a34; font-size: 17px; animation: arcade-trail var(--motion-fast) var(--ease-exit) both; }
+.arcade-player[data-state="wrong"] .arcade-avatar-head::after { content: '?'; position: absolute; right: -5px; top: -8px; color: #a03342; font-weight: 850; font-size: 18px; }
+.arcade-polished .arcade-player[data-direction="UP"][data-state="correct"] .arcade-actor, .arcade-polished .arcade-player[data-direction="UP"][data-state="combo"] .arcade-actor { animation: arcade-jump-up var(--motion-fast) var(--ease-spring) both; }
+.arcade-polished .arcade-player[data-direction="DOWN"][data-state="correct"] .arcade-actor, .arcade-polished .arcade-player[data-direction="DOWN"][data-state="combo"] .arcade-actor { animation: arcade-duck var(--motion-fast) var(--ease-standard) both; }
+.arcade-word-wrap.is-success .arcade-word { color: #235e3e; animation: arcade-word-complete var(--motion-fast) var(--ease-standard) both; }
+.arcade-word-wrap.is-next .arcade-word { animation: arcade-word-arrive var(--motion-fast) var(--ease-standard) both; }
+.arcade-polished .arcade-main-character .arcade-player[data-state="idle"] .arcade-body i { transform: translateY(-4px) rotate(-25deg); }
+.arcade-polished .arcade-rivals .arcade-player[data-state="correct"] .arcade-body i { animation: arcade-type-hands var(--motion-fast) var(--ease-standard) both; }
+.arcade-direction-arena.is-opposite { background: #f6e9ce80; border-radius: 18px; }
+.arcade-trick-anticipation { background: #fff2d3; color: #825223; font-weight: 750; border-radius: 5px; padding: 2px 7px; }
+.arcade-memory-board.phase-flash .is-lit>span { animation: arcade-tile-reveal var(--motion-fast) var(--ease-spring) both; }
+.arcade-memory-board.phase-hide .arcade-memory-tile>span { opacity: 0; }
+.arcade-memory-tableau { position: relative; }
+.arcade-level-label { color: #87551e !important; animation: arcade-level-up var(--motion-layout) var(--ease-spring) both; }
+.arcade-memory-board.phase-hide { animation: arcade-board-hide var(--motion-instant) var(--ease-standard) both; }
+.arcade-result-polished { animation: arcade-result-arrive var(--motion-layout) var(--ease-emphasized) both; }
+.arcade-page .arcade-surface-flash { animation-duration: var(--motion-fast); }
+@keyframes arcade-board-hide { from { opacity: .7; } to { opacity: 1; } }
+@keyframes arcade-result-arrive { from { opacity: .5; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes arcade-count-beat { from { opacity: .5; transform: scale(.86); } to { opacity: 1; transform: scale(1); } }
+@keyframes arcade-type-hands { 50% { transform: translateY(-5px) rotate(-10deg); } }
+@keyframes arcade-finish-hop { 45% { transform: translate(7px,-7px); } }
+@keyframes arcade-trail { from { opacity: .8; transform: translateX(0); } to { opacity: 0; transform: translateX(-18px) scale(.65); } }
+@keyframes arcade-jump-up { 50% { transform: translateY(-18px) scale(.98,1.04); } }
+@keyframes arcade-duck { 50% { transform: translateY(9px) scale(1.07,.85); } }
+@keyframes arcade-word-complete { 65% { opacity: 1; transform: scale(1.025); } to { opacity: .3; transform: translateY(-4px); } }
+@keyframes arcade-word-arrive { from { opacity: .4; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes arcade-tile-reveal { from { opacity: .6; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes arcade-level-up { from { opacity: 0; transform: translateY(4px); } 55% { opacity: 1; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .arcade-page *, .arcade-page *::before, .arcade-page *::after { animation: none !important; transition: none !important; } }
+html[data-workrank-reduce-motion="true"] .arcade-page *, html[data-workrank-reduce-motion="true"] .arcade-page *::before, html[data-workrank-reduce-motion="true"] .arcade-page *::after { animation: none !important; transition: none !important; }

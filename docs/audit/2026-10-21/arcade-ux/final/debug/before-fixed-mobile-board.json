@@ -1,0 +1,371 @@
+{
+  "startedAt": "2026-10-21T15:49:27.092Z",
+  "checks": [
+    {
+      "game": "memory_flash",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "memory_flash",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "direction_rush",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "direction_rush",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 390px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 60,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 430px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 60,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "24 phím liên tiếp dưới CPU 4x không mất input",
+      "status": "PASS",
+      "evidence": {
+        "before": 5,
+        "after": 29
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Input/RAF/CLS sau polish với CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "direction_rush",
+        "cpuThrottle": 4,
+        "frameSamples": 539,
+        "frameP50Ms": 8.399999999999636,
+        "frameP95Ms": 16.5,
+        "inputSamples": 24,
+        "inputToNextFrameP50Ms": 6.800000011920929,
+        "inputToNextFrameP95Ms": 13.200000047683716,
+        "gameplayCls": 0,
+        "longTaskCount": 0,
+        "longestTaskMs": 0
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 768px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 1024px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 3,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 1440px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 3,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Ván 60s: xoay trước input, biển đảo chiều muộn, đáp án ngược và trở lại luật thường",
+      "status": "PASS",
+      "evidence": {
+        "stages": [
+          "normal",
+          "position",
+          "color",
+          "entrance",
+          "opposite",
+          "final"
+        ],
+        "entranceGuard": true,
+        "wrongCaptured": true
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Cài đặt giảm chuyển động",
+      "status": "PASS",
+      "evidence": {
+        "animation": "none",
+        "transition": "0s"
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tới 5×5, tăng từng biến độ khó",
+      "status": "PASS",
+      "evidence": {
+        "sizes": [
+          3,
+          4,
+          5
+        ],
+        "rounds": 19
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Mặc định 60s → kết quả có PB thật → một chạm chơi lại",
+      "status": "PASS",
+      "evidence": {
+        "result": {
+          "score": 33257,
+          "correct": 186,
+          "attempts": 208,
+          "accuracy": 89.42,
+          "bestCombo": 172,
+          "combo": 0,
+          "avgResponseMs": 220,
+          "perfectCount": 181,
+          "wrongCount": 22,
+          "timeoutCount": 22,
+          "lastCorrect": false,
+          "lastResponseMs": 698,
+          "awardedXp": 30,
+          "eligible": true,
+          "forfeited": false,
+          "attemptId": "8e58f271-d231-4d3f-a5be-c9aa39b84e6b",
+          "playerAttemptId": "5d0786b3-2b9c-4e08-8734-34316c28bc07",
+          "mode": "SOLO",
+          "gameType": "direction_rush",
+          "previousBestScore": 0,
+          "personalBestScore": 33257,
+          "isPersonalBest": true,
+          "improvement": 33257
+        },
+        "newRoom": "fb8ddb65-4f92-43ed-be02-fe2c375a35b0"
+      }
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: {\"inputTop\":378.46875,\"inputBottom\":430.359375,\"targetTop\":302.0625,\"targetBottom\":344.859375,\"viewport\":430}\n    at audit (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/arcade-ux-final-audit.mjs:153:12)\n    at async Promise.allSettled (index 0)\n    at async file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/arcade-ux-final-audit.mjs:213:23"
+  ],
+  "performance": [
+    {
+      "game": "direction_rush",
+      "cpuThrottle": 4,
+      "frameSamples": 539,
+      "frameP50Ms": 8.399999999999636,
+      "frameP95Ms": 16.5,
+      "inputSamples": 24,
+      "inputToNextFrameP50Ms": 6.800000011920929,
+      "inputToNextFrameP95Ms": 13.200000047683716,
+      "gameplayCls": 0,
+      "longTaskCount": 0,
+      "longestTaskMs": 0
+    },
+    {
+      "game": "memory_flash",
+      "cpuThrottle": 4,
+      "frameSamples": 5207,
+      "frameP50Ms": 8.30000000000291,
+      "frameP95Ms": 9.19999999999709,
+      "inputSamples": 53,
+      "inputToNextFrameP50Ms": 5.900000035762787,
+      "inputToNextFrameP95Ms": 10.300000011920929,
+      "gameplayCls": 0.2561660126632296,
+      "longTaskCount": 0,
+      "longestTaskMs": 0
+    }
+  ],
+  "finishedAt": "2026-10-21T15:50:45.559Z"
+}

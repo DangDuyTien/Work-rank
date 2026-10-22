@@ -1,0 +1,53 @@
+{
+  "computer_rush": {
+    "scores": {
+      "First-time understandability": 8.5,
+      "Visual hierarchy": 9,
+      "Input responsiveness": 9.2,
+      "Correct/wrong feedback": 9,
+      "Game feel / fun": 8.8,
+      "Progression / pacing": 8.8,
+      "Multiplayer clarity": 9,
+      "Result satisfaction": 9.1,
+      "Mobile experience": 8.8,
+      "Replay desire": 9.2
+    },
+    "average": 8.94,
+    "minimumCategory": 8.5,
+    "reviewType": "Heuristic self-review after real browser play; not a user study"
+  },
+  "direction_rush": {
+    "scores": {
+      "First-time understandability": 8.5,
+      "Visual hierarchy": 9.1,
+      "Input responsiveness": 9.2,
+      "Correct/wrong feedback": 9.2,
+      "Game feel / fun": 9,
+      "Progression / pacing": 8.8,
+      "Multiplayer clarity": 9,
+      "Result satisfaction": 9,
+      "Mobile experience": 8.7,
+      "Replay desire": 9.1
+    },
+    "average": 8.96,
+    "minimumCategory": 8.5,
+    "reviewType": "Heuristic self-review after real browser play; not a user study"
+  },
+  "memory_flash": {
+    "scores": {
+      "First-time understandability": 8.5,
+      "Visual hierarchy": 9,
+      "Input responsiveness": 9.2,
+      "Correct/wrong feedback": 9.3,
+      "Game feel / fun": 8.8,
+      "Progression / pacing": 8.8,
+      "Multiplayer clarity": 9,
+      "Result satisfaction": 9,
+      "Mobile experience": 7.5,
+      "Replay desire": 9
+    },
+    "average": 8.81,
+    "minimumCategory": 7.5,
+    "reviewType": "Heuristic self-review after real browser play; not a user study"
+  }
+}

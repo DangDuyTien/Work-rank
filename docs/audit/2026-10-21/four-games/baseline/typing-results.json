@@ -1,0 +1,61 @@
+{
+  "phase": "baseline",
+  "matches": [
+    {
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": 1,
+      "players": 1,
+      "perf": {
+        "inputP50": 41.90000003576279,
+        "inputP95": 56.40000003576279,
+        "frameP50": 9,
+        "frameP95": 75.80000000000018,
+        "longTasks": 21,
+        "cls": 0.006451341959635423,
+        "reactCommits": 214,
+        "domNodes": 4005,
+        "sceneMutations": 0,
+        "inputs": 102
+      },
+      "result": {
+        "id": 1,
+        "roomId": 1,
+        "mode": "SOLO",
+        "matchType": "PRACTICE",
+        "seasonId": 1,
+        "winnerUserId": 4,
+        "winnerTeam": "NONE",
+        "teamAScore": 0,
+        "teamBScore": 0,
+        "results": [
+          {
+            "metricVersion": 3,
+            "validSubmission": true,
+            "rawWpm": 48,
+            "correctChars": 120,
+            "userId": 4,
+            "name": "Telex QA",
+            "team": "NONE",
+            "individualRank": 1,
+            "wpm": 48,
+            "accuracy": 100,
+            "errorCount": 0,
+            "completionTimeMs": 30000,
+            "typedChars": 120,
+            "progressPct": 4,
+            "completed": false,
+            "eligible": true,
+            "scoreDelta": 0,
+            "isWinner": true,
+            "performanceScore": 79.1
+          }
+        ],
+        "playedAt": "2026-10-21T16:17:36.620Z",
+        "createdAt": "2026-10-21T16:17:36.626Z",
+        "updatedAt": "2026-10-21T16:17:36.626Z"
+      }
+    }
+  ],
+  "errors": []
+}

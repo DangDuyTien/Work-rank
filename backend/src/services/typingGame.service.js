@@ -124,7 +124,7 @@ function clearStartCountdown(roomId) {
   }
 }
 
-// Schedule 5s start countdown
+// The shared arcade countdown is three seconds.
 function scheduleStartCountdown(roomId) {
   const numId = Number(roomId);
   clearStartCountdown(numId);
@@ -138,7 +138,7 @@ function scheduleStartCountdown(roomId) {
       if (!room || room.status !== 'STARTING') return;
 
       const players = room.players || [];
-      const requiredPlayers = room.mode === 'SOLO' ? 1 : room.mode === '1V1' ? 2 : room.mode === '2V2' ? 4 : 6;
+      const requiredPlayers = room.maxPlayers;
 
       if (players.length >= requiredPlayers && players.every((p) => p.isReady)) {
         await startMatch(numId, room.hostUserId, true);
@@ -158,7 +158,7 @@ function scheduleStartCountdown(roomId) {
     } catch (err) {
       console.error(`[TypingStartCountdown Error room ${numId}]:`, err.message);
     }
-  }, 5000);
+  }, 3200);
 
   startCountdownTimers.set(numId, timer);
 }
@@ -324,9 +324,9 @@ async function createRoom(data, requestingUser) {
     durationLimitSeconds = 120, // Default 2 minutes (120s), or 60s (1 min), 300s (5 min)
   } = data;
 
-  const validModes = ['SOLO', '1V1', '2V2', '3V3'];
+  const validModes = ['SOLO', '1V1', 'TRIO', '2V2', '3V3'];
   const effectiveMode = validModes.includes(mode) ? mode : '1V1';
-  const maxPlayers = effectiveMode === 'SOLO' ? 1 : effectiveMode === '1V1' ? 2 : effectiveMode === '2V2' ? 4 : 6;
+  const maxPlayers = effectiveMode === 'SOLO' ? 1 : effectiveMode === '1V1' ? 2 : effectiveMode === 'TRIO' ? 3 : effectiveMode === '2V2' ? 4 : 6;
   const cleanDuration = [30, 60, 120, 180, 300].includes(Number(durationLimitSeconds))
     ? Number(durationLimitSeconds)
     : 120;
@@ -776,12 +776,12 @@ async function toggleReady(roomId, userId, isReady) {
     include: [{ model: User, as: 'user' }],
   });
 
-  const requiredCount = room.mode === 'SOLO' ? 1 : room.mode === '1V1' ? 2 : room.mode === '2V2' ? 4 : 6;
+  const requiredCount = room.maxPlayers;
   const allReady = allPlayers.length >= requiredCount && allPlayers.every((p) => p.isReady);
 
   if (allReady) {
     room.status = 'STARTING';
-    room.startAt = new Date(Date.now() + 5000);
+    room.startAt = new Date(Date.now() + 3200);
     await room.save();
 
     scheduleStartCountdown(room.id);
@@ -844,6 +844,8 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
   if (!isAutomated && Number(room.hostUserId) !== Number(hostUserId)) {
     throw new ForbiddenError('Chỉ chủ phòng mới có quyền bắt đầu trận đấu');
   }
+  if (room.status === 'PLAYING') return getRoomDetail(room.id, hostUserId);
+  if (!['WAITING', 'STARTING'].includes(room.status) || room.players.length !== room.maxPlayers || room.players.some((p) => !p.isReady)) throw new ValidationError('Cần đủ người và tất cả sẵn sàng');
 
   // Ensure challenge text is assigned
   if (!room.challengeText) {
@@ -1228,7 +1230,7 @@ async function finalizeMatchOnce(roomId) {
   if (room.mode === '2V2' || room.mode === '3V3') {
     const teamResult = typingEngine.calculateTeamMatchResult(room.players);
     winnerTeam = teamResult.winnerTeam;
-  } else if (room.mode === '1V1') {
+  } else if (room.mode === '1V1' || room.mode === 'TRIO') {
     const winner = finalRanking.find(eligibleForRanking);
     winnerUserId = winner?.userId || null;
   } else if (room.mode === 'SOLO') {
@@ -1307,7 +1309,7 @@ async function finalizeMatchOnce(roomId) {
       }
 
       const isWinner = meetsParticipation && (
-        (room.mode === '1V1' && Number(player.userId) === Number(winnerUserId)) ||
+        ((room.mode === '1V1' || room.mode === 'TRIO') && Number(player.userId) === Number(winnerUserId)) ||
         (room.mode === 'SOLO' && player.status === 'FINISHED') ||
         ((room.mode === '2V2' || room.mode === '3V3') && player.team === winnerTeam)
       );
@@ -1598,6 +1600,8 @@ async function resetRoom(roomId, requestingUserId) {
   });
 
   await typingTransaction(async (t) => {
+    await room.reload({ transaction: t, lock: t.LOCK.UPDATE });
+    if (room.status !== 'FINISHED') throw new ValidationError('Chỉ mở ván mới khi trận trước đã kết thúc');
     room.status = 'WAITING';
     room.startAt = null;
     room.startedAt = null;

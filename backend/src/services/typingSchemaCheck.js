@@ -22,6 +22,7 @@ async function ensureTypingSchema(sequelize) {
     await TypingMatchResult.sync();
     await TypingUserStat.sync();
     await TypingPracticeAttempt.sync();
+    await require('../migrations/20261021160000-typing-trio-mode').up(sequelize.getQueryInterface(), require('sequelize').DataTypes);
 
     // 2. Ensure initial challenges exist
     const count = await TypingChallenge.count();

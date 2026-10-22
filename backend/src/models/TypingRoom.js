@@ -12,7 +12,7 @@ TypingRoom.init(
     title: { type: DataTypes.STRING(150), allowNull: false },
     hostUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, field: 'host_user_id' },
     mode: {
-      type: DataTypes.ENUM('SOLO', '1V1', '2V2', '3V3'),
+      type: DataTypes.ENUM('SOLO', '1V1', 'TRIO', '2V2', '3V3'),
       allowNull: false,
       defaultValue: '1V1',
     },

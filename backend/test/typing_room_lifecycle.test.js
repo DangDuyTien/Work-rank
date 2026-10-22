@@ -268,8 +268,10 @@ test('creating a new room abandons the stale WAITING seat room and broadcasts it
   assert.ok(removedIds.includes(Number(oldRoomId)));
 });
 
-test('startMatch announces WAITING -> PLAYING to every lobby', async () => {
+test('startMatch announces the ready room -> PLAYING to every lobby', async () => {
   const roomId = await makeRoomWithPlayers(0, 1);
+  await typingGameService.toggleReady(roomId, users[0].id, true);
+  await typingGameService.toggleReady(roomId, users[1].id, true);
   await typingGameService.startMatch(roomId, users[0].id);
 
   assert.equal((await TypingRoom.findByPk(roomId)).status, 'PLAYING');

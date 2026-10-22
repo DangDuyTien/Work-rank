@@ -264,7 +264,7 @@ function calculateAwardedPoints({
     rawPoints = Math.floor(performanceScore * 0.22);
     // Cap solo to max 25 points before diminishing
     rawPoints = Math.min(25, rawPoints);
-  } else if (mode === '1V1') {
+  } else if (mode === '1V1' || mode === 'TRIO') {
     if (isWinner) {
       rawPoints = Math.floor(performanceScore * 0.25) + 15; // Win bonus
     } else if (isDraw) {

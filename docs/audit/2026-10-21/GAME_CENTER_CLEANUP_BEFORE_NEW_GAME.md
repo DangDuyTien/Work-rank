@@ -89,7 +89,7 @@ Xác định "Đoán Hình": implementation thực tế là **Quiz Game** (`game
 - `sockets/index.js`: bỏ 2 khối handler Quiz/Sâm và `samRealtime`.
 - `server.js`: bỏ `quizRealtime.setIo` / `samRealtime.setIo`.
 - `services/gameRoomAuth.service.js`: viết lại chỉ còn nhánh typing (bỏ import `SamRoom/SamPlayer/QuizRoom/QuizPlayer` và cả `GameRoom/GamePlayer` không tồn tại).
-- `services/gameCatalog.service.js`: DEFAULT_GAMES chỉ còn `typing_battle`, `drawing`.
+- `services/gameCatalog.service.js`: bỏ `sam`, `quiz` khỏi DEFAULT_GAMES. **Sau đó phiên song song thêm 3 default Arcade**, nên file hiện có 5 default (3 Arcade + `typing_battle` + `drawing`) — phần Arcade không do phase này tạo.
 - `middlewares/gameAvailability.middleware.js`, `app.js`: cập nhật comment.
 
 **Uploads:** xóa `backend/uploads/quiz/` (72 file ảnh/audio, 312 KB) — chỉ phục vụ Quiz.
@@ -167,7 +167,7 @@ Số bảng: 67 → 58 (drop 12 bảng game cũ; +1 bảng typing practice; +2 b
 
 | Thành phần | Vai trò | Trạng thái |
 |---|---|---|
-| `gameCatalog.service` + `game_catalogs` | Game Registry (gameKey, status, enabled, route) | Giữ, chỉ còn 2 default |
+| `gameCatalog.service` + `game_catalogs` | Game Registry (gameKey, status, enabled, route) | Giữ; đã bỏ `sam`/`quiz`; hiện có thêm 3 default Arcade từ phiên song song |
 | `gameAvailability.middleware` | Chặn non-admin khi COMING_SOON/disabled | Giữ |
 | `gameRoomAuth.service` | Authorization phòng theo `gameType` | Giữ, thu gọn còn typing; trả 400 cho type lạ |
 | `GameComingSoon` + `useGameAvailability` | UI/status gate | Giữ (Typing dùng) |

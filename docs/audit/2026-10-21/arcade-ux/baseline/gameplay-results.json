@@ -1,0 +1,219 @@
+{
+  "phase": "baseline",
+  "startedAt": "2026-10-21T15:13:36.644Z",
+  "checks": [
+    {
+      "game": "direction_rush",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "64bde4d8-fb07-431a-88fa-7c75b92b7e3b",
+      "ranks": [
+        [
+          5,
+          1,
+          419
+        ]
+      ],
+      "result": {
+        "score": 419,
+        "correct": 11,
+        "attempts": 24,
+        "accuracy": 45.83,
+        "bestCombo": 11,
+        "combo": 0,
+        "avgResponseMs": 226,
+        "awardedXp": 0,
+        "eligible": false,
+        "forfeited": false,
+        "attemptId": "64bde4d8-fb07-431a-88fa-7c75b92b7e3b",
+        "playerAttemptId": "5ead570f-ddf7-4be0-962e-f7f97ca47ba3",
+        "mode": "SOLO",
+        "gameType": "direction_rush"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nMột kỷ lục mới đang chờ!\n🥇\nAN\n✦\n✧\n✦\nP1\nAn\n419\n#1\n\n11 hướng đúng · 45.83% chính xác · Chuỗi tốt nhất 11 · TB 226ms\n\nMáy chủ đã xác minh · +0 XP\n\nChơi lại\nBXH\nGame Center"
+    },
+    {
+      "game": "memory_flash",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "0b56d451-3a02-4de8-88ae-04df71bcaba7",
+      "ranks": [
+        [
+          8,
+          1,
+          248
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 533,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "0b56d451-3a02-4de8-88ae-04df71bcaba7",
+        "playerAttemptId": "c7bc9964-b495-43fc-adea-ceb4b7596e9a",
+        "mode": "SOLO",
+        "gameType": "memory_flash"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nMột kỷ lục mới đang chờ!\n🥇\nĐẠ\n✦\n✧\n✦\nP1\nĐạt\n248\n#1\n\n2 vòng đúng · 66.67% chính xác · Chuỗi tốt nhất 2 · TB 533ms\n\nMáy chủ đã xác minh · +1 XP\n\nChơi lại\nBXH\nGame Center"
+    },
+    {
+      "game": "computer_rush",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "7b698494-2ec8-4ab7-a255-ccdf60ecbbea",
+      "ranks": [
+        [
+          1,
+          1,
+          640
+        ]
+      ],
+      "result": {
+        "score": 640,
+        "correct": 6,
+        "attempts": 7,
+        "accuracy": 80.54,
+        "bestCombo": 6,
+        "combo": 6,
+        "avgResponseMs": 607,
+        "awardedXp": 3,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "7b698494-2ec8-4ab7-a255-ccdf60ecbbea",
+        "playerAttemptId": "0ff7f527-ae3a-4bd9-b3a6-61b9fe72b4f7",
+        "mode": "SOLO",
+        "gameType": "computer_rush"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nMột kỷ lục mới đang chờ!\n🥇\nLA\n✦\n✧\n✦\nP1\nLan\n640\n#1\n\n6 từ đúng · 80.54% chính xác · Chuỗi tốt nhất 6 · TB 607ms\n\nMáy chủ đã xác minh · +3 XP\n\nChơi lại\nBXH\nGame Center"
+    },
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "c7187c24-bc67-4cd5-bc8d-3fa44c1215d9",
+      "ranks": [
+        [
+          1,
+          1,
+          640
+        ],
+        [
+          2,
+          2,
+          339
+        ],
+        [
+          3,
+          3,
+          209
+        ]
+      ],
+      "result": {
+        "score": 640,
+        "correct": 6,
+        "attempts": 7,
+        "accuracy": 80.54,
+        "bestCombo": 6,
+        "combo": 6,
+        "avgResponseMs": 601,
+        "awardedXp": 3,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "c7187c24-bc67-4cd5-bc8d-3fa44c1215d9",
+        "playerAttemptId": "b7ea820d-20a1-42df-b008-743cd4853ebe",
+        "mode": "TRIO",
+        "gameType": "computer_rush"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nLan chiến thắng!\n🥇\nLA\n✦\n✧\n✦\nP1\nLan\n640\n#1\n🥈\nMI\nP2\nMinh\n339\n#2\n🥉\nHU\nP3\nHuy\n209\n#3\n\n6 từ đúng · 80.54% chính xác · Chuỗi tốt nhất 6 · TB 601ms\n\nMáy chủ đã xác minh · +3 XP\n\nChơi lại\nBXH\nGame Center"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "b24b7fbb-7de9-4a2b-8c21-b16f7bac89e9",
+      "ranks": [
+        [
+          5,
+          1,
+          418
+        ],
+        [
+          6,
+          2,
+          196
+        ],
+        [
+          7,
+          3,
+          87
+        ]
+      ],
+      "result": {
+        "score": 418,
+        "correct": 11,
+        "attempts": 24,
+        "accuracy": 45.83,
+        "bestCombo": 11,
+        "combo": 0,
+        "avgResponseMs": 235,
+        "awardedXp": 0,
+        "eligible": false,
+        "forfeited": false,
+        "attemptId": "b24b7fbb-7de9-4a2b-8c21-b16f7bac89e9",
+        "playerAttemptId": "f14981aa-dc0e-4f8b-a6ab-34c6e160c28b",
+        "mode": "TRIO",
+        "gameType": "direction_rush"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nAn chiến thắng!\n🥇\nAN\n✦\n✧\n✦\nP1\nAn\n418\n#1\n🥈\nBÌ\nP2\nBình\n196\n#2\n🥉\nCH\nP3\nChi\n87\n#3\n\n11 hướng đúng · 45.83% chính xác · Chuỗi tốt nhất 11 · TB 235ms\n\nMáy chủ đã xác minh · +0 XP\n\nChơi lại\nBXH\nGame Center"
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "c925aa9e-b35d-4461-b576-6d599bad1729",
+      "ranks": [
+        [
+          8,
+          3,
+          248
+        ],
+        [
+          9,
+          2,
+          248
+        ],
+        [
+          10,
+          1,
+          248
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 598,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "c925aa9e-b35d-4461-b576-6d599bad1729",
+        "playerAttemptId": "ee6d4ec8-7145-43b6-9dcd-4c1ea00908ab",
+        "mode": "TRIO",
+        "gameType": "memory_flash"
+      },
+      "resultText": "🏆\n\nTRẬN ĐẤU HOÀN THÀNH\n\nHà chiến thắng!\n🥇\nHÀ\n✦\n✧\n✦\nP3\nHà\n248\n#1\n🥈\nGI\nP2\nGiang\n248\n#2\n🥉\nĐẠ\nP1\nĐạt\n248\n#3\n\n2 vòng đúng · 66.67% chính xác · Chuỗi tốt nhất 2 · TB 598ms\n\nMáy chủ đã xác minh · +1 XP\n\nChơi lại\nBXH\nGame Center"
+    }
+  ],
+  "observations": [],
+  "errors": [],
+  "finishedAt": "2026-10-21T15:14:36.105Z"
+}

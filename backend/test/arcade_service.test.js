@@ -109,3 +109,48 @@ test('Revisions are monotonic, immutable checkpoints and offline timeout uses sa
   await service.sweep();
   assert.equal((await service.detail(a.room.id, users[0].id)).players[0].result.correct, 1);
 });
+test('Quick replay keeps one shared party, new seed, same rules and prevents duplicate rewards', async () => {
+  const a = await service.create({ gameType: 'memory_flash', mode: 'TRIO' }, users[0]);
+  await service.join(a.room.id, users[1].id); await service.join(a.room.id, users[2].id);
+  for (const u of users.slice(0, 3)) await service.ready(a.room.id, u.id, true);
+  await service.begin(a.room.id, users[0].id);
+  await assert.rejects(service.rematch(a.room.id, users[0]));
+  await Room.update({ startedAt: new Date(Date.now() - 60010) }, { where: { id: a.room.id } });
+  for (const u of users.slice(0, 3)) await service.sync(a.room.id, u.id, { attemptId: a.room.id, seed: a.room.seed, revision: 0, events: [] }, true);
+  const ledgerCount = await ScoreLedger.count();
+  await assert.rejects(service.rematch(a.room.id, users[3]));
+  const next = await Promise.all(users.slice(0, 3).map((u) => service.rematch(a.room.id, u)));
+  assert.equal(new Set(next.map((s) => s.room.id)).size, 1);
+  assert.notEqual(next[0].room.seed, a.room.seed);
+  assert.equal(next[0].room.mode, 'TRIO'); assert.equal(next[0].room.rulesVersion, 2);
+  assert.equal(next[0].room.durationSeconds, a.room.durationSeconds);
+  const state = await service.rematch(a.room.id, users[0]);
+  assert.equal(state.players.length, 3); assert.ok(state.players.every((p) => !p.ready));
+  assert.equal((await Room.findByPk(a.room.id)).rematchId, state.room.id);
+  assert.equal(await ScoreLedger.count(), ledgerCount);
+  for (const u of users.slice(0, 3)) await service.leave(state.room.id, u.id);
+});
+test('Result PB is server-computed, isolated by configuration, and remains stable on duplicate finalize', async () => {
+  const { challenge } = await engine;
+  let previous = 0;
+  for (const count of [3, 4, 2]) {
+    const state = await service.create({ gameType: 'computer_rush', mode: 'SOLO', difficulty: 'easy' }, users[3]);
+    const { id, seed } = state.room;
+    await Room.update({ startedAt: new Date(Date.now() - 60010) }, { where: { id } });
+    const events = Array.from({ length: count }, (_, index) => ({ index, at: (index + 1) * 1000, value: challenge('computer_rush', seed, index, 'easy').word, errors: 0 }));
+    const data = { attemptId: id, seed, revision: count, events, personalBestScore: 99999999 };
+    const a = await service.sync(id, users[3].id, data, true);
+    const b = await service.sync(id, users[3].id, data, true);
+    const result = a.players[0].result;
+    assert.deepEqual(result, b.players[0].result);
+    assert.equal(result.previousBestScore, previous);
+    assert.equal(result.isPersonalBest, result.score > previous);
+    assert.equal(result.improvement, result.score - previous);
+    previous = Math.max(previous, result.score);
+    assert.equal(result.personalBestScore, previous);
+    const next = await service.rematch(id, users[3]);
+    assert.equal(next.room.status, 'PLAYING'); assert.equal(next.room.difficulty, 'easy');
+    assert.equal((await service.rematch(id, users[3])).room.id, next.room.id);
+    await service.leave(next.room.id, users[3].id);
+  }
+});

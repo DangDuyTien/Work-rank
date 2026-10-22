@@ -19,6 +19,11 @@ router.post('/rooms', asyncHandler(async (req, res) => {
   res.status(201).json(await service.create(req.body, req.user));
 }));
 router.get('/rooms/:id', asyncHandler(async (req, res) => res.json(await service.detail(req.params.id, req.user.id))));
+router.post('/rooms/:id/rematch', asyncHandler(async (req, res) => {
+  const room = await require('../models').ArcadeRoom.findByPk(req.params.id);
+  if (room) { const availability = await catalog.checkGameAvailability(room.gameType, req.user); if (!availability.allowed) throw new ForbiddenError(availability.message); }
+  res.json(await service.rematch(req.params.id, req.user));
+}));
 for (const action of ['join', 'ready', 'start', 'progress', 'finish', 'leave']) {
   router.post(`/rooms/:id/${action}`, asyncHandler(async (req, res) => {
     const { id } = req.params, userId = req.user.id;

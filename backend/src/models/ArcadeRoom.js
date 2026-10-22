@@ -15,5 +15,7 @@ ArcadeRoom.init({
   durationSeconds: { type: D.INTEGER, allowNull: false, defaultValue: 60 },
   startedAt: { type: D.DATE },
   revision: { type: D.INTEGER, allowNull: false, defaultValue: 0 },
+  rulesVersion: { type: D.INTEGER, allowNull: false, defaultValue: 2 },
+  rematchId: { type: D.STRING(36) },
 }, { sequelize, modelName: 'ArcadeRoom', tableName: 'arcade_rooms', underscored: true, indexes: [{ fields: ['game_type', 'status', 'mode'] }] });
 module.exports = ArcadeRoom;

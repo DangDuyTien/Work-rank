@@ -1,0 +1,298 @@
+{
+  "method": "Heuristic self-review from real Chromium interaction, screenshot review and performance evidence. Not independent user research; scores are not certified measurements.",
+  "categories": [
+    "Visual identity",
+    "2D scene quality",
+    "Animation smoothness",
+    "Correct feedback",
+    "Wrong feedback",
+    "Input responsiveness",
+    "Game feel",
+    "Multiplayer feel",
+    "Progression/pacing",
+    "Mobile",
+    "Replay desire"
+  ],
+  "phases": {
+    "baseline": {
+      "typing_battle": {
+        "scores": {
+          "Visual identity": 6.8,
+          "2D scene quality": 4,
+          "Animation smoothness": 4.5,
+          "Correct feedback": 7.8,
+          "Wrong feedback": 7.8,
+          "Input responsiveness": 6.8,
+          "Game feel": 5.5,
+          "Multiplayer feel": 6.8,
+          "Progression/pacing": 7.5,
+          "Mobile": 6.5,
+          "Replay desire": 5.5
+        },
+        "average": 6.32,
+        "minimum": 4
+      },
+      "computer_rush": {
+        "scores": {
+          "Visual identity": 9,
+          "2D scene quality": 8.8,
+          "Animation smoothness": 8.5,
+          "Correct feedback": 8.5,
+          "Wrong feedback": 9,
+          "Input responsiveness": 9.2,
+          "Game feel": 8.5,
+          "Multiplayer feel": 8.8,
+          "Progression/pacing": 9,
+          "Mobile": 8.8,
+          "Replay desire": 8.6
+        },
+        "average": 8.79,
+        "minimum": 8.5
+      },
+      "direction_rush": {
+        "scores": {
+          "Visual identity": 9,
+          "2D scene quality": 9,
+          "Animation smoothness": 8.5,
+          "Correct feedback": 9,
+          "Wrong feedback": 9,
+          "Input responsiveness": 9.4,
+          "Game feel": 8.8,
+          "Multiplayer feel": 9,
+          "Progression/pacing": 8.2,
+          "Mobile": 9,
+          "Replay desire": 8.8
+        },
+        "average": 8.88,
+        "minimum": 8.2
+      },
+      "memory_flash": {
+        "scores": {
+          "Visual identity": 9,
+          "2D scene quality": 9,
+          "Animation smoothness": 8.5,
+          "Correct feedback": 8.8,
+          "Wrong feedback": 9.2,
+          "Input responsiveness": 9.4,
+          "Game feel": 8.8,
+          "Multiplayer feel": 8.8,
+          "Progression/pacing": 8.5,
+          "Mobile": 9,
+          "Replay desire": 8.8
+        },
+        "average": 8.89,
+        "minimum": 8.5
+      }
+    },
+    "iteration1": {
+      "typing_battle": {
+        "scores": {
+          "Visual identity": 9,
+          "2D scene quality": 9,
+          "Animation smoothness": 8.8,
+          "Correct feedback": 9,
+          "Wrong feedback": 9,
+          "Input responsiveness": 8,
+          "Game feel": 8.8,
+          "Multiplayer feel": 9,
+          "Progression/pacing": 8.8,
+          "Mobile": 8,
+          "Replay desire": 8.8
+        },
+        "average": 8.75,
+        "minimum": 8
+      },
+      "computer_rush": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.1,
+          "Correct feedback": 9.2,
+          "Wrong feedback": 9.2,
+          "Input responsiveness": 9.4,
+          "Game feel": 9.1,
+          "Multiplayer feel": 9.1,
+          "Progression/pacing": 9,
+          "Mobile": 9,
+          "Replay desire": 9.1
+        },
+        "average": 9.15,
+        "minimum": 9
+      },
+      "direction_rush": {
+        "scores": {
+          "Visual identity": 9.1,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.3,
+          "Correct feedback": 9.3,
+          "Wrong feedback": 9.3,
+          "Input responsiveness": 9.5,
+          "Game feel": 9.2,
+          "Multiplayer feel": 9.2,
+          "Progression/pacing": 9.1,
+          "Mobile": 9.1,
+          "Replay desire": 9.1
+        },
+        "average": 9.22,
+        "minimum": 9.1
+      },
+      "memory_flash": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.1,
+          "Correct feedback": 9.3,
+          "Wrong feedback": 9.3,
+          "Input responsiveness": 9.5,
+          "Game feel": 9.2,
+          "Multiplayer feel": 9,
+          "Progression/pacing": 8.7,
+          "Mobile": 9,
+          "Replay desire": 9.1
+        },
+        "average": 9.15,
+        "minimum": 8.7
+      }
+    },
+    "iteration2": {
+      "typing_battle": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.1,
+          "Animation smoothness": 9.1,
+          "Correct feedback": 9.2,
+          "Wrong feedback": 9.1,
+          "Input responsiveness": 9.2,
+          "Game feel": 9.1,
+          "Multiplayer feel": 9.2,
+          "Progression/pacing": 9,
+          "Mobile": 8.2,
+          "Replay desire": 9
+        },
+        "average": 9.04,
+        "minimum": 8.2
+      },
+      "computer_rush": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.3,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.2,
+          "Input responsiveness": 9.5,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9.1,
+          "Progression/pacing": 9,
+          "Mobile": 9,
+          "Replay desire": 9.2
+        },
+        "average": 9.22,
+        "minimum": 9
+      },
+      "direction_rush": {
+        "scores": {
+          "Visual identity": 9.1,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.4,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.4,
+          "Input responsiveness": 9.6,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9.2,
+          "Progression/pacing": 9.2,
+          "Mobile": 9.2,
+          "Replay desire": 9.2
+        },
+        "average": 9.29,
+        "minimum": 9.1
+      },
+      "memory_flash": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.3,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.4,
+          "Input responsiveness": 9.6,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9,
+          "Progression/pacing": 9.2,
+          "Mobile": 9.1,
+          "Replay desire": 9.2
+        },
+        "average": 9.26,
+        "minimum": 9
+      }
+    },
+    "iteration3": {
+      "typing_battle": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.1,
+          "Animation smoothness": 9.2,
+          "Correct feedback": 9.2,
+          "Wrong feedback": 9.1,
+          "Input responsiveness": 9.6,
+          "Game feel": 9.2,
+          "Multiplayer feel": 9.2,
+          "Progression/pacing": 9,
+          "Mobile": 9,
+          "Replay desire": 9.1
+        },
+        "average": 9.17,
+        "minimum": 9
+      },
+      "computer_rush": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.3,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.2,
+          "Input responsiveness": 9.5,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9.1,
+          "Progression/pacing": 9,
+          "Mobile": 9,
+          "Replay desire": 9.2
+        },
+        "average": 9.22,
+        "minimum": 9
+      },
+      "direction_rush": {
+        "scores": {
+          "Visual identity": 9.1,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.4,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.4,
+          "Input responsiveness": 9.6,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9.2,
+          "Progression/pacing": 9.2,
+          "Mobile": 9.2,
+          "Replay desire": 9.2
+        },
+        "average": 9.29,
+        "minimum": 9.1
+      },
+      "memory_flash": {
+        "scores": {
+          "Visual identity": 9.2,
+          "2D scene quality": 9.2,
+          "Animation smoothness": 9.3,
+          "Correct feedback": 9.4,
+          "Wrong feedback": 9.4,
+          "Input responsiveness": 9.6,
+          "Game feel": 9.3,
+          "Multiplayer feel": 9,
+          "Progression/pacing": 9.2,
+          "Mobile": 9.1,
+          "Replay desire": 9.2
+        },
+        "average": 9.26,
+        "minimum": 9
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ const { ValidationError, NotFoundError, ForbiddenError } = require('../utils/err
 const engine = import('../../../shared/arcade/engine.mjs');
 const GRACE_MS = 30000;
 const DELIVERY_MS = 10000;
+const rulesFor = (room) => ({ durationMs: room.durationSeconds * 1000, difficulty: room.difficulty, rulesVersion: room.rulesVersion || 1 });
 let io, sweepTimer;
 
 async function roomLocked(id, t) {
@@ -31,7 +32,7 @@ async function pack(room, players, userId) {
       id: p.id, userId: p.userId, name: p.User?.name || 'Người chơi', avatarUrl: p.User?.avatarUrl,
       position: position + 1, ready: p.ready, revision: p.revision, connected: Date.now() - new Date(p.heartbeatAt).getTime() < GRACE_MS,
       finishedAt: p.finishedAt, result: p.result, rank: p.result ? ranked.findIndex((r) => r.id === p.id) + 1 : null,
-      metrics: p.result || replay(room.gameType, room.seed, p.events, { durationMs: room.durationSeconds * 1000, difficulty: room.difficulty }),
+      metrics: p.result || replay(room.gameType, room.seed, p.events, rulesFor(room)),
       ...(String(p.userId) === String(userId) ? { events: p.events } : {}),
     })),
   };
@@ -61,10 +62,14 @@ async function mutate(id, userId, work, { allowAbsent = false } = {}) {
 async function settle(room, p, t, { forfeited = false } = {}) {
   if (p.finishedAt) return;
   const { replay } = await engine;
-  const metrics = replay(room.gameType, room.seed, p.events, { durationMs: room.durationSeconds * 1000, difficulty: room.difficulty });
+  const metrics = replay(room.gameType, room.seed, p.events, rulesFor(room));
   const eligible = !forfeited && metrics.correct > 0 && metrics.accuracy >= 50;
   const awardedXp = eligible ? Math.min(30, Math.floor(metrics.score / 200)) : 0;
-  p.result = { ...metrics, awardedXp, eligible, forfeited, attemptId: room.id, playerAttemptId: p.id, mode: room.mode, gameType: room.gameType };
+  const earlier = await Player.findAll({ where: { userId: p.userId, finishedAt: { [Op.ne]: null } }, include: [{ model: Room, where: { gameType: room.gameType, mode: room.mode, difficulty: room.difficulty, durationSeconds: room.durationSeconds, rulesVersion: room.rulesVersion || 1 } }], transaction: t });
+  const previousBestScore = earlier.reduce((best, x) => x.result?.eligible ? Math.max(best, Number(x.result.score || 0)) : best, 0);
+  p.result = { ...metrics, awardedXp, eligible, forfeited, attemptId: room.id, playerAttemptId: p.id, mode: room.mode, gameType: room.gameType,
+    previousBestScore, personalBestScore: eligible ? Math.max(previousBestScore, metrics.score) : previousBestScore,
+    isPersonalBest: eligible && metrics.score > previousBestScore, improvement: metrics.score - previousBestScore };
   p.finishedAt = new Date();
   if (awardedXp) {
     const user = await User.findByPk(p.userId, { transaction: t });
@@ -122,7 +127,7 @@ async function create(data, user) {
     if (active.length) throw new ValidationError('Hãy hoàn thành hoặc rời phòng hiện tại trước khi tạo lượt mới');
     const durationSeconds = Number(process.env.ARCADE_ROUND_SECONDS || 60);
     if (!Number.isInteger(durationSeconds) || durationSeconds < 5 || durationSeconds > 300) throw new Error('ARCADE_ROUND_SECONDS must be 5..300');
-    const room = await Room.create({ id: crypto.randomUUID(), gameType, mode, difficulty, capacity: CAPACITY[mode], hostId: user.id, title: `${user.name} · ${mode}`.slice(0, 100), seed: crypto.randomBytes(16).toString('hex'), durationSeconds, status: mode === 'SOLO' ? 'PLAYING' : 'WAITING', startedAt: mode === 'SOLO' ? new Date(Date.now() + 3200) : null }, { transaction: t });
+    const room = await Room.create({ id: crypto.randomUUID(), gameType, mode, difficulty, capacity: CAPACITY[mode], hostId: user.id, title: `${user.name} · ${mode}`.slice(0, 100), seed: crypto.randomBytes(16).toString('hex'), durationSeconds, rulesVersion: 2, status: mode === 'SOLO' ? 'PLAYING' : 'WAITING', startedAt: mode === 'SOLO' ? new Date(Date.now() + 3200) : null }, { transaction: t });
     await Player.create({ id: crypto.randomUUID(), roomId: room.id, userId: user.id, heartbeatAt: new Date(), ready: mode === 'SOLO' }, { transaction: t });
     return pack(room, await members(room, t), user.id);
   });
@@ -186,7 +191,7 @@ async function accept(room, p, data) {
   const elapsedMs = Date.now() - new Date(room.startedAt).getTime();
   if (elapsedMs < 0) throw new ValidationError('Chưa GO!');
   if (elapsedMs > room.durationSeconds * 1000 + DELIVERY_MS) return;
-  try { replay(room.gameType, room.seed, data.events, { durationMs: room.durationSeconds * 1000, elapsedMs, difficulty: room.difficulty }); }
+  try { replay(room.gameType, room.seed, data.events, { ...rulesFor(room), elapsedMs }); }
   catch (e) { throw new ValidationError(e.message); }
   p.events = data.events; p.revision = data.revision;
 }
@@ -219,6 +224,32 @@ async function active(userId) {
   const p = await Player.findOne({ where: { userId, finishedAt: null }, include: [{ model: Room, where: { status: { [Op.in]: ['WAITING', 'PLAYING'] } } }], order: [['createdAt', 'DESC']] });
   return p ? detail(p.roomId, userId) : null;
 }
+async function rematch(id, user) {
+  const result = await transaction(async (t) => {
+    await User.findByPk(user.id, { transaction: t, lock: t.LOCK.UPDATE });
+    const old = await roomLocked(id, t);
+    mine(await members(old, t), user.id);
+    if (old.status !== 'FINISHED') throw new ValidationError('Chờ tất cả người chơi hoàn thành để chơi lại');
+    let next = old.rematchId ? await Room.findByPk(old.rematchId, { transaction: t, lock: t.LOCK.UPDATE }) : null;
+    const active = await Player.findOne({ where: { userId: user.id, finishedAt: null }, include: [{ model: Room, where: { status: { [Op.in]: ['WAITING', 'PLAYING'] } } }], transaction: t });
+    if (active && active.roomId !== next?.id) throw new ValidationError('Bạn đang có một lượt chơi khác');
+    if (!next || !['WAITING', 'PLAYING'].includes(next.status)) {
+      next = await Room.create({ id: crypto.randomUUID(), gameType: old.gameType, mode: old.mode, difficulty: old.difficulty, capacity: old.capacity, durationSeconds: old.durationSeconds,
+        rulesVersion: 2, seed: crypto.randomBytes(16).toString('hex'), hostId: user.id, title: `${user.name} · ${old.mode}`.slice(0, 100), status: old.mode === 'SOLO' ? 'PLAYING' : 'WAITING', startedAt: old.mode === 'SOLO' ? new Date(Date.now() + 3200) : null }, { transaction: t });
+      old.rematchId = next.id; old.revision++; await old.save({ transaction: t });
+    }
+    const nextPlayers = await members(next, t);
+    if (!nextPlayers.some((p) => String(p.userId) === String(user.id))) {
+      if ((next.status !== 'WAITING' && next.mode !== 'SOLO') || nextPlayers.length >= next.capacity) throw new ValidationError('Ván tiếp theo đã đầy hoặc đã bắt đầu');
+      await Player.create({ id: crypto.randomUUID(), roomId: next.id, userId: user.id, heartbeatAt: new Date(), ready: next.mode === 'SOLO' }, { transaction: t });
+      for (const p of nextPlayers) { p.ready = false; await p.save({ transaction: t }); }
+      next.revision++; await next.save({ transaction: t });
+    }
+    return pack(next, await members(next, t), user.id);
+  });
+  await changed(id); await changed(result.room.id);
+  return result;
+}
 async function leaderboard(gameType, mode, period, userId, difficulty = 'mixed') {
   const { GAME_TYPES, CAPACITY, compareResults } = await engine;
   if (!GAME_TYPES.includes(gameType) || !Object.keys(CAPACITY).includes(mode) || !['today', 'week', 'month', 'all'].includes(period) || !['mixed', 'easy', 'medium', 'hard', 'vietnamese'].includes(difficulty)) throw new ValidationError('Bộ lọc BXH không hợp lệ');
@@ -230,7 +261,7 @@ async function leaderboard(gameType, mode, period, userId, difficulty = 'mixed')
   if (period === 'month') local.setUTCDate(1);
   const where = { finishedAt: period === 'all' ? { [Op.ne]: null } : { [Op.gte]: new Date(local.getTime() - 7 * 3600000) } };
   const durationSeconds = Number(process.env.ARCADE_ROUND_SECONDS || 60);
-  const rows = await Player.findAll({ where, include: [{ model: Room, where: { gameType, mode, durationSeconds, ...(gameType === 'computer_rush' ? { difficulty } : {}) } }, { model: User, attributes: ['name', 'avatarUrl'] }] });
+  const rows = await Player.findAll({ where, include: [{ model: Room, where: { gameType, mode, durationSeconds, rulesVersion: 2, ...(gameType === 'computer_rush' ? { difficulty } : {}) } }, { model: User, attributes: ['name', 'avatarUrl'] }] });
   const best = new Map();
   for (const p of rows) {
     if (!p.result?.eligible) continue;
@@ -241,4 +272,4 @@ async function leaderboard(gameType, mode, period, userId, difficulty = 'mixed')
   const ranked = [...best.values()].sort(compareResults).map((x, i) => ({ ...x, rank: i + 1 }));
   return { rows: ranked.slice(0, 100), personal: ranked.find((x) => String(x.userId) === String(userId)) || null, gameType, mode, period, durationSeconds };
 }
-module.exports = { start, stop, sweep, create, list, join, detail, ready, begin, sync, leave, active, leaderboard };
+module.exports = { start, stop, sweep, create, list, join, detail, ready, begin, sync, leave, active, rematch, leaderboard };

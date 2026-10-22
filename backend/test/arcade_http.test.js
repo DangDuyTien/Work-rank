@@ -48,6 +48,11 @@ test('Arcade migration creates indexed durable tables and is safely repeatable',
     assert.ok((await q.describeTable('arcade_rooms')).seed);
     assert.ok((await q.describeTable('arcade_players')).events);
     assert.ok((await q.showIndex('arcade_players')).some((i) => i.unique && i.fields.some((f) => f.attribute === 'room_id')));
+    const ux = require('../src/migrations/20261021140000-arcade-ux-rules-and-rematch');
+    await ux.up(q, DataTypes); await ux.up(q, DataTypes);
+    const columns = await q.describeTable('arcade_rooms');
+    assert.equal(Number(columns.rules_version.defaultValue), 1);
+    assert.ok(columns.rematch_id);
     await migration.down(q); await migration.up(q, DataTypes);
   } finally { await db.close(); }
 });

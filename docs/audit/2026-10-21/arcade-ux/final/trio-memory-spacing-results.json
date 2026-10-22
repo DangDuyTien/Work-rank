@@ -1,0 +1,72 @@
+{
+  "phase": "final",
+  "startedAt": "2026-10-21T16:02:29.234Z",
+  "checks": [
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "1c54e358-17ed-41f3-80cf-01880759e552",
+      "ranks": [
+        [
+          1,
+          1,
+          248
+        ],
+        [
+          2,
+          2,
+          247
+        ],
+        [
+          3,
+          3,
+          247
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 484,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 631,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "1c54e358-17ed-41f3-80cf-01880759e552",
+        "playerAttemptId": "40224059-8cf0-408a-a14e-5db6db7cc7e9",
+        "mode": "TRIO",
+        "gameType": "memory_flash",
+        "previousBestScore": 0,
+        "personalBestScore": 248,
+        "isPersonalBest": true,
+        "improvement": 248
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · TRIO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nLA\n✦\n✧\n✦\nP1\nLan\n248\n#1\n🥈\nMI\nP2\nMinh\n247\n#2\n🥉\nHU\nP3\nHuy\n247\n#3\nVòng đúng\n2\nChính xác\n66.67%\nChuỗi tốt nhất\nx2\nPhản hồi TB\n484ms\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "quickReplay": "PASS",
+      "oldRoom": "1c54e358-17ed-41f3-80cf-01880759e552",
+      "newRoom": "49544713-f946-41f9-8f21-f538329d161b",
+      "sharedParty": [
+        "49544713-f946-41f9-8f21-f538329d161b",
+        "49544713-f946-41f9-8f21-f538329d161b",
+        "49544713-f946-41f9-8f21-f538329d161b"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 248
+    }
+  ],
+  "observations": [],
+  "errors": [],
+  "finishedAt": "2026-10-21T16:03:00.298Z"
+}

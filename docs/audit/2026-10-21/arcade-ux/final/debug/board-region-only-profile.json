@@ -1,0 +1,4401 @@
+{
+  "startedAt": "2026-10-21T15:52:38.298Z",
+  "checks": [
+    {
+      "game": "memory_flash",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "direction_rush",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "memory_flash",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "direction_rush",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Target và input cùng nhìn thấy khi viewport còn 390×430",
+      "status": "PASS",
+      "evidence": {
+        "inputTop": 221.46875,
+        "inputBottom": 273.359375,
+        "targetTop": 145.0625,
+        "targetBottom": 187.859375,
+        "viewport": 430
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 390px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 60,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 430px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 60,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "24 phím liên tiếp dưới CPU 4x không mất input",
+      "status": "PASS",
+      "evidence": {
+        "before": 5,
+        "after": 29
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Input/RAF/CLS sau polish với CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "direction_rush",
+        "cpuThrottle": 4,
+        "frameSamples": 449,
+        "frameP50Ms": 8.400000000000546,
+        "frameP95Ms": 24.400000000001455,
+        "inputSamples": 24,
+        "inputToNextFrameP50Ms": 11.699999988079071,
+        "inputToNextFrameP95Ms": 14.800000011920929,
+        "gameplayCls": 0,
+        "shiftDetails": [],
+        "longTaskCount": 0,
+        "longestTaskMs": 0
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 768px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 2,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Input/RAF/CLS sau polish với CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "computer_rush",
+        "cpuThrottle": 4,
+        "frameSamples": 906,
+        "frameP50Ms": 8.399999999999636,
+        "frameP95Ms": 17.30000000000109,
+        "inputSamples": 333,
+        "inputToNextFrameP50Ms": 6.300000011920929,
+        "inputToNextFrameP95Ms": 18.099999964237213,
+        "gameplayCls": 0,
+        "shiftDetails": [],
+        "longTaskCount": 0,
+        "longestTaskMs": 0
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Cài đặt giảm chuyển động",
+      "status": "PASS",
+      "evidence": {
+        "animation": "none",
+        "transition": "0s"
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 1024px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 3,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Memory chơi 1440px, feedback / không lộ pattern / nhân vật không đè bảng",
+      "status": "PASS",
+      "evidence": {
+        "size": 3,
+        "targets": 3,
+        "tile": 66,
+        "hiddenColors": [
+          "rgb(228, 201, 157)"
+        ],
+        "characterOverlap": false
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Ván 60s: xoay trước input, biển đảo chiều muộn, đáp án ngược và trở lại luật thường",
+      "status": "PASS",
+      "evidence": {
+        "stages": [
+          "normal",
+          "position",
+          "color",
+          "entrance",
+          "opposite",
+          "final"
+        ],
+        "entranceGuard": true,
+        "wrongCaptured": true
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Cài đặt giảm chuyển động",
+      "status": "PASS",
+      "evidence": {
+        "animation": "none",
+        "transition": "0s"
+      }
+    },
+    {
+      "game": "memory_flash",
+      "name": "Chơi tới 5×5, tăng từng biến độ khó",
+      "status": "PASS",
+      "evidence": {
+        "sizes": [
+          3,
+          4,
+          5
+        ],
+        "rounds": 19
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Mặc định 60s → kết quả có PB thật → một chạm chơi lại",
+      "status": "PASS",
+      "evidence": {
+        "result": {
+          "score": 5242,
+          "correct": 26,
+          "attempts": 26,
+          "accuracy": 97.2,
+          "bestCombo": 26,
+          "combo": 26,
+          "avgResponseMs": 436,
+          "perfectCount": 0,
+          "wrongCount": 0,
+          "timeoutCount": 0,
+          "lastCorrect": true,
+          "lastResponseMs": 426,
+          "awardedXp": 26,
+          "eligible": true,
+          "forfeited": false,
+          "attemptId": "4365be45-1d12-4847-91e4-a83e467249b9",
+          "playerAttemptId": "9175e129-ff02-4382-b607-c848fccf8bf9",
+          "mode": "SOLO",
+          "gameType": "computer_rush",
+          "previousBestScore": 0,
+          "personalBestScore": 5242,
+          "isPersonalBest": true,
+          "improvement": 5242
+        },
+        "newRoom": "f227b54e-409a-40d2-93e5-5b8803a401a6"
+      }
+    },
+    {
+      "game": "direction_rush",
+      "name": "Mặc định 60s → kết quả có PB thật → một chạm chơi lại",
+      "status": "PASS",
+      "evidence": {
+        "result": {
+          "score": 33941,
+          "correct": 189,
+          "attempts": 211,
+          "accuracy": 89.57,
+          "bestCombo": 172,
+          "combo": 0,
+          "avgResponseMs": 217,
+          "perfectCount": 185,
+          "wrongCount": 22,
+          "timeoutCount": 22,
+          "lastCorrect": false,
+          "lastResponseMs": 692,
+          "awardedXp": 30,
+          "eligible": true,
+          "forfeited": false,
+          "attemptId": "5bb4c18f-3224-4f88-9785-9a3d586ad78e",
+          "playerAttemptId": "ce2956ac-4c63-45c8-9a61-b836ab607534",
+          "mode": "SOLO",
+          "gameType": "direction_rush",
+          "previousBestScore": 0,
+          "personalBestScore": 33941,
+          "isPersonalBest": true,
+          "improvement": 33941
+        },
+        "newRoom": "02f789b7-e509-4e0c-80ec-d1f3487174b1"
+      }
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: {\"game\":\"memory_flash\",\"cpuThrottle\":4,\"frameSamples\":5219,\"frameP50Ms\":8.30000000000291,\"frameP95Ms\":9.19999999999709,\"inputSamples\":53,\"inputToNextFrameP50Ms\":5.300000011920929,\"inputToNextFrameP95Ms\":6.600000023841858,\"gameplayCls\":0.18849321253125867,\"shiftDetails\":[{\"value\":0.0006131744260415281,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125},\"current\":{\"x\":127.4375,\"y\":256.640625,\"width\":135.109375,\"height\":26,\"top\":256.640625,\"right\":262.546875,\"bottom\":282.640625,\"left\":127.4375}},{\"previous\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125},\"current\":{\"x\":127.4375,\"y\":292.640625,\"width\":135.109375,\"height\":13,\"top\":292.640625,\"right\":262.546875,\"bottom\":305.640625,\"left\":127.4375}}]},{\"value\":0.0015196217094180274,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":127.4375,\"y\":230.59375,\"width\":135.109375,\"height\":81.046875,\"top\":230.59375,\"right\":262.546875,\"bottom\":311.640625,\"left\":127.4375},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.061368633649332295,\"sources\":[{\"node\":\"arcade-memory-board phase-prepare\",\"previous\":{\"x\":84,\"y\":363.640625,\"width\":228,\"height\":233,\"top\":363.640625,\"right\":312,\"bottom\":596.640625,\"left\":84},\"current\":{\"x\":53,\"y\":332.640625,\"width\":290,\"height\":295,\"top\":332.640625,\"right\":343,\"bottom\":627.640625,\"left\":53}},{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":121.765625,\"y\":230.59375,\"width\":147,\"height\":81.046875,\"top\":230.59375,\"right\":268.765625,\"bottom\":311.640625,\"left\":121.765625},\"current\":{\"x\":127.40625,\"y\":230.59375,\"width\":135.1875,\"height\":81.046875,\"top\":230.59375,\"right\":262.59375,\"bottom\":311.640625,\"left\":127.40625}}]},{\"value\":0.0009745660890582318,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":127.40625,\"y\":256.640625,\"width\":135.1875,\"height\":26,\"top\":256.640625,\"right\":262.59375,\"bottom\":282.640625,\"left\":127.40625},\"current\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125}},{\"previous\":{\"x\":127.40625,\"y\":292.640625,\"width\":135.1875,\"height\":13,\"top\":292.640625,\"right\":262.59375,\"bottom\":305.640625,\"left\":127.40625},\"current\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125}}]},{\"value\":0.0006131744260415281,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125},\"current\":{\"x\":127.40625,\"y\":256.640625,\"width\":135.1875,\"height\":26,\"top\":256.640625,\"right\":262.59375,\"bottom\":282.640625,\"left\":127.40625}},{\"previous\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125},\"current\":{\"x\":127.40625,\"y\":292.640625,\"width\":135.1875,\"height\":13,\"top\":292.640625,\"right\":262.59375,\"bottom\":305.640625,\"left\":127.40625}}]},{\"value\":0.0015208786339088614,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":127.40625,\"y\":230.59375,\"width\":135.1875,\"height\":81.046875,\"top\":230.59375,\"right\":262.59375,\"bottom\":311.640625,\"left\":127.40625},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0015242206087274284,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":121.765625,\"y\":230.59375,\"width\":147,\"height\":81.046875,\"top\":230.59375,\"right\":268.765625,\"bottom\":311.640625,\"left\":121.765625},\"current\":{\"x\":127.15625,\"y\":230.59375,\"width\":135.6875,\"height\":81.046875,\"top\":230.59375,\"right\":262.84375,\"bottom\":311.640625,\"left\":127.15625}},{\"previous\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67},\"current\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67}},{\"previous\":{\"x\":132.75,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":191.5,\"bottom\":457.84375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":191.5,\"bottom\":457.84375,\"left\":132.75}},{\"previous\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5}}]},{\"value\":0.0009745660890582318,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":127.15625,\"y\":256.640625,\"width\":135.6875,\"height\":26,\"top\":256.640625,\"right\":262.84375,\"bottom\":282.640625,\"left\":127.15625},\"current\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125}},{\"previous\":{\"x\":127.15625,\"y\":292.640625,\"width\":135.6875,\"height\":13,\"top\":292.640625,\"right\":262.84375,\"bottom\":305.640625,\"left\":127.15625},\"current\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125}}]},{\"value\":0.0006131744260415281,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125},\"current\":{\"x\":127.15625,\"y\":256.640625,\"width\":135.6875,\"height\":26,\"top\":256.640625,\"right\":262.84375,\"bottom\":282.640625,\"left\":127.15625}},{\"previous\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125},\"current\":{\"x\":127.15625,\"y\":292.640625,\"width\":135.6875,\"height\":13,\"top\":292.640625,\"right\":262.84375,\"bottom\":305.640625,\"left\":127.15625}}]},{\"value\":0.0015208786339088614,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":127.15625,\"y\":230.59375,\"width\":135.6875,\"height\":81.046875,\"top\":230.59375,\"right\":262.84375,\"bottom\":311.640625,\"left\":127.15625},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.001526155264564,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":121.765625,\"y\":230.59375,\"width\":147,\"height\":81.046875,\"top\":230.59375,\"right\":268.765625,\"bottom\":311.640625,\"left\":121.765625},\"current\":{\"x\":127.046875,\"y\":230.59375,\"width\":135.890625,\"height\":81.046875,\"top\":230.59375,\"right\":262.9375,\"bottom\":311.640625,\"left\":127.046875}},{\"previous\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67},\"current\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67}},{\"previous\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67},\"current\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67}},{\"previous\":{\"x\":264.25,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":323,\"bottom\":589.34375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":323,\"bottom\":589.34375,\"left\":264.25}}]},{\"value\":0.0009737718216669863,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":127.046875,\"y\":256.640625,\"width\":135.890625,\"height\":26,\"top\":256.640625,\"right\":262.9375,\"bottom\":282.640625,\"left\":127.046875},\"current\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125}},{\"previous\":{\"x\":127.046875,\"y\":292.640625,\"width\":135.890625,\"height\":13,\"top\":292.640625,\"right\":262.9375,\"bottom\":305.640625,\"left\":127.046875},\"current\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125}}]},{\"value\":0.0006131744260415281,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":126.03125,\"y\":256.640625,\"width\":137.921875,\"height\":26,\"top\":256.640625,\"right\":263.953125,\"bottom\":282.640625,\"left\":126.03125},\"current\":{\"x\":127.046875,\"y\":256.640625,\"width\":135.890625,\"height\":26,\"top\":256.640625,\"right\":262.9375,\"bottom\":282.640625,\"left\":127.046875}},{\"previous\":{\"x\":126.03125,\"y\":292.640625,\"width\":137.921875,\"height\":13,\"top\":292.640625,\"right\":263.953125,\"bottom\":305.640625,\"left\":126.03125},\"current\":{\"x\":127.046875,\"y\":292.640625,\"width\":135.890625,\"height\":13,\"top\":292.640625,\"right\":262.9375,\"bottom\":305.640625,\"left\":127.046875}}]},{\"value\":0.0015196217094180274,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":127.046875,\"y\":230.59375,\"width\":135.890625,\"height\":81.046875,\"top\":230.59375,\"right\":262.9375,\"bottom\":311.640625,\"left\":127.046875},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0010168466824608555,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":123.6875,\"y\":256.640625,\"width\":142.609375,\"height\":26,\"top\":256.640625,\"right\":266.296875,\"bottom\":282.640625,\"left\":123.6875}},{\"previous\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67},\"current\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67}},{\"previous\":{\"x\":132.75,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":191.5,\"bottom\":392.09375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":191.5,\"bottom\":392.09375,\"left\":132.75}},{\"previous\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67},\"current\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67}},{\"previous\":{\"x\":121.765625,\"y\":231.59375,\"width\":146.453125,\"height\":14,\"top\":231.59375,\"right\":268.21875,\"bottom\":245.59375,\"left\":121.765625},\"current\":{\"x\":123.6875,\"y\":231.59375,\"width\":142.609375,\"height\":14,\"top\":231.59375,\"right\":266.296875,\"bottom\":245.59375,\"left\":123.6875}}]},{\"value\":0.0009845286835973113,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":123.6875,\"y\":256.640625,\"width\":142.609375,\"height\":26,\"top\":256.640625,\"right\":266.296875,\"bottom\":282.640625,\"left\":123.6875},\"current\":{\"x\":123.6875,\"y\":256.640625,\"width\":142.609375,\"height\":26,\"top\":256.640625,\"right\":266.296875,\"bottom\":282.640625,\"left\":123.6875}},{\"previous\":{\"x\":123.6875,\"y\":292.640625,\"width\":142.609375,\"height\":13,\"top\":292.640625,\"right\":266.296875,\"bottom\":305.640625,\"left\":123.6875},\"current\":{\"x\":123.6875,\"y\":292.640625,\"width\":142.609375,\"height\":13,\"top\":292.640625,\"right\":266.296875,\"bottom\":305.640625,\"left\":123.6875}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":123.6875,\"y\":256.640625,\"width\":142.609375,\"height\":26,\"top\":256.640625,\"right\":266.296875,\"bottom\":282.640625,\"left\":123.6875},\"current\":{\"x\":123.6875,\"y\":256.640625,\"width\":142.609375,\"height\":26,\"top\":256.640625,\"right\":266.296875,\"bottom\":282.640625,\"left\":123.6875}},{\"previous\":{\"x\":123.6875,\"y\":292.640625,\"width\":142.609375,\"height\":13,\"top\":292.640625,\"right\":266.296875,\"bottom\":305.640625,\"left\":123.6875},\"current\":{\"x\":123.6875,\"y\":292.640625,\"width\":142.609375,\"height\":13,\"top\":292.640625,\"right\":266.296875,\"bottom\":305.640625,\"left\":123.6875}}]},{\"value\":0.0015196217094180274,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":123.6875,\"y\":230.59375,\"width\":142.609375,\"height\":81.046875,\"top\":230.59375,\"right\":266.296875,\"bottom\":311.640625,\"left\":123.6875},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.001520253658745887,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":121.765625,\"y\":230.59375,\"width\":147,\"height\":81.046875,\"top\":230.59375,\"right\":268.765625,\"bottom\":311.640625,\"left\":121.765625},\"current\":{\"x\":124.765625,\"y\":230.59375,\"width\":140.453125,\"height\":81.046875,\"top\":230.59375,\"right\":265.21875,\"bottom\":311.640625,\"left\":124.765625}},{\"previous\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5}},{\"previous\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67},\"current\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67}},{\"previous\":{\"x\":198.5,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":257.25,\"bottom\":589.34375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":257.25,\"bottom\":589.34375,\"left\":198.5}}]},{\"value\":0.0009791502526321487,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.765625,\"y\":256.640625,\"width\":140.453125,\"height\":26,\"top\":256.640625,\"right\":265.21875,\"bottom\":282.640625,\"left\":124.765625},\"current\":{\"x\":124.765625,\"y\":256.640625,\"width\":140.453125,\"height\":26,\"top\":256.640625,\"right\":265.21875,\"bottom\":282.640625,\"left\":124.765625}},{\"previous\":{\"x\":124.765625,\"y\":292.640625,\"width\":140.453125,\"height\":13,\"top\":292.640625,\"right\":265.21875,\"bottom\":305.640625,\"left\":124.765625},\"current\":{\"x\":124.765625,\"y\":292.640625,\"width\":140.453125,\"height\":13,\"top\":292.640625,\"right\":265.21875,\"bottom\":305.640625,\"left\":124.765625}}]},{\"value\":0.0006165611704991998,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.765625,\"y\":256.640625,\"width\":140.453125,\"height\":26,\"top\":256.640625,\"right\":265.21875,\"bottom\":282.640625,\"left\":124.765625},\"current\":{\"x\":124.765625,\"y\":256.640625,\"width\":140.453125,\"height\":26,\"top\":256.640625,\"right\":265.21875,\"bottom\":282.640625,\"left\":124.765625}},{\"previous\":{\"x\":124.765625,\"y\":292.640625,\"width\":140.453125,\"height\":13,\"top\":292.640625,\"right\":265.21875,\"bottom\":305.640625,\"left\":124.765625},\"current\":{\"x\":124.765625,\"y\":292.640625,\"width\":140.453125,\"height\":13,\"top\":292.640625,\"right\":265.21875,\"bottom\":305.640625,\"left\":124.765625}}]},{\"value\":0.0015196217094180274,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.765625,\"y\":230.59375,\"width\":140.453125,\"height\":81.046875,\"top\":230.59375,\"right\":265.21875,\"bottom\":311.640625,\"left\":124.765625},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0010015868159883063,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":123.984375,\"y\":256.640625,\"width\":142.015625,\"height\":26,\"top\":256.640625,\"right\":266,\"bottom\":282.640625,\"left\":123.984375}},{\"previous\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67},\"current\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67}},{\"previous\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25}},{\"previous\":{\"x\":198.5,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":257.25,\"bottom\":589.34375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":257.25,\"bottom\":589.34375,\"left\":198.5}},{\"previous\":{\"x\":121.765625,\"y\":292.640625,\"width\":146.453125,\"height\":13,\"top\":292.640625,\"right\":268.21875,\"bottom\":305.640625,\"left\":121.765625},\"current\":{\"x\":123.984375,\"y\":292.640625,\"width\":142.015625,\"height\":13,\"top\":292.640625,\"right\":266,\"bottom\":305.640625,\"left\":123.984375}}]},{\"value\":0.0009845286835973113,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":123.984375,\"y\":256.640625,\"width\":142.015625,\"height\":26,\"top\":256.640625,\"right\":266,\"bottom\":282.640625,\"left\":123.984375},\"current\":{\"x\":123.984375,\"y\":256.640625,\"width\":142.015625,\"height\":26,\"top\":256.640625,\"right\":266,\"bottom\":282.640625,\"left\":123.984375}},{\"previous\":{\"x\":123.984375,\"y\":292.640625,\"width\":142.015625,\"height\":13,\"top\":292.640625,\"right\":266,\"bottom\":305.640625,\"left\":123.984375},\"current\":{\"x\":123.984375,\"y\":292.640625,\"width\":142.015625,\"height\":13,\"top\":292.640625,\"right\":266,\"bottom\":305.640625,\"left\":123.984375}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":123.984375,\"y\":256.640625,\"width\":142.015625,\"height\":26,\"top\":256.640625,\"right\":266,\"bottom\":282.640625,\"left\":123.984375},\"current\":{\"x\":123.984375,\"y\":256.640625,\"width\":142.015625,\"height\":26,\"top\":256.640625,\"right\":266,\"bottom\":282.640625,\"left\":123.984375}},{\"previous\":{\"x\":123.984375,\"y\":292.640625,\"width\":142.015625,\"height\":13,\"top\":292.640625,\"right\":266,\"bottom\":305.640625,\"left\":123.984375},\"current\":{\"x\":123.984375,\"y\":292.640625,\"width\":142.015625,\"height\":13,\"top\":292.640625,\"right\":266,\"bottom\":305.640625,\"left\":123.984375}}]},{\"value\":0.0015196217094180274,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":123.984375,\"y\":230.59375,\"width\":142.015625,\"height\":81.046875,\"top\":230.59375,\"right\":266,\"bottom\":311.640625,\"left\":123.984375},\"current\":{\"x\":110.9375,\"y\":230.59375,\"width\":168.125,\"height\":81.046875,\"top\":230.59375,\"right\":279.0625,\"bottom\":311.640625,\"left\":110.9375}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0008356673838447889,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":124.109375,\"y\":256.640625,\"width\":141.765625,\"height\":26,\"top\":256.640625,\"right\":265.875,\"bottom\":282.640625,\"left\":124.109375}},{\"previous\":{\"x\":198.5,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":257.25,\"bottom\":392.09375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":257.25,\"bottom\":392.09375,\"left\":198.5}},{\"previous\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5}},{\"previous\":{\"x\":198.5,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":257.25,\"bottom\":523.59375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":257.25,\"bottom\":523.59375,\"left\":198.5}}]},{\"value\":0.0009845286835973113,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.109375,\"y\":256.640625,\"width\":141.765625,\"height\":26,\"top\":256.640625,\"right\":265.875,\"bottom\":282.640625,\"left\":124.109375},\"current\":{\"x\":124.109375,\"y\":256.640625,\"width\":141.765625,\"height\":26,\"top\":256.640625,\"right\":265.875,\"bottom\":282.640625,\"left\":124.109375}},{\"previous\":{\"x\":124.109375,\"y\":292.640625,\"width\":141.765625,\"height\":13,\"top\":292.640625,\"right\":265.875,\"bottom\":305.640625,\"left\":124.109375},\"current\":{\"x\":124.109375,\"y\":292.640625,\"width\":141.765625,\"height\":13,\"top\":292.640625,\"right\":265.875,\"bottom\":305.640625,\"left\":124.109375}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.109375,\"y\":256.640625,\"width\":141.765625,\"height\":26,\"top\":256.640625,\"right\":265.875,\"bottom\":282.640625,\"left\":124.109375},\"current\":{\"x\":124.109375,\"y\":256.640625,\"width\":141.765625,\"height\":26,\"top\":256.640625,\"right\":265.875,\"bottom\":282.640625,\"left\":124.109375}},{\"previous\":{\"x\":124.109375,\"y\":292.640625,\"width\":141.765625,\"height\":13,\"top\":292.640625,\"right\":265.875,\"bottom\":305.640625,\"left\":124.109375},\"current\":{\"x\":124.109375,\"y\":292.640625,\"width\":141.765625,\"height\":13,\"top\":292.640625,\"right\":265.875,\"bottom\":305.640625,\"left\":124.109375}}]},{\"value\":0.0015422463502530355,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.109375,\"y\":230.59375,\"width\":141.765625,\"height\":81.046875,\"top\":230.59375,\"right\":265.875,\"bottom\":311.640625,\"left\":124.109375},\"current\":{\"x\":110.65625,\"y\":230.59375,\"width\":168.6875,\"height\":81.046875,\"top\":230.59375,\"right\":279.34375,\"bottom\":311.640625,\"left\":110.65625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0010192966953365137,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":123.96875,\"y\":256.640625,\"width\":142.0625,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.96875}},{\"previous\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67},\"current\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67}},{\"previous\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25}},{\"previous\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67},\"current\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67}},{\"previous\":{\"x\":264.25,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":323,\"bottom\":589.34375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":323,\"bottom\":589.34375,\"left\":264.25}}]},{\"value\":0.000985331724937929,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":123.96875,\"y\":256.640625,\"width\":142.0625,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.96875},\"current\":{\"x\":123.96875,\"y\":256.640625,\"width\":142.0625,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.96875}},{\"previous\":{\"x\":123.96875,\"y\":292.640625,\"width\":142.0625,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.96875},\"current\":{\"x\":123.96875,\"y\":292.640625,\"width\":142.0625,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.96875}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":123.96875,\"y\":256.640625,\"width\":142.0625,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.96875},\"current\":{\"x\":123.96875,\"y\":256.640625,\"width\":142.0625,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.96875}},{\"previous\":{\"x\":123.96875,\"y\":292.640625,\"width\":142.0625,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.96875},\"current\":{\"x\":123.96875,\"y\":292.640625,\"width\":142.0625,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.96875}}]},{\"value\":0.0015435032747438693,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":123.96875,\"y\":230.59375,\"width\":142.0625,\"height\":81.046875,\"top\":230.59375,\"right\":266.03125,\"bottom\":311.640625,\"left\":123.96875},\"current\":{\"x\":110.65625,\"y\":230.59375,\"width\":168.6875,\"height\":81.046875,\"top\":230.59375,\"right\":279.34375,\"bottom\":311.640625,\"left\":110.65625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0010186171642062893,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":124.15625,\"y\":256.640625,\"width\":141.671875,\"height\":26,\"top\":256.640625,\"right\":265.828125,\"bottom\":282.640625,\"left\":124.15625}},{\"previous\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67},\"current\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67}},{\"previous\":{\"x\":264.25,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":323,\"bottom\":457.84375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":323,\"bottom\":457.84375,\"left\":264.25}},{\"previous\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25}},{\"previous\":{\"x\":132.75,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":191.5,\"bottom\":589.34375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":191.5,\"bottom\":589.34375,\"left\":132.75}}]},{\"value\":0.0009845286835973113,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.15625,\"y\":256.640625,\"width\":141.671875,\"height\":26,\"top\":256.640625,\"right\":265.828125,\"bottom\":282.640625,\"left\":124.15625},\"current\":{\"x\":124.15625,\"y\":256.640625,\"width\":141.671875,\"height\":26,\"top\":256.640625,\"right\":265.828125,\"bottom\":282.640625,\"left\":124.15625}},{\"previous\":{\"x\":124.15625,\"y\":292.640625,\"width\":141.671875,\"height\":13,\"top\":292.640625,\"right\":265.828125,\"bottom\":305.640625,\"left\":124.15625},\"current\":{\"x\":124.15625,\"y\":292.640625,\"width\":141.671875,\"height\":13,\"top\":292.640625,\"right\":265.828125,\"bottom\":305.640625,\"left\":124.15625}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.15625,\"y\":256.640625,\"width\":141.671875,\"height\":26,\"top\":256.640625,\"right\":265.828125,\"bottom\":282.640625,\"left\":124.15625},\"current\":{\"x\":124.15625,\"y\":256.640625,\"width\":141.671875,\"height\":26,\"top\":256.640625,\"right\":265.828125,\"bottom\":282.640625,\"left\":124.15625}},{\"previous\":{\"x\":124.15625,\"y\":292.640625,\"width\":141.671875,\"height\":13,\"top\":292.640625,\"right\":265.828125,\"bottom\":305.640625,\"left\":124.15625},\"current\":{\"x\":124.15625,\"y\":292.640625,\"width\":141.671875,\"height\":13,\"top\":292.640625,\"right\":265.828125,\"bottom\":305.640625,\"left\":124.15625}}]},{\"value\":0.0015422463502530355,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.15625,\"y\":230.59375,\"width\":141.671875,\"height\":81.046875,\"top\":230.59375,\"right\":265.828125,\"bottom\":311.640625,\"left\":124.15625},\"current\":{\"x\":110.65625,\"y\":230.59375,\"width\":168.6875,\"height\":81.046875,\"top\":230.59375,\"right\":279.34375,\"bottom\":311.640625,\"left\":110.65625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.001015666361297233,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":123.953125,\"y\":256.640625,\"width\":142.078125,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.953125}},{\"previous\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25}},{\"previous\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67},\"current\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67}},{\"previous\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5},\"current\":{\"x\":198.5,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":257.25,\"bottom\":457.84375,\"left\":198.5}},{\"previous\":{\"x\":132.75,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":191.5,\"bottom\":523.59375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":191.5,\"bottom\":523.59375,\"left\":132.75}}]},{\"value\":0.0009845286835973113,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":123.953125,\"y\":256.640625,\"width\":142.078125,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.953125},\"current\":{\"x\":123.953125,\"y\":256.640625,\"width\":142.078125,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.953125}},{\"previous\":{\"x\":123.953125,\"y\":292.640625,\"width\":142.078125,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.953125},\"current\":{\"x\":123.953125,\"y\":292.640625,\"width\":142.078125,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.953125}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":123.953125,\"y\":256.640625,\"width\":142.078125,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.953125},\"current\":{\"x\":123.953125,\"y\":256.640625,\"width\":142.078125,\"height\":26,\"top\":256.640625,\"right\":266.03125,\"bottom\":282.640625,\"left\":123.953125}},{\"previous\":{\"x\":123.953125,\"y\":292.640625,\"width\":142.078125,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.953125},\"current\":{\"x\":123.953125,\"y\":292.640625,\"width\":142.078125,\"height\":13,\"top\":292.640625,\"right\":266.03125,\"bottom\":305.640625,\"left\":123.953125}}]},{\"value\":0.0015133370869638587,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":123.953125,\"y\":230.59375,\"width\":142.078125,\"height\":81.046875,\"top\":230.59375,\"right\":266.03125,\"bottom\":311.640625,\"left\":123.953125},\"current\":{\"x\":111.015625,\"y\":230.59375,\"width\":167.96875,\"height\":81.046875,\"top\":230.59375,\"right\":278.984375,\"bottom\":311.640625,\"left\":111.015625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.0011905574378901574,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":124.3125,\"y\":256.640625,\"width\":141.375,\"height\":26,\"top\":256.640625,\"right\":265.6875,\"bottom\":282.640625,\"left\":124.3125}},{\"previous\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67},\"current\":{\"x\":67,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":125.75,\"bottom\":392.09375,\"left\":67}},{\"previous\":{\"x\":132.75,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":191.5,\"bottom\":392.09375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":191.5,\"bottom\":392.09375,\"left\":132.75}},{\"previous\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67},\"current\":{\"x\":67,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":125.75,\"bottom\":457.84375,\"left\":67}},{\"previous\":{\"x\":132.75,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":191.5,\"bottom\":589.34375,\"left\":132.75},\"current\":{\"x\":132.75,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":191.5,\"bottom\":589.34375,\"left\":132.75}}]},{\"value\":0.000985331724937929,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.3125,\"y\":256.640625,\"width\":141.375,\"height\":26,\"top\":256.640625,\"right\":265.6875,\"bottom\":282.640625,\"left\":124.3125},\"current\":{\"x\":124.3125,\"y\":256.640625,\"width\":141.375,\"height\":26,\"top\":256.640625,\"right\":265.6875,\"bottom\":282.640625,\"left\":124.3125}},{\"previous\":{\"x\":124.3125,\"y\":292.640625,\"width\":141.375,\"height\":13,\"top\":292.640625,\"right\":265.6875,\"bottom\":305.640625,\"left\":124.3125},\"current\":{\"x\":124.3125,\"y\":292.640625,\"width\":141.375,\"height\":13,\"top\":292.640625,\"right\":265.6875,\"bottom\":305.640625,\"left\":124.3125}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.3125,\"y\":256.640625,\"width\":141.375,\"height\":26,\"top\":256.640625,\"right\":265.6875,\"bottom\":282.640625,\"left\":124.3125},\"current\":{\"x\":124.3125,\"y\":256.640625,\"width\":141.375,\"height\":26,\"top\":256.640625,\"right\":265.6875,\"bottom\":282.640625,\"left\":124.3125}},{\"previous\":{\"x\":124.3125,\"y\":292.640625,\"width\":141.375,\"height\":13,\"top\":292.640625,\"right\":265.6875,\"bottom\":305.640625,\"left\":124.3125},\"current\":{\"x\":124.3125,\"y\":292.640625,\"width\":141.375,\"height\":13,\"top\":292.640625,\"right\":265.6875,\"bottom\":305.640625,\"left\":124.3125}}]},{\"value\":0.0015145940114546924,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.3125,\"y\":230.59375,\"width\":141.375,\"height\":81.046875,\"top\":230.59375,\"right\":265.6875,\"bottom\":311.640625,\"left\":124.3125},\"current\":{\"x\":111.015625,\"y\":230.59375,\"width\":167.96875,\"height\":81.046875,\"top\":230.59375,\"right\":278.984375,\"bottom\":311.640625,\"left\":111.015625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.001193510209313496,\"sources\":[{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":124.0625,\"y\":256.640625,\"width\":141.875,\"height\":26,\"top\":256.640625,\"right\":265.9375,\"bottom\":282.640625,\"left\":124.0625}},{\"previous\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":357.09375,\"width\":58.75,\"height\":35,\"top\":357.09375,\"right\":323,\"bottom\":392.09375,\"left\":264.25}},{\"previous\":{\"x\":264.25,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":323,\"bottom\":457.84375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":422.84375,\"width\":58.75,\"height\":35,\"top\":422.84375,\"right\":323,\"bottom\":457.84375,\"left\":264.25}},{\"previous\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25},\"current\":{\"x\":264.25,\"y\":488.59375,\"width\":58.75,\"height\":35,\"top\":488.59375,\"right\":323,\"bottom\":523.59375,\"left\":264.25}},{\"previous\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67},\"current\":{\"x\":67,\"y\":554.34375,\"width\":58.75,\"height\":35,\"top\":554.34375,\"right\":125.75,\"bottom\":589.34375,\"left\":67}}]},{\"value\":0.000985331724937929,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.0625,\"y\":256.640625,\"width\":141.875,\"height\":26,\"top\":256.640625,\"right\":265.9375,\"bottom\":282.640625,\"left\":124.0625},\"current\":{\"x\":124.0625,\"y\":256.640625,\"width\":141.875,\"height\":26,\"top\":256.640625,\"right\":265.9375,\"bottom\":282.640625,\"left\":124.0625}},{\"previous\":{\"x\":124.0625,\"y\":292.640625,\"width\":141.875,\"height\":13,\"top\":292.640625,\"right\":265.9375,\"bottom\":305.640625,\"left\":124.0625},\"current\":{\"x\":124.0625,\"y\":292.640625,\"width\":141.875,\"height\":13,\"top\":292.640625,\"right\":265.9375,\"bottom\":305.640625,\"left\":124.0625}}]},{\"value\":0.0006199479149568714,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.0625,\"y\":256.640625,\"width\":141.875,\"height\":26,\"top\":256.640625,\"right\":265.9375,\"bottom\":282.640625,\"left\":124.0625},\"current\":{\"x\":124.0625,\"y\":256.640625,\"width\":141.875,\"height\":26,\"top\":256.640625,\"right\":265.9375,\"bottom\":282.640625,\"left\":124.0625}},{\"previous\":{\"x\":124.0625,\"y\":292.640625,\"width\":141.875,\"height\":13,\"top\":292.640625,\"right\":265.9375,\"bottom\":305.640625,\"left\":124.0625},\"current\":{\"x\":124.0625,\"y\":292.640625,\"width\":141.875,\"height\":13,\"top\":292.640625,\"right\":265.9375,\"bottom\":305.640625,\"left\":124.0625}}]},{\"value\":0.0015145940114546924,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.0625,\"y\":230.59375,\"width\":141.875,\"height\":81.046875,\"top\":230.59375,\"right\":265.9375,\"bottom\":311.640625,\"left\":124.0625},\"current\":{\"x\":111.015625,\"y\":230.59375,\"width\":167.96875,\"height\":81.046875,\"top\":230.59375,\"right\":278.984375,\"bottom\":311.640625,\"left\":111.015625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]},{\"value\":0.07153117457103217,\"sources\":[{\"node\":\"arcade-memory-board phase-prepare\",\"previous\":{\"x\":53,\"y\":332.640625,\"width\":290,\"height\":295,\"top\":332.640625,\"right\":343,\"bottom\":627.640625,\"left\":53},\"current\":{\"x\":49.5,\"y\":329.140625,\"width\":297,\"height\":302,\"top\":329.140625,\"right\":346.5,\"bottom\":631.140625,\"left\":49.5}},{\"previous\":{\"x\":121.765625,\"y\":256.640625,\"width\":147,\"height\":26,\"top\":256.640625,\"right\":268.765625,\"bottom\":282.640625,\"left\":121.765625},\"current\":{\"x\":124.71875,\"y\":256.640625,\"width\":140.5625,\"height\":26,\"top\":256.640625,\"right\":265.28125,\"bottom\":282.640625,\"left\":124.71875}}]},{\"value\":0.0009799489069980804,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}},{\"previous\":{\"x\":124.71875,\"y\":256.640625,\"width\":140.5625,\"height\":26,\"top\":256.640625,\"right\":265.28125,\"bottom\":282.640625,\"left\":124.71875},\"current\":{\"x\":124.71875,\"y\":256.640625,\"width\":140.5625,\"height\":26,\"top\":256.640625,\"right\":265.28125,\"bottom\":282.640625,\"left\":124.71875}},{\"previous\":{\"x\":124.71875,\"y\":292.640625,\"width\":140.5625,\"height\":13,\"top\":292.640625,\"right\":265.28125,\"bottom\":305.640625,\"left\":124.71875},\"current\":{\"x\":124.71875,\"y\":292.640625,\"width\":140.5625,\"height\":13,\"top\":292.640625,\"right\":265.28125,\"bottom\":305.640625,\"left\":124.71875}}]},{\"value\":0.0006165611704991998,\"sources\":[{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161},\"current\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625}},{\"previous\":{\"x\":124.71875,\"y\":256.640625,\"width\":140.5625,\"height\":26,\"top\":256.640625,\"right\":265.28125,\"bottom\":282.640625,\"left\":124.71875},\"current\":{\"x\":124.71875,\"y\":256.640625,\"width\":140.5625,\"height\":26,\"top\":256.640625,\"right\":265.28125,\"bottom\":282.640625,\"left\":124.71875}},{\"previous\":{\"x\":124.71875,\"y\":292.640625,\"width\":140.5625,\"height\":13,\"top\":292.640625,\"right\":265.28125,\"bottom\":305.640625,\"left\":124.71875},\"current\":{\"x\":124.71875,\"y\":292.640625,\"width\":140.5625,\"height\":13,\"top\":292.640625,\"right\":265.28125,\"bottom\":305.640625,\"left\":124.71875}}]},{\"value\":0.0015145940114546924,\"sources\":[{\"node\":\"arcade-memory-heading\",\"previous\":{\"x\":124.71875,\"y\":230.59375,\"width\":140.5625,\"height\":81.046875,\"top\":230.59375,\"right\":265.28125,\"bottom\":311.640625,\"left\":124.71875},\"current\":{\"x\":111.015625,\"y\":230.59375,\"width\":167.96875,\"height\":81.046875,\"top\":230.59375,\"right\":278.984375,\"bottom\":311.640625,\"left\":111.015625}},{\"node\":\"arcade-memory-companion\",\"previous\":{\"x\":156.640625,\"y\":632.875,\"width\":76.71875,\"height\":115.53125,\"top\":632.875,\"right\":233.359375,\"bottom\":748.40625,\"left\":156.640625},\"current\":{\"x\":161,\"y\":632.875,\"width\":68,\"height\":115.53125,\"top\":632.875,\"right\":229,\"bottom\":748.40625,\"left\":161}}]}],\"longTaskCount\":0,\"longestTaskMs\":0}\n    at performanceEnd (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/arcade-ux-final-audit.mjs:128:10)\n    at async audit (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/arcade-ux-final-audit.mjs:175:3)\n    at async Promise.allSettled (index 2)\n    at async file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/arcade-ux-final-audit.mjs:213:23"
+  ],
+  "performance": [
+    {
+      "game": "direction_rush",
+      "cpuThrottle": 4,
+      "frameSamples": 449,
+      "frameP50Ms": 8.400000000000546,
+      "frameP95Ms": 24.400000000001455,
+      "inputSamples": 24,
+      "inputToNextFrameP50Ms": 11.699999988079071,
+      "inputToNextFrameP95Ms": 14.800000011920929,
+      "gameplayCls": 0,
+      "shiftDetails": [],
+      "longTaskCount": 0,
+      "longestTaskMs": 0
+    },
+    {
+      "game": "computer_rush",
+      "cpuThrottle": 4,
+      "frameSamples": 906,
+      "frameP50Ms": 8.399999999999636,
+      "frameP95Ms": 17.30000000000109,
+      "inputSamples": 333,
+      "inputToNextFrameP50Ms": 6.300000011920929,
+      "inputToNextFrameP95Ms": 18.099999964237213,
+      "gameplayCls": 0,
+      "shiftDetails": [],
+      "longTaskCount": 0,
+      "longestTaskMs": 0
+    },
+    {
+      "game": "memory_flash",
+      "cpuThrottle": 4,
+      "frameSamples": 5219,
+      "frameP50Ms": 8.30000000000291,
+      "frameP95Ms": 9.19999999999709,
+      "inputSamples": 53,
+      "inputToNextFrameP50Ms": 5.300000011920929,
+      "inputToNextFrameP95Ms": 6.600000023841858,
+      "gameplayCls": 0.18849321253125867,
+      "shiftDetails": [
+        {
+          "value": 0.0006131744260415281,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.4375,
+                "y": 256.640625,
+                "width": 135.109375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.546875,
+                "bottom": 282.640625,
+                "left": 127.4375
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.4375,
+                "y": 292.640625,
+                "width": 135.109375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.546875,
+                "bottom": 305.640625,
+                "left": 127.4375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015196217094180274,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 127.4375,
+                "y": 230.59375,
+                "width": 135.109375,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.546875,
+                "bottom": 311.640625,
+                "left": 127.4375
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.061368633649332295,
+          "sources": [
+            {
+              "node": "arcade-memory-board phase-prepare",
+              "previous": {
+                "x": 84,
+                "y": 363.640625,
+                "width": 228,
+                "height": 233,
+                "top": 363.640625,
+                "right": 312,
+                "bottom": 596.640625,
+                "left": 84
+              },
+              "current": {
+                "x": 53,
+                "y": 332.640625,
+                "width": 290,
+                "height": 295,
+                "top": 332.640625,
+                "right": 343,
+                "bottom": 627.640625,
+                "left": 53
+              }
+            },
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 121.765625,
+                "y": 230.59375,
+                "width": 147,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 268.765625,
+                "bottom": 311.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 127.40625,
+                "y": 230.59375,
+                "width": 135.1875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.59375,
+                "bottom": 311.640625,
+                "left": 127.40625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009745660890582318,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 127.40625,
+                "y": 256.640625,
+                "width": 135.1875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.59375,
+                "bottom": 282.640625,
+                "left": 127.40625
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              }
+            },
+            {
+              "previous": {
+                "x": 127.40625,
+                "y": 292.640625,
+                "width": 135.1875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.59375,
+                "bottom": 305.640625,
+                "left": 127.40625
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006131744260415281,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.40625,
+                "y": 256.640625,
+                "width": 135.1875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.59375,
+                "bottom": 282.640625,
+                "left": 127.40625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.40625,
+                "y": 292.640625,
+                "width": 135.1875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.59375,
+                "bottom": 305.640625,
+                "left": 127.40625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015208786339088614,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 127.40625,
+                "y": 230.59375,
+                "width": 135.1875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.59375,
+                "bottom": 311.640625,
+                "left": 127.40625
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015242206087274284,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 121.765625,
+                "y": 230.59375,
+                "width": 147,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 268.765625,
+                "bottom": 311.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 127.15625,
+                "y": 230.59375,
+                "width": 135.6875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.84375,
+                "bottom": 311.640625,
+                "left": 127.15625
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 191.5,
+                "bottom": 457.84375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 191.5,
+                "bottom": 457.84375,
+                "left": 132.75
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009745660890582318,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 127.15625,
+                "y": 256.640625,
+                "width": 135.6875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.84375,
+                "bottom": 282.640625,
+                "left": 127.15625
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              }
+            },
+            {
+              "previous": {
+                "x": 127.15625,
+                "y": 292.640625,
+                "width": 135.6875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.84375,
+                "bottom": 305.640625,
+                "left": 127.15625
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006131744260415281,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.15625,
+                "y": 256.640625,
+                "width": 135.6875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.84375,
+                "bottom": 282.640625,
+                "left": 127.15625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.15625,
+                "y": 292.640625,
+                "width": 135.6875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.84375,
+                "bottom": 305.640625,
+                "left": 127.15625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015208786339088614,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 127.15625,
+                "y": 230.59375,
+                "width": 135.6875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.84375,
+                "bottom": 311.640625,
+                "left": 127.15625
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.001526155264564,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 121.765625,
+                "y": 230.59375,
+                "width": 147,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 268.765625,
+                "bottom": 311.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 127.046875,
+                "y": 230.59375,
+                "width": 135.890625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.9375,
+                "bottom": 311.640625,
+                "left": 127.046875
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 323,
+                "bottom": 589.34375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 323,
+                "bottom": 589.34375,
+                "left": 264.25
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009737718216669863,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 127.046875,
+                "y": 256.640625,
+                "width": 135.890625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.9375,
+                "bottom": 282.640625,
+                "left": 127.046875
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              }
+            },
+            {
+              "previous": {
+                "x": 127.046875,
+                "y": 292.640625,
+                "width": 135.890625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.9375,
+                "bottom": 305.640625,
+                "left": 127.046875
+              },
+              "current": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006131744260415281,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 256.640625,
+                "width": 137.921875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 263.953125,
+                "bottom": 282.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.046875,
+                "y": 256.640625,
+                "width": 135.890625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 262.9375,
+                "bottom": 282.640625,
+                "left": 127.046875
+              }
+            },
+            {
+              "previous": {
+                "x": 126.03125,
+                "y": 292.640625,
+                "width": 137.921875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 263.953125,
+                "bottom": 305.640625,
+                "left": 126.03125
+              },
+              "current": {
+                "x": 127.046875,
+                "y": 292.640625,
+                "width": 135.890625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 262.9375,
+                "bottom": 305.640625,
+                "left": 127.046875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015196217094180274,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 127.046875,
+                "y": 230.59375,
+                "width": 135.890625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 262.9375,
+                "bottom": 311.640625,
+                "left": 127.046875
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0010168466824608555,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 256.640625,
+                "width": 142.609375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.296875,
+                "bottom": 282.640625,
+                "left": 123.6875
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 191.5,
+                "bottom": 392.09375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 191.5,
+                "bottom": 392.09375,
+                "left": 132.75
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 231.59375,
+                "width": 146.453125,
+                "height": 14,
+                "top": 231.59375,
+                "right": 268.21875,
+                "bottom": 245.59375,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 231.59375,
+                "width": 142.609375,
+                "height": 14,
+                "top": 231.59375,
+                "right": 266.296875,
+                "bottom": 245.59375,
+                "left": 123.6875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009845286835973113,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 123.6875,
+                "y": 256.640625,
+                "width": 142.609375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.296875,
+                "bottom": 282.640625,
+                "left": 123.6875
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 256.640625,
+                "width": 142.609375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.296875,
+                "bottom": 282.640625,
+                "left": 123.6875
+              }
+            },
+            {
+              "previous": {
+                "x": 123.6875,
+                "y": 292.640625,
+                "width": 142.609375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.296875,
+                "bottom": 305.640625,
+                "left": 123.6875
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 292.640625,
+                "width": 142.609375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.296875,
+                "bottom": 305.640625,
+                "left": 123.6875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 123.6875,
+                "y": 256.640625,
+                "width": 142.609375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.296875,
+                "bottom": 282.640625,
+                "left": 123.6875
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 256.640625,
+                "width": 142.609375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.296875,
+                "bottom": 282.640625,
+                "left": 123.6875
+              }
+            },
+            {
+              "previous": {
+                "x": 123.6875,
+                "y": 292.640625,
+                "width": 142.609375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.296875,
+                "bottom": 305.640625,
+                "left": 123.6875
+              },
+              "current": {
+                "x": 123.6875,
+                "y": 292.640625,
+                "width": 142.609375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.296875,
+                "bottom": 305.640625,
+                "left": 123.6875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015196217094180274,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 123.6875,
+                "y": 230.59375,
+                "width": 142.609375,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 266.296875,
+                "bottom": 311.640625,
+                "left": 123.6875
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.001520253658745887,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 121.765625,
+                "y": 230.59375,
+                "width": 147,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 268.765625,
+                "bottom": 311.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.765625,
+                "y": 230.59375,
+                "width": 140.453125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.21875,
+                "bottom": 311.640625,
+                "left": 124.765625
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 257.25,
+                "bottom": 589.34375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 257.25,
+                "bottom": 589.34375,
+                "left": 198.5
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009791502526321487,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.765625,
+                "y": 256.640625,
+                "width": 140.453125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.21875,
+                "bottom": 282.640625,
+                "left": 124.765625
+              },
+              "current": {
+                "x": 124.765625,
+                "y": 256.640625,
+                "width": 140.453125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.21875,
+                "bottom": 282.640625,
+                "left": 124.765625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.765625,
+                "y": 292.640625,
+                "width": 140.453125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.21875,
+                "bottom": 305.640625,
+                "left": 124.765625
+              },
+              "current": {
+                "x": 124.765625,
+                "y": 292.640625,
+                "width": 140.453125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.21875,
+                "bottom": 305.640625,
+                "left": 124.765625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006165611704991998,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.765625,
+                "y": 256.640625,
+                "width": 140.453125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.21875,
+                "bottom": 282.640625,
+                "left": 124.765625
+              },
+              "current": {
+                "x": 124.765625,
+                "y": 256.640625,
+                "width": 140.453125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.21875,
+                "bottom": 282.640625,
+                "left": 124.765625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.765625,
+                "y": 292.640625,
+                "width": 140.453125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.21875,
+                "bottom": 305.640625,
+                "left": 124.765625
+              },
+              "current": {
+                "x": 124.765625,
+                "y": 292.640625,
+                "width": 140.453125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.21875,
+                "bottom": 305.640625,
+                "left": 124.765625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015196217094180274,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.765625,
+                "y": 230.59375,
+                "width": 140.453125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.21875,
+                "bottom": 311.640625,
+                "left": 124.765625
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0010015868159883063,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 256.640625,
+                "width": 142.015625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266,
+                "bottom": 282.640625,
+                "left": 123.984375
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 257.25,
+                "bottom": 589.34375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 257.25,
+                "bottom": 589.34375,
+                "left": 198.5
+              }
+            },
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 292.640625,
+                "width": 146.453125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 268.21875,
+                "bottom": 305.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 292.640625,
+                "width": 142.015625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266,
+                "bottom": 305.640625,
+                "left": 123.984375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009845286835973113,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 123.984375,
+                "y": 256.640625,
+                "width": 142.015625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266,
+                "bottom": 282.640625,
+                "left": 123.984375
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 256.640625,
+                "width": 142.015625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266,
+                "bottom": 282.640625,
+                "left": 123.984375
+              }
+            },
+            {
+              "previous": {
+                "x": 123.984375,
+                "y": 292.640625,
+                "width": 142.015625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266,
+                "bottom": 305.640625,
+                "left": 123.984375
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 292.640625,
+                "width": 142.015625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266,
+                "bottom": 305.640625,
+                "left": 123.984375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 123.984375,
+                "y": 256.640625,
+                "width": 142.015625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266,
+                "bottom": 282.640625,
+                "left": 123.984375
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 256.640625,
+                "width": 142.015625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266,
+                "bottom": 282.640625,
+                "left": 123.984375
+              }
+            },
+            {
+              "previous": {
+                "x": 123.984375,
+                "y": 292.640625,
+                "width": 142.015625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266,
+                "bottom": 305.640625,
+                "left": 123.984375
+              },
+              "current": {
+                "x": 123.984375,
+                "y": 292.640625,
+                "width": 142.015625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266,
+                "bottom": 305.640625,
+                "left": 123.984375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015196217094180274,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 123.984375,
+                "y": 230.59375,
+                "width": 142.015625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 266,
+                "bottom": 311.640625,
+                "left": 123.984375
+              },
+              "current": {
+                "x": 110.9375,
+                "y": 230.59375,
+                "width": 168.125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.0625,
+                "bottom": 311.640625,
+                "left": 110.9375
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0008356673838447889,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.109375,
+                "y": 256.640625,
+                "width": 141.765625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.875,
+                "bottom": 282.640625,
+                "left": 124.109375
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 257.25,
+                "bottom": 392.09375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 257.25,
+                "bottom": 392.09375,
+                "left": 198.5
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 257.25,
+                "bottom": 523.59375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 257.25,
+                "bottom": 523.59375,
+                "left": 198.5
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009845286835973113,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.109375,
+                "y": 256.640625,
+                "width": 141.765625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.875,
+                "bottom": 282.640625,
+                "left": 124.109375
+              },
+              "current": {
+                "x": 124.109375,
+                "y": 256.640625,
+                "width": 141.765625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.875,
+                "bottom": 282.640625,
+                "left": 124.109375
+              }
+            },
+            {
+              "previous": {
+                "x": 124.109375,
+                "y": 292.640625,
+                "width": 141.765625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.875,
+                "bottom": 305.640625,
+                "left": 124.109375
+              },
+              "current": {
+                "x": 124.109375,
+                "y": 292.640625,
+                "width": 141.765625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.875,
+                "bottom": 305.640625,
+                "left": 124.109375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.109375,
+                "y": 256.640625,
+                "width": 141.765625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.875,
+                "bottom": 282.640625,
+                "left": 124.109375
+              },
+              "current": {
+                "x": 124.109375,
+                "y": 256.640625,
+                "width": 141.765625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.875,
+                "bottom": 282.640625,
+                "left": 124.109375
+              }
+            },
+            {
+              "previous": {
+                "x": 124.109375,
+                "y": 292.640625,
+                "width": 141.765625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.875,
+                "bottom": 305.640625,
+                "left": 124.109375
+              },
+              "current": {
+                "x": 124.109375,
+                "y": 292.640625,
+                "width": 141.765625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.875,
+                "bottom": 305.640625,
+                "left": 124.109375
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015422463502530355,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.109375,
+                "y": 230.59375,
+                "width": 141.765625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.875,
+                "bottom": 311.640625,
+                "left": 124.109375
+              },
+              "current": {
+                "x": 110.65625,
+                "y": 230.59375,
+                "width": 168.6875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.34375,
+                "bottom": 311.640625,
+                "left": 110.65625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0010192966953365137,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.96875,
+                "y": 256.640625,
+                "width": 142.0625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.96875
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 323,
+                "bottom": 589.34375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 323,
+                "bottom": 589.34375,
+                "left": 264.25
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.000985331724937929,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 123.96875,
+                "y": 256.640625,
+                "width": 142.0625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.96875
+              },
+              "current": {
+                "x": 123.96875,
+                "y": 256.640625,
+                "width": 142.0625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.96875
+              }
+            },
+            {
+              "previous": {
+                "x": 123.96875,
+                "y": 292.640625,
+                "width": 142.0625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.96875
+              },
+              "current": {
+                "x": 123.96875,
+                "y": 292.640625,
+                "width": 142.0625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.96875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 123.96875,
+                "y": 256.640625,
+                "width": 142.0625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.96875
+              },
+              "current": {
+                "x": 123.96875,
+                "y": 256.640625,
+                "width": 142.0625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.96875
+              }
+            },
+            {
+              "previous": {
+                "x": 123.96875,
+                "y": 292.640625,
+                "width": 142.0625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.96875
+              },
+              "current": {
+                "x": 123.96875,
+                "y": 292.640625,
+                "width": 142.0625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.96875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015435032747438693,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 123.96875,
+                "y": 230.59375,
+                "width": 142.0625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 266.03125,
+                "bottom": 311.640625,
+                "left": 123.96875
+              },
+              "current": {
+                "x": 110.65625,
+                "y": 230.59375,
+                "width": 168.6875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.34375,
+                "bottom": 311.640625,
+                "left": 110.65625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0010186171642062893,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.15625,
+                "y": 256.640625,
+                "width": 141.671875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.828125,
+                "bottom": 282.640625,
+                "left": 124.15625
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 323,
+                "bottom": 457.84375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 323,
+                "bottom": 457.84375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 191.5,
+                "bottom": 589.34375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 191.5,
+                "bottom": 589.34375,
+                "left": 132.75
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009845286835973113,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.15625,
+                "y": 256.640625,
+                "width": 141.671875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.828125,
+                "bottom": 282.640625,
+                "left": 124.15625
+              },
+              "current": {
+                "x": 124.15625,
+                "y": 256.640625,
+                "width": 141.671875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.828125,
+                "bottom": 282.640625,
+                "left": 124.15625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.15625,
+                "y": 292.640625,
+                "width": 141.671875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.828125,
+                "bottom": 305.640625,
+                "left": 124.15625
+              },
+              "current": {
+                "x": 124.15625,
+                "y": 292.640625,
+                "width": 141.671875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.828125,
+                "bottom": 305.640625,
+                "left": 124.15625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.15625,
+                "y": 256.640625,
+                "width": 141.671875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.828125,
+                "bottom": 282.640625,
+                "left": 124.15625
+              },
+              "current": {
+                "x": 124.15625,
+                "y": 256.640625,
+                "width": 141.671875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.828125,
+                "bottom": 282.640625,
+                "left": 124.15625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.15625,
+                "y": 292.640625,
+                "width": 141.671875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.828125,
+                "bottom": 305.640625,
+                "left": 124.15625
+              },
+              "current": {
+                "x": 124.15625,
+                "y": 292.640625,
+                "width": 141.671875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.828125,
+                "bottom": 305.640625,
+                "left": 124.15625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015422463502530355,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.15625,
+                "y": 230.59375,
+                "width": 141.671875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.828125,
+                "bottom": 311.640625,
+                "left": 124.15625
+              },
+              "current": {
+                "x": 110.65625,
+                "y": 230.59375,
+                "width": 168.6875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 279.34375,
+                "bottom": 311.640625,
+                "left": 110.65625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.001015666361297233,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 123.953125,
+                "y": 256.640625,
+                "width": 142.078125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.953125
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              },
+              "current": {
+                "x": 198.5,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 257.25,
+                "bottom": 457.84375,
+                "left": 198.5
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 191.5,
+                "bottom": 523.59375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 191.5,
+                "bottom": 523.59375,
+                "left": 132.75
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009845286835973113,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 123.953125,
+                "y": 256.640625,
+                "width": 142.078125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.953125
+              },
+              "current": {
+                "x": 123.953125,
+                "y": 256.640625,
+                "width": 142.078125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.953125
+              }
+            },
+            {
+              "previous": {
+                "x": 123.953125,
+                "y": 292.640625,
+                "width": 142.078125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.953125
+              },
+              "current": {
+                "x": 123.953125,
+                "y": 292.640625,
+                "width": 142.078125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.953125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 123.953125,
+                "y": 256.640625,
+                "width": 142.078125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.953125
+              },
+              "current": {
+                "x": 123.953125,
+                "y": 256.640625,
+                "width": 142.078125,
+                "height": 26,
+                "top": 256.640625,
+                "right": 266.03125,
+                "bottom": 282.640625,
+                "left": 123.953125
+              }
+            },
+            {
+              "previous": {
+                "x": 123.953125,
+                "y": 292.640625,
+                "width": 142.078125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.953125
+              },
+              "current": {
+                "x": 123.953125,
+                "y": 292.640625,
+                "width": 142.078125,
+                "height": 13,
+                "top": 292.640625,
+                "right": 266.03125,
+                "bottom": 305.640625,
+                "left": 123.953125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015133370869638587,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 123.953125,
+                "y": 230.59375,
+                "width": 142.078125,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 266.03125,
+                "bottom": 311.640625,
+                "left": 123.953125
+              },
+              "current": {
+                "x": 111.015625,
+                "y": 230.59375,
+                "width": 167.96875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 278.984375,
+                "bottom": 311.640625,
+                "left": 111.015625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0011905574378901574,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.3125,
+                "y": 256.640625,
+                "width": 141.375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.6875,
+                "bottom": 282.640625,
+                "left": 124.3125
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 125.75,
+                "bottom": 392.09375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 191.5,
+                "bottom": 392.09375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 191.5,
+                "bottom": 392.09375,
+                "left": 132.75
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 125.75,
+                "bottom": 457.84375,
+                "left": 67
+              }
+            },
+            {
+              "previous": {
+                "x": 132.75,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 191.5,
+                "bottom": 589.34375,
+                "left": 132.75
+              },
+              "current": {
+                "x": 132.75,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 191.5,
+                "bottom": 589.34375,
+                "left": 132.75
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.000985331724937929,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.3125,
+                "y": 256.640625,
+                "width": 141.375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.6875,
+                "bottom": 282.640625,
+                "left": 124.3125
+              },
+              "current": {
+                "x": 124.3125,
+                "y": 256.640625,
+                "width": 141.375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.6875,
+                "bottom": 282.640625,
+                "left": 124.3125
+              }
+            },
+            {
+              "previous": {
+                "x": 124.3125,
+                "y": 292.640625,
+                "width": 141.375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.6875,
+                "bottom": 305.640625,
+                "left": 124.3125
+              },
+              "current": {
+                "x": 124.3125,
+                "y": 292.640625,
+                "width": 141.375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.6875,
+                "bottom": 305.640625,
+                "left": 124.3125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.3125,
+                "y": 256.640625,
+                "width": 141.375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.6875,
+                "bottom": 282.640625,
+                "left": 124.3125
+              },
+              "current": {
+                "x": 124.3125,
+                "y": 256.640625,
+                "width": 141.375,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.6875,
+                "bottom": 282.640625,
+                "left": 124.3125
+              }
+            },
+            {
+              "previous": {
+                "x": 124.3125,
+                "y": 292.640625,
+                "width": 141.375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.6875,
+                "bottom": 305.640625,
+                "left": 124.3125
+              },
+              "current": {
+                "x": 124.3125,
+                "y": 292.640625,
+                "width": 141.375,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.6875,
+                "bottom": 305.640625,
+                "left": 124.3125
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015145940114546924,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.3125,
+                "y": 230.59375,
+                "width": 141.375,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.6875,
+                "bottom": 311.640625,
+                "left": 124.3125
+              },
+              "current": {
+                "x": 111.015625,
+                "y": 230.59375,
+                "width": 167.96875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 278.984375,
+                "bottom": 311.640625,
+                "left": 111.015625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.001193510209313496,
+          "sources": [
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.0625,
+                "y": 256.640625,
+                "width": 141.875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.9375,
+                "bottom": 282.640625,
+                "left": 124.0625
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 357.09375,
+                "width": 58.75,
+                "height": 35,
+                "top": 357.09375,
+                "right": 323,
+                "bottom": 392.09375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 323,
+                "bottom": 457.84375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 422.84375,
+                "width": 58.75,
+                "height": 35,
+                "top": 422.84375,
+                "right": 323,
+                "bottom": 457.84375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              },
+              "current": {
+                "x": 264.25,
+                "y": 488.59375,
+                "width": 58.75,
+                "height": 35,
+                "top": 488.59375,
+                "right": 323,
+                "bottom": 523.59375,
+                "left": 264.25
+              }
+            },
+            {
+              "previous": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              },
+              "current": {
+                "x": 67,
+                "y": 554.34375,
+                "width": 58.75,
+                "height": 35,
+                "top": 554.34375,
+                "right": 125.75,
+                "bottom": 589.34375,
+                "left": 67
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.000985331724937929,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.0625,
+                "y": 256.640625,
+                "width": 141.875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.9375,
+                "bottom": 282.640625,
+                "left": 124.0625
+              },
+              "current": {
+                "x": 124.0625,
+                "y": 256.640625,
+                "width": 141.875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.9375,
+                "bottom": 282.640625,
+                "left": 124.0625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.0625,
+                "y": 292.640625,
+                "width": 141.875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.9375,
+                "bottom": 305.640625,
+                "left": 124.0625
+              },
+              "current": {
+                "x": 124.0625,
+                "y": 292.640625,
+                "width": 141.875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.9375,
+                "bottom": 305.640625,
+                "left": 124.0625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006199479149568714,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.0625,
+                "y": 256.640625,
+                "width": 141.875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.9375,
+                "bottom": 282.640625,
+                "left": 124.0625
+              },
+              "current": {
+                "x": 124.0625,
+                "y": 256.640625,
+                "width": 141.875,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.9375,
+                "bottom": 282.640625,
+                "left": 124.0625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.0625,
+                "y": 292.640625,
+                "width": 141.875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.9375,
+                "bottom": 305.640625,
+                "left": 124.0625
+              },
+              "current": {
+                "x": 124.0625,
+                "y": 292.640625,
+                "width": 141.875,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.9375,
+                "bottom": 305.640625,
+                "left": 124.0625
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015145940114546924,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.0625,
+                "y": 230.59375,
+                "width": 141.875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.9375,
+                "bottom": 311.640625,
+                "left": 124.0625
+              },
+              "current": {
+                "x": 111.015625,
+                "y": 230.59375,
+                "width": 167.96875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 278.984375,
+                "bottom": 311.640625,
+                "left": 111.015625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.07153117457103217,
+          "sources": [
+            {
+              "node": "arcade-memory-board phase-prepare",
+              "previous": {
+                "x": 53,
+                "y": 332.640625,
+                "width": 290,
+                "height": 295,
+                "top": 332.640625,
+                "right": 343,
+                "bottom": 627.640625,
+                "left": 53
+              },
+              "current": {
+                "x": 49.5,
+                "y": 329.140625,
+                "width": 297,
+                "height": 302,
+                "top": 329.140625,
+                "right": 346.5,
+                "bottom": 631.140625,
+                "left": 49.5
+              }
+            },
+            {
+              "previous": {
+                "x": 121.765625,
+                "y": 256.640625,
+                "width": 147,
+                "height": 26,
+                "top": 256.640625,
+                "right": 268.765625,
+                "bottom": 282.640625,
+                "left": 121.765625
+              },
+              "current": {
+                "x": 124.71875,
+                "y": 256.640625,
+                "width": 140.5625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.28125,
+                "bottom": 282.640625,
+                "left": 124.71875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0009799489069980804,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            },
+            {
+              "previous": {
+                "x": 124.71875,
+                "y": 256.640625,
+                "width": 140.5625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.28125,
+                "bottom": 282.640625,
+                "left": 124.71875
+              },
+              "current": {
+                "x": 124.71875,
+                "y": 256.640625,
+                "width": 140.5625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.28125,
+                "bottom": 282.640625,
+                "left": 124.71875
+              }
+            },
+            {
+              "previous": {
+                "x": 124.71875,
+                "y": 292.640625,
+                "width": 140.5625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.28125,
+                "bottom": 305.640625,
+                "left": 124.71875
+              },
+              "current": {
+                "x": 124.71875,
+                "y": 292.640625,
+                "width": 140.5625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.28125,
+                "bottom": 305.640625,
+                "left": 124.71875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0006165611704991998,
+          "sources": [
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              },
+              "current": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              }
+            },
+            {
+              "previous": {
+                "x": 124.71875,
+                "y": 256.640625,
+                "width": 140.5625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.28125,
+                "bottom": 282.640625,
+                "left": 124.71875
+              },
+              "current": {
+                "x": 124.71875,
+                "y": 256.640625,
+                "width": 140.5625,
+                "height": 26,
+                "top": 256.640625,
+                "right": 265.28125,
+                "bottom": 282.640625,
+                "left": 124.71875
+              }
+            },
+            {
+              "previous": {
+                "x": 124.71875,
+                "y": 292.640625,
+                "width": 140.5625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.28125,
+                "bottom": 305.640625,
+                "left": 124.71875
+              },
+              "current": {
+                "x": 124.71875,
+                "y": 292.640625,
+                "width": 140.5625,
+                "height": 13,
+                "top": 292.640625,
+                "right": 265.28125,
+                "bottom": 305.640625,
+                "left": 124.71875
+              }
+            }
+          ]
+        },
+        {
+          "value": 0.0015145940114546924,
+          "sources": [
+            {
+              "node": "arcade-memory-heading",
+              "previous": {
+                "x": 124.71875,
+                "y": 230.59375,
+                "width": 140.5625,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 265.28125,
+                "bottom": 311.640625,
+                "left": 124.71875
+              },
+              "current": {
+                "x": 111.015625,
+                "y": 230.59375,
+                "width": 167.96875,
+                "height": 81.046875,
+                "top": 230.59375,
+                "right": 278.984375,
+                "bottom": 311.640625,
+                "left": 111.015625
+              }
+            },
+            {
+              "node": "arcade-memory-companion",
+              "previous": {
+                "x": 156.640625,
+                "y": 632.875,
+                "width": 76.71875,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 233.359375,
+                "bottom": 748.40625,
+                "left": 156.640625
+              },
+              "current": {
+                "x": 161,
+                "y": 632.875,
+                "width": 68,
+                "height": 115.53125,
+                "top": 632.875,
+                "right": 229,
+                "bottom": 748.40625,
+                "left": 161
+              }
+            }
+          ]
+        }
+      ],
+      "longTaskCount": 0,
+      "longestTaskMs": 0
+    }
+  ],
+  "finishedAt": "2026-10-21T15:53:55.924Z"
+}

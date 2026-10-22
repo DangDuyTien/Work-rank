@@ -83,7 +83,11 @@ export default memo(function TypingPassage({ challenge, typedText, inputChars, f
       cancelAnimationFrame(frame);
       resize.disconnect();
     };
-  }, [current, target]);
+  }, [wordIndex, target]);
+  // A timed passage may contain thousands of characters. Keep the previous,
+  // current and next block; the native input/session still owns the full text.
+  const firstBlock = Math.max(0, Math.floor(wordIndex / 32) - 1);
+  const visibleBlocks = blocks.slice(firstBlock, firstBlock + 3);
   return <div className="typing-passage" onClick={onFocusInput}>
     <div className="typing-position" aria-live="off" data-testid="typing-position">
       <strong>{finished ? 'Đã kết thúc' : `Ký tự ${Math.min(current + 1, targetChars.length)} / ${targetChars.length}`}</strong>
@@ -91,17 +95,8 @@ export default memo(function TypingPassage({ challenge, typedText, inputChars, f
       {!focused && !finished && <span>Bấm vào đoạn văn để tiếp tục gõ</span>}
     </div>
     <div ref={viewport} className={`workrank-typing-text-arena typing-passage-viewport${focused ? ' is-focused' : ''}`} role="region" aria-label="Đoạn văn luyện gõ" tabIndex={-1}>
-      {blocks.map((block) => <Block key={block.offset} tokens={block.tokens} offset={block.offset} input={input.slice(block.offset, block.end).join('')} current={current >= block.offset && current < block.end ? current : -1} />)}
+      {visibleBlocks.map((block) => <Block key={block.offset} tokens={block.tokens} offset={block.offset} input={input.slice(block.offset, block.end).join('')} current={current >= block.offset && current < block.end ? current : -1} />)}
       <span className="typing-end" aria-hidden="true">{current >= targetChars.length ? ' ✓' : ''}</span>
     </div>
-  </div>;
-});
-
-export const TypingLiveStandings = memo(function TypingLiveStandings({ players, userId }) {
-  return <div className="typing-live-standings" aria-label="Bảng xếp hạng tạm thời">
-    <strong>Xếp hạng tạm thời · Máy chủ xác minh</strong>
-    <table><thead><tr><th>Hạng</th><th>Người chơi</th><th>WPM hiệu dụng</th><th>Đúng</th><th>Tiến độ</th></tr></thead><tbody>
-      {[...players].sort((a, b) => (a.liveRank ?? 999) - (b.liveRank ?? 999)).map((p) => <tr key={p.userId} data-live-user={p.userId} data-live-rank={p.liveRank ?? ''} className={Number(p.userId) === Number(userId) ? 'is-me' : ''}><td>{p.liveRank ?? '—'}</td><td>{p.user?.name || p.name || 'Người chơi'}{Number(p.userId) === Number(userId) ? ' (Bạn)' : ''}</td><td>{p.wpm || 0}</td><td>{p.accuracy ?? 0}%</td><td>{Math.round(p.progressPct || 0)}%</td></tr>)}
-    </tbody></table>
   </div>;
 });

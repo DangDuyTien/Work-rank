@@ -47,8 +47,7 @@ async function start() {
   await ensureYouTubeSchema(sequelize);
   await ensureTypingSchema(sequelize);
   await ensureDrawingSchema(sequelize);
-  await require('./models').ArcadeRoom.sync();
-  await require('./models').ArcadePlayer.sync();
+  await require('./services/arcadeSchemaCheck').ensureArcadeSchema(sequelize);
   const server = http.createServer(app);
   serverInstance = server;
   const io = new Server(server, socketOptions);

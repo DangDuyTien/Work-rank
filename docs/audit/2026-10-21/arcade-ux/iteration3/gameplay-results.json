@@ -1,0 +1,522 @@
+{
+  "phase": "iteration3",
+  "startedAt": "2026-10-21T15:46:50.619Z",
+  "checks": [
+    {
+      "game": "memory_flash",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "f296ac4c-5980-4468-85df-a7c86d71caf2",
+      "ranks": [
+        [
+          8,
+          1,
+          248
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 459,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 631,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "f296ac4c-5980-4468-85df-a7c86d71caf2",
+        "playerAttemptId": "8c4a0668-6842-4801-8260-74719c57a3eb",
+        "mode": "SOLO",
+        "gameType": "memory_flash",
+        "previousBestScore": 0,
+        "personalBestScore": 248,
+        "isPersonalBest": true,
+        "improvement": 248
+      },
+      "resultText": "✦\n\nVÁN CHƠI CỦA BẠN\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\nĐẠ\n✦\n✧\n✦\nP1\nĐạt\nĐIỂM CỦA BẠN\n248\n+1 XP · Đã ghi nhận\nVòng đúng\n2\nChính xác\n66.67%\nChuỗi tốt nhất\nx2\nPhản hồi TB\n459ms\nChơi lại\nBXH\nGame Center\n\nMột chạm · giữ chế độ · thử thách mới"
+    },
+    {
+      "game": "computer_rush",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "d6e4ce23-c5a0-4166-b167-b762d5806800",
+      "ranks": [
+        [
+          1,
+          1,
+          639
+        ]
+      ],
+      "result": {
+        "score": 639,
+        "correct": 6,
+        "attempts": 7,
+        "accuracy": 80.54,
+        "bestCombo": 6,
+        "combo": 6,
+        "avgResponseMs": 604,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 797,
+        "awardedXp": 3,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "d6e4ce23-c5a0-4166-b167-b762d5806800",
+        "playerAttemptId": "7ea6da93-16ce-4746-b9e4-88af73fbcd34",
+        "mode": "SOLO",
+        "gameType": "computer_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 639,
+        "isPersonalBest": true,
+        "improvement": 639
+      },
+      "resultText": "✦\n\nVÁN CHƠI CỦA BẠN\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\nLA\n✦\n✧\n✦\nP1\nLan\nĐIỂM CỦA BẠN\n639\n+3 XP · Đã ghi nhận\nTừ đúng\n6\nChính xác\n80.54%\nCombo tốt nhất\nx6\nPhản hồi TB\n604ms\nChơi lại\nBXH\nGame Center\n\nMột chạm · giữ chế độ · thử thách mới"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "SOLO",
+      "status": "PASS",
+      "roomId": "5019cb5c-2d51-4da5-9808-6884bee06603",
+      "ranks": [
+        [
+          5,
+          1,
+          545
+        ]
+      ],
+      "result": {
+        "score": 545,
+        "correct": 13,
+        "attempts": 26,
+        "accuracy": 50,
+        "bestCombo": 10,
+        "combo": 0,
+        "avgResponseMs": 311,
+        "perfectCount": 11,
+        "wrongCount": 13,
+        "timeoutCount": 12,
+        "lastCorrect": false,
+        "lastResponseMs": 1250,
+        "awardedXp": 2,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "5019cb5c-2d51-4da5-9808-6884bee06603",
+        "playerAttemptId": "526551e7-3009-438e-a7b5-2105cd0af35d",
+        "mode": "SOLO",
+        "gameType": "direction_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 545,
+        "isPersonalBest": true,
+        "improvement": 545
+      },
+      "resultText": "✦\n\nVÁN CHƠI CỦA BẠN\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\nAN\n✦\n✧\n✦\nP1\nAn\nĐIỂM CỦA BẠN\n545\n+2 XP · Đã ghi nhận\nPERFECT\n11\nChính xác\n50%\nCombo tốt nhất\nx10\nPhản xạ TB\n311ms\n\n13 hướng đúng · 13 lần lỡ nhịp (hết giờ 12)\n\nChơi lại\nBXH\nGame Center\n\nMột chạm · giữ chế độ · thử thách mới"
+    },
+    {
+      "game": "computer_rush",
+      "mode": "SOLO",
+      "quickReplay": "PASS",
+      "oldRoom": "d6e4ce23-c5a0-4166-b167-b762d5806800",
+      "newRoom": "b7cd8bbc-0b11-40ad-b801-5de36561eaee",
+      "sharedParty": [
+        "b7cd8bbc-0b11-40ad-b801-5de36561eaee"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 639
+    },
+    {
+      "game": "memory_flash",
+      "mode": "SOLO",
+      "quickReplay": "PASS",
+      "oldRoom": "f296ac4c-5980-4468-85df-a7c86d71caf2",
+      "newRoom": "d72fe6bd-c49c-4526-b3b1-743b515f5114",
+      "sharedParty": [
+        "d72fe6bd-c49c-4526-b3b1-743b515f5114"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 248
+    },
+    {
+      "game": "direction_rush",
+      "mode": "SOLO",
+      "quickReplay": "PASS",
+      "oldRoom": "5019cb5c-2d51-4da5-9808-6884bee06603",
+      "newRoom": "e1c896e5-ca13-4015-96a7-018e6b852db8",
+      "sharedParty": [
+        "e1c896e5-ca13-4015-96a7-018e6b852db8"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 545
+    },
+    {
+      "game": "computer_rush",
+      "mode": "DUO",
+      "status": "PASS",
+      "roomId": "32008cb5-26bb-43e5-940e-c986fba1b439",
+      "ranks": [
+        [
+          1,
+          1,
+          639
+        ],
+        [
+          2,
+          2,
+          338
+        ]
+      ],
+      "result": {
+        "score": 639,
+        "correct": 6,
+        "attempts": 7,
+        "accuracy": 80.54,
+        "bestCombo": 6,
+        "combo": 6,
+        "avgResponseMs": 671,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 733,
+        "awardedXp": 3,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "32008cb5-26bb-43e5-940e-c986fba1b439",
+        "playerAttemptId": "bf68081d-09d9-4c0c-91ad-ea2912a4c44f",
+        "mode": "DUO",
+        "gameType": "computer_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 639,
+        "isPersonalBest": true,
+        "improvement": 639
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · DUO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nLA\n✦\n✧\n✦\nP1\nLan\n639\n#1\n🥈\nMI\nP2\nMinh\n338\n#2\nTừ đúng\n6\nChính xác\n80.54%\nCombo tốt nhất\nx6\nPhản hồi TB\n671ms\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "memory_flash",
+      "mode": "DUO",
+      "status": "PASS",
+      "roomId": "fb8f0ccd-b736-4858-a29b-4ff638c4f03f",
+      "ranks": [
+        [
+          8,
+          1,
+          248
+        ],
+        [
+          9,
+          2,
+          247
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 483,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 626,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "fb8f0ccd-b736-4858-a29b-4ff638c4f03f",
+        "playerAttemptId": "3732c13c-2db4-4223-87c4-7d9119aa7a67",
+        "mode": "DUO",
+        "gameType": "memory_flash",
+        "previousBestScore": 0,
+        "personalBestScore": 248,
+        "isPersonalBest": true,
+        "improvement": 248
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · DUO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nĐẠ\n✦\n✧\n✦\nP1\nĐạt\n248\n#1\n🥈\nGI\nP2\nGiang\n247\n#2\nVòng đúng\n2\nChính xác\n66.67%\nChuỗi tốt nhất\nx2\nPhản hồi TB\n483ms\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "DUO",
+      "status": "PASS",
+      "roomId": "299cf621-5839-44e6-b5c2-9b56c8f59843",
+      "ranks": [
+        [
+          5,
+          1,
+          544
+        ],
+        [
+          6,
+          2,
+          301
+        ]
+      ],
+      "result": {
+        "score": 544,
+        "correct": 13,
+        "attempts": 26,
+        "accuracy": 50,
+        "bestCombo": 10,
+        "combo": 0,
+        "avgResponseMs": 323,
+        "perfectCount": 11,
+        "wrongCount": 13,
+        "timeoutCount": 12,
+        "lastCorrect": false,
+        "lastResponseMs": 1247,
+        "awardedXp": 2,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "299cf621-5839-44e6-b5c2-9b56c8f59843",
+        "playerAttemptId": "0dd57efe-e6bb-4d83-bbec-a242c87241ab",
+        "mode": "DUO",
+        "gameType": "direction_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 544,
+        "isPersonalBest": true,
+        "improvement": 544
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · DUO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nAN\n✦\n✧\n✦\nP1\nAn\n544\n#1\n🥈\nBÌ\nP2\nBình\n301\n#2\nPERFECT\n11\nChính xác\n50%\nCombo tốt nhất\nx10\nPhản xạ TB\n323ms\n\n13 hướng đúng · 13 lần lỡ nhịp (hết giờ 12)\n\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "DUO",
+      "quickReplay": "PASS",
+      "oldRoom": "299cf621-5839-44e6-b5c2-9b56c8f59843",
+      "newRoom": "bd414368-9fac-4029-8068-8e84a2c1da75",
+      "sharedParty": [
+        "bd414368-9fac-4029-8068-8e84a2c1da75",
+        "bd414368-9fac-4029-8068-8e84a2c1da75"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 544
+    },
+    {
+      "game": "memory_flash",
+      "mode": "DUO",
+      "quickReplay": "PASS",
+      "oldRoom": "fb8f0ccd-b736-4858-a29b-4ff638c4f03f",
+      "newRoom": "32bcf5c2-cd66-4e7b-b436-4c7cd62cef7a",
+      "sharedParty": [
+        "32bcf5c2-cd66-4e7b-b436-4c7cd62cef7a",
+        "32bcf5c2-cd66-4e7b-b436-4c7cd62cef7a"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 248
+    },
+    {
+      "game": "computer_rush",
+      "mode": "DUO",
+      "quickReplay": "PASS",
+      "oldRoom": "32008cb5-26bb-43e5-940e-c986fba1b439",
+      "newRoom": "e352e807-0580-4e88-bb06-17176228c6e3",
+      "sharedParty": [
+        "e352e807-0580-4e88-bb06-17176228c6e3",
+        "e352e807-0580-4e88-bb06-17176228c6e3"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 639
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "13dd5e77-77b5-45b9-aab3-49a8de65f533",
+      "ranks": [
+        [
+          8,
+          1,
+          248
+        ],
+        [
+          9,
+          2,
+          247
+        ],
+        [
+          10,
+          3,
+          247
+        ]
+      ],
+      "result": {
+        "score": 248,
+        "correct": 2,
+        "attempts": 3,
+        "accuracy": 66.67,
+        "bestCombo": 2,
+        "combo": 2,
+        "avgResponseMs": 504,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 623,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "13dd5e77-77b5-45b9-aab3-49a8de65f533",
+        "playerAttemptId": "635db252-c4f9-4dc5-b606-0622692ce9f9",
+        "mode": "TRIO",
+        "gameType": "memory_flash",
+        "previousBestScore": 0,
+        "personalBestScore": 248,
+        "isPersonalBest": true,
+        "improvement": 248
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · TRIO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nĐẠ\n✦\n✧\n✦\nP1\nĐạt\n248\n#1\n🥈\nGI\nP2\nGiang\n247\n#2\n🥉\nHÀ\nP3\nHà\n247\n#3\nVòng đúng\n2\nChính xác\n66.67%\nChuỗi tốt nhất\nx2\nPhản hồi TB\n504ms\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "5402e221-cbaa-4484-af40-c0bb92698245",
+      "ranks": [
+        [
+          5,
+          1,
+          543
+        ],
+        [
+          6,
+          2,
+          302
+        ],
+        [
+          7,
+          3,
+          174
+        ]
+      ],
+      "result": {
+        "score": 543,
+        "correct": 13,
+        "attempts": 26,
+        "accuracy": 50,
+        "bestCombo": 10,
+        "combo": 0,
+        "avgResponseMs": 330,
+        "perfectCount": 11,
+        "wrongCount": 13,
+        "timeoutCount": 12,
+        "lastCorrect": false,
+        "lastResponseMs": 1250,
+        "awardedXp": 2,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "5402e221-cbaa-4484-af40-c0bb92698245",
+        "playerAttemptId": "6fe684e7-b860-4a2a-aaaf-b5987bb8d613",
+        "mode": "TRIO",
+        "gameType": "direction_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 543,
+        "isPersonalBest": true,
+        "improvement": 543
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · TRIO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nAN\n✦\n✧\n✦\nP1\nAn\n543\n#1\n🥈\nBÌ\nP2\nBình\n302\n#2\n🥉\nCH\nP3\nChi\n174\n#3\nPERFECT\n11\nChính xác\n50%\nCombo tốt nhất\nx10\nPhản xạ TB\n330ms\n\n13 hướng đúng · 13 lần lỡ nhịp (hết giờ 12)\n\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "status": "PASS",
+      "roomId": "10ccece5-c097-44a3-a406-dd28d5d81707",
+      "ranks": [
+        [
+          1,
+          1,
+          639
+        ],
+        [
+          2,
+          2,
+          339
+        ],
+        [
+          3,
+          3,
+          209
+        ]
+      ],
+      "result": {
+        "score": 639,
+        "correct": 6,
+        "attempts": 7,
+        "accuracy": 80.54,
+        "bestCombo": 6,
+        "combo": 6,
+        "avgResponseMs": 609,
+        "perfectCount": 0,
+        "wrongCount": 1,
+        "timeoutCount": 0,
+        "lastCorrect": true,
+        "lastResponseMs": 653,
+        "awardedXp": 3,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "10ccece5-c097-44a3-a406-dd28d5d81707",
+        "playerAttemptId": "2f6c9911-5c2c-4c5d-ab39-6548e1eb18ea",
+        "mode": "TRIO",
+        "gameType": "computer_rush",
+        "previousBestScore": 0,
+        "personalBestScore": 639,
+        "isPersonalBest": true,
+        "improvement": 639
+      },
+      "resultText": "✦\n\nBẠN VỀ ĐÍCH #1 · TRIO\n\nKỶ LỤC MỚI!\n\nThành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình!\n\n🥇\nLA\n✦\n✧\n✦\nP1\nLan\n639\n#1\n🥈\nMI\nP2\nMinh\n339\n#2\n🥉\nHU\nP3\nHuy\n209\n#3\nTừ đúng\n6\nChính xác\n80.54%\nCombo tốt nhất\nx6\nPhản hồi TB\n609ms\nChơi lại\nBXH\nGame Center\n\nGiữ nhóm cùng sân · vào phòng ván mới, sẵn sàng và chơi"
+    },
+    {
+      "game": "direction_rush",
+      "mode": "TRIO",
+      "quickReplay": "PASS",
+      "oldRoom": "5402e221-cbaa-4484-af40-c0bb92698245",
+      "newRoom": "eb987656-e49a-4fef-8832-1449f93c5487",
+      "sharedParty": [
+        "eb987656-e49a-4fef-8832-1449f93c5487",
+        "eb987656-e49a-4fef-8832-1449f93c5487",
+        "eb987656-e49a-4fef-8832-1449f93c5487"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 543
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "quickReplay": "PASS",
+      "oldRoom": "13dd5e77-77b5-45b9-aab3-49a8de65f533",
+      "newRoom": "87319fc7-abf6-4d3d-b3e0-89adbf34a5b2",
+      "sharedParty": [
+        "87319fc7-abf6-4d3d-b3e0-89adbf34a5b2",
+        "87319fc7-abf6-4d3d-b3e0-89adbf34a5b2",
+        "87319fc7-abf6-4d3d-b3e0-89adbf34a5b2"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 248
+    },
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "quickReplay": "PASS",
+      "oldRoom": "10ccece5-c097-44a3-a406-dd28d5d81707",
+      "newRoom": "e67adf48-f46c-42f9-bbb4-5626619d4231",
+      "sharedParty": [
+        "e67adf48-f46c-42f9-bbb4-5626619d4231",
+        "e67adf48-f46c-42f9-bbb4-5626619d4231",
+        "e67adf48-f46c-42f9-bbb4-5626619d4231"
+      ],
+      "freshChallenge": true,
+      "resultPersonalBest": 639
+    }
+  ],
+  "observations": [],
+  "errors": [],
+  "finishedAt": "2026-10-21T15:48:24.089Z"
+}

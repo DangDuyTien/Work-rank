@@ -6,7 +6,7 @@ if (env.db.dialect !== 'sqlite' || env.db.storage !== ':memory:') throw new Erro
 const http = require('node:http');
 const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
-const { sequelize, User, Season } = require('../../src/models');
+const { sequelize, User, Season, TypingChallenge } = require('../../src/models');
 const app = require('../../src/app');
 const fixture = require('express')();
 fixture.use(require('express').urlencoded({ extended: false }));
@@ -20,8 +20,9 @@ fixture.use(app);
 (async () => {
   await sequelize.sync();
   const passwordHash = await bcrypt.hash('ArcadeAuditTest123!', 4);
-  for (const [suffix, name] of [['a', 'Lan'], ['b', 'Minh'], ['c', 'Huy'], ['native', 'Telex QA']]) await User.create({ name, email: `arcade-${suffix}@audit.test`, passwordHash, status: 'active', role: 'user' });
+  for (const [suffix, name] of [['a', 'Lan'], ['b', 'Minh'], ['c', 'Huy'], ['native', 'Telex QA'], ['d', 'An'], ['e', 'Bình'], ['f', 'Chi'], ['g', 'Đạt'], ['h', 'Giang'], ['i', 'Hà']]) await User.create({ name, email: `arcade-${suffix}@audit.test`, passwordHash, status: 'active', role: 'user' });
   await Season.create({ name: 'Isolated Arcade Audit', slug: 'arcade-audit', status: 'ACTIVE', startAt: new Date(Date.now() - 86400000), endAt: new Date(Date.now() + 86400000) });
+  await TypingChallenge.create({ title: 'Unified arcade typing passage', language: 'VI', difficulty: 'MEDIUM', content: 'cùng nhau học hỏi từng ngày giữ nhịp thật đều nhìn rõ từng chữ sửa lỗi rồi tiếp tục cuộc đua '.repeat(30), isActive: true });
   await require('../../src/services/gameCatalog.service').getCatalog();
   const server = http.createServer(fixture), io = new Server(server, require('../../src/config/socket'));
   app.set('io', io); require('../../src/sockets')(io);

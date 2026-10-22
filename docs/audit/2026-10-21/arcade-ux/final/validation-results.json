@@ -1,0 +1,26 @@
+{
+  "frontendCheck": {
+    "status": "PASS",
+    "files": 84
+  },
+  "productionBuild": {
+    "status": "PASS",
+    "knownWarnings": [
+      "Friends.jsx: duplicate object keys",
+      "Global CSS: Unexpected @media"
+    ]
+  },
+  "backendRegression": {
+    "status": "PASS",
+    "passed": 46,
+    "failed": 0
+  },
+  "arcadeAfterFinalRampChange": {
+    "status": "PASS",
+    "passed": 22,
+    "failed": 0
+  },
+  "gitDiffCheck": "PASS",
+  "fixtureDatabase": "SQLite :memory:, NODE_ENV=test, 127.0.0.1",
+  "noProductionDataWritten": true
+}

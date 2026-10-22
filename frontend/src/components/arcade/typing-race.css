@@ -1,0 +1,41 @@
+.typing_battle { --arcade-accent: #36788d; --arcade-soft: #e0eef0; }
+.typing-arcade-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 19px 25px; }
+.typing-arcade-heading h1 { margin: 0; font-size: 25px; letter-spacing: -.03em; }.typing-arcade-heading p:last-child { font-size: 11px; color: #5c7276; margin: 5px 0 0; }
+.typing-arcade-heading .arcade-kicker { font-size: 9px; margin: 0 0 4px; }
+.typing-arcade-tabs { display: flex; gap: 6px; padding: 0 24px 17px; }.typing-arcade-tabs button { min-height: 44px; border: 1px solid #c9d6d4; border-radius: 9px; background: #fffdf6; color: #45666d; font-size: 12px; padding: 8px 14px; }.typing-arcade-tabs button[aria-pressed="true"] { background: #deedf0; border-color: #80a8ae; font-weight: 750; }
+.typing-race-world .arcade-hud { border-top: 1px solid #cfdcda; }
+.typing-race-world .arcade-scene { background: #e5eff0; min-height: 0; padding: 16px 25px 25px; }
+.typing-race-world .arcade-scene::after { background: #cbdddb; }.typing-race-world .arcade-cloud { background: #f9fbef; }
+.typing-race-tracks { width: min(900px,100%); position: relative; margin: 4px auto 18px; z-index: 1; }
+.typing-race-lane { display: grid; grid-template-columns: 110px minmax(0,1fr); align-items: center; gap: 10px; height: 66px; border-bottom: 1px solid #aecbc8; }
+.typing-race-name { min-width: 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }.typing-race-name b { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.typing-race-name small { font-size: 9px; color: #53747a; }
+.typing-race-road { position: relative; height: 60px; margin-right: 24px; }.typing-race-dashes { position: absolute; top: 43px; left: 0; right: -18px; border-bottom: 2px dashed #95b8b6; }.typing-race-lane.is-local .typing-race-dashes { border-color: #538d8d; }
+.typing-finish-line { position: absolute; right: -20px; bottom: 8px; font-size: 28px; color: #397575; }
+.typing-runner-travel { position: absolute; left: 0; right: 48px; top: 0; height: 1px; transition: transform var(--motion-normal) var(--ease-standard); }
+.typing-runner-figure { position: absolute; top: -9px; left: -17px; width: 68px; height: 120px; transform: scale(.42); transform-origin: top center; }
+.typing-runner-figure .arcade-name { display: none; }.typing-race-lane.is-local .arcade-avatar-head { border-color: #256b75; }
+.typing-race-console { position: relative; width: min(920px,100%); border: 3px solid #7da5a7; border-bottom-width: 7px; border-radius: 19px; background: #fffdf5; padding: 15px 18px 10px; box-sizing: border-box; z-index: 2; }
+.typing-console-label { display: flex; justify-content: space-between; font-size: 10px; color: #607b7c; letter-spacing: .05em; margin-bottom: 13px; }
+.typing-race-console .typing-passage-viewport { border: 0; background: transparent; border-radius: 0; padding: 7px 0; height: 150px; outline: none; font-size: 24px; line-height: 37px; color: #405d60; }
+.typing-race-console .typing-position { font-size: 10px; margin-bottom: 7px; color: #6e8381; }.typing-race-console .typing-position strong { color: #42717a; }
+.typing-race-console .typing-character.is-correct { color: #6b9790; }.typing-race-console .typing-character.is-current { background: #e3eff0; box-shadow: inset 0 -3px #3e8290; }.typing-race-console .typing-word.is-current-word { background: #eff5ed; }
+.typing-race-console input { position: absolute; opacity: 0; pointer-events: none; top: 58px; left: 0; width: 100%; height: 40px; font-size: 16px; }
+.typing-pulse { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; margin-top: 9px; color: #4c7773; font-size: 11px; }.typing-pulse b { font-size: 14px; }.typing-pulse[data-feedback="error"] { color: #a7444d; }
+.typing-practice-options { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 13px 18px; font-size: 11px; color: #6a7b77; }.typing-practice-options select { font-size: 12px; }
+.typing-lobby-count { position: relative; height: 230px; }.typing-lobby-count .arcade-countdown { border-radius: 17px; }
+.typing-finish { min-height: 580px; }.typing-finish .arcade-podium { margin: 15px 0; }.typing-finish .arcade-result-highlights { gap: 20px; }.typing-finish .arcade-result-highlights dd { font-size: 22px; }
+@media(max-width:700px) { .typing-arcade-heading { padding: 15px; gap: 8px; }.typing-arcade-heading h1 { font-size: 22px; }.typing-arcade-heading .arcade-best-chip { font-size: 9px; max-width: 110px; }.typing-arcade-tabs { padding: 0 12px 12px; gap: 5px; }.typing-arcade-tabs button { padding: 7px 10px; font-size: 11px; }.typing-race-world .arcade-scene { padding: 10px 10px 17px; }.typing-race-lane { grid-template-columns: 77px minmax(0,1fr); height: 52px; gap: 5px; }.typing-race-road { height: 50px; }.typing-race-dashes { top: 39px; }.typing-race-name b { font-size: 10px; }.typing-race-name small { font-size: 8px; }.typing-runner-figure { transform: scale(.36); top: -2px; }.typing-finish-line { bottom: 1px; font-size: 23px; }.typing-race-tracks { margin-bottom: 12px; }.typing-race-console { padding: 12px 10px 7px; border-radius: 15px; }.typing-race-console .typing-passage-viewport { height: 148px; font-size: 21px; line-height: 34px; }.typing-console-label { font-size: 9px; letter-spacing: 0; margin-bottom: 9px; }.typing-race-console .typing-position { font-size: 9px; gap: 4px 8px; }.typing-pulse { font-size: 9px; min-height: 36px; }.typing-pulse b { font-size: 12px; }.typing-practice-options>span { width: 100%; text-align: center; } }
+@media(max-height:550px) and (max-width:700px) { .typing-arcade-heading,.typing-arcade-tabs { display: none; }.typing-race-tracks { display: block; margin: 0 0 6px; }.typing-race-lane:not(.is-local) { display: none; }.typing-race-lane { height: 28px; }.typing-race-name small { display: none; }.typing-race-road { height: 27px; }.typing-race-dashes { top: 24px; }.typing-runner-figure { transform: scale(.24); top: -3px; }.typing-finish-line { font-size: 15px; bottom: -2px; }.typing-race-world .arcade-scene { padding-top: 8px; }.typing-race-console .typing-passage-viewport { height: 92px; line-height: 30px; font-size: 20px; } }
+
+/* visualViewport shrinks on mobile keyboards even when layout height stays unchanged. */
+.typing-keyboard-compact .typing-arcade-heading,.typing-keyboard-compact .typing-arcade-tabs { display: none; }
+.typing-keyboard-compact .typing-race-tracks { display: block; margin: 0 0 6px; }
+.typing-keyboard-compact .typing-race-lane:not(.is-local) { display: none; }
+.typing-keyboard-compact .typing-race-lane { height: 28px; }
+.typing-keyboard-compact .typing-race-name small { display: none; }
+.typing-keyboard-compact .typing-race-road { height: 27px; }
+.typing-keyboard-compact .typing-race-dashes { top: 24px; }
+.typing-keyboard-compact .typing-runner-figure { transform: scale(.24); top: -3px; }
+.typing-keyboard-compact .typing-finish-line { font-size: 15px; bottom: -2px; }
+.typing-keyboard-compact .typing-race-world .arcade-scene { padding-top: 8px; }
+.typing-keyboard-compact .typing-race-console .typing-passage-viewport { height: 92px; line-height: 30px; font-size: 20px; }

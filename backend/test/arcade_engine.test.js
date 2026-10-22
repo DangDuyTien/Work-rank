@@ -27,9 +27,9 @@ test('Memory: deterministic patterns, phases, correct/wrong evidence, deselect, 
   }
   const c = challenge('memory_flash', seed, 0);
   assert.equal(memoryPhase(0, 0, 0, c), 'PREPARE');
-  assert.equal(memoryPhase(300, 0, 0, c), 'FLASH');
-  assert.equal(memoryPhase(2100, 0, 0, c), 'HIDE');
-  assert.equal(memoryPhase(2250, 0, 0, c), 'SELECT');
+  assert.equal(memoryPhase(c.prepareMs, 0, 0, c), 'FLASH');
+  assert.equal(memoryPhase(c.prepareMs + c.revealMs, 0, 0, c), 'HIDE');
+  assert.equal(memoryPhase(c.prepareMs + c.revealMs + c.hideMs, 0, 0, c), 'SELECT');
   const event = { index: 0, at: memorySelectAt(0, 0, c) + 500, cells: c.cells };
   assert.equal(replay('memory_flash', seed, [event]).correct, 1);
   assert.throws(() => replay('memory_flash', seed, [{ ...event, at: 1000 }]));
@@ -38,6 +38,41 @@ test('Memory: deterministic patterns, phases, correct/wrong evidence, deselect, 
   assert.deepEqual(toggleCell([1], 1, 2), []); assert.deepEqual(toggleCell([1, 2], 3, 2), [1, 2]);
   assert.equal(memoryLevel(0).size, 3); assert.equal(memoryLevel(9).size, 4); assert.equal(memoryLevel(21).size, 5);
   assert.ok(memoryLevel(12).revealMs < memoryLevel(0).revealMs);
+});
+test('UX rules v2: readable trick rules, settled entrance timing and authoritative opposite evidence', async () => {
+  const { challenge, replay, OPPOSITE } = await engine;
+  const events = []; let at = 0, sawOpposite = false, sawEntrance = false;
+  while (at < 55000) {
+    const c = challenge('direction_rush', 'fair', events.length, 'mixed', { previousAt: at, durationMs: 60000, rulesVersion: 2 });
+    assert.equal(c.expected, c.opposite ? OPPOSITE[c.direction] : c.direction);
+    assert.deepEqual(c, challenge('direction_rush', 'fair', events.length, 'mixed', { previousAt: at, durationMs: 60000, rulesVersion: 2 }));
+    if (c.opposite) { assert.ok(at >= 40000 && at < 45000); sawOpposite = true; }
+    if (c.revealMs) { sawEntrance = true; assert.equal(c.stage, 'entrance'); }
+    at += c.revealMs + 400;
+    events.push({ index: events.length, at, direction: c.expected });
+  }
+  assert.ok(sawOpposite && sawEntrance);
+  assert.equal(replay('direction_rush', 'fair', events).correct, events.length);
+  const first = challenge('direction_rush', 'fair', 0, 'mixed', { rulesVersion: 1 });
+  assert.equal(first.revealMs, 0); assert.equal(first.expected, first.direction);
+});
+test('UX memory: separate size/targets/time ramp, pattern diversity and timeout evidence', async () => {
+  const { challenge, memoryLevel, replay, memorySelectAt } = await engine;
+  assert.deepEqual([memoryLevel(5).targets, memoryLevel(5).revealMs], [memoryLevel(6).targets, memoryLevel(6).revealMs]);
+  assert.equal(memoryLevel(5).size, 3); assert.equal(memoryLevel(6).size, 4);
+  for (let level = 1; level < 14; level++) {
+    const before = memoryLevel((level - 1) * 3), after = memoryLevel(level * 3);
+    assert.ok(['size', 'targets', 'revealMs', 'selectMs'].filter((key) => before[key] !== after[key]).length <= 1, `Level ${level + 1} changes multiple variables`);
+  }
+  assert.equal(new Set(Array.from({ length: 10 }, (_, i) => challenge('memory_flash', 'variety', i).kind)).size, 5);
+  const c = challenge('memory_flash', 'variety', 0);
+  const timeout = { index: 0, at: memorySelectAt(0, 0, c) + c.selectMs, cells: [c.cells[0]], timeout: true };
+  assert.equal(replay('memory_flash', 'variety', [timeout]).timeoutCount, 1);
+  assert.equal(replay('memory_flash', 'variety', [timeout]).correct, 0);
+  assert.throws(() => replay('memory_flash', 'variety', [{ ...timeout, at: memorySelectAt(0, 0, c) + 200 }]));
+  assert.equal(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: false }).restMs, 800);
+  assert.equal(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: true }).restMs, 320);
+  assert.equal(challenge('memory_flash', 'variety', 0, 'mixed', { rulesVersion: 1 }).revealMs, 1800);
 });
 test('Direction: four arrows, WASD, swipe, 55 rapid challenges, wrong, timeout, impossible reaction', async () => {
   const { challenge, replay, directionForKey, directionForSwipe } = await engine;

@@ -190,6 +190,10 @@ test('Typing Battle socket room state sync (late join / reconnect)', async (t) =
 
     const startedPromise = waitForEvent(joinerSocket, 'typing:started');
     await request(app)
+      .post(`/api/games/typing/rooms/${roomId}/ready`)
+      .set('Authorization', `Bearer ${joinerToken}`)
+      .send({ isReady: true });
+    await request(app)
       .post(`/api/games/typing/rooms/${roomId}/start`)
       .set('Authorization', `Bearer ${hostToken}`)
       .send();
