@@ -1,0 +1,140 @@
+{
+  "base": "http://localhost:5173",
+  "startedAt": "2026-10-21T14:58:16.212Z",
+  "pages": [],
+  "consoleErrors": [
+    {
+      "page": "global",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "checks": {
+    "gameCenterCards": [
+      "Computer Rush",
+      "Direction Rush",
+      "Memory Flash",
+      "WorkRank Typing Battle",
+      "Góc Sáng Tạo (Game Vẽ)"
+    ],
+    "hasTyping": true,
+    "hasDrawing": true,
+    "hasRetiredGames": false,
+    "typingRoute": "http://localhost:5173/games/typing",
+    "typingRendered": true,
+    "drawingRoute": "http://localhost:5173/games/drawing",
+    "drawingRendered": true,
+    "retiredRoutes": [
+      {
+        "path": "/games/sam",
+        "httpStatus": 200,
+        "finalUrl": "/games",
+        "crashed": false
+      },
+      {
+        "path": "/games/quiz",
+        "httpStatus": 200,
+        "finalUrl": "/games",
+        "crashed": false
+      },
+      {
+        "path": "/games/guess",
+        "httpStatus": 200,
+        "finalUrl": "/games",
+        "crashed": false
+      },
+      {
+        "path": "/games/sam/room/1",
+        "httpStatus": 200,
+        "finalUrl": "/games",
+        "crashed": false
+      },
+      {
+        "path": "/games/quiz/room/1",
+        "httpStatus": 200,
+        "finalUrl": "/games",
+        "crashed": false
+      }
+    ],
+    "retiredAdminRoute": {
+      "httpStatus": 200,
+      "finalUrl": "http://localhost:5173/",
+      "crashed": false
+    },
+    "catalogApi": {
+      "status": 200,
+      "body": {
+        "games": [
+          {
+            "id": 134,
+            "gameKey": "typing_battle",
+            "name": "WorkRank Typing Battle",
+            "status": "AVAILABLE",
+            "enabled": true,
+            "sortOrder": 1,
+            "description": "Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.",
+            "icon": "Keyboard",
+            "route": "/games/typing",
+            "createdAt": "2026-10-07T11:27:32.000Z",
+            "updatedAt": "2026-10-07T11:27:32.000Z"
+          },
+          {
+            "id": 298,
+            "gameKey": "computer_rush",
+            "name": "Computer Rush",
+            "status": "AVAILABLE",
+            "enabled": true,
+            "sortOrder": 3,
+            "description": "Gõ nhanh · Giữ combo",
+            "icon": "Monitor",
+            "route": "/games/arcade/computer_rush",
+            "createdAt": "2026-10-21T14:49:41.000Z",
+            "updatedAt": "2026-10-21T14:49:41.000Z"
+          },
+          {
+            "id": 299,
+            "gameKey": "direction_rush",
+            "name": "Direction Rush",
+            "status": "AVAILABLE",
+            "enabled": true,
+            "sortOrder": 4,
+            "description": "Nhanh mắt · Nhanh tay",
+            "icon": "Move",
+            "route": "/games/arcade/direction_rush",
+            "createdAt": "2026-10-21T14:49:41.000Z",
+            "updatedAt": "2026-10-21T14:49:41.000Z"
+          },
+          {
+            "id": 300,
+            "gameKey": "memory_flash",
+            "name": "Memory Flash",
+            "status": "AVAILABLE",
+            "enabled": true,
+            "sortOrder": 5,
+            "description": "Nhìn nhanh · Nhớ chuẩn",
+            "icon": "Brain",
+            "route": "/games/arcade/memory_flash",
+            "createdAt": "2026-10-21T14:49:41.000Z",
+            "updatedAt": "2026-10-21T14:49:41.000Z"
+          },
+          {
+            "id": 167,
+            "gameKey": "drawing",
+            "name": "Góc Sáng Tạo (Game Vẽ)",
+            "status": "AVAILABLE",
+            "enabled": true,
+            "sortOrder": 6,
+            "description": "Không gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.",
+            "icon": "Palette",
+            "route": "/games/drawing",
+            "createdAt": "2026-10-08T12:04:57.000Z",
+            "updatedAt": "2026-10-08T12:04:57.000Z"
+          }
+        ]
+      }
+    },
+    "retiredApi": {
+      "status": 404
+    }
+  },
+  "finishedAt": "2026-10-21T14:58:31.172Z"
+}

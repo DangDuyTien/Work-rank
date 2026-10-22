@@ -1,4 +1,6 @@
 const sequelize = require('../config/database');
+const ArcadeRoom = require('./ArcadeRoom');
+const ArcadePlayer = require('./ArcadePlayer');
 const Team = require('./Team');
 const User = require('./User');
 const GoogleAuthTicket = require('./GoogleAuthTicket');
@@ -38,19 +40,6 @@ const GrandLeaderboardProjection = require('./GrandLeaderboardProjection');
 const GrandIndividualLeaderboardProjection = require('./GrandIndividualLeaderboardProjection');
 const CompetitionActivityProjection = require('./CompetitionActivityProjection');
 const ProjectionCheckpoint = require('./ProjectionCheckpoint');
-// Quiz Game V1 Models
-const QuizSet = require('./QuizSet');
-const QuizRoom = require('./QuizRoom');
-const QuizPlayer = require('./QuizPlayer');
-const QuizQuestion = require('./QuizQuestion');
-const QuizAnswer = require('./QuizAnswer');
-const QuizUserStat = require('./QuizUserStat');
-// Sam Game Models
-const SamRoom = require('./SamRoom');
-const SamPlayer = require('./SamPlayer');
-const SamAction = require('./SamAction');
-const SamResult = require('./SamResult');
-const SamUserStat = require('./SamUserStat');
 // KPI Foundation Models
 const Department = require('./Department');
 const Kpi = require('./Kpi');
@@ -99,6 +88,10 @@ User.hasMany(ChatMessage, { as: 'SentChatMessages', foreignKey: 'senderId' });
 User.hasMany(ChatMessage, { as: 'ReceivedChatMessages', foreignKey: 'receiverId' });
 ChatMessage.belongsTo(User, { as: 'Sender', foreignKey: 'senderId' });
 ChatMessage.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId' });
+
+ArcadeRoom.hasMany(ArcadePlayer, { foreignKey: 'roomId', as: 'players', onDelete: 'CASCADE' });
+ArcadePlayer.belongsTo(ArcadeRoom, { foreignKey: 'roomId' });
+ArcadePlayer.belongsTo(User, { foreignKey: 'userId' });
 
 // Phase 4 Associations
 RuleSet.hasMany(RuleSetVersion, { foreignKey: 'ruleSetId', as: 'versions' });
@@ -185,48 +178,6 @@ UserRecognition.belongsTo(Season, { foreignKey: 'seasonId', as: 'season', constr
 UserRecognition.belongsTo(GrandChampionship, { foreignKey: 'grandId', as: 'grand', constraints: false });
 UserRecognition.belongsTo(User, { foreignKey: 'awardedBy', as: 'awarder', constraints: false });
 
-// Quiz Game Associations
-QuizSet.hasMany(QuizQuestion, { as: 'questions', foreignKey: 'quizSetId' });
-QuizQuestion.belongsTo(QuizSet, { as: 'quizSet', foreignKey: 'quizSetId' });
-QuizSet.belongsTo(User, { as: 'creator', foreignKey: 'createdByUserId' });
-QuizQuestion.belongsTo(User, { as: 'creator', foreignKey: 'createdByUserId' });
-
-QuizRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
-QuizRoom.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
-QuizRoom.belongsTo(QuizQuestion, { as: 'currentQuestion', foreignKey: 'currentQuestionId' });
-QuizRoom.belongsTo(QuizSet, { as: 'quizSet', foreignKey: 'quizSetId' });
-
-QuizRoom.hasMany(QuizPlayer, { as: 'players', foreignKey: 'roomId' });
-QuizPlayer.belongsTo(QuizRoom, { as: 'room', foreignKey: 'roomId' });
-QuizPlayer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-QuizRoom.hasMany(QuizAnswer, { as: 'answers', foreignKey: 'roomId' });
-QuizAnswer.belongsTo(QuizRoom, { as: 'room', foreignKey: 'roomId' });
-QuizAnswer.belongsTo(QuizQuestion, { as: 'question', foreignKey: 'questionId' });
-QuizAnswer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-User.hasOne(QuizUserStat, { as: 'quizStats', foreignKey: 'userId' });
-QuizUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-// Sam Game Associations
-SamRoom.belongsTo(User, { as: 'host', foreignKey: 'hostUserId' });
-SamRoom.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
-SamRoom.belongsTo(User, { as: 'currentTurnPlayer', foreignKey: 'currentTurnUserId' });
-SamRoom.hasMany(SamPlayer, { as: 'players', foreignKey: 'roomId' });
-SamPlayer.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
-SamPlayer.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-SamRoom.hasMany(SamAction, { as: 'actions', foreignKey: 'roomId' });
-SamAction.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
-SamAction.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
-SamRoom.hasOne(SamResult, { as: 'result', foreignKey: 'roomId' });
-SamResult.belongsTo(SamRoom, { as: 'room', foreignKey: 'roomId' });
-SamResult.belongsTo(User, { as: 'winner', foreignKey: 'winnerUserId' });
-
-User.hasOne(SamUserStat, { as: 'samStats', foreignKey: 'userId' });
-SamUserStat.belongsTo(User, { as: 'user', foreignKey: 'userId' });
-
 // KPI Foundation Associations
 Department.hasMany(Kpi, { foreignKey: 'departmentId', as: 'kpis' });
 Kpi.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
@@ -284,6 +235,8 @@ User.hasMany(DrawingLike, { as: 'drawingLikes', foreignKey: 'userId' });
 DrawingLike.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 module.exports = {
+  ArcadeRoom,
+  ArcadePlayer,
   sequelize,
   Team,
   User,
@@ -329,19 +282,6 @@ module.exports = {
   YouTubeChannel,
   YouTubeChannelMetric,
   TeamYouTubeSummary,
-  // Quiz Game V1
-  QuizSet,
-  QuizRoom,
-  QuizPlayer,
-  QuizQuestion,
-  QuizAnswer,
-  QuizUserStat,
-  // Sam Game V1
-  SamRoom,
-  SamPlayer,
-  SamAction,
-  SamResult,
-  SamUserStat,
   // KPI Foundation Models
   Department,
   Kpi,

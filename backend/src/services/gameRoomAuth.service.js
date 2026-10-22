@@ -1,24 +1,19 @@
 'use strict';
 
-const {
-  SamRoom,
-  SamPlayer,
-  QuizRoom,
-  QuizPlayer,
-  GameRoom,
-  GamePlayer,
-  TypingRoom,
-  TypingPlayer,
-} = require('../models');
+const { TypingRoom, TypingPlayer } = require('../models');
 
 /**
  * Validate whether a user can access a game room.
  *
+ * Game Center currently ships Typing Battle and Drawing. Drawing is a
+ * single-player canvas (no rooms), so room authorization only covers the
+ * typing room contract. New room-based games must add their branch here.
+ *
  * @param {object} params
  * @param {number|string} params.userId
- * @param {string} [params.userRole]
+ * @param {string} [params.userRole] - Reserved for admin-only room modes
  * @param {number|string} params.roomId - Numeric id or room code
- * @param {'sam'|'quiz'|'typing'|'typing_battle'} params.gameType
+ * @param {'typing'|'typing_battle'} params.gameType
  * @param {boolean} [params.clientSpectatorHint] - Client hint if they want spectator mode
  * @returns {Promise<{
  *   allowed: boolean,
@@ -41,114 +36,6 @@ async function canAccessGameRoom({
   const uid = Number(userId);
   if (!uid) {
     return { allowed: false, error: 'User ID không hợp lệ', code: 'UNAUTHORIZED', status: 401 };
-  }
-
-  if (gameType === 'sam') {
-    let room = null;
-    if (typeof roomId === 'number' || /^\d+$/.test(String(roomId))) {
-      room = await SamRoom.findByPk(Number(roomId));
-    }
-    if (!room && roomId) {
-      room = await SamRoom.findOne({ where: { code: String(roomId).trim().toUpperCase().replace(/^#/, '') } });
-    }
-
-    if (!room) {
-      return { allowed: false, error: 'Phòng Sâm không tồn tại', code: 'ROOM_NOT_FOUND', status: 404 };
-    }
-
-    // Check test room authorization (Admin only, EXCEPT practice bot room or host)
-    const isHost = Number(room.hostUserId) === uid;
-    const isPracticeBot = room.testScenario === 'PRACTICE_BOT';
-    if (room.isTest && userRole !== 'admin' && !isHost && !isPracticeBot) {
-      return {
-        allowed: false,
-        error: 'Chỉ quản trị viên (Admin) mới có quyền truy cập phòng test kịch bản bot',
-        code: 'FORBIDDEN',
-        status: 403,
-      };
-    }
-
-    const player = await SamPlayer.findOne({
-      where: { roomId: room.id, userId: uid },
-    });
-    const isPlayer = !!player;
-
-    if (isPlayer || isHost) {
-      return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: false,
-        isPlayer: true,
-        role: 'player',
-      };
-    }
-
-    // In WAITING or STARTING state, outside non-players cannot connect to socket
-    if (room.status === 'WAITING' || room.status === 'STARTING') {
-      return {
-        allowed: false,
-        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
-        code: 'FORBIDDEN',
-        status: 403,
-      };
-    }
-
-    // In PLAYING or FINISHED state, allow spectator
-    return {
-      allowed: true,
-      roomId: room.id,
-      isSpectator: true,
-      isPlayer: false,
-      role: 'spectator',
-    };
-  }
-
-  if (gameType === 'quiz') {
-    let room = null;
-    if (typeof roomId === 'number' || /^\d+$/.test(String(roomId))) {
-      room = await QuizRoom.findByPk(Number(roomId));
-    }
-    if (!room && roomId) {
-      room = await QuizRoom.findOne({ where: { code: String(roomId).trim().toUpperCase().replace(/^#/, '') } });
-    }
-
-    if (!room) {
-      return { allowed: false, error: 'Phòng Quiz không tồn tại', code: 'ROOM_NOT_FOUND', status: 404 };
-    }
-
-    const player = await QuizPlayer.findOne({
-      where: { roomId: room.id, userId: uid },
-    });
-
-    const isHost = Number(room.hostUserId) === uid;
-    const isPlayer = !!player;
-
-    if (isPlayer || isHost) {
-      return {
-        allowed: true,
-        roomId: room.id,
-        isSpectator: false,
-        isPlayer: true,
-        role: 'player',
-      };
-    }
-
-    if (room.status === 'WAITING' || room.status === 'STARTING') {
-      return {
-        allowed: false,
-        error: 'Phòng đang chờ người chơi. Vui lòng tham gia phòng trước khi kết nối.',
-        code: 'FORBIDDEN',
-        status: 403,
-      };
-    }
-
-    return {
-      allowed: true,
-      roomId: room.id,
-      isSpectator: true,
-      isPlayer: false,
-      role: 'spectator',
-    };
   }
 
   if (gameType === 'typing' || gameType === 'typing_battle') {

@@ -10700,8 +10700,7 @@ html[data-workrank-contrast="true"] .profile-level-card {
 .profile-page,
 .leaderboard-page,
 .youtube-overview-page,
-.groups-page,
-.admin-quiz-page {
+.groups-page {
   box-sizing: border-box;
   width: min(var(--page-max), 100%);
   margin-left: auto;
@@ -10726,56 +10725,6 @@ html[data-workrank-contrast="true"] .profile-level-card {
 .admin-data-page textarea,
 .admin-data-page button:not(.ui-button):not(.btn) {
   border-radius: var(--radius-interactive);
-}
-
-.admin-quiz-page {
-  min-height: 100%;
-  background: var(--background) !important;
-  color: var(--text-primary) !important;
-  padding: 24px !important;
-}
-
-.admin-quiz-page .bg-white {
-  background: var(--surface) !important;
-}
-
-.admin-quiz-page .bg-slate-50,
-.admin-quiz-page .bg-slate-100 {
-  background: var(--surface-soft) !important;
-}
-
-.admin-quiz-page .border-slate-100,
-.admin-quiz-page .border-slate-200,
-.admin-quiz-page .border-slate-200\/90,
-.admin-quiz-page .border-slate-300 {
-  border-color: var(--border) !important;
-}
-
-.admin-quiz-page .rounded-xl,
-.admin-quiz-page .rounded-2xl {
-  border-radius: var(--radius-content) !important;
-}
-
-.admin-quiz-page .rounded-lg {
-  border-radius: var(--radius-interactive) !important;
-}
-
-.admin-quiz-page .shadow-sm {
-  box-shadow: var(--shadow-card) !important;
-}
-
-.admin-quiz-page .shadow-md {
-  box-shadow: var(--shadow-card-hover) !important;
-}
-
-.admin-quiz-page .shadow-2xl {
-  box-shadow: var(--shadow-modal) !important;
-}
-
-.admin-quiz-page .fixed.inset-0 > .bg-white {
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-modal) !important;
-  box-shadow: var(--shadow-modal) !important;
 }
 
 .admin-data-page .rounded-xl,
@@ -10926,12 +10875,6 @@ html[data-workrank-contrast="true"] .profile-level-card {
   border-color: var(--border);
   box-shadow: var(--shadow-card);
   overflow: hidden;
-}
-
-@media (max-width: 640px) {
-  .admin-quiz-page {
-    padding: 16px !important;
-  }
 }
 
 /* ── WorkRank UI refinement layer ──────────────────────────────────────────
@@ -12094,76 +12037,6 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
   animation: none !important;
 }
 
-/* ── QUIZ GAME FULL-BLEED GAMESHELL & RESPONSIVE STYLES ── */
-.quiz-game-shell {
-  width: 100vw;
-  min-height: 100dvh;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.quiz-game-shell--scrollable {
-  min-height: 100dvh;
-  height: auto;
-  overflow-y: auto !important;
-}
-
-.quiz-game-main-stage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 32px 14px;
-  gap: 28px;
-  max-width: 1360px;
-  margin: 0 auto;
-  width: 100%;
-  min-height: 0;
-  flex: 1;
-  box-sizing: border-box;
-}
-
-.quiz-game-left-col {
-  flex: 0 0 42%;
-  max-width: 44%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-}
-
-.quiz-game-right-col {
-  flex: 1 1 58%;
-  height: 100%;
-  max-height: 460px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 900px) {
-  .quiz-game-main-stage {
-    flex-direction: column;
-    padding: 6px 14px 10px;
-    gap: 14px;
-    overflow-y: auto;
-  }
-
-  .quiz-game-left-col {
-    flex: none;
-    max-width: 100%;
-    width: 100%;
-    order: 2;
-  }
-
-  .quiz-game-right-col {
-    flex: none;
-    width: 100%;
-    max-height: 220px;
-    order: 1;
-  }
-}
-
 /* =========================================================================
  * UNIVERSAL GAME FULLSCREEN SHELL & ENTER/EXIT TRANSITION SYSTEM
  * ========================================================================= */
@@ -13239,6 +13112,163 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
 }
 
 .public-creative-studio-cta:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.public-creative-cta-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.public-creative-gallery-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-standard);
+}
+
+.public-creative-gallery-cta:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Admin notice: khu vực đang bị ẩn khỏi Trang chủ */
+.public-creative-hidden-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-content);
+  border: 1px dashed var(--warning-border);
+  background: var(--warning-soft);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.public-creative-hidden-notice > svg {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.public-creative-hidden-notice > span {
+  flex: 1;
+  min-width: 240px;
+}
+
+.public-creative-hidden-notice b {
+  color: var(--text-primary);
+}
+
+.public-creative-hidden-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.public-creative-hidden-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.public-creative-hidden-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.public-creative-hidden-btn {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+    opacity var(--motion-fast) var(--ease-standard);
+}
+
+.public-creative-hidden-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.public-creative-hidden-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Placeholder khi file ảnh tác phẩm bị mất/hỏng */
+.public-artwork-img-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.public-artwork-img-fallback.is-large {
+  min-height: 320px;
+  font-size: 13.5px;
+}
+
+/* Trang Thư Viện Tranh (/creative-corner) */
+.creative-gallery-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.creative-gallery-back,
+.creative-gallery-draw-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-standard);
+}
+
+.creative-gallery-back:hover,
+.creative-gallery-draw-link:hover {
+  color: var(--text-primary);
+}
+
+.creative-gallery-draw-link {
+  color: var(--accent);
+}
+
+.creative-gallery-draw-link:hover {
   color: var(--accent-hover);
   text-decoration: underline;
   text-underline-offset: 4px;

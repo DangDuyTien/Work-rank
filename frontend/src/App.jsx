@@ -47,11 +47,10 @@ const AdminOperations = lazyWithReload(() => import('./pages/AdminOperations'));
 const Arena = lazyWithReload(() => import('./pages/Arena'));
 const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
-const QuizGame = lazyWithReload(() => import('./pages/QuizGame'));
-const AdminQuiz = lazyWithReload(() => import('./pages/AdminQuiz'));
-const SamGame = lazyWithReload(() => import('./pages/SamGame'));
 const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
+const ArcadeGame = lazyWithReload(() => import('./pages/ArcadeGame'));
 const DrawingGame = lazyWithReload(() => import('./pages/DrawingGame'));
+const CreativeGallery = lazyWithReload(() => import('./pages/CreativeGallery'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
 const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
 
@@ -205,17 +204,15 @@ function AppRoutes() {
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<GameHub />} />
-            <Route path="/games/guess" element={<Navigate to="/games/quiz" replace />} />
-            <Route path="/games/quiz" element={<QuizGame />} />
-            <Route path="/games/quiz/room/:roomId" element={<QuizGame />} />
-            <Route path="/games/sam" element={<SamGame />} />
-            <Route path="/games/sam/room/:roomId" element={<SamGame />} />
             <Route path="/games/typing" element={<TypingBattle />} />
             <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
             <Route path="/games/typing/spectate/:roomId" element={<TypingBattle />} />
+            <Route path="/games/arcade/:gameType" element={<ArcadeGame />} />
+            <Route path="/games/arcade/:gameType/room/:roomId" element={<ArcadeGame />} />
             <Route path="/games/drawing" element={<DrawingGame />} />
-            <Route path="/admin/quiz" element={<AdminRoute><AdminQuiz /></AdminRoute>} />
-            <Route path="/admin/games/quiz" element={<Navigate to="/admin/quiz" replace />} />
+            {/* Unknown or retired game URLs land on Game Center instead of a dead route. */}
+            <Route path="/games/*" element={<Navigate to="/games" replace />} />
+            <Route path="/creative-corner" element={<CreativeGallery />} />
             <Route path="/admin/privileges" element={<AdminRoute><AdminPrivileges /></AdminRoute>} />
             <Route path="/admin/teams-youtube" element={<AdminRoute><AdminTeamsYouTube /></AdminRoute>} />
             <Route path="/admin/competition" element={<Navigate to="/admin/competition/seasons" replace />} />
@@ -223,6 +220,7 @@ function AppRoutes() {
             <Route path="/admin/competition/seasons" element={<AdminRoute><AdminSeasons /></AdminRoute>} />
             <Route path="/admin/competition/grand" element={<AdminRoute><AdminGrand /></AdminRoute>} />
             <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
+            <Route path="/admin/games/*" element={<Navigate to="/settings?tab=games" replace />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/users/:id" element={<UserDetail />} />
           </Route>

@@ -3,6 +3,9 @@
 const { GameCatalog } = require('../models');
 
 const DEFAULT_GAMES = [
+  { gameKey: 'computer_rush', name: 'Computer Rush', status: 'AVAILABLE', enabled: true, sortOrder: 3, description: 'Gõ nhanh · Giữ combo', icon: 'Monitor', route: '/games/arcade/computer_rush' },
+  { gameKey: 'direction_rush', name: 'Direction Rush', status: 'AVAILABLE', enabled: true, sortOrder: 4, description: 'Nhanh mắt · Nhanh tay', icon: 'Move', route: '/games/arcade/direction_rush' },
+  { gameKey: 'memory_flash', name: 'Memory Flash', status: 'AVAILABLE', enabled: true, sortOrder: 5, description: 'Nhìn nhanh · Nhớ chuẩn', icon: 'Brain', route: '/games/arcade/memory_flash' },
   {
     gameKey: 'typing_battle',
     name: 'WorkRank Typing Battle',
@@ -14,31 +17,11 @@ const DEFAULT_GAMES = [
     route: '/games/typing',
   },
   {
-    gameKey: 'sam',
-    name: 'Đánh Sâm',
-    status: 'AVAILABLE',
-    enabled: true,
-    sortOrder: 4,
-    description: 'Trò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực kịch tính.',
-    icon: 'Club',
-    route: '/games/sam',
-  },
-  {
-    gameKey: 'quiz',
-    name: 'Đoán Hình & Đoán Nhạc',
-    status: 'AVAILABLE',
-    enabled: true,
-    sortOrder: 5,
-    description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao nhiều người chơi.',
-    icon: 'Sparkles',
-    route: '/games/quiz',
-  },
-  {
     gameKey: 'drawing',
     name: 'Góc Sáng Tạo (Game Vẽ)',
     status: 'AVAILABLE',
     enabled: true,
-    sortOrder: 6,
+    sortOrder: 2,
     description: 'Không gian sáng tạo nghệ thuật, vẽ tranh canvas siêu lớn và chia sẻ ngay lên trang chủ WorkRank.',
     icon: 'Palette',
     route: '/games/drawing',
@@ -60,6 +43,7 @@ async function ensureDefaultCatalog() {
 async function getCatalog() {
   await ensureDefaultCatalog().catch(() => {});
   const games = await GameCatalog.findAll({
+    where: { gameKey: DEFAULT_GAMES.map((g) => g.gameKey) },
     order: [['sort_order', 'ASC'], ['id', 'ASC']],
   });
   return games;

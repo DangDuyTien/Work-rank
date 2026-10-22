@@ -10,22 +10,62 @@ let audioCtx = null;
 let isMuted = false;
 let masterVolume = 0.65;
 let currentSwitchProfile = 'blue'; // 'blue' (Clicky Tách Tách) | 'thock' (Holy Panda / Warm) | 'linear' (Red Smooth)
+let audioCtxRunning = false;
+let resumeAttempt = null;
+let lastResumeAttemptAt = 0;
+const RESUME_RETRY_COOLDOWN_MS = 1500;
 
 // Pre-allocated noise buffer for zero-garbage-collection instantaneous key clicks
 let precomputedNoiseBuffer = null;
 
-function getAudioContext() {
+// Constructing an AudioContext can cost tens of milliseconds (no audio device,
+// cold audio service). Do it during page idle, never between a keydown and its
+// render. If the user somehow types before prewarm finishes, early keystrokes
+// are simply silent instead of janking the input.
+function ensureAudioContext() {
+  if (audioCtx) return audioCtx;
   if (typeof window === 'undefined') return null;
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) {
-      audioCtx = new AudioContextClass();
-    }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  audioCtx = new AudioContextClass();
+  audioCtxRunning = audioCtx.state === 'running';
+  if (typeof audioCtx.addEventListener === 'function') {
+    audioCtx.addEventListener('statechange', () => {
+      audioCtxRunning = audioCtx.state === 'running';
+      if (audioCtxRunning) resumeAttempt = null;
+    });
   }
   return audioCtx;
+}
+
+if (typeof window !== 'undefined') {
+  const prewarm = () => ensureAudioContext();
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(prewarm, { timeout: 2000 });
+  } else {
+    setTimeout(prewarm, 0);
+  }
+}
+
+// Hot path: called for every keystroke. Reads only cached flags — never the
+// AudioContext state (a cross-process getter) and never blocks on resume().
+// While the context is suspended (no user gesture yet, missing audio device,
+// or power-save suspend) audio is skipped and at most one resume attempt runs
+// per cooldown window; a statechange listener re-enables sound when it's back.
+function getAudioContext() {
+  if (!audioCtx) return null;
+  if (audioCtxRunning) return audioCtx;
+  const now = Date.now();
+  if (!resumeAttempt && now - lastResumeAttemptAt >= RESUME_RETRY_COOLDOWN_MS) {
+    lastResumeAttemptAt = now;
+    let attempt;
+    attempt = audioCtx.resume().catch(() => {}).finally(() => {
+      if (resumeAttempt === attempt) resumeAttempt = null;
+      if (audioCtx.state === 'running') audioCtxRunning = true;
+    });
+    resumeAttempt = attempt;
+  }
+  return null;
 }
 
 function getNoiseBuffer(ctx) {

@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-10-21T15:01:39.884Z",
+  "tableCount": 58,
+  "retiredTablesPresent": [],
+  "catalog": [
+    {
+      "game_key": "typing_battle",
+      "name": "WorkRank Typing Battle",
+      "status": "AVAILABLE",
+      "route": "/games/typing"
+    },
+    {
+      "game_key": "computer_rush",
+      "name": "Computer Rush",
+      "status": "AVAILABLE",
+      "route": "/games/arcade/computer_rush"
+    },
+    {
+      "game_key": "direction_rush",
+      "name": "Direction Rush",
+      "status": "AVAILABLE",
+      "route": "/games/arcade/direction_rush"
+    },
+    {
+      "game_key": "memory_flash",
+      "name": "Memory Flash",
+      "status": "AVAILABLE",
+      "route": "/games/arcade/memory_flash"
+    },
+    {
+      "game_key": "drawing",
+      "name": "Góc Sáng Tạo (Game Vẽ)",
+      "status": "AVAILABLE",
+      "route": "/games/drawing"
+    }
+  ],
+  "counts": {
+    "typing_rooms": 125,
+    "typing_players": 146,
+    "typing_match_results": 100,
+    "typing_user_stats": 97,
+    "typing_practice_attempts": 1,
+    "drawings": 4,
+    "drawing_likes": 0,
+    "users": 1193,
+    "teams": 253,
+    "kpi_results": 13,
+    "seasons": 11,
+    "score_ledger": 64
+  },
+  "gameLedgerRows": 0,
+  "legacyRoomsInCatalog": 0
+}

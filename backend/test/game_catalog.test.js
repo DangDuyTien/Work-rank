@@ -12,16 +12,14 @@ const app = require('../src/app');
 const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
 
-test('Game Catalog Coming Soon Test Suite', async (t) => {
+test('Game Catalog Test Suite (Typing Battle + Drawing + 3 Arcade games)', async (t) => {
   let adminUser, normalUser;
   let adminToken, userToken;
 
   before(async () => {
     await GameCatalog.bulkCreate([
-      { gameKey: 'uno', name: 'UNO Battle', route: '/games/uno', status: 'AVAILABLE', enabled: true, sortOrder: 1 },
-      { gameKey: 'game_2048', name: '2048 Vô Địch', route: '/games/2048', status: 'AVAILABLE', enabled: true, sortOrder: 2 },
-      { gameKey: 'quiz', name: 'Đấu Trí Tri Thức', route: '/games/quiz', status: 'AVAILABLE', enabled: true, sortOrder: 3 },
-      { gameKey: 'sam', name: 'Sâm Lốc', route: '/games/sam', status: 'AVAILABLE', enabled: true, sortOrder: 4 },
+      { gameKey: 'typing_battle', name: 'WorkRank Typing Battle', route: '/games/typing', status: 'AVAILABLE', enabled: true, sortOrder: 1 },
+      { gameKey: 'drawing', name: 'Góc Sáng Tạo (Game Vẽ)', route: '/games/drawing', status: 'AVAILABLE', enabled: true, sortOrder: 2 },
     ], { updateOnDuplicate: ['name', 'route', 'status', 'enabled', 'sortOrder'] });
 
     const ts = Date.now();
@@ -45,70 +43,52 @@ test('Game Catalog Coming Soon Test Suite', async (t) => {
     userToken = jwt.sign({ sub: normalUser.id, role: 'user' }, env.jwtSecret);
   });
 
-  await t.test('1. Game Catalog: Public catalog returns games with status', async () => {
-    const res = await request(app)
-      .get('/api/games/catalog');
+  await t.test('1. Public catalog exposes the five active Game Center titles', async () => {
+    const res = await request(app).get('/api/games/catalog');
 
     assert.equal(res.status, 200);
     assert.ok(Array.isArray(res.body.games));
-    assert.ok(res.body.games.length >= 4);
 
-    const keys = res.body.games.map((g) => g.gameKey);
-    assert.ok(keys.includes('uno'));
-    assert.ok(keys.includes('game_2048'));
-    assert.ok(keys.includes('quiz'));
-    assert.ok(keys.includes('sam'));
+    const keys = res.body.games.map((g) => g.gameKey).sort();
+    assert.deepEqual(keys, ['computer_rush', 'direction_rush', 'drawing', 'memory_flash', 'typing_battle']);
   });
 
-  await t.test('2. Game Coming Soon Enforcement: Non-admin blocked when game is COMING_SOON, Admin allowed', async () => {
-    // 1. Admin sets 2048 to COMING_SOON
+  await t.test('2. Coming Soon enforcement: non-admin blocked, admin allowed to preview', async () => {
     const patchRes = await request(app)
-      .patch('/api/admin/games/game_2048')
+      .patch('/api/admin/games/typing_battle')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'COMING_SOON' });
 
     assert.equal(patchRes.status, 200);
     assert.equal(patchRes.body.status, 'COMING_SOON');
 
-    // 2. Regular user attempts to start 2048 session -> BLOCKED with 403 GAME_COMING_SOON
     const blockedRes = await request(app)
-      .post('/api/games/2048/start')
+      .post('/api/games/typing/rooms')
       .set('Authorization', `Bearer ${userToken}`)
-      .send({});
+      .send({ title: 'Blocked Room', mode: '1V1' });
 
     assert.equal(blockedRes.status, 403);
-    assert.equal(blockedRes.body.error, 'GAME_COMING_SOON');
+    assert.equal(blockedRes.body.reason, 'COMING_SOON');
 
-    // 3. Admin attempts to start 2048 session -> ALLOWED (preview/testing privilege)
-    const adminStartRes = await request(app)
-      .post('/api/games/2048/start')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({});
+    const adminStatusRes = await request(app)
+      .get('/api/games/typing/status')
+      .set('Authorization', `Bearer ${adminToken}`);
 
-    assert.equal(adminStartRes.status, 200);
-    assert.ok(adminStartRes.body.data?.gameSessionId || adminStartRes.body.gameSessionId);
+    assert.equal(adminStatusRes.status, 200);
+    assert.equal(adminStatusRes.body.allowed, true);
 
-    // 4. Admin reverts 2048 to AVAILABLE
     const revertRes = await request(app)
-      .patch('/api/admin/games/game_2048')
+      .patch('/api/admin/games/typing_battle')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'AVAILABLE' });
 
     assert.equal(revertRes.status, 200);
     assert.equal(revertRes.body.status, 'AVAILABLE');
-
-    // 5. Regular user can now start 2048 session
-    const allowedRes = await request(app)
-      .post('/api/games/2048/start')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({});
-
-    assert.equal(allowedRes.status, 200);
-    assert.ok(allowedRes.body.data?.gameSessionId || allowedRes.body.gameSessionId);
   });
 
   after(async () => {
     if (adminUser) await User.destroy({ where: { id: adminUser.id } });
     if (normalUser) await User.destroy({ where: { id: normalUser.id } });
+    await sequelize.close().catch(() => {});
   });
 });

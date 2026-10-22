@@ -4,9 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
 const { Drawing, DrawingLike, User, Team, UserProfilePreference, SystemSetting } = require('../models');
-const { ValidationError, NotFoundError, ForbiddenError } = require('../utils/errors');
+const { ValidationError, NotFoundError, ForbiddenError, StorageError } = require('../utils/errors');
+const { resolveStorageConfig } = require('../config/storage');
+const {
+  getDrawingStorage,
+  parseStorageKey,
+} = require('./storage/drawingStorage.service');
 
 const CREATIVE_CORNER_SETTING_KEY = 'creative_corner_settings';
+const LEGACY_UPLOAD_PREFIX = '/uploads/drawings/';
 
 /**
  * Get current system settings for Creative Corner & Drawing Game.
@@ -285,12 +291,19 @@ async function getById(drawingId, { userId = null, teamId = null, isAdmin = fals
 
 /**
  * Create a new drawing artwork.
+ *
+ * `imageUrl`/`storageKey` do controller (server) quyết định sau khi upload object
+ * storage thành công — client không bao giờ truyền trực tiếp các giá trị này.
  */
 async function createDrawing({
   userId,
   teamId = null,
   title,
   imageUrl,
+  storageKey = null,
+  storageProvider = null,
+  mimeType = null,
+  sizeBytes = null,
   width = 1200,
   height = 700,
   visibility = 'PUBLIC',
@@ -315,6 +328,10 @@ async function createDrawing({
     userId,
     title: cleanTitle,
     imageUrl,
+    storageKey,
+    storageProvider,
+    mimeType,
+    sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : null,
     width: parseInt(width, 10) || 1200,
     height: parseInt(height, 10) || 700,
     visibility: ['PUBLIC', 'TEAM', 'PRIVATE'].includes(visibility) ? visibility : 'PUBLIC',
@@ -376,7 +393,35 @@ async function toggleLike({ drawingId, userId, teamId = null, isAdmin = false })
 }
 
 /**
+ * Xóa file legacy còn nằm trong `/uploads/drawings` (bản ghi chưa migrate).
+ * Best-effort: lỗi file không được chặn việc xóa bản ghi.
+ */
+function deleteLegacyLocalFile(imageUrl) {
+  try {
+    if (!imageUrl || !imageUrl.startsWith(LEGACY_UPLOAD_PREFIX)) return;
+    const filename = path.basename(imageUrl);
+    const config = resolveStorageConfig();
+    const rootDir = config.local?.rootDir || path.resolve(__dirname, '../../uploads');
+    const filePath = path.resolve(rootDir, 'drawings', filename);
+    if (!filePath.startsWith(path.resolve(rootDir, 'drawings'))) return;
+    if (fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.warn('[DrawingService] Không xóa được file legacy:', err.message);
+      });
+    }
+  } catch (err) {
+    console.warn('[DrawingService] Lỗi dọn file legacy:', err.message);
+  }
+}
+
+/**
  * Delete a drawing artwork (by author or admin).
+ *
+ * Thứ tự có chủ đích: xóa object storage TRƯỚC, rồi mới đánh dấu DB.
+ * - Storage lỗi → DB giữ nguyên ACTIVE, client nhận lỗi và retry được (không orphan
+ *   object "mồ côi" vì bản ghi vẫn còn trỏ tới object).
+ * - Storage xong nhưng DB lỗi → retry sẽ gặp object đã mất, được coi là đã xóa
+ *   (idempotent) nên lần retry hoàn tất được.
  */
 async function deleteDrawing({ drawingId, userId, isAdmin = false }) {
   const drawing = await Drawing.findByPk(drawingId);
@@ -385,23 +430,53 @@ async function deleteDrawing({ drawingId, userId, isAdmin = false }) {
     throw new NotFoundError('Tác phẩm không tồn tại.');
   }
 
-  if (drawing.userId !== userId && !isAdmin) {
+  // BIGINT có thể được driver trả về dạng string → so sánh qua Number để không chặn nhầm
+  if (Number(drawing.userId) !== Number(userId) && !isAdmin) {
     throw new ForbiddenError('Bạn không có quyền xóa tác phẩm này.');
   }
 
-  // Soft delete status or destroy
-  await drawing.update({ status: 'DELETED' });
-
-  // Optionally remove physical image file
-  if (drawing.imageUrl && drawing.imageUrl.startsWith('/uploads/drawings/')) {
-    const filename = path.basename(drawing.imageUrl);
-    const filePath = path.resolve(__dirname, '../../uploads/drawings', filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlink(filePath, () => {});
-    }
+  // Idempotent: gọi lại lần 2 không được 500
+  if (drawing.status === 'DELETED') {
+    return { success: true, drawingId: drawing.id, alreadyDeleted: true };
   }
 
-  return { success: true, drawingId };
+  const storageConfig = resolveStorageConfig();
+  const storageKey =
+    drawing.storageKey ||
+    parseStorageKey(drawing.imageUrl, { publicBaseUrl: storageConfig.s3.publicBaseUrl });
+
+  const isRemoteObject =
+    Boolean(storageKey) &&
+    drawing.storageProvider !== 'external' &&
+    !String(drawing.imageUrl || '').startsWith('data:');
+
+  if (isRemoteObject) {
+    try {
+      const result = await getDrawingStorage().delete({ key: storageKey });
+      if (result?.alreadyMissing) {
+        console.info('[DrawingService] Object đã không còn trên storage (coi như đã xóa):', {
+          drawingId: drawing.id,
+          key: storageKey,
+        });
+      }
+    } catch (err) {
+      console.error('[DrawingService] Xóa object storage thất bại:', {
+        drawingId: drawing.id,
+        key: storageKey,
+        message: err.message,
+      });
+      throw new StorageError(
+        'Không thể xóa ảnh tác phẩm khỏi kho lưu trữ. Vui lòng thử lại.',
+        { status: 502, code: 'STORAGE_DELETE_FAILED' }
+      );
+    }
+  } else {
+    deleteLegacyLocalFile(drawing.imageUrl);
+  }
+
+  await drawing.update({ status: 'DELETED' });
+
+  return { success: true, drawingId: drawing.id, alreadyDeleted: false };
 }
 
 /**

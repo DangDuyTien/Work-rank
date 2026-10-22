@@ -47,7 +47,7 @@ async function mockAccountApi(page) {
     }
     if (url.pathname.includes('/recognitions')) json = { badges: {}, awards: [] };
     if (url.pathname === '/api/games/catalog') json = {
-      games: [{ gameKey: 'quiz', name: 'Quiz Test', status: 'AVAILABLE', description: 'Quiz' }],
+      games: [{ gameKey: 'typing_battle', name: 'Typing Battle', status: 'AVAILABLE', description: 'Typing' }],
     };
     await route.fulfill({ json });
   });

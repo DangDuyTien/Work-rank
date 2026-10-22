@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Gamepad2,
   Keyboard,
-  Sparkles,
-  Club,
+  Palette,
   ArrowLeft,
   Clock,
   ShieldCheck,
@@ -16,8 +15,7 @@ import { Button } from './ui';
 const GAME_ICONS = {
   typing_battle: Keyboard,
   typing: Keyboard,
-  quiz: Sparkles,
-  sam: Club,
+  drawing: Palette,
 };
 
 export default function GameComingSoon({

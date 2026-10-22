@@ -1,0 +1,74 @@
+{
+  "started": "2026-10-19T09:11:52.176Z",
+  "checks": [
+    {
+      "name": "Live room appears in watcher lobby with correct real player count",
+      "status": "PASS",
+      "evidence": {
+        "roomId": 4,
+        "cardText": "Audit Room 1 17924011123921V130sChủ phòng: Typing Audit B • 1 NgườiTham Gia Phòng"
+      }
+    },
+    {
+      "name": "UI leave removes the lobby card instantly and the server list/DB agree",
+      "status": "PASS",
+      "evidence": {
+        "gone1Ms": 428,
+        "roomStatus": "ABANDONED"
+      }
+    },
+    {
+      "name": "Tab close releases the waiting seat after grace; lobby drops the card live",
+      "status": "PASS",
+      "evidence": {
+        "gone2Ms": 5048,
+        "seats": 0
+      }
+    },
+    {
+      "name": "Reload inside a waiting room keeps the seat; watcher card never disappears",
+      "status": "PASS",
+      "evidence": {
+        "roomId": 6
+      }
+    },
+    {
+      "name": "Guest leave releases only the guest seat; watcher card updates to the live count",
+      "status": "PASS",
+      "evidence": {
+        "players": 1
+      }
+    },
+    {
+      "name": "Start moves room to live list; mid-match reload keeps both seats (recovery intact)",
+      "status": "PASS",
+      "evidence": {
+        "players": 2
+      }
+    },
+    {
+      "name": "Match finish removes the live card for every lobby immediately",
+      "status": "PASS",
+      "evidence": {
+        "roomId": 6
+      }
+    },
+    {
+      "name": "Server list integrity: no zero-player ghosts, status filter allow-listed",
+      "status": "PASS",
+      "evidence": {
+        "visibleRooms": 0
+      }
+    }
+  ],
+  "errors": [],
+  "results": {
+    "room1": {
+      "id": 4,
+      "cardText": "Audit Room 1 17924011123921V130sChủ phòng: Typing Audit B • 1 NgườiTham Gia Phòng"
+    },
+    "updatedCard": "Audit Room 3 17924011123921V130sChủ phòng: Typing Audit B • 1 NgườiTham Gia Phòng"
+  },
+  "status": "PASS",
+  "finishedAt": "2026-10-19T09:12:17.929Z"
+}

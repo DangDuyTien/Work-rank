@@ -1,0 +1,64 @@
+{
+  "capturedAt": "2026-10-21T13:43:56.609Z",
+  "counts": {
+    "quiz_sets": 0,
+    "quiz_rooms": 0,
+    "quiz_players": 0,
+    "quiz_questions": 0,
+    "quiz_answers": 0,
+    "quiz_user_stats": 58,
+    "sam_rooms": 90,
+    "sam_players": 115,
+    "sam_actions": 39,
+    "sam_results": 2,
+    "sam_user_stats": 0,
+    "game_catalogs": 4,
+    "game_leaderboard_profiles": 0,
+    "score_ledger": 66,
+    "typing_rooms": 125,
+    "typing_players": 146,
+    "typing_match_results": 100,
+    "typing_user_stats": 96,
+    "typing_challenges": 68,
+    "drawings": 3,
+    "drawing_likes": 0,
+    "users": 1193,
+    "teams": 253,
+    "kpi_results": 13,
+    "seasons": 11
+  },
+  "catalog": [
+    {
+      "game_key": "sam",
+      "name": "Sâm Lốc",
+      "status": "AVAILABLE",
+      "enabled": 1,
+      "route": "/games/sam"
+    },
+    {
+      "game_key": "quiz",
+      "name": "Đấu Trí Tri Thức",
+      "status": "AVAILABLE",
+      "enabled": 1,
+      "route": "/games/quiz"
+    },
+    {
+      "game_key": "typing_battle",
+      "name": "WorkRank Typing Battle",
+      "status": "AVAILABLE",
+      "enabled": 1,
+      "route": "/games/typing"
+    },
+    {
+      "game_key": "drawing",
+      "name": "Góc Sáng Tạo (Game Vẽ)",
+      "status": "AVAILABLE",
+      "enabled": 1,
+      "route": "/games/drawing"
+    }
+  ],
+  "ledgerGameSpecific": {
+    "c": 2,
+    "p": "112"
+  }
+}

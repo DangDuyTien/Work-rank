@@ -130,6 +130,15 @@ function emitToUser(userId, eventName, payload) {
   ioInstance.to(`web:${userId}`).emit(eventName, payload);
 }
 
+// Global "this room left every public list" event so open lobbies can drop the
+// card instantly instead of waiting for a refetch/poll.
+function broadcastRoomRemoved(roomId) {
+  if (!ioInstance) return;
+  const numId = Number(roomId);
+  if (!Number.isFinite(numId)) return;
+  ioInstance.emit('typing:roomRemoved', { roomId: numId });
+}
+
 /**
  * Throttled broadcast of real-time progress in a typing room.
  * Batches high-frequency typing keystroke progress (120ms tick) to keep network lightweight and smooth.
@@ -183,6 +192,7 @@ module.exports = {
   emitSpectatorCount,
   emitToRoom,
   emitToUser,
+  broadcastRoomRemoved,
   queueProgressUpdate,
   clearProgressThrottle,
 };

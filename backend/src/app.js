@@ -64,7 +64,7 @@ app.get('/api/health', asyncHandler(healthController.health));
 app.get('/api/health/live', asyncHandler(healthController.live));
 app.get('/api/health/ready', asyncHandler(healthController.ready));
 
-// Static files for uploads (Quiz images, user assets, etc.)
+// Static files for uploads (drawings, user assets, etc.)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), {
   setHeaders: (res) => {
     res.set('X-Content-Type-Options', 'nosniff');

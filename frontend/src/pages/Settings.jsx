@@ -17,7 +17,6 @@ import {
   Save,
   Shield,
   ShieldCheck,
-  Sparkles,
   Star,
   Trash2,
   Trophy,
@@ -30,7 +29,6 @@ import {
   Wrench,
   Gamepad2,
   Keyboard,
-  Club,
   Activity,
   Clock,
 } from 'lucide-react';
@@ -1123,9 +1121,7 @@ export default function Settings() {
                   const Icon =
                     game.gameKey === 'typing_battle' || game.gameKey === 'typing'
                       ? Keyboard
-                      : game.gameKey === 'sam'
-                      ? Club
-                      : Sparkles;
+                      : Palette;
                   const isAvail = game.status === 'AVAILABLE';
                   const isUpdating = updatingGameKey === game.gameKey;
                   return (
@@ -1233,7 +1229,7 @@ export default function Settings() {
                   </span>
                 </div>
                 <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Khi bật, khu vực triển lãm tranh nghệ thuật sẽ hiển thị trực tiếp tại Trang chủ. Khi tắt, toàn bộ khu vực Thư Viện Tranh sẽ được ẩn khỏi Trang chủ.
+                  Khi bật, khu vực triển lãm tranh nghệ thuật sẽ hiển thị trực tiếp tại Trang chủ. Khi tắt, khu vực Thư Viện Tranh chỉ được ẩn khỏi Trang chủ — tác phẩm vẫn xem, thả tim và tải về đầy đủ tại trang <b>Thư Viện Tranh</b> (<code>/creative-corner</code>).
                 </p>
               </div>
 

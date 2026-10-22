@@ -1228,9 +1228,9 @@ export default function DrawingGame() {
                 type="button"
                 variant="primary"
                 size="md"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/creative-corner')}
               >
-                Xem Thư Viện Tranh trên Home
+                Xem trong Thư Viện Tranh
               </Button>
             </div>
           ) : (

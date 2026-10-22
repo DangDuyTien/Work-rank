@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "name": "Menu responsive 1920px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 1440px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 1280px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 1024px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 768px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 430px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Menu responsive 390px: all three games, no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Game Center contains the three arcade cards without retired games",
+      "status": "PASS"
+    },
+    {
+      "name": "Computer: early input blocked, Backspace, native NFD/NFC, simulated composition, offline input and reload recovery",
+      "status": "PASS",
+      "evidence": {
+        "events": 3,
+        "accuracy": 95.24,
+        "realOsUniKey": "Not available in headless Chromium; manual validation required"
+      }
+    },
+    {
+      "name": "Direction: real CDP touch swipe, accessible buttons and CPU 4x keyboard input",
+      "status": "PASS",
+      "evidence": {
+        "correct": 22,
+        "inputToNextFrameP50Ms": 8.100000023841858,
+        "inputToNextFrameP95Ms": 29.30000001192093
+      }
+    },
+    {
+      "name": "Memory: real 22 rounds through 3×3 → 4×4 → 5×5 on mobile; tiles >=44px; no overflow",
+      "status": "PASS",
+      "evidence": {
+        "sizes": [
+          3,
+          4,
+          5
+        ],
+        "correct": 22
+      }
+    },
+    {
+      "name": "Ghost room prevention: waiting user with no heartbeats removed after grace",
+      "status": "PASS"
+    },
+    {
+      "name": "Reduced motion setting disables new transitions",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "startedAt": "2026-10-21T14:40:08.101Z",
+  "finishedAt": "2026-10-21T14:41:45.807Z"
+}

@@ -1,0 +1,135 @@
+{
+  "checks": [
+    {
+      "gameType": "computer_rush",
+      "width": 1920,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 1440,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 1280,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 1024,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 768,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 430,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "computer_rush",
+      "width": 390,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 1920,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 1440,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 1280,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 1024,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 768,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 430,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "direction_rush",
+      "width": 390,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 1920,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 1440,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 1280,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 1024,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 768,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 430,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "gameType": "memory_flash",
+      "width": 390,
+      "status": "PASS",
+      "overflow": 0
+    },
+    {
+      "name": "Direction native key-repeat does not complete a second challenge",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

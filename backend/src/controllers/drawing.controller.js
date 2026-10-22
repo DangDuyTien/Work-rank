@@ -1,47 +1,58 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
 const multer = require('multer');
 const drawingService = require('../services/drawing.service');
-const { ValidationError } = require('../utils/errors');
+const { ValidationError, StorageError } = require('../utils/errors');
+const { resolveStorageConfig } = require('../config/storage');
+const {
+  buildDrawingStorageKey,
+  getDrawingStorage,
+  getStorageStatus,
+} = require('../services/storage/drawingStorage.service');
+const {
+  MAX_UPLOAD_BYTES,
+  ALLOWED_MIME_LIST,
+  inspectImageBuffer,
+} = require('../utils/imageValidation');
 
-// Ensure upload directory exists
-const uploadDir = path.resolve(__dirname, '../../uploads/drawings');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+/**
+ * Upload đi qua memoryStorage: file chỉ được ghi vào object storage sau khi
+ * đã xác thực chữ ký ảnh, và không bao giờ chạm filesystem production.
+ */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: MAX_UPLOAD_BYTES,
+    files: 1,
+    fields: 12,
+  },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME_LIST.includes(String(file.mimetype || '').toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new ValidationError('Chỉ chấp nhận các định dạng ảnh hợp lệ: PNG, JPG, WEBP'), false);
+    }
+  },
+});
+
+function decodeBase64Image(imageBase64) {
+  if (typeof imageBase64 !== 'string') return null;
+  const match = imageBase64.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.+)$/);
+  if (!match) return null;
+  return Buffer.from(match[2], 'base64');
 }
 
-const ALLOWED_MIMES = ['image/png', 'image/jpeg', 'image/webp'];
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.png';
-    const cleanExt = ALLOWED_MIMES.includes(file.mimetype) ? ext : '.png';
-    const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
-    cb(null, `drawing-${uniqueSuffix}${cleanExt}`);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (ALLOWED_MIMES.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new ValidationError('Chỉ chấp nhận các định dạng ảnh hợp lệ: PNG, JPG, WEBP'), false);
+/**
+ * Xóa object vừa upload khi bước ghi DB thất bại (compensation) — tránh orphan.
+ */
+async function rollbackUploadedObject(storage, key) {
+  if (!key) return;
+  try {
+    await storage.delete({ key });
+  } catch (err) {
+    console.error('[DrawingController] Rollback object thất bại:', { key, message: err.message });
   }
-};
-
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 15 * 1024 * 1024, // 15MB limit
-  },
-});
+}
 
 const drawingController = {
   uploadMiddleware: upload.single('image'),
@@ -54,6 +65,23 @@ const drawingController = {
     res.json({
       success: true,
       settings,
+    });
+  },
+
+  /**
+   * GET /api/drawings/storage/status (Admin Only)
+   * Trả tên biến env còn thiếu — KHÔNG trả giá trị secret.
+   */
+  async getStorageStatus(req, res) {
+    const status = getStorageStatus();
+    res.json({
+      success: true,
+      storage: {
+        provider: status.provider,
+        nodeEnv: status.nodeEnv,
+        ready: status.ok,
+        missingEnv: status.missingEnv,
+      },
     });
   },
 
@@ -125,30 +153,67 @@ const drawingController = {
 
   /**
    * POST /api/drawings
+   *
+   * Server authority: quyết định định dạng, kích thước, storage key và quyền sở hữu.
+   * Client không thể gửi `imageUrl`/`storageKey` tuỳ ý.
    */
   async create(req, res) {
     const userId = req.user.id;
-    const { title, width, height, visibility, metadata, imageBase64 } = req.body;
+    const { title, visibility, metadata, imageBase64 } = req.body;
 
-    let imageUrl = '';
+    let buffer = null;
+    let declaredMime = null;
 
-    if (req.file) {
-      imageUrl = `/uploads/drawings/${req.file.filename}`;
-    } else if (imageBase64 && typeof imageBase64 === 'string') {
-      // Support direct base64 payload as fallback
-      const match = imageBase64.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-      if (match) {
-        const ext = `.${match[1].toLowerCase()}`;
-        const data = Buffer.from(match[2], 'base64');
-        const filename = `drawing-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`;
-        const filePath = path.join(uploadDir, filename);
-        fs.writeFileSync(filePath, data);
-        imageUrl = `/uploads/drawings/${filename}`;
+    if (req.file && Buffer.isBuffer(req.file.buffer)) {
+      buffer = req.file.buffer;
+      declaredMime = req.file.mimetype;
+    } else if (imageBase64) {
+      buffer = decodeBase64Image(imageBase64);
+      if (!buffer) {
+        throw new ValidationError('Dữ liệu ảnh base64 không hợp lệ.');
       }
     }
 
-    if (!imageUrl) {
+    if (!buffer || buffer.length === 0) {
       throw new ValidationError('Vui lòng gửi file ảnh tác phẩm hợp lệ.');
+    }
+
+    const inspected = inspectImageBuffer(buffer, { declaredMime });
+
+    // Cấu hình storage sai → fail rõ ràng, tuyệt đối không ghi local để "chạy được"
+    const storageConfig = resolveStorageConfig();
+    if (!storageConfig.ok) {
+      throw new StorageError('Dịch vụ lưu trữ ảnh chưa được cấu hình. Tác phẩm chưa được lưu.', {
+        status: 503,
+        code: 'STORAGE_UNAVAILABLE',
+        details: storageConfig.missingEnv,
+      });
+    }
+
+    const storage = getDrawingStorage();
+    const key = buildDrawingStorageKey({
+      userId,
+      ext: inspected.ext,
+      prefix: storageConfig.s3.keyPrefix,
+    });
+
+    let uploaded;
+    try {
+      uploaded = await storage.upload({
+        key,
+        buffer,
+        contentType: inspected.mime,
+      });
+    } catch (err) {
+      console.error('[DrawingController] Upload object storage thất bại:', {
+        provider: storage.provider,
+        key,
+        message: err.message,
+      });
+      throw new StorageError(
+        'Không thể lưu ảnh tác phẩm lên kho lưu trữ. Vui lòng thử lại sau.',
+        { status: 502, code: 'STORAGE_UPLOAD_FAILED' }
+      );
     }
 
     let parsedMeta = {};
@@ -160,16 +225,27 @@ const drawingController = {
       }
     }
 
-    const created = await drawingService.createDrawing({
-      userId,
-      teamId: req.user.teamId || null,
-      title,
-      imageUrl,
-      width,
-      height,
-      visibility,
-      metadata: parsedMeta,
-    });
+    let created;
+    try {
+      created = await drawingService.createDrawing({
+        userId,
+        teamId: req.user.teamId || null,
+        title,
+        imageUrl: uploaded.url,
+        storageKey: uploaded.key,
+        storageProvider: uploaded.provider,
+        mimeType: inspected.mime,
+        sizeBytes: inspected.sizeBytes,
+        // Kích thước lấy từ chính file, không tin client
+        width: inspected.width,
+        height: inspected.height,
+        visibility,
+        metadata: parsedMeta,
+      });
+    } catch (err) {
+      await rollbackUploadedObject(storage, uploaded.key);
+      throw err;
+    }
 
     // Realtime broadcast to all connected clients
     try {

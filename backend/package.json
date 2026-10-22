@@ -13,6 +13,7 @@
     "test": "NODE_ENV=test node --import ./test/setup/teardown-db.mjs --test --test-concurrency=1 test/*.test.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all",
+    "db:migrate-drawings": "node scripts/migrate-drawing-images.js",
     "db:reset-clean": "node scripts/reset-and-seed-local.js",
     "test:load": "node scripts/api-load-smoke-test.js"
   },
@@ -21,6 +22,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1154.0",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.2",
     "cors": "^2.8.6",

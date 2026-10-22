@@ -38,6 +38,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': apiTarget,
+      // Ảnh/file tĩnh do backend phục vụ (tác phẩm Góc Sáng Tạo, media người dùng…)
+      '/uploads': apiTarget,
       '/socket.io': { target: apiTarget, ws: true },
     },
   },

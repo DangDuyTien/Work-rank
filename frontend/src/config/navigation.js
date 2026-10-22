@@ -14,10 +14,9 @@ import {
   Building2,
   Gamepad2,
   Keyboard,
-  Sparkles,
   Layers,
-  Club,
   Palette,
+  Images,
   Target,
   Settings as SettingsIcon,
   Sliders,
@@ -30,7 +29,7 @@ import {
  * - Overview (Dashboard, YouTube Analytics, Leaderboard)
  * - Competition (Arena, Grand Championship)
  * - Collaboration (Members / Teams)
- * - Games (Typing Battle, Sâm, Quiz, Drawing)
+ * - Games (Typing Battle, Drawing)
  * - Admin (People & Privileges, Teams & YouTube, Seasons, Grand Championship, Operations & Logs)
  * - Account (Profile, Settings)
  */
@@ -132,24 +131,6 @@ export const NAVIGATION_CONFIG = [
         description: 'Đấu trường thi đấu đánh máy tốc độ cao 1v1, 2v2, 3v3',
       },
       {
-        to: '/games/sam',
-        label: 'Đánh Sâm',
-        shortLabel: 'Đánh Sâm',
-        icon: Club,
-        badge: 'Mới',
-        tourTarget: 'nav-sam-game',
-        description: 'Trò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực',
-      },
-      {
-        to: '/games/quiz',
-        label: 'Đoán Hình & Đoán Nhạc',
-        shortLabel: 'Đoán Hình & Nhạc',
-        icon: Sparkles,
-        badge: 'Live',
-        tourTarget: 'nav-guess-quiz',
-        description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao',
-      },
-      {
         to: '/games/drawing',
         label: 'Góc Sáng Tạo (Game Vẽ)',
         shortLabel: 'Game Vẽ Tranh',
@@ -157,6 +138,14 @@ export const NAVIGATION_CONFIG = [
         badge: 'Mới',
         tourTarget: 'nav-drawing-game',
         description: 'Không gian vẽ tranh nghệ thuật & chia sẻ lên trang chủ WorkRank',
+      },
+      {
+        to: '/creative-corner',
+        label: 'Thư Viện Tranh',
+        shortLabel: 'Thư viện tranh',
+        icon: Images,
+        badge: 'Mới',
+        description: 'Bộ sưu tập tác phẩm của mọi người — thả tim, tải ảnh, xem chi tiết',
       },
     ],
   },
@@ -176,14 +165,6 @@ export const NAVIGATION_CONFIG = [
         adminOnly: true,
         badge: 'Mới',
         description: 'Cấu hình phòng ban, thiết lập chỉ tiêu KPI và quản lý kết quả thực hiện',
-      },
-      {
-        to: '/admin/quiz',
-        label: 'Quản Lý Quiz Game',
-        shortLabel: 'Quiz Game',
-        icon: Sparkles,
-        adminOnly: true,
-        description: 'Tạo câu hỏi, upload hình ảnh, quản lý bộ câu hỏi Đoán Hình & Đoán Nhạc',
       },
       {
         to: '/admin/privileges',
@@ -296,8 +277,6 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
   if (pathname.startsWith('/games/typing')) return 'WorkRank Typing Battle';
-  if (pathname.startsWith('/games/sam')) return 'Đánh Sâm';
-  if (pathname.startsWith('/games/quiz')) return 'Đoán Hình & Đoán Nhạc';
   if (pathname.startsWith('/admin/kpi')) return 'Quản Lý KPI & Phòng Ban';
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';

@@ -5,7 +5,7 @@ const gameCatalogService = require('../services/gameCatalog.service');
 /**
  * Middleware that blocks non-admin users if the requested game is COMING_SOON or disabled.
  *
- * @param {string} gameKey - 'quiz' | 'sam' | 'typing_battle'
+ * @param {string} gameKey - 'typing_battle' | 'drawing'
  */
 function requireGameAvailable(gameKey) {
   return async (req, res, next) => {

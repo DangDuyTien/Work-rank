@@ -1,5 +1,5 @@
 {
-  "started": "2026-10-19T07:58:32.759Z",
+  "started": "2026-10-19T09:13:34.533Z",
   "mockedRequests": 0,
   "checks": [
     {
@@ -74,13 +74,13 @@
       "evidence": [
         {
           "userId": 1,
-          "wpm": 55.8,
+          "wpm": 55.1,
           "accuracy": 50.7,
           "liveRank": null
         },
         {
           "userId": 2,
-          "wpm": 74.9,
+          "wpm": 73.9,
           "accuracy": 100,
           "liveRank": 1
         }
@@ -134,8 +134,8 @@
       "name": "Continuous typing cannot postpone the 30-second deadline",
       "status": "PASS",
       "evidence": {
-        "characters": 320,
-        "elapsedMs": 30104
+        "characters": 315,
+        "elapsedMs": 30120
       }
     },
     {
@@ -160,18 +160,18 @@
       "observedWpm": 60,
       "characters": 32,
       "dropped": 0,
-      "p95CommitMs": 2.5,
-      "maxCommitMs": 2.5999999940395355,
-      "p95TwoFramePaintMs": 25
+      "p95CommitMs": 3,
+      "maxCommitMs": 3.699999988079071,
+      "p95TwoFramePaintMs": 27.299999982118607
     },
     {
       "targetWpm": 100,
       "observedWpm": 100,
       "characters": 32,
       "dropped": 0,
-      "p95CommitMs": 2.2999999821186066,
-      "maxCommitMs": 2.399999976158142,
-      "p95TwoFramePaintMs": 27.099999994039536
+      "p95CommitMs": 2.5,
+      "maxCommitMs": 2.899999976158142,
+      "p95TwoFramePaintMs": 25.200000017881393
     },
     {
       "targetWpm": 150,
@@ -180,16 +180,16 @@
       "dropped": 0,
       "p95CommitMs": 2.300000011920929,
       "maxCommitMs": 2.4000000059604645,
-      "p95TwoFramePaintMs": 25.899999976158142
+      "p95TwoFramePaintMs": 27.599999994039536
     },
     {
       "targetWpm": 210,
       "observedWpm": 209,
       "characters": 32,
       "dropped": 0,
-      "p95CommitMs": 2.2999999821186066,
-      "maxCommitMs": 2.4000000059604645,
-      "p95TwoFramePaintMs": 24.80000001192093
+      "p95CommitMs": 2.4000000059604645,
+      "maxCommitMs": 2.5,
+      "p95TwoFramePaintMs": 25.799999982118607
     }
   ],
   "errors": [],
@@ -210,12 +210,12 @@
     "performanceScore": 82.8,
     "completionTimeMs": 120000,
     "invalidReason": null,
-    "attemptId": "5fd73004-0cee-40d6-b4cd-d62b00f13160",
+    "attemptId": "19af43d9-74e2-484a-b68f-05059b6c458f",
     "recorded": true,
     "awardedXp": 11,
     "reason": null,
     "message": "Máy chủ đã xác minh thành tích luyện tập và ghi nhận một lần."
   },
   "status": "PASS",
-  "finished": "2026-10-19T08:01:06.684Z"
+  "finished": "2026-10-19T09:16:09.194Z"
 }

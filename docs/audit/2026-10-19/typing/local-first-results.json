@@ -1,12 +1,12 @@
 {
-  "started": "2026-10-19T08:01:17.087Z",
+  "started": "2026-10-19T09:16:14.198Z",
   "checks": [
     {
       "name": "3000ms network latency does not slow the keystroke path",
       "ok": true,
-      "p50": 2,
-      "p95": 2.300000011920929,
-      "max": 121.59999999403954,
+      "p50": 1.9000000059604645,
+      "p95": 2.4000000059604645,
+      "max": 4.200000017881393,
       "samples": 40,
       "characters": 40
     },
@@ -18,9 +18,9 @@
     {
       "name": "offline typing continues with zero interruption",
       "ok": true,
-      "p50": 1.899999976158142,
+      "p50": 1.9000000059604645,
       "p95": 2.0999999940395355,
-      "max": 2.199999988079071,
+      "max": 2.0999999940395355,
       "samples": 25,
       "characters": 65
     },
@@ -32,12 +32,12 @@
     {
       "name": "final result is server-authoritative under 3000ms latency",
       "ok": true,
-      "wpm": 73,
+      "wpm": 72.7,
       "accuracy": 100,
       "revision": 65
     }
   ],
   "errors": [],
   "status": "PASS",
-  "finished": "2026-10-19T08:01:29.171Z"
+  "finished": "2026-10-19T09:16:26.221Z"
 }

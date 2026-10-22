@@ -9,6 +9,7 @@ const competitionRealtime = require('./services/competition/competitionRealtime.
 const { ensureYouTubeSchema } = require('./services/youtube/youtubeSchemaCheck');
 const { ensureTypingSchema } = require('./services/typingSchemaCheck');
 const { ensureDrawingSchema } = require('./services/drawingSchemaCheck');
+const { resolveStorageConfig } = require('./config/storage');
 const youtubeSyncWorker = require('./workers/youtubeSync.worker');
 const keepAliveWorker = require('./workers/keepAlive.worker');
 const competitionEngineWorker = require('./services/competition/competitionEngine.worker');
@@ -18,21 +19,42 @@ let serverInstance = null;
 let ioInstance = null;
 let isShuttingDown = false;
 
+/**
+ * Log trạng thái cấu hình lưu trữ ảnh khi khởi động.
+ * Không bao giờ log secret — chỉ tên biến còn thiếu.
+ *
+ * Production thiếu cấu hình: server vẫn chạy (để các module khác không sập) nhưng
+ * endpoint upload Drawing fail-closed với 503 — không fallback về local disk.
+ */
+function logStorageReadiness() {
+  const status = resolveStorageConfig();
+  if (status.ok) {
+    console.log(`[Storage] Drawing image storage ready (provider=${status.provider}).`);
+    return;
+  }
+  console.error(
+    '[Storage] CẤU HÌNH LƯU TRỮ ẢNH KHÔNG HỢP LỆ — upload Drawing sẽ bị từ chối (fail-closed).'
+  );
+  for (const message of status.errors) console.error(`[Storage]  - ${message}`);
+  if (status.missingEnv.length > 0) {
+    console.error(`[Storage]  Thiếu biến: ${status.missingEnv.join(', ')}`);
+  }
+}
+
 async function start() {
   await sequelize.authenticate();
+  logStorageReadiness();
   await ensureYouTubeSchema(sequelize);
   await ensureTypingSchema(sequelize);
   await ensureDrawingSchema(sequelize);
+  await require('./models').ArcadeRoom.sync();
+  await require('./models').ArcadePlayer.sync();
   const server = http.createServer(app);
   serverInstance = server;
   const io = new Server(server, socketOptions);
   ioInstance = io;
   app.set('io', io);
   competitionRealtime.setIo(io);
-  const quizRealtime = require('./services/quizRealtime.service');
-  quizRealtime.setIo(io);
-  const samRealtime = require('./services/samRealtime.service');
-  samRealtime.setIo(io);
   const typingRealtime = require('./services/typingRealtime.service');
   typingRealtime.setIo(io);
   youtubeSyncWorker.setIo(io);
@@ -64,6 +86,7 @@ async function start() {
 async function shutdown(signal) {
   if (isShuttingDown) return;
   isShuttingDown = true;
+  require('./services/arcade.service').stop();
   console.log(`[Server] Received ${signal}. Starting graceful shutdown...`);
 
   // 1. Stop background workers and await in-flight batches

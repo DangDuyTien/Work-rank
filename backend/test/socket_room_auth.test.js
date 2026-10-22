@@ -3,21 +3,16 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const {
+  sequelize,
   User,
-  SamRoom,
-  SamPlayer,
-  QuizRoom,
-  QuizPlayer,
-  GameRoom,
-  GamePlayer,
+  TypingRoom,
+  TypingPlayer,
 } = require('../src/models');
 const { canAccessGameRoom } = require('../src/services/gameRoomAuth.service');
 
-describe('Socket Game Room Authorization Test Suite', () => {
+describe('Socket Game Room Authorization Test Suite (Typing Battle)', () => {
   let adminUser, normalUser, otherUser;
-  let normalSamRoom, testSamRoom;
-  let quizRoom;
-  let capitalRoom;
+  let waitingRoom, playingRoom;
 
   before(async () => {
     const ts = Date.now();
@@ -44,75 +39,52 @@ describe('Socket Game Room Authorization Test Suite', () => {
 
     const suffix = Date.now().toString().slice(-8);
 
-    // Normal Sam Room
-    normalSamRoom = await SamRoom.create({
-      code: `SA_${suffix}`,
-      title: 'Phòng Sâm Thường',
+    waitingRoom = await TypingRoom.create({
+      code: `TY_${suffix}`,
+      title: 'Phòng Typing Chờ',
       hostUserId: normalUser.id,
       status: 'WAITING',
-      isTest: false,
+      mode: '1V1',
     });
-    await SamPlayer.create({
-      roomId: normalSamRoom.id,
+    await TypingPlayer.create({
+      roomId: waitingRoom.id,
       userId: normalUser.id,
       seatIndex: 0,
-      isHost: true,
+      isReady: false,
       status: 'WAITING',
-      handCards: [],
+      team: 'A',
     });
 
-    // Test Bot Sam Room
-    testSamRoom = await SamRoom.create({
-      code: `ST_${suffix}`,
-      title: 'Phòng Test Bot Sâm',
-      hostUserId: adminUser.id,
-      status: 'WAITING',
-      isTest: true,
-      roomType: 'BOT_TEST',
-    });
-
-    // Quiz Room
-    quizRoom = await QuizRoom.create({
-      code: `QZ_${suffix}`,
-      title: 'Phòng Quiz Auth',
+    playingRoom = await TypingRoom.create({
+      code: `TP_${suffix}`,
+      title: 'Phòng Typing Đang Đấu',
       hostUserId: normalUser.id,
-      status: 'WAITING',
+      status: 'PLAYING',
+      mode: '1V1',
     });
-    await QuizPlayer.create({
-      roomId: quizRoom.id,
-      userId: normalUser.id,
-      score: 0,
-    });
-
-    // Capital Board Room
-    capitalRoom = await GameRoom.create({
-      code: `CB_${suffix}`,
-      title: 'Phòng Capital Auth',
-      hostUserId: normalUser.id,
-      status: 'WAITING',
-    });
-    await GamePlayer.create({
-      roomId: capitalRoom.id,
+    await TypingPlayer.create({
+      roomId: playingRoom.id,
       userId: normalUser.id,
       seatIndex: 0,
+      isReady: true,
+      status: 'TYPING',
+      team: 'A',
     });
   });
 
   after(async () => {
-    await SamPlayer.destroy({ where: { roomId: [normalSamRoom.id, testSamRoom.id] } });
-    await SamRoom.destroy({ where: { id: [normalSamRoom.id, testSamRoom.id] } });
-    await QuizPlayer.destroy({ where: { roomId: quizRoom.id } });
-    await QuizRoom.destroy({ where: { id: quizRoom.id } });
-    await GamePlayer.destroy({ where: { roomId: capitalRoom.id } });
-    await GameRoom.destroy({ where: { id: capitalRoom.id } });
+    const roomIds = [waitingRoom?.id, playingRoom?.id].filter(Boolean);
+    await TypingPlayer.destroy({ where: { roomId: roomIds } });
+    await TypingRoom.destroy({ where: { id: roomIds } });
     await User.destroy({ where: { id: [adminUser.id, normalUser.id, otherUser.id] } });
+    await sequelize.close().catch(() => {});
   });
 
   it('1. Returns ROOM_NOT_FOUND when room does not exist', async () => {
     const res = await canAccessGameRoom({
       userId: normalUser.id,
       roomId: 999999999,
-      gameType: 'sam',
+      gameType: 'typing',
     });
     assert.equal(res.allowed, false);
     assert.equal(res.code, 'ROOM_NOT_FOUND');
@@ -123,8 +95,8 @@ describe('Socket Game Room Authorization Test Suite', () => {
     const res = await canAccessGameRoom({
       userId: normalUser.id,
       userRole: normalUser.role,
-      roomId: normalSamRoom.id,
-      gameType: 'sam',
+      roomId: waitingRoom.id,
+      gameType: 'typing',
     });
     assert.equal(res.allowed, true);
     assert.equal(res.isPlayer, true);
@@ -136,90 +108,47 @@ describe('Socket Game Room Authorization Test Suite', () => {
     const res = await canAccessGameRoom({
       userId: otherUser.id,
       userRole: otherUser.role,
-      roomId: normalSamRoom.id,
-      gameType: 'sam',
+      roomId: waitingRoom.id,
+      gameType: 'typing',
     });
     assert.equal(res.allowed, false);
     assert.equal(res.status, 403);
     assert.equal(res.code, 'FORBIDDEN');
   });
 
-  it('4. Grants spectator access to outside user ONLY when room is actively PLAYING', async () => {
-    // Set room to PLAYING
-    normalSamRoom.status = 'PLAYING';
-    await normalSamRoom.save();
-
+  it('4. Grants spectator access to outside user when room is actively PLAYING', async () => {
     const res = await canAccessGameRoom({
       userId: otherUser.id,
       userRole: otherUser.role,
-      roomId: normalSamRoom.id,
-      gameType: 'sam',
+      roomId: playingRoom.id,
+      gameType: 'typing',
     });
     assert.equal(res.allowed, true);
     assert.equal(res.isPlayer, false);
     assert.equal(res.isSpectator, true);
     assert.equal(res.role, 'spectator');
-
-    // Reset back
-    normalSamRoom.status = 'WAITING';
-    await normalSamRoom.save();
   });
 
-  it('5. Rejects non-admin user trying to access isTest bot room (FORBIDDEN 403)', async () => {
+  it('5. Allows an explicit spectator hint in a WAITING room (typing spectate route)', async () => {
     const res = await canAccessGameRoom({
-      userId: normalUser.id,
-      userRole: normalUser.role,
-      roomId: testSamRoom.id,
-      gameType: 'sam',
-    });
-    assert.equal(res.allowed, false);
-    assert.equal(res.code, 'FORBIDDEN');
-    assert.equal(res.status, 403);
-  });
-
-  it('6. Allows admin user to access isTest bot room', async () => {
-    const res = await canAccessGameRoom({
-      userId: adminUser.id,
-      userRole: adminUser.role,
-      roomId: testSamRoom.id,
-      gameType: 'sam',
+      userId: otherUser.id,
+      userRole: otherUser.role,
+      roomId: waitingRoom.id,
+      gameType: 'typing',
+      clientSpectatorHint: true,
     });
     assert.equal(res.allowed, true);
+    assert.equal(res.isSpectator, true);
   });
 
-  it('7. Supports Quiz Room authorization: Member allowed, non-member rejected in WAITING room', async () => {
-    const resMember = await canAccessGameRoom({
+  it('6. Rejects unknown game types instead of silently allowing access', async () => {
+    const res = await canAccessGameRoom({
       userId: normalUser.id,
-      roomId: quizRoom.id,
-      gameType: 'quiz',
+      roomId: waitingRoom.id,
+      gameType: 'retired_game',
     });
-    assert.equal(resMember.allowed, true);
-    assert.equal(resMember.isPlayer, true);
-
-    const resNonMember = await canAccessGameRoom({
-      userId: otherUser.id,
-      roomId: quizRoom.code,
-      gameType: 'quiz',
-    });
-    assert.equal(resNonMember.allowed, false);
-    assert.equal(resNonMember.status, 403);
-  });
-
-  it('8. Supports Capital Board Room authorization: Member allowed, non-member rejected in WAITING room', async () => {
-    const resMember = await canAccessGameRoom({
-      userId: normalUser.id,
-      roomId: capitalRoom.id,
-      gameType: 'capital_board',
-    });
-    assert.equal(resMember.allowed, true);
-    assert.equal(resMember.isPlayer, true);
-
-    const resNonMember = await canAccessGameRoom({
-      userId: otherUser.id,
-      roomId: capitalRoom.code,
-      gameType: 'capital_board',
-    });
-    assert.equal(resNonMember.allowed, false);
-    assert.equal(resNonMember.status, 403);
+    assert.equal(res.allowed, false);
+    assert.equal(res.code, 'INVALID_GAME_TYPE');
+    assert.equal(res.status, 400);
   });
 });

@@ -26,6 +26,28 @@ const Drawing = sequelize.define(
       allowNull: false,
       field: 'image_url',
     },
+    // Object key trong persistent storage (nguồn sự thật để delete/migrate).
+    // NULL = bản ghi legacy (ảnh cũ nằm ở /uploads hoặc data URI).
+    storageKey: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+      field: 'storage_key',
+    },
+    storageProvider: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+      field: 'storage_provider',
+    },
+    mimeType: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+      field: 'mime_type',
+    },
+    sizeBytes: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      field: 'size_bytes',
+    },
     width: {
       type: DataTypes.INTEGER,
       allowNull: true,

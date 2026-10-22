@@ -10,6 +10,8 @@ import {
   Medal,
   ChevronLeft,
   ChevronRight,
+  ImageOff,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { drawingApi } from '../services/api';
@@ -18,6 +20,7 @@ import { Reveal, Button, AnimatedModal, Skeleton } from './ui';
 import VerifiedBadge from './VerifiedBadge';
 import { displayScore, removeVietnameseDiacritics } from './PublicRecognition';
 import { initialsFromName, avatarHue } from '../utils/avatar';
+import { resolveAssetUrl } from '../utils/assetUrl';
 
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
@@ -76,7 +79,7 @@ function AuthorAvatar({ author, size = 38 }) {
   );
 }
 
-export default function CreativeCornerSection() {
+export default function CreativeCornerSection({ standalone = false, forceVisible = false }) {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
 
@@ -85,6 +88,13 @@ export default function CreativeCornerSection() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('top'); // 'top' | 'latest'
   const [homeVisible, setHomeVisible] = useState(true);
+  const [enablingHome, setEnablingHome] = useState(false);
+  // id tác phẩm có ảnh lỗi (file bị mất / URL hỏng) → hiển thị placeholder thay vì icon vỡ
+  const [failedImages, setFailedImages] = useState({});
+
+  const markImageFailed = useCallback((id) => {
+    setFailedImages((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  }, []);
 
   // Floating Heart Particle Animation State
   const [floatingHearts, setFloatingHearts] = useState([]);
@@ -126,7 +136,7 @@ export default function CreativeCornerSection() {
       setError(null);
       const res = await drawingApi.getGallery({
         page: 1,
-        limit: 12,
+        limit: standalone ? 24 : 12,
         filter,
         visibility: 'PUBLIC',
       });
@@ -142,7 +152,7 @@ export default function CreativeCornerSection() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, standalone]);
 
   useEffect(() => {
     fetchDrawings();
@@ -266,7 +276,7 @@ export default function CreativeCornerSection() {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!drawing || !drawing.imageUrl) return;
     const link = document.createElement('a');
-    link.href = drawing.imageUrl;
+    link.href = resolveAssetUrl(drawing.imageUrl);
     link.download = `${drawing.title || 'workrank-artwork'}.png`;
     link.target = '_blank';
     link.click();
@@ -315,12 +325,31 @@ export default function CreativeCornerSection() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxArtwork, handleLightboxPrev, handleLightboxNext]);
 
-  // If Admin has toggled Home Visibility to false, do not render section
-  if (!homeVisible) {
+  // Trang chủ: tôn trọng cấu hình ẩn của admin — nhưng không được để Thư Viện Tranh
+  // "mất tích" hoàn toàn: trang riêng /creative-corner luôn hiển thị, và admin vẫn
+  // thấy khu vực này kèm nút bật lại ngay tại chỗ.
+  const hiddenOnHome = !homeVisible;
+  if (hiddenOnHome && !forceVisible && !isAdmin) {
     return null;
   }
 
   const currentCount = drawings.length;
+
+  const handleEnableHome = async () => {
+    try {
+      setEnablingHome(true);
+      const res = await drawingApi.updateSettings({ homeVisible: true });
+      if (res && res.settings) {
+        setHomeVisible(res.settings.homeVisible !== false);
+      } else {
+        setHomeVisible(true);
+      }
+    } catch (err) {
+      console.error('Lỗi bật hiển thị Góc Sáng Tạo:', err);
+    } finally {
+      setEnablingHome(false);
+    }
+  };
 
   return (
     <Reveal
@@ -348,6 +377,30 @@ export default function CreativeCornerSection() {
               <Heart size={heart.size} fill="currentColor" stroke="none" />
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Admin notice: khu vực đang bị ẩn khỏi Trang chủ */}
+      {hiddenOnHome && !forceVisible && (
+        <div className="public-creative-hidden-notice" role="status">
+          <EyeOff size={16} aria-hidden="true" />
+          <span>
+            Góc Sáng Tạo đang bị <b>ẩn khỏi Trang chủ</b> — chỉ quản trị viên nhìn thấy. Tác phẩm
+            vẫn xem được đầy đủ tại trang Thư viện tranh.
+          </span>
+          <div className="public-creative-hidden-actions">
+            <Link to="/creative-corner" className="public-creative-hidden-link">
+              Mở Thư viện tranh <ArrowUpRight size={14} aria-hidden="true" />
+            </Link>
+            <button
+              type="button"
+              className="public-creative-hidden-btn"
+              onClick={handleEnableHome}
+              disabled={enablingHome}
+            >
+              {enablingHome ? 'Đang bật…' : 'Bật hiển thị lại'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -385,11 +438,19 @@ export default function CreativeCornerSection() {
           </button>
         </div>
 
-        <Link to="/games/drawing" className="public-editorial-link public-creative-studio-cta">
-          <Palette size={16} aria-hidden="true" />
-          <span>Vào phòng vẽ tranh</span>
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </Link>
+        <div className="public-creative-cta-group">
+          {!standalone && (
+            <Link to="/creative-corner" className="public-editorial-link public-creative-gallery-cta">
+              <span>Xem tất cả tác phẩm</span>
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          )}
+          <Link to="/games/drawing" className="public-editorial-link public-creative-studio-cta">
+            <Palette size={16} aria-hidden="true" />
+            <span>Vào phòng vẽ tranh</span>
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
 
       {/* 3. Main Artwork Content Area */}
@@ -522,12 +583,20 @@ export default function CreativeCornerSection() {
                   }}
                 >
                   <div className="public-artwork-canvas-backdrop">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="public-artwork-canvas-img"
-                      loading="lazy"
-                    />
+                    {failedImages[item.id] ? (
+                      <div className="public-artwork-img-fallback" role="img" aria-label="Ảnh tác phẩm không còn khả dụng">
+                        <ImageOff size={26} aria-hidden="true" />
+                        <span>Ảnh tác phẩm không còn khả dụng</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={resolveAssetUrl(item.imageUrl)}
+                        alt={item.title}
+                        className="public-artwork-canvas-img"
+                        loading="lazy"
+                        onError={() => markImageFailed(item.id)}
+                      />
+                    )}
                   </div>
                   <div className="public-artwork-media-overlay" aria-hidden="true">
                     <span className="public-artwork-media-hint">
@@ -606,11 +675,19 @@ export default function CreativeCornerSection() {
           <div className="public-artwork-modal-body">
             {/* Modal Image Exhibition Frame */}
             <div className="public-artwork-modal-frame">
-              <img
-                src={lightboxArtwork.imageUrl}
-                alt={lightboxArtwork.title}
-                className="public-artwork-modal-image"
-              />
+              {failedImages[lightboxArtwork.id] ? (
+                <div className="public-artwork-img-fallback is-large" role="img" aria-label="Ảnh tác phẩm không còn khả dụng">
+                  <ImageOff size={34} aria-hidden="true" />
+                  <span>Ảnh tác phẩm không còn khả dụng</span>
+                </div>
+              ) : (
+                <img
+                  src={resolveAssetUrl(lightboxArtwork.imageUrl)}
+                  alt={lightboxArtwork.title}
+                  className="public-artwork-modal-image"
+                  onError={() => markImageFailed(lightboxArtwork.id)}
+                />
+              )}
 
               {drawings.length > 1 && (
                 <>

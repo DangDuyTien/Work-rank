@@ -22,7 +22,11 @@ const routes = [
   { name: 'AdminSeasons', path: '../src/pages/AdminSeasons.jsx' },
   { name: 'AdminGrand', path: '../src/pages/AdminGrand.jsx' },
   { name: 'AdminOperations', path: '../src/pages/AdminOperations.jsx' },
-  { name: 'CapitalBoardGame', path: '../src/pages/CapitalBoardGame.jsx' },
+  { name: 'GameHub', path: '../src/pages/GameHub.jsx' },
+  { name: 'TypingBattle', path: '../src/pages/TypingBattle.jsx' },
+  { name: 'ArcadeGame', path: '../src/pages/ArcadeGame.jsx' },
+  { name: 'DrawingGame', path: '../src/pages/DrawingGame.jsx' },
+  { name: 'CreativeGallery', path: '../src/pages/CreativeGallery.jsx' },
   { name: 'Layout', path: '../src/components/Layout.jsx' },
   { name: 'Sidebar', path: '../src/components/Sidebar.jsx' },
   { name: 'VerifiedBadge', path: '../src/components/VerifiedBadge.jsx' },
@@ -30,7 +34,7 @@ const routes = [
 ];
 
 async function runRouteSmokeTests() {
-  console.log('🧪 [WorkRank Route Smoke Test] Checking all 20 core pages & layout components...\n');
+  console.log('🧪 [WorkRank Route Smoke Test] Checking all core pages & layout components...\n');
   let passed = 0;
   let failed = 0;
 

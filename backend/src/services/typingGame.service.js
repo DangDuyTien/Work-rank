@@ -19,6 +19,7 @@ const typingEngine = require('./typingEngine');
 const typingTransaction = require('./typingTransaction');
 const { measureInput, chars, METRIC_VERSION } = require('./typingMetrics');
 const typingRealtime = require('./typingRealtime.service');
+const presence = require('./presence.service');
 const { seedTypingChallenges } = require('../seeders/typingChallenges.seeder');
 const projector = require('./competition/competitionReadModel.projector');
 const effectEngine = require('./competition/effectEngine.service');
@@ -36,6 +37,10 @@ const startCountdownTimers = new Map();
 const matchDeadlineTimers = new Map();
 const liveMetricTimers = new Map();
 const matchFinalizationPromises = new Map();
+// Grace window before a disconnected player's WAITING/STARTING seat is released.
+// Short on purpose: refreshes/reconnects keep the seat, dead tabs release it.
+const typingSeatGraceTimers = new Map();
+const TYPING_SEAT_GRACE_MS = 5000;
 const TYPING_DRAFT_KEY = '_typingDraft';
 
 function getTypingDraft(player) {
@@ -160,7 +165,10 @@ function scheduleStartCountdown(roomId) {
 
 // ── STALE ROOMS CLEANUP & SELF-HEALING ──
 
+// Returns the ids of rooms that were closed so callers can broadcast removal
+// (never emit from inside a transaction; callers broadcast after commit).
 async function cleanupStaleTypingRooms(t = null) {
+  const closedRoomIds = [];
   try {
     const now = new Date();
     const staleCutoff = new Date(now.getTime() - 15 * 60 * 1000); // 15 min for playing
@@ -181,6 +189,7 @@ async function cleanupStaleTypingRooms(t = null) {
         { status: 'FINISHED' },
         { where: { roomId: sr.id, status: 'TYPING' }, transaction: t }
       );
+      closedRoomIds.push(Number(sr.id));
     }
 
     // Clean up empty WAITING rooms with 0 players
@@ -194,24 +203,30 @@ async function cleanupStaleTypingRooms(t = null) {
       if (!er.players || er.players.length === 0) {
         er.status = 'ABANDONED';
         await er.save({ transaction: t });
+        closedRoomIds.push(Number(er.id));
       }
     }
   } catch (err) {
     console.warn('[TypingService] cleanupStaleTypingRooms warning:', err.message);
   }
+  return closedRoomIds;
 }
 
 // ── LOBBY & ROOM MANAGEMENT ──
 
+// Only these statuses are ever exposed through the public lobby list.
+const LISTABLE_ROOM_STATUSES = ['WAITING', 'STARTING', 'PLAYING'];
+
 async function listRooms(filters = {}) {
   await ensureChallengesExist();
-  await cleanupStaleTypingRooms().catch(() => {});
+  const closedRoomIds = await cleanupStaleTypingRooms().catch(() => []);
+  for (const closedRoomId of closedRoomIds) typingRealtime.broadcastRoomRemoved(closedRoomId);
   const where = {};
 
-  if (filters.status) {
+  if (filters.status && LISTABLE_ROOM_STATUSES.includes(filters.status)) {
     where.status = filters.status;
   } else {
-    where.status = { [Op.in]: ['WAITING', 'STARTING', 'PLAYING'] };
+    where.status = { [Op.in]: LISTABLE_ROOM_STATUSES };
   }
 
   if (filters.mode) {
@@ -236,10 +251,9 @@ async function listRooms(filters = {}) {
     limit: filters.limit ? Number(filters.limit) : 30,
   });
 
-  const activeRooms = rooms.filter((r) => {
-    if (r.status === 'WAITING' && (!r.players || r.players.length === 0)) return false;
-    return true;
-  });
+  // Zero-player rooms are never legitimate: an empty WAITING room is a ghost,
+  // and an empty PLAYING room is a match that was abandoned mid-flight.
+  const activeRooms = rooms.filter((r) => (r.players || []).length > 0);
 
   return activeRooms.map((r) => {
     const data = r.toJSON();
@@ -342,8 +356,8 @@ async function createRoom(data, requestingUser) {
   }
 
   const code = generateRoomCode();
-  const result = await typingTransaction(async (t) => {
-    await cleanupStaleTypingRooms(t);
+  const { room: result, closedRoomIds } = await typingTransaction(async (t) => {
+    const closedIds = await cleanupStaleTypingRooms(t);
 
     // Clean up any old WAITING seat for this user and mark orphaned rooms abandoned
     const oldWaiting = await TypingPlayer.findAll({
@@ -356,7 +370,8 @@ async function createRoom(data, requestingUser) {
       await ow.destroy({ transaction: t });
       const remaining = await TypingPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
       if (remaining === 0) {
-        await TypingRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+        await TypingRoom.update({ status: 'ABANDONED', finishedAt: new Date() }, { where: { id: oldRoomId }, transaction: t });
+        closedIds.push(Number(oldRoomId));
       }
     }
 
@@ -397,9 +412,10 @@ async function createRoom(data, requestingUser) {
       { transaction: t }
     );
 
-    return room;
+    return { room, closedRoomIds: closedIds };
   });
 
+  for (const closedRoomId of closedRoomIds) typingRealtime.broadcastRoomRemoved(closedRoomId);
   typingRealtime.emitToRoom(result.id, 'typing:roomListChanged', { roomId: result.id });
   return getRoomDetail(result.id, actualUserId);
 }
@@ -447,6 +463,7 @@ async function joinRoom(roomId, userId) {
     throw new ValidationError('Thiếu roomId hoặc userId');
   }
 
+  const closedRoomIds = [];
   const joinResult = await typingTransaction(async (t) => {
     // 1. Clean up any stale waiting seats the user might have in other rooms
     const oldWaiting = await TypingPlayer.findAll({
@@ -459,7 +476,8 @@ async function joinRoom(roomId, userId) {
       await ow.destroy({ transaction: t });
       const remaining = await TypingPlayer.count({ where: { roomId: oldRoomId }, transaction: t });
       if (remaining === 0) {
-        await TypingRoom.update({ status: 'ABANDONED' }, { where: { id: oldRoomId }, transaction: t });
+        await TypingRoom.update({ status: 'ABANDONED', finishedAt: new Date() }, { where: { id: oldRoomId }, transaction: t });
+        closedRoomIds.push(Number(oldRoomId));
       }
     }
 
@@ -525,6 +543,8 @@ async function joinRoom(roomId, userId) {
     return { roomId: room.id, userId, isNewJoin: true };
   });
 
+  cancelDisconnectedSeatCleanup(joinResult.roomId, joinResult.userId);
+  for (const closedRoomId of closedRoomIds) typingRealtime.broadcastRoomRemoved(closedRoomId);
   const detail = await getRoomDetail(joinResult.roomId, joinResult.userId);
   if (joinResult.isNewJoin) {
     typingRealtime.emitToRoom(joinResult.roomId, 'typing:playerJoined', {
@@ -573,64 +593,162 @@ async function switchTeam(roomId, userId, targetTeam) {
   return detail;
 }
 
+// Transactional + idempotent: concurrent/duplicate leaves resolve to the same
+// final state (seat removed once, room closed once, broadcasts once).
 async function leaveRoom(roomId, userId) {
-  const room = await TypingRoom.findByPk(roomId, {
-    include: [{ model: TypingPlayer, as: 'players' }],
+  const numericRoomId = Number(roomId);
+  const numericUserId = Number(userId);
+
+  const outcome = await typingTransaction(async (t) => {
+    const room = await TypingRoom.findByPk(numericRoomId, { transaction: t, lock: t.LOCK.UPDATE });
+    if (!room) return null;
+
+    const player = await TypingPlayer.findOne({
+      where: { roomId: room.id, userId: numericUserId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+    if (!player) return null;
+
+    if (room.status === 'WAITING' || room.status === 'STARTING') {
+      const wasStarting = room.status === 'STARTING';
+      if (wasStarting) {
+        room.status = 'WAITING';
+        room.startAt = null;
+      }
+
+      await player.destroy({ transaction: t });
+
+      const remainingPlayers = await TypingPlayer.findAll({ where: { roomId: room.id }, transaction: t });
+      let abandoned = false;
+      if (remainingPlayers.length === 0) {
+        room.status = 'ABANDONED';
+        room.finishedAt = new Date();
+        abandoned = true;
+      } else if (Number(room.hostUserId) === numericUserId) {
+        room.hostUserId = remainingPlayers[0].userId;
+      }
+      await room.save({ transaction: t });
+      return { kind: 'waiting', wasStarting, abandoned };
+    }
+
+    if (room.status === 'PLAYING') {
+      if (player.status !== 'SURRENDERED') {
+        player.status = 'SURRENDERED';
+        await player.save({ transaction: t });
+      }
+      const activeRemaining = await TypingPlayer.count({ where: { roomId: room.id, status: 'TYPING' }, transaction: t });
+      return { kind: 'playing', finalize: activeRemaining === 0 };
+    }
+
+    // FINISHED/ABANDONED rooms have no live seats to release.
+    return null;
   });
 
-  if (!room) return { success: true };
+  if (!outcome) return { success: true };
 
-  const player = room.players.find((p) => p.userId && Number(p.userId) === Number(userId));
-  if (!player) return { success: true };
-
-  if (room.status === 'WAITING' || room.status === 'STARTING') {
-    if (room.status === 'STARTING') {
-      clearStartCountdown(room.id);
-      room.status = 'WAITING';
-      room.startAt = null;
-      await room.save();
-      typingRealtime.emitToRoom(room.id, 'typing:startingCancelled', {
-        roomId: room.id,
+  if (outcome.kind === 'waiting') {
+    if (outcome.wasStarting) {
+      clearStartCountdown(numericRoomId);
+      typingRealtime.emitToRoom(numericRoomId, 'typing:startingCancelled', {
+        roomId: numericRoomId,
         reason: 'PLAYER_LEFT',
-        userId,
+        userId: numericUserId,
       });
     }
-
-    await player.destroy();
-
-    const remainingPlayers = await TypingPlayer.findAll({ where: { roomId: room.id } });
-    if (remainingPlayers.length === 0) {
-      room.status = 'ABANDONED';
-      await room.save();
-    } else if (Number(room.hostUserId) === Number(userId)) {
-      room.hostUserId = remainingPlayers[0].userId;
-      await room.save();
-    }
-
-    const detail = await getRoomDetail(room.id, userId).catch(() => null);
-    typingRealtime.emitToRoom(room.id, 'typing:playerLeft', {
-      roomId: room.id,
-      userId,
+    const detail = await getRoomDetail(numericRoomId, numericUserId).catch(() => null);
+    typingRealtime.emitToRoom(numericRoomId, 'typing:playerLeft', {
+      roomId: numericRoomId,
+      userId: numericUserId,
       players: detail ? detail.players : [],
     });
-    typingRealtime.emitToRoom(room.id, 'typing:roomUpdated', { room: detail ? detail.room : null });
+    typingRealtime.emitToRoom(numericRoomId, 'typing:roomUpdated', { room: detail ? detail.room : null });
+    if (outcome.abandoned) {
+      typingRealtime.broadcastRoomRemoved(numericRoomId);
+      hardClearRoomActivity(numericRoomId);
+    }
     return { success: true };
   }
 
-  // If match in PLAYING -> mark player SURRENDERED
-  player.status = 'SURRENDERED';
-  await player.save();
+  // PLAYING: surrender-only; finalize normalizes the room and broadcasts.
+  if (outcome.finalize) {
+    await finalizeMatch(numericRoomId);
+  }
+  return { success: true };
+}
 
-  // Check if all remaining players finished/surrendered
-  const activeRemaining = await TypingPlayer.findAll({
-    where: { roomId: room.id, status: 'TYPING' },
+// Channel-leave path (route change/unmount): only releases WAITING/STARTING
+// seats. An active match keeps its membership so refresh/reconnect can recover.
+async function leaveWaitingSeat(roomId, userId) {
+  const numericRoomId = Number(roomId);
+  const numericUserId = Number(userId);
+  if (!Number.isFinite(numericRoomId) || !Number.isFinite(numericUserId)) return false;
+  const room = await TypingRoom.findByPk(numericRoomId, { attributes: ['id', 'status'] });
+  if (!room || !['WAITING', 'STARTING'].includes(room.status)) return false;
+  const player = await TypingPlayer.findOne({ where: { roomId: room.id, userId: numericUserId }, attributes: ['id'] });
+  if (!player) return false;
+  await leaveRoom(room.id, numericUserId);
+  return true;
+}
+
+// Drop any in-memory timers/spectators for a room that no longer exists.
+function hardClearRoomActivity(roomId) {
+  const numId = Number(roomId);
+  clearStartCountdown(numId);
+  if (liveMetricTimers.has(numId)) {
+    clearInterval(liveMetricTimers.get(numId));
+    liveMetricTimers.delete(numId);
+  }
+  if (matchDeadlineTimers.has(numId)) {
+    clearTimeout(matchDeadlineTimers.get(numId));
+    matchDeadlineTimers.delete(numId);
+  }
+  typingRealtime.clearProgressThrottle(numId);
+}
+
+// Socket disconnect: hold a WAITING/STARTING seat for a short grace window so a
+// refresh/reconnect can reclaim it; release it if the user stays offline.
+async function scheduleDisconnectedSeatCleanup(userId) {
+  const numericUserId = Number(userId);
+  if (!Number.isFinite(numericUserId)) return;
+  const seats = await TypingPlayer.findAll({
+    where: { userId: numericUserId },
+    include: [{
+      model: TypingRoom,
+      as: 'room',
+      attributes: ['id', 'status'],
+      where: { status: { [Op.in]: ['WAITING', 'STARTING'] } },
+      required: true,
+    }],
   });
 
-  if (activeRemaining.length === 0) {
-    await finalizeMatch(room.id);
+  for (const seat of seats) {
+    const key = `${Number(seat.roomId)}:${numericUserId}`;
+    const existing = typingSeatGraceTimers.get(key);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(async () => {
+      typingSeatGraceTimers.delete(key);
+      // Disconnects can arrive out of order (navigation + tab close); liveness
+      // is re-checked at expiry so a user with any live socket keeps the seat.
+      if (presence.socketCount(numericUserId) > 0) return;
+      try {
+        await leaveWaitingSeat(seat.roomId, numericUserId);
+      } catch (err) {
+        console.warn('[TypingService] disconnected seat cleanup warning:', err.message);
+      }
+    }, TYPING_SEAT_GRACE_MS);
+    timer.unref?.();
+    typingSeatGraceTimers.set(key, timer);
   }
+}
 
-  return { success: true };
+function cancelDisconnectedSeatCleanup(roomId, userId) {
+  const key = `${Number(roomId)}:${Number(userId)}`;
+  const timer = typingSeatGraceTimers.get(key);
+  if (timer) {
+    clearTimeout(timer);
+    typingSeatGraceTimers.delete(key);
+  }
 }
 
 async function toggleReady(roomId, userId, isReady) {
@@ -770,6 +888,8 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
     startedAt: room.startedAt,
     durationLimitSeconds: room.durationLimitSeconds,
   });
+  // WAITING -> PLAYING moves the room between public lists for every lobby.
+  typingRealtime.emitToRoom(room.id, 'typing:roomListChanged', { roomId: room.id });
 
   // Schedule auto-finish if match duration limit is reached
   if (liveMetricTimers.has(room.id)) clearInterval(liveMetricTimers.get(room.id));
@@ -1350,6 +1470,8 @@ async function finalizeMatchOnce(roomId) {
     results: playerResultList,
     room: detail ? detail.room : null,
   });
+  // FINISHED rooms leave every public list; lobbies should drop the live card now.
+  typingRealtime.broadcastRoomRemoved(room.id);
 
   return detail;
 }
@@ -1535,7 +1657,8 @@ async function submitPracticeResult(data, requestingUser) {
 
 async function getActiveRoom(userId) {
   if (!userId) return null;
-  await cleanupStaleTypingRooms().catch(() => {});
+  const closedRoomIds = await cleanupStaleTypingRooms().catch(() => []);
+  for (const closedRoomId of closedRoomIds) typingRealtime.broadcastRoomRemoved(closedRoomId);
   const activePlayer = await TypingPlayer.findOne({
     where: {
       userId: Number(userId),
@@ -1566,6 +1689,9 @@ module.exports = {
   joinRoom,
   switchTeam,
   leaveRoom,
+  leaveWaitingSeat,
+  scheduleDisconnectedSeatCleanup,
+  cancelDisconnectedSeatCleanup,
   toggleReady,
   startMatch,
   resetRoom,

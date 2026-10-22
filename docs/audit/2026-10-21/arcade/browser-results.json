@@ -1,0 +1,187 @@
+{
+  "checks": [
+    {
+      "name": "computer_rush SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          808
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          810
+        ],
+        [
+          2,
+          2,
+          632
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          810
+        ],
+        [
+          2,
+          2,
+          632
+        ],
+        [
+          3,
+          3,
+          462
+        ]
+      ]
+    },
+    {
+      "name": "computer_rush TRIO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          9656
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          9964
+        ],
+        [
+          2,
+          2,
+          7435
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          9655
+        ],
+        [
+          2,
+          2,
+          7446
+        ],
+        [
+          3,
+          3,
+          5287
+        ]
+      ]
+    },
+    {
+      "name": "direction_rush TRIO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash SOLO: real 1-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          1,
+          843
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash SOLO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash DUO: real 2-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          2,
+          842
+        ],
+        [
+          2,
+          1,
+          842
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash DUO: leaderboard and personal best",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash TRIO: real 3-context input, common seed/clock, identical final ranks",
+      "status": "PASS",
+      "evidence": [
+        [
+          1,
+          2,
+          841
+        ],
+        [
+          2,
+          3,
+          841
+        ],
+        [
+          3,
+          1,
+          844
+        ]
+      ]
+    },
+    {
+      "name": "memory_flash TRIO: leaderboard and personal best",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "startedAt": "2026-10-21T14:36:31.943Z",
+  "finishedAt": "2026-10-21T14:39:45.505Z"
+}

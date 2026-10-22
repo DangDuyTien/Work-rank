@@ -2,18 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Gamepad2,
-  Sparkles,
-  Club,
   Keyboard,
   Palette,
   Play,
   Clock,
-  Shield,
   Settings,
-  RefreshCw,
-  ArrowRight,
-  ExternalLink,
 } from 'lucide-react';
+import { ARCADE_GAMES } from '../games/arcade/catalog';
+import { ArcadePoster } from '../components/arcade/ArcadeArt';
+import '../components/arcade/arcade.css';
 import { gameCatalogApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../components/ui';
@@ -21,12 +18,11 @@ import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../c
 const GAME_ICONS = {
   typing_battle: Keyboard,
   typing: Keyboard,
-  quiz: Sparkles,
-  sam: Club,
   drawing: Palette,
 };
 
 const DEFAULT_GAMES = [
+  ...Object.entries(ARCADE_GAMES).map(([gameKey, game]) => ({ gameKey, name: game.name, status: 'AVAILABLE', description: game.subtitle, route: `/games/arcade/${gameKey}` })),
   {
     gameKey: 'typing_battle',
     name: 'WorkRank Typing Battle',
@@ -42,22 +38,6 @@ const DEFAULT_GAMES = [
     description: 'Không gian sáng tạo vẽ tranh nghệ thuật trên canvas siêu lớn & chia sẻ lên trang chủ WorkRank.',
     icon: 'Palette',
     route: '/games/drawing',
-  },
-  {
-    gameKey: 'sam',
-    name: 'Đánh Sâm',
-    status: 'AVAILABLE',
-    description: 'Trò chơi bài dân gian Đánh Sâm 2–4 người thời gian thực kịch tính.',
-    icon: 'Club',
-    route: '/games/sam',
-  },
-  {
-    gameKey: 'quiz',
-    name: 'Đoán Hình & Đoán Nhạc',
-    status: 'AVAILABLE',
-    description: 'Mini game đoán hình ảnh & đoán bài hát tốc độ cao nhiều người chơi.',
-    icon: 'Sparkles',
-    route: '/games/quiz',
   },
 ];
 
@@ -81,20 +61,6 @@ export default function GameHub() {
             ...serverGame,
             route: serverGame.route || def.route || `/games/${def.gameKey}`,
           };
-        });
-
-        res.games.forEach((g) => {
-          const key = g.gameKey || g.game_key;
-          if (key && !DEFAULT_GAMES.some((d) => d.gameKey === key)) {
-            merged.push({
-              gameKey: key,
-              name: g.name,
-              status: g.status || 'AVAILABLE',
-              description: g.description || '',
-              route: g.route || `/games/${key}`,
-              enabled: g.enabled !== false,
-            });
-          }
         });
 
         setGames(merged);
@@ -127,7 +93,7 @@ export default function GameHub() {
       <PageHeader
         kicker="Trung Tâm Giải Trí & Đấu Trí"
         title="Danh Mục Trò Chơi WorkRank"
-        description="Khám phá các trò chơi tương tác bàn cờ kinh doanh, ghép số trí tuệ và đấu bài dân gian thời gian thực."
+        description="Khám phá các trò chơi tương tác của WorkRank: đấu trường đánh máy tốc độ cao và không gian sáng tạo hội hoạ."
         actions={
           isAdmin && (
             <Button
@@ -191,7 +157,7 @@ export default function GameHub() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 20,
             }}
           >
@@ -213,6 +179,7 @@ export default function GameHub() {
                   className="hover:border-slate-400 hover:shadow-sm"
                 >
                   <div>
+                    {ARCADE_GAMES[game.gameKey] && <div style={{ marginBottom: 20 }}><ArcadePoster gameType={game.gameKey} /></div>}
                     <div
                       style={{
                         display: 'flex',
@@ -269,7 +236,7 @@ export default function GameHub() {
                         minHeight: 40,
                       }}
                     >
-                      {game.description}
+                      {game.description}{ARCADE_GAMES[game.gameKey] && <span style={{ display: 'block', marginTop: 8, fontSize: 10, letterSpacing: '0.1em', fontWeight: 700 }}>SOLO · DUO · TRIO</span>}
                     </p>
                   </div>
 
@@ -353,7 +320,7 @@ export default function GameHub() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 20,
             }}
           >

@@ -11,6 +11,9 @@ const router = express.Router();
 router.get('/settings', optionalAuth, asyncHandler(drawingController.getSettings));
 router.patch('/settings', auth, requireRole('admin'), asyncHandler(drawingController.updateSettings));
 
+// Storage diagnostics (admin) — chỉ trả tên biến env còn thiếu, không trả secret
+router.get('/storage/status', auth, requireRole('admin'), asyncHandler(drawingController.getStorageStatus));
+
 // Gallery & Detail
 router.get('/', optionalAuth, asyncHandler(drawingController.getGallery));
 router.get('/user/:userId', optionalAuth, asyncHandler(drawingController.getUserDrawings));

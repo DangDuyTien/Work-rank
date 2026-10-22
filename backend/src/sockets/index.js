@@ -3,7 +3,6 @@ const env = require('../config/env');
 const { User } = require('../models');
 const chatService = require('../services/chat.service');
 const presence = require('../services/presence.service');
-const samRealtime = require('../services/samRealtime.service');
 const typingRealtime = require('../services/typingRealtime.service');
 const { canAccessGameRoom } = require('../services/gameRoomAuth.service');
 
@@ -33,8 +32,8 @@ function chatUserPayload(user) {
 }
 
 function registerSockets(io) {
-  samRealtime.setIo(io);
   typingRealtime.setIo(io);
+  require('../services/arcade.service').start(io);
 
   io.use(async (socket, next) => {
     try {
@@ -122,107 +121,6 @@ function registerSockets(io) {
       }
     });
 
-    // ── Quiz Game Socket Rooms ──
-    socket.on('quiz:joinRoom', async (payload = {}, ack) => {
-      try {
-        const auth = await canAccessGameRoom({
-          userId: socket.user.id,
-          userRole: socket.user.role,
-          roomId: payload.roomId,
-          gameType: 'quiz',
-          clientSpectatorHint: !!payload.isSpectator,
-        });
-
-        if (!auth.allowed) {
-          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
-          socket.emit('error', { message: auth.error, code: auth.code });
-          return;
-        }
-
-        socket.join(`quiz:${auth.roomId}`);
-        if (typeof ack === 'function') {
-          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
-        }
-      } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
-      }
-    });
-
-    socket.on('quiz:leaveRoom', async (payload = {}) => {
-      let roomId = Number(payload.roomId);
-      if ((Number.isNaN(roomId) || !roomId) && payload.roomId) {
-        try {
-          const { QuizRoom } = require('../models');
-          const cleanCode = String(payload.roomId).trim().toUpperCase().replace(/^#/, '');
-          const room = await QuizRoom.findOne({ where: { code: cleanCode } });
-          if (room) roomId = room.id;
-        } catch {}
-      }
-      if (roomId) {
-        socket.leave(`quiz:${roomId}`);
-      }
-    });
-
-    // ── Sam Lốc Game Socket Rooms ──
-    socket.on('sam:joinRoom', async (payload = {}, ack) => {
-      try {
-        const auth = await canAccessGameRoom({
-          userId: socket.user.id,
-          userRole: socket.user.role,
-          roomId: payload.roomId,
-          gameType: 'sam',
-          clientSpectatorHint: !!payload.isSpectator,
-        });
-
-        if (!auth.allowed) {
-          if (typeof ack === 'function') ack({ ok: false, error: auth.error, code: auth.code });
-          socket.emit('error', { message: auth.error, code: auth.code });
-          return;
-        }
-
-        socket.join(`sam:${auth.roomId}`);
-        if (auth.isSpectator) {
-          samRealtime.addSpectator(auth.roomId, socket.id);
-        }
-        if (typeof ack === 'function') {
-          ack({ ok: true, roomId: auth.roomId, isSpectator: auth.isSpectator, role: auth.role });
-        }
-
-        // Push an authoritative snapshot to the joining socket. This lets a late
-        // joiner (socket connected after join/start broadcasts) converge instead
-        // of being stuck on stale UI.
-        try {
-          const samGameService = require('../services/samGame.service');
-          const detail = await samGameService.getRoomDetail(auth.roomId, socket.user.id, socket.user.role);
-          socket.emit('sam:roomState', detail);
-        } catch {
-          // Snapshot is best-effort; the HTTP room detail endpoint remains the fallback.
-        }
-      } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
-      }
-    });
-
-    socket.on('sam:leaveRoom', (payload = {}) => {
-      const roomId = Number(payload.roomId);
-      if (roomId) {
-        socket.leave(`sam:${roomId}`);
-        samRealtime.removeSpectator(roomId, socket.id);
-      }
-    });
-
-    socket.on('sam:toggleReady', async (payload = {}, ack) => {
-      try {
-        const samGameService = require('../services/samGame.service');
-        const roomId = Number(payload.roomId);
-        const isReady = Boolean(payload.isReady);
-        const result = await samGameService.toggleReady(roomId, socket.user.id, isReady);
-        if (typeof ack === 'function') ack({ ok: true, data: result });
-      } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
-      }
-    });
-
     // ── Typing Competition Socket Rooms & Actions ──
     socket.on('typing:joinRoom', async (payload = {}, ack) => {
       try {
@@ -241,6 +139,8 @@ function registerSockets(io) {
         }
 
         socket.join(`typing:${auth.roomId}`);
+        // Reconnect reclaims any pending disconnected-seat release.
+        require('../services/typingGame.service').cancelDisconnectedSeatCleanup(auth.roomId, socket.user.id);
         if (auth.isSpectator) {
           typingRealtime.addSpectator(auth.roomId, socket.id, socket.user);
         }
@@ -280,6 +180,10 @@ function registerSockets(io) {
       if (roomId) {
         socket.leave(`typing:${roomId}`);
         typingRealtime.removeSpectator(roomId, socket.id);
+        // Route change/unmount releases a WAITING/STARTING seat so a room cannot
+        // keep a ghost player. PLAYING membership is preserved for recovery.
+        require('../services/typingGame.service').cancelDisconnectedSeatCleanup(roomId, socket.user.id);
+        require('../services/typingGame.service').leaveWaitingSeat(roomId, socket.user.id).catch(() => {});
       }
     });
 
@@ -353,13 +257,15 @@ function registerSockets(io) {
 
 
     socket.on('disconnect', () => {
-      samRealtime.removeSpectatorFromAll(socket.id);
       typingRealtime.removeSpectatorFromAll(socket.id);
       if (socket.user) {
-        const state = presence.removeSocket(socket.user, socket.id, (offlineUser) => {
+        presence.removeSocket(socket.user, socket.id, (offlineUser) => {
           emitPresence(io, offlineUser, 'offline');
         });
-        if (state && state.sockets && state.sockets.size > 0) return;
+        // Re-arm the WAITING/STARTING seat grace window on every disconnect.
+        // The timer re-checks liveness at expiry, so out-of-order disconnects
+        // (page navigation, then tab close) can never leak a ghost seat.
+        require('../services/typingGame.service').scheduleDisconnectedSeatCleanup(socket.user.id).catch(() => {});
       }
     });
   });

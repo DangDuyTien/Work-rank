@@ -694,6 +694,7 @@ export default function TypingBattle() {
   const [spectators, setSpectators] = useState([]);
   const [showSpectatorsModal, setShowSpectatorsModal] = useState(false);
   const [liveMatches, setLiveMatches] = useState([]);
+  const [leavingRoom, setLeavingRoom] = useState(false);
   const [spectatorViewTab, setSpectatorViewTab] = useState('both'); // 'both' | 'p1' | 'p2'
 
   // Navigation Tabs: 'practice' (Instant Trainer) | 'arena' (Online PvP) | 'leaderboard'
@@ -1171,8 +1172,23 @@ export default function TypingBattle() {
         );
       }
     };
+    const handleSocketReconnect = () => {
+      joinRoomChannel();
+      // Rooms may have started/finished while the socket was down.
+      if (!urlRoomId) fetchHubData();
+    };
+
+    // Server-authoritative "this room is gone from every public list".
+    const handleRoomRemoved = (data) => {
+      const removedId = Number(data?.roomId);
+      if (!removedId) return;
+      setRoomList((prev) => prev.filter((r) => Number(r.id) !== removedId));
+      setLiveMatches((prev) => prev.filter((m) => Number(m.id) !== removedId));
+    };
+
     joinRoomChannel();
-    socket.on('connect', joinRoomChannel);
+    socket.on('connect', handleSocketReconnect);
+    socket.on('typing:roomRemoved', handleRoomRemoved);
 
     // Authoritative snapshot pushed by the server right after the socket joins.
     // Covers late join / reconnect where the original broadcasts were missed.
@@ -1411,7 +1427,8 @@ export default function TypingBattle() {
     socket.on('typing:roomListChanged', handleRoomListChanged);
 
     return () => {
-      socket.off('connect', joinRoomChannel);
+      socket.off('connect', handleSocketReconnect);
+      socket.off('typing:roomRemoved', handleRoomRemoved);
       if (room?.id) {
         socket.emit('typing:leaveRoom', { roomId: Number(room.id) });
       }
@@ -1804,10 +1821,12 @@ export default function TypingBattle() {
   };
 
   const handleLeaveRoom = async () => {
+    if (leavingRoom) return;
     if (!room?.id) {
       navigate('/games/typing');
       return;
     }
+    setLeavingRoom(true);
     try {
       if (socket) {
         socket.emit('typing:leaveRoom', { roomId: room.id });
@@ -1815,6 +1834,9 @@ export default function TypingBattle() {
       await typingGameApi.leaveRoom(room.id).catch(() => {});
     } finally {
       setRoom(null);
+      setPlayers([]);
+      setRoomError(null);
+      setLeavingRoom(false);
       navigate('/games/typing');
     }
   };
@@ -1829,6 +1851,12 @@ export default function TypingBattle() {
 
   // ── 8. ELEGANT 2-LINE TYPING ARENA (SMOOTH 2-LINE ROLLING WINDOW) ──
   const renderedText = <TypingPassage challenge={challengeText} typedText={typedText} inputChars={inputChars} focused={isInputFocused} finished={isFinished} onFocusInput={() => inputRef.current?.focus()} />;
+
+  // Server is the authority on player counts; the lobby never renders a card for
+  // a room with zero seats (defensive against stale snapshots while it refetches).
+  const playerCountOf = (r) => r.playerCount ?? r.players?.length ?? 0;
+  const visibleRoomList = roomList.filter((r) => playerCountOf(r) > 0);
+  const visibleLiveMatches = liveMatches.filter((m) => playerCountOf(m) > 0);
 
   // Coming Soon Screen Guard
   if (isComingSoon) {
@@ -2308,7 +2336,7 @@ export default function TypingBattle() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Button variant="secondary" onClick={handleLeaveRoom} style={{ padding: '6px 10px', fontSize: 12 }}>
+            <Button variant="secondary" onClick={handleLeaveRoom} disabled={leavingRoom} style={{ padding: '6px 10px', fontSize: 12 }}>
               <ArrowLeft size={14} /> {isSpectator ? 'Rời phòng xem' : 'Rời phòng'}
             </Button>
             <div>
@@ -2513,7 +2541,7 @@ export default function TypingBattle() {
                     {mePlayer.isReady ? 'Hủy Sẵn Sàng' : 'Sẵn Sàng'}
                   </Button>
                 ) : (
-                  <Button variant="secondary" onClick={handleLeaveRoom}>Về sảnh thi đấu</Button>
+                  <Button variant="secondary" onClick={handleLeaveRoom} disabled={leavingRoom}>Về sảnh thi đấu</Button>
                 )}
 
                 {isHost && (
@@ -3479,7 +3507,7 @@ export default function TypingBattle() {
                     <Eye size={14} /> Danh Sách Khán Giả ({spectatorCount})
                   </Button>
                 )}
-                <Button variant="secondary" onClick={handleLeaveRoom} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Button variant="secondary" onClick={handleLeaveRoom} disabled={leavingRoom} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <LogOut size={14} /> Quay lại Sảnh Đấu
                 </Button>
                 <Button variant="secondary" onClick={() => navigate('/leaderboard')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -4107,7 +4135,7 @@ export default function TypingBattle() {
                     🔴 TRỰC TIẾP
                   </span>
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
-                    Trận Đấu Đang Diễn Ra ({liveMatches.length})
+                    Trận Đấu Đang Diễn Ra ({visibleLiveMatches.length})
                   </h3>
                 </div>
                 <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
@@ -4115,7 +4143,7 @@ export default function TypingBattle() {
                 </span>
               </div>
 
-              {liveMatches.length === 0 ? (
+              {visibleLiveMatches.length === 0 ? (
                 <Card style={{ padding: 16, background: 'var(--surface-soft, #faf9f6)', textAlign: 'center', marginBottom: 8 }}>
                   <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
                     Hiện chưa có trận PvP nào đang thi đấu. Khi hai người chơi bắt đầu trận, trận đấu sẽ xuất hiện tại đây để bạn vào xem trực tiếp!
@@ -4123,7 +4151,7 @@ export default function TypingBattle() {
                 </Card>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14, marginBottom: 8 }}>
-                  {liveMatches.map((m) => {
+                  {visibleLiveMatches.map((m) => {
                     const p1 = m.players?.[0] || {};
                     const p2 = m.players?.[1] || {};
                     const p1Name = p1.user?.name || 'Tuyển thủ 1';
@@ -4294,13 +4322,13 @@ export default function TypingBattle() {
             {/* Available Room List */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Danh Sách Phòng Đang Chờ ({roomList.length})</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Danh Sách Phòng Đang Chờ ({visibleRoomList.length})</h3>
                 <Button variant="secondary" size="sm" onClick={fetchHubData}>
                   <RefreshCw size={13} /> Làm mới
                 </Button>
               </div>
 
-              {roomList.length === 0 ? (
+              {visibleRoomList.length === 0 ? (
                 <EmptyState
                   icon={Swords}
                   title="Chưa có phòng thi đấu nào"
@@ -4309,7 +4337,7 @@ export default function TypingBattle() {
                 />
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-                  {roomList.map((r) => (
+                  {visibleRoomList.map((r) => (
                     <Card key={r.id} style={{ padding: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                         <span style={{ fontWeight: 700, fontSize: 14 }}>{r.title}</span>
@@ -4319,7 +4347,7 @@ export default function TypingBattle() {
                         </div>
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
-                        Chủ phòng: <strong>{r.host?.name || 'Thành viên'}</strong> • {r.players?.length || 1} Người
+                        Chủ phòng: <strong>{r.host?.name || 'Thành viên'}</strong> • {playerCountOf(r)} Người
                       </div>
                       <Button
                         variant="primary"

@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "gameType": "memory_flash",
+      "status": "PASS",
+      "durationSeconds": 60,
+      "result": {
+        "score": 276,
+        "correct": 1,
+        "attempts": 1,
+        "accuracy": 100,
+        "bestCombo": 1,
+        "combo": 1,
+        "avgResponseMs": 399,
+        "awardedXp": 1,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "046ea4f0-dfac-4016-b396-b9fc8dc96b5c",
+        "playerAttemptId": "9d8fd8f4-d4a9-437b-8578-a2967b23a543",
+        "mode": "SOLO",
+        "gameType": "memory_flash"
+      }
+    },
+    {
+      "gameType": "direction_rush",
+      "status": "PASS",
+      "durationSeconds": 60,
+      "result": {
+        "score": 2,
+        "correct": 3,
+        "attempts": 39,
+        "accuracy": 7.69,
+        "bestCombo": 3,
+        "combo": 0,
+        "avgResponseMs": 538,
+        "awardedXp": 0,
+        "eligible": false,
+        "forfeited": false,
+        "attemptId": "c94f870e-b714-4bea-8e5b-11a4f4a6cd25",
+        "playerAttemptId": "587ca939-d188-4bdb-af79-147b3c692ad1",
+        "mode": "SOLO",
+        "gameType": "direction_rush"
+      }
+    },
+    {
+      "gameType": "computer_rush",
+      "status": "PASS",
+      "durationSeconds": 60,
+      "result": {
+        "score": 456,
+        "correct": 3,
+        "attempts": 3,
+        "accuracy": 100,
+        "bestCombo": 3,
+        "combo": 3,
+        "avgResponseMs": 691,
+        "awardedXp": 2,
+        "eligible": true,
+        "forfeited": false,
+        "attemptId": "3de64177-d392-4ae5-b157-f259af4e885a",
+        "playerAttemptId": "b4d9e8d7-e854-411e-9bca-4284f99c1318",
+        "mode": "SOLO",
+        "gameType": "computer_rush"
+      }
+    }
+  ],
+  "errors": [],
+  "startedAt": "2026-10-21T14:56:23.370Z",
+  "finishedAt": "2026-10-21T14:57:27.681Z"
+}

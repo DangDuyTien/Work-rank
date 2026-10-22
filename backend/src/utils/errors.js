@@ -42,6 +42,17 @@ class ConflictError extends AppError {
   }
 }
 
+/**
+ * Lỗi tầng lưu trữ (object storage / cấu hình storage).
+ * isOperational = true để message an toàn vẫn tới được client ở production.
+ */
+class StorageError extends AppError {
+  constructor(message = 'Dịch vụ lưu trữ tạm thời không khả dụng', { status = 502, code = 'STORAGE_ERROR', details } = {}) {
+    super(message, status, code);
+    if (details) this.details = details;
+  }
+}
+
 module.exports = {
   AppError,
   ValidationError,
@@ -49,4 +60,5 @@ module.exports = {
   ForbiddenError,
   NotFoundError,
   ConflictError,
+  StorageError,
 };
