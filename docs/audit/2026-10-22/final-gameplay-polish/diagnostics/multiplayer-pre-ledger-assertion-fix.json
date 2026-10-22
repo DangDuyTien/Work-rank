@@ -1,0 +1,529 @@
+{
+  "checks": [
+    {
+      "name": "computer_rush DUO wrong action/combo reset/rival overtake",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+        "rankText": "#2 ↓ Minh vừa vượtCùng sân · cùng thử thách",
+        "players": [
+          {
+            "id": "067f4501-a4f9-47ae-9a81-d99ec9497a3c",
+            "score": 296,
+            "combo": 2
+          },
+          {
+            "id": "3ad1140f-45c8-4300-abfb-78c7fbe85781",
+            "score": 31,
+            "combo": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "computer_rush TRIO wrong action/combo reset/rival overtake",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+        "rankText": "#3 ↓ Bình vừa vượtCùng sân · cùng thử thách",
+        "players": [
+          {
+            "id": "00a70076-f640-45f4-8af1-42b3a6d53419",
+            "score": 32,
+            "combo": 0
+          },
+          {
+            "id": "249ecfb0-1865-470a-9713-81ebd13bc9e4",
+            "score": 461,
+            "combo": 3
+          },
+          {
+            "id": "efb8b419-b9fe-4f6c-ba33-3e6bc7898149",
+            "score": 456,
+            "combo": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "memory_flash TRIO wrong action/combo reset/rival overtake",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "4030a0a9-8562-4f59-b656-7b57b561474e",
+        "rankText": "#3 ↓ Hà vừa vượtCùng sân · cùng thử thách",
+        "players": [
+          {
+            "id": "860a4f94-4070-49e7-b13d-2ce3d1d9f8ec",
+            "score": 0,
+            "combo": 0
+          },
+          {
+            "id": "1c5b88fa-f604-4078-9463-2d0a50c419d3",
+            "score": 0,
+            "combo": 0
+          },
+          {
+            "id": "e1a237bd-708b-40aa-a10d-7fbe61b0d29e",
+            "score": 276,
+            "combo": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "memory_flash DUO wrong action/combo reset/rival overtake",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+        "rankText": "#2 Còn 275 điểm để dẫn đầuCùng sân · cùng thử thách",
+        "players": [
+          {
+            "id": "93011512-2659-434d-a169-b66212394e22",
+            "score": 274,
+            "combo": 1
+          },
+          {
+            "id": "b0178e3c-e0c8-45c3-8b8e-b8683cd162c6",
+            "score": 0,
+            "combo": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "computer_rush TRIO 60s finish/rank/DB history/duplicate finalize/replay",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+        "newRoom": "ed8910c4-035a-47e3-ab0c-5e3923756fa7",
+        "ranks": [
+          3,
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "name": "memory_flash DUO 60s finish/rank/DB history/duplicate finalize/replay",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+        "newRoom": "45f53a73-9c51-46b6-8a85-b60624cdeaa0",
+        "ranks": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "computer_rush DUO 60s finish/rank/DB history/duplicate finalize/replay",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+        "newRoom": "8e7db69b-4102-444a-9ee3-efb8a2565d6c",
+        "ranks": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "memory_flash TRIO 60s finish/rank/DB history/duplicate finalize/replay",
+      "status": "PASS",
+      "evidence": {
+        "roomId": "4030a0a9-8562-4f59-b656-7b57b561474e",
+        "newRoom": "fa7aa481-72f1-463d-90e7-f55d0c2dd6ee",
+        "ranks": [
+          3,
+          1,
+          2
+        ]
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "id": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+      "suffix": "c",
+      "playerId": "00a70076-f640-45f4-8af1-42b3a6d53419",
+      "result": {
+        "mode": "TRIO",
+        "rank": 3,
+        "combo": 5,
+        "score": 664,
+        "userId": 3,
+        "correct": 6,
+        "accuracy": 83.92,
+        "attempts": 7,
+        "eligible": true,
+        "gameType": "computer_rush",
+        "attemptId": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+        "awardedXp": 3,
+        "bestCombo": 5,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.334Z",
+        "wrongCount": 1,
+        "improvement": 664,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T06:35:42.334Z",
+        "perfectCount": 0,
+        "timeoutCount": 0,
+        "avgResponseMs": 702,
+        "isPersonalBest": true,
+        "lastResponseMs": 352,
+        "playerAttemptId": "00a70076-f640-45f4-8af1-42b3a6d53419",
+        "personalBestScore": 664,
+        "previousBestScore": 0
+      }
+    },
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "id": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+      "suffix": "d",
+      "playerId": "249ecfb0-1865-470a-9713-81ebd13bc9e4",
+      "result": {
+        "mode": "TRIO",
+        "rank": 2,
+        "combo": 9,
+        "score": 1593,
+        "userId": 4,
+        "correct": 9,
+        "accuracy": 100,
+        "attempts": 9,
+        "eligible": true,
+        "gameType": "computer_rush",
+        "attemptId": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+        "awardedXp": 7,
+        "bestCombo": 9,
+        "createdAt": "2026-10-22T06:34:37.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.413Z",
+        "wrongCount": 0,
+        "improvement": -1,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T06:35:42.413Z",
+        "perfectCount": 0,
+        "timeoutCount": 0,
+        "avgResponseMs": 538,
+        "isPersonalBest": false,
+        "lastResponseMs": 371,
+        "playerAttemptId": "249ecfb0-1865-470a-9713-81ebd13bc9e4",
+        "personalBestScore": 1594,
+        "previousBestScore": 1594
+      }
+    },
+    {
+      "game": "computer_rush",
+      "mode": "TRIO",
+      "id": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+      "suffix": "e",
+      "playerId": "efb8b419-b9fe-4f6c-ba33-3e6bc7898149",
+      "result": {
+        "mode": "TRIO",
+        "rank": 1,
+        "combo": 10,
+        "score": 1811,
+        "userId": 5,
+        "correct": 10,
+        "accuracy": 100,
+        "attempts": 10,
+        "eligible": true,
+        "gameType": "computer_rush",
+        "attemptId": "eddbfab5-8c78-42ce-96a6-e6ecf60b55ee",
+        "awardedXp": 9,
+        "bestCombo": 10,
+        "createdAt": "2026-10-22T06:34:37.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.548Z",
+        "wrongCount": 0,
+        "improvement": -2,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T06:35:42.548Z",
+        "perfectCount": 0,
+        "timeoutCount": 0,
+        "avgResponseMs": 524,
+        "isPersonalBest": false,
+        "lastResponseMs": 415,
+        "playerAttemptId": "efb8b419-b9fe-4f6c-ba33-3e6bc7898149",
+        "personalBestScore": 1813,
+        "previousBestScore": 1813
+      }
+    },
+    {
+      "game": "memory_flash",
+      "mode": "DUO",
+      "id": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+      "suffix": "f",
+      "playerId": "b0178e3c-e0c8-45c3-8b8e-b8683cd162c6",
+      "result": {
+        "mode": "DUO",
+        "rank": 2,
+        "combo": 0,
+        "score": 162,
+        "userId": 6,
+        "correct": 3,
+        "accuracy": 42.86,
+        "attempts": 7,
+        "eligible": false,
+        "gameType": "memory_flash",
+        "attemptId": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+        "awardedXp": 0,
+        "bestCombo": 3,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.640Z",
+        "wrongCount": 4,
+        "improvement": 162,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T06:35:42.640Z",
+        "perfectCount": 0,
+        "timeoutCount": 3,
+        "avgResponseMs": 427,
+        "isPersonalBest": false,
+        "lastResponseMs": 12045,
+        "playerAttemptId": "b0178e3c-e0c8-45c3-8b8e-b8683cd162c6",
+        "personalBestScore": 0,
+        "previousBestScore": 0
+      }
+    },
+    {
+      "game": "computer_rush",
+      "mode": "DUO",
+      "id": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+      "suffix": "a",
+      "playerId": "3ad1140f-45c8-4300-abfb-78c7fbe85781",
+      "result": {
+        "mode": "DUO",
+        "rank": 2,
+        "combo": 5,
+        "score": 666,
+        "userId": 1,
+        "correct": 6,
+        "accuracy": 83.92,
+        "attempts": 7,
+        "eligible": true,
+        "gameType": "computer_rush",
+        "attemptId": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+        "awardedXp": 3,
+        "bestCombo": 5,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.639Z",
+        "wrongCount": 1,
+        "improvement": 666,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T06:35:42.639Z",
+        "perfectCount": 0,
+        "timeoutCount": 0,
+        "avgResponseMs": 630,
+        "isPersonalBest": true,
+        "lastResponseMs": 364,
+        "playerAttemptId": "3ad1140f-45c8-4300-abfb-78c7fbe85781",
+        "personalBestScore": 666,
+        "previousBestScore": 0
+      }
+    },
+    {
+      "game": "memory_flash",
+      "mode": "DUO",
+      "id": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+      "suffix": "g",
+      "playerId": "93011512-2659-434d-a169-b66212394e22",
+      "result": {
+        "mode": "DUO",
+        "rank": 1,
+        "combo": 0,
+        "score": 385,
+        "userId": 7,
+        "correct": 4,
+        "accuracy": 57.14,
+        "attempts": 7,
+        "eligible": true,
+        "gameType": "memory_flash",
+        "attemptId": "d5cdd7a6-59d8-449c-b9ac-52d6994ec9f7",
+        "awardedXp": 1,
+        "bestCombo": 4,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.649Z",
+        "wrongCount": 3,
+        "improvement": 0,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T06:35:42.649Z",
+        "perfectCount": 0,
+        "timeoutCount": 3,
+        "avgResponseMs": 530,
+        "isPersonalBest": false,
+        "lastResponseMs": 12006,
+        "playerAttemptId": "93011512-2659-434d-a169-b66212394e22",
+        "personalBestScore": 385,
+        "previousBestScore": 385
+      }
+    },
+    {
+      "game": "computer_rush",
+      "mode": "DUO",
+      "id": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+      "suffix": "b",
+      "playerId": "067f4501-a4f9-47ae-9a81-d99ec9497a3c",
+      "result": {
+        "mode": "DUO",
+        "rank": 1,
+        "combo": 9,
+        "score": 1595,
+        "userId": 2,
+        "correct": 9,
+        "accuracy": 100,
+        "attempts": 9,
+        "eligible": true,
+        "gameType": "computer_rush",
+        "attemptId": "d97f8f8c-ab4c-4256-9ed2-6644817b13a0",
+        "awardedXp": 7,
+        "bestCombo": 9,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.650Z",
+        "wrongCount": 0,
+        "improvement": -4,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T06:35:42.650Z",
+        "perfectCount": 0,
+        "timeoutCount": 0,
+        "avgResponseMs": 503,
+        "isPersonalBest": false,
+        "lastResponseMs": 464,
+        "playerAttemptId": "067f4501-a4f9-47ae-9a81-d99ec9497a3c",
+        "personalBestScore": 1599,
+        "previousBestScore": 1599
+      }
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "id": "4030a0a9-8562-4f59-b656-7b57b561474e",
+      "suffix": "h",
+      "playerId": "860a4f94-4070-49e7-b13d-2ce3d1d9f8ec",
+      "result": {
+        "mode": "TRIO",
+        "rank": 3,
+        "combo": 0,
+        "score": 162,
+        "userId": 8,
+        "correct": 3,
+        "accuracy": 42.86,
+        "attempts": 7,
+        "eligible": false,
+        "gameType": "memory_flash",
+        "attemptId": "4030a0a9-8562-4f59-b656-7b57b561474e",
+        "awardedXp": 0,
+        "bestCombo": 3,
+        "createdAt": "2026-10-22T06:34:36.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.333Z",
+        "wrongCount": 4,
+        "improvement": 162,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T06:35:42.333Z",
+        "perfectCount": 0,
+        "timeoutCount": 3,
+        "avgResponseMs": 419,
+        "isPersonalBest": false,
+        "lastResponseMs": 12001,
+        "playerAttemptId": "860a4f94-4070-49e7-b13d-2ce3d1d9f8ec",
+        "personalBestScore": 0,
+        "previousBestScore": 0
+      }
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "id": "4030a0a9-8562-4f59-b656-7b57b561474e",
+      "suffix": "i",
+      "playerId": "e1a237bd-708b-40aa-a10d-7fbe61b0d29e",
+      "result": {
+        "mode": "TRIO",
+        "rank": 2,
+        "combo": 0,
+        "score": 386,
+        "userId": 9,
+        "correct": 4,
+        "accuracy": 57.14,
+        "attempts": 7,
+        "eligible": true,
+        "gameType": "memory_flash",
+        "attemptId": "4030a0a9-8562-4f59-b656-7b57b561474e",
+        "awardedXp": 1,
+        "bestCombo": 4,
+        "createdAt": "2026-10-22T06:34:37.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.435Z",
+        "wrongCount": 3,
+        "improvement": 1,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T06:35:42.435Z",
+        "perfectCount": 0,
+        "timeoutCount": 3,
+        "avgResponseMs": 464,
+        "isPersonalBest": true,
+        "lastResponseMs": 12049,
+        "playerAttemptId": "e1a237bd-708b-40aa-a10d-7fbe61b0d29e",
+        "personalBestScore": 386,
+        "previousBestScore": 385
+      }
+    },
+    {
+      "game": "memory_flash",
+      "mode": "TRIO",
+      "id": "4030a0a9-8562-4f59-b656-7b57b561474e",
+      "suffix": "native",
+      "playerId": "1c5b88fa-f604-4078-9463-2d0a50c419d3",
+      "result": {
+        "mode": "TRIO",
+        "rank": 1,
+        "combo": 0,
+        "score": 386,
+        "userId": 10,
+        "correct": 4,
+        "accuracy": 57.14,
+        "attempts": 7,
+        "eligible": true,
+        "gameType": "memory_flash",
+        "attemptId": "4030a0a9-8562-4f59-b656-7b57b561474e",
+        "awardedXp": 1,
+        "bestCombo": 4,
+        "createdAt": "2026-10-22T06:34:37.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T06:34:42.000Z",
+        "finishedAt": "2026-10-22T06:35:42.549Z",
+        "wrongCount": 3,
+        "improvement": 1,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T06:35:42.549Z",
+        "perfectCount": 0,
+        "timeoutCount": 3,
+        "avgResponseMs": 440,
+        "isPersonalBest": true,
+        "lastResponseMs": 12003,
+        "playerAttemptId": "1c5b88fa-f604-4078-9463-2d0a50c419d3",
+        "personalBestScore": 386,
+        "previousBestScore": 385
+      }
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1\n\n    at file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/final-computer-memory-multiplayer-audit.mjs:84:122"
+  ]
+}

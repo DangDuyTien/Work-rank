@@ -1,0 +1,46 @@
+/* Shared gameplay hierarchy. Uses the existing WorkRank motion tokens. */
+.arcade-page :is(button,a,input,select):focus-visible { outline: 3px solid var(--arcade-accent); outline-offset: 3px; }
+.arcade-page .arcade-direction-arena:focus-visible { outline: none; }
+.arcade-page .arcade-direction-arena:focus-visible .direction-stack-card[data-depth="0"] .direction-stack-face:not([data-wrong="true"]) { outline: 2px solid #6475a6; outline-offset: 4px; }
+.arcade-hud { font-variant-numeric: tabular-nums; }
+.arcade-hud[data-pressure="true"]>div:first-child strong { color: #9a3e40; }
+.arcade-hud[data-pressure="true"]>div:first-child>span::before { content: '● '; color: #9a3e40; }
+.arcade-complete-beat { min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: var(--arcade-accent); background: #f8f9ef; animation: arcade-complete-in var(--motion-layout) var(--ease-standard) both; }
+.arcade-complete-beat>span { color: #285867; font-size: 14px; font-weight: 850; letter-spacing: .09em; }.arcade-complete-beat>strong { font-size: 64px; font-variant-numeric: tabular-nums; }.arcade-complete-beat>small { font-size: 12px; color: #556a61; }
+.arcade-page .arcade-race-status { min-height: 25px; margin-bottom: 7px; }.arcade-race-status[data-overtake="up"] { color: #276347; }.arcade-race-status[data-overtake="down"] { color: #963f46; }
+.arcade-polished .arcade-monitor-top { display: flex; align-items: center; gap: 5px; }.arcade-polished .arcade-monitor-top small { margin-left: auto; font-size: 9px; color: #486750; font-weight: 750; }
+.computer-word-progress { width: 62%; height: 3px; background: #dce5d3; margin: 5px auto 0; overflow: hidden; border-radius: 3px; }.computer-word-progress i { display: block; width: 100%; height: 100%; background: #447b59; transform-origin: left; }
+.arcade-polished .arcade-word-wrap { min-height: 92px; }.arcade-polished .arcade-word [data-char-state="pending"] { color: #597050; }.arcade-polished .arcade-word [data-char-state="cursor"] { color: #203e2c; background: #f7e8ba; box-shadow: inset 0 -3px #9e7022; }
+.arcade-page .computer_rush .arcade-surface-flash { border-width: 2px; }
+.arcade-page .arcade-monitor.typing-error { animation: computer-error-nudge var(--motion-instant) var(--ease-standard); }
+.arcade-polished .arcade-word-receipt { font-variant-numeric: tabular-nums; min-height: 36px; }
+.memory-round-summary { position: relative; width: 100%; min-height: 28px; margin: -9px 0 8px; color: #725932; font-size: 11px; font-variant-numeric: tabular-nums; }
+.memory-round-result { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3,54px) 76px; justify-content: center; align-items: center; gap: 8px; }.memory-round-hint { position: absolute; inset: 0; display: grid; place-items: center; }
+.memory-round-summary strong { font-size: 12px; }.memory-round-summary span { white-space: nowrap; }
+.memory-reveal-meter { width: 180px; height: 3px; background: #ddcba7; margin-top: 5px; overflow: hidden; border-radius: 3px; }.memory-reveal-meter i { display: block; width: 100%; height: 100%; background: #957029; transform-origin: left; }
+.arcade-memory-room[data-phase="FLASH"] .arcade-memory-companion .arcade-actor,.arcade-memory-room[data-phase="FLASH"] .arcade-memory-rivals .arcade-actor { animation: none; }
+.arcade-polished .arcade-memory-tile[data-cell-state="missed"] { border-style: dashed; }.arcade-polished .arcade-memory-tile[data-cell-state="incorrect"] { border-style: double; border-width: 4px; }
+.arcade-page .typing-race-console .typing-character.is-correct { color: #52716c; }.arcade-page .typing-race-console .typing-character.is-remaining { color: #5a7376; }.arcade-page .typing-race-console .typing-character.is-current { color: #173e45; background: #dcecee; box-shadow: inset 0 -3px #286f7d; }.arcade-page .typing-race-console .typing-character.is-current::before { background: #286f7d; width: 2px; }
+.arcade-page .typing-race-console .typing-character.is-incorrect { color: #992b3b; background: #f9e1df; text-decoration: underline wavy; outline: 1px dashed #b26065; outline-offset: 1px; }
+.typing-race-console .typing-character.is-incorrect::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 2px solid #992b3b; animation: typing-error-tap var(--motion-fast) var(--ease-standard) both; }
+.typing-race-console:focus-within { border-color: #477f8a; }
+@keyframes arcade-complete-in { from { opacity: .6; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes computer-error-nudge { 35% { transform: translateX(-2px); } 70% { transform: translateX(2px); } }
+@keyframes typing-error-tap { 30% { transform: translateX(-2px); } 65% { transform: translateX(2px); } }
+@media(max-width:700px) { .arcade-complete-beat { min-height: 560px; }.memory-round-summary { gap: 8px; font-size: 10px; }.memory-round-summary strong { font-size: 11px; }.arcade-polished .arcade-monitor-top small { font-size: 8px; }.arcade-polished .arcade-word-wrap { min-height: 72px; }.arcade-page .arcade-racer { padding-top: 5px; padding-bottom: 8px; }.arcade-page .arcade-racer>strong { font-size: 17px; } }
+@media(prefers-reduced-motion:reduce) { .arcade-complete-beat,.arcade-monitor.typing-error,.typing-race-console .typing-character.is-incorrect::after { animation: none !important; } }
+html[data-workrank-reduce-motion="true"] .arcade-complete-beat,html[data-workrank-reduce-motion="true"] .arcade-monitor.typing-error,html[data-workrank-reduce-motion="true"] .typing-race-console .typing-character.is-incorrect::after { animation: none !important; }
+
+/* Small HUD labels stay readable against the shared warm background. */
+.arcade-page .arcade-hud>div>span,.arcade-page .arcade-world-label small { color: #526451; }
+.typing-page .typing-arcade-heading .arcade-kicker { color: #286475; }
+.typing-page .typing-arcade-heading p:last-child,.typing-page .typing-practice-options>span { color: #4d6565; }
+
+/* Canvas-like scene layers need explicit contrast; axe cannot resolve their pseudo backgrounds. */
+.arcade-page .arcade-polished .arcade-name>b { background: #3c7350; }
+.arcade-page .arcade-combo>small { color: #536345; }
+.arcade-page .arcade-monitor-top>span,.arcade-page .arcade-word-receipt:not(.visible) { color: #536b4c; }
+.arcade-page.memory_flash .arcade-scene-title,.arcade-page .arcade-memory-heading>span,.arcade-page .arcade-memory-heading>small,.arcade-page .arcade-memory-selection-time,.arcade-page .arcade-memory-phase-track { color: #6f542d; }
+.typing-page .typing-race-name>small { color: #48666b; }
+.typing-page .typing-console-label { color: #496768; }
+.typing-page .typing-race-console .typing-position { color: #526d6b; }

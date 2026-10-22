@@ -6,7 +6,8 @@ const path = require('path');
  * Cấu hình lưu trữ ảnh tác phẩm (Drawing / Góc Sáng Tạo).
  *
  * Nguyên tắc:
- * - Development/test: `STORAGE_PROVIDER=local` (mặc định) → ghi vào `backend/uploads`.
+ * - Adapter local (mặc định dev/test) chỉ dành cho legacy/tooling và unit tests.
+ *   Publish mới ở development/production yêu cầu S3; không gọi local file là đã đăng bền vững.
  * - Production: chỉ chấp nhận `s3` (S3-compatible: AWS S3, Cloudflare R2, MinIO,
  *   Supabase Storage S3, Backblaze B2…). KHÔNG bao giờ fallback im lặng về local disk.
  * - Thiếu cấu hình → trả về `ok: false` kèm danh sách biến còn thiếu (chỉ tên biến,
@@ -104,6 +105,14 @@ function resolveStorageConfig(env = process.env) {
       if (!String(env[key] || '').trim()) {
         missingEnv.push(key);
       }
+    }
+    const publicUrl = String(env.STORAGE_PUBLIC_BASE_URL || '').trim();
+    if (publicUrl) {
+      try {
+        const url = new URL(publicUrl);
+        if (!['http:','https:'].includes(url.protocol) || url.search || url.hash || url.username || url.password) errors.push('STORAGE_PUBLIC_BASE_URL phải là URL gốc ổn định, không chứa query/token hoặc thông tin đăng nhập.');
+        if (isProduction && url.protocol !== 'https:') errors.push('STORAGE_PUBLIC_BASE_URL phải dùng HTTPS ở production.');
+      } catch { errors.push('STORAGE_PUBLIC_BASE_URL không phải URL hợp lệ.'); }
     }
     // STORAGE_REGION không bắt buộc: mặc định "auto" (Cloudflare R2) nếu để trống.
   }

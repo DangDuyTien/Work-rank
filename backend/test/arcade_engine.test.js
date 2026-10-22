@@ -91,3 +91,25 @@ test('Direction: four arrows, WASD, swipe, 55 rapid challenges, wrong, timeout, 
   assert.throws(() => replay('direction_rush', 'seed', [{ ...events[0], direction: 'FORGED' }]));
   assert.throws(() => replay('direction_rush', 'seed', [{ ...events[0], direction: 'constructor' }]));
 });
+
+
+test('Direction v3: preview stimuli stay deterministic, input can follow during animation, server enforces stumble', async()=>{
+  const {challenge,replay,DIRECTION_STUMBLE_MS,OPPOSITE}=await import('../../shared/arcade/engine.mjs');
+  const options={rulesVersion:3,durationMs:60000};
+  const first=challenge('direction_rush','queue',0,'mixed',options);
+  const events=[{index:0,at:120,direction:first.expected}];
+  const next=challenge('direction_rush','queue',1,'mixed',{...options,previousAt:120});
+  events.push({index:1,at:185,direction:next.expected});
+  assert.equal(replay('direction_rush','queue',events,options).correct,2);
+  const wrong=challenge('direction_rush','queue',2,'mixed',{...options,previousAt:185});
+  events.push({index:2,at:260,direction:OPPOSITE[wrong.expected]});
+  const after=challenge('direction_rush','queue',3,'mixed',{...options,previousAt:260,previousCorrect:false});
+  assert.equal(after.stumbleMs,DIRECTION_STUMBLE_MS);
+  assert.throws(()=>replay('direction_rush','queue',[...events,{index:3,at:320,direction:after.expected}],options));
+  const before=replay('direction_rush','queue',events,options);assert.equal(before.combo,0);
+  assert.equal(before.score,replay('direction_rush','queue',events.slice(0,2),options).score,'wrong does not retroactively remove points');
+  events.push({index:3,at:260+DIRECTION_STUMBLE_MS+65,direction:after.expected});
+  assert.equal(replay('direction_rush','queue',events,options).correct,3);
+  for(let i=0;i<12;i++)assert.equal(challenge('direction_rush','queue',i,'mixed',{...options,previousAt:41000}).direction,challenge('direction_rush','queue',i,'mixed',{...options,previousAt:0}).direction);
+  const inverted=challenge('direction_rush','queue',4,'mixed',{...options,previousAt:41000});assert.equal(inverted.expected,OPPOSITE[inverted.direction]);
+});

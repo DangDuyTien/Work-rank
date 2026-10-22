@@ -1,6 +1,7 @@
 'use strict';
 
 const multer = require('multer');
+const crypto = require('node:crypto');
 const drawingService = require('../services/drawing.service');
 const { ValidationError, StorageError } = require('../utils/errors');
 const { resolveStorageConfig } = require('../config/storage');
@@ -42,17 +43,6 @@ function decodeBase64Image(imageBase64) {
   return Buffer.from(match[2], 'base64');
 }
 
-/**
- * Xóa object vừa upload khi bước ghi DB thất bại (compensation) — tránh orphan.
- */
-async function rollbackUploadedObject(storage, key) {
-  if (!key) return;
-  try {
-    await storage.delete({ key });
-  } catch (err) {
-    console.error('[DrawingController] Rollback object thất bại:', { key, message: err.message });
-  }
-}
 
 const drawingController = {
   uploadMiddleware: upload.single('image'),
@@ -65,6 +55,7 @@ const drawingController = {
     res.json({
       success: true,
       settings,
+      publishing: { available: resolveStorageConfig().ok && resolveStorageConfig().provider === 's3', persistent: resolveStorageConfig().provider === 's3' },
     });
   },
 
@@ -182,8 +173,8 @@ const drawingController = {
 
     // Cấu hình storage sai → fail rõ ràng, tuyệt đối không ghi local để "chạy được"
     const storageConfig = resolveStorageConfig();
-    if (!storageConfig.ok) {
-      throw new StorageError('Dịch vụ lưu trữ ảnh chưa được cấu hình. Tác phẩm chưa được lưu.', {
+    if (!storageConfig.ok || (storageConfig.provider !== 's3' && storageConfig.nodeEnv !== 'test')) {
+      throw new StorageError('Chưa có kho ảnh bền vững. Tác phẩm chưa được đăng; bản nháp của bạn vẫn còn.', {
         status: 503,
         code: 'STORAGE_UNAVAILABLE',
         details: storageConfig.missingEnv,
@@ -191,61 +182,16 @@ const drawingController = {
     }
 
     const storage = getDrawingStorage();
-    const key = buildDrawingStorageKey({
-      userId,
-      ext: inspected.ext,
-      prefix: storageConfig.s3.keyPrefix,
-    });
-
-    let uploaded;
-    try {
-      uploaded = await storage.upload({
-        key,
-        buffer,
-        contentType: inspected.mime,
-      });
-    } catch (err) {
-      console.error('[DrawingController] Upload object storage thất bại:', {
-        provider: storage.provider,
-        key,
-        message: err.message,
-      });
-      throw new StorageError(
-        'Không thể lưu ảnh tác phẩm lên kho lưu trữ. Vui lòng thử lại sau.',
-        { status: 502, code: 'STORAGE_UPLOAD_FAILED' }
-      );
-    }
-
+    const publicationId = req.body.publicationId || crypto.randomUUID();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(publicationId)) throw new ValidationError('Mã xuất bản không hợp lệ.');
+    const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
+    const key = buildDrawingStorageKey({ userId, ext: inspected.ext, prefix: storageConfig.s3.keyPrefix, uniqueToken: `${publicationId}-${checksum.slice(0,12)}` });
     let parsedMeta = {};
-    if (metadata) {
-      try {
-        parsedMeta = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
-      } catch (_) {
-        parsedMeta = {};
-      }
-    }
-
-    let created;
-    try {
-      created = await drawingService.createDrawing({
-        userId,
-        teamId: req.user.teamId || null,
-        title,
-        imageUrl: uploaded.url,
-        storageKey: uploaded.key,
-        storageProvider: uploaded.provider,
-        mimeType: inspected.mime,
-        sizeBytes: inspected.sizeBytes,
-        // Kích thước lấy từ chính file, không tin client
-        width: inspected.width,
-        height: inspected.height,
-        visibility,
-        metadata: parsedMeta,
-      });
-    } catch (err) {
-      await rollbackUploadedObject(storage, uploaded.key);
-      throw err;
-    }
+    if (metadata) { try { parsedMeta = typeof metadata === 'string' ? JSON.parse(metadata) : metadata; } catch { /* Optional metadata. */ } }
+    const created = await drawingService.createDrawing({ userId, teamId: req.user.teamId || null, title, visibility, metadata: parsedMeta,
+      imageUrl: storage.getPublicUrl(key), storageKey: key, storageProvider: storage.provider,
+      mimeType: inspected.mime, sizeBytes: inspected.sizeBytes, width: inspected.width, height: inspected.height,
+      publicationId, checksum, buffer, storage });
 
     // Realtime broadcast to all connected clients
     try {

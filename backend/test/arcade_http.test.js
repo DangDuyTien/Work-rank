@@ -56,3 +56,21 @@ test('Arcade migration creates indexed durable tables and is safely repeatable',
     await migration.down(q); await migration.up(q, DataTypes);
   } finally { await db.close(); }
 });
+
+test('Direction HTTP rejects bypassing the authoritative stumble and preserves the valid checkpoint',async()=>{
+  const {ArcadeRoom,ArcadePlayer}=require('../src/models');
+  const {challenge,OPPOSITE}=await import('../../shared/arcade/engine.mjs');
+  const response=await request(app).post(endpoint+'/rooms').set('Authorization',`Bearer ${token}`).send({gameType:'direction_rush',mode:'SOLO'});
+  assert.equal(response.status,201);const {room}=response.body;assert.equal(room.rulesVersion,3);
+  await ArcadeRoom.update({startedAt:new Date(Date.now()-3000)},{where:{id:room.id}});
+  const wrong={index:0,at:300,direction:OPPOSITE[challenge('direction_rush',room.seed,0).expected]};
+  const send=events=>request(app).post(`${endpoint}/rooms/${room.id}/progress`).set('Authorization',`Bearer ${token}`).send({attemptId:room.id,seed:room.seed,revision:events.length,events});
+  assert.equal((await send([wrong])).status,200);
+  const next={index:1,at:600,direction:challenge('direction_rush',room.seed,1).expected};
+  assert.equal((await send([wrong,next])).status,400);
+  assert.equal((await ArcadePlayer.findOne({where:{roomId:room.id,userId:user.id}})).revision,1);
+  const valid=await send([wrong,{...next,at:810}]);assert.equal(valid.status,200);assert.equal(valid.body.players[0].metrics.correct,1);
+  await request(app).post(`${endpoint}/rooms/${room.id}/leave`).set('Authorization',`Bearer ${token}`).send({});
+  const history=await request(app).get(endpoint+'/history?gameType=direction_rush').set('Authorization',`Bearer ${token}`);
+  assert.ok(history.body.attempts.some(a=>a.roomId===room.id&&a.validatedAt&&a.rank===1));
+});

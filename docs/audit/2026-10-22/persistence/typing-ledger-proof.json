@@ -1,0 +1,91 @@
+{
+  "roomId": "10",
+  "checks": [
+    {
+      "userId": 4,
+      "xp": 0,
+      "ledgerRows": 0,
+      "expectedRows": 0,
+      "status": "PASS"
+    },
+    {
+      "userId": 5,
+      "xp": 0,
+      "ledgerRows": 0,
+      "expectedRows": 0,
+      "status": "PASS"
+    },
+    {
+      "userId": 6,
+      "xp": 0,
+      "ledgerRows": 0,
+      "expectedRows": 0,
+      "status": "PASS"
+    }
+  ],
+  "earlierEligibleMySQLMatches": [
+    {
+      "roomId": 1,
+      "userId": 4,
+      "xp": 37,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 1,
+      "userId": 5,
+      "xp": 20,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 1,
+      "userId": 6,
+      "xp": 19,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 2,
+      "userId": 4,
+      "xp": 37,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 2,
+      "userId": 5,
+      "xp": 20,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 2,
+      "userId": 6,
+      "xp": 19,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 3,
+      "userId": 4,
+      "xp": 37,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 3,
+      "userId": 5,
+      "xp": 20,
+      "ledgerRows": 1,
+      "status": "PASS"
+    },
+    {
+      "roomId": 3,
+      "userId": 6,
+      "xp": 19,
+      "ledgerRows": 1,
+      "status": "PASS"
+    }
+  ]
+}

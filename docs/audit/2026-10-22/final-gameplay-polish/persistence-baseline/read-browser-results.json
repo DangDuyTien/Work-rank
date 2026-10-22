@@ -1,0 +1,53 @@
+{
+  "phase": "read",
+  "checks": [
+    {
+      "name": "computer_rush fresh Browser B same DB result/content",
+      "status": "PASS"
+    },
+    {
+      "name": "computer_rush logout/login + local/session/IndexedDB/cookie/cache clear survives",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush fresh Browser B same DB result/content",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush logout/login + local/session/IndexedDB/cookie/cache clear survives",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash fresh Browser B same DB result/content",
+      "status": "PASS"
+    },
+    {
+      "name": "memory_flash logout/login + local/session/IndexedDB/cookie/cache clear survives",
+      "status": "PASS"
+    },
+    {
+      "name": "typing_battle fresh Browser B same DB result/content",
+      "status": "PASS"
+    },
+    {
+      "name": "typing_battle logout/login + local/session/IndexedDB/cookie/cache clear survives",
+      "status": "PASS"
+    },
+    {
+      "name": "drawing fresh Browser B same DB result/content",
+      "status": "PASS"
+    },
+    {
+      "name": "drawing logout/login + local/session/IndexedDB/cookie/cache clear survives",
+      "status": "PASS"
+    },
+    {
+      "name": "Ledger unchanged after frontend/backend/object-store restart and all browser clears",
+      "status": "PASS",
+      "evidence": {
+        "entries": 35
+      }
+    }
+  ],
+  "errors": []
+}

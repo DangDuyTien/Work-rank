@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArcadeHUD, ArcadeCountdown } from './ArcadeShared';
 import { arcadeSound } from '../../utils/arcadeSound';
-import { challenge, emptyMetrics, replay } from '../../../../shared/arcade/engine.mjs';
+import { challenge, emptyMetrics, replay, DIRECTION_STUMBLE_MS } from '../../../../shared/arcade/engine.mjs';
 import { ARCADE_GAMES } from '../../games/arcade/catalog';
 import ComputerStation from './ComputerStation';
 import DirectionArena from './DirectionArena';
@@ -39,13 +39,18 @@ export default function ArcadePlay({ snapshot, userId, eventsRef, record, offset
     const correct = result.lastCorrect;
     const milestone = ({ 3: 'ĐẸP LẮM!', 5: 'TUYỆT VỜI!', 10: 'BÙNG NỔ!', 20: 'CHUỖI HOÀN HẢO!' })[result.combo];
     setFeedback({ state: correct ? result.combo >= 3 ? 'combo' : 'correct' : 'wrong', id: next.length, at, challenge: object, cells: event.cells || [], timeout: event.timeout || event.direction === null,
-      expected: object.expected, direction: event.direction, word: object.word, delta: result.score - previous.score, lostCombo: previous.combo,
+      expected: object.expected, direction: event.direction, word: object.word, delta: result.score - previous.score, lostCombo: previous.combo, combo: result.combo,
       text: correct ? milestone || (room.gameType === 'direction_rush' ? result.lastResponseMs <= 350 ? 'PERFECT!' : 'GOOD!' : 'CHÍNH XÁC!') : event.direction === null || event.timeout ? 'HẾT NHỊP!' : 'CHƯA ĐÚNG!' });
     clearTimeout(feedbackTimer.current);
-    const hold = room.gameType === 'memory_flash' ? options.rulesVersion < 2 ? 400 : correct ? 320 : 800 : room.gameType === 'direction_rush' ? 280 : 180;
+    const hold = room.gameType === 'memory_flash' ? options.rulesVersion < 2 ? 400 : correct ? 320 : 800 : room.gameType === 'direction_rush' ? options.rulesVersion >= 3 && !correct ? DIRECTION_STUMBLE_MS : 180 : 180;
     feedbackTimer.current = setTimeout(() => setFeedback(null), hold);
     return true;
   }, [canPlay, elapsedNow, eventsRef, options, record, room.gameType, room.seed, room.difficulty]);
+  const getDirectionState = useCallback(() => {
+    const nextIndex=eventsRef.current.length, previousAt=eventsRef.current.at(-1)?.at || 0;
+    return { index:nextIndex, previousAt, current:challenge(room.gameType,room.seed,nextIndex,room.difficulty,{...options,previousAt,previousCorrect:metricsRef.current.lastCorrect !== false}) };
+  },[eventsRef,room.gameType,room.seed,room.difficulty,options]);
+  const upcoming=useMemo(()=>room.gameType==='direction_rush' ? [1,2,3].map(n=>({index:index+n,direction:challenge(room.gameType,room.seed,index+n,room.difficulty,options).direction})) : [],[room.gameType,room.seed,room.difficulty,index,options]);
   useEffect(() => {
     const timer = setInterval(() => setElapsed(elapsedNow()), 50);
     return () => { clearInterval(timer); clearTimeout(feedbackTimer.current); };
@@ -57,17 +62,17 @@ export default function ArcadePlay({ snapshot, userId, eventsRef, record, offset
     const frame = requestAnimationFrame(() => arcadeSound.play(feedback.state === 'wrong' ? 'wrong' : feedback.state === 'combo' ? 'combo' : 'correct'));
     return () => cancelAnimationFrame(frame);
   }, [feedback?.id]);
-  return <div className={`arcade-world ${room.gameType} arcade-polished`} data-feedback={feedback?.state || 'idle'} data-urgent={elapsed >= duration - 10000}>
-    <ArcadeHUD time={remaining} score={metrics.score} combo={metrics.combo} rank={liveRank} count={snapshot.players.length} comboLabel={room.gameType === 'memory_flash' ? 'CHUỖI' : 'COMBO'} />
+  return <div className={`arcade-world ${room.gameType} arcade-polished`} data-feedback={feedback?.state || 'idle'} data-urgent={elapsed >= duration - 10000} data-attempts={metrics.attempts}>
+    <ArcadeHUD animateScore={false} time={remaining} score={metrics.score} combo={metrics.combo} rank={liveRank} count={snapshot.players.length} comboLabel={room.gameType === 'memory_flash' ? 'CHUỖI' : 'COMBO'} />
     <div className="arcade-scene">
-      {feedback && <span key={feedback.id} className="arcade-surface-flash" data-state={feedback.state} aria-hidden="true" />}
+      {feedback && feedback.state !== 'wrong' && <span key={feedback.id} className="arcade-surface-flash" data-state={feedback.state} aria-hidden="true" />}
       <div className="arcade-cloud cloud-one" aria-hidden="true" /><div className="arcade-cloud cloud-two" aria-hidden="true" />
       <div className="arcade-scene-title">{ARCADE_GAMES[room.gameType].subtitle}</div>
       {room.gameType === 'computer_rush' && <>
         <ComputerStation current={current} index={index} player={mine} canPlay={canPlay} submit={submit} previousAt={previousAt} elapsedNow={elapsedNow} feedback={feedback} />
         {snapshot.players.length > 1 && <div className="arcade-rivals">{snapshot.players.filter((p) => p.id !== mine.id).map((p) => <div key={p.id}><span className="arcade-rival-monitor"><b>{p.metrics.correct}</b> từ · x{p.metrics.combo}</span><RivalAvatar player={p} /></div>)}</div>}
       </>}
-      {room.gameType === 'direction_rush' && <DirectionArena current={current} index={index} elapsed={elapsed} durationMs={duration} elapsedNow={elapsedNow} previousAt={previousAt} canPlay={canPlay} submit={submit} players={snapshot.players} me={mine} feedback={feedback} />}
+      {room.gameType === 'direction_rush' && <DirectionArena rulesVersion={options.rulesVersion} getDirectionState={getDirectionState} upcoming={upcoming} localMetrics={metrics} current={current} index={index} elapsed={elapsed} durationMs={duration} elapsedNow={elapsedNow} previousAt={previousAt} canPlay={canPlay} submit={submit} players={snapshot.players} me={mine} feedback={feedback} />}
       {room.gameType === 'memory_flash' && <MemoryBoard current={current} index={index} elapsed={elapsed} elapsedNow={elapsedNow} previousAt={previousAt} canPlay={canPlay} submit={submit} players={snapshot.players} me={mine} feedback={feedback} />}
       <div className="arcade-flow-footer"><div className={`arcade-combo ${metrics.combo >= 3 ? 'hot' : ''}`} data-level={metrics.combo >= 10 ? 3 : metrics.combo >= 5 ? 2 : metrics.combo >= 3 ? 1 : 0}><span>✦</span> x{metrics.combo} <small>{room.gameType === 'memory_flash' ? 'CHUỖI' : 'COMBO'}</small></div><span className="arcade-goal">{personalBest > 0 ? metrics.score > personalBest ? '★ VƯỢT KỶ LỤC!' : `Còn ${personalBest - metrics.score + 1} điểm để phá kỷ lục` : '✦ Tạo kỷ lục đầu tiên của bạn'}</span></div>
       {elapsed >= duration && <div className="arcade-end-message" role="status">HẾT GIỜ!<small>Đang ghi nhận thành tích…</small></div>}

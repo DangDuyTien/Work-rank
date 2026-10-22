@@ -14,6 +14,8 @@ router.get('/my-stats', auth, asyncHandler(typingGameController.getMyStats));
 router.get('/leaderboard', auth, asyncHandler(typingGameController.getLeaderboard));
 router.get('/challenges', auth, asyncHandler(typingGameController.getChallenges));
 
+router.get('/history', auth, asyncHandler(async(req,res)=>res.json(await require('../services/typingGame.service').getHistory(req.user.id,req.query))));
+
 // Room management
 router.get('/rooms', auth, asyncHandler(typingGameController.listRooms));
 router.get('/active-room', auth, asyncHandler(typingGameController.getActiveRoom));

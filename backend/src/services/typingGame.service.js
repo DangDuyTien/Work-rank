@@ -192,15 +192,16 @@ async function cleanupStaleTypingRooms(t = null) {
       closedRoomIds.push(Number(sr.id));
     }
 
-    // Clean up empty WAITING rooms with 0 players
+    // Recover empty lobbies, including a cancelled/raced STARTING countdown.
     const emptyWaiting = await TypingRoom.findAll({
-      where: { status: 'WAITING' },
+      where: { status: { [Op.in]: ['WAITING','STARTING'] } },
       include: [{ model: TypingPlayer, as: 'players' }],
       transaction: t,
     });
 
     for (const er of emptyWaiting) {
       if (!er.players || er.players.length === 0) {
+        clearStartCountdown(er.id);
         er.status = 'ABANDONED';
         await er.save({ transaction: t });
         closedRoomIds.push(Number(er.id));
@@ -1414,6 +1415,10 @@ async function finalizeMatchOnce(roomId) {
       await stat.save({ transaction: t });
 
       playerResultList.push({
+        attemptId: `${room.id}:${new Date(room.startedAt).toISOString()}`,
+        gameType: 'typing_battle', mode: room.mode,
+        startedAt: new Date(room.startedAt).toISOString(), finishedAt: now.toISOString(), validatedAt: now.toISOString(), createdAt: now.toISOString(),
+        score: player.performanceScore, rank: player.individualRank,
         metricVersion: METRIC_VERSION,
         validSubmission: getTypingDraft(player).valid !== false,
         rawWpm: typingEngine.calculateWPM(player.typedChars, player.completionTimeMs),
@@ -1684,7 +1689,25 @@ async function getActiveRoom(userId) {
   return getRoomDetail(activePlayer.room.id, userId);
 }
 
+async function getHistory(userId, { limit = 20 } = {}) {
+  const maximum = Math.min(50,Math.max(1,Number(limit)||20));
+  const { TypingPracticeAttempt } = require('../models');
+  const [matches, practices] = await Promise.all([
+    TypingMatchResult.findAll({ where: { results: { [Op.ne]: null } }, order:[['playedAt','DESC'],['id','DESC']] }),
+    TypingPracticeAttempt.findAll({ where:{userId,status:'FINISHED'},order:[['finishedAt','DESC']],limit:maximum }),
+  ]);
+  const attempts = matches.flatMap(match => {
+    const mine=(match.results || []).find(r=>String(r.userId)===String(userId));
+    if (!mine) return [];
+    return [{ attemptId:`match:${match.id}`,roomId:match.roomId,mode:match.mode,finishedAt:match.playedAt,
+      ...mine,kind:'match' }];
+  });
+  attempts.push(...practices.map(p=>({ ...p.result,attemptId:p.id,mode:'SOLO',kind:'practice',finishedAt:p.finishedAt,durationSeconds:p.durationSeconds })));
+  return { attempts:attempts.sort((a,b)=>new Date(b.finishedAt)-new Date(a.finishedAt)).slice(0,maximum) };
+}
+
 module.exports = {
+  getHistory,
   ensureChallengesExist,
   buildContinuousChallengeText,
   listRooms,

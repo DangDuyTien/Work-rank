@@ -38,3 +38,5 @@
 @keyframes arcade-level-up { from { opacity: 0; transform: translateY(4px); } 55% { opacity: 1; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .arcade-page *, .arcade-page *::before, .arcade-page *::after { animation: none !important; transition: none !important; } }
 html[data-workrank-reduce-motion="true"] .arcade-page *, html[data-workrank-reduce-motion="true"] .arcade-page *::before, html[data-workrank-reduce-motion="true"] .arcade-page *::after { animation: none !important; transition: none !important; }
+
+.arcade-memory-tile { transition-duration: var(--motion-instant); }

@@ -10,7 +10,7 @@ TypingMatchResult.init(
     id: { type: DataTypes.BIGINT.UNSIGNED, autoIncrement: true, primaryKey: true },
     roomId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, field: 'room_id' },
     mode: {
-      type: DataTypes.ENUM('SOLO', '1V1', '2V2', '3V3'),
+      type: DataTypes.ENUM('SOLO', '1V1', 'TRIO', '2V2', '3V3'),
       allowNull: false,
       defaultValue: '1V1',
     },

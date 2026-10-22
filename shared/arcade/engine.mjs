@@ -2,7 +2,10 @@ import { WORD_BANK } from './words.mjs';
 
 export const GAME_TYPES = ['computer_rush', 'direction_rush', 'memory_flash'];
 export const CAPACITY = Object.freeze({ SOLO: 1, DUO: 2, TRIO: 3 });
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
+export const rulesVersionFor = game => game === 'direction_rush' ? 3 : 2;
+export const DIRECTION_STUMBLE_MS = 450;
+export const DIRECTION_MIN_RESPONSE_MS = 60;
 export const ARROWS = Object.freeze({ UP: '↑', DOWN: '↓', LEFT: '←', RIGHT: '→' });
 export const OPPOSITE = Object.freeze({ UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT' });
 export const normalizeWord = (value) => String(value).normalize('NFC').trim().replace(/\s+/gu, ' ').toLocaleUpperCase('vi');
@@ -17,6 +20,14 @@ function random(seed, index) {
     x ^= x + Math.imul(x ^ x >>> 7, 61 | x);
     return ((x ^ x >>> 14) >>> 0) / 4294967296;
   };
+}
+
+// MySQL JSON normalizes object-key order. Compare event contents, never their
+// serialization order, while still rejecting any changed/added field.
+export function sameArcadeEvent(a, b) {
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  const keys=Object.keys(a);
+  return keys.length===Object.keys(b).length && keys.every(key => Object.hasOwn(b,key) && JSON.stringify(a[key])===JSON.stringify(b[key]));
 }
 
 export function memoryLevel(index, rulesVersion = RULES_VERSION) {
@@ -50,7 +61,9 @@ export function challenge(game, seed, index, difficulty = 'mixed', options = {})
     return { direction, expected: opposite ? OPPOSITE[direction] : direction, stage, opposite,
       slot: stage === 'normal' ? 0 : Math.floor(rng() * 3) - 1,
       color: ['color', 'entrance', 'final'].includes(stage) ? Math.floor(rng() * 3) : 0,
-      revealMs: stage === 'entrance' ? 180 : 0,
+      revealMs: rulesVersion >= 3 ? 0 : stage === 'entrance' ? 180 : 0,
+      entranceMs: stage === 'entrance' ? 180 : 0,
+      stumbleMs: rulesVersion >= 3 && !previousCorrect ? DIRECTION_STUMBLE_MS : 0,
       oppositeUntil: durationMs * .75,
       windowMs: Math.max(650, 1800 - Math.floor(index / 6) * 100 - (seconds >= 50 ? 180 : 0)) };
   }
@@ -109,8 +122,8 @@ export function replay(game, seed, events, { durationMs = 60000, elapsedMs = dur
       if (response < Math.max(140, (correct ? Array.from(c.word).length : 1) * 35)) throw new Error('Hoàn thành từ quá nhanh');
       mistakes += e.errors;
     } else if (game === 'direction_rush') {
-      response -= c.revealMs;
-      if (response < 80 || (e.direction !== null && response > c.windowMs + 200) || (e.direction !== null && !Object.hasOwn(ARROWS, e.direction))) throw new Error('Phản xạ không hợp lệ');
+      response -= c.revealMs + (c.stumbleMs || 0);
+      if (response < (rulesVersion >= 3 ? DIRECTION_MIN_RESPONSE_MS : 80) || (e.direction !== null && response > c.windowMs + 200) || (e.direction !== null && !Object.hasOwn(ARROWS, e.direction))) throw new Error('Phản xạ không hợp lệ');
       if (e.direction === null && response < c.windowMs) throw new Error('Hết giờ không hợp lệ');
       correct = e.direction === c.expected && response <= c.windowMs;
       metrics.timeoutCount += Number(e.direction === null);
@@ -135,7 +148,7 @@ export function replay(game, seed, events, { durationMs = 60000, elapsedMs = dur
     previousAt = e.at;
   }
   metrics.accuracy = metrics.attempts ? Math.round(metrics.correct / (metrics.attempts + mistakes * 0.15) * 10000) / 100 : 100;
-  metrics.score = Math.round(rawScore * (metrics.accuracy / 100) ** 2);
+  metrics.score = game === 'direction_rush' && rulesVersion >= 3 ? rawScore : Math.round(rawScore * (metrics.accuracy / 100) ** 2);
   metrics.avgResponseMs = metrics.correct ? Math.round(totalResponse / metrics.correct) : 0;
   return metrics;
 }

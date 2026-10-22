@@ -1,0 +1,16 @@
+{
+  "phase": "create",
+  "checks": [
+    {
+      "name": "Drawing canvas → S3 bytes → DB → read-back/gallery",
+      "status": "PASS",
+      "evidence": {
+        "id": 1,
+        "hash": "0e6b67dcb1303795bf9f808bc26886589f79279dbca8bb23cfd530509a2f762a"
+      }
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(mine.result.score>0&&mine.result.awardedXp>0)\n\n    at arcade (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/persistence-browser-audit.mjs:24:140)\n    at async Promise.all (index 0)\n    at async file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/persistence-browser-audit.mjs:68:11"
+  ]
+}

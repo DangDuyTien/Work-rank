@@ -22,7 +22,7 @@ async function noOverflow(p) {
 }
 async function setup(game, suffix) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-  const response = await context.request.post(api + '/api/auth/login', { data: { email: `arcade-${suffix}@audit.test`, password: 'ArcadeAuditTest123!' } });
+  const response = await context.request.post(api + '/api/auth/login', { data: { email: `${process.env.UX_ACCOUNT_PREFIX||'arcade'}-${suffix}@audit.test`, password: process.env.UX_PASSWORD||'ArcadeAuditTest123!' } });
   const auth = await response.json(); assert.ok(auth.accessToken);
   await context.addInitScript((token) => {
     localStorage.setItem('token', token); window.__commits=0;
@@ -39,7 +39,7 @@ async function setup(game, suffix) {
     await p.goto(`${web}/games/arcade/${game}`); await p.locator('.arcade-menu').waitFor();
     if (width === 390) {
       assert.equal(await p.locator('.arcade-tutorial-toggle').getAttribute('aria-expanded'), 'true');
-      await p.waitForTimeout(2150);
+      await p.locator('.arcade-tutorial-demo[data-step="2"]').waitFor({timeout:5000});
       assert.equal(await p.locator('.arcade-tutorial-demo').getAttribute('data-step'), '2');
       await p.locator('.arcade-tutorial').scrollIntoViewIfNeeded(); await shot(p, game, 'tutorial-390');
       await p.getByRole('button', { name: 'Đã hiểu · sẵn sàng chơi ✓' }).click();
@@ -59,9 +59,9 @@ async function setup(game, suffix) {
   await p.setViewportSize({ width: 390, height: 844 });
   await p.locator('.arcade-start-row').getByRole('button', { name: 'Vào chơi ngay' }).click();
   await p.waitForURL('**/room/**'); const id = p.url().split('/').at(-1);
-  const initial = await request(`/rooms/${id}`); assert.equal(initial.room.durationSeconds, 60);
+  const initial = await request(`/rooms/${id}`); assert.equal(initial.room.durationSeconds,Number(process.env.UX_EXPECT_DURATION||60));
   await p.locator('.arcade-world').waitFor(); await p.locator('.arcade-countdown').waitFor({ state: 'hidden' });
-  const events = () => p.evaluate(({ id, uid }) => JSON.parse(sessionStorage.getItem(`wr:arcade:v1:${id}:${uid}`) || '[]'), { id, uid: auth.user.id });
+  const events = async () => Array(Number(await p.locator('.arcade-world').getAttribute('data-attempts')));
   const s = { context, p, request, id, initial, events, game };
   return s;
 }
@@ -70,7 +70,7 @@ async function typeWord(s, delay = 45) {
   const input = s.p.locator('#arcade-word-input'); const target = await s.p.getByTestId('challenge-word').textContent();
   const before = (await s.events()).length;
   await input.focus(); await s.p.keyboard.type(target.toLowerCase(), { delay });
-  await s.p.waitForFunction(({ id, uid, before }) => JSON.parse(sessionStorage.getItem(`wr:arcade:v1:${id}:${uid}`) || '[]').length > before, { id: s.id, uid: s.initial.players[0].userId, before });
+  await s.p.waitForFunction(before => Number(document.querySelector('.arcade-world')?.dataset.attempts)>before,before);
 }
 async function sendDirection(s, method = 'key') {
   const p = s.p; await p.locator('.arcade-arrow-object.is-entering').waitFor({ state: 'hidden' });
@@ -134,7 +134,7 @@ async function performanceEnd(s, cdp) {
   check(s.game, 'Input/RAF/CLS sau polish với CPU 4x', perf);
 }
 async function audit(game, i) {
-  const s = await setup(game, ['a', 'd', 'g'][i]), { p } = s;
+  const s = await setup(game, process.env.UX_SUFFIX||['a', 'd', 'g'][i]), { p } = s;
   for (const width of [390, 430, 768, 1024, 1440]) {
     await p.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
     if (game === 'computer_rush') {
@@ -213,7 +213,7 @@ async function audit(game, i) {
   await p.locator('.arcade-result').getByRole('button', { name: /Chơi lại|Vào ván tiếp theo/ }).click();
   await p.waitForURL((url) => url.pathname.includes('/room/') && !url.pathname.endsWith(s.id));
   const nextId = p.url().split('/').at(-1); await p.locator('.arcade-world').waitFor();
-  check(game, 'Mặc định 60s → kết quả có PB thật → một chạm chơi lại', { result: result.players[0].result, newRoom: nextId });
+  check(game, `Ván ${s.initial.room.durationSeconds}s → kết quả có PB thật → một chạm chơi lại`, { result: result.players[0].result, newRoom: nextId });
   await s.request(`/rooms/${nextId}/leave`, {}); await s.context.close();
 }
 try { const results = await Promise.allSettled(games.filter((g) => !process.env.UX_GAME || g === process.env.UX_GAME).map((g) => audit(g, games.indexOf(g)))); for (const r of results) if (r.status === 'rejected') throw r.reason; }

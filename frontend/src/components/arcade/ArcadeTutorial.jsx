@@ -3,8 +3,8 @@ import { AnimatedCollapse } from '../ui';
 
 const LESSONS = {
   computer_rush: { title: 'Thấy từ → gõ đúng → nối combo', steps: ['Nhìn từ', 'Gõ ngay', 'Đúng rồi!'], tip: 'Aa và aa đều đúng. Giữ dấu tiếng Việt; Backspace để sửa.' },
-  direction_rush: { title: 'Nhìn HƯỚNG → bấm thật nhanh', steps: ['Nhìn ↑', 'Bấm ↑ / W', 'Lướt đúng!'], tip: 'Vị trí và màu có thể đổi. Chỉ bấm ngược khi có biển ĐẢO CHIỀU!' },
-  memory_flash: { title: 'Nhớ vị trí → chờ tắt → chọn lại', steps: ['Nhớ ô sao', 'Chờ tắt', 'Chọn đúng ô'], tip: 'Bấm lại để bỏ chọn. Khi sai, xem ✓ chọn đúng · × chọn nhầm · ★ bỏ sót.' },
+  direction_rush: { title: 'Nhìn HƯỚNG → bấm thật nhanh', steps: ['Nhìn ↑', 'Bấm ↑ / W', 'Lướt đúng!'], tip: 'Hướng rõ ở trước, lớp sau chỉ gợi nhịp. Bỏ qua vị trí/màu; chỉ bấm ngược khi có biển ĐẢO CHIỀU!' },
+  memory_flash: { title: 'Nhớ vị trí → chờ tắt → chọn lại', steps: ['Nhớ ô sao', 'Chờ tắt', 'Chọn đúng ô'], tip: 'Bấm lại để bỏ chọn. Khi sai, xem ✓ chọn đúng · × chọn nhầm · ◇ bỏ sót.' },
 };
 export default function ArcadeTutorial({ gameType }) {
   const key = `wr:arcade:learned:v2:${gameType}`;

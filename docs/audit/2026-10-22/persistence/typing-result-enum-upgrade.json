@@ -1,0 +1,6 @@
+{
+  "before": "ENUM('SOLO','1V1','2V2','3V3')",
+  "after": "ENUM('SOLO','1V1','TRIO','2V2','3V3')",
+  "rowsBefore": 100,
+  "rowsAfter": 100
+}

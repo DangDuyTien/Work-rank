@@ -18,6 +18,7 @@ const outboxDispatcherWorker = require('./workers/outboxDispatcher.worker');
 let serverInstance = null;
 let ioInstance = null;
 let isShuttingDown = false;
+let drawingCleanupTimer;
 
 /**
  * Log trạng thái cấu hình lưu trữ ảnh khi khởi động.
@@ -77,6 +78,12 @@ async function start() {
   }
 
   registerSockets(io);
+  const retryDrawingDeletes = () => require('./services/drawing.service').retryPendingDeletes().then((ids) => {
+    for (const drawingId of ids) io.emit('drawing:deleted', { drawingId });
+  }).catch((err) => console.warn('[Drawing cleanup]', err.message));
+  await retryDrawingDeletes();
+  drawingCleanupTimer = setInterval(retryDrawingDeletes, 60000);
+  drawingCleanupTimer.unref();
   server.listen(env.port, '0.0.0.0', () => {
     console.log(`WorkRank backend listening on 0.0.0.0:${env.port}`);
   });
@@ -85,6 +92,7 @@ async function start() {
 async function shutdown(signal) {
   if (isShuttingDown) return;
   isShuttingDown = true;
+  clearInterval(drawingCleanupTimer);
   require('./services/arcade.service').stop();
   console.log(`[Server] Received ${signal}. Starting graceful shutdown...`);
 

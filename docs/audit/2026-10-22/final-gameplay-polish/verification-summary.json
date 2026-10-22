@@ -1,0 +1,42 @@
+{
+  "status": "FOUR_GAME_GAMEPLAY_UX_POLISH_PASS",
+  "gates": {
+    "DIRECTION_STACKED_PREVIEW": "PASS",
+    "DIRECTION_WRONG_FEEDBACK": "PASS",
+    "DIRECTION_INPUT_BUFFER": "PASS",
+    "DIRECTION_MULTIPLAYER_FAIRNESS": "PASS",
+    "COMPUTER_GAMEPLAY_UX": "PASS",
+    "MEMORY_GAMEPLAY_UX": "PASS",
+    "TYPING_GAMEPLAY_UX": "PASS",
+    "SHARED_GAME_DESIGN_SYSTEM": "PASS",
+    "MOBILE_GAMEPLAY": "PASS",
+    "GAMEPLAY_PERFORMANCE": "PASS",
+    "ACCESSIBILITY": "PASS",
+    "PERSISTENCE_REGRESSION": "PASS",
+    "BACKEND_REGRESSION": "PASS",
+    "FRONTEND_BUILD": "PASS"
+  },
+  "backendTests": 117,
+  "browserScenarioItems": 87,
+  "scenarioCounts": {
+    "Direction": 10,
+    "Computer": 11,
+    "Memory": 16,
+    "Native input": 7,
+    "Accessibility": 5,
+    "Multiplayer Computer/Memory": 9,
+    "Persistence dữ liệu cũ": 11,
+    "Persistence ghi mới": 5,
+    "Persistence sau restart": 9,
+    "Typing modes": 3,
+    "Drawing guard chỉ đọc": 1
+  },
+  "frontendFilesChecked": 89,
+  "axeAudits": 4,
+  "axeViolations": 0,
+  "manualContrastPairs": 47,
+  "protectedFilesUnchanged": 260,
+  "ledgerEntriesBeforeAfter": 87,
+  "memoryDeepFixtureSeconds": 90,
+  "normalArcadeSeconds": 60
+}

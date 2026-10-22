@@ -1,0 +1,6 @@
+PASS Drawing canvas → S3 bytes → DB → read-back/gallery
+PASS Typing TRIO finalized into real MySQL enum/result/history
+PASS direction_rush DB result/BXH/history after actual play and finalize retry
+PASS computer_rush DB result/BXH/history after actual play and finalize retry
+PASS memory_flash DB result/BXH/history after actual play and finalize retry
+PASS Direct DB read confirms rows/stats and exactly-once arcade ledger

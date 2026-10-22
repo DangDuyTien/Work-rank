@@ -56,3 +56,9 @@ test('drawing authorization enforces anonymous, owner, team, former and foreign 
   await assert.rejects(() => drawingService.deleteDrawing({ drawingId: teamDrawing.id, userId: foreign.id }), { status: 403 });
   await assert.doesNotReject(() => drawingService.deleteDrawing({ drawingId: privateDrawing.id, userId: owner.id }));
 });
+
+test('user gallery never exposes private drawings to anonymous/foreign users', async () => {
+  assert.equal((await drawingService.getUserDrawings({userId:owner.id})).drawings.length,1);
+  assert.equal((await drawingService.getUserDrawings({userId:owner.id,currentUserId:foreign.id,currentUserTeamId:teamB.id})).drawings.length,1);
+  assert.equal((await drawingService.getUserDrawings({userId:owner.id,currentUserId:sameTeam.id,currentUserTeamId:teamA.id})).drawings.length,2);
+});

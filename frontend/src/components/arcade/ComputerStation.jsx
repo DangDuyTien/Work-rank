@@ -9,8 +9,7 @@ export default memo(function ComputerStation({ current, index, player, canPlay, 
   const latest = useRef(null);
   latest.current = { current, index, previousAt };
   const draft = value.normalize('NFC').trimStart().toLocaleUpperCase('vi');
-  const completed = feedback?.state !== 'wrong' && feedback?.word && !value;
-  const target = (completed ? feedback.word : current.word).normalize('NFC');
+  const target = current.word.normalize('NFC');
   const wrong = !composing && !target.startsWith(draft.trimStart());
   useEffect(() => { setValue(''); errors.current = 0; previous.current = ''; clearTimeout(pending.current); if (input.current) input.current.value = ''; }, [index]);
   useEffect(() => {
@@ -46,8 +45,9 @@ export default memo(function ComputerStation({ current, index, player, canPlay, 
   };
   return <div className="arcade-workstation">
     <div className={`arcade-monitor ${wrong ? 'typing-error' : ''} ${feedback?.state === 'wrong' ? 'bump' : ''}`} data-feedback={feedback?.state || 'idle'}>
-      <div className="arcade-monitor-top"><i /><i /><i /><span>GÕ TỪ NÀY · {index + 1}</span></div>
-      <div className={`arcade-word-wrap ${completed ? 'is-success' : 'is-next'}`} data-transition={completed ? 'complete' : 'ready'}><span className={`arcade-word ${target.length > 13 ? 'long-word' : ''}`} data-testid="challenge-word" aria-label={target}>{Array.from(target).map((char, i) => <span key={i} aria-hidden="true" data-char-state={completed ? 'correct' : i < draft.length ? composing ? 'composing' : char === Array.from(draft)[i] ? 'correct' : 'wrong' : i === draft.length ? 'cursor' : 'pending'}>{char}</span>)}</span></div>
+      <div className="arcade-monitor-top"><i /><i /><i /><span>LƯỢT {index + 1}</span><small>{current.category==='vietnamese'?'TIẾNG VIỆT':'ENGLISH'}</small></div>
+      <div className={`arcade-word-wrap is-next`} data-transition="ready" key={`word-${index}`}><span className={`arcade-word ${target.length > 13 ? 'long-word' : ''}`} data-testid="challenge-word" role="img" aria-label={target}>{Array.from(target).map((char, i) => <span key={i} aria-hidden="true" data-char-state={i < draft.length ? composing ? 'composing' : char === Array.from(draft)[i] ? 'correct' : 'wrong' : i === draft.length ? 'cursor' : 'pending'}>{char}</span>)}</span></div>
+      <div className="computer-word-progress" role="progressbar" aria-label="Ký tự đã gõ" aria-valuemin={0} aria-valuemax={Array.from(target).length} aria-valuenow={Math.min(Array.from(draft).length,Array.from(target).length)}><i style={{transform:`scaleX(${Math.min(1,Array.from(draft).length/Array.from(target).length)})`}}/></div>
       <div className="arcade-computer-input">
         <label htmlFor="arcade-word-input">{composing ? 'Đang đặt dấu…' : wrong ? 'Sửa ký tự được tô đỏ' : 'Gõ ngay bên dưới'}<span>Aa = aa · có dấu</span></label>
         <input ref={input} id="arcade-word-input" value={value} className={wrong ? 'is-wrong' : ''} aria-invalid={wrong} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} enterKeyHint="go" placeholder="Gõ để bắt đầu combo…"
@@ -55,11 +55,11 @@ export default memo(function ComputerStation({ current, index, player, canPlay, 
           onCompositionStart={() => { composition.current = true; setComposing(true); }}
           onCompositionEnd={(e) => { composition.current = false; setComposing(false); change(e.currentTarget.value); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.repeat && !e.nativeEvent.isComposing && !composition.current) { e.preventDefault(); complete(e.currentTarget.value, true); } }} />
-        <small>{wrong ? 'Backspace để sửa · Enter để bỏ qua' : 'Đúng từ → tự chuyển · giữ nhịp, nối combo!'}</small>
+        <small>{wrong ? '⌫ Sửa · Enter bỏ qua' : '✓ Đúng từ → tự chuyển'}</small>
       </div>
-      <div className={`arcade-word-receipt ${feedback ? 'visible' : ''}`} role="status" key={feedback?.id}>{feedback ? <><b>{feedback.state === 'wrong' ? '✕ CHƯA ĐÚNG' : `✓ ${feedback.text}`}</b><span>{feedback.word}</span><strong>{feedback.delta > 0 ? `+${feedback.delta}` : 'Combo bắt đầu lại'}</strong></> : <span>{current.category === 'vietnamese' ? 'TIẾNG VIỆT' : 'ENGLISH'} · TẬP TRUNG VÀO TỪ</span>}</div>
+      <div className={`arcade-word-receipt ${feedback ? 'visible' : ''}`} role="status" key={`receipt-${feedback?.id??'idle'}`}>{feedback ? <><b>{feedback.state === 'wrong' ? '✕ CHƯA ĐÚNG' : `✓ ${feedback.text}`}</b><span>{feedback.word}</span><strong>{feedback.delta > 0 ? `+${feedback.delta}` : 'Combo bắt đầu lại'}</strong></> : <span>{current.category === 'vietnamese' ? 'TIẾNG VIỆT' : 'ENGLISH'} · TẬP TRUNG VÀO TỪ</span>}</div>
     </div>
-    <div className="arcade-monitor-neck" /><div className="arcade-desk"><span>▰ ▰ ▰ ▰ ▰ ▰</span></div>
+    <div className="arcade-monitor-neck" /><div className="arcade-desk"><span aria-hidden="true">⌨</span></div>
     <div className="arcade-main-character"><PlayerAvatar2D player={player} state={feedback?.state || (value ? 'action' : 'idle')} feedbackId={feedback?.id} /></div>
   </div>;
 });

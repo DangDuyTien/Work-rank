@@ -1,0 +1,452 @@
+◇ injected env (20) from .env // tip: ⌘ override existing { override: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ Computer: seed, case, NFC/Unicode, errors, timer, duplicate and forged score (3.206667ms)
+✔ Memory: deterministic patterns, phases, correct/wrong evidence, deselect, duplicate, progression (2.369041ms)
+✔ UX rules v2: readable trick rules, settled entrance timing and authoritative opposite evidence (0.917833ms)
+✔ UX memory: separate size/targets/time ramp, pattern diversity and timeout evidence (0.373291ms)
+✔ Direction: four arrows, WASD, swipe, 55 rapid challenges, wrong, timeout, impossible reaction (0.43275ms)
+✔ Direction v3: preview stimuli stay deterministic, input can follow during animation, server enforces stumble (0.286041ms)
+◇ injected env (20) from .env // tip: ⌘ suppress logs { quiet: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "GET /api/games/arcade/active HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 400 164 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 400 164 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 201 835 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "GET /api/games/arcade/rooms/4c528dc8-d846-47e9-9095-601ddbd8d211 HTTP/1.1" 403 138 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/4c528dc8-d846-47e9-9095-601ddbd8d211/join HTTP/1.1" 400 158 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/4c528dc8-d846-47e9-9095-601ddbd8d211/finish HTTP/1.1" 400 142 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/4c528dc8-d846-47e9-9095-601ddbd8d211/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/4c528dc8-d846-47e9-9095-601ddbd8d211/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 400 164 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 201 836 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "GET /api/games/arcade/rooms/9513a844-5459-4838-b2f4-db1340b40dc0 HTTP/1.1" 403 138 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/9513a844-5459-4838-b2f4-db1340b40dc0/join HTTP/1.1" 400 158 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/9513a844-5459-4838-b2f4-db1340b40dc0/finish HTTP/1.1" 400 142 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/9513a844-5459-4838-b2f4-db1340b40dc0/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/9513a844-5459-4838-b2f4-db1340b40dc0/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 400 164 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 201 834 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "GET /api/games/arcade/rooms/14801876-b662-435f-9247-5146428ac576 HTTP/1.1" 403 138 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/14801876-b662-435f-9247-5146428ac576/join HTTP/1.1" 400 158 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/14801876-b662-435f-9247-5146428ac576/finish HTTP/1.1" 400 142 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/14801876-b662-435f-9247-5146428ac576/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/14801876-b662-435f-9247-5146428ac576/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 201 811 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/41400678-ef57-4dda-99b1-9543ca0cac99/leave HTTP/1.1" 200 429 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "POST /api/games/arcade/rooms/41400678-ef57-4dda-99b1-9543ca0cac99/leave HTTP/1.1" 200 13 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:51 +0000] "GET /api/games/arcade/rooms?gameType=uno&mode=DUO HTTP/1.1" 400 146 "-" "-"
+✔ Arcade HTTP auth, availability, strict modes, ownership, early finalize and idempotent leave (188.072041ms)
+✔ Arcade migration creates indexed durable tables and is safely repeatable (11.693375ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "POST /api/games/arcade/rooms HTTP/1.1" 201 836 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "POST /api/games/arcade/rooms/39bb26b0-daf7-4edc-831b-25ac81034a7b/progress HTTP/1.1" 200 893 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "POST /api/games/arcade/rooms/39bb26b0-daf7-4edc-831b-25ac81034a7b/progress HTTP/1.1" 400 140 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "POST /api/games/arcade/rooms/39bb26b0-daf7-4edc-831b-25ac81034a7b/progress HTTP/1.1" 200 935 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "POST /api/games/arcade/rooms/39bb26b0-daf7-4edc-831b-25ac81034a7b/leave HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:52 +0000] "GET /api/games/arcade/history?gameType=direction_rush HTTP/1.1" 200 - "-" "-"
+✔ Direction HTTP rejects bypassing the authoritative stumble and preserves the valid checkpoint (32.861958ms)
+◇ injected env (20) from .env // tip: ⌘ suppress logs { quiet: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ Computer SOLO → DUO → TRIO: room flow, seeds, privacy, final flush, rewards and rankings
+  ✔ SOLO (31.397959ms)
+  ✔ DUO (39.175791ms)
+  ✔ TRIO (46.931375ms)
+✔ Computer SOLO → DUO → TRIO: room flow, seeds, privacy, final flush, rewards and rankings (141.654459ms)
+▶ Direction and Memory SOLO → DUO → TRIO: evidence replay, forged submissions, concurrent finalize idempotency
+  ✔ direction_rush SOLO (13.419833ms)
+  ✔ direction_rush DUO (30.075292ms)
+  ✔ direction_rush TRIO (37.330333ms)
+  ✔ memory_flash SOLO (12.637542ms)
+  ✔ memory_flash DUO (27.736ms)
+  ✔ memory_flash TRIO (43.236542ms)
+✔ Direction and Memory SOLO → DUO → TRIO: evidence replay, forged submissions, concurrent finalize idempotency (165.339958ms)
+✔ Room lifecycle: transfer host, reset ready, last leave, disconnect expiry, reconnect heartbeat (22.7915ms)
+✔ Revisions are monotonic, immutable checkpoints and offline timeout uses saved evidence (13.573333ms)
+✔ Quick replay keeps one shared party, new seed, same rules and prevents duplicate rewards (62.969291ms)
+✔ Result PB is server-computed, isolated by configuration, and remains stable on duplicate finalize (51.60275ms)
+◇ injected env (20) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ drawing authorization enforces anonymous, owner, team, former and foreign access (64.001ms)
+✔ user gallery never exposes private drawings to anonymous/foreign users (10.92275ms)
+◇ injected env (20) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+▶ Drawing persistent storage remediation
+  ✔ validates image signature, size and dimensions (9.586ms)
+  ✔ local adapter uploads, deletes and is idempotent (8.259041ms)
+  ✔ local adapter blocks path traversal (0.271292ms)
+  ✔ storage key is server-generated and traversal-safe (0.410334ms)
+  ✔ parseStorageKey understands legacy and public URLs (0.106125ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 201 788 "-" "-"
+  ✔ POST /api/drawings persists object + storage metadata (33.328209ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "GET /api/drawings?page=1&limit=50&visibility=PUBLIC HTTP/1.1" 200 902 "-" "-"
+  ✔ GET /api/drawings exposes the stored artwork (6.659083ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "DELETE /api/drawings/1 HTTP/1.1" 403 151 "-" "-"
+  ✔ non-owner cannot delete another artwork (4.680333ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "DELETE /api/drawings/1 HTTP/1.1" 200 53 "-" "-"
+  ✔ owner delete removes DB record and storage object (5.650334ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "DELETE /api/drawings/1 HTTP/1.1" 200 52 "-" "-"
+  ✔ repeated delete is idempotent (no 500) (3.570833ms)
+[Server Error][74f88cb3-f85e-45f0-948a-351f0d025d2d] DELETE /api/drawings/2: StorageError: Tác phẩm đã ẩn; chưa xóa được ảnh trong kho gốc. Hệ thống sẽ thử lại.
+    at Object.deleteDrawing (/Applications/du-an/workrank/workrank-realtime/backend/src/services/drawing.service.js:429:27)
+    at async remove (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:253:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "DELETE /api/drawings/2 HTTP/1.1" 502 212 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "DELETE /api/drawings/2 HTTP/1.1" 200 53 "-" "-"
+  ✔ delete still succeeds when the object is already missing (10.123084ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 400 185 "-" "-"
+  ✔ rejects non-image payloads (2.948291ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 413 146 "-" "-"
+  ✔ rejects oversize payloads with 413 (15.326625ms)
+[Server Error][2b9c8c29-bc35-4f9d-a9ea-b6d360cc03cb] POST /api/drawings: StorageError: Chưa có kho ảnh bền vững. Tác phẩm chưa được đăng; bản nháp của bạn vẫn còn.
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:177:13)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+    at Multipart.emit (node:events:509:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 503 315 "-" "-"
+  ✔ upload fails closed (503) when storage config is invalid — no local fallback (5.040833ms)
+[Server Error][64ca2ebb-7e0d-4848-a522-df7fa6ab17db] POST /api/drawings: Error: simulated DB failure
+    at drawingService.createDrawing (/Applications/du-an/workrank/workrank-realtime/backend/test/drawing_storage.test.js:436:13)
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:191:42)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 500 105 "-" "-"
+  ✔ DB failure after upload rolls the object back (no orphan) (3.505708ms)
+[Server Error][10c94ec5-595f-4837-8142-48791681401b] POST /api/drawings: StorageError: Chưa có kho ảnh bền vững. Tác phẩm chưa được đăng; bản nháp của bạn vẫn còn.
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:177:13)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+    at Multipart.emit (node:events:509:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:53 +0000] "POST /api/drawings HTTP/1.1" 503 231 "-" "-"
+  ✔ development cannot publish to local filesystem and claim durable storage (2.429833ms)
+  ✔ legacy migration uploads existing local file then skips on rerun (2.802083ms)
+  ✔ migration moves nested local-adapter keys and verifies cloud objects on rerun (2.910458ms)
+  ✔ legacy migration marks missing files without deleting the record (1.602458ms)
+  ✔ legacy migration can re-fetch files from the old deployment over HTTP (18.129667ms)
+✔ Drawing persistent storage remediation (141.534958ms)
+✔ sequelize connection is usable for this suite (2.281375ms)
+◇ injected env (20) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ MySQL reordered JSON keys retain immutable event contents (0.709834ms)
+✔ result TRIO migration extends both room and immutable result enum, idempotently (1.088667ms)
+✔ Drawing upload intents preserve bytes across DB activation failure and retries; delete intents retry (30.146834ms)
+◇ injected env (20) from .env // tip: ⌘ override existing { override: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ Arcade TRIO: capacity, readiness, 3s countdown, authoritative winner and replay in the same room (177.54725ms)
+✔ TRIO enum migration is idempotent and preserves existing modes (0.560167ms)
+◇ injected env (20) from .env // tip: ⌘ enable debugging { debug: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "GET /api/games/typing/status HTTP/1.1" 200 16 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "GET /api/games/typing/challenges HTTP/1.1" 200 - "-" "-"
+▶ Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite
+  ✔ 1. Catalog & Challenges: Endpoints return game catalog status and populated challenges (93.876959ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/1/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/1/progress HTTP/1.1" 200 11 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/1/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 2. Solo Mode: Create, auto-ready, start, progress and finish settlement (67.504916ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/2/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "GET /api/games/typing/my-stats HTTP/1.1" 200 377 "-" "-"
+  ✔ 3. 1 VS 1 Ranked Match: 2 players, ready, start, finish and ScoreLedger integration (111.317417ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/switch-team HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/switch-team HTTP/1.1" 409 135 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/switch-team HTTP/1.1" 409 135 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/switch-team HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 4. 2 VS 2 Team Match: 4 players, switch teams, finish settlement & team scores (157.869958ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:55 +0000] "GET /api/games/typing/leaderboard HTTP/1.1" 200 - "-" "-"
+  ✔ 5. Leaderboard: Returns ranked list of typing warriors (10.242709ms)
+✔ Comprehensive Typing Competition Game E2E & ScoreLedger Test Suite (442.203541ms)
+◇ injected env (20) from .env // tip: ⌘ enable debugging { debug: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ typing metrics and ranking use bounded server-authoritative inputs
+  ✔ accuracy is zero for empty input and counts only correct retained characters (0.357584ms)
+  ✔ WPM never returns NaN or Infinity for hostile numeric inputs (0.163583ms)
+  ✔ client duration cannot override server elapsed time (0.319292ms)
+  ✔ final ranking prefers validated performance over raw WPM and elapsed time (0.213ms)
+  ✔ team scoring does not reinterpret zero accuracy as 100% (0.1285ms)
+✔ typing metrics and ranking use bounded server-authoritative inputs (1.918666ms)
+◇ injected env (20) from .env // tip: ⌘ enable debugging { debug: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ Practice attempts verify content/time, reject forged legacy metrics, and settle once
+  ✔ legacy arbitrary metrics cannot write stats or rewards (1.511458ms)
+  ✔ owner, revision, and corrections are server checked (6.383458ms)
+  ✔ fake final duration/WPM/accuracy and concurrent retries cannot award twice (11.238583ms)
+  ✔ old cached fake record is excluded from verified leaderboard (6.73425ms)
+  ✔ early/zero run cannot score even with a forged duration (5.932167ms)
+  ✔ IME composition starts an authoritative clock before text commit (4.911709ms)
+  ✔ NFC Vietnamese, emoji, punctuation and repeated spaces use positional correctness (0.20275ms)
+  ✔ practice migration can create, re-run and roll back in an isolated database (14.036792ms)
+✔ Practice attempts verify content/time, reject forged legacy metrics, and settle once (104.392334ms)
+◇ injected env (20) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ Typing room details stay in their channel; the lobby receives only invalidation (0.794542ms)
+◇ injected env (20) from .env // tip: ⌘ override existing { override: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ Typing re-audit: deadlines, rematches, team participation and ranking ties
+  ✔ deadline rejects newly supplied progress and late finish content (14.648917ms)
+  ✔ a new run in the same room has its own immutable result and reward key (27.254291ms)
+  ✔ AFK team members contribute zero instead of increasing the team average (0.219125ms)
+  ✔ ties have stable server identity order and invalid participants never outrank eligible users (0.1695ms)
+✔ Typing re-audit: deadlines, rematches, team participation and ranking ties (118.229375ms)
+◇ injected env (20) from .env // tip: ⌘ enable debugging { debug: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Scoring Integrity Suite
+  ✔ 1. Typing Engine Unit: Zero-input accuracy returns 0.0%, not 100.0% (49.569958ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/progress HTTP/1.1" 200 11 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/progress HTTP/1.1" 200 11 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/progress HTTP/1.1" 200 11 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/finish HTTP/1.1" 200 - "-" "-"
+[Typing Anti-Cheat Warning] User #2 in Room #1 rejected: Bài thi không có ký tự hợp lệ nào được gõ
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/1/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 2. BUG-009 Monotonic Guard: Stale or zero progress cannot overwrite existing server progress (121.017458ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/start HTTP/1.1" 200 - "-" "-"
+[Typing Anti-Cheat Warning] User #2 in Room #2 rejected: Bài thi không có ký tự hợp lệ nào được gõ
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/2/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 3. BUG-010 Scoring Integrity: Player with 0 typed chars receives 0 points and is disqualified from winning (78.457583ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/start HTTP/1.1" 200 - "-" "-"
+[Typing Anti-Cheat Warning] User #1 in Room #3 rejected: Bài thi không có ký tự hợp lệ nào được gõ
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+[Typing Anti-Cheat Warning] User #2 in Room #3 rejected: Bài thi không có ký tự hợp lệ nào được gõ
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/3/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 4. Dual-AFK Match: Neither player types (0 chars) -> No winner and 0 points awarded (66.388666ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/4/finish HTTP/1.1" 200 - "-" "-"
+  ✔ 5. Simultaneous finishes settle the room and rewards exactly once (63.739708ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/finish HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:07:57 +0000] "POST /api/games/typing/rooms/5/progress HTTP/1.1" 200 11 "-" "-"
+  ✔ 6. Timed-out player progress is scored before the final winner is selected (63.320417ms)
+✔ BUG-009 & BUG-010: Typing Draft Recovery, Monotonic Progress Guard, and Scoring Integrity Suite (447.401167ms)
+◇ injected env (20) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ leaveRoom removes only the caller seat and transfers host when needed (76.344458ms)
+✔ last player leave closes the room once and broadcasts roomRemoved exactly once (19.88625ms)
+✔ concurrent double-leave resolves idempotently (13.838ms)
+✔ leaveDuringStarting returns room to WAITING and emits startingCancelled (15.334125ms)
+✔ leaveWaitingSeat releases WAITING seats but never touches a PLAYING match (29.92575ms)
+✔ disconnected seat cleanup releases the seat after the grace window unless cancelled (39.348167ms)
+✔ out-of-order disconnects: a live socket at expiry keeps the seat; a later disconnect still releases it (140.493166ms)
+✔ listRooms hides zero-player ghosts, rejects unknown status, and broadcasts removal (26.626541ms)
+✔ ghost PLAYING room (crash leftover) is excluded from the live list (16.239ms)
+✔ empty STARTING room from an interrupted replay is abandoned without losing history (9.883166ms)
+✔ creating a new room abandons the stale WAITING seat room and broadcasts it (18.447375ms)
+✔ startMatch announces the ready room -> PLAYING to every lobby (36.262625ms)
+✔ leaving during PLAYING surrenders the seat; last TYPING player finalizes the match (27.230041ms)
+✔ DB integrity: abandoned rooms never keep player rows after any lifecycle path (46.592083ms)
+◇ injected env (20) from .env // tip: ⌘ override existing { override: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:13 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:13 +0000] "POST /api/games/typing/rooms/1/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:13 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:13 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:13 +0000] "POST /api/games/typing/rooms/1/start HTTP/1.1" 200 - "-" "-"
+▶ Typing Battle socket room state sync (late join / reconnect)
+  ✔ Typing: connect-before-join is rejected, then converges with authoritative state (180.206833ms)
+[test-teardown] Failed to close Sequelize connection: SQLITE_MISUSE: Database is closed
+✔ Typing Battle socket room state sync (late join / reconnect) (183.107208ms)
+◇ injected env (20) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "POST /api/games/typing/rooms HTTP/1.1" 201 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "POST /api/games/typing/rooms/1/join HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "POST /api/games/typing/rooms/1/ready HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "POST /api/games/typing/rooms/1/start HTTP/1.1" 200 - "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:08:29 +0000] "GET /api/games/typing/rooms/1/spectators HTTP/1.1" 200 349 "-" "-"
+▶ Typing Battle — Live Spectator Mode Integration Test
+  ✔ 1. Setup 1v1 match and verify spectator join, snapshot, and viewer count increments (255.862083ms)
+[test-teardown] Failed to close Sequelize connection: SQLITE_MISUSE: Database is closed
+✔ Typing Battle — Live Spectator Mode Integration Test (263.183709ms)
+◇ injected env (20) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+▶ typing Unicode semantics
+  ✔ NFC/NFD Vietnamese are equivalent and normalized output is NFC (0.563458ms)
+  ✔ grapheme clusters count as one typing position (0.112208ms)
+  ✔ punctuation and whitespace remain strict positional characters (0.156292ms)
+  ✔ case policy is deterministic and case-insensitive (0.107416ms)
+  ✔ NFC normalization occurs before challenge boundary validation (0.075209ms)
+✔ typing Unicode semantics (1.636292ms)
+ℹ tests 111
+ℹ suites 0
+ℹ pass 111
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39354.752209

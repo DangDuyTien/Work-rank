@@ -1,0 +1,50 @@
+{
+  "startedAt": "2026-10-22T03:21:33.320Z",
+  "checks": [
+    {
+      "name": "drawing input/frame CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "drawing",
+        "cpuThrottle": 4,
+        "inputSamples": 28,
+        "inputToNextFrameP50Ms": 0.9000000357627869,
+        "inputToNextFrameP95Ms": 4.800000011920929,
+        "frameP95Ms": 9.400000000000091,
+        "frameSamples": 50,
+        "cls": 0,
+        "longTasks": 0,
+        "longestTaskMs": 0,
+        "reactCommits": 1
+      }
+    },
+    {
+      "name": "Drawing mobile fit, undo/redo and IndexedDB draft reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Drawing confirmed remote image, stable retry identity, one row and gallery",
+      "status": "PASS",
+      "evidence": {
+        "id": 8
+      }
+    }
+  ],
+  "errors": [],
+  "performance": [
+    {
+      "game": "drawing",
+      "cpuThrottle": 4,
+      "inputSamples": 28,
+      "inputToNextFrameP50Ms": 0.9000000357627869,
+      "inputToNextFrameP95Ms": 4.800000011920929,
+      "frameP95Ms": 9.400000000000091,
+      "frameSamples": 50,
+      "cls": 0,
+      "longTasks": 0,
+      "longestTaskMs": 0,
+      "reactCommits": 1
+    }
+  ],
+  "finishedAt": "2026-10-22T03:21:37.829Z"
+}

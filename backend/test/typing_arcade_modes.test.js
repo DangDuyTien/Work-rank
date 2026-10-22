@@ -29,6 +29,11 @@ test('Arcade TRIO: capacity, readiness, 3s countdown, authoritative winner and r
   const next=await game.getRoomDetail(id,users[0].id);
   assert.equal(next.room.status,'WAITING'); assert.equal(next.players.length,3); assert.equal(next.result,null);
   assert.ok(next.players.every(p=>!p.isReady)); assert.equal(await TypingMatchResult.count({where:{roomId:id}}),1);
+  const history=await game.getHistory(users[0].id);
+  const saved=history.attempts.find(a=>Number(a.roomId)===Number(id));
+  assert.ok(saved?.validatedAt&&saved?.createdAt&&saved?.startedAt);
+  assert.equal(saved.gameType,'typing_battle');assert.equal(saved.rank,1);
+  assert.equal(saved.score,done.result.results.find(r=>r.userId===users[0].id).performanceScore);
   assert.equal(await ScoreLedger.count(),awards);
   for(const u of users.slice(0,3)) await game.leaveRoom(id,u.id);
   assert.equal(await TypingPlayer.count({where:{roomId:id}}),0);

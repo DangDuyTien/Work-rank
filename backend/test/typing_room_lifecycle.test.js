@@ -256,6 +256,14 @@ test('ghost PLAYING room (crash leftover) is excluded from the live list', async
   assert.ok(!live.map((r) => Number(r.id)).includes(Number(roomId)));
 });
 
+test('empty STARTING room from an interrupted replay is abandoned without losing history', async () => {
+  const roomId = await makeRoom(0);
+  await TypingRoom.update({ status:'STARTING',startAt:new Date(Date.now()+3000) },{where:{id:roomId}});
+  await TypingPlayer.destroy({where:{roomId}});
+  await typingGameService.getActiveRoom(users[0].id);
+  assert.equal((await TypingRoom.findByPk(roomId)).status,'ABANDONED');
+});
+
 test('creating a new room abandons the stale WAITING seat room and broadcasts it', async () => {
   const oldRoomId = await makeRoom(0);
   const newDetail = await typingGameService.createRoom({ mode: '1V1' }, { id: users[0].id });

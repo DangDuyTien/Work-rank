@@ -1,18 +1,16 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const { Op } = require('sequelize');
 const { Drawing, DrawingLike, User, Team, UserProfilePreference, SystemSetting } = require('../models');
 const { ValidationError, NotFoundError, ForbiddenError, StorageError } = require('../utils/errors');
 const { resolveStorageConfig } = require('../config/storage');
+const transaction = require('./typingTransaction');
 const {
   getDrawingStorage,
   parseStorageKey,
 } = require('./storage/drawingStorage.service');
 
 const CREATIVE_CORNER_SETTING_KEY = 'creative_corner_settings';
-const LEGACY_UPLOAD_PREFIX = '/uploads/drawings/';
 
 /**
  * Get current system settings for Creative Corner & Drawing Game.
@@ -116,10 +114,14 @@ function canViewDrawing(drawing, { userId = null, teamId = null, isAdmin = false
 
 function formatDrawing(drawing, likedDrawingIds = new Set()) {
   const plain = drawing.get ? drawing.get({ plain: true }) : drawing;
+  const storageConfig = resolveStorageConfig();
   return {
     id: plain.id,
     title: plain.title || 'Tác phẩm không tên',
-    imageUrl: plain.imageUrl || plain.image_url,
+    imageUrl: plain.storageProvider === 's3' && plain.storageKey && storageConfig.provider === 's3' && storageConfig.ok
+      ? getDrawingStorage().getPublicUrl(plain.storageKey) : plain.imageUrl || plain.image_url,
+    storageProvider: plain.storageProvider || null,
+    storagePersistent: plain.storageProvider === 's3',
     width: plain.width || 1200,
     height: plain.height || 700,
     visibility: plain.visibility || 'PUBLIC',
@@ -292,57 +294,37 @@ async function getById(drawingId, { userId = null, teamId = null, isAdmin = fals
 /**
  * Create a new drawing artwork.
  *
- * `imageUrl`/`storageKey` do controller (server) quyết định sau khi upload object
- * storage thành công — client không bao giờ truyền trực tiếp các giá trị này.
+ * Server determines imageUrl/storageKey; a HIDDEN upload intent owns the key
+ * before upload, and is activated only after storage succeeds.
  */
-async function createDrawing({
-  userId,
-  teamId = null,
-  title,
-  imageUrl,
-  storageKey = null,
-  storageProvider = null,
-  mimeType = null,
-  sizeBytes = null,
-  width = 1200,
-  height = 700,
-  visibility = 'PUBLIC',
-  metadata = {},
-}) {
-  if (!userId) {
-    throw new ValidationError('Thiếu thông tin người dùng.');
-  }
-  if (!imageUrl) {
-    throw new ValidationError('Thiếu đường dẫn hình ảnh tác phẩm.');
-  }
-
-  let cleanTitle = String(title || '').trim();
-  if (!cleanTitle) {
-    cleanTitle = 'Tác phẩm không tên';
-  }
-  if (cleanTitle.length > 120) {
-    cleanTitle = cleanTitle.substring(0, 120);
-  }
-
-  const drawing = await Drawing.create({
-    userId,
-    title: cleanTitle,
-    imageUrl,
-    storageKey,
-    storageProvider,
-    mimeType,
-    sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : null,
-    width: parseInt(width, 10) || 1200,
-    height: parseInt(height, 10) || 700,
-    visibility: ['PUBLIC', 'TEAM', 'PRIVATE'].includes(visibility) ? visibility : 'PUBLIC',
-    status: 'ACTIVE',
-    likesCount: 0,
-    viewsCount: 0,
-    metadata: metadata || {},
+async function createDrawing({ userId, teamId = null, title, imageUrl, storageKey, storageProvider, mimeType, sizeBytes, width = 1200, height = 700, visibility = 'PUBLIC', metadata = {}, publicationId, checksum, buffer, storage }) {
+  if (!userId || !imageUrl || !storageKey || !publicationId) throw new ValidationError('Thiếu thông tin xuất bản tác phẩm.');
+  const row = await transaction(async (t) => {
+    await User.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
+    const existing = await Drawing.findOne({ where: { userId, 'metadata.publicationId': publicationId }, transaction: t, lock: t.LOCK.UPDATE });
+    if (existing) {
+      if (existing.metadata?.checksum !== checksum) throw new ValidationError('Bản nháp đã đổi. Hãy mở lại bản xem trước để đăng.');
+      if (existing.status === 'DELETED' || existing.metadata?.deletionPending) throw new ValidationError('Tác phẩm này đã được yêu cầu xóa.');
+      return existing;
+    }
+    // Persist an upload intent BEFORE talking to object storage. Interrupted
+    // uploads/DB activation retain an owned row and stable key for safe retry.
+    return Drawing.create({ userId, title: String(title || '').trim().slice(0,120) || 'Tác phẩm không tên', imageUrl, storageKey, storageProvider, mimeType, sizeBytes,
+      width, height, visibility: ['PUBLIC','TEAM','PRIVATE'].includes(visibility) ? visibility : 'PUBLIC', status: 'HIDDEN',
+      metadata: { ...metadata, publicationId, checksum, uploadState: 'PENDING' } }, { transaction: t });
   });
-
-  const created = await getById(drawing.id, { userId, teamId });
-  return created;
+  if (row.status !== 'ACTIVE') {
+    try { await storage.upload({ key: row.storageKey, buffer, contentType: mimeType }); }
+    catch (err) { throw new StorageError('Không thể tải ảnh lên kho lưu trữ. Bản nháp vẫn còn; bạn có thể thử lại.', { status: 502, code: 'STORAGE_UPLOAD_FAILED' }); }
+    await transaction(async (t) => {
+      const saved = await Drawing.findByPk(row.id, { transaction: t, lock: t.LOCK.UPDATE });
+      saved.status = 'ACTIVE';
+      saved.metadata = { ...saved.metadata, uploadState: 'CONFIRMED', validatedAt: new Date().toISOString() };
+      await saved.save({ transaction: t });
+    });
+  }
+  // A read-back failure must never delete an already committed object's bytes.
+  return getById(row.id, { userId, teamId });
 }
 
 /**
@@ -393,90 +375,50 @@ async function toggleLike({ drawingId, userId, teamId = null, isAdmin = false })
 }
 
 /**
- * Xóa file legacy còn nằm trong `/uploads/drawings` (bản ghi chưa migrate).
- * Best-effort: lỗi file không được chặn việc xóa bản ghi.
- */
-function deleteLegacyLocalFile(imageUrl) {
-  try {
-    if (!imageUrl || !imageUrl.startsWith(LEGACY_UPLOAD_PREFIX)) return;
-    const filename = path.basename(imageUrl);
-    const config = resolveStorageConfig();
-    const rootDir = config.local?.rootDir || path.resolve(__dirname, '../../uploads');
-    const filePath = path.resolve(rootDir, 'drawings', filename);
-    if (!filePath.startsWith(path.resolve(rootDir, 'drawings'))) return;
-    if (fs.existsSync(filePath)) {
-      fs.unlink(filePath, (err) => {
-        if (err) console.warn('[DrawingService] Không xóa được file legacy:', err.message);
-      });
-    }
-  } catch (err) {
-    console.warn('[DrawingService] Lỗi dọn file legacy:', err.message);
-  }
-}
-
-/**
  * Delete a drawing artwork (by author or admin).
  *
- * Thứ tự có chủ đích: xóa object storage TRƯỚC, rồi mới đánh dấu DB.
- * - Storage lỗi → DB giữ nguyên ACTIVE, client nhận lỗi và retry được (không orphan
- *   object "mồ côi" vì bản ghi vẫn còn trỏ tới object).
- * - Storage xong nhưng DB lỗi → retry sẽ gặp object đã mất, được coi là đã xóa
- *   (idempotent) nên lần retry hoàn tất được.
+ * Persist HIDDEN + deletionPending before deleting bytes. Storage failures leave
+ * a durable retry intent; startup/background reconciliation completes deletion.
  */
 async function deleteDrawing({ drawingId, userId, isAdmin = false }) {
-  const drawing = await Drawing.findByPk(drawingId);
-
-  if (!drawing) {
-    throw new NotFoundError('Tác phẩm không tồn tại.');
-  }
-
-  // BIGINT có thể được driver trả về dạng string → so sánh qua Number để không chặn nhầm
-  if (Number(drawing.userId) !== Number(userId) && !isAdmin) {
-    throw new ForbiddenError('Bạn không có quyền xóa tác phẩm này.');
-  }
-
-  // Idempotent: gọi lại lần 2 không được 500
-  if (drawing.status === 'DELETED') {
-    return { success: true, drawingId: drawing.id, alreadyDeleted: true };
-  }
-
-  const storageConfig = resolveStorageConfig();
-  const storageKey =
-    drawing.storageKey ||
-    parseStorageKey(drawing.imageUrl, { publicBaseUrl: storageConfig.s3.publicBaseUrl });
-
-  const isRemoteObject =
-    Boolean(storageKey) &&
-    drawing.storageProvider !== 'external' &&
-    !String(drawing.imageUrl || '').startsWith('data:');
-
-  if (isRemoteObject) {
+  const drawing = await transaction(async (t) => {
+    const row = await Drawing.findByPk(drawingId, { transaction: t, lock: t.LOCK.UPDATE });
+    if (!row) throw new NotFoundError('Tác phẩm không tồn tại.');
+    if (Number(row.userId) !== Number(userId) && !isAdmin) throw new ForbiddenError('Bạn không có quyền xóa tác phẩm này.');
+    if (row.status === 'DELETED') return row;
+    if (row.metadata?.uploadState === 'PENDING') throw new ValidationError('Tác phẩm đang được lưu; hãy thử xóa lại sau khi lưu xong.');
+    row.status = 'HIDDEN';
+    row.metadata = { ...row.metadata, deletionPending: true };
+    await row.save({ transaction: t });
+    return row;
+  });
+  if (drawing.status === 'DELETED') return { success: true, drawingId: drawing.id, alreadyDeleted: true };
+  const config = resolveStorageConfig();
+  const key = drawing.storageKey || parseStorageKey(drawing.imageUrl, { publicBaseUrl: config.s3.publicBaseUrl });
+  if (key && drawing.storageProvider !== 'external' && !String(drawing.imageUrl || '').startsWith('data:')) {
     try {
-      const result = await getDrawingStorage().delete({ key: storageKey });
-      if (result?.alreadyMissing) {
-        console.info('[DrawingService] Object đã không còn trên storage (coi như đã xóa):', {
-          drawingId: drawing.id,
-          key: storageKey,
-        });
-      }
-    } catch (err) {
-      console.error('[DrawingService] Xóa object storage thất bại:', {
-        drawingId: drawing.id,
-        key: storageKey,
-        message: err.message,
-      });
-      throw new StorageError(
-        'Không thể xóa ảnh tác phẩm khỏi kho lưu trữ. Vui lòng thử lại.',
-        { status: 502, code: 'STORAGE_DELETE_FAILED' }
-      );
-    }
-  } else {
-    deleteLegacyLocalFile(drawing.imageUrl);
+      const localRecord = drawing.storageProvider === 'local' || String(drawing.imageUrl || '').startsWith('/uploads/');
+      const storage = localRecord ? require('./storage/localDrawingStorage.adapter').createLocalDrawingStorageAdapter(config.local) : getDrawingStorage();
+      if (!localRecord && storage.provider !== 's3') throw new Error('Kho ảnh gốc chưa được cấu hình.');
+      await storage.delete({ key });
+    } catch (err) { throw new StorageError('Tác phẩm đã ẩn; chưa xóa được ảnh trong kho gốc. Hệ thống sẽ thử lại.', { status: 502, code: 'STORAGE_DELETE_FAILED' }); }
   }
-
-  await drawing.update({ status: 'DELETED' });
-
+  await transaction(async (t) => {
+    const row = await Drawing.findByPk(drawing.id, { transaction: t, lock: t.LOCK.UPDATE });
+    row.status = 'DELETED'; row.metadata = { ...row.metadata, deletionPending: false };
+    await row.save({ transaction: t });
+  });
   return { success: true, drawingId: drawing.id, alreadyDeleted: false };
+}
+
+async function retryPendingDeletes() {
+  const rows = await Drawing.findAll({ where: { status: 'HIDDEN', 'metadata.deletionPending': true }, limit: 20 });
+  const completed = [];
+  for (const row of rows) {
+    try { await deleteDrawing({ drawingId: row.id, userId: row.userId }); completed.push(row.id); }
+    catch { /* Durable intent stays in DB; storage may still be unavailable. */ }
+  }
+  return completed;
 }
 
 /**
@@ -492,11 +434,13 @@ async function getUserDrawings({ userId, currentUserId = null, currentUserTeamId
     status: 'ACTIVE',
   };
 
-  if (currentUserId !== userId && !isAdmin && currentUserTeamId) {
-    const author = await User.findByPk(userId, { attributes: ['teamId'] });
-    if (author?.teamId === currentUserTeamId) {
-      delete whereClause.visibility;
-      whereClause[Op.or] = [{ visibility: 'PUBLIC' }, { visibility: 'TEAM' }];
+  if (!isAdmin && String(currentUserId) !== String(userId)) {
+    whereClause.visibility = 'PUBLIC';
+    if (currentUserTeamId) {
+      const author = await User.findByPk(userId, { attributes: ['teamId'] });
+      if (author?.teamId != null && String(author.teamId) === String(currentUserTeamId)) {
+        whereClause.visibility = { [Op.in]: ['PUBLIC','TEAM'] };
+      }
     }
   }
 
@@ -560,5 +504,6 @@ module.exports = {
   createDrawing,
   toggleLike,
   deleteDrawing,
+  retryPendingDeletes,
   getUserDrawings,
 };

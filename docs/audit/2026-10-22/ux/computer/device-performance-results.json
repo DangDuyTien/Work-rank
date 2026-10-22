@@ -1,0 +1,163 @@
+{
+  "startedAt": "2026-10-22T02:58:15.891Z",
+  "checks": [
+    {
+      "game": "computer_rush",
+      "name": "Tutorial minh họa 3 bước, bỏ qua và nhớ lựa chọn sau reload",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Tutorial tĩnh khi hệ điều hành yêu cầu giảm chuyển động",
+      "status": "PASS"
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 390px",
+      "status": "PASS",
+      "evidence": {
+        "width": 390,
+        "events": 1
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 430px",
+      "status": "PASS",
+      "evidence": {
+        "width": 430,
+        "events": 2
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 768px",
+      "status": "PASS",
+      "evidence": {
+        "width": 768,
+        "events": 3
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1024px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1024,
+        "events": 4
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Chơi tương tác tại 1440px",
+      "status": "PASS",
+      "evidence": {
+        "width": 1440,
+        "events": 5
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Target và input cùng nhìn thấy khi viewport còn 390×430",
+      "status": "PASS",
+      "evidence": {
+        "inputTop": 221.46875,
+        "inputBottom": 273.359375,
+        "targetTop": 145.2050018310547,
+        "targetBottom": 188.0018768310547,
+        "viewport": 430
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Input/RAF/CLS sau polish với CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "computer_rush",
+        "cpuThrottle": 4,
+        "reactCommits": 768,
+        "domNodes": 367,
+        "fpsMean": 116.0919173890872,
+        "frameSamples": 1457,
+        "frameP50Ms": 8.300000000001091,
+        "frameP95Ms": 9.299999999999272,
+        "inputSamples": 315,
+        "inputToNextFrameP50Ms": 6.300000011920929,
+        "inputToNextFrameP95Ms": 15.900000035762787,
+        "gameplayCls": 0,
+        "shiftDetails": [],
+        "longTaskCount": 1,
+        "longestTaskMs": 71
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Cài đặt giảm chuyển động",
+      "status": "PASS",
+      "evidence": {
+        "animation": "none",
+        "transition": "0s"
+      }
+    },
+    {
+      "game": "computer_rush",
+      "name": "Mặc định 60s → kết quả có PB thật → một chạm chơi lại",
+      "status": "PASS",
+      "evidence": {
+        "result": {
+          "mode": "SOLO",
+          "rank": 1,
+          "combo": 26,
+          "score": 5216,
+          "userId": 1,
+          "correct": 26,
+          "accuracy": 97.2,
+          "attempts": 26,
+          "eligible": true,
+          "gameType": "computer_rush",
+          "attemptId": "8c35e9db-54ad-4efc-903c-ef48aaeebaf7",
+          "awardedXp": 26,
+          "bestCombo": 26,
+          "createdAt": "2026-10-22T02:58:25.000Z",
+          "forfeited": false,
+          "startedAt": "2026-10-22T02:58:29.000Z",
+          "finishedAt": "2026-10-22T02:59:29.021Z",
+          "wrongCount": 0,
+          "improvement": 5216,
+          "lastCorrect": true,
+          "validatedAt": "2026-10-22T02:59:29.021Z",
+          "perfectCount": 0,
+          "timeoutCount": 0,
+          "avgResponseMs": 575,
+          "isPersonalBest": true,
+          "lastResponseMs": 619,
+          "playerAttemptId": "591d73b9-67d1-4fd3-8341-b8b92b355842",
+          "personalBestScore": 5216,
+          "previousBestScore": 0
+        },
+        "newRoom": "c65fad62-3dcd-4cd0-8c73-9590372de73f"
+      }
+    }
+  ],
+  "errors": [],
+  "performance": [
+    {
+      "game": "computer_rush",
+      "cpuThrottle": 4,
+      "reactCommits": 768,
+      "domNodes": 367,
+      "fpsMean": 116.0919173890872,
+      "frameSamples": 1457,
+      "frameP50Ms": 8.300000000001091,
+      "frameP95Ms": 9.299999999999272,
+      "inputSamples": 315,
+      "inputToNextFrameP50Ms": 6.300000011920929,
+      "inputToNextFrameP95Ms": 15.900000035762787,
+      "gameplayCls": 0,
+      "shiftDetails": [],
+      "longTaskCount": 1,
+      "longestTaskMs": 71
+    }
+  ],
+  "finishedAt": "2026-10-22T02:59:30.785Z"
+}

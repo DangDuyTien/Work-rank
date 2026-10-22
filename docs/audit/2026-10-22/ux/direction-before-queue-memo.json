@@ -1,0 +1,60 @@
+{
+  "startedAt": "2026-10-22T02:51:11.641Z",
+  "checks": [
+    {
+      "name": "Direction current +3, promotion and single-slot rapid input buffer",
+      "status": "PASS",
+      "evidence": {
+        "queue": [
+          {
+            "index": 1,
+            "direction": "LEFT",
+            "opacity": "0.72",
+            "transform": "matrix(0.72, 0, 0, 0.72, 0, 0)"
+          },
+          {
+            "index": 2,
+            "direction": "RIGHT",
+            "opacity": "0.52",
+            "transform": "matrix(0.52, 0, 0, 0.52, 0, 0)"
+          },
+          {
+            "index": 3,
+            "direction": "RIGHT",
+            "opacity": "0.32",
+            "transform": "matrix(0.32, 0, 0, 0.32, 0, 0)"
+          }
+        ],
+        "before": 0,
+        "after": 2
+      }
+    },
+    {
+      "name": "Direction wrong freezes input, then resumes clearly",
+      "status": "PASS",
+      "evidence": {
+        "penaltyObserved": 586,
+        "configuredMs": 450
+      }
+    }
+  ],
+  "errors": [
+    "AssertionError [ERR_ASSERTION]: {\"game\":\"direction_rush\",\"cpuThrottle\":4,\"inputSamples\":83,\"inputToNextFrameP50Ms\":13.599999964237213,\"inputToNextFrameP95Ms\":20.5,\"frameP95Ms\":16.799999999999272,\"frameSamples\":1777,\"cls\":0,\"longTasks\":4,\"longestTaskMs\":158,\"reactCommits\":1678}\n    at perfEnd (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/persistence-ux-audit.mjs:44:367)\n    at async direction (file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/persistence-ux-audit.mjs:68:2)\n    at async file:///Applications/du-an/workrank/workrank-realtime/frontend/scripts/persistence-ux-audit.mjs:98:64"
+  ],
+  "performance": [
+    {
+      "game": "direction_rush",
+      "cpuThrottle": 4,
+      "inputSamples": 83,
+      "inputToNextFrameP50Ms": 13.599999964237213,
+      "inputToNextFrameP95Ms": 20.5,
+      "frameP95Ms": 16.799999999999272,
+      "frameSamples": 1777,
+      "cls": 0,
+      "longTasks": 4,
+      "longestTaskMs": 158,
+      "reactCommits": 1678
+    }
+  ],
+  "finishedAt": "2026-10-22T02:51:33.487Z"
+}

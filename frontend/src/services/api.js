@@ -1255,6 +1255,7 @@ export const gameCatalogApi = {
 };
 
 export const typingGameApi = {
+  getHistory: async () => (await api.get('/api/games/typing/history')).data,
   createPracticeAttempt: async (data) => (await api.post('/api/games/typing/practice/attempts', data)).data,
   activePracticeAttempt: async () => (await api.get('/api/games/typing/practice/active')).data,
   updatePracticeProgress: async (id, data) => (await api.post(`/api/games/typing/practice/attempts/${id}/progress`, data)).data,
@@ -1382,8 +1383,9 @@ export const drawingApi = {
     const res = await api.get(`/api/drawings/user/${userId}`, { params });
     return res.data;
   },
-  createDrawing: async (formData) => {
+  createDrawing: async (formData, onUploadProgress) => {
     const res = await api.post('/api/drawings', formData, {
+      onUploadProgress,
       headers: {
         'Content-Type': 'multipart/form-data',
       },

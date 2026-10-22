@@ -1,0 +1,36 @@
+/* Overlapping depth stack. Absolute wrappers share bounds; inner faces animate
+   depth without FLIP overwriting their scale or measuring on clock renders. */
+.direction-stack { position: relative; isolation: isolate; width: min(330px,100%); height: 234px; }
+.direction-stack-caption { position: absolute; bottom: 1px; left: 0; right: 0; text-align: center; font-size: 9px; font-weight: 750; letter-spacing: .08em; color: #555f8a; }
+.direction-stack-track { position: absolute; width: 148px; height: 144px; left: calc(50% - 98px); top: 67px; }
+.direction-stack-card { position: absolute; inset: 0; pointer-events: none; }
+.direction-stack-face { width: 148px; height: 144px; box-sizing: border-box; display: grid; place-items: center; position: relative; border: 3px solid #828bb3; border-bottom-width: 7px; border-radius: 26px; color: #46568e; background: #fffefa; transform-origin: center; transition: transform var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard); }
+.direction-stack-face>strong { font-size: 115px; line-height: 1; font-weight: 850; }
+.direction-stack-hint { font-size: 98px; line-height: 1; }
+.direction-stack-card[data-depth="0"] .direction-stack-face { transform: translate(0,0) scale(1); opacity: 1; box-shadow: 0 4px 0 #bfc7df; }
+.direction-stack-card[data-depth="1"] .direction-stack-face { transform: translate(49px,-39px) scale(.86); opacity: .64; }
+.direction-stack-card[data-depth="2"] .direction-stack-face { transform: translate(78px,-57px) scale(.72); opacity: .32; }
+.direction-stack-card[data-depth="3"] .direction-stack-face { transform: translate(99px,-67px) scale(.6); opacity: .18; }
+.direction-stack-card[data-depth="3"] .direction-stack-hint { font-size: 73px; }
+.direction-stack-card[data-depth="-1"] .direction-stack-face { transform: translate(-35px,12px) scale(.92); opacity: 0; transition-duration: var(--motion-instant); }
+.direction-stack-face[data-color="1"] { color: #2b6872; border-color: #658d96; background: #f4fcfa; }.direction-stack-face[data-color="2"] { color: #8e5e30; border-color: #aa885f; background: #fffbef; }
+.direction-stack[data-frozen="true"] .direction-stack-card:not([data-depth="0"]) .direction-stack-face { transition: none; animation: none; }
+.direction-stack-face[data-wrong="true"] { border-color: #a34951; outline: 2px dashed #b86c64; outline-offset: 3px; animation: direction-cue-stumble var(--motion-fast) var(--ease-standard) both; }
+.direction-stack-anchor { width: min(330px,100%); transform: translateX(calc(var(--arrow-slot) * 18px)); }
+.direction-runner-position { transition: transform var(--motion-fast) var(--ease-standard); }
+.direction-lane-rank { position: absolute; top: 1px; left: 6px; font-size: 10px; font-weight: 800; color: #5f6792; }
+.arcade-page .has-direction-queue[data-stumbling="true"] .my-lane .arcade-player .arcade-actor { animation: direction-stumble var(--motion-slow) var(--ease-standard) both; }
+.has-direction-queue[data-stumbling="true"] .arcade-direction-feedback { color: #943940; }
+.has-direction-queue .arcade-direction-controls button[aria-disabled="true"] { opacity: .55; }
+.arcade-polished .has-direction-queue .arcade-stimulus-zone { min-height: 0; padding-top: 0; }
+.has-direction-queue .arcade-response-track { margin-top: 7px; }
+.has-direction-queue .arcade-direction-feedback { width: 100%; min-height: 64px; background: transparent; padding: 0; }
+.has-direction-queue .arcade-direction-feedback>span { gap: 8px; }.has-direction-queue .arcade-direction-feedback>b { font-size: 13px; }
+.has-direction-queue .arcade-lanes { margin-top: 0; }
+.is-opposite .direction-stack-card[data-depth="0"] .direction-stack-face { border-style: dashed; border-bottom-style: solid; border-color: #ae753f; color: #8a562f; background: #fff6df; }
+.direction-stack[data-tempo="fast"] .direction-stack-caption { color: #8a453e; }
+@keyframes direction-cue-stumble { 25% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(3px) rotate(2deg); } to { transform: translateX(0); } }
+@keyframes direction-stumble { 25% { transform: translateX(-4px) rotate(-6deg); } 60%,85% { transform: translateY(3px) rotate(4deg); } }
+@media(max-width:700px) { .direction-stack { height: 213px; }.direction-stack-track { width: 132px; height: 128px; left: calc(50% - 90px); top: 63px; }.direction-stack-face { width: 132px; height: 128px; border-radius: 23px; }.direction-stack-face>strong { font-size: 103px; }.direction-stack-hint { font-size: 88px; }.direction-stack-anchor { transform: translateX(calc(var(--arrow-slot) * 10px)); }.has-direction-queue .arcade-direction-rule strong { font-size: 12px; }.has-direction-queue .arcade-direction-rule>span { font-size: 10px; } }
+@media(prefers-reduced-motion:reduce) { .direction-stack *, .direction-runner-position { animation: none !important; transition: none !important; } }
+html[data-workrank-reduce-motion="true"] .direction-stack *,html[data-workrank-reduce-motion="true"] .direction-runner-position { animation: none !important; transition: none !important; }

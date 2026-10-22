@@ -1,0 +1,76 @@
+{
+  "checks": [
+    {
+      "name": "Vietnamese NFD composition commits once, caret remains native",
+      "status": "PASS",
+      "evidence": {
+        "value": "cùng",
+        "start": 5,
+        "end": 5
+      }
+    },
+    {
+      "name": "Backspace correction after composition",
+      "status": "PASS"
+    },
+    {
+      "name": "620 native characters cross virtual word blocks, current line visible",
+      "status": "PASS",
+      "evidence": {
+        "top": 415.953125,
+        "bottom": 563.953125,
+        "markerTop": 449.953125,
+        "markerBottom": 473.953125,
+        "nodes": 895,
+        "firstIndex": "427"
+      }
+    },
+    {
+      "name": "Offline typing and reload restore full draft",
+      "status": "PASS",
+      "evidence": {
+        "characters": 628
+      }
+    },
+    {
+      "name": "Keyboard viewport keeps current line and local mini race visible",
+      "status": "PASS",
+      "evidence": {
+        "top": 348.4864196777344,
+        "bottom": 372.4864196777344,
+        "viewport": 430,
+        "compact": true,
+        "laneTop": 225.61143493652344,
+        "laneBottom": 253.61143493652344,
+        "sceneScroll": 0
+      }
+    },
+    {
+      "name": "Reduced motion keeps text and color feedback",
+      "status": "PASS",
+      "evidence": {
+        "animation": "none"
+      }
+    },
+    {
+      "name": "Shared sound preference and one prewarmed AudioContext across four routes",
+      "status": "PASS",
+      "evidence": {
+        "audioContexts": 1,
+        "buffers": 6,
+        "sources": 0,
+        "playedBeforeReload": {
+          "contexts": 1,
+          "buffers": 6,
+          "sources": 138,
+          "state": "running"
+        },
+        "preference": "off"
+      }
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Chromium composition events and keyboard viewport emulation; no physical UniKey/OS keyboard session."
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trophy, Play, Users, Sparkles, Plus } from 'lucide-react';
+import { ArrowLeft, Trophy, Play, Users, Sparkles, Plus, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button, PageState, TabTransition, FlipTableBody } from '../components/ui';
 import { ArcadePoster, PlayerAvatar2D } from '../components/arcade/ArcadeArt';
@@ -9,9 +9,17 @@ import { ARCADE_GAMES } from '../games/arcade/catalog';
 import useArcadeSession, { arcadeApi } from '../games/arcade/useArcadeSession';
 import ArcadeTutorial from '../components/arcade/ArcadeTutorial';
 import ArcadeResult from '../components/arcade/ArcadeResult';
-import { ArcadeSoundControl } from '../components/arcade/ArcadeShared';
+import SavedGameHistory from '../components/arcade/SavedGameHistory';
+import { ArcadeComplete, ArcadeSoundControl } from '../components/arcade/ArcadeShared';
 import '../components/arcade/arcade.css';
 import '../components/arcade/arcade-polish.css';
+
+function SettledResult(props) {
+  const [settled,setSettled]=useState(false);
+  useEffect(()=>{const timer=setTimeout(()=>setSettled(true),340);return()=>clearTimeout(timer);},[]);
+  const me=props.snapshot.players.find(p=>String(p.userId)===String(props.userId));
+  return settled?<ArcadeResult {...props}/>:<ArcadeComplete score={me.result.score} rank={me.result.rank}/>;
+}
 
 function Leaderboard({ gameType, mode, setMode }) {
   const [period, setPeriod] = useState('all');
@@ -93,14 +101,14 @@ export default function ArcadeGame() {
   const me = snapshot?.players.find((p) => String(p.userId) === String(user.id));
   const effective = snapshot?.room.gameType || gameType;
   return <div className={`arcade-page ${effective}`}>
-    <header className="arcade-topbar"><button type="button" onClick={exit}><ArrowLeft size={18} /><span>{roomId ? 'Rời phòng' : 'Game Center'}</span></button><span className="arcade-brand">WORK RANK <b>ARCADE</b></span><ArcadeSoundControl /><button type="button" disabled={snapshot?.room.status === 'PLAYING' && !me?.finishedAt} onClick={() => { if (snapshot) setMode(snapshot.room.mode); setView((v) => v === 'board' ? 'play' : 'board'); }} aria-pressed={view === 'board'}><Trophy size={18} /><span>BXH</span></button></header>
+    <header className="arcade-topbar"><button type="button" onClick={exit}><ArrowLeft size={18} /><span>{roomId ? 'Rời phòng' : 'Game Center'}</span></button><span className="arcade-brand">WORK RANK <b>ARCADE</b></span><ArcadeSoundControl /><button type="button" aria-label="Lịch sử đã lưu" aria-pressed={view==='history'} disabled={snapshot?.room.status==='PLAYING'&&!me?.finishedAt} onClick={()=>setView(v=>v==='history'?'play':'history')}><History size={18}/></button><button type="button" disabled={snapshot?.room.status === 'PLAYING' && !me?.finishedAt} onClick={() => { if (snapshot) setMode(snapshot.room.mode); setView((v) => v === 'board' ? 'play' : 'board'); }} aria-pressed={view === 'board'}><Trophy size={18} /><span>BXH</span></button></header>
     {(error || session.error) && <p className="arcade-notice motion-slide-down" role="alert">{error || session.error}</p>}
     {roomId && !session.online && <p className="arcade-offline" role="status">Kết nối gián đoạn · input vẫn hoạt động · đang giữ bản lưu trên thiết bị</p>}
-    <TabTransition key={view === 'board' ? 'board' : roomId ? 'room' : 'menu'} minHeight={640}>
-      {view === 'board' ? <Leaderboard gameType={effective} mode={mode} setMode={setMode} />
+    <TabTransition key={view==='play' ? roomId?'room':'menu' : view} minHeight={640}>
+      {view === 'history' ? <SavedGameHistory kind="arcade" gameType={effective} onOpen={()=>setView('play')}/> : view === 'board' ? <Leaderboard gameType={effective} mode={mode} setMode={setMode} />
         : roomId ? !snapshot ? <PageState type="loading" message="Đang mở sân chơi…" />
           : snapshot.room.status === 'WAITING' ? <section className="arcade-lobby"><p className="arcade-kicker">{snapshot.room.mode} · PHÒNG CHỜ</p><h1>{game.name}</h1><p>{snapshot.room.title} · {snapshot.players.length}/{snapshot.room.capacity} người</p><div className="arcade-lobby-stage">{snapshot.players.map((p) => <div key={p.id}><PlayerAvatar2D player={p} state={p.ready ? 'ready' : 'idle'} /><span className="arcade-ready-label">{p.ready ? '✓ Sẵn sàng' : 'Đang chuẩn bị'}{String(p.userId) === String(snapshot.room.hostId) ? ' · Chủ phòng' : ''}</span></div>)}{Array.from({ length: snapshot.room.capacity - snapshot.players.length }, (_, i) => <div className="arcade-empty-seat" key={i}><Users size={40} /><span>Đợi đồng đội…</span></div>)}</div><p className="arcade-controls-info">{game.controls}</p><div className="arcade-actions"><Button onClick={() => session.action('ready', { ready: !me.ready })}>{me.ready ? 'Hủy sẵn sàng' : 'Tôi đã sẵn sàng'}</Button>{String(snapshot.room.hostId) === String(user.id) && <Button variant="secondary" disabled={snapshot.players.length !== snapshot.room.capacity || snapshot.players.some((p) => !p.ready)} onClick={() => session.action('start')}><Play size={18} /> Bắt đầu</Button>}</div></section>
-            : me?.finishedAt ? <ArcadeResult snapshot={snapshot} userId={user.id} busy={busy} onReplay={replayGame} onBoard={() => { setMode(snapshot.room.mode); setView('board'); }} />
+          : me?.finishedAt ? <SettledResult key={snapshot.room.id} snapshot={snapshot} userId={user.id} busy={busy} onReplay={replayGame} onBoard={() => { setMode(snapshot.room.mode); setView('board'); }} />
               : <ArcadePlay key={snapshot.room.id} snapshot={snapshot} userId={user.id} eventsRef={session.eventsRef} record={session.record} offsetRef={session.offsetRef} personalBest={personal?.score || 0} />
           : <section className="arcade-menu"><div className="arcade-menu-hero"><div><p className="arcade-kicker">WORK RANK ARCADE · {game.mark}</p><h1>{game.name}</h1><h2>{game.subtitle}</h2><p>{game.description}</p><span className="arcade-best-chip"><Trophy size={16} /> Kỷ lục {mode}: <b>{personal?.score ?? '—'}</b> · Hạng {personal?.rank ? `#${personal.rank}` : '—'} · Chuỗi {personal?.bestCombo ?? '—'}</span></div><ArcadePoster gameType={gameType} /></div>
             <ArcadeTutorial key={gameType} gameType={gameType} /><h3>Chọn chế độ của bạn</h3><div className="arcade-mode-select">{[{ id: 'SOLO', icon: '✦', label: 'Phá kỷ lục của bạn', players: '01' }, { id: 'DUO', icon: '⚑', label: 'Đấu 1v1', players: '02' }, { id: 'TRIO', icon: '♛', label: '3 người tranh hạng', players: '03' }].map((m) => <button key={m.id} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}><span className="arcade-mode-icon">{m.icon}</span><span><b>{m.id}</b><small>{m.label}</small></span><em>{m.players}</em></button>)}</div>

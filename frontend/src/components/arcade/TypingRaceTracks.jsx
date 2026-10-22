@@ -32,7 +32,7 @@ const Runner = memo(function Runner({ player, telemetry, local, finished, durati
 });
 export default memo(function TypingRaceTracks({ players, user, telemetry, duration = 120 }) {
   const racers = players.length ? players : [{ userId: user.id, user: user, liveRank: 1 }];
-  return <div className="typing-race-tracks" aria-label="Đường đua Typing Battle 2D">
+  return <div className="typing-race-tracks" role="group" aria-label="Đường đua Typing Battle 2D">
     {racers.map((p, i) => {
       const local = String(p.userId) === String(user.id), done = p.status === 'FINISHED';
       const player = { ...p, position: i % 3 + 1, name: p.user?.name || p.name || 'Người chơi', avatarUrl: p.user?.avatarUrl || p.avatarUrl };

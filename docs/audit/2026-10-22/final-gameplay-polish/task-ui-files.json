@@ -1,0 +1,15 @@
+[
+  "frontend/src/components/TypingPassage.jsx",
+  "frontend/src/pages/ArcadeGame.jsx",
+  "frontend/src/components/arcade/ArcadeShared.jsx",
+  "frontend/src/components/arcade/TypingArcadeView.jsx",
+  "frontend/src/components/arcade/direction-queue.css",
+  "frontend/src/components/arcade/MemoryBoard.jsx",
+  "frontend/src/components/arcade/DirectionArena.jsx",
+  "frontend/src/components/arcade/ArcadePlay.jsx",
+  "frontend/src/components/arcade/RaceStrip.jsx",
+  "frontend/src/components/arcade/ArcadeTutorial.jsx",
+  "frontend/src/components/arcade/TypingRaceTracks.jsx",
+  "frontend/src/components/arcade/ComputerStation.jsx",
+  "frontend/src/components/arcade/gameplay-polish.css"
+]

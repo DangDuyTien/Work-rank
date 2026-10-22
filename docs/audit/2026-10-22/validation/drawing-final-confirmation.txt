@@ -1,0 +1,112 @@
+◇ injected env (20) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ drawing authorization enforces anonymous, owner, team, former and foreign access (59.026833ms)
+✔ user gallery never exposes private drawings to anonymous/foreign users (6.010958ms)
+◇ injected env (20) from .env // tip: ⌘ suppress logs { quiet: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+▶ Drawing persistent storage remediation
+  ✔ validates image signature, size and dimensions (11.076834ms)
+  ✔ local adapter uploads, deletes and is idempotent (6.876417ms)
+  ✔ local adapter blocks path traversal (0.243583ms)
+  ✔ storage key is server-generated and traversal-safe (0.375167ms)
+  ✔ parseStorageKey understands legacy and public URLs (0.124125ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 201 788 "-" "-"
+  ✔ POST /api/drawings persists object + storage metadata (31.973167ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "GET /api/drawings?page=1&limit=50&visibility=PUBLIC HTTP/1.1" 200 902 "-" "-"
+  ✔ GET /api/drawings exposes the stored artwork (6.221583ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "DELETE /api/drawings/1 HTTP/1.1" 403 151 "-" "-"
+  ✔ non-owner cannot delete another artwork (4.658541ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "DELETE /api/drawings/1 HTTP/1.1" 200 53 "-" "-"
+  ✔ owner delete removes DB record and storage object (5.240417ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "DELETE /api/drawings/1 HTTP/1.1" 200 52 "-" "-"
+  ✔ repeated delete is idempotent (no 500) (3.094708ms)
+[Server Error][86426ca5-39e7-4ea8-829e-706e620d6ee4] DELETE /api/drawings/2: StorageError: Tác phẩm đã ẩn; chưa xóa được ảnh trong kho gốc. Hệ thống sẽ thử lại.
+    at Object.deleteDrawing (/Applications/du-an/workrank/workrank-realtime/backend/src/services/drawing.service.js:404:27)
+    at async remove (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:253:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "DELETE /api/drawings/2 HTTP/1.1" 502 212 "-" "-"
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "DELETE /api/drawings/2 HTTP/1.1" 200 53 "-" "-"
+  ✔ delete still succeeds when the object is already missing (7.848792ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 400 185 "-" "-"
+  ✔ rejects non-image payloads (3.61125ms)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 413 146 "-" "-"
+  ✔ rejects oversize payloads with 413 (16.046666ms)
+[Server Error][2f23bf22-0b89-4f6b-8b88-05b7cdc59a54] POST /api/drawings: StorageError: Chưa có kho ảnh bền vững. Tác phẩm chưa được đăng; bản nháp của bạn vẫn còn.
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:177:13)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+    at Multipart.emit (node:events:509:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 503 315 "-" "-"
+  ✔ upload fails closed (503) when storage config is invalid — no local fallback (5.455083ms)
+[Server Error][e1801907-e2dc-4a4b-81eb-e970e832e6ac] POST /api/drawings: Error: simulated DB failure
+    at drawingService.createDrawing (/Applications/du-an/workrank/workrank-realtime/backend/test/drawing_storage.test.js:436:13)
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:191:42)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 500 105 "-" "-"
+  ✔ DB failure after upload rolls the object back (no orphan) (3.128708ms)
+[Server Error][3c5c7ab4-aa13-4279-9500-766116830eb6] POST /api/drawings: StorageError: Chưa có kho ảnh bền vững. Tác phẩm chưa được đăng; bản nháp của bạn vẫn còn.
+    at create (/Applications/du-an/workrank/workrank-realtime/backend/src/controllers/drawing.controller.js:177:13)
+    at /Applications/du-an/workrank/workrank-realtime/backend/src/utils/asyncHandler.js:1:67
+    at Layer.handleRequest (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/layer.js:152:17)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/router/lib/route.js:157:13)
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at next (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:73:16)
+    at done (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:168:7)
+    at indicateDone (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:172:68)
+    at Multipart.<anonymous> (/Applications/du-an/workrank/workrank-realtime/backend/node_modules/multer/lib/make-middleware.js:432:7)
+    at Multipart.emit (node:events:509:20)
+::ffff:127.0.0.1 - - [22/Oct/2026:03:09:55 +0000] "POST /api/drawings HTTP/1.1" 503 231 "-" "-"
+  ✔ development cannot publish to local filesystem and claim durable storage (2.358417ms)
+  ✔ legacy migration uploads existing local file then skips on rerun (2.573042ms)
+  ✔ migration moves nested local-adapter keys and verifies cloud objects on rerun (2.877125ms)
+  ✔ legacy migration marks missing files without deleting the record (1.454042ms)
+  ✔ legacy migration can re-fetch files from the old deployment over HTTP (17.08075ms)
+✔ Drawing persistent storage remediation (136.149ms)
+✔ sequelize connection is usable for this suite (2.159791ms)
+◇ injected env (20) from .env // tip: ⌘ override existing { override: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ MySQL reordered JSON keys retain immutable event contents (0.929291ms)
+✔ result TRIO migration extends both room and immutable result enum, idempotently (1.101375ms)
+✔ Drawing upload intents preserve bytes across DB activation failure and retries; delete intents retry (27.210875ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1696.808584

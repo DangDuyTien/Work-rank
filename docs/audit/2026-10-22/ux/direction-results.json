@@ -1,0 +1,161 @@
+{
+  "startedAt": "2026-10-22T02:54:13.753Z",
+  "checks": [
+    {
+      "name": "Direction current +3, promotion and single-slot rapid input buffer",
+      "status": "PASS",
+      "evidence": {
+        "queue": [
+          {
+            "index": 1,
+            "direction": "DOWN",
+            "opacity": "0.72",
+            "transform": "matrix(0.72, 0, 0, 0.72, 0, 0)"
+          },
+          {
+            "index": 2,
+            "direction": "LEFT",
+            "opacity": "0.52",
+            "transform": "matrix(0.52, 0, 0, 0.52, 0, 0)"
+          },
+          {
+            "index": 3,
+            "direction": "DOWN",
+            "opacity": "0.32",
+            "transform": "matrix(0.32, 0, 0, 0.32, 0, 0)"
+          }
+        ],
+        "before": 0,
+        "after": 2
+      }
+    },
+    {
+      "name": "Direction wrong freezes input, then resumes clearly",
+      "status": "PASS",
+      "evidence": {
+        "penaltyObserved": 482,
+        "configuredMs": 450
+      }
+    },
+    {
+      "name": "direction_rush input/frame CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "direction_rush",
+        "cpuThrottle": 4,
+        "inputSamples": 40,
+        "inputToNextFrameP50Ms": 13.599999964237213,
+        "inputToNextFrameP95Ms": 17.099999964237213,
+        "frameP95Ms": 16.100000000000364,
+        "frameSamples": 733,
+        "cls": 0,
+        "longTasks": 0,
+        "longestTaskMs": 0,
+        "reactCommits": 799
+      }
+    },
+    {
+      "name": "Direction trick stages preserve raw queue semantics",
+      "status": "PASS",
+      "evidence": {
+        "stages": [
+          "position",
+          "color",
+          "entrance",
+          "opposite",
+          "final"
+        ],
+        "oppositeChecked": true
+      }
+    },
+    {
+      "name": "Direction history UI reads committed v3 and legacy results",
+      "status": "PASS"
+    },
+    {
+      "name": "Direction DUO rival overtakes after real stumble, no boost",
+      "status": "PASS",
+      "evidence": {
+        "mine": {
+          "score": 143,
+          "correct": 1,
+          "attempts": 2,
+          "accuracy": 50,
+          "bestCombo": 1,
+          "combo": 0,
+          "avgResponseMs": 175,
+          "perfectCount": 1,
+          "wrongCount": 1,
+          "timeoutCount": 0,
+          "lastCorrect": false,
+          "lastResponseMs": 91
+        },
+        "other": {
+          "score": 290,
+          "correct": 2,
+          "attempts": 2,
+          "accuracy": 100,
+          "bestCombo": 2,
+          "combo": 2,
+          "avgResponseMs": 230,
+          "perfectCount": 2,
+          "wrongCount": 0,
+          "timeoutCount": 0,
+          "lastCorrect": true,
+          "lastResponseMs": 113
+        }
+      }
+    },
+    {
+      "name": "Direction TRIO rival overtakes after real stumble, no boost",
+      "status": "PASS",
+      "evidence": {
+        "mine": {
+          "score": 136,
+          "correct": 1,
+          "attempts": 2,
+          "accuracy": 50,
+          "bestCombo": 1,
+          "combo": 0,
+          "avgResponseMs": 366,
+          "perfectCount": 0,
+          "wrongCount": 1,
+          "timeoutCount": 0,
+          "lastCorrect": false,
+          "lastResponseMs": 86
+        },
+        "other": {
+          "score": 282,
+          "correct": 2,
+          "attempts": 2,
+          "accuracy": 100,
+          "bestCombo": 2,
+          "combo": 2,
+          "avgResponseMs": 336,
+          "perfectCount": 1,
+          "wrongCount": 0,
+          "timeoutCount": 0,
+          "lastCorrect": true,
+          "lastResponseMs": 123
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "performance": [
+    {
+      "game": "direction_rush",
+      "cpuThrottle": 4,
+      "inputSamples": 40,
+      "inputToNextFrameP50Ms": 13.599999964237213,
+      "inputToNextFrameP95Ms": 17.099999964237213,
+      "frameP95Ms": 16.100000000000364,
+      "frameSamples": 733,
+      "cls": 0,
+      "longTasks": 0,
+      "longestTaskMs": 0,
+      "reactCommits": 799
+    }
+  ],
+  "finishedAt": "2026-10-22T02:54:56.176Z"
+}

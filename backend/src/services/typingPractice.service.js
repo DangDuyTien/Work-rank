@@ -67,7 +67,10 @@ async function finish(id, userId, data) {
     const recorded = measured.eligible && a.durationSeconds >= 120 && elapsed >= a.durationSeconds * 1000;
     const awardedXp = recorded ? Math.min(40, Math.max(5, Math.round(measured.wpm * measured.accuracy / 100 * (a.durationSeconds / 60) / 10))) : 0;
     const { text: privateText, ...publicMetrics } = measured;
-    const result = { ...publicMetrics, attemptId: a.id, recorded, awardedXp, reason: recorded ? null : (a.durationSeconds < 120 ? 'DURATION_LESS_THAN_2_MINUTES' : elapsed < a.durationSeconds * 1000 ? 'ATTEMPT_ENDED_EARLY' : 'INVALID_PARTICIPATION'), message: recorded ? 'Máy chủ đã xác minh thành tích luyện tập và ghi nhận một lần.' : 'Bài luyện tập này không đủ điều kiện ghi BXH hoặc nhận XP.' };
+    const finishedAt = new Date();
+    const result = { ...publicMetrics, attemptId: a.id, userId, gameType: 'typing_battle', mode: 'SOLO', rank: 1, score: measured.performanceScore,
+      startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : null, finishedAt: finishedAt.toISOString(), validatedAt: finishedAt.toISOString(), createdAt: new Date(a.createdAt).toISOString(),
+      recorded, awardedXp, reason: recorded ? null : (a.durationSeconds < 120 ? 'DURATION_LESS_THAN_2_MINUTES' : elapsed < a.durationSeconds * 1000 ? 'ATTEMPT_ENDED_EARLY' : 'INVALID_PARTICIPATION'), message: recorded ? 'Máy chủ đã xác minh thành tích luyện tập và ghi nhận một lần.' : 'Bài luyện tập này không đủ điều kiện ghi BXH hoặc nhận XP.' };
     if (recorded) {
       const [stat] = await Stat.findOrCreate({ where: { userId }, defaults: { userId }, transaction: t });
       await stat.reload({ transaction: t, lock: t.LOCK.UPDATE });
@@ -88,7 +91,7 @@ async function finish(id, userId, data) {
       await ScoreLedger.create({ idempotencyKey: `typing_practice_attempt:${a.id}`, effectType: 'INDIVIDUAL_XP', pointsDelta: awardedXp, userId, teamId: user.teamId, seasonId: season?.id || null, eventId: crypto.randomUUID(), reason: 'Luyện tập đánh máy đã xác minh', metadata: { ...result, type: 'PRACTICE' } }, { transaction: t });
       await stat.save({ transaction: t });
     }
-    a.status = 'FINISHED'; a.finishedAt = new Date(); a.result = result;
+    a.status = 'FINISHED'; a.finishedAt = finishedAt; a.result = result;
     await a.save({ transaction: t });
     return result;
   });

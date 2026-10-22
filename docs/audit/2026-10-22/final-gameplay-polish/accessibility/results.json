@@ -1,0 +1,2658 @@
+{
+  "axeVersion": "4.14.0",
+  "checks": [
+    {
+      "name": "Keyboard focus style",
+      "focus": {
+        "tag": "BUTTON",
+        "outline": "solid"
+      }
+    },
+    {
+      "name": "Direction immediate wrong cue and visible 450ms penalty",
+      "inputToWrongMs": 1.600000023841858,
+      "visiblePenaltyMs": 480.39999997615814
+    },
+    "Computer local wrong glyph, no fullscreen error flash",
+    "Memory roving focus + Space selects the focused tile",
+    {
+      "name": "Typing color-independent wrong character",
+      "error": {
+        "decoration": "wavy",
+        "outline": "dashed",
+        "pseudoAnimation": "typing-error-tap"
+      }
+    }
+  ],
+  "audits": [
+    {
+      "game": "direction_rush",
+      "violations": [],
+      "passes": 14,
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".arcade-direction-rule > strong"
+              ],
+              "html": "<strong>➜ NHÌN HƯỚNG · BẤM THEO</strong>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-direction-rule > span"
+              ],
+              "html": "<span class=\"\">Nhìn trước một nhịp · giữ nhịp tay</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".direction-stack-caption"
+              ],
+              "html": "<span class=\"direction-stack-caption\">HIỆN TẠI</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "strong[data-testid=\"challenge-direction\"]"
+              ],
+              "html": "<strong data-testid=\"challenge-direction\" data-direction=\"DOWN\" data-expected=\"DOWN\" role=\"img\" aria-label=\"Hướng DOWN\">↓</strong>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "span[data-queue-index=\"2\"]"
+              ],
+              "html": "<span aria-hidden=\"true\" class=\"direction-stack-hint\" data-testid=\"queued-direction\" data-direction=\"LEFT\" data-queue-index=\"2\">←</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "span[data-queue-index=\"3\"]"
+              ],
+              "html": "<span aria-hidden=\"true\" class=\"direction-stack-hint\" data-testid=\"queued-direction\" data-direction=\"LEFT\" data-queue-index=\"3\">←</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "span[data-direction=\"UP\"]"
+              ],
+              "html": "<span aria-hidden=\"true\" class=\"direction-stack-hint\" data-testid=\"queued-direction\" data-direction=\"UP\" data-queue-index=\"4\">◇</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                ".arcade-direction-feedback > b"
+              ],
+              "html": "<b>MŨI TÊN / WASD / VUỐT</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-direction-feedback > span"
+              ],
+              "html": "<span>Nhịp nhanh dần · giữ combo</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".direction-lane-rank"
+              ],
+              "html": "<small class=\"direction-lane-rank\">#1</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".wr-avatar-container > span"
+              ],
+              "html": "<span style=\"font-family: &quot;Space Grotesk&quot;, -apple-system, sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.5px;\">CH</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name"
+              ],
+              "html": "<span class=\"arcade-name\"><b>P1</b> Chi</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name > b"
+              ],
+              "html": "<b>P1</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi UP\"]"
+              ],
+              "html": "<button type=\"button\" aria-label=\"Đi UP\" aria-disabled=\"false\" data-pressed=\"false\">↑<small>W</small></button>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi UP\"] > small"
+              ],
+              "html": "<small>W</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi LEFT\"]"
+              ],
+              "html": "<button type=\"button\" aria-label=\"Đi LEFT\" aria-disabled=\"false\" data-pressed=\"false\">←<small>A</small></button>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi LEFT\"] > small"
+              ],
+              "html": "<small>A</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi DOWN\"]"
+              ],
+              "html": "<button type=\"button\" aria-label=\"Đi DOWN\" aria-disabled=\"false\" data-pressed=\"false\">↓<small>S</small></button>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi DOWN\"] > small"
+              ],
+              "html": "<small>S</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi RIGHT\"]"
+              ],
+              "html": "<button type=\"button\" aria-label=\"Đi RIGHT\" aria-disabled=\"false\" data-pressed=\"false\">→<small>D</small></button>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "button[aria-label=\"Đi RIGHT\"] > small"
+              ],
+              "html": "<small>D</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo"
+              ],
+              "html": "<div class=\"arcade-combo \" data-level=\"0\"><span>✦</span> x0 <small>COMBO</small></div>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo > span"
+              ],
+              "html": "<span>✦</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                ".arcade-combo > small"
+              ],
+              "html": "<small>COMBO</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-goal"
+              ],
+              "html": "<span class=\"arcade-goal\">✦ Tạo kỷ lục đầu tiên của bạn</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            }
+          ]
+        }
+      ],
+      "manualContrast": [
+        {
+          "target": [
+            ".arcade-direction-rule > strong"
+          ],
+          "text": "➜ NHÌN HƯỚNG · BẤM THEO",
+          "foreground": "rgb(76, 80, 126)",
+          "compositedBackground": [
+            246,
+            246,
+            251
+          ],
+          "fontSize": "15px",
+          "fontWeight": "700",
+          "ratio": 7.09,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".direction-stack-caption"
+          ],
+          "text": "HIỆN TẠI",
+          "foreground": "rgb(85, 95, 138)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "9px",
+          "fontWeight": "750",
+          "ratio": 5.13,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "strong[data-testid=\"challenge-direction\"]"
+          ],
+          "text": "↓",
+          "foreground": "rgb(70, 86, 142)",
+          "compositedBackground": [
+            255,
+            254,
+            250
+          ],
+          "fontSize": "115px",
+          "fontWeight": "850",
+          "ratio": 6.98,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-direction-feedback > b"
+          ],
+          "text": "MŨI TÊN / WASD / VUỐT",
+          "foreground": "rgb(93, 99, 136)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "13px",
+          "fontWeight": "700",
+          "ratio": 4.82,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".direction-lane-rank"
+          ],
+          "text": "#1",
+          "foreground": "rgb(95, 103, 146)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "10px",
+          "fontWeight": "800",
+          "ratio": 4.53,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".wr-avatar-container > span"
+          ],
+          "text": "CH",
+          "foreground": "rgb(89, 29, 114)",
+          "compositedBackground": [
+            242,
+            234,
+            246
+          ],
+          "fontSize": "20px",
+          "fontWeight": "700",
+          "ratio": 9.7,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-name"
+          ],
+          "text": "P1 Chi",
+          "foreground": "rgb(38, 59, 56)",
+          "compositedBackground": [
+            255,
+            253,
+            244
+          ],
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "ratio": 11.68,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-name > b"
+          ],
+          "text": "P1",
+          "foreground": "rgb(255, 255, 255)",
+          "compositedBackground": [
+            60,
+            115,
+            80
+          ],
+          "fontSize": "9px",
+          "fontWeight": "900",
+          "ratio": 5.58,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "button[aria-label=\"Đi UP\"]"
+          ],
+          "text": "↑W",
+          "foreground": "rgb(90, 93, 152)",
+          "compositedBackground": [
+            250,
+            250,
+            255
+          ],
+          "fontSize": "31px",
+          "fontWeight": "800",
+          "ratio": 5.84,
+          "threshold": 3
+        },
+        {
+          "target": [
+            "button[aria-label=\"Đi UP\"] > small"
+          ],
+          "text": "W",
+          "foreground": "rgb(90, 93, 152)",
+          "compositedBackground": [
+            250,
+            250,
+            255
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.84,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-combo"
+          ],
+          "text": "✦ x0 COMBO",
+          "foreground": "rgb(108, 126, 88)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "29px",
+          "fontWeight": "900",
+          "ratio": 3.65,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-combo > small"
+          ],
+          "text": "COMBO",
+          "foreground": "rgb(83, 99, 69)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.37,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-goal"
+          ],
+          "text": "✦ Tạo kỷ lục đầu tiên của bạn",
+          "foreground": "rgb(83, 106, 80)",
+          "compositedBackground": [
+            232,
+            233,
+            244
+          ],
+          "fontSize": "10px",
+          "fontWeight": "650",
+          "ratio": 4.91,
+          "threshold": 4.5
+        }
+      ]
+    },
+    {
+      "game": "computer_rush",
+      "violations": [],
+      "passes": 19,
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".arcade-scene-title"
+              ],
+              "html": "<div class=\"arcade-scene-title\">Gõ nhanh · Giữ combo</div>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-monitor-top > span"
+              ],
+              "html": "<span>LƯỢT 1</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-monitor-top > small"
+              ],
+              "html": "<small>ENGLISH</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-state=\"wrong\"]"
+              ],
+              "html": "<span aria-hidden=\"true\" data-char-state=\"wrong\">E</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-state=\"cursor\"]"
+              ],
+              "html": "<span aria-hidden=\"true\" data-char-state=\"cursor\">D</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-state=\"pending\"][aria-hidden=\"true\"]:nth-child(3)"
+              ],
+              "html": "<span aria-hidden=\"true\" data-char-state=\"pending\">I</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-state=\"pending\"][aria-hidden=\"true\"]:nth-child(4)"
+              ],
+              "html": "<span aria-hidden=\"true\" data-char-state=\"pending\">T</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "label[for=\"arcade-word-input\"]"
+              ],
+              "html": "<label for=\"arcade-word-input\">Sửa ký tự được tô đỏ<span>Aa = aa · có dấu</span></label>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "label[for=\"arcade-word-input\"] > span"
+              ],
+              "html": "<span>Aa = aa · có dấu</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "#arcade-word-input"
+              ],
+              "html": "<input id=\"arcade-word-input\" class=\"is-wrong\" aria-invalid=\"true\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" enterkeyhint=\"go\" placeholder=\"Gõ để bắt đầu combo…\" value=\"z\">",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-computer-input > small"
+              ],
+              "html": "<small>⌫ Sửa · Enter bỏ qua</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-word-receipt > span"
+              ],
+              "html": "<span>ENGLISH · TẬP TRUNG VÀO TỪ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".wr-avatar-container > span"
+              ],
+              "html": "<span style=\"font-family: &quot;Space Grotesk&quot;, -apple-system, sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.5px;\">CH</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name"
+              ],
+              "html": "<span class=\"arcade-name\"><b>P1</b> Chi</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name > b"
+              ],
+              "html": "<b>P1</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo"
+              ],
+              "html": "<div class=\"arcade-combo \" data-level=\"0\"><span>✦</span> x0 <small>COMBO</small></div>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo > span"
+              ],
+              "html": "<span>✦</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                ".arcade-combo > small"
+              ],
+              "html": "<small>COMBO</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-goal"
+              ],
+              "html": "<span class=\"arcade-goal\">✦ Tạo kỷ lục đầu tiên của bạn</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            }
+          ]
+        }
+      ],
+      "manualContrast": [
+        {
+          "target": [
+            ".arcade-scene-title"
+          ],
+          "text": "Gõ nhanh · Giữ combo",
+          "foreground": "rgb(82, 110, 83)",
+          "compositedBackground": [
+            228,
+            238,
+            224
+          ],
+          "fontSize": "10px",
+          "fontWeight": "750",
+          "ratio": 4.74,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-monitor-top > span"
+          ],
+          "text": "LƯỢT 1",
+          "foreground": "rgb(83, 107, 76)",
+          "compositedBackground": [
+            250,
+            255,
+            239
+          ],
+          "fontSize": "9px",
+          "fontWeight": "700",
+          "ratio": 5.77,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-monitor-top > small"
+          ],
+          "text": "ENGLISH",
+          "foreground": "rgb(72, 103, 80)",
+          "compositedBackground": [
+            250,
+            255,
+            239
+          ],
+          "fontSize": "9px",
+          "fontWeight": "750",
+          "ratio": 6.19,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "label[for=\"arcade-word-input\"]"
+          ],
+          "text": "Sửa ký tự được tô đỏAa = aa · có dấu",
+          "foreground": "rgb(85, 85, 85)",
+          "compositedBackground": [
+            250,
+            255,
+            239
+          ],
+          "fontSize": "11px",
+          "fontWeight": "750",
+          "ratio": 7.32,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "label[for=\"arcade-word-input\"] > span"
+          ],
+          "text": "Aa = aa · có dấu",
+          "foreground": "rgb(97, 113, 94)",
+          "compositedBackground": [
+            250,
+            255,
+            239
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.11,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "#arcade-word-input"
+          ],
+          "text": "",
+          "foreground": "rgb(44, 72, 54)",
+          "compositedBackground": [
+            255,
+            247,
+            240
+          ],
+          "fontSize": "21px",
+          "fontWeight": "400",
+          "ratio": 9.49,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-computer-input > small"
+          ],
+          "text": "⌫ Sửa · Enter bỏ qua",
+          "foreground": "rgb(105, 116, 95)",
+          "compositedBackground": [
+            250,
+            255,
+            239
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 4.83,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".wr-avatar-container > span"
+          ],
+          "text": "CH",
+          "foreground": "rgb(89, 29, 114)",
+          "compositedBackground": [
+            242,
+            234,
+            246
+          ],
+          "fontSize": "20px",
+          "fontWeight": "700",
+          "ratio": 9.7,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-name"
+          ],
+          "text": "P1 Chi",
+          "foreground": "rgb(38, 59, 56)",
+          "compositedBackground": [
+            255,
+            253,
+            244
+          ],
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "ratio": 11.68,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-name > b"
+          ],
+          "text": "P1",
+          "foreground": "rgb(255, 255, 255)",
+          "compositedBackground": [
+            60,
+            115,
+            80
+          ],
+          "fontSize": "9px",
+          "fontWeight": "900",
+          "ratio": 5.58,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-combo"
+          ],
+          "text": "✦ x0 COMBO",
+          "foreground": "rgb(108, 126, 88)",
+          "compositedBackground": [
+            228,
+            238,
+            224
+          ],
+          "fontSize": "29px",
+          "fontWeight": "900",
+          "ratio": 3.7,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-combo > small"
+          ],
+          "text": "COMBO",
+          "foreground": "rgb(83, 99, 69)",
+          "compositedBackground": [
+            228,
+            238,
+            224
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.44,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-goal"
+          ],
+          "text": "✦ Tạo kỷ lục đầu tiên của bạn",
+          "foreground": "rgb(83, 106, 80)",
+          "compositedBackground": [
+            228,
+            238,
+            224
+          ],
+          "fontSize": "10px",
+          "fontWeight": "650",
+          "ratio": 4.97,
+          "threshold": 4.5
+        }
+      ]
+    },
+    {
+      "game": "memory_flash",
+      "violations": [],
+      "passes": 13,
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".arcade-scene-title"
+              ],
+              "html": "<div class=\"arcade-scene-title\">Nhìn nhanh · Nhớ chuẩn</div>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-heading > span"
+              ],
+              "html": "<span class=\"\">VÒNG 1 · NẤC 1 · 3 × 3</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "strong[role=\"status\"]"
+              ],
+              "html": "<strong role=\"status\">CHỌN 2 Ô ĐÃ SÁNG</strong>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-heading > small"
+              ],
+              "html": "<small>1/2 ô · bấm lại để bỏ chọn</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".memory-round-hint[aria-hidden=\"false\"]"
+              ],
+              "html": "<span class=\"memory-round-hint\" aria-hidden=\"false\" style=\"visibility: visible;\">Chọn ô · Space / Enter hoặc chạm</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".wr-avatar-container > span"
+              ],
+              "html": "<span style=\"font-family: &quot;Space Grotesk&quot;, -apple-system, sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.5px;\">CH</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name"
+              ],
+              "html": "<span class=\"arcade-name\"><b>P1</b> Chi</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-name > b"
+              ],
+              "html": "<b>P1</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-companion > small"
+              ],
+              "html": "<small>Đến lượt bạn!</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".is-selected > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">✓</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                "button[data-cell=\"1\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"2\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"3\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"4\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"5\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"6\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"7\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "button[data-cell=\"8\"] > span[aria-hidden=\"true\"]"
+              ],
+              "html": "<span aria-hidden=\"true\">·</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-phase-track > span:nth-child(1)"
+              ],
+              "html": "<span class=\"\">① Ghi nhớ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-phase-track > .active"
+              ],
+              "html": "<span class=\"active\">② Chọn lại</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span:nth-child(5)"
+              ],
+              "html": "<span class=\"\">③ So kết quả</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-memory-selection-time > span"
+              ],
+              "html": "<span>Còn 12s để chọn</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo"
+              ],
+              "html": "<div class=\"arcade-combo \" data-level=\"0\"><span>✦</span> x0 <small>CHUỖI</small></div>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-combo > span"
+              ],
+              "html": "<span>✦</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                ".arcade-combo > small"
+              ],
+              "html": "<small>CHUỖI</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".arcade-goal"
+              ],
+              "html": "<span class=\"arcade-goal\">✦ Tạo kỷ lục đầu tiên của bạn</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            }
+          ]
+        }
+      ],
+      "manualContrast": [
+        {
+          "target": [
+            ".arcade-scene-title"
+          ],
+          "text": "Nhìn nhanh · Nhớ chuẩn",
+          "foreground": "rgb(111, 84, 45)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "10px",
+          "fontWeight": "750",
+          "ratio": 5.91,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            "strong[role=\"status\"]"
+          ],
+          "text": "CHỌN 2 Ô ĐÃ SÁNG",
+          "foreground": "rgb(38, 59, 56)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "25px",
+          "fontWeight": "700",
+          "ratio": 9.98,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".memory-round-hint[aria-hidden=\"false\"]"
+          ],
+          "text": "Chọn ô · Space / Enter hoặc chạm",
+          "foreground": "rgb(114, 89, 50)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "11px",
+          "fontWeight": "400",
+          "ratio": 5.52,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".wr-avatar-container > span"
+          ],
+          "text": "CH",
+          "foreground": "rgb(89, 29, 114)",
+          "compositedBackground": [
+            242,
+            234,
+            246
+          ],
+          "fontSize": "20px",
+          "fontWeight": "700",
+          "ratio": 9.7,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-name"
+          ],
+          "text": "P1 Chi",
+          "foreground": "rgb(38, 59, 56)",
+          "compositedBackground": [
+            255,
+            253,
+            244
+          ],
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "ratio": 11.68,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-name > b"
+          ],
+          "text": "P1",
+          "foreground": "rgb(255, 255, 255)",
+          "compositedBackground": [
+            60,
+            115,
+            80
+          ],
+          "fontSize": "9px",
+          "fontWeight": "900",
+          "ratio": 5.58,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-memory-companion > small"
+          ],
+          "text": "Đến lượt bạn!",
+          "foreground": "rgb(128, 99, 63)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 4.67,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-combo"
+          ],
+          "text": "✦ x0 CHUỖI",
+          "foreground": "rgb(108, 126, 88)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "29px",
+          "fontWeight": "900",
+          "ratio": 3.7,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".arcade-combo > small"
+          ],
+          "text": "CHUỖI",
+          "foreground": "rgb(83, 99, 69)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.44,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".arcade-goal"
+          ],
+          "text": "✦ Tạo kỷ lục đầu tiên của bạn",
+          "foreground": "rgb(83, 106, 80)",
+          "compositedBackground": [
+            243,
+            234,
+            220
+          ],
+          "fontSize": "10px",
+          "fontWeight": "650",
+          "ratio": 4.97,
+          "threshold": 4.5
+        }
+      ]
+    },
+    {
+      "game": "typing",
+      "violations": [],
+      "passes": 17,
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".typing-race-name > b"
+              ],
+              "html": "<b>An · Bạn</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-race-name > small"
+              ],
+              "html": "<small>Gõ đúng để tiến lên!</small>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-finish-line"
+              ],
+              "html": "<span class=\"typing-finish-line\" aria-hidden=\"true\">⚑</span>",
+              "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+            },
+            {
+              "target": [
+                ".wr-avatar-container > span"
+              ],
+              "html": "<span style=\"font-family: &quot;Space Grotesk&quot;, -apple-system, sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.5px;\">AN</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-console-label > b"
+              ],
+              "html": "<b>GÕ ĐOẠN NÀY</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-console-label > span"
+              ],
+              "html": "<span>0% chính xác</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-position > strong"
+              ],
+              "html": "<strong>Ký tự 2 / 2748</strong>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-position > span"
+              ],
+              "html": "<span>Từ 1 · Dòng 1</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".is-incorrect"
+              ],
+              "html": "<span data-char-index=\"0\" data-state=\"incorrect\" class=\"typing-character is-incorrect\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".is-current"
+              ],
+              "html": "<span data-char-index=\"1\" data-state=\"current\" class=\"typing-character is-current\" aria-current=\"location\">ặ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"2\"]"
+              ],
+              "html": "<span data-char-index=\"2\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"4\"]"
+              ],
+              "html": "<span data-char-index=\"4\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"5\"]"
+              ],
+              "html": "<span data-char-index=\"5\" data-state=\"remaining\" class=\"typing-character is-remaining\">r</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"6\"]"
+              ],
+              "html": "<span data-char-index=\"6\" data-state=\"remaining\" class=\"typing-character is-remaining\">ờ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"7\"]"
+              ],
+              "html": "<span data-char-index=\"7\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"9\"]"
+              ],
+              "html": "<span data-char-index=\"9\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"10\"]"
+              ],
+              "html": "<span data-char-index=\"10\" data-state=\"remaining\" class=\"typing-character is-remaining\">ọ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"11\"]"
+              ],
+              "html": "<span data-char-index=\"11\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"13\"]"
+              ],
+              "html": "<span data-char-index=\"13\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"14\"]"
+              ],
+              "html": "<span data-char-index=\"14\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"15\"]"
+              ],
+              "html": "<span data-char-index=\"15\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"16\"]"
+              ],
+              "html": "<span data-char-index=\"16\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"18\"]"
+              ],
+              "html": "<span data-char-index=\"18\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"19\"]"
+              ],
+              "html": "<span data-char-index=\"19\" data-state=\"remaining\" class=\"typing-character is-remaining\">ó</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"20\"]"
+              ],
+              "html": "<span data-char-index=\"20\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"22\"]"
+              ],
+              "html": "<span data-char-index=\"22\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"23\"]"
+              ],
+              "html": "<span data-char-index=\"23\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"24\"]"
+              ],
+              "html": "<span data-char-index=\"24\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"25\"]"
+              ],
+              "html": "<span data-char-index=\"25\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"27\"]"
+              ],
+              "html": "<span data-char-index=\"27\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"28\"]"
+              ],
+              "html": "<span data-char-index=\"28\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"29\"]"
+              ],
+              "html": "<span data-char-index=\"29\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"30\"]"
+              ],
+              "html": "<span data-char-index=\"30\" data-state=\"remaining\" class=\"typing-character is-remaining\">y</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"32\"]"
+              ],
+              "html": "<span data-char-index=\"32\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"33\"]"
+              ],
+              "html": "<span data-char-index=\"33\" data-state=\"remaining\" class=\"typing-character is-remaining\">ớ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"34\"]"
+              ],
+              "html": "<span data-char-index=\"34\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"36\"]"
+              ],
+              "html": "<span data-char-index=\"36\" data-state=\"remaining\" class=\"typing-character is-remaining\">b</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"37\"]"
+              ],
+              "html": "<span data-char-index=\"37\" data-state=\"remaining\" class=\"typing-character is-remaining\">ì</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"38\"]"
+              ],
+              "html": "<span data-char-index=\"38\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"39\"]"
+              ],
+              "html": "<span data-char-index=\"39\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"41\"]"
+              ],
+              "html": "<span data-char-index=\"41\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"42\"]"
+              ],
+              "html": "<span data-char-index=\"42\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"43\"]"
+              ],
+              "html": "<span data-char-index=\"43\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"44\"]"
+              ],
+              "html": "<span data-char-index=\"44\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"46\"]"
+              ],
+              "html": "<span data-char-index=\"46\" data-state=\"remaining\" class=\"typing-character is-remaining\">r</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"47\"]"
+              ],
+              "html": "<span data-char-index=\"47\" data-state=\"remaining\" class=\"typing-character is-remaining\">ự</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"48\"]"
+              ],
+              "html": "<span data-char-index=\"48\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"50\"]"
+              ],
+              "html": "<span data-char-index=\"50\" data-state=\"remaining\" class=\"typing-character is-remaining\">r</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"51\"]"
+              ],
+              "html": "<span data-char-index=\"51\" data-state=\"remaining\" class=\"typing-character is-remaining\">ỡ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"53\"]"
+              ],
+              "html": "<span data-char-index=\"53\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"54\"]"
+              ],
+              "html": "<span data-char-index=\"54\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"55\"]"
+              ],
+              "html": "<span data-char-index=\"55\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"57\"]"
+              ],
+              "html": "<span data-char-index=\"57\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"58\"]"
+              ],
+              "html": "<span data-char-index=\"58\" data-state=\"remaining\" class=\"typing-character is-remaining\">ỏ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"60\"]"
+              ],
+              "html": "<span data-char-index=\"60\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"61\"]"
+              ],
+              "html": "<span data-char-index=\"61\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"62\"]"
+              ],
+              "html": "<span data-char-index=\"62\" data-state=\"remaining\" class=\"typing-character is-remaining\">á</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"63\"]"
+              ],
+              "html": "<span data-char-index=\"63\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"65\"]"
+              ],
+              "html": "<span data-char-index=\"65\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"66\"]"
+              ],
+              "html": "<span data-char-index=\"66\" data-state=\"remaining\" class=\"typing-character is-remaining\">ư</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"67\"]"
+              ],
+              "html": "<span data-char-index=\"67\" data-state=\"remaining\" class=\"typing-character is-remaining\">ơ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"68\"]"
+              ],
+              "html": "<span data-char-index=\"68\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"69\"]"
+              ],
+              "html": "<span data-char-index=\"69\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"71\"]"
+              ],
+              "html": "<span data-char-index=\"71\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"72\"]"
+              ],
+              "html": "<span data-char-index=\"72\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"73\"]"
+              ],
+              "html": "<span data-char-index=\"73\" data-state=\"remaining\" class=\"typing-character is-remaining\">ó</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"75\"]"
+              ],
+              "html": "<span data-char-index=\"75\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"76\"]"
+              ],
+              "html": "<span data-char-index=\"76\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"77\"]"
+              ],
+              "html": "<span data-char-index=\"77\" data-state=\"remaining\" class=\"typing-character is-remaining\">ẹ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"79\"]"
+              ],
+              "html": "<span data-char-index=\"79\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"80\"]"
+              ],
+              "html": "<span data-char-index=\"80\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"81\"]"
+              ],
+              "html": "<span data-char-index=\"81\" data-state=\"remaining\" class=\"typing-character is-remaining\">ổ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"82\"]"
+              ],
+              "html": "<span data-char-index=\"82\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"84\"]"
+              ],
+              "html": "<span data-char-index=\"84\" data-state=\"remaining\" class=\"typing-character is-remaining\">q</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"85\"]"
+              ],
+              "html": "<span data-char-index=\"85\" data-state=\"remaining\" class=\"typing-character is-remaining\">u</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"86\"]"
+              ],
+              "html": "<span data-char-index=\"86\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"88\"]"
+              ],
+              "html": "<span data-char-index=\"88\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"89\"]"
+              ],
+              "html": "<span data-char-index=\"89\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"90\"]"
+              ],
+              "html": "<span data-char-index=\"90\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"91\"]"
+              ],
+              "html": "<span data-char-index=\"91\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"93\"]"
+              ],
+              "html": "<span data-char-index=\"93\" data-state=\"remaining\" class=\"typing-character is-remaining\">l</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"94\"]"
+              ],
+              "html": "<span data-char-index=\"94\" data-state=\"remaining\" class=\"typing-character is-remaining\">á</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"96\"]"
+              ],
+              "html": "<span data-char-index=\"96\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"97\"]"
+              ],
+              "html": "<span data-char-index=\"97\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"98\"]"
+              ],
+              "html": "<span data-char-index=\"98\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"99\"]"
+              ],
+              "html": "<span data-char-index=\"99\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"101\"]"
+              ],
+              "html": "<span data-char-index=\"101\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"102\"]"
+              ],
+              "html": "<span data-char-index=\"102\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"103\"]"
+              ],
+              "html": "<span data-char-index=\"103\" data-state=\"remaining\" class=\"typing-character is-remaining\">e</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"104\"]"
+              ],
+              "html": "<span data-char-index=\"104\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"106\"]"
+              ],
+              "html": "<span data-char-index=\"106\" data-state=\"remaining\" class=\"typing-character is-remaining\">k</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"107\"]"
+              ],
+              "html": "<span data-char-index=\"107\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"108\"]"
+              ],
+              "html": "<span data-char-index=\"108\" data-state=\"remaining\" class=\"typing-character is-remaining\">ô</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"109\"]"
+              ],
+              "html": "<span data-char-index=\"109\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"110\"]"
+              ],
+              "html": "<span data-char-index=\"110\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"112\"]"
+              ],
+              "html": "<span data-char-index=\"112\" data-state=\"remaining\" class=\"typing-character is-remaining\">k</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"113\"]"
+              ],
+              "html": "<span data-char-index=\"113\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"114\"]"
+              ],
+              "html": "<span data-char-index=\"114\" data-state=\"remaining\" class=\"typing-character is-remaining\">í</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"116\"]"
+              ],
+              "html": "<span data-char-index=\"116\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"117\"]"
+              ],
+              "html": "<span data-char-index=\"117\" data-state=\"remaining\" class=\"typing-character is-remaining\">r</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"118\"]"
+              ],
+              "html": "<span data-char-index=\"118\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"119\"]"
+              ],
+              "html": "<span data-char-index=\"119\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"120\"]"
+              ],
+              "html": "<span data-char-index=\"120\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"122\"]"
+              ],
+              "html": "<span data-char-index=\"122\" data-state=\"remaining\" class=\"typing-character is-remaining\">l</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"123\"]"
+              ],
+              "html": "<span data-char-index=\"123\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"124\"]"
+              ],
+              "html": "<span data-char-index=\"124\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"125\"]"
+              ],
+              "html": "<span data-char-index=\"125\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"127\"]"
+              ],
+              "html": "<span data-char-index=\"127\" data-state=\"remaining\" class=\"typing-character is-remaining\">d</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"128\"]"
+              ],
+              "html": "<span data-char-index=\"128\" data-state=\"remaining\" class=\"typing-character is-remaining\">ễ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"130\"]"
+              ],
+              "html": "<span data-char-index=\"130\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"131\"]"
+              ],
+              "html": "<span data-char-index=\"131\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"132\"]"
+              ],
+              "html": "<span data-char-index=\"132\" data-state=\"remaining\" class=\"typing-character is-remaining\">ị</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"133\"]"
+              ],
+              "html": "<span data-char-index=\"133\" data-state=\"remaining\" class=\"typing-character is-remaining\">u</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"135\"]"
+              ],
+              "html": "<span data-char-index=\"135\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"136\"]"
+              ],
+              "html": "<span data-char-index=\"136\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"137\"]"
+              ],
+              "html": "<span data-char-index=\"137\" data-state=\"remaining\" class=\"typing-character is-remaining\">ữ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"138\"]"
+              ],
+              "html": "<span data-char-index=\"138\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"140\"]"
+              ],
+              "html": "<span data-char-index=\"140\" data-state=\"remaining\" class=\"typing-character is-remaining\">l</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"141\"]"
+              ],
+              "html": "<span data-char-index=\"141\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"142\"]"
+              ],
+              "html": "<span data-char-index=\"142\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"143\"]"
+              ],
+              "html": "<span data-char-index=\"143\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"145\"]"
+              ],
+              "html": "<span data-char-index=\"145\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"146\"]"
+              ],
+              "html": "<span data-char-index=\"146\" data-state=\"remaining\" class=\"typing-character is-remaining\">â</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"147\"]"
+              ],
+              "html": "<span data-char-index=\"147\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"149\"]"
+              ],
+              "html": "<span data-char-index=\"149\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"150\"]"
+              ],
+              "html": "<span data-char-index=\"150\" data-state=\"remaining\" class=\"typing-character is-remaining\">ồ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"151\"]"
+              ],
+              "html": "<span data-char-index=\"151\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"153\"]"
+              ],
+              "html": "<span data-char-index=\"153\" data-state=\"remaining\" class=\"typing-character is-remaining\">b</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"154\"]"
+              ],
+              "html": "<span data-char-index=\"154\" data-state=\"remaining\" class=\"typing-character is-remaining\">ằ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"155\"]"
+              ],
+              "html": "<span data-char-index=\"155\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"156\"]"
+              ],
+              "html": "<span data-char-index=\"156\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"158\"]"
+              ],
+              "html": "<span data-char-index=\"158\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"159\"]"
+              ],
+              "html": "<span data-char-index=\"159\" data-state=\"remaining\" class=\"typing-character is-remaining\">ộ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"160\"]"
+              ],
+              "html": "<span data-char-index=\"160\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"162\"]"
+              ],
+              "html": "<span data-char-index=\"162\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"163\"]"
+              ],
+              "html": "<span data-char-index=\"163\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"164\"]"
+              ],
+              "html": "<span data-char-index=\"164\" data-state=\"remaining\" class=\"typing-character is-remaining\">é</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"165\"]"
+              ],
+              "html": "<span data-char-index=\"165\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"167\"]"
+              ],
+              "html": "<span data-char-index=\"167\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"168\"]"
+              ],
+              "html": "<span data-char-index=\"168\" data-state=\"remaining\" class=\"typing-character is-remaining\">r</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"169\"]"
+              ],
+              "html": "<span data-char-index=\"169\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"171\"]"
+              ],
+              "html": "<span data-char-index=\"171\" data-state=\"remaining\" class=\"typing-character is-remaining\">ấ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"172\"]"
+              ],
+              "html": "<span data-char-index=\"172\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"174\"]"
+              ],
+              "html": "<span data-char-index=\"174\" data-state=\"remaining\" class=\"typing-character is-remaining\">v</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"175\"]"
+              ],
+              "html": "<span data-char-index=\"175\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"177\"]"
+              ],
+              "html": "<span data-char-index=\"177\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"178\"]"
+              ],
+              "html": "<span data-char-index=\"178\" data-state=\"remaining\" class=\"typing-character is-remaining\">á</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"179\"]"
+              ],
+              "html": "<span data-char-index=\"179\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"181\"]"
+              ],
+              "html": "<span data-char-index=\"181\" data-state=\"remaining\" class=\"typing-character is-remaining\">l</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"182\"]"
+              ],
+              "html": "<span data-char-index=\"182\" data-state=\"remaining\" class=\"typing-character is-remaining\">ạ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"183\"]"
+              ],
+              "html": "<span data-char-index=\"183\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"185\"]"
+              ],
+              "html": "<span data-char-index=\"185\" data-state=\"remaining\" class=\"typing-character is-remaining\">m</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"186\"]"
+              ],
+              "html": "<span data-char-index=\"186\" data-state=\"remaining\" class=\"typing-character is-remaining\">ọ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"187\"]"
+              ],
+              "html": "<span data-char-index=\"187\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"189\"]"
+              ],
+              "html": "<span data-char-index=\"189\" data-state=\"remaining\" class=\"typing-character is-remaining\">l</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"190\"]"
+              ],
+              "html": "<span data-char-index=\"190\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"192\"]"
+              ],
+              "html": "<span data-char-index=\"192\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"193\"]"
+              ],
+              "html": "<span data-char-index=\"193\" data-state=\"remaining\" class=\"typing-character is-remaining\">o</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"194\"]"
+              ],
+              "html": "<span data-char-index=\"194\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"195\"]"
+              ],
+              "html": "<span data-char-index=\"195\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"197\"]"
+              ],
+              "html": "<span data-char-index=\"197\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"198\"]"
+              ],
+              "html": "<span data-char-index=\"198\" data-state=\"remaining\" class=\"typing-character is-remaining\">ô</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"199\"]"
+              ],
+              "html": "<span data-char-index=\"199\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"200\"]"
+              ],
+              "html": "<span data-char-index=\"200\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"202\"]"
+              ],
+              "html": "<span data-char-index=\"202\" data-state=\"remaining\" class=\"typing-character is-remaining\">v</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"203\"]"
+              ],
+              "html": "<span data-char-index=\"203\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"204\"]"
+              ],
+              "html": "<span data-char-index=\"204\" data-state=\"remaining\" class=\"typing-character is-remaining\">ệ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"205\"]"
+              ],
+              "html": "<span data-char-index=\"205\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"207\"]"
+              ],
+              "html": "<span data-char-index=\"207\" data-state=\"remaining\" class=\"typing-character is-remaining\">s</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"208\"]"
+              ],
+              "html": "<span data-char-index=\"208\" data-state=\"remaining\" class=\"typing-character is-remaining\">a</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"209\"]"
+              ],
+              "html": "<span data-char-index=\"209\" data-state=\"remaining\" class=\"typing-character is-remaining\">u</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"211\"]"
+              ],
+              "html": "<span data-char-index=\"211\" data-state=\"remaining\" class=\"typing-character is-remaining\">g</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"212\"]"
+              ],
+              "html": "<span data-char-index=\"212\" data-state=\"remaining\" class=\"typing-character is-remaining\">i</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"213\"]"
+              ],
+              "html": "<span data-char-index=\"213\" data-state=\"remaining\" class=\"typing-character is-remaining\">ờ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"215\"]"
+              ],
+              "html": "<span data-char-index=\"215\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"216\"]"
+              ],
+              "html": "<span data-char-index=\"216\" data-state=\"remaining\" class=\"typing-character is-remaining\">à</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"217\"]"
+              ],
+              "html": "<span data-char-index=\"217\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"218\"]"
+              ],
+              "html": "<span data-char-index=\"218\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"220\"]"
+              ],
+              "html": "<span data-char-index=\"220\" data-state=\"remaining\" class=\"typing-character is-remaining\">c</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"221\"]"
+              ],
+              "html": "<span data-char-index=\"221\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"222\"]"
+              ],
+              "html": "<span data-char-index=\"222\" data-state=\"remaining\" class=\"typing-character is-remaining\">í</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"223\"]"
+              ],
+              "html": "<span data-char-index=\"223\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"224\"]"
+              ],
+              "html": "<span data-char-index=\"224\" data-state=\"remaining\" class=\"typing-character is-remaining\">h</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"226\"]"
+              ],
+              "html": "<span data-char-index=\"226\" data-state=\"remaining\" class=\"typing-character is-remaining\">đ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"227\"]"
+              ],
+              "html": "<span data-char-index=\"227\" data-state=\"remaining\" class=\"typing-character is-remaining\">ể</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"229\"]"
+              ],
+              "html": "<span data-char-index=\"229\" data-state=\"remaining\" class=\"typing-character is-remaining\">t</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"230\"]"
+              ],
+              "html": "<span data-char-index=\"230\" data-state=\"remaining\" class=\"typing-character is-remaining\">ậ</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                "span[data-char-index=\"231\"]"
+              ],
+              "html": "<span data-char-index=\"231\" data-state=\"remaining\" class=\"typing-character is-remaining\">n</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-pulse > span"
+              ],
+              "html": "<span>Sửa ký tự đỏ · giữ bình tĩnh nhé</span>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            },
+            {
+              "target": [
+                ".typing-pulse > b"
+              ],
+              "html": "<b>x0 COMBO</b>",
+              "summary": "Fix any of the following:\n  Element's background color could not be determined due to a pseudo element"
+            }
+          ]
+        }
+      ],
+      "manualContrast": [
+        {
+          "target": [
+            ".typing-race-name > b"
+          ],
+          "text": "An · Bạn",
+          "foreground": "rgb(38, 59, 56)",
+          "compositedBackground": [
+            229,
+            239,
+            240
+          ],
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "ratio": 10.16,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".typing-race-name > small"
+          ],
+          "text": "Gõ đúng để tiến lên!",
+          "foreground": "rgb(72, 102, 107)",
+          "compositedBackground": [
+            229,
+            239,
+            240
+          ],
+          "fontSize": "9px",
+          "fontWeight": "400",
+          "ratio": 5.29,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".wr-avatar-container > span"
+          ],
+          "text": "AN",
+          "foreground": "rgb(29, 103, 114)",
+          "compositedBackground": [
+            234,
+            244,
+            246
+          ],
+          "fontSize": "20px",
+          "fontWeight": "700",
+          "ratio": 5.8,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".typing-console-label > b"
+          ],
+          "text": "GÕ ĐOẠN NÀY",
+          "foreground": "rgb(73, 103, 104)",
+          "compositedBackground": [
+            255,
+            253,
+            245
+          ],
+          "fontSize": "10px",
+          "fontWeight": "700",
+          "ratio": 6.02,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".typing-position > strong"
+          ],
+          "text": "Ký tự 2 / 2748",
+          "foreground": "rgb(66, 113, 122)",
+          "compositedBackground": [
+            255,
+            253,
+            245
+          ],
+          "fontSize": "10px",
+          "fontWeight": "700",
+          "ratio": 5.32,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".typing-position > span"
+          ],
+          "text": "Từ 1 · Dòng 1",
+          "foreground": "rgb(82, 109, 107)",
+          "compositedBackground": [
+            255,
+            253,
+            245
+          ],
+          "fontSize": "10px",
+          "fontWeight": "400",
+          "ratio": 5.49,
+          "threshold": 4.5
+        },
+        {
+          "target": [
+            ".is-incorrect"
+          ],
+          "text": "m",
+          "foreground": "rgb(153, 43, 59)",
+          "compositedBackground": [
+            249,
+            225,
+            223
+          ],
+          "fontSize": "24px",
+          "fontWeight": "500",
+          "ratio": 6.1,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".is-current"
+          ],
+          "text": "ặ",
+          "foreground": "rgb(23, 62, 69)",
+          "compositedBackground": [
+            220,
+            236,
+            238
+          ],
+          "fontSize": "24px",
+          "fontWeight": "500",
+          "ratio": 9.54,
+          "threshold": 3
+        },
+        {
+          "target": [
+            "span[data-char-index=\"2\"]"
+          ],
+          "text": "t",
+          "foreground": "rgb(90, 115, 118)",
+          "compositedBackground": [
+            239,
+            245,
+            237
+          ],
+          "fontSize": "24px",
+          "fontWeight": "500",
+          "ratio": 4.57,
+          "threshold": 3
+        },
+        {
+          "target": [
+            "span[data-char-index=\"4\"]"
+          ],
+          "text": "t",
+          "foreground": "rgb(90, 115, 118)",
+          "compositedBackground": [
+            255,
+            253,
+            245
+          ],
+          "fontSize": "24px",
+          "fontWeight": "500",
+          "ratio": 4.97,
+          "threshold": 3
+        },
+        {
+          "target": [
+            ".typing-pulse > span"
+          ],
+          "text": "Sửa ký tự đỏ · giữ bình tĩnh nhé",
+          "foreground": "rgb(167, 68, 77)",
+          "compositedBackground": [
+            255,
+            253,
+            245
+          ],
+          "fontSize": "11px",
+          "fontWeight": "400",
+          "ratio": 5.76,
+          "threshold": 4.5
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

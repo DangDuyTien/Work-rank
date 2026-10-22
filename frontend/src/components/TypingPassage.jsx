@@ -50,6 +50,8 @@ export default memo(function TypingPassage({ challenge, typedText, inputChars, f
   }, [tokens]);
   const current = Math.min(input.length, targetChars.length);
   const wordIndex = Math.max(0, tokens.findIndex((token) => current < token.offset + token.length));
+  const firstBlock = Math.max(0, Math.floor(wordIndex / 32) - 1);
+  const previousWindow=useRef(firstBlock),scrollTarget=useRef(-1);
   useLayoutEffect(() => {
     const box = viewport.current;
     if (!box) return undefined;
@@ -72,8 +74,15 @@ export default memo(function TypingPassage({ challenge, typedText, inputChars, f
         const bottomInset = Math.min(lineHeight, box.clientHeight / 3);
         if (markerRect.bottom > boxRect.bottom - bottomInset || markerRect.top < boxRect.top + topInset) {
           const desired = Math.max(0, top - lineHeight);
-          if (Math.abs(box.scrollTop - desired) > 1) box.scrollTop = desired;
+          const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.dataset.workrankReduceMotion==='true';
+          const outside=markerRect.top<boxRect.top||markerRect.bottom>boxRect.bottom;
+          const windowChanged=previousWindow.current!==firstBlock;
+          if (Math.abs(box.scrollTop-desired)>1&&(outside||windowChanged||Math.abs(scrollTarget.current-desired)>1)) {
+            box.scrollTo({top:desired,behavior:reduced||outside||windowChanged?'instant':'smooth'});
+            scrollTarget.current=desired;
+          }
         }
+        previousWindow.current=firstBlock;
       });
     };
     track();
@@ -83,10 +92,9 @@ export default memo(function TypingPassage({ challenge, typedText, inputChars, f
       cancelAnimationFrame(frame);
       resize.disconnect();
     };
-  }, [wordIndex, target]);
+  }, [wordIndex, target, firstBlock]);
   // A timed passage may contain thousands of characters. Keep the previous,
   // current and next block; the native input/session still owns the full text.
-  const firstBlock = Math.max(0, Math.floor(wordIndex / 32) - 1);
   const visibleBlocks = blocks.slice(firstBlock, firstBlock + 3);
   return <div className="typing-passage" onClick={onFocusInput}>
     <div className="typing-position" aria-live="off" data-testid="typing-position">

@@ -6,7 +6,7 @@
  *   node scripts/migrate-drawing-images.js [--dry-run] [--report <path>]
  *
  * Đặc điểm:
- * - Idempotent: bản ghi đã có `storage_key` bị bỏ qua; key legacy được sinh TẤT ĐỊNH
+ * - Idempotent: key đúng provider phải HEAD tồn tại; ảnh local có key vẫn migrate. Key legacy sinh TẤT ĐỊNH
  *   theo (drawingId + checksum nội dung) nên chạy lại không tạo object trùng.
  * - File local còn tồn tại  → upload lên storage, cập nhật image_url + storage_key.
  * - File local đã mất       → KHÔNG fake ảnh, KHÔNG xóa record; đánh dấu
@@ -93,7 +93,14 @@ function decodeDataUri(uri) {
 async function migrateDrawing(row, { storage, storageConfig, dryRun, legacyBaseUrl = '' }) {
   const imageUrl = String(row.imageUrl || '');
 
-  if (row.storageKey) {
+  // A local adapter also stores keys. Having a key does not mean the bytes
+  // reached durable object storage; local records still need migration.
+  if (row.storageKey && row.storageProvider === storage.provider && storage.provider !== 'local') {
+    const exists = await storage.exists({ key: row.storageKey });
+    if (!exists) {
+      if (!dryRun) await row.update({ metadata: { ...(row.metadata || {}), imageMissing: true, imageMissingSince: new Date().toISOString() } });
+      return { status: 'missing-object', key: row.storageKey, note: 'DB có key nhưng object không tồn tại trong kho đã cấu hình.' };
+    }
     return { status: 'skipped-has-key', key: row.storageKey };
   }
 
@@ -118,7 +125,7 @@ async function migrateDrawing(row, { storage, storageConfig, dryRun, legacyBaseU
     });
     if (dryRun) return { status: 'would-upload', key, source: 'data-uri' };
 
-    const alreadyExists = await storage.exists({ key }).catch(() => false);
+    const alreadyExists = await storage.exists({ key });
     const uploaded = alreadyExists
       ? { key, url: storage.getPublicUrl(key), provider: storage.provider }
       : await storage.upload({ key, buffer: decoded.buffer, contentType: decoded.mime });
@@ -129,14 +136,18 @@ async function migrateDrawing(row, { storage, storageConfig, dryRun, legacyBaseU
       storageProvider: uploaded.provider,
       mimeType: decoded.mime,
       sizeBytes: decoded.buffer.length,
+      metadata: { ...(row.metadata || {}), imageMissing:false, awaitingObjectMigration:false },
     });
     return { status: alreadyExists ? 'linked-existing' : 'migrated', key, source: 'data-uri' };
   }
 
   // 2. File local /uploads/drawings/*
-  if (imageUrl.startsWith('/uploads/')) {
-    const fileName = path.basename(imageUrl);
-    const localPath = path.resolve(storageConfig.local.rootDir, 'drawings', fileName);
+  if (row.storageProvider === 'local' || imageUrl.startsWith('/uploads/')) {
+    const localKey = row.storageProvider === 'local' && row.storageKey ? row.storageKey : parseStorageKey(imageUrl);
+    const root = path.resolve(storageConfig.local.rootDir);
+    const localPath = path.resolve(root, String(localKey || ''));
+    if (!localKey || !localPath.startsWith(`${root}${path.sep}`)) return { status: 'failed', reason: 'Local storage key không an toàn.' };
+    const fileName = path.basename(localPath);
 
     let buffer = null;
     let source = 'local-file';
@@ -179,7 +190,7 @@ async function migrateDrawing(row, { storage, storageConfig, dryRun, legacyBaseU
 
     if (dryRun) return { status: 'would-upload', key, source };
 
-    const alreadyExists = await storage.exists({ key }).catch(() => false);
+    const alreadyExists = await storage.exists({ key });
     const uploaded = alreadyExists
       ? { key, url: storage.getPublicUrl(key), provider: storage.provider }
       : await storage.upload({ key, buffer, contentType });
@@ -199,6 +210,7 @@ async function migrateDrawing(row, { storage, storageConfig, dryRun, legacyBaseU
   if (/^https?:\/\//i.test(imageUrl)) {
     const ownKey = parseStorageKey(imageUrl, { publicBaseUrl: storageConfig.s3.publicBaseUrl });
     if (ownKey) {
+      if (!(await storage.exists({key:ownKey}))) return {status:'missing-object',key:ownKey,note:'URL thuộc kho nhưng object không tồn tại.'};
       if (!dryRun) {
         await row.update({ storageKey: ownKey, storageProvider: storage.provider });
       }
@@ -226,6 +238,7 @@ async function main() {
   }
 
   const storage = getDrawingStorage();
+  if (!dryRun && !storage.persistent) throw new Error('Migration yêu cầu persistent object storage, không migrate sang local filesystem.');
   const rows = await Drawing.findAll({ order: [['id', 'ASC']] });
 
   const report = {
@@ -245,7 +258,7 @@ async function main() {
 
       if (result.status === 'migrated') report.totals.migrated += 1;
       else if (result.status === 'linked-existing') report.totals.linkedExisting += 1;
-      else if (result.status === 'missing-local-file') report.totals.missing += 1;
+      else if (['missing-local-file', 'missing-object'].includes(result.status)) report.totals.missing += 1;
       else if (result.status === 'failed') report.totals.failed += 1;
       else report.totals.skipped += 1;
 
@@ -265,7 +278,7 @@ async function main() {
   console.log('[migrate-drawings] Tổng kết:', JSON.stringify(report.totals));
   console.log('[migrate-drawings] Report:', reportPath);
 
-  if (report.totals.failed > 0) process.exitCode = 1;
+  if (report.totals.failed > 0 || report.totals.missing > 0) process.exitCode = 1;
 }
 
 if (require.main === module) {

@@ -1,0 +1,11 @@
+PASS computer_rush fresh Browser B same DB result/content
+PASS computer_rush logout/login + local/session/IndexedDB/cookie/cache clear survives
+PASS direction_rush fresh Browser B same DB result/content
+PASS direction_rush logout/login + local/session/IndexedDB/cookie/cache clear survives
+PASS memory_flash fresh Browser B same DB result/content
+PASS memory_flash logout/login + local/session/IndexedDB/cookie/cache clear survives
+PASS typing_battle fresh Browser B same DB result/content
+PASS typing_battle logout/login + local/session/IndexedDB/cookie/cache clear survives
+PASS drawing fresh Browser B same DB result/content
+PASS drawing logout/login + local/session/IndexedDB/cookie/cache clear survives
+PASS Ledger unchanged after frontend/backend/object-store restart and all browser clears

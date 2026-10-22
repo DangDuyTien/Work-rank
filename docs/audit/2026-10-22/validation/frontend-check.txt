@@ -1,0 +1,8 @@
+
+> workrank-realtime-frontend@1.0.0 check
+> node scripts/verify-frontend.js
+
+🔍 [WorkRank Frontend Audit] Scanning 89 files in src/...
+
+✅ [WorkRank Frontend Audit Passed] 100% integrity across all 89 files. 0 errors detected.
+

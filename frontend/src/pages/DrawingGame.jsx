@@ -23,6 +23,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { drawingApi } from '../services/api';
+import { loadDrawingDraft, saveDrawingDraft, removeDrawingDraft } from '../utils/drawingDraft';
+import { resolveAssetUrl } from '../utils/assetUrl';
+import { PlayerAvatar2D } from '../components/arcade/ArcadeArt';
+import '../components/arcade/arcade.css';
+import '../components/arcade/drawing-arcade.css';
 import { PageShell, Button, AnimatedModal, Notice } from '../components/ui';
 
 const PRESET_COLORS = [
@@ -105,6 +110,30 @@ export default function DrawingGame() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [publishingAvailable,setPublishingAvailable]=useState(null);
+  useEffect(()=>{let active=true;drawingApi.getSettings().then(data=>{if(active)setPublishingAvailable(data.publishing?.available ?? null);}).catch(()=>{});return()=>{active=false;};},[]);
+  const [draftStatus,setDraftStatus]=useState('loading'),[publishedArtwork,setPublishedArtwork]=useState(null),[uploadPercent,setUploadPercent]=useState(0),[publishStage,setPublishStage]=useState('');
+  const draftTimer=useRef(null),draftReady=useRef(false),draftRevision=useRef(0),publicationId=useRef(null),draftMeta=useRef(null);
+  if(!publicationId.current)publicationId.current=crypto.randomUUID();
+  draftMeta.current={title:artworkTitle,visibility,tool,color,brushSize};
+  const persistDraftNow=useCallback(async()=>{
+    clearTimeout(draftTimer.current);draftTimer.current=null;
+    if(!canvasRef.current || !draftReady.current)return;
+    const revision=draftRevision.current,meta={...draftMeta.current,publicationId:publicationId.current};
+    const blob=await new Promise(resolve=>canvasRef.current.toBlob(resolve,'image/png'));
+    if(!blob || revision!==draftRevision.current)return;
+    await saveDrawingDraft(user.id,{...meta,blob,savedAt:Date.now()});
+    if(revision===draftRevision.current)setDraftStatus('saved');
+  },[user.id]);
+  const queueDraft=useCallback((pixelsChanged=false)=>{
+    if(!draftReady.current)return;
+    if(pixelsChanged){publicationId.current=crypto.randomUUID();setPublishedArtwork(null);}
+    draftRevision.current++;setDraftStatus('saving');clearTimeout(draftTimer.current);
+    draftTimer.current=setTimeout(()=>persistDraftNow().catch(()=>setDraftStatus('unavailable')),400);
+  },[persistDraftNow]);
+  useEffect(()=>{if(draftReady.current&&!publishedArtwork)queueDraft();},[artworkTitle,visibility,tool,color,brushSize,queueDraft,publishedArtwork]);
+  useEffect(()=>()=>{clearTimeout(draftTimer.current);},[]);
+
 
   // Synchronize state changes to refs immediately and synchronously
   const changeTool = useCallback((nextTool) => {
@@ -187,6 +216,18 @@ export default function DrawingGame() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     contextRef.current = ctx;
 
+    let active=true;
+    loadDrawingDraft(user.id).then(draft=>{
+      if(!active)return;
+      if(!draft?.blob){draftReady.current=true;setDraftStatus('empty');return;}
+      const image=new Image(),url=URL.createObjectURL(draft.blob);
+      image.onload=()=>{URL.revokeObjectURL(url);if(!active)return;ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);ctx.drawImage(image,0,0);
+        undoStackRef.current=[ctx.getImageData(0,0,CANVAS_WIDTH,CANVAS_HEIGHT)];redoStackRef.current=[];
+        publicationId.current=draft.publicationId||crypto.randomUUID();setArtworkTitle(draft.title||'');setVisibility(draft.visibility||'PUBLIC');
+        draftReady.current=true;setDraftStatus('restored');};
+      image.onerror=()=>{URL.revokeObjectURL(url);draftReady.current=true;setDraftStatus('unavailable');};image.src=url;
+    }).catch(()=>{draftReady.current=true;setDraftStatus('unavailable');});
+
     // Save initial blank state
     const initialState = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     undoStackRef.current = [initialState];
@@ -198,13 +239,14 @@ export default function DrawingGame() {
     if (viewportRef.current) {
       const vpRect = viewportRef.current.getBoundingClientRect();
       const fitZoom = Math.min(1, Math.min((vpRect.width - 32) / CANVAS_WIDTH, (vpRect.height - 32) / CANVAS_HEIGHT));
-      const initialZoom = Math.max(0.4, Math.round(fitZoom * 100) / 100);
+      const initialZoom = Math.max(0.1, Math.round(fitZoom * 100) / 100);
       const initialX = Math.round((vpRect.width - CANVAS_WIDTH * initialZoom) / 2);
       const initialY = Math.round((vpRect.height - CANVAS_HEIGHT * initialZoom) / 2);
       setZoom(initialZoom);
       setPan({ x: initialX, y: initialY });
     }
-  }, []);
+    return()=>{active=false;draftReady.current=false;};
+  }, [user.id]);
 
   // Save current canvas snapshot to undo stack
   const saveSnapshot = useCallback(() => {
@@ -218,7 +260,8 @@ export default function DrawingGame() {
     redoStackRef.current = [];
     setCanUndo(undoStackRef.current.length > 1);
     setCanRedo(false);
-  }, []);
+    queueDraft(true);
+  }, [queueDraft]);
 
   // Undo action (synchronous & instant)
   const handleUndo = useCallback(() => {
@@ -233,7 +276,8 @@ export default function DrawingGame() {
     ctx.putImageData(previous, 0, 0);
     setCanUndo(undoStackRef.current.length > 1);
     setCanRedo(redoStackRef.current.length > 0);
-  }, []);
+    queueDraft(true);
+  }, [queueDraft]);
 
   // Redo action (synchronous & instant)
   const handleRedo = useCallback(() => {
@@ -247,11 +291,12 @@ export default function DrawingGame() {
     ctx.putImageData(nextState, 0, 0);
     setCanUndo(undoStackRef.current.length > 1);
     setCanRedo(redoStackRef.current.length > 0);
-  }, []);
+    queueDraft(true);
+  }, [queueDraft]);
 
   // Zoom management helper (centered at cursor position or viewport center)
   const updateZoom = useCallback((targetZoom, centerScreen) => {
-    const clamped = Math.min(4.0, Math.max(0.25, Math.round(targetZoom * 100) / 100));
+    const clamped = Math.min(4.0, Math.max(0.1, Math.round(targetZoom * 100) / 100));
     const currentZoom = zoomRef.current;
     if (clamped === currentZoom) return;
 
@@ -298,12 +343,21 @@ export default function DrawingGame() {
     }
     const vpRect = vp.getBoundingClientRect();
     const fitZoom = Math.min(1, Math.min((vpRect.width - 32) / CANVAS_WIDTH, (vpRect.height - 32) / CANVAS_HEIGHT));
-    const targetZoom = Math.max(0.4, Math.round(fitZoom * 100) / 100);
+    const targetZoom = Math.max(0.1, Math.round(fitZoom * 100) / 100);
     const targetX = Math.round((vpRect.width - CANVAS_WIDTH * targetZoom) / 2);
     const targetY = Math.round((vpRect.height - CANVAS_HEIGHT * targetZoom) / 2);
     setZoom(targetZoom);
     setPan({ x: targetX, y: targetY });
   }, []);
+
+  useEffect(() => {
+    const viewport=viewportRef.current;
+    if(!viewport)return;
+    let frame;
+    const observer=new ResizeObserver(()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(handleResetView);});
+    observer.observe(viewport);
+    return()=>{observer.disconnect();cancelAnimationFrame(frame);};
+  },[handleResetView]);
 
   // Wheel listener: Ctrl + Wheel for cursor-centered zoom; page scrolling preserved without Ctrl
   useEffect(() => {
@@ -524,6 +578,7 @@ export default function DrawingGame() {
 
   // Pointer Down (Draw or Pan)
   const handlePointerDown = (e) => {
+    if (!draftReady.current || isPublishing) return;
     // Check for Pan modes:
     // 1. Middle mouse button (button === 1)
     // 2. Space key held down
@@ -758,8 +813,9 @@ export default function DrawingGame() {
     if (!exportCanvas) return;
 
     try {
-      setIsPublishing(true);
+      setIsPublishing(true);setUploadPercent(0);setPublishStage('Đang giữ bản nháp trước khi đăng…');
       setErrorMessage('');
+      await persistDraftNow().catch(()=>setDraftStatus('unavailable'));
 
       const blob = await new Promise((resolve) => {
         exportCanvas.toBlob((b) => resolve(b), 'image/png');
@@ -771,6 +827,7 @@ export default function DrawingGame() {
 
       const formData = new FormData();
       formData.append('image', blob, 'artwork.png');
+      formData.append('publicationId',publicationId.current);
       formData.append('title', artworkTitle.trim() || 'Tác phẩm không tên');
       formData.append('width', String(CANVAS_WIDTH));
       formData.append('height', String(CANVAS_HEIGHT));
@@ -783,8 +840,15 @@ export default function DrawingGame() {
         })
       );
 
-      await drawingApi.createDrawing(formData);
-
+      setPublishStage('Đang tải ảnh lên hệ thống…');
+      const created=await drawingApi.createDrawing(formData,event=>setUploadPercent(event.total?Math.min(90,Math.round(event.loaded/event.total*90)):0));
+      setUploadPercent(92);setPublishStage('Đang xác minh bản ghi và ảnh đã lưu…');
+      const confirmed=(await drawingApi.getById(created.drawing.id)).drawing;
+      const remoteUrl=resolveAssetUrl(confirmed.imageUrl);
+      await new Promise((resolve,reject)=>{const image=new Image(),timer=setTimeout(()=>reject(new Error('Đã gửi tác phẩm nhưng chưa xác minh được ảnh. Hãy thử lại; bản nháp vẫn còn.')),15000);
+        image.onload=()=>{clearTimeout(timer);resolve();};image.onerror=()=>{clearTimeout(timer);reject(new Error('Chưa tải lại được ảnh từ kho lưu trữ. Hãy thử lại; bản nháp vẫn còn.'));};image.src=remoteUrl;});
+      setPreviewImageUrl(remoteUrl);setArtworkTitle(confirmed.title);setPublishedArtwork(confirmed);setUploadPercent(100);setPublishStage('Đã lưu lên hệ thống');
+      await removeDrawingDraft(user.id).catch(()=>{});setDraftStatus('published');
       setPublishSuccess(true);
     } catch (err) {
       console.error('Lỗi chia sẻ tác phẩm:', err);
@@ -809,10 +873,11 @@ export default function DrawingGame() {
             <ArrowLeft size={16} />
             <span>Trò chơi</span>
           </Link>
+          <div className="drawing-companion" data-published={!!publishedArtwork}><PlayerAvatar2D player={{userId:user.id,name:user.name,avatarUrl:user.avatarUrl,position:1}} state={publishedArtwork?'win':'ready'} feedbackId={tool}/></div>
           <div className="drawing-header__title-group">
             <div className="drawing-badge">
               <Sparkles size={13} />
-              <span>Góc Sáng Tạo</span>
+              <span>WORK RANK ARCADE · GÓC SÁNG TẠO</span>
             </div>
             <h1 className="drawing-title">Game Vẽ Tranh WorkRank</h1>
           </div>
@@ -836,6 +901,8 @@ export default function DrawingGame() {
         </div>
       </div>
 
+      <div className="drawing-save-hud" data-state={draftStatus} role="status"><span>{publishedArtwork?`✓ Đã lưu lên hệ thống · Tác phẩm #${publishedArtwork.id}`:draftStatus==='loading'?'Đang mở bản nháp…':draftStatus==='saving'?'Đang lưu nháp trên thiết bị…':draftStatus==='restored'?'Đã khôi phục nháp trên thiết bị · Chưa đăng':draftStatus==='unavailable'?'Không lưu được nháp trên thiết bị · Hãy tải PNG để giữ tranh':'Nháp trên thiết bị · Chưa đăng lên hệ thống'}</span><Link to="/creative-corner">Thư viện tranh →</Link></div>
+      {publishingAvailable===false&&<Notice type="info">Hiện chưa thể đăng tranh lên hệ thống. Bạn vẫn có thể vẽ, giữ nháp trên thiết bị và tải bản PNG.</Notice>}
       {/* Main Drawing Stage (WHITEBOARD VIEWPORT WITH ZOOM & PAN) */}
       <div className="drawing-stage-container">
         <div
@@ -1219,7 +1286,7 @@ export default function DrawingGame() {
                 size="md"
                 onClick={() => {
                   setShowPreviewModal(false);
-                  handleClearCanvas();
+                  setArtworkTitle('');handleClearCanvas();
                 }}
               >
                 Vẽ tác phẩm mới 🎨
@@ -1248,14 +1315,14 @@ export default function DrawingGame() {
                 type="button"
                 variant="primary"
                 size="md"
-                disabled={isPublishing}
+                disabled={isPublishing || publishingAvailable===false}
                 onClick={handlePublish}
                 className="share-submit-btn"
               >
                 {isPublishing ? (
                   <>
                     <span className="ui-spinner ui-spinner--sm" />
-                    <span>Đang lưu tác phẩm...</span>
+                    <span>{publishStage}</span>
                   </>
                 ) : (
                   <>
@@ -1271,9 +1338,10 @@ export default function DrawingGame() {
         {publishSuccess ? (
           <div className="publish-success-state">
             <CheckCircle2 size={54} className="publish-success-icon" />
-            <h2 className="publish-success-title">Tác phẩm đã được lưu thành công!</h2>
+            <h2 className="publish-success-title">Đã lưu lên hệ thống!</h2>
+            <p className="drawing-publish-id">✓ Tác phẩm #{publishedArtwork?.id} · Đã đọc lại bản ghi và ảnh trên hệ thống</p>
             <p className="publish-success-desc">
-              Tác phẩm của bạn đã được đưa vào <b>Thư Viện Tranh</b>. Mọi người trong công ty có thể chiêm ngưỡng và thả tim cho bạn!
+              Tác phẩm đã có trong <b>Thư Viện Tranh</b> theo quyền xem bạn đã chọn.
             </p>
             <div className="publish-preview-card">
               <img src={previewImageUrl} alt={artworkTitle} className="publish-preview-img" />
@@ -1285,9 +1353,10 @@ export default function DrawingGame() {
           </div>
         ) : (
           <div className="drawing-preview-form">
+            {isPublishing&&<div className="drawing-save-progress" role="status">{publishStage}<progress value={uploadPercent} max={100}/></div>}
             {errorMessage && (
               <Notice type="error" className="preview-error-notice">
-                {errorMessage}
+                {errorMessage} <Button variant="secondary" onClick={handleDownload}>Tải bản PNG để giữ tranh</Button>
               </Notice>
             )}
 
@@ -1306,6 +1375,7 @@ export default function DrawingGame() {
                 </label>
                 <input
                   id="artwork-title"
+                  disabled={isPublishing}
                   type="text"
                   value={artworkTitle}
                   onChange={(e) => setArtworkTitle(e.target.value)}

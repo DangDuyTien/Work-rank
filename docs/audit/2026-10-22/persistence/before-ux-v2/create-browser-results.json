@@ -1,0 +1,126 @@
+{
+  "phase": "create",
+  "checks": [
+    {
+      "name": "Drawing canvas → S3 bytes → DB → read-back/gallery",
+      "status": "PASS",
+      "evidence": {
+        "id": 3,
+        "hash": "4c9b7817750538f4008adf3f0c9970d8b8136dd139a3d1220e1c251e090d6696"
+      }
+    },
+    {
+      "name": "computer_rush DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "12a7630d-6f40-4ef8-9146-e056e5b5d413",
+        "score": 2732
+      }
+    },
+    {
+      "name": "direction_rush DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "08f69be9-007f-45c8-9615-ab1ec996d083",
+        "score": 1491
+      }
+    },
+    {
+      "name": "memory_flash DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "cd910dd2-0887-4cbe-9014-7ce0c71c1299",
+        "score": 1179
+      }
+    },
+    {
+      "name": "Typing TRIO finalized into real MySQL enum/result/history",
+      "status": "PASS",
+      "evidence": {
+        "id": "3",
+        "results": [
+          {
+            "wpm": 64,
+            "name": "An",
+            "team": "NONE",
+            "rawWpm": 64,
+            "userId": 4,
+            "accuracy": 100,
+            "eligible": true,
+            "isWinner": true,
+            "attemptId": "3:2026-10-22T02:21:46.000Z",
+            "completed": false,
+            "startedAt": "2026-10-22T02:21:46.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T02:22:16.147Z",
+            "scoreDelta": 37,
+            "typedChars": 160,
+            "progressPct": 16,
+            "validatedAt": "2026-10-22T02:22:16.147Z",
+            "correctChars": 160,
+            "metricVersion": 3,
+            "individualRank": 1,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 90.2
+          },
+          {
+            "wpm": 56,
+            "name": "Bình",
+            "team": "NONE",
+            "rawWpm": 56,
+            "userId": 5,
+            "accuracy": 100,
+            "eligible": true,
+            "isWinner": false,
+            "attemptId": "3:2026-10-22T02:21:46.000Z",
+            "completed": false,
+            "startedAt": "2026-10-22T02:21:46.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T02:22:16.153Z",
+            "scoreDelta": 20,
+            "typedChars": 140,
+            "progressPct": 14,
+            "validatedAt": "2026-10-22T02:22:16.153Z",
+            "correctChars": 140,
+            "metricVersion": 3,
+            "individualRank": 2,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 84.6
+          },
+          {
+            "wpm": 48,
+            "name": "Chi",
+            "team": "NONE",
+            "rawWpm": 48,
+            "userId": 6,
+            "accuracy": 100,
+            "eligible": true,
+            "isWinner": false,
+            "attemptId": "3:2026-10-22T02:21:46.000Z",
+            "completed": false,
+            "startedAt": "2026-10-22T02:21:46.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T02:22:16.157Z",
+            "scoreDelta": 19,
+            "typedChars": 120,
+            "progressPct": 12,
+            "validatedAt": "2026-10-22T02:22:16.157Z",
+            "correctChars": 120,
+            "metricVersion": 3,
+            "individualRank": 3,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 79.1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Direct DB read confirms rows/stats and exactly-once arcade ledger",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

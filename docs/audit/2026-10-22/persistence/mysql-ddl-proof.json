@@ -1,0 +1,6 @@
+{
+  "database": "workrank_persistence_20261022_audit",
+  "version": "8.4.9",
+  "typedTextSql": "LONGTEXT NOT NULL",
+  "defaultIsApplicationFunction": true
+}

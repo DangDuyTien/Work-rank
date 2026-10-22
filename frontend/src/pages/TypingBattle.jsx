@@ -81,7 +81,8 @@ export default function TypingBattle() {
   const [leavingRoom, setLeavingRoom] = useState(false);
 
   // Navigation Tabs: 'practice' (Instant Trainer) | 'arena' (Online PvP) | 'leaderboard'
-  const [activeTab, setActiveTab] = useState('practice');
+  const [activeTab, setActiveTab] = useState(()=>searchParams.get('tab') || 'practice');
+  useEffect(()=>{const tab=searchParams.get('tab');setActiveTab(['arena','leaderboard','history'].includes(tab)?tab:'practice');},[searchParams]);
 
   // Time-based Test Settings: 30s, 60s (1 min), 120s (2 min), 300s (5 min)
   const [selectedDuration, setSelectedDuration] = useState(120); // Default: 2 minutes (120s)
@@ -493,6 +494,14 @@ export default function TypingBattle() {
   }, [urlRoomId, fetchRoomDetail, fetchHubData]);
 
   // ── 3. REALTIME SOCKET EVENT LISTENERS ──
+  // Membership outlives listener refreshes (e.g. a new challenge on replay).
+  // Only leaving this room releases its waiting seat on the server.
+  useEffect(() => {
+    if (!socket || !room?.id) return;
+    const subscribedRoomId=Number(room.id);
+    return()=>socket.emit('typing:leaveRoom',{roomId:subscribedRoomId});
+  },[socket,room?.id]);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -760,9 +769,6 @@ export default function TypingBattle() {
     return () => {
       socket.off('connect', handleSocketReconnect);
       socket.off('typing:roomRemoved', handleRoomRemoved);
-      if (room?.id) {
-        socket.emit('typing:leaveRoom', { roomId: Number(room.id) });
-      }
       socket.off('typing:roomState', handleRoomState);
       socket.off('typing:roomUpdated', handleRoomUpdated);
       socket.off('typing:playerJoined', handlePlayerJoined);
@@ -1102,10 +1108,10 @@ export default function TypingBattle() {
     }
   };
 
-  const handleLeaveRoom = async () => {
+  const handleLeaveRoom = async (nextTab='practice') => {
     if (leavingRoom) return;
     if (!room?.id) {
-      navigate('/games/typing');
+      setActiveTab(nextTab);navigate(`/games/typing${nextTab==='practice'?'':`?tab=${nextTab}`}`);
       return;
     }
     setLeavingRoom(true);
@@ -1119,7 +1125,7 @@ export default function TypingBattle() {
       setPlayers([]);
       setRoomError(null);
       setLeavingRoom(false);
-      navigate('/games/typing');
+      setActiveTab(nextTab);navigate(`/games/typing${nextTab==='practice'?'':`?tab=${nextTab}`}`);
     }
   };
 
@@ -1153,11 +1159,12 @@ export default function TypingBattle() {
     onChange={handleInputChange} onCompositionStart={handleCompositionStart} onBeforeInput={handleInputBeforeInput} onCompositionEnd={handleCompositionEnd}
     onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()} disabled={isFinished || !room && (practiceLoading || !practiceAttemptRef.current)} />;
   return <TypingArcadeView user={user} room={room} players={players} isSpectator={isSpectator} roomError={roomError} loading={loading}
-    practiceLoading={practiceLoading} practiceError={practiceError} activeTab={activeTab} setActiveTab={setActiveTab} selectedDuration={selectedDuration} setDuration={handleDurationChange}
+    practiceLoading={practiceLoading} practiceError={practiceError} activeTab={activeTab} setActiveTab={tab=>{setActiveTab(tab);if(!room)navigate(`/games/typing${tab==='practice'?'':`?tab=${tab}`}`,{replace:true});}} selectedDuration={selectedDuration} setDuration={handleDurationChange}
     roomList={visibleRoomList} leaderboard={leaderboard} myStats={myStats} input={nativeInput} passage={renderedText} telemetry={telemetry}
     timeRemaining={timeRemaining} liveWpm={liveWpm} liveAccuracy={liveAccuracy} combo={arcadeTypingRef.current.combo} bestCombo={arcadeTypingRef.current.best}
     finished={isFinished} result={matchResult} practiceResult={practiceSubmissionResult} countdown={countdownNumber} onRestart={() => handleRestartPractice()}
     onLeave={() => room ? handleLeaveRoom() : navigate('/games')} onReady={handleToggleReady} onReset={handleResetRoom} onSwitchTeam={handleSwitchTeam}
+    onBoard={()=>room?handleLeaveRoom('leaderboard'):(setActiveTab('leaderboard'),navigate('/games/typing?tab=leaderboard'))}
     onRetry={() => isFinished ? finishCurrentRun() : preparePractice(false)} onJoin={(id) => navigate(`/games/typing/room/${id}`)}
     onCreate={async (mode, duration) => {
       try { const next = await typingGameApi.createRoom({ mode, title: `Đường đua ${mode === '1V1' ? 'Duo' : mode}`, matchType: 'RANKED', language: 'VI', difficulty: 'MEDIUM', durationLimitSeconds: duration }); navigate(`/games/typing/room/${next.room.id}`); }

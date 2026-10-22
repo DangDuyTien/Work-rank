@@ -1,0 +1,365 @@
+{
+  "startedAt": "2026-10-22T04:10:38.681Z",
+  "checks": [
+    {
+      "name": "Overlapping stack, silhouette tail and one-key rapid buffer",
+      "status": "PASS",
+      "evidence": {
+        "stack": [
+          {
+            "index": 0,
+            "depth": 0,
+            "opacity": 1,
+            "transform": "matrix(1, 0, 0, 1, 0, 0)",
+            "hint": "→",
+            "bounds": {
+              "x": 742,
+              "y": 394.984375,
+              "width": 148,
+              "height": 144
+            }
+          },
+          {
+            "index": 1,
+            "depth": 1,
+            "opacity": 0.64,
+            "transform": "matrix(0.86, 0, 0, 0.86, 49, -39)",
+            "hint": "←",
+            "bounds": {
+              "x": 801.3599853515625,
+              "y": 366.0643615722656,
+              "width": 127.280029296875,
+              "height": 123.83999633789062
+            }
+          },
+          {
+            "index": 2,
+            "depth": 2,
+            "opacity": 0.32,
+            "transform": "matrix(0.72, 0, 0, 0.72, 78, -57)",
+            "hint": "↓",
+            "bounds": {
+              "x": 840.719970703125,
+              "y": 358.1443786621094,
+              "width": 106.56005859375,
+              "height": 103.67999267578125
+            }
+          },
+          {
+            "index": 3,
+            "depth": 3,
+            "opacity": 0.18,
+            "transform": "matrix(0.6, 0, 0, 0.6, 99, -67)",
+            "hint": "◇",
+            "bounds": {
+              "x": 870.5999755859375,
+              "y": 356.78436279296875,
+              "width": 88.800048828125,
+              "height": 86.4000244140625
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Wrong freezes cue/queue, rejects penalty keys",
+      "status": "PASS",
+      "evidence": {
+        "observedMs": 662
+      }
+    },
+    {
+      "name": "390/430/768/1024/1440, buttons/WASD/swipe, 44px touch targets",
+      "status": "PASS"
+    },
+    {
+      "name": "direction_rush input/frame CPU 4x",
+      "status": "PASS",
+      "evidence": {
+        "game": "direction_rush",
+        "cpuThrottle": 4,
+        "inputSamples": 40,
+        "inputToNextFrameP50Ms": 6,
+        "inputToNextFrameP95Ms": 15.399999976158142,
+        "frameP95Ms": 10.100000000000364,
+        "frameSamples": 670,
+        "cls": 0,
+        "longTasks": 0,
+        "longestTaskMs": 0,
+        "reactCommits": 165
+      }
+    },
+    {
+      "name": "Tricks/opposite and reduced motion preserve input timing",
+      "status": "PASS",
+      "evidence": {
+        "stages": [
+          "normal",
+          "position",
+          "color",
+          "entrance",
+          "opposite",
+          "final"
+        ]
+      }
+    },
+    {
+      "name": "340ms GAME COMPLETE, saved result, replay",
+      "status": "PASS",
+      "evidence": {
+        "durationMs": 342.80000001192093
+      }
+    },
+    {
+      "name": "DUO real overtake after stumble, no boost",
+      "status": "PASS"
+    },
+    {
+      "name": "TRIO real overtake after stumble, no boost",
+      "status": "PASS"
+    },
+    {
+      "name": "DUO full round/ranks/results DB read-back",
+      "status": "PASS",
+      "evidence": {
+        "id": "e466fca7-91a9-498a-b635-8c1486cd8c41"
+      }
+    },
+    {
+      "name": "TRIO full round/ranks/results DB read-back",
+      "status": "PASS",
+      "evidence": {
+        "id": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28"
+      }
+    }
+  ],
+  "errors": [],
+  "performance": [
+    {
+      "game": "direction_rush",
+      "cpuThrottle": 4,
+      "inputSamples": 40,
+      "inputToNextFrameP50Ms": 6,
+      "inputToNextFrameP95Ms": 15.399999976158142,
+      "frameP95Ms": 10.100000000000364,
+      "frameSamples": 670,
+      "cls": 0,
+      "longTasks": 0,
+      "longestTaskMs": 0,
+      "reactCommits": 165
+    }
+  ],
+  "finishedAt": "2026-10-22T04:12:50.619Z",
+  "attempts": [
+    {
+      "id": "0dbd69ef-b4f6-40e1-972a-231916fec736",
+      "suffix": "g",
+      "result": {
+        "mode": "SOLO",
+        "rank": 1,
+        "combo": 0,
+        "score": 80842,
+        "userId": 7,
+        "correct": 351,
+        "accuracy": 96.16,
+        "attempts": 365,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "0dbd69ef-b4f6-40e1-972a-231916fec736",
+        "awardedXp": 30,
+        "bestCombo": 349,
+        "createdAt": "2026-10-22T04:10:39.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:10:42.000Z",
+        "finishedAt": "2026-10-22T04:11:42.501Z",
+        "wrongCount": 14,
+        "improvement": 4246,
+        "lastCorrect": false,
+        "validatedAt": "2026-10-22T04:11:42.501Z",
+        "perfectCount": 351,
+        "timeoutCount": 13,
+        "avgResponseMs": 128,
+        "isPersonalBest": true,
+        "lastResponseMs": 699,
+        "playerAttemptId": "c6ff9d2b-fbb2-449e-b8b9-387056e5e41e",
+        "personalBestScore": 80842,
+        "previousBestScore": 76596
+      }
+    },
+    {
+      "id": "e466fca7-91a9-498a-b635-8c1486cd8c41",
+      "suffix": "g",
+      "result": {
+        "mode": "DUO",
+        "rank": 1,
+        "combo": 330,
+        "score": 75734,
+        "userId": 7,
+        "correct": 331,
+        "accuracy": 99.7,
+        "attempts": 332,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "e466fca7-91a9-498a-b635-8c1486cd8c41",
+        "awardedXp": 30,
+        "bestCombo": 330,
+        "createdAt": "2026-10-22T04:11:44.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:11:49.000Z",
+        "finishedAt": "2026-10-22T04:12:49.440Z",
+        "wrongCount": 1,
+        "improvement": -969,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T04:12:49.440Z",
+        "perfectCount": 327,
+        "timeoutCount": 0,
+        "avgResponseMs": 179,
+        "isPersonalBest": false,
+        "lastResponseMs": 170,
+        "playerAttemptId": "a41a0be0-6628-4670-a297-10b18feb3db9",
+        "personalBestScore": 76703,
+        "previousBestScore": 76703
+      }
+    },
+    {
+      "id": "e466fca7-91a9-498a-b635-8c1486cd8c41",
+      "suffix": "h",
+      "result": {
+        "mode": "DUO",
+        "rank": 2,
+        "combo": 60,
+        "score": 74602,
+        "userId": 8,
+        "correct": 328,
+        "accuracy": 99.7,
+        "attempts": 329,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "e466fca7-91a9-498a-b635-8c1486cd8c41",
+        "awardedXp": 30,
+        "bestCombo": 268,
+        "createdAt": "2026-10-22T04:11:44.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:11:49.000Z",
+        "finishedAt": "2026-10-22T04:12:49.587Z",
+        "wrongCount": 1,
+        "improvement": -2420,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T04:12:49.587Z",
+        "perfectCount": 325,
+        "timeoutCount": 1,
+        "avgResponseMs": 179,
+        "isPersonalBest": false,
+        "lastResponseMs": 167,
+        "playerAttemptId": "05a4a05c-7d41-411c-88a3-59781a425000",
+        "personalBestScore": 77022,
+        "previousBestScore": 77022
+      }
+    },
+    {
+      "id": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+      "suffix": "i",
+      "result": {
+        "mode": "TRIO",
+        "rank": 3,
+        "combo": 60,
+        "score": 74054,
+        "userId": 9,
+        "correct": 326,
+        "accuracy": 99.39,
+        "attempts": 328,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+        "awardedXp": 30,
+        "bestCombo": 265,
+        "createdAt": "2026-10-22T04:11:44.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:11:49.000Z",
+        "finishedAt": "2026-10-22T04:12:49.834Z",
+        "wrongCount": 2,
+        "improvement": -2656,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T04:12:49.834Z",
+        "perfectCount": 323,
+        "timeoutCount": 1,
+        "avgResponseMs": 179,
+        "isPersonalBest": false,
+        "lastResponseMs": 162,
+        "playerAttemptId": "7dc9d494-480e-48ca-8c2f-ed9fea8c3fbb",
+        "personalBestScore": 76710,
+        "previousBestScore": 76710
+      }
+    },
+    {
+      "id": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+      "suffix": "native",
+      "result": {
+        "mode": "TRIO",
+        "rank": 1,
+        "combo": 331,
+        "score": 75805,
+        "userId": 10,
+        "correct": 331,
+        "accuracy": 100,
+        "attempts": 331,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+        "awardedXp": 30,
+        "bestCombo": 331,
+        "createdAt": "2026-10-22T04:11:44.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:11:49.000Z",
+        "finishedAt": "2026-10-22T04:12:49.902Z",
+        "wrongCount": 0,
+        "improvement": -1216,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T04:12:49.902Z",
+        "perfectCount": 327,
+        "timeoutCount": 0,
+        "avgResponseMs": 181,
+        "isPersonalBest": false,
+        "lastResponseMs": 169,
+        "playerAttemptId": "197bcb3b-3fee-4ffc-a187-bc341b2fc002",
+        "personalBestScore": 77021,
+        "previousBestScore": 77021
+      }
+    },
+    {
+      "id": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+      "suffix": "a",
+      "result": {
+        "mode": "TRIO",
+        "rank": 2,
+        "combo": 330,
+        "score": 75557,
+        "userId": 1,
+        "correct": 330,
+        "accuracy": 100,
+        "attempts": 330,
+        "eligible": true,
+        "gameType": "direction_rush",
+        "attemptId": "1b6e1aa2-9bd5-43f4-8e25-36db3b99fe28",
+        "awardedXp": 30,
+        "bestCombo": 330,
+        "createdAt": "2026-10-22T04:11:44.000Z",
+        "forfeited": false,
+        "startedAt": "2026-10-22T04:11:49.000Z",
+        "finishedAt": "2026-10-22T04:12:49.054Z",
+        "wrongCount": 0,
+        "improvement": -1217,
+        "lastCorrect": true,
+        "validatedAt": "2026-10-22T04:12:49.054Z",
+        "perfectCount": 327,
+        "timeoutCount": 0,
+        "avgResponseMs": 182,
+        "isPersonalBest": false,
+        "lastResponseMs": 186,
+        "playerAttemptId": "d73e5f0a-070b-467c-bc91-9c6c97b20079",
+        "personalBestScore": 76774,
+        "previousBestScore": 76774
+      }
+    }
+  ]
+}

@@ -40,6 +40,7 @@ const {
   buildLegacyDrawingStorageKey,
   parseStorageKey,
   resetDrawingStorage,
+  setDrawingStorageForTests,
 } = require('../src/services/storage/drawingStorage.service');
 const { resolveStorageConfig } = require('../src/config/storage');
 const { migrateDrawing } = require('../scripts/migrate-drawing-images');
@@ -357,7 +358,11 @@ test('Drawing persistent storage remediation', async (t) => {
       visibility: 'PUBLIC',
     });
 
-    // storage local: object không tồn tại → alreadyMissing, vẫn phải thành công
+    // A local adapter must never pretend to delete a cloud object.
+    const rejected = await request(app).delete(`/api/drawings/${created.id}`).set('Authorization', `Bearer ${tokenA}`);
+    assert.equal(rejected.status, 502);
+    assert.equal((await Drawing.findByPk(created.id)).metadata.deletionPending, true);
+    setDrawingStorageForTests(createFakeStorage());
     const res = await request(app)
       .delete(`/api/drawings/${created.id}`)
       .set('Authorization', `Bearer ${tokenA}`);
@@ -365,6 +370,7 @@ test('Drawing persistent storage remediation', async (t) => {
 
     const row = await Drawing.findByPk(created.id);
     assert.equal(row.status, 'DELETED');
+    resetDrawingStorage();
   });
 
   /* ── 5. validation ở HTTP layer ── */
@@ -449,6 +455,14 @@ test('Drawing persistent storage remediation', async (t) => {
     );
   });
 
+  await t.test('development cannot publish to local filesystem and claim durable storage', async () => {
+    const previous = process.env.NODE_ENV; process.env.NODE_ENV = 'development';
+    try {
+      const res = await request(app).post('/api/drawings').set('Authorization', `Bearer ${tokenA}`).attach('image', makePng(20,20), {filename:'art.png',contentType:'image/png'});
+      assert.equal(res.status,503); assert.equal(res.body.code,'STORAGE_UNAVAILABLE');
+    } finally { process.env.NODE_ENV = previous; }
+  });
+
   /* ── 7. legacy migration ── */
   await t.test('legacy migration uploads existing local file then skips on rerun', async () => {
     const storage = createFakeStorage();
@@ -483,6 +497,17 @@ test('Drawing persistent storage remediation', async (t) => {
     assert.equal(second.status, 'skipped-has-key');
     assert.equal(storage._stats().uploads, uploadsAfterFirst, 'không được upload trùng');
     assert.equal(storage._stats().size, 1, 'không được tạo object trùng');
+  });
+
+  await t.test('migration moves nested local-adapter keys and verifies cloud objects on rerun', async () => {
+    const storage=createFakeStorage(), storageConfig=resolveStorageConfig();
+    const key=`drawings/${userA.id}/nested-local.png`;
+    fs.mkdirSync(path.dirname(path.join(STORAGE_ROOT,key)),{recursive:true});fs.writeFileSync(path.join(STORAGE_ROOT,key),makePng(40,30));
+    const row=await Drawing.create({userId:userA.id,title:'Nested local',imageUrl:`/uploads/${key}`,storageKey:key,storageProvider:'local'});
+    assert.equal((await migrateDrawing(row,{storage,storageConfig,dryRun:false})).status,'migrated');
+    await row.reload();assert.equal(row.storageProvider,'s3');assert.equal((await migrateDrawing(row,{storage,storageConfig,dryRun:false})).status,'skipped-has-key');
+    await storage.delete({key:row.storageKey});
+    assert.equal((await migrateDrawing(row,{storage,storageConfig,dryRun:false})).status,'missing-object');await row.reload();assert.equal(row.metadata.imageMissing,true);
   });
 
   await t.test('legacy migration marks missing files without deleting the record', async () => {

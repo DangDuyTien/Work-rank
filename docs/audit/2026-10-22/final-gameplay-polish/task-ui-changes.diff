@@ -1,0 +1,456 @@
+--- a/frontend/src/components/TypingPassage.jsx
++++ b/frontend/src/components/TypingPassage.jsx
+@@ -50,6 +50,8 @@
+   }, [tokens]);
+   const current = Math.min(input.length, targetChars.length);
+   const wordIndex = Math.max(0, tokens.findIndex((token) => current < token.offset + token.length));
++  const firstBlock = Math.max(0, Math.floor(wordIndex / 32) - 1);
++  const previousWindow=useRef(firstBlock),scrollTarget=useRef(-1);
+   useLayoutEffect(() => {
+     const box = viewport.current;
+     if (!box) return undefined;
+@@ -72,8 +74,15 @@
+         const bottomInset = Math.min(lineHeight, box.clientHeight / 3);
+         if (markerRect.bottom > boxRect.bottom - bottomInset || markerRect.top < boxRect.top + topInset) {
+           const desired = Math.max(0, top - lineHeight);
+-          if (Math.abs(box.scrollTop - desired) > 1) box.scrollTop = desired;
++          const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.dataset.workrankReduceMotion==='true';
++          const outside=markerRect.top<boxRect.top||markerRect.bottom>boxRect.bottom;
++          const windowChanged=previousWindow.current!==firstBlock;
++          if (Math.abs(box.scrollTop-desired)>1&&(outside||windowChanged||Math.abs(scrollTarget.current-desired)>1)) {
++            box.scrollTo({top:desired,behavior:reduced||outside||windowChanged?'instant':'smooth'});
++            scrollTarget.current=desired;
++          }
+         }
++        previousWindow.current=firstBlock;
+       });
+     };
+     track();
+@@ -83,10 +92,9 @@
+       cancelAnimationFrame(frame);
+       resize.disconnect();
+     };
+-  }, [wordIndex, target]);
++  }, [wordIndex, target, firstBlock]);
+   // A timed passage may contain thousands of characters. Keep the previous,
+   // current and next block; the native input/session still owns the full text.
+-  const firstBlock = Math.max(0, Math.floor(wordIndex / 32) - 1);
+   const visibleBlocks = blocks.slice(firstBlock, firstBlock + 3);
+   return <div className="typing-passage" onClick={onFocusInput}>
+     <div className="typing-position" aria-live="off" data-testid="typing-position">
+--- a/frontend/src/pages/ArcadeGame.jsx
++++ b/frontend/src/pages/ArcadeGame.jsx
+@@ -10,9 +10,16 @@
+ import ArcadeTutorial from '../components/arcade/ArcadeTutorial';
+ import ArcadeResult from '../components/arcade/ArcadeResult';
+ import SavedGameHistory from '../components/arcade/SavedGameHistory';
+-import { ArcadeSoundControl } from '../components/arcade/ArcadeShared';
++import { ArcadeComplete, ArcadeSoundControl } from '../components/arcade/ArcadeShared';
+ import '../components/arcade/arcade.css';
+ import '../components/arcade/arcade-polish.css';
++
++function SettledResult(props) {
++  const [settled,setSettled]=useState(false);
++  useEffect(()=>{const timer=setTimeout(()=>setSettled(true),340);return()=>clearTimeout(timer);},[]);
++  const me=props.snapshot.players.find(p=>String(p.userId)===String(props.userId));
++  return settled?<ArcadeResult {...props}/>:<ArcadeComplete score={me.result.score} rank={me.result.rank}/>;
++}
+ 
+ function Leaderboard({ gameType, mode, setMode }) {
+   const [period, setPeriod] = useState('all');
+@@ -101,7 +108,7 @@
+       {view === 'history' ? <SavedGameHistory kind="arcade" gameType={effective} onOpen={()=>setView('play')}/> : view === 'board' ? <Leaderboard gameType={effective} mode={mode} setMode={setMode} />
+         : roomId ? !snapshot ? <PageState type="loading" message="Đang mở sân chơi…" />
+           : snapshot.room.status === 'WAITING' ? <section className="arcade-lobby"><p className="arcade-kicker">{snapshot.room.mode} · PHÒNG CHỜ</p><h1>{game.name}</h1><p>{snapshot.room.title} · {snapshot.players.length}/{snapshot.room.capacity} người</p><div className="arcade-lobby-stage">{snapshot.players.map((p) => <div key={p.id}><PlayerAvatar2D player={p} state={p.ready ? 'ready' : 'idle'} /><span className="arcade-ready-label">{p.ready ? '✓ Sẵn sàng' : 'Đang chuẩn bị'}{String(p.userId) === String(snapshot.room.hostId) ? ' · Chủ phòng' : ''}</span></div>)}{Array.from({ length: snapshot.room.capacity - snapshot.players.length }, (_, i) => <div className="arcade-empty-seat" key={i}><Users size={40} /><span>Đợi đồng đội…</span></div>)}</div><p className="arcade-controls-info">{game.controls}</p><div className="arcade-actions"><Button onClick={() => session.action('ready', { ready: !me.ready })}>{me.ready ? 'Hủy sẵn sàng' : 'Tôi đã sẵn sàng'}</Button>{String(snapshot.room.hostId) === String(user.id) && <Button variant="secondary" disabled={snapshot.players.length !== snapshot.room.capacity || snapshot.players.some((p) => !p.ready)} onClick={() => session.action('start')}><Play size={18} /> Bắt đầu</Button>}</div></section>
+-            : me?.finishedAt ? <ArcadeResult snapshot={snapshot} userId={user.id} busy={busy} onReplay={replayGame} onBoard={() => { setMode(snapshot.room.mode); setView('board'); }} />
++          : me?.finishedAt ? <SettledResult key={snapshot.room.id} snapshot={snapshot} userId={user.id} busy={busy} onReplay={replayGame} onBoard={() => { setMode(snapshot.room.mode); setView('board'); }} />
+               : <ArcadePlay key={snapshot.room.id} snapshot={snapshot} userId={user.id} eventsRef={session.eventsRef} record={session.record} offsetRef={session.offsetRef} personalBest={personal?.score || 0} />
+           : <section className="arcade-menu"><div className="arcade-menu-hero"><div><p className="arcade-kicker">WORK RANK ARCADE · {game.mark}</p><h1>{game.name}</h1><h2>{game.subtitle}</h2><p>{game.description}</p><span className="arcade-best-chip"><Trophy size={16} /> Kỷ lục {mode}: <b>{personal?.score ?? '—'}</b> · Hạng {personal?.rank ? `#${personal.rank}` : '—'} · Chuỗi {personal?.bestCombo ?? '—'}</span></div><ArcadePoster gameType={gameType} /></div>
+             <ArcadeTutorial key={gameType} gameType={gameType} /><h3>Chọn chế độ của bạn</h3><div className="arcade-mode-select">{[{ id: 'SOLO', icon: '✦', label: 'Phá kỷ lục của bạn', players: '01' }, { id: 'DUO', icon: '⚑', label: 'Đấu 1v1', players: '02' }, { id: 'TRIO', icon: '♛', label: '3 người tranh hạng', players: '03' }].map((m) => <button key={m.id} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}><span className="arcade-mode-icon">{m.icon}</span><span><b>{m.id}</b><small>{m.label}</small></span><em>{m.players}</em></button>)}</div>
+--- a/frontend/src/components/arcade/ArcadeShared.jsx
++++ b/frontend/src/components/arcade/ArcadeShared.jsx
+@@ -4,9 +4,14 @@
+ import { arcadeSound } from '../../utils/arcadeSound';
+ import { PlayerAvatar2D } from './ArcadeArt';
+ import './arcade-system.css';
++import './gameplay-polish.css';
++
++export function ArcadeComplete({score,rank,pending=false}) {
++  return <section className="arcade-complete-beat" role="status" data-testid="game-complete"><span>✓ GAME COMPLETE</span><strong>{score??'—'}</strong><small>{pending?'Đang chốt thành tích…':rank?`Về đích #${rank} · Đã lưu kết quả`:'Đã lưu điểm · Chờ hạng cuối'}</small></section>;
++}
+ 
+ export const ArcadeHUD = memo(function ArcadeHUD({ time, score, combo = 0, rank, count, scoreLabel = 'ĐIỂM CỦA BẠN', comboLabel = 'COMBO', animateScore = true }) {
+-  return <header className="arcade-hud"><div><span>CÒN LẠI</span><strong role="timer">{time}<small>s</small></strong></div><span className="arcade-world-label"><b>{count > 1 ? `#${rank || '—'}/${count}` : `x${combo}`}</b><small>{count > 1 ? `x${combo} · ` : ''}{comboLabel}</small></span><div><span>{scoreLabel}</span><strong>{animateScore ? <AnimatedNumber value={score} duration={180} /> : score}</strong></div></header>;
++  return <header className="arcade-hud" data-pressure={time<=10} aria-label="Trạng thái ván chơi"><div><span>CÒN LẠI</span><strong role="timer">{time}<small>s</small></strong></div><span className="arcade-world-label"><b>{count > 1 ? `#${rank || '—'}/${count}` : `x${combo}`}</b><small>{count > 1 ? `x${combo} · ` : ''}{comboLabel}</small></span><div><span>{scoreLabel}</span><strong>{animateScore ? <AnimatedNumber value={score} duration={180} /> : score.toLocaleString('vi-VN')}</strong></div></header>;
+ });
+ export function ArcadeSoundControl() {
+   const muted = useSyncExternalStore(arcadeSound.subscribe, arcadeSound.isMuted, () => true);
+--- a/frontend/src/components/arcade/TypingArcadeView.jsx
++++ b/frontend/src/components/arcade/TypingArcadeView.jsx
+@@ -2,7 +2,7 @@
+ import { Link } from 'react-router-dom';
+ import { ArrowLeft, Trophy } from 'lucide-react';
+ import { Button, TabTransition } from '../ui';
+-import { ArcadeHUD, ArcadeCountdown, ArcadePodium, ArcadeSoundControl } from './ArcadeShared';
++import { ArcadeHUD, ArcadeCountdown, ArcadePodium, ArcadeSoundControl, ArcadeComplete } from './ArcadeShared';
+ import { PlayerAvatar2D } from './ArcadeArt';
+ import TypingRaceTracks from './TypingRaceTracks';
+ import SavedGameHistory from './SavedGameHistory';
+@@ -72,7 +72,7 @@
+     {!room&&<div className="typing-arcade-tabs">{[['practice','Solo · Luyện nhịp'],['arena','Duo / Trio'],['leaderboard','BXH'],['history','Lịch sử']].map(([k,l])=><button type="button" key={k} aria-pressed={activeTab===k} onClick={()=>setActiveTab(k)}>{l}</button>)}</div>}
+     <TabTransition key={room?'room':activeTab} minHeight={500}>
+       {done?<TypingFinish players={players} result={result} practiceResult={practiceResult} user={user} best={previousBest.current} combo={bestCombo} time={selectedDuration} host={host} busy={loading} onReplay={room?onReset:onRestart} onBoard={onBoard}/>
+-      :waiting?<section className="arcade-lobby"><p className="arcade-kicker">{room.mode==='1V1'?'DUO':room.mode} · CÙNG SÂN, CÙNG ĐÍCH</p><h2>{room.title}</h2><div className="arcade-lobby-stage">{players.map((p,i)=><div key={p.userId}><PlayerAvatar2D player={{...p,name:p.user?.name,position:i%3+1}} state={p.isReady?'ready':'idle'}/><span className="arcade-ready-label">{p.isReady?'✓ Sẵn sàng':'Đang chuẩn bị'}</span></div>)}</div><p>Gõ đoạn văn xuất hiện · Backspace để sửa · Avatar tiến theo số chữ đã gõ.</p>{room.status==='WAITING'?<><Button onClick={onReady}>{room.mode==='SOLO'?'Bắt đầu đường đua':me?.isReady?'Hủy sẵn sàng':'Tôi đã sẵn sàng'}</Button><p>{players.length}/{room.maxPlayers} người · Tất cả sẵn sàng → đếm ngược 3 giây</p>{['2V2','3V3'].includes(room.mode)&&<div className="arcade-actions"><Button variant="secondary" onClick={()=>onSwitchTeam('A')}>Đội xanh</Button><Button variant="secondary" onClick={()=>onSwitchTeam('B')}>Đội cam</Button></div>}</>:<div className="typing-lobby-count"><ArcadeCountdown value={countdown ?? 3} instruction="Nhìn chữ · giữ nhịp cùng nhau"/></div>}</section>
++      :readyResult?<ArcadeComplete score={(result?.results||[]).find(p=>String(p.userId)===String(user.id))?.wpm??practiceResult?.wpm} rank={(result?.results||[]).find(p=>String(p.userId)===String(user.id))?.individualRank??1}/>:waiting?<section className="arcade-lobby"><p className="arcade-kicker">{room.mode==='1V1'?'DUO':room.mode} · CÙNG SÂN, CÙNG ĐÍCH</p><h2>{room.title}</h2><div className="arcade-lobby-stage">{players.map((p,i)=><div key={p.userId}><PlayerAvatar2D player={{...p,name:p.user?.name,position:i%3+1}} state={p.isReady?'ready':'idle'}/><span className="arcade-ready-label">{p.isReady?'✓ Sẵn sàng':'Đang chuẩn bị'}</span></div>)}</div><p>Gõ đoạn văn xuất hiện · Backspace để sửa · Avatar tiến theo số chữ đã gõ.</p>{room.status==='WAITING'?<><Button onClick={onReady}>{room.mode==='SOLO'?'Bắt đầu đường đua':me?.isReady?'Hủy sẵn sàng':'Tôi đã sẵn sàng'}</Button><p>{players.length}/{room.maxPlayers} người · Tất cả sẵn sàng → đếm ngược 3 giây</p>{['2V2','3V3'].includes(room.mode)&&<div className="arcade-actions"><Button variant="secondary" onClick={()=>onSwitchTeam('A')}>Đội xanh</Button><Button variant="secondary" onClick={()=>onSwitchTeam('B')}>Đội cam</Button></div>}</>:<div className="typing-lobby-count"><ArcadeCountdown value={countdown ?? 3} instruction="Nhìn chữ · giữ nhịp cùng nhau"/></div>}</section>
+       :!room&&activeTab==='history'?<SavedGameHistory kind="typing"/>:!room&&activeTab==='arena'?<section className="arcade-menu"><h2>Chọn bạn cùng đua</h2><div className="arcade-mode-select">{[['SOLO','Một đường đua'],['1V1','Duo · 1 đấu 1'],['TRIO','Trio · ba người']].map(([k,l])=><button key={k} aria-pressed={mode===k} onClick={()=>setMode(k)}><b>{k==='1V1'?'DUO':k}</b><small>{l}</small></button>)}</div><div className="arcade-start-row"><select aria-label="Thời lượng Typing Race" value={selectedDuration} onChange={e=>setDuration(Number(e.target.value))}>{[30,60,120,300].map(n=><option key={n} value={n}>{n}s</option>)}</select><Button onClick={create} disabled={creating}>{creating?'Đang mở…':'Mở đường đua'}</Button></div><div className="arcade-room-list"><h3>Phòng chờ · vào cùng bạn bè</h3>{roomList.filter(r=>(r.playerCount??r.players?.length??0)>0).map(r=><button key={r.id} onClick={()=>onJoin(r.id)}><span><b>{r.title}</b><small>{r.mode} · {r.playerCount??r.players?.length}/{r.maxPlayers}</small></span><strong>Vào đua →</strong></button>)}{!roomList.length&&<p className="arcade-empty">Đường đua đang đợi bạn. Mở phòng để mời bạn bè!</p>}</div></section>
+       :!room&&activeTab==='leaderboard'?<section className="arcade-leaderboard"><h2>Kỷ lục đường đua</h2><p>Thành tích do máy chủ xác minh · {myStats?.bestWpm || 0} WPM tốt nhất của bạn</p><div className="arcade-table-scroll"><table><thead><tr><th>Hạng</th><th>Tay đua</th><th>WPM</th><th>Chính xác</th></tr></thead><tbody>{leaderboard.map((p,i)=><tr key={p.userId||i}><td>{p.rank||i+1}</td><td>{p.user?.name||p.name}</td><td>{p.wpm||p.bestWpm}</td><td>{p.accuracy||p.bestAccuracy}%</td></tr>)}</tbody></table></div></section>
+       :<><div className="arcade-world arcade-polished typing-race-world"><ArcadeHUD time={timeRemaining} score={Math.round(liveWpm)} combo={combo} rank={me?.liveRank} count={players.length} scoreLabel="TỐC ĐỘ · WPM" animateScore={false}/><div className="arcade-scene typing-race-scene"><div className="arcade-cloud cloud-one"/><div className="arcade-cloud cloud-two"/><TypingRaceTracks players={players} user={user} telemetry={telemetry} duration={room?.durationLimitSeconds || selectedDuration}/><div ref={target} className="typing-race-console"><div className="typing-console-label"><b>{isSpectator?'ĐANG XEM ĐƯỜNG ĐUA':'GÕ ĐOẠN NÀY'}</b><span>{liveAccuracy}% chính xác</span></div>{passage}{!isSpectator&&input}<TypingPulse telemetry={telemetry}/></div>{finished&&!done&&<p role="status">✓ Bạn đã về đích · Đang chờ thành tích chung…</p>}{practiceLoading&&<p role="status">Đang chuẩn bị đường đua…</p>}</div></div>{!room&&<div className="typing-practice-options"><span>Gõ chữ đầu để bắt đầu đồng hồ</span><select aria-label="Thời lượng Solo" value={selectedDuration} onChange={e=>setDuration(Number(e.target.value))}>{[30,60,120,300].map(n=><option key={n} value={n}>{n}s{n===120?' · Ghi kỷ lục':''}</option>)}</select><Button variant="secondary" onClick={onRestart}>Bài mới</Button></div>}</>}
+--- a/frontend/src/components/arcade/direction-queue.css
++++ b/frontend/src/components/arcade/direction-queue.css
+@@ -1,19 +1,36 @@
+-.direction-queue { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; color: #555c8a; }
+-.direction-queue>small { font-size: 9px; font-weight: 750; letter-spacing: .05em; }
+-.direction-queue-track { display: flex; align-items: center; gap: 2px; height: 48px; }
+-.direction-queue-item { width: 48px; height: 48px; display: grid; place-items: center; }
+-.direction-queue-item>span { display: grid; place-items: center; width: 48px; height: 48px; font-size: 43px; line-height: 1; border: 2px solid #959cc3; border-radius: 11px; background: #fffdf7; transition: transform var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard); }
+-.direction-queue-item.queue-1>span { opacity: .72; transform: scale(.72); }.direction-queue-item.queue-2>span { opacity: .52; transform: scale(.52); }.direction-queue-item.queue-3>span { opacity: .32; transform: scale(.32); }
+-.queue-current-arrival { animation: direction-current-in var(--motion-fast) var(--ease-standard) both; }
++/* Overlapping depth stack. Absolute wrappers share bounds; inner faces animate
++   depth without FLIP overwriting their scale or measuring on clock renders. */
++.direction-stack { position: relative; isolation: isolate; width: min(330px,100%); height: 234px; }
++.direction-stack-caption { position: absolute; bottom: 1px; left: 0; right: 0; text-align: center; font-size: 9px; font-weight: 750; letter-spacing: .08em; color: #555f8a; }
++.direction-stack-track { position: absolute; width: 148px; height: 144px; left: calc(50% - 98px); top: 67px; }
++.direction-stack-card { position: absolute; inset: 0; pointer-events: none; }
++.direction-stack-face { width: 148px; height: 144px; box-sizing: border-box; display: grid; place-items: center; position: relative; border: 3px solid #828bb3; border-bottom-width: 7px; border-radius: 26px; color: #46568e; background: #fffefa; transform-origin: center; transition: transform var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard); }
++.direction-stack-face>strong { font-size: 115px; line-height: 1; font-weight: 850; }
++.direction-stack-hint { font-size: 98px; line-height: 1; }
++.direction-stack-card[data-depth="0"] .direction-stack-face { transform: translate(0,0) scale(1); opacity: 1; box-shadow: 0 4px 0 #bfc7df; }
++.direction-stack-card[data-depth="1"] .direction-stack-face { transform: translate(49px,-39px) scale(.86); opacity: .64; }
++.direction-stack-card[data-depth="2"] .direction-stack-face { transform: translate(78px,-57px) scale(.72); opacity: .32; }
++.direction-stack-card[data-depth="3"] .direction-stack-face { transform: translate(99px,-67px) scale(.6); opacity: .18; }
++.direction-stack-card[data-depth="3"] .direction-stack-hint { font-size: 73px; }
++.direction-stack-card[data-depth="-1"] .direction-stack-face { transform: translate(-35px,12px) scale(.92); opacity: 0; transition-duration: var(--motion-instant); }
++.direction-stack-face[data-color="1"] { color: #2b6872; border-color: #658d96; background: #f4fcfa; }.direction-stack-face[data-color="2"] { color: #8e5e30; border-color: #aa885f; background: #fffbef; }
++.direction-stack[data-frozen="true"] .direction-stack-card:not([data-depth="0"]) .direction-stack-face { transition: none; animation: none; }
++.direction-stack-face[data-wrong="true"] { border-color: #a34951; outline: 2px dashed #b86c64; outline-offset: 3px; animation: direction-cue-stumble var(--motion-fast) var(--ease-standard) both; }
++.direction-stack-anchor { width: min(330px,100%); transform: translateX(calc(var(--arrow-slot) * 18px)); }
+ .direction-runner-position { transition: transform var(--motion-fast) var(--ease-standard); }
+ .direction-lane-rank { position: absolute; top: 1px; left: 6px; font-size: 10px; font-weight: 800; color: #5f6792; }
+ .arcade-page .has-direction-queue[data-stumbling="true"] .my-lane .arcade-player .arcade-actor { animation: direction-stumble var(--motion-slow) var(--ease-standard) both; }
+-.has-direction-queue[data-stumbling="true"] .arcade-direction-feedback { background: #fff0e3; border: 1px solid #d29a6a; border-radius: 10px; color: #9d4538; }
++.has-direction-queue[data-stumbling="true"] .arcade-direction-feedback { color: #943940; }
+ .has-direction-queue .arcade-direction-controls button[aria-disabled="true"] { opacity: .55; }
+-.has-direction-queue .arcade-stimulus-zone { padding-top: 3px; }
++.arcade-polished .has-direction-queue .arcade-stimulus-zone { min-height: 0; padding-top: 0; }
++.has-direction-queue .arcade-response-track { margin-top: 7px; }
++.has-direction-queue .arcade-direction-feedback { width: 100%; min-height: 64px; background: transparent; padding: 0; }
++.has-direction-queue .arcade-direction-feedback>span { gap: 8px; }.has-direction-queue .arcade-direction-feedback>b { font-size: 13px; }
+ .has-direction-queue .arcade-lanes { margin-top: 0; }
+-@keyframes direction-current-in { from { opacity: .7; transform: translateX(12px) scale(.94); } to { opacity: 1; transform: translateX(0) scale(1); } }
+-@keyframes direction-stumble { 25% { transform: translateX(-4px) rotate(-6deg); } 60% { transform: translateY(3px) rotate(4deg); } 85% { transform: translateY(3px) rotate(4deg); } }
+-@media(max-width:700px) { .direction-queue { height: 42px; gap: 4px; }.direction-queue-track { height: 40px; }.direction-queue-item { width: 42px; height: 40px; }.direction-queue-item>span { width: 42px; height: 40px; font-size: 37px; }.arcade-polished .has-direction-queue .arcade-stimulus-zone { min-height: 203px; }.has-direction-queue .arcade-direction-rule strong { font-size: 12px; }.has-direction-queue .arcade-direction-rule>span { font-size: 9px; }.has-direction-queue .arcade-direction-feedback { min-height: 70px; }.has-direction-queue .arcade-lanes { padding-bottom: 2px; } }
+-@media(prefers-reduced-motion:reduce) { .direction-queue *, .direction-runner-position, .queue-current-arrival { animation: none !important; transition: none !important; } }
+-html[data-workrank-reduce-motion="true"] .direction-queue *,html[data-workrank-reduce-motion="true"] .direction-runner-position,html[data-workrank-reduce-motion="true"] .queue-current-arrival { animation: none !important; transition: none !important; }
++.is-opposite .direction-stack-card[data-depth="0"] .direction-stack-face { border-style: dashed; border-bottom-style: solid; border-color: #ae753f; color: #8a562f; background: #fff6df; }
++.direction-stack[data-tempo="fast"] .direction-stack-caption { color: #8a453e; }
++@keyframes direction-cue-stumble { 25% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(3px) rotate(2deg); } to { transform: translateX(0); } }
++@keyframes direction-stumble { 25% { transform: translateX(-4px) rotate(-6deg); } 60%,85% { transform: translateY(3px) rotate(4deg); } }
++@media(max-width:700px) { .direction-stack { height: 213px; }.direction-stack-track { width: 132px; height: 128px; left: calc(50% - 90px); top: 63px; }.direction-stack-face { width: 132px; height: 128px; border-radius: 23px; }.direction-stack-face>strong { font-size: 103px; }.direction-stack-hint { font-size: 88px; }.direction-stack-anchor { transform: translateX(calc(var(--arrow-slot) * 10px)); }.has-direction-queue .arcade-direction-rule strong { font-size: 12px; }.has-direction-queue .arcade-direction-rule>span { font-size: 10px; } }
++@media(prefers-reduced-motion:reduce) { .direction-stack *, .direction-runner-position { animation: none !important; transition: none !important; } }
++html[data-workrank-reduce-motion="true"] .direction-stack *,html[data-workrank-reduce-motion="true"] .direction-runner-position { animation: none !important; transition: none !important; }
+--- a/frontend/src/components/arcade/MemoryBoard.jsx
++++ b/frontend/src/components/arcade/MemoryBoard.jsx
+@@ -6,6 +6,8 @@
+ export default function MemoryBoard({ current, index, elapsed, elapsedNow, previousAt, canPlay, submit, players, me, feedback }) {
+   const [selected, setSelected] = useState([]);
+   const selectedRef = useRef([]), pending = useRef(null);
++  const grid=useRef(null),keyboard=useRef(false);
++  const [focusCell,setFocusCell]=useState(0);
+   const lastSize = useRef(current.size);
+   const [levelUp, setLevelUp] = useState(false);
+   const review = feedback?.challenge && elapsed - feedback.at < current.restMs;
+@@ -19,8 +21,16 @@
+   const phase = review ? 'REVIEW' : memoryPhase(elapsed, previousAt, index, current);
+   const selectAt = memorySelectAt(previousAt, index, current);
+   const remaining = Math.max(0, (current.selectMs || 12000) - (elapsed - selectAt));
+-  useEffect(() => { setSelected([]); selectedRef.current = []; clearTimeout(pending.current); }, [index]);
++  const revealStart=previousAt+(index?current.restMs:0)+current.prepareMs;
++  const revealFraction=Math.max(0,Math.min(1,1-(elapsed-revealStart)/current.revealMs));
++  useEffect(() => { setSelected([]); selectedRef.current = []; setFocusCell(0); clearTimeout(pending.current); }, [index]);
+   useEffect(() => () => clearTimeout(pending.current), []);
++  useEffect(()=>{
++    if(phase!=='SELECT'||!keyboard.current)return;
++    if(document.activeElement!==document.body&&!grid.current?.contains(document.activeElement))return;
++    const frame=requestAnimationFrame(()=>grid.current?.querySelector('[data-cell="0"]')?.focus({preventScroll:true}));
++    return()=>cancelAnimationFrame(frame);
++  },[phase]);
+   useEffect(() => {
+     if (phase === 'SELECT' && current.selectMs && canPlay() && remaining <= 0) { clearTimeout(pending.current); submit({ cells: selectedRef.current, timeout: true }, selectAt + current.selectMs, index); }
+   }, [phase, remaining, current.selectMs, index]);
+@@ -30,12 +40,24 @@
+     selectedRef.current = next; setSelected(next); clearTimeout(pending.current);
+     if (next.length === current.targets) pending.current = setTimeout(() => submit({ cells: next }, selectAt + 120, index), 220);
+   };
++  const moveFocus=(event,cell)=>{
++    keyboard.current=true;
++    const step={ArrowRight:1,ArrowLeft:-1,ArrowDown:board.size,ArrowUp:-board.size}[event.key];
++    if(step===undefined&&event.key!=='Home'&&event.key!=='End')return;
++    event.preventDefault();
++    const next=event.key==='Home'?0:event.key==='End'?board.size**2-1:Math.max(0,Math.min(board.size**2-1,cell+step));
++    setFocusCell(next);grid.current?.querySelector(`[data-cell="${next}"]`)?.focus({preventScroll:true});
++  };
+   const title = ({ PREPARE: 'Sẵn sàng…', FLASH: 'GHI NHỚ Ô SAO!', HIDE: 'Đợi bảng tắt…', SELECT: `CHỌN ${current.targets} Ô ĐÃ SÁNG`, REVIEW: feedback?.state === 'wrong' ? 'XEM LẠI MỘT CHÚT' : 'NHỚ CHUẨN RỒI!' })[phase];
+   return <div className="arcade-memory-room" data-phase={phase}>
+-    <div className="arcade-memory-heading"><span className={levelUp && !review ? 'arcade-level-label' : ''}>{levelUp && !review ? `✦ LEVEL UP · ${current.size} × ${current.size}` : `VÒNG ${index + (review ? 0 : 1)} · NẤC ${board.level} · ${board.size} × ${board.size}`}</span><strong role="status">{title}</strong><small>{phase === 'REVIEW' ? feedback.state === 'wrong' ? `✓ ${feedback.cells.filter(x=>board.cells.includes(x)).length} đúng · × ${feedback.cells.filter(x=>!board.cells.includes(x)).length} nhầm · ★ ${board.cells.filter(x=>!feedback.cells.includes(x)).length} bỏ sót` : `+${feedback.delta} điểm · Giữ chuỗi nào!` : phase === 'SELECT' ? `${selected.length}/${current.targets} ô · bấm lại để bỏ chọn` : phase === 'FLASH' ? `${current.targets} ô sao · ${(current.revealMs / 1000).toFixed(1)} giây để nhớ` : 'Nhớ vị trí · chờ tắt · chọn lại'}</small></div>
++    <div className="arcade-memory-heading"><span className={levelUp && !review ? 'arcade-level-label' : ''}>{levelUp && !review ? `✦ LEVEL UP · ${current.size} × ${current.size}` : `VÒNG ${index + (review ? 0 : 1)} · NẤC ${board.level} · ${board.size} × ${board.size}`}</span><strong role="status">{title}</strong><small>{review?'Kết quả vòng vừa rồi':phase === 'SELECT' ? `${selected.length}/${current.targets} ô · bấm lại để bỏ chọn` : phase === 'FLASH' ? `${current.targets} ô sao · ${(current.revealMs / 1000).toFixed(1)} giây để nhớ` : 'Nhớ vị trí · chờ tắt · chọn lại'}</small></div>
++    <div className="memory-round-summary" role="status">
++      <div className="memory-round-result" aria-hidden={!review} style={{visibility:review?'visible':'hidden'}}><span>✓ <b>{review?feedback.cells.filter(x=>board.cells.includes(x)).length:0}</b> đúng</span><span>× <b>{review?feedback.cells.filter(x=>!board.cells.includes(x)).length:0}</b> nhầm</span><span>◇ <b>{review?board.cells.filter(x=>!feedback.cells.includes(x)).length:0}</b> sót</span><strong>{review?`${feedback.delta>0?'+':''}${feedback.delta} · x${feedback.combo??0}`:''}</strong></div>
++      {['FLASH','SELECT','PREPARE'].map(step=><span className="memory-round-hint" key={step} aria-hidden={review||(phase==='FLASH'||phase==='SELECT'?phase: 'PREPARE')!==step} style={{visibility:!review&&(phase==='FLASH'||phase==='SELECT'?phase:'PREPARE')===step?'visible':'hidden'}}>{step==='FLASH'?'Nhìn các ô sao':step==='SELECT'?'Chọn ô · Space / Enter hoặc chạm':'Chuẩn bị nhịp tiếp theo'}</span>)}
++    </div>
+     <div className="arcade-memory-tableau">
+     <div className="arcade-memory-companion"><PlayerAvatar2D player={me} state={feedback?.state} feedbackId={feedback?.id} /><small>{phase === 'SELECT' ? 'Đến lượt bạn!' : phase === 'FLASH' ? 'Nhìn kỹ nào!' : 'Bạn làm được mà!'}</small></div>
+-    <div key={board.size} className={`arcade-memory-board phase-${phase.toLowerCase()}`} role="group" aria-label={`Bảng trí nhớ ${board.size} nhân ${board.size}`} data-phase={phase} data-feedback={review ? feedback.state : 'idle'} style={{ gridTemplateColumns: `repeat(${board.size}, 1fr)`, '--memory-size': board.size }}>
++    <div ref={grid} key={board.size} className={`arcade-memory-board phase-${phase.toLowerCase()}`} role="group" aria-label={`Bảng trí nhớ ${board.size} nhân ${board.size}`} data-phase={phase} data-feedback={review ? feedback.state : 'idle'} style={{ gridTemplateColumns: `repeat(${board.size}, 1fr)`, '--memory-size': board.size }}>
+       {Array.from({ length: board.size ** 2 }, (_, cell) => {
+         const lit = phase === 'FLASH' && board.cells.includes(cell);
+         const pressed = !review && selected.includes(cell);
+@@ -43,12 +65,13 @@
+         const missed = review && !feedback.cells.includes(cell) && board.cells.includes(cell);
+         const incorrect = review && feedback.cells.includes(cell) && !board.cells.includes(cell);
+         const state = correct ? 'correct' : missed ? 'missed' : incorrect ? 'incorrect' : lit ? 'lit' : pressed ? 'selected' : 'hidden';
+-        return <button key={cell} type="button" data-cell={cell} data-cell-state={state} className={`arcade-memory-tile ${lit ? 'is-lit' : ''} ${pressed ? 'is-selected' : ''}`} aria-label={`Ô hàng ${Math.floor(cell / board.size) + 1}, cột ${cell % board.size + 1}${lit ? ', sao sáng' : correct ? ', chọn đúng' : missed ? ', bỏ sót' : incorrect ? ', chọn nhầm' : ''}`} aria-pressed={pressed} disabled={phase !== 'SELECT' || !canPlay()} onClick={() => choose(cell)}><span aria-hidden="true">{correct ? '✓' : incorrect ? '×' : missed || lit ? '✦' : pressed ? '✓' : '·'}</span></button>;
++        return <button key={cell} type="button" data-cell={cell} data-cell-state={state} className={`arcade-memory-tile ${lit ? 'is-lit' : ''} ${pressed ? 'is-selected' : ''}`} aria-label={`Ô hàng ${Math.floor(cell / board.size) + 1}, cột ${cell % board.size + 1}${lit ? ', sao sáng' : correct ? ', chọn đúng' : missed ? ', bỏ sót' : incorrect ? ', chọn nhầm' : ''}`} aria-pressed={pressed} tabIndex={cell===focusCell?0:-1} disabled={phase !== 'SELECT' || !canPlay()} onKeyDown={e=>moveFocus(e,cell)} onPointerDown={()=>{keyboard.current=false;setFocusCell(cell);}} onClick={() => choose(cell)}><span aria-hidden="true">{correct ? '✓' : incorrect ? '×' : missed ? '◇' : lit ? '✦' : pressed ? '✓' : '·'}</span></button>;
+       })}
+     </div>
+     <div className="arcade-memory-rivals">{players.filter((p) => p.id !== me.id).map((p) => <div key={p.id}><RivalAvatar player={p} /><small>{p.finishedAt ? 'Đã về đích' : `Vòng ${p.metrics.attempts + 1} · x${p.metrics.combo}`}</small></div>)}</div>
+     </div>
+     <div className="arcade-memory-phase-track" aria-hidden="true"><span className={phase === 'FLASH' ? 'active' : ''}>① Ghi nhớ</span><i /><span className={phase === 'SELECT' ? 'active' : ''}>② Chọn lại</span><i /><span className={review ? 'active' : ''}>③ So kết quả</span></div>
++    <div className="memory-reveal-meter" role="progressbar" aria-label="Thời gian ghi nhớ" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(revealFraction*100)} aria-hidden={phase!=='FLASH'} style={{visibility:phase==='FLASH'?'visible':'hidden'}}><i style={{transform:`scaleX(${revealFraction})`}}/></div>
+     {current.selectMs && <div className="arcade-memory-selection-time" style={{ visibility: phase === 'SELECT' ? 'visible' : 'hidden' }} aria-hidden={phase !== 'SELECT'}><span>Còn {Math.ceil(remaining / 1000)}s để chọn</span><i style={{ transform: `scaleX(${Math.min(1, remaining / current.selectMs)})` }} /></div>}
+ 
+   </div>;
+--- a/frontend/src/components/arcade/DirectionArena.jsx
++++ b/frontend/src/components/arcade/DirectionArena.jsx
+@@ -5,10 +5,23 @@
+ import { FlipList } from '../ui';
+ import './direction-queue.css';
+ 
+-// The clock ticks independently of the queue. Avoid FLIP layout measurements
+-// on clock-only renders, including while a previous cue is still sliding.
+-const DirectionQueue = memo(function DirectionQueue({ upcoming }) {
+-  return <div className="direction-queue" aria-label="Ba hướng tiếp theo"><small>TIẾP THEO</small><FlipList className="direction-queue-track" duration={180} easing="var(--ease-standard)">{upcoming.map((cue,n)=><div key={cue.index} data-flip-id={cue.index} data-testid="queued-direction" data-direction={cue.direction} data-queue-index={cue.index} className={`direction-queue-item queue-${n+1}`}><span aria-label={`Tiếp ${n+1}: ${cue.direction}`}>{ARROWS[cue.direction]}</span></div>)}</FlipList></div>;
++// Logical input advances immediately; keyed faces keep their DOM identity while
++// moving through depth. The wrong cue stays foreground throughout the penalty.
++const DirectionStack = memo(function DirectionStack({ current, index, upcoming, feedback, frozen, tempo }) {
++  const cues=frozen
++    ? [{...feedback.challenge,index:index-1}, {...current,index}, ...upcoming.slice(0,2)]
++    : [{...current,index}, ...upcoming];
++  const exiting=!frozen&&feedback&&feedback.state!=='wrong'?{...feedback.challenge,index:index-1}:null;
++  const items=[...(exiting?[{...exiting,depth:-1}]:[]),...cues.map((cue,depth)=>({...cue,depth}))];
++  return <div className="direction-stack" data-frozen={frozen} data-tempo={tempo} data-visible-index={cues[0].index} role="group" aria-label="Chồng hướng: hướng hiện tại ở phía trước">
++    <span className="direction-stack-caption">{frozen?'KHỰNG · x0':'HIỆN TẠI'}</span>
++    <FlipList className="direction-stack-track" enabled={false}>{items.map(cue=><div key={cue.index} data-flip-id={cue.index} className="direction-stack-card" data-depth={cue.depth} style={{zIndex:cue.depth<0?5:4-cue.depth}}>
++      <div className="direction-stack-face" data-color={cue.depth===0?cue.color||0:0} data-wrong={frozen&&cue.depth===0}>
++        {cue.depth===0?<strong data-testid="challenge-direction" data-direction={cue.direction} data-expected={cue.expected||cue.direction} role="img" aria-label={`Hướng ${cue.direction}`}>{ARROWS[cue.direction]}</strong>
++          :<span aria-hidden="true" className="direction-stack-hint" data-testid={cue.depth>0?'queued-direction':undefined} data-direction={cue.depth>0?cue.direction:undefined} data-queue-index={cue.index}>{cue.depth===3?'◇':ARROWS[cue.direction]}</span>}
++      </div>
++    </div>)}</FlipList>
++  </div>;
+ });
+ 
+ export default function DirectionArena({ current, index, elapsed, durationMs, elapsedNow, previousAt, canPlay, submit, players, me, feedback, rulesVersion, getDirectionState, upcoming, localMetrics }) {
+@@ -43,25 +56,26 @@
+     if(now-start>=c.windowMs)live.submit({direction:null},start+c.windowMs,state.index);
+     else live.submit({direction},earliest,state.index);
+   };
+-  const rule=current.opposite?'ĐẢO CHIỀU!':current.stage==='normal'?'NHÌN HƯỚNG · BẤM THEO':'NHÌN HƯỚNG · BỎ QUA VỊ TRÍ & MÀU';
++  const shown=stumbling&&feedback?.state==='wrong'?feedback.challenge:current;
++  const rule=shown.opposite?'ĐẢO CHIỀU!':shown.stage==='normal'?'NHÌN HƯỚNG · BẤM THEO':'NHÌN HƯỚNG · BỎ QUA VỊ TRÍ & MÀU';
+   const warning=!current.opposite && elapsed>=durationMs*37/60 && elapsed<durationMs*40/60;
+   const count=Math.max(1,Math.ceil((durationMs*40/60-elapsed)/(durationMs/60)));
+   const leader=Math.max(1,...players.map(p=>p.id===me.id?localMetrics.score:p.metrics.score));
+-  return <div ref={arena} tabIndex={0} role="group" aria-label="Sân phản xạ — phím mũi tên hoặc WASD" className={`arcade-direction-arena ${current.opposite?'is-opposite':''} ${modern?'has-direction-queue':''}`} data-stage={current.stage} data-feedback={feedback?.state||'idle'} data-stumbling={stumbling} data-buffered={buffered} data-current-index={index}
++  return <div ref={arena} tabIndex={0} role="group" aria-label="Sân phản xạ — phím mũi tên hoặc WASD" className={`arcade-direction-arena ${shown.opposite?'is-opposite':''} ${modern?'has-direction-queue':''}`} data-stage={current.stage} data-feedback={feedback?.state||'idle'} data-stumbling={stumbling} data-buffered={buffered} data-current-index={index}
+     onKeyDown={e=>{const direction=directionForKey(e.key);if(!direction)return;e.preventDefault();if(!e.repeat)send(direction);}}
+     onPointerDown={e=>{if(!canPlay()||e.target.closest('button'))return;pointer.current={x:e.clientX,y:e.clientY,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId);}}
+     onPointerCancel={()=>{pointer.current=null;}}
+     onPointerUp={e=>{if(!pointer.current||pointer.current.id!==e.pointerId)return;const d=directionForSwipe(e.clientX-pointer.current.x,e.clientY-pointer.current.y);pointer.current=null;if(d)send(d);}}>
+-    <div className="arcade-direction-rule"><strong>{current.opposite?'⇄ ':'➜ '}{rule}</strong><span className={warning?'arcade-trick-anticipation':''}>{warning?`SẮP ĐẢO CHIỀU · ${count} · Chờ biển cam!`:buffered?'✓ Đã nhận phím kế tiếp':current.opposite?'Cả hàng đều là hướng hiển thị · hãy bấm ngược':modern?'Bấm hướng lớn · nhìn trước 3 hướng nhỏ':current.stage==='entrance'?'Chờ mũi tên dừng rồi bấm':'Mũi tên / WASD / vuốt'}</span></div>
+-    {modern&&<DirectionQueue upcoming={upcoming}/>}
++    <div className="arcade-direction-rule"><strong>{shown.opposite?'⇄ ':'➜ '}{rule}</strong><span className={warning?'arcade-trick-anticipation':''}>{warning?`SẮP ĐẢO CHIỀU · ${count} · Chờ biển cam!`:buffered?'✓ Đã nhận phím kế tiếp':shown.opposite?'Bấm ngược hướng phía trước':modern?'Nhìn trước một nhịp · giữ nhịp tay':current.stage==='entrance'?'Chờ mũi tên dừng rồi bấm':'Mũi tên / WASD / vuốt'}</span></div>
+     <div className="arcade-stimulus-zone">
+-      <div className="arcade-arrow-position" style={{'--arrow-slot':current.slot||0}}><div key={index} className={`arcade-arrow-object ${entering || modern&&current.entranceMs?'is-entering':modern?'queue-current-arrival':''}`} data-color={current.color||0} data-feedback={feedback?.state||'idle'}><strong data-testid="challenge-direction" data-direction={current.direction} data-expected={current.expected||current.direction} aria-label={`Hướng ${current.direction}`}>{ARROWS[current.direction]}</strong><span className="arcade-arrow-particles" aria-hidden="true">✦ · ✧</span></div></div>
++      {modern?<div className="direction-stack-anchor" style={{'--arrow-slot':stumbling?shown.slot||0:current.slot||0}}><DirectionStack current={current} index={index} upcoming={upcoming} feedback={feedback} frozen={stumbling&&feedback?.state==='wrong'} tempo={elapsed>durationMs*.83?'fast':localMetrics.combo>=5?'flow':'steady'}/></div>
++        :<div className="arcade-arrow-position" style={{'--arrow-slot':current.slot||0}}><div key={index} className={`arcade-arrow-object ${entering?'is-entering':''}`} data-color={current.color||0}><strong data-testid="challenge-direction" data-direction={current.direction} data-expected={current.expected||current.direction}>{ARROWS[current.direction]}</strong></div></div>}
+       <span className="arcade-response-track"><i style={{transform:`scaleX(${Math.max(0,Math.min(1,1-(elapsed-readyAt)/current.windowMs))})`}}/></span>
+       <div className={`arcade-direction-feedback ${feedback?'is-visible':''}`} role="status" key={feedback?.id}>
+-        {feedback?<><b>{stumbling?'KHỰNG! · ':feedback.state==='wrong'?'✕ VỪA RỒI: ':'✓ '}{feedback.text}</b>{feedback.state==='wrong'?<span>CẦN <strong>{ARROWS[feedback.expected]}</strong> <small>BẠN {feedback.direction?'BẤM':'HẾT GIỜ'}</small> <strong>{ARROWS[feedback.direction]||'—'}</strong><em>{stumbling?`Chờ ${Math.max(0,(readyAt-elapsed)/1000).toFixed(1)}s rồi tiếp tục`:feedback.lostCombo?`x${feedback.lostCombo} → x0`:'Thử hướng tiếp theo!'}</em></span>:<span><strong>+{feedback.delta}</strong><small>Giữ nhịp nào!</small></span>}</>:<><b>{entering?'CHỜ MŨI TÊN DỪNG…':'BẤM ĐÚNG HƯỚNG LỚN!'}</b><span>{current.opposite?'Bấm hướng ngược lại':'Phản xạ nhanh · giữ combo'}</span></>}
++        {feedback?<><b>{stumbling?'KHỰNG!':feedback.state==='wrong'?'✕ LỠ NHỊP':`✓ ${feedback.text}`}</b>{feedback.state==='wrong'?<span>CẦN <strong>{ARROWS[feedback.expected]}</strong> <small>{feedback.direction?'BẠN BẤM':'HẾT GIỜ'}</small> <strong>{ARROWS[feedback.direction]||'—'}</strong><em>{stumbling?`x${feedback.lostCombo||0} → x0 · ${Math.max(0,(readyAt-elapsed)/1000).toFixed(1)}s`:feedback.lostCombo?`x${feedback.lostCombo} → x0`:'Thử hướng tiếp theo!'}</em></span>:<span><strong>+{feedback.delta}</strong><small>Giữ nhịp nào!</small></span>}</>:<><b>{entering?'CHỜ MŨI TÊN DỪNG…':'MŨI TÊN / WASD / VUỐT'}</b><span>{current.opposite?'⇄ Bấm ngược hướng':'Nhịp nhanh dần · giữ combo'}</span></>}
+       </div>
+     </div>
+     <div className="arcade-lanes">{players.map(p=>{const score=p.id===me.id?localMetrics.score:p.metrics.score;return <div className={`arcade-lane ${p.id===me.id?'my-lane':''}`} key={p.id}><span className="arcade-lane-line"/><span className="arcade-lane-ring"/>{modern&&<small className="direction-lane-rank">#{1+players.filter(x=>(x.id===me.id?localMetrics.score:x.metrics.score)>score).length}</small>}<div className="direction-runner-position" style={modern?{transform:`translateY(${-18*score/leader}px)`}:undefined}>{p.id===me.id?<PlayerAvatar2D player={p} state={stumbling?'wrong':feedback?.state} direction={feedback?.direction} feedbackId={feedback?.id}/>:<RivalAvatar player={p}/>}</div></div>;})}</div>
+-    <div className="arcade-direction-controls" aria-label="Điều khiển bốn hướng">{['UP','LEFT','DOWN','RIGHT'].map(d=><button key={d} type="button" aria-label={`Đi ${d}`} disabled={entering} aria-disabled={stumbling} data-pressed={feedback?.direction===d} onClick={()=>send(d)}>{ARROWS[d]}<small>{({UP:'W',LEFT:'A',DOWN:'S',RIGHT:'D'})[d]}</small></button>)}</div>
++    <div className="arcade-direction-controls" role="group" aria-label="Điều khiển bốn hướng">{['UP','LEFT','DOWN','RIGHT'].map(d=><button key={d} type="button" aria-label={`Đi ${d}`} disabled={entering} aria-disabled={stumbling} data-pressed={feedback?.direction===d} onClick={()=>send(d)}>{ARROWS[d]}<small>{({UP:'W',LEFT:'A',DOWN:'S',RIGHT:'D'})[d]}</small></button>)}</div>
+   </div>;
+ }
+--- a/frontend/src/components/arcade/ArcadePlay.jsx
++++ b/frontend/src/components/arcade/ArcadePlay.jsx
+@@ -39,7 +39,7 @@
+     const correct = result.lastCorrect;
+     const milestone = ({ 3: 'ĐẸP LẮM!', 5: 'TUYỆT VỜI!', 10: 'BÙNG NỔ!', 20: 'CHUỖI HOÀN HẢO!' })[result.combo];
+     setFeedback({ state: correct ? result.combo >= 3 ? 'combo' : 'correct' : 'wrong', id: next.length, at, challenge: object, cells: event.cells || [], timeout: event.timeout || event.direction === null,
+-      expected: object.expected, direction: event.direction, word: object.word, delta: result.score - previous.score, lostCombo: previous.combo,
++      expected: object.expected, direction: event.direction, word: object.word, delta: result.score - previous.score, lostCombo: previous.combo, combo: result.combo,
+       text: correct ? milestone || (room.gameType === 'direction_rush' ? result.lastResponseMs <= 350 ? 'PERFECT!' : 'GOOD!' : 'CHÍNH XÁC!') : event.direction === null || event.timeout ? 'HẾT NHỊP!' : 'CHƯA ĐÚNG!' });
+     clearTimeout(feedbackTimer.current);
+     const hold = room.gameType === 'memory_flash' ? options.rulesVersion < 2 ? 400 : correct ? 320 : 800 : room.gameType === 'direction_rush' ? options.rulesVersion >= 3 && !correct ? DIRECTION_STUMBLE_MS : 180 : 180;
+@@ -63,9 +63,9 @@
+     return () => cancelAnimationFrame(frame);
+   }, [feedback?.id]);
+   return <div className={`arcade-world ${room.gameType} arcade-polished`} data-feedback={feedback?.state || 'idle'} data-urgent={elapsed >= duration - 10000} data-attempts={metrics.attempts}>
+-    <ArcadeHUD time={remaining} score={metrics.score} combo={metrics.combo} rank={liveRank} count={snapshot.players.length} comboLabel={room.gameType === 'memory_flash' ? 'CHUỖI' : 'COMBO'} />
++    <ArcadeHUD animateScore={false} time={remaining} score={metrics.score} combo={metrics.combo} rank={liveRank} count={snapshot.players.length} comboLabel={room.gameType === 'memory_flash' ? 'CHUỖI' : 'COMBO'} />
+     <div className="arcade-scene">
+-      {feedback && <span key={feedback.id} className="arcade-surface-flash" data-state={feedback.state} aria-hidden="true" />}
++      {feedback && feedback.state !== 'wrong' && <span key={feedback.id} className="arcade-surface-flash" data-state={feedback.state} aria-hidden="true" />}
+       <div className="arcade-cloud cloud-one" aria-hidden="true" /><div className="arcade-cloud cloud-two" aria-hidden="true" />
+       <div className="arcade-scene-title">{ARCADE_GAMES[room.gameType].subtitle}</div>
+       {room.gameType === 'computer_rush' && <>
+--- a/frontend/src/components/arcade/RaceStrip.jsx
++++ b/frontend/src/components/arcade/RaceStrip.jsx
+@@ -16,12 +16,20 @@
+ });
+ 
+ export default memo(function RaceStrip({ players, userId, localMetrics, gameType }) {
+-  if (players.length < 2) return null;
+   const ranked = players.map((p) => ({ ...p, live: String(p.userId) === String(userId) ? localMetrics : p.metrics })).sort((a, b) => b.live.score - a.live.score || a.position - b.position);
+   const mine = ranked.findIndex((p) => String(p.userId) === String(userId));
+-  const lead = ranked[0].live.score;
++  const lead = ranked[0]?.live.score||0;
++  const previousRank=useRef(null),[overtake,setOvertake]=useState(null);
++  useEffect(()=>{
++    const old=previousRank.current;previousRank.current=mine;
++    if(old===null||old===mine||mine<0)return;
++    const passed=ranked[mine<old?mine+1:mine-1];
++    setOvertake({direction:mine<old?'up':'down',text:mine<old?`↑ Vượt ${passed?.name||'đối thủ'}`:`↓ ${passed?.name||'Đối thủ'} vừa vượt`});
++    const timer=setTimeout(()=>setOvertake(null),1000);return()=>clearTimeout(timer);
++  },[mine]);
++  if(players.length<2)return null;
+   return <div className="arcade-race" aria-label="Cuộc đua trực tiếp">
+-    {ranked.length > 1 && <p className="arcade-race-status"><b>#{mine + 1}</b> {mine === 0 ? lead === 0 ? 'Xuất phát cùng nhau!' : 'Bạn đang dẫn đầu!' : `Còn ${lead - ranked[mine].live.score + 1} điểm để dẫn đầu`}<span>Cùng sân · cùng thử thách</span></p>}
++    {ranked.length > 1 && <p className="arcade-race-status" data-overtake={overtake?.direction||'idle'} aria-live="polite"><b>#{mine + 1}</b> {overtake?overtake.text:mine === 0 ? lead === 0 ? 'Xuất phát cùng nhau!' : 'Bạn đang dẫn đầu!' : `Còn ${lead - ranked[mine].live.score + 1} điểm để dẫn đầu`}<span>Cùng sân · cùng thử thách</span></p>}
+     <FlipList className="arcade-race-track" duration={260} easing="var(--ease-ranking)">{ranked.map((p, i) => <div className={`arcade-racer ${String(p.userId) === String(userId) ? 'is-me' : ''}`} key={p.id} data-flip-id={p.id} data-finished={!!p.finishedAt}>
+       <span className="arcade-racer-position">{ranked.length > 1 ? `#${i + 1}` : '✦'}</span><span className="arcade-racer-name"><b>P{p.position} · {p.name}</b><small>{p.finishedAt ? '✓ ĐÃ VỀ ĐÍCH' : `${p.live.correct} ${gameType === 'computer_rush' ? 'từ' : gameType === 'memory_flash' ? 'vòng' : 'hướng'} đúng · x${p.live.combo}`}</small></span><strong>{p.live.score.toLocaleString('vi-VN')}</strong><span className="arcade-racer-progress"><i style={{ transform: `scaleX(${lead ? Math.max(.03, p.live.score / lead) : .03})` }} /></span>
+     </div>)}</FlipList>
+--- a/frontend/src/components/arcade/ArcadeTutorial.jsx
++++ b/frontend/src/components/arcade/ArcadeTutorial.jsx
+@@ -3,8 +3,8 @@
+ 
+ const LESSONS = {
+   computer_rush: { title: 'Thấy từ → gõ đúng → nối combo', steps: ['Nhìn từ', 'Gõ ngay', 'Đúng rồi!'], tip: 'Aa và aa đều đúng. Giữ dấu tiếng Việt; Backspace để sửa.' },
+-  direction_rush: { title: 'Nhìn HƯỚNG → bấm thật nhanh', steps: ['Nhìn ↑', 'Bấm ↑ / W', 'Lướt đúng!'], tip: 'Vị trí và màu có thể đổi. Chỉ bấm ngược khi có biển ĐẢO CHIỀU!' },
+-  memory_flash: { title: 'Nhớ vị trí → chờ tắt → chọn lại', steps: ['Nhớ ô sao', 'Chờ tắt', 'Chọn đúng ô'], tip: 'Bấm lại để bỏ chọn. Khi sai, xem ✓ chọn đúng · × chọn nhầm · ★ bỏ sót.' },
++  direction_rush: { title: 'Nhìn HƯỚNG → bấm thật nhanh', steps: ['Nhìn ↑', 'Bấm ↑ / W', 'Lướt đúng!'], tip: 'Hướng rõ ở trước, lớp sau chỉ gợi nhịp. Bỏ qua vị trí/màu; chỉ bấm ngược khi có biển ĐẢO CHIỀU!' },
++  memory_flash: { title: 'Nhớ vị trí → chờ tắt → chọn lại', steps: ['Nhớ ô sao', 'Chờ tắt', 'Chọn đúng ô'], tip: 'Bấm lại để bỏ chọn. Khi sai, xem ✓ chọn đúng · × chọn nhầm · ◇ bỏ sót.' },
+ };
+ export default function ArcadeTutorial({ gameType }) {
+   const key = `wr:arcade:learned:v2:${gameType}`;
+--- a/frontend/src/components/arcade/TypingRaceTracks.jsx
++++ b/frontend/src/components/arcade/TypingRaceTracks.jsx
+@@ -32,7 +32,7 @@
+ });
+ export default memo(function TypingRaceTracks({ players, user, telemetry, duration = 120 }) {
+   const racers = players.length ? players : [{ userId: user.id, user: user, liveRank: 1 }];
+-  return <div className="typing-race-tracks" aria-label="Đường đua Typing Battle 2D">
++  return <div className="typing-race-tracks" role="group" aria-label="Đường đua Typing Battle 2D">
+     {racers.map((p, i) => {
+       const local = String(p.userId) === String(user.id), done = p.status === 'FINISHED';
+       const player = { ...p, position: i % 3 + 1, name: p.user?.name || p.name || 'Người chơi', avatarUrl: p.user?.avatarUrl || p.avatarUrl };
+--- a/frontend/src/components/arcade/ComputerStation.jsx
++++ b/frontend/src/components/arcade/ComputerStation.jsx
+@@ -9,8 +9,7 @@
+   const latest = useRef(null);
+   latest.current = { current, index, previousAt };
+   const draft = value.normalize('NFC').trimStart().toLocaleUpperCase('vi');
+-  const completed = feedback?.state !== 'wrong' && feedback?.word && !value;
+-  const target = (completed ? feedback.word : current.word).normalize('NFC');
++  const target = current.word.normalize('NFC');
+   const wrong = !composing && !target.startsWith(draft.trimStart());
+   useEffect(() => { setValue(''); errors.current = 0; previous.current = ''; clearTimeout(pending.current); if (input.current) input.current.value = ''; }, [index]);
+   useEffect(() => {
+@@ -46,8 +45,9 @@
+   };
+   return <div className="arcade-workstation">
+     <div className={`arcade-monitor ${wrong ? 'typing-error' : ''} ${feedback?.state === 'wrong' ? 'bump' : ''}`} data-feedback={feedback?.state || 'idle'}>
+-      <div className="arcade-monitor-top"><i /><i /><i /><span>GÕ TỪ NÀY · {index + 1} · {current.category==='vietnamese'?'TIẾNG VIỆT':'ENGLISH'}</span></div>
+-      <div className={`arcade-word-wrap ${completed ? 'is-success' : 'is-next'}`} data-transition={completed ? 'complete' : 'ready'}><span className={`arcade-word ${target.length > 13 ? 'long-word' : ''}`} data-testid="challenge-word" aria-label={target}>{Array.from(target).map((char, i) => <span key={i} aria-hidden="true" data-char-state={completed ? 'correct' : i < draft.length ? composing ? 'composing' : char === Array.from(draft)[i] ? 'correct' : 'wrong' : i === draft.length ? 'cursor' : 'pending'}>{char}</span>)}</span></div>
++      <div className="arcade-monitor-top"><i /><i /><i /><span>LƯỢT {index + 1}</span><small>{current.category==='vietnamese'?'TIẾNG VIỆT':'ENGLISH'}</small></div>
++      <div className={`arcade-word-wrap is-next`} data-transition="ready" key={`word-${index}`}><span className={`arcade-word ${target.length > 13 ? 'long-word' : ''}`} data-testid="challenge-word" role="img" aria-label={target}>{Array.from(target).map((char, i) => <span key={i} aria-hidden="true" data-char-state={i < draft.length ? composing ? 'composing' : char === Array.from(draft)[i] ? 'correct' : 'wrong' : i === draft.length ? 'cursor' : 'pending'}>{char}</span>)}</span></div>
++      <div className="computer-word-progress" role="progressbar" aria-label="Ký tự đã gõ" aria-valuemin={0} aria-valuemax={Array.from(target).length} aria-valuenow={Math.min(Array.from(draft).length,Array.from(target).length)}><i style={{transform:`scaleX(${Math.min(1,Array.from(draft).length/Array.from(target).length)})`}}/></div>
+       <div className="arcade-computer-input">
+         <label htmlFor="arcade-word-input">{composing ? 'Đang đặt dấu…' : wrong ? 'Sửa ký tự được tô đỏ' : 'Gõ ngay bên dưới'}<span>Aa = aa · có dấu</span></label>
+         <input ref={input} id="arcade-word-input" value={value} className={wrong ? 'is-wrong' : ''} aria-invalid={wrong} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} enterKeyHint="go" placeholder="Gõ để bắt đầu combo…"
+@@ -55,11 +55,11 @@
+           onCompositionStart={() => { composition.current = true; setComposing(true); }}
+           onCompositionEnd={(e) => { composition.current = false; setComposing(false); change(e.currentTarget.value); }}
+           onKeyDown={(e) => { if (e.key === 'Enter' && !e.repeat && !e.nativeEvent.isComposing && !composition.current) { e.preventDefault(); complete(e.currentTarget.value, true); } }} />
+-        <small>{wrong ? 'Backspace để sửa · Enter để bỏ qua' : 'Đúng từ → tự chuyển · giữ nhịp, nối combo!'}</small>
++        <small>{wrong ? '⌫ Sửa · Enter bỏ qua' : '✓ Đúng từ → tự chuyển'}</small>
+       </div>
+-      <div className={`arcade-word-receipt ${feedback ? 'visible' : ''}`} role="status" key={feedback?.id}>{feedback ? <><b>{feedback.state === 'wrong' ? '✕ CHƯA ĐÚNG' : `✓ ${feedback.text}`}</b><span>{feedback.word}</span><strong>{feedback.delta > 0 ? `+${feedback.delta}` : 'Combo bắt đầu lại'}</strong></> : <span>{current.category === 'vietnamese' ? 'TIẾNG VIỆT' : 'ENGLISH'} · TẬP TRUNG VÀO TỪ</span>}</div>
++      <div className={`arcade-word-receipt ${feedback ? 'visible' : ''}`} role="status" key={`receipt-${feedback?.id??'idle'}`}>{feedback ? <><b>{feedback.state === 'wrong' ? '✕ CHƯA ĐÚNG' : `✓ ${feedback.text}`}</b><span>{feedback.word}</span><strong>{feedback.delta > 0 ? `+${feedback.delta}` : 'Combo bắt đầu lại'}</strong></> : <span>{current.category === 'vietnamese' ? 'TIẾNG VIỆT' : 'ENGLISH'} · TẬP TRUNG VÀO TỪ</span>}</div>
+     </div>
+-    <div className="arcade-monitor-neck" /><div className="arcade-desk"><span>▰ ▰ ▰ ▰ ▰ ▰</span></div>
++    <div className="arcade-monitor-neck" /><div className="arcade-desk"><span aria-hidden="true">⌨</span></div>
+     <div className="arcade-main-character"><PlayerAvatar2D player={player} state={feedback?.state || (value ? 'action' : 'idle')} feedbackId={feedback?.id} /></div>
+   </div>;
+ });
+--- /dev/null
++++ b/frontend/src/components/arcade/gameplay-polish.css
+@@ -0,0 +1,46 @@
++/* Shared gameplay hierarchy. Uses the existing WorkRank motion tokens. */
++.arcade-page :is(button,a,input,select):focus-visible { outline: 3px solid var(--arcade-accent); outline-offset: 3px; }
++.arcade-page .arcade-direction-arena:focus-visible { outline: none; }
++.arcade-page .arcade-direction-arena:focus-visible .direction-stack-card[data-depth="0"] .direction-stack-face:not([data-wrong="true"]) { outline: 2px solid #6475a6; outline-offset: 4px; }
++.arcade-hud { font-variant-numeric: tabular-nums; }
++.arcade-hud[data-pressure="true"]>div:first-child strong { color: #9a3e40; }
++.arcade-hud[data-pressure="true"]>div:first-child>span::before { content: '● '; color: #9a3e40; }
++.arcade-complete-beat { min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: var(--arcade-accent); background: #f8f9ef; animation: arcade-complete-in var(--motion-layout) var(--ease-standard) both; }
++.arcade-complete-beat>span { color: #285867; font-size: 14px; font-weight: 850; letter-spacing: .09em; }.arcade-complete-beat>strong { font-size: 64px; font-variant-numeric: tabular-nums; }.arcade-complete-beat>small { font-size: 12px; color: #556a61; }
++.arcade-page .arcade-race-status { min-height: 25px; margin-bottom: 7px; }.arcade-race-status[data-overtake="up"] { color: #276347; }.arcade-race-status[data-overtake="down"] { color: #963f46; }
++.arcade-polished .arcade-monitor-top { display: flex; align-items: center; gap: 5px; }.arcade-polished .arcade-monitor-top small { margin-left: auto; font-size: 9px; color: #486750; font-weight: 750; }
++.computer-word-progress { width: 62%; height: 3px; background: #dce5d3; margin: 5px auto 0; overflow: hidden; border-radius: 3px; }.computer-word-progress i { display: block; width: 100%; height: 100%; background: #447b59; transform-origin: left; }
++.arcade-polished .arcade-word-wrap { min-height: 92px; }.arcade-polished .arcade-word [data-char-state="pending"] { color: #597050; }.arcade-polished .arcade-word [data-char-state="cursor"] { color: #203e2c; background: #f7e8ba; box-shadow: inset 0 -3px #9e7022; }
++.arcade-page .computer_rush .arcade-surface-flash { border-width: 2px; }
++.arcade-page .arcade-monitor.typing-error { animation: computer-error-nudge var(--motion-instant) var(--ease-standard); }
++.arcade-polished .arcade-word-receipt { font-variant-numeric: tabular-nums; min-height: 36px; }
++.memory-round-summary { position: relative; width: 100%; min-height: 28px; margin: -9px 0 8px; color: #725932; font-size: 11px; font-variant-numeric: tabular-nums; }
++.memory-round-result { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3,54px) 76px; justify-content: center; align-items: center; gap: 8px; }.memory-round-hint { position: absolute; inset: 0; display: grid; place-items: center; }
++.memory-round-summary strong { font-size: 12px; }.memory-round-summary span { white-space: nowrap; }
++.memory-reveal-meter { width: 180px; height: 3px; background: #ddcba7; margin-top: 5px; overflow: hidden; border-radius: 3px; }.memory-reveal-meter i { display: block; width: 100%; height: 100%; background: #957029; transform-origin: left; }
++.arcade-memory-room[data-phase="FLASH"] .arcade-memory-companion .arcade-actor,.arcade-memory-room[data-phase="FLASH"] .arcade-memory-rivals .arcade-actor { animation: none; }
++.arcade-polished .arcade-memory-tile[data-cell-state="missed"] { border-style: dashed; }.arcade-polished .arcade-memory-tile[data-cell-state="incorrect"] { border-style: double; border-width: 4px; }
++.arcade-page .typing-race-console .typing-character.is-correct { color: #52716c; }.arcade-page .typing-race-console .typing-character.is-remaining { color: #5a7376; }.arcade-page .typing-race-console .typing-character.is-current { color: #173e45; background: #dcecee; box-shadow: inset 0 -3px #286f7d; }.arcade-page .typing-race-console .typing-character.is-current::before { background: #286f7d; width: 2px; }
++.arcade-page .typing-race-console .typing-character.is-incorrect { color: #992b3b; background: #f9e1df; text-decoration: underline wavy; outline: 1px dashed #b26065; outline-offset: 1px; }
++.typing-race-console .typing-character.is-incorrect::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 2px solid #992b3b; animation: typing-error-tap var(--motion-fast) var(--ease-standard) both; }
++.typing-race-console:focus-within { border-color: #477f8a; }
++@keyframes arcade-complete-in { from { opacity: .6; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
++@keyframes computer-error-nudge { 35% { transform: translateX(-2px); } 70% { transform: translateX(2px); } }
++@keyframes typing-error-tap { 30% { transform: translateX(-2px); } 65% { transform: translateX(2px); } }
++@media(max-width:700px) { .arcade-complete-beat { min-height: 560px; }.memory-round-summary { gap: 8px; font-size: 10px; }.memory-round-summary strong { font-size: 11px; }.arcade-polished .arcade-monitor-top small { font-size: 8px; }.arcade-polished .arcade-word-wrap { min-height: 72px; }.arcade-page .arcade-racer { padding-top: 5px; padding-bottom: 8px; }.arcade-page .arcade-racer>strong { font-size: 17px; } }
++@media(prefers-reduced-motion:reduce) { .arcade-complete-beat,.arcade-monitor.typing-error,.typing-race-console .typing-character.is-incorrect::after { animation: none !important; } }
++html[data-workrank-reduce-motion="true"] .arcade-complete-beat,html[data-workrank-reduce-motion="true"] .arcade-monitor.typing-error,html[data-workrank-reduce-motion="true"] .typing-race-console .typing-character.is-incorrect::after { animation: none !important; }
++
++/* Small HUD labels stay readable against the shared warm background. */
++.arcade-page .arcade-hud>div>span,.arcade-page .arcade-world-label small { color: #526451; }
++.typing-page .typing-arcade-heading .arcade-kicker { color: #286475; }
++.typing-page .typing-arcade-heading p:last-child,.typing-page .typing-practice-options>span { color: #4d6565; }
++
++/* Canvas-like scene layers need explicit contrast; axe cannot resolve their pseudo backgrounds. */
++.arcade-page .arcade-polished .arcade-name>b { background: #3c7350; }
++.arcade-page .arcade-combo>small { color: #536345; }
++.arcade-page .arcade-monitor-top>span,.arcade-page .arcade-word-receipt:not(.visible) { color: #536b4c; }
++.arcade-page.memory_flash .arcade-scene-title,.arcade-page .arcade-memory-heading>span,.arcade-page .arcade-memory-heading>small,.arcade-page .arcade-memory-selection-time,.arcade-page .arcade-memory-phase-track { color: #6f542d; }
++.typing-page .typing-race-name>small { color: #48666b; }
++.typing-page .typing-console-label { color: #496768; }
++.typing-page .typing-race-console .typing-position { color: #526d6b; }

@@ -1,0 +1,51 @@
+{
+  "status": "PASS_DEV",
+  "production": "PENDING_BUCKET_AND_DEPLOYMENT",
+  "browserEvidence": [
+    {
+      "file": "persistence/create-browser-results.json",
+      "status": "PASS",
+      "checks": 6
+    },
+    {
+      "file": "persistence/read-browser-results.json",
+      "status": "PASS",
+      "checks": 11
+    },
+    {
+      "file": "ux/direction-results.json",
+      "status": "PASS",
+      "checks": 7
+    },
+    {
+      "file": "ux/drawing-results.json",
+      "status": "PASS",
+      "checks": 3
+    },
+    {
+      "file": "ux/computer/device-performance-results.json",
+      "status": "PASS",
+      "checks": 11
+    },
+    {
+      "file": "ux/memory/device-performance-results.json",
+      "status": "PASS",
+      "checks": 16
+    },
+    {
+      "file": "ux/typing/typing-results.json",
+      "status": "PASS",
+      "checks": 3
+    },
+    {
+      "file": "ux/native/native-input-results.json",
+      "status": "PASS",
+      "checks": 7
+    },
+    {
+      "file": "ux/drawing-delete-resilience.json",
+      "status": "PASS",
+      "checks": 2
+    }
+  ]
+}

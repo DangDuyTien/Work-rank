@@ -1,0 +1,33 @@
+{
+  "id": 8,
+  "title": "Drawing recovery UX 1792639296921",
+  "imageUrl": "http://127.0.0.1:5125/workrank-audit/drawings/10/356c9bf9-4f50-4e21-99db-7eaca0d6d8e2-7df50aa79b28.png",
+  "storageProvider": "s3",
+  "storagePersistent": true,
+  "width": 1200,
+  "height": 700,
+  "visibility": "PUBLIC",
+  "status": "ACTIVE",
+  "likesCount": 0,
+  "viewsCount": 0,
+  "metadata": {
+    "drawnAt": "2026-10-22T03:21:37.449Z",
+    "checksum": "7df50aa79b28677b4762aaafc5f976ba0472a4adfbb2ff62de52f7d7114e2f33",
+    "toolUsed": "WorkRank Creative Canvas Studio",
+    "uploadState": "CONFIRMED",
+    "validatedAt": "2026-10-22T03:21:37.491Z",
+    "publicationId": "356c9bf9-4f50-4e21-99db-7eaca0d6d8e2"
+  },
+  "createdAt": "2026-10-22T03:21:37.000Z",
+  "updatedAt": "2026-10-22T03:21:37.000Z",
+  "hasLiked": false,
+  "author": {
+    "id": 10,
+    "name": "QA Vẽ",
+    "avatarUrl": null,
+    "jobTitle": "Nhân viên",
+    "department": "Media & Content",
+    "teamName": null,
+    "isVerified": false
+  }
+}

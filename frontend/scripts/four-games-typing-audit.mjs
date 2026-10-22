@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 const phase = process.env.UX_PHASE || 'baseline';
-const web = 'http://127.0.0.1:5282', api = 'http://127.0.0.1:5112';
-const out = path.resolve(`../docs/audit/2026-10-21/four-games/${phase}`);
+const web = process.env.UX_WEB||'http://127.0.0.1:5282', api = process.env.UX_API||'http://127.0.0.1:5112';
+const out = path.resolve(process.env.UX_OUTPUT||`../docs/audit/2026-10-21/four-games/${phase}`);
 await fs.mkdir(out, { recursive: true });
 const report = { phase, matches: [], errors: [] };
 const browser = await chromium.launch();
 const percentile = (a,p) => [...a].sort((a,b)=>a-b)[Math.min(a.length-1,Math.floor(a.length*p))] || 0;
 async function identity(suffix) {
  const c = await browser.newContext({ viewport: { width:1440,height:1000 }, hasTouch:true });
- const auth = await c.request.post(api+'/api/auth/login',{data:{email:`arcade-${suffix}@audit.test`,password:'ArcadeAuditTest123!'}}).then(r=>r.json());
+ const auth = await c.request.post(api+'/api/auth/login',{data:{email:`${process.env.UX_ACCOUNT_PREFIX||'arcade'}-${suffix}@audit.test`,password:process.env.UX_PASSWORD||'ArcadeAuditTest123!'}}).then(r=>r.json());
  await c.addInitScript(token=>{
   localStorage.setItem('token',token);
   window.__commits=0;

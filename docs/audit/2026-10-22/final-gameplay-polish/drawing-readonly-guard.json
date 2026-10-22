@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "scope": "Read-only guard of pre-existing artwork after restart; no new artwork or UI redesign",
+  "id": 7,
+  "storageProvider": "s3",
+  "uploadState": "CONFIRMED",
+  "bytes": 30786,
+  "sha256": "25c0d80c5248f567aaac3004ad16d7fa178a614b4fa0428bb1773761e87a20eb"
+}

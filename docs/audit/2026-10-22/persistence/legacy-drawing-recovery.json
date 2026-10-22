@@ -1,0 +1,9 @@
+{
+  "drawingId": 4,
+  "source": "retired mock store, exact original storage key",
+  "backup": "/Users/quynh/.codex/backups/workrank/legacy-drawings/drawing-4-b2d48cc40803.png",
+  "sha256": "b2d48cc40803320dd4bfd70cc3778bb35256de088f3740549542427cc1b495c6",
+  "sizeBytes": 397061,
+  "recovery": "Original PNG bytes restored into the existing DB image field; temporary legacy recovery, not a publish fallback",
+  "productionObjectMigration": "PENDING_BUCKET"
+}

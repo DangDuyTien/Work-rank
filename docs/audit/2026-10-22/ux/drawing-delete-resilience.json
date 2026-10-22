@@ -1,0 +1,41 @@
+{
+  "checks": [
+    "Resumed verification of captured real storage outage and durable deletion intent",
+    "Backend startup retries intent; object 404, DB DELETED, repeated delete succeeds"
+  ],
+  "status": "PASS",
+  "before": {
+    "id": 4,
+    "userId": 10,
+    "status": "HIDDEN",
+    "storageKey": "drawings/10/b79b2f8e-99bc-4a95-9dec-3b6176566b97-d6bd5ae8474e.png",
+    "storageProvider": "s3",
+    "imageUrl": "http://127.0.0.1:5125/workrank-audit/drawings/10/b79b2f8e-99bc-4a95-9dec-3b6176566b97-d6bd5ae8474e.png",
+    "metadata": {
+      "drawnAt": "2026-10-22T02:53:15.692Z",
+      "checksum": "d6bd5ae8474ee6590a7d6bfe0da4d2d43d4f2ebfd5791ddcf9a929ab4ce4a776",
+      "toolUsed": "WorkRank Creative Canvas Studio",
+      "uploadState": "CONFIRMED",
+      "validatedAt": "2026-10-22T02:54:02.861Z",
+      "publicationId": "b79b2f8e-99bc-4a95-9dec-3b6176566b97",
+      "deletionPending": true
+    }
+  },
+  "after": {
+    "id": 4,
+    "userId": 10,
+    "status": "DELETED",
+    "storageKey": "drawings/10/b79b2f8e-99bc-4a95-9dec-3b6176566b97-d6bd5ae8474e.png",
+    "storageProvider": "s3",
+    "imageUrl": "http://127.0.0.1:5125/workrank-audit/drawings/10/b79b2f8e-99bc-4a95-9dec-3b6176566b97-d6bd5ae8474e.png",
+    "metadata": {
+      "drawnAt": "2026-10-22T02:53:15.692Z",
+      "checksum": "d6bd5ae8474ee6590a7d6bfe0da4d2d43d4f2ebfd5791ddcf9a929ab4ce4a776",
+      "toolUsed": "WorkRank Creative Canvas Studio",
+      "uploadState": "CONFIRMED",
+      "validatedAt": "2026-10-22T02:54:02.861Z",
+      "publicationId": "b79b2f8e-99bc-4a95-9dec-3b6176566b97",
+      "deletionPending": false
+    }
+  }
+}

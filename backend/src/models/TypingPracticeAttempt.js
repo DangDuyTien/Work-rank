@@ -8,7 +8,7 @@ TypingPracticeAttempt.init({
   status: { type: DataTypes.STRING(16), allowNull: false, defaultValue: 'READY' },
   durationSeconds: { type: DataTypes.INTEGER, allowNull: false, field: 'duration_seconds' },
   challengeText: { type: DataTypes.TEXT('long'), allowNull: false, field: 'challenge_text' },
-  typedText: { type: DataTypes.TEXT('long'), allowNull: false, defaultValue: '', field: 'typed_text' },
+  typedText: { type: DataTypes.TEXT('long'), allowNull: false, defaultValue: () => '', field: 'typed_text' },
   inputRevision: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'input_revision' },
   startedAt: { type: DataTypes.DATE, allowNull: true, field: 'started_at' },
   finishedAt: { type: DataTypes.DATE, allowNull: true, field: 'finished_at' },

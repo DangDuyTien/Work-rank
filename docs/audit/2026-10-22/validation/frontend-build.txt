@@ -1,0 +1,117 @@
+
+> workrank-realtime-frontend@1.0.0 build
+> node scripts/verify-frontend.js && vite build
+
+🔍 [WorkRank Frontend Audit] Scanning 89 files in src/...
+
+✅ [WorkRank Frontend Audit Passed] 100% integrity across all 89 files. 0 errors detected.
+
+vite v5.4.21 building for production...
+transforming...
+[plugin:vite:esbuild] [plugin vite:esbuild] src/pages/Friends.jsx: Duplicate key "display" in object literal
+809|                                  border: memberIsLeader ? '1px solid var(--accent-border)' : '1px solid var(--info-border)',
+810|                                  padding: '2px 8px',
+811|                                  display: 'inline-flex',
+   |                                  ^
+812|                                  alignItems: 'center',
+813|                                  gap: 4,
+
+[plugin:vite:esbuild] [plugin vite:esbuild] src/pages/Friends.jsx: Duplicate key "alignItems" in object literal
+810|                                  padding: '2px 8px',
+811|                                  display: 'inline-flex',
+812|                                  alignItems: 'center',
+   |                                  ^
+813|                                  gap: 4,
+814|                                }}>
+
+[plugin:vite:esbuild] [plugin vite:esbuild] src/pages/Friends.jsx: Duplicate key "gap" in object literal
+811|                                  display: 'inline-flex',
+812|                                  alignItems: 'center',
+813|                                  gap: 4,
+   |                                  ^
+814|                                }}>
+815|                                  <Shield size={12} />
+
+✓ 1919 modules transformed.
+rendering chunks...
+warnings when minifying css:
+▲ [WARNING] Unexpected "@media" [css-syntax-error]
+
+    <stdin>:14836:0:
+      14836 │ @media (prefers-reduced-motion: reduce) {
+            ╵ ~~~~~~
+
+
+computing gzip size...
+dist/index.html                                     2.49 kB │ gzip:   1.15 kB
+dist/assets/DrawingGame-Byn0j8RS.css                2.41 kB │ gzip:   0.92 kB
+dist/assets/ArcadeGame-BkTKg7Rz.css                 2.83 kB │ gzip:   0.88 kB
+dist/assets/TypingBattle-Pl_lJmzV.css               8.60 kB │ gzip:   2.36 kB
+dist/assets/arcade-BgcGh08u.css                    26.18 kB │ gzip:   6.13 kB
+dist/assets/arcade-polish-qEA4iv70.css             31.48 kB │ gzip:   6.52 kB
+dist/assets/index-DErFbOou.css                    268.89 kB │ gzip:  44.66 kB
+dist/assets/check-CYPvypDT.js                       0.29 kB │ gzip:   0.24 kB
+dist/assets/chevron-left-BurCvnJ2.js                0.30 kB │ gzip:   0.25 kB
+dist/assets/loader-circle-HD0hN7JR.js               0.31 kB │ gzip:   0.26 kB
+dist/assets/plus-BxRkEzMW.js                        0.33 kB │ gzip:   0.25 kB
+dist/assets/code-BAcLmL6h.js                        0.33 kB │ gzip:   0.26 kB
+dist/assets/clock-CddGTZqO.js                       0.34 kB │ gzip:   0.27 kB
+dist/assets/arrow-right-CHPOAzHQ.js                 0.34 kB │ gzip:   0.26 kB
+dist/assets/arrow-up-right-BeDs_y2X.js              0.34 kB │ gzip:   0.26 kB
+dist/assets/user-round-CK37zNpz.js                  0.35 kB │ gzip:   0.28 kB
+dist/assets/play-4lBGlRiI.js                        0.36 kB │ gzip:   0.29 kB
+dist/assets/mail-kiH39WMF.js                        0.39 kB │ gzip:   0.31 kB
+dist/assets/upload-Cv9zevpa.js                      0.40 kB │ gzip:   0.30 kB
+dist/assets/copy-D1-quQzI.js                        0.40 kB │ gzip:   0.31 kB
+dist/assets/activity-D0Q6tGZQ.js                    0.41 kB │ gzip:   0.30 kB
+dist/assets/history-CjAq6ClY.js                     0.41 kB │ gzip:   0.30 kB
+dist/assets/database-Cnpc8X89.js                    0.42 kB │ gzip:   0.31 kB
+dist/assets/circle-alert-B8bPL9Qx.js                0.42 kB │ gzip:   0.29 kB
+dist/assets/external-link-CeKPUtnl.js               0.42 kB │ gzip:   0.30 kB
+dist/assets/heart-BcfDg9Yy.js                       0.43 kB │ gzip:   0.32 kB
+dist/assets/zap-Bm7hO3O_.js                         0.43 kB │ gzip:   0.31 kB
+dist/assets/pen-line-gKpQHBbG.js                    0.45 kB │ gzip:   0.33 kB
+dist/assets/shield-check-BVIpDqxb.js                0.49 kB │ gzip:   0.35 kB
+dist/assets/refresh-cw-BBvuDhoc.js                  0.49 kB │ gzip:   0.33 kB
+dist/assets/save-BvAcmn7j.js                        0.50 kB │ gzip:   0.33 kB
+dist/assets/trash-2-Bvs7x5Rz.js                     0.50 kB │ gzip:   0.32 kB
+dist/assets/volume-2-DjjsJHaP.js                    0.56 kB │ gzip:   0.38 kB
+dist/assets/layers-C0n8nP0L.js                      0.59 kB │ gzip:   0.34 kB
+dist/assets/medal-BWYSQCla.js                       0.61 kB │ gzip:   0.39 kB
+dist/assets/arrow-up-uJIK3KuF.js                    0.62 kB │ gzip:   0.32 kB
+dist/assets/star-DGaQ3gqf.js                        0.64 kB │ gzip:   0.40 kB
+dist/assets/CreativeGallery-BHgqspiX.js             0.79 kB │ gzip:   0.48 kB
+dist/assets/catalog-CA78q3DV.js                     0.93 kB │ gzip:   0.69 kB
+dist/assets/assetUrl-Krba6U38.js                    1.04 kB │ gzip:   0.55 kB
+dist/assets/PublicRecognition-CmzKZUQ9.js           2.43 kB │ gzip:   1.15 kB
+dist/assets/errors-BN9tGkS3.js                      2.73 kB │ gzip:   1.47 kB
+dist/assets/arcade-BVBHbySM.js                      3.21 kB │ gzip:   1.34 kB
+dist/assets/FlipTableBody-My7yZNZH.js               3.57 kB │ gzip:   0.95 kB
+dist/assets/Onboarding-cWqaeyR_.js                  3.76 kB │ gzip:   1.88 kB
+dist/assets/RecognitionPortraitFrame-B-z3jHXD.js    5.84 kB │ gzip:   2.37 kB
+dist/assets/GameHub-B63GEtSa.js                     7.53 kB │ gzip:   2.62 kB
+dist/assets/Login-Ci5i6ppf.js                       8.65 kB │ gzip:   3.48 kB
+dist/assets/MvpCupAwardModal-DAzmEfga.js           15.09 kB │ gzip:   4.88 kB
+dist/assets/arcade-polish-DyL8caNw.js              16.38 kB │ gzip:   7.59 kB
+dist/assets/CreativeCornerSection-Ci2Z_EzI.js      17.56 kB │ gzip:   5.99 kB
+dist/assets/AdminGrand-CVds3L0O.js                 17.70 kB │ gzip:   4.81 kB
+dist/assets/Home-vPELHV5F.js                       18.80 kB │ gzip:   5.58 kB
+dist/assets/GrandHub-Br4SIa5K.js                   21.34 kB │ gzip:   5.75 kB
+dist/assets/Arena-UppppDry.js                      21.60 kB │ gzip:   6.24 kB
+dist/assets/YouTubeOverview-lv4s97wR.js            30.19 kB │ gzip:   8.46 kB
+dist/assets/DrawingGame-SWZx-cii.js                31.20 kB │ gzip:   9.82 kB
+dist/assets/Friends-BoxMlZvd.js                    32.81 kB │ gzip:   7.89 kB
+dist/assets/AdminSeasons-DZwIaZOV.js               34.28 kB │ gzip:   8.20 kB
+dist/assets/Dashboard-SQF0nS7b.js                  35.94 kB │ gzip:   8.29 kB
+dist/assets/UserDetail-jPTlOxRL.js                 37.87 kB │ gzip:   9.84 kB
+dist/assets/AdminOperations-CZtDdLY2.js            37.91 kB │ gzip:   8.79 kB
+dist/assets/ArcadeGame-TQZfyh_G.js                 38.64 kB │ gzip:  13.70 kB
+dist/assets/Settings-BeEJGZtX.js                   39.12 kB │ gzip:  10.76 kB
+dist/assets/CompetitionAdmin-bFewHuAn.js           40.80 kB │ gzip:   9.94 kB
+dist/assets/AdminPrivileges-hAe1fmUR.js            42.74 kB │ gzip:  10.06 kB
+dist/assets/TypingBattle-QsJbaNCU.js               45.86 kB │ gzip:  16.49 kB
+dist/assets/AdminKpi-BXofp4w7.js                   53.09 kB │ gzip:  10.23 kB
+dist/assets/AdminTeamsYouTube-B3dRxZPA.js          53.23 kB │ gzip:  10.48 kB
+dist/assets/Leaderboard-DI5uMoFB.js                62.39 kB │ gzip:  12.66 kB
+dist/assets/index-B1hWFwu0.js                     388.04 kB │ gzip: 122.03 kB
+✓ built in 2.54s

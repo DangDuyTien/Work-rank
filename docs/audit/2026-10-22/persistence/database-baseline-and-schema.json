@@ -1,0 +1,50 @@
+{
+  "backup": "/Users/quynh/.codex/backups/workrank/2026-10-22-before-persistence-1792634712984.sql.gz",
+  "backupSha256": "dcf5da70d2f2f6d42a044f9db03d60e6b5b49d886df6cbde70b9a5ea03babed7",
+  "arcadeColumns": [
+    "id",
+    "game_type",
+    "mode",
+    "capacity",
+    "host_id",
+    "title",
+    "status",
+    "seed",
+    "difficulty",
+    "duration_seconds",
+    "started_at",
+    "revision",
+    "created_at",
+    "updated_at",
+    "rules_version",
+    "rematch_id"
+  ],
+  "drawingRows": 4,
+  "legacyImages": [
+    {
+      "id": 1,
+      "provider": null,
+      "keyPresent": false,
+      "kind": "inline-in-DB"
+    },
+    {
+      "id": 2,
+      "provider": null,
+      "keyPresent": false,
+      "kind": "inline-in-DB"
+    },
+    {
+      "id": 3,
+      "provider": null,
+      "keyPresent": false,
+      "kind": "inline-in-DB"
+    },
+    {
+      "id": 4,
+      "provider": "s3",
+      "keyPresent": true,
+      "host": "127.0.0.1:4599",
+      "httpStatus": "UNREACHABLE"
+    }
+  ]
+}

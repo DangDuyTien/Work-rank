@@ -10,6 +10,7 @@ router.use((req, res, next) => {
   if (req.body && Buffer.byteLength(JSON.stringify(req.body), 'utf8') > 256000) return next(new ValidationError('Bản ghi lượt chơi quá lớn'));
   next();
 });
+router.get('/history', asyncHandler(async (req,res)=>res.json(await service.history(req.user.id,req.query))));
 router.get('/active', asyncHandler(async (req, res) => res.json(await service.active(req.user.id))));
 router.get('/rooms', asyncHandler(async (req, res) => res.json({ rooms: await service.list(req.query.gameType, req.query.mode) })));
 router.get('/leaderboard', asyncHandler(async (req, res) => res.json(await service.leaderboard(req.query.gameType, req.query.mode || 'SOLO', req.query.period || 'all', req.user.id, req.query.difficulty || 'mixed'))));

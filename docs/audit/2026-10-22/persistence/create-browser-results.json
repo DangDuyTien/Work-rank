@@ -1,0 +1,141 @@
+{
+  "phase": "create",
+  "checks": [
+    {
+      "name": "Drawing canvas → S3 bytes → DB → read-back/gallery",
+      "status": "PASS",
+      "evidence": {
+        "id": 7,
+        "hash": "25c0d80c5248f567aaac3004ad16d7fa178a614b4fa0428bb1773761e87a20eb"
+      }
+    },
+    {
+      "name": "Typing TRIO finalized into real MySQL enum/result/history",
+      "status": "PASS",
+      "evidence": {
+        "id": "10",
+        "results": [
+          {
+            "wpm": 64,
+            "mode": "TRIO",
+            "name": "An",
+            "rank": 1,
+            "team": "NONE",
+            "score": 90.2,
+            "rawWpm": 64,
+            "userId": 4,
+            "accuracy": 100,
+            "eligible": true,
+            "gameType": "typing_battle",
+            "isWinner": true,
+            "attemptId": "10:2026-10-22T03:14:23.000Z",
+            "completed": false,
+            "createdAt": "2026-10-22T03:14:53.280Z",
+            "startedAt": "2026-10-22T03:14:23.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T03:14:53.280Z",
+            "scoreDelta": 0,
+            "typedChars": 160,
+            "progressPct": 3,
+            "validatedAt": "2026-10-22T03:14:53.280Z",
+            "correctChars": 160,
+            "metricVersion": 3,
+            "individualRank": 1,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 90.2
+          },
+          {
+            "wpm": 56,
+            "mode": "TRIO",
+            "name": "Bình",
+            "rank": 2,
+            "team": "NONE",
+            "score": 84.6,
+            "rawWpm": 56,
+            "userId": 5,
+            "accuracy": 100,
+            "eligible": true,
+            "gameType": "typing_battle",
+            "isWinner": false,
+            "attemptId": "10:2026-10-22T03:14:23.000Z",
+            "completed": false,
+            "createdAt": "2026-10-22T03:14:53.280Z",
+            "startedAt": "2026-10-22T03:14:23.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T03:14:53.280Z",
+            "scoreDelta": 0,
+            "typedChars": 140,
+            "progressPct": 3,
+            "validatedAt": "2026-10-22T03:14:53.280Z",
+            "correctChars": 140,
+            "metricVersion": 3,
+            "individualRank": 2,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 84.6
+          },
+          {
+            "wpm": 48,
+            "mode": "TRIO",
+            "name": "Chi",
+            "rank": 3,
+            "team": "NONE",
+            "score": 79.1,
+            "rawWpm": 48,
+            "userId": 6,
+            "accuracy": 100,
+            "eligible": true,
+            "gameType": "typing_battle",
+            "isWinner": false,
+            "attemptId": "10:2026-10-22T03:14:23.000Z",
+            "completed": false,
+            "createdAt": "2026-10-22T03:14:53.280Z",
+            "startedAt": "2026-10-22T03:14:23.000Z",
+            "errorCount": 0,
+            "finishedAt": "2026-10-22T03:14:53.280Z",
+            "scoreDelta": 0,
+            "typedChars": 120,
+            "progressPct": 2,
+            "validatedAt": "2026-10-22T03:14:53.280Z",
+            "correctChars": 120,
+            "metricVersion": 3,
+            "individualRank": 3,
+            "validSubmission": true,
+            "completionTimeMs": 30000,
+            "performanceScore": 79.1
+          }
+        ]
+      }
+    },
+    {
+      "name": "direction_rush DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "fc6aa076-6c88-41c7-9730-292f07bb9a09",
+        "score": 59749
+      }
+    },
+    {
+      "name": "computer_rush DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "7d954605-7ba8-48bd-aa9e-a7b935265ee4",
+        "score": 2730
+      }
+    },
+    {
+      "name": "memory_flash DB result/BXH/history after actual play and finalize retry",
+      "status": "PASS",
+      "evidence": {
+        "id": "f1b58248-9870-4ec5-89f2-7a950003a486",
+        "score": 7900
+      }
+    },
+    {
+      "name": "Direct DB read confirms rows/stats and exactly-once arcade ledger",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}
