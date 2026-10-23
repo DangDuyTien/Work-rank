@@ -1,12 +1,25 @@
 import { CHALLENGES, COMPUTER_SEQUENCE_LIMIT, entriesForDifficulty, tierForIndex } from './vocabulary/index.mjs';
 import { ARCADE_GAME_TYPES } from '../gameRegistry.mjs';
+import { GAME_MODES, MODE_IDS, canonicalMode, modeSpec, capacityFor, aggregateTeams, teamOutcome, teamScore, balancedTeam, teamCounts, teamsAreBalanced, compareTeams } from './modes.mjs';
+import { memoryLevel as memoryLevelV3, buildMemoryPattern } from './memory.mjs';
 
 export const GAME_TYPES = ARCADE_GAME_TYPES;
-export const CAPACITY = Object.freeze({ SOLO: 1, DUO: 2, TRIO: 3 });
+export { GAME_MODES, MODE_IDS, canonicalMode, modeSpec, capacityFor, aggregateTeams, teamOutcome, teamScore, balancedTeam, teamCounts, teamsAreBalanced, compareTeams };
+export const CAPACITY = Object.freeze(Object.fromEntries(Object.values(GAME_MODES).map((mode) => [mode.id, mode.capacity])));
 export const RULES_VERSION = 3;
-export const rulesVersionFor = game => game === 'direction_rush' ? 3 : 2;
+export const rulesVersionFor = game => game === 'direction_rush' || game === 'memory_flash' ? 3 : 2;
 export const DIRECTION_STUMBLE_MS = 450;
 export const DIRECTION_MIN_RESPONSE_MS = 60;
+/**
+ * Dung sai cho event "ở tương lai" so với đồng hồ server.
+ *
+ * MySQL lưu `started_at` dạng DATETIME không có phần lẻ, nên mốc bắt đầu có
+ * thể bị làm tròn tới ±500ms. Cộng thêm jitter mạng, 150ms cũ làm client
+ * hợp lệ bị từ chối ("Lựa chọn hoặc thời gian ghi nhớ không hợp lệ").
+ * 1500ms vẫn chặn việc gửi trước cả trận, vì `at <= durationMs` và
+ * finish vẫn kiểm tra đồng hồ thật.
+ */
+export const EVENT_CLOCK_TOLERANCE_MS = 1500;
 export const ARROWS = Object.freeze({ UP: '↑', DOWN: '↓', LEFT: '←', RIGHT: '→' });
 export const OPPOSITE = Object.freeze({ UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT' });
 export const normalizeWord = (value) => String(value).normalize('NFC').trim().replace(/\s+/gu, ' ').toLocaleUpperCase('vi');
@@ -178,6 +191,7 @@ export function sameArcadeEvent(a, b) {
 }
 
 export function memoryLevel(index, rulesVersion = RULES_VERSION) {
+  if (rulesVersion >= 3) return memoryLevelV3(index, rulesVersion);
   const level = Math.floor(index / 3) + 1;
   if (rulesVersion >= 2) {
     // Change one difficulty variable at a time, particularly at board-size boundaries.
@@ -223,6 +237,13 @@ export function challenge(game, seed, index, difficulty = 'mixed', options = {})
       windowMs: Math.max(650, 1800 - Math.floor(index / 6) * 100 - (seconds >= 50 ? 180 : 0)) };
   }
   const level = memoryLevel(index, rulesVersion);
+  if (rulesVersion >= 3) {
+    // Sai thì giữ nhịp chậm hơn để người chơi kịp đọc lỗi, nhưng không kéo
+    // dài cả trận: trần 620ms và giảm dần theo level.
+    level.restMs = previousCorrect ? level.restMs : Math.max(620, level.restMs + 260);
+    const pattern = buildMemoryPattern(rng, level.size, level.targets, level.level);
+    return { ...level, kind: pattern.kind, patternDifficulty: pattern.difficulty, cells: pattern.cells };
+  }
   if (rulesVersion >= 2) level.restMs = previousCorrect ? 320 : 800;
   const cells = Array.from({ length: level.size * level.size }, (_, i) => i);
   for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
@@ -268,7 +289,7 @@ export function replay(game, seed, events, { durationMs = 60000, elapsedMs = dur
   let previousAt = 0, totalResponse = 0, rawScore = 0, mistakes = 0;
   for (let index = 0; index < events.length; index++) {
     const e = events[index];
-    if (!e || e.index !== index || !Number.isInteger(e.at) || e.at <= previousAt || e.at > durationMs || e.at > elapsedMs + 150) throw new Error('Thời gian hoặc challenge ID không hợp lệ');
+    if (!e || e.index !== index || !Number.isInteger(e.at) || e.at <= previousAt || e.at > durationMs || e.at > elapsedMs + EVENT_CLOCK_TOLERANCE_MS) throw new Error('Thời gian hoặc challenge ID không hợp lệ');
     const c = challenge(game, seed, index, difficulty, { rulesVersion, previousAt, durationMs, previousCorrect: metrics.lastCorrect !== false });
     let response = e.at - previousAt, correct = false, base = 100;
     if (game === 'computer_rush') {

@@ -7,8 +7,8 @@ async function getDefaultGames() {
   return [
     {
       gameKey: GAME_TYPES.TYPING_BATTLE,
-      name: 'WorkRank Typing Battle', status: 'AVAILABLE', enabled: true, sortOrder: 1,
-      description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
+      name: 'WorkRank Typing', status: 'AVAILABLE', enabled: true, sortOrder: 1,
+      description: 'Một game, hai chế độ: gõ từng từ giữ combo (2.817 từ) hoặc đua cả đoạn văn realtime 1v1, 2v2, 3v3.',
       icon: 'Keyboard', route: '/games/typing',
     },
     {
@@ -35,6 +35,12 @@ async function ensureDefaultCatalog() {
     const existing = await GameCatalog.findOne({ where: { gameKey: g.gameKey } });
     if (!existing) {
       await GameCatalog.create(g).catch(() => {});
+      continue;
+    }
+    // Tên/mô tả/route là metadata hiển thị, không phải trạng thái admin chỉnh tay.
+    // Cập nhật idempotent để game gộp "WorkRank Typing" không còn tên cũ trong DB.
+    if (existing.name !== g.name || existing.description !== g.description || existing.route !== g.route) {
+      await existing.update({ name: g.name, description: g.description, route: g.route }).catch(() => {});
     }
   }
 }

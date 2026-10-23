@@ -163,3 +163,95 @@
 @media (max-width: 700px) { .arcade-polished .arcade-memory-board { width: 304px; height: 304px; } }
 @media (prefers-reduced-motion: reduce) { .arcade-page *, .arcade-page *::before, .arcade-page *::after { animation: none !important; transition: none !important; } }
 html[data-workrank-reduce-motion="true"] .arcade-page *, html[data-workrank-reduce-motion="true"] .arcade-page *::before, html[data-workrank-reduce-motion="true"] .arcade-page *::after { animation: none !important; transition: none !important; }
+
+/* ── Team modes (2V2 / 3V3) ───────────────────────────────────────────── */
+/* Năm chế độ: 3 cột để nhãn tiếng Việt không bị bẻ thành 3 dòng. */
+.arcade-mode-select { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 900px) { .arcade-mode-select { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .arcade-mode-select { grid-template-columns: 1fr; } .arcade-mode-select button { min-height: 74px; flex-direction: row; align-items: center; } .arcade-mode-select small { min-height: 0; } }
+.arcade-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 760px; margin: 10px auto 0; }
+.arcade-team { padding: 14px; text-align: left; background: #fffdf7; border: 2px solid #dde0d5; border-radius: 18px; }
+.arcade-team[data-team="A"] { border-color: #bfd0ad; }
+.arcade-team[data-team="B"] { border-color: #dfc4ac; }
+.arcade-team > header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px dashed #e3dfd2; }
+.arcade-team > header span { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #7d6a49; }
+.arcade-team > header strong { margin-left: auto; font-size: 11px; color: #8a7451; }
+.arcade-team-roster { display: flex; flex-direction: column; gap: 8px; }
+.arcade-team-slot { display: flex; align-items: center; gap: 10px; min-height: 54px; }
+.arcade-team-slot .arcade-player { margin: -12px -18px -12px 0; transform: scale(.68); transform-origin: left center; }
+.arcade-team-slot .arcade-name { display: none; }
+.arcade-team-slot b { display: block; font-size: 13px; }
+.arcade-team-slot small { display: block; font-size: 10px; color: #8a7451; }
+.arcade-team-slot[data-ready="true"] b { color: #3f6b48; }
+.arcade-team-slot.is-empty { opacity: .55; }
+.arcade-teams-note { margin: 8px 0 0; font-size: 11px; color: #8a7451; }
+.arcade-teams-note[data-balanced="false"] { color: #a4532f; }
+
+.arcade-team-hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 760px; margin: 8px auto 0; }
+.arcade-team-hud-side { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; background: rgba(255, 253, 247, .94); border: 1px solid #e3dfd2; border-radius: 12px; }
+.arcade-team-hud-side[data-team="A"] { border-color: #c3d2b1; }
+.arcade-team-hud-side[data-team="B"] { border-color: #e0c4ad; }
+.arcade-team-hud-score { min-width: 86px; }
+.arcade-team-hud-score span { display: block; font-size: 9px; font-weight: 800; letter-spacing: .08em; color: #8a7451; }
+.arcade-team-hud-score strong { display: block; font-size: 18px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.arcade-team-hud-score small { display: block; font-size: 9px; color: #8a7451; }
+.arcade-team-hud-side ul { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.arcade-team-hud-side li { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 10px; }
+.arcade-team-hud-side li i { font-style: normal; font-size: 10px; color: #6f8a5f; }
+.arcade-team-hud-side li[data-state="done"] i { color: #3f6b48; }
+.arcade-team-hud-side li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arcade-team-hud-side li b { font-size: 10px; font-variant-numeric: tabular-nums; }
+.arcade-team-hud-side li.is-me span { font-weight: 800; }
+
+.arcade-team-result { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 720px; margin: 14px auto 0; }
+.arcade-team-card { padding: 14px; text-align: left; background: #fffdf7; border: 2px solid #dde0d5; border-radius: 18px; }
+.arcade-team-card[data-winner="true"] { border-color: #c8a45a; box-shadow: inset 0 0 0 3px #f7ecd0; }
+.arcade-team-card[data-mine="true"] { background: #fffef9; }
+.arcade-team-card header span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #8a7451; }
+.arcade-team-card header strong { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.arcade-team-card header small { display: block; font-size: 10px; color: #8a7451; }
+.arcade-team-card ul { margin: 10px 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.arcade-team-card li { display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; padding: 6px 0; border-top: 1px dashed #e3dfd2; font-size: 12px; }
+.arcade-team-card li small { grid-column: 1 / -1; font-size: 9px; color: #8a7451; }
+.arcade-team-card footer { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 2px solid #e3dfd2; font-size: 10px; letter-spacing: .06em; color: #7d6a49; }
+.arcade-team-card footer b { font-size: 16px; font-variant-numeric: tabular-nums; }
+
+/* ── Memory reveal / answer pressure ──────────────────────────────────── */
+.memory-reveal { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9px; font-weight: 800; letter-spacing: .08em; color: #806943; opacity: 0; transition: opacity var(--motion-fast) var(--ease-standard); }
+.memory-reveal[data-visible="true"] { opacity: 1; }
+.memory-reveal b { font-size: 10px; font-variant-numeric: tabular-nums; }
+.memory-reveal .memory-reveal-meter { width: 180px; margin: 0; }
+.memory-reveal .memory-reveal-meter i { transition: transform 60ms linear; }
+.arcade-memory-room[data-rush="true"] .memory-reveal-meter i { background: #b4652f; }
+.arcade-memory-rush { display: inline-block; margin-left: 8px; padding: 2px 7px; border-radius: 6px; background: #b23b3b; color: #fff; font-size: 10px; font-style: normal; letter-spacing: .08em; animation: memory-rush-pulse 900ms ease-in-out infinite; }
+@keyframes memory-rush-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+.arcade-memory-selection-time[data-critical="true"] span { color: #b23b3b; font-weight: 800; }
+.arcade-memory-selection-time[data-critical="true"] i { background: #b23b3b; }
+.arcade-memory-selection-time[data-critical="true"] { animation: memory-tick 700ms ease-in-out infinite; }
+@keyframes memory-tick { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+
+@media (max-width: 700px) {
+  .arcade-teams, .arcade-team-hud, .arcade-team-result { grid-template-columns: 1fr; }
+  .arcade-team-hud-side { padding: 7px 9px; }
+  .arcade-team-hud-score { min-width: 74px; }
+  .arcade-team-hud-score strong { font-size: 16px; }
+  .memory-reveal .memory-reveal-meter { width: 132px; }
+}
+.arcade-memory-tableau[data-team-mode="true"] { grid-template-columns: 140px auto; }
+@media (max-width: 1024px) { .arcade-memory-tableau[data-team-mode="true"] { grid-template-columns: 105px auto; } }
+@media (max-width: 700px) {
+  .arcade-memory-tableau[data-team-mode="true"] { grid-template-columns: 1fr; grid-template-rows: 304px auto; }
+  .arcade-memory-tableau[data-team-mode="true"] .arcade-memory-companion { grid-column: 1 / -1; }
+}
+.arcade-team-hud-side li[data-state="wrong"] i { color: #b23b3b; }
+.arcade-team-formula { grid-column: 1 / -1; margin: 2px 0 0; font-size: 10px; line-height: 1.5; color: #8a7451; text-align: center; }
+@media (max-width: 700px) {
+  .arcade-team-hud { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .arcade-team-hud-side { gap: 6px; padding: 6px 7px; }
+  .arcade-team-hud-score { min-width: 56px; }
+  .arcade-team-hud-score span { font-size: 8px; }
+  .arcade-team-hud-score strong { font-size: 15px; }
+  .arcade-team-hud-score small { font-size: 8px; }
+  .arcade-team-hud-side li { font-size: 9px; gap: 3px; }
+  .arcade-team-hud-side li i, .arcade-team-hud-side li b { font-size: 9px; }
+}

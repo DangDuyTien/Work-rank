@@ -460,7 +460,7 @@ export default function TypingBattle() {
       }
     } catch (err) {
       console.error('Failed to fetch typing room detail:', err);
-      navigate('/games/typing');
+      navigate('/games/typing/passage');
     } finally {
       setLoading(false);
     }
@@ -1111,7 +1111,7 @@ export default function TypingBattle() {
   const handleLeaveRoom = async (nextTab='practice') => {
     if (leavingRoom) return;
     if (!room?.id) {
-      setActiveTab(nextTab);navigate(`/games/typing${nextTab==='practice'?'':`?tab=${nextTab}`}`);
+      setActiveTab(nextTab);navigate(`/games/typing/passage${nextTab==='practice'?'':`?tab=${nextTab}`}`);
       return;
     }
     setLeavingRoom(true);
@@ -1125,7 +1125,7 @@ export default function TypingBattle() {
       setPlayers([]);
       setRoomError(null);
       setLeavingRoom(false);
-      setActiveTab(nextTab);navigate(`/games/typing${nextTab==='practice'?'':`?tab=${nextTab}`}`);
+      setActiveTab(nextTab);navigate(`/games/typing/passage${nextTab==='practice'?'':`?tab=${nextTab}`}`);
     }
   };
 
@@ -1143,7 +1143,7 @@ export default function TypingBattle() {
       <PageShell className="typing-page">
         <GameComingSoon
           gameKey="typing_battle"
-          name={availabilityGame?.name || 'WorkRank Typing Battle'}
+          name={availabilityGame?.name || 'Đua Gõ Chữ'}
           description={availabilityGame?.description}
           isAdmin={isAdmin}
           onAdminProceed={proceedAsAdmin}
@@ -1159,12 +1159,12 @@ export default function TypingBattle() {
     onChange={handleInputChange} onCompositionStart={handleCompositionStart} onBeforeInput={handleInputBeforeInput} onCompositionEnd={handleCompositionEnd}
     onFocus={() => setIsInputFocused(true)} onBlur={() => setIsInputFocused(false)} onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()} disabled={isFinished || !room && (practiceLoading || !practiceAttemptRef.current)} />;
   return <TypingArcadeView user={user} room={room} players={players} isSpectator={isSpectator} roomError={roomError} loading={loading}
-    practiceLoading={practiceLoading} practiceError={practiceError} activeTab={activeTab} setActiveTab={tab=>{setActiveTab(tab);if(!room)navigate(`/games/typing${tab==='practice'?'':`?tab=${tab}`}`,{replace:true});}} selectedDuration={selectedDuration} setDuration={handleDurationChange}
+    practiceLoading={practiceLoading} practiceError={practiceError} activeTab={activeTab} setActiveTab={tab=>{setActiveTab(tab);if(!room)navigate(`/games/typing/passage${tab==='practice'?'':`?tab=${tab}`}`,{replace:true});}} selectedDuration={selectedDuration} setDuration={handleDurationChange}
     roomList={visibleRoomList} leaderboard={leaderboard} myStats={myStats} input={nativeInput} passage={renderedText} telemetry={telemetry}
     timeRemaining={timeRemaining} liveWpm={liveWpm} liveAccuracy={liveAccuracy} combo={arcadeTypingRef.current.combo} bestCombo={arcadeTypingRef.current.best}
     finished={isFinished} result={matchResult} practiceResult={practiceSubmissionResult} countdown={countdownNumber} onRestart={() => handleRestartPractice()}
-    onLeave={() => room ? handleLeaveRoom() : navigate('/games')} onReady={handleToggleReady} onReset={handleResetRoom} onSwitchTeam={handleSwitchTeam}
-    onBoard={()=>room?handleLeaveRoom('leaderboard'):(setActiveTab('leaderboard'),navigate('/games/typing?tab=leaderboard'))}
+    onLeave={() => room ? handleLeaveRoom() : navigate('/games/typing')} onReady={handleToggleReady} onReset={handleResetRoom} onSwitchTeam={handleSwitchTeam}
+    onBoard={()=>room?handleLeaveRoom('leaderboard'):(setActiveTab('leaderboard'),navigate('/games/typing/passage?tab=leaderboard'))}
     onRetry={() => isFinished ? finishCurrentRun() : preparePractice(false)} onJoin={(id) => navigate(`/games/typing/room/${id}`)}
     onCreate={async (mode, duration) => {
       try { const next = await typingGameApi.createRoom({ mode, title: `Đường đua ${mode === '1V1' ? 'Duo' : mode}`, matchType: 'RANKED', language: 'VI', difficulty: 'MEDIUM', durationLimitSeconds: duration }); navigate(`/games/typing/room/${next.room.id}`); }

@@ -1,73 +1,51 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Gamepad2,
-  Keyboard,
-  Palette,
-  Play,
+  ArrowRight,
   Clock,
+  Images,
+  Play,
   Settings,
+  Sparkles,
+  Trophy,
 } from 'lucide-react';
-import { ARCADE_GAMES } from '../games/arcade/catalog';
-import { GAME_TYPES } from '../../../shared/gameRegistry.mjs';
+import {
+  GAME_CENTER_ITEMS,
+  GALLERY_NAV_ITEM,
+  MODE_SHORT_VI,
+} from '../games/arcade/catalog';
 import { ArcadePoster } from '../components/arcade/ArcadeArt';
 import '../components/arcade/arcade.css';
+import '../components/arcade/game-center.css';
 import { gameCatalogApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PageShell, PageHeader, Card, Button, PageState, EmptyState } from '../components/ui';
+import { PageShell, Button, EmptyState } from '../components/ui';
 
-const GAME_ICONS = {
-  [GAME_TYPES.TYPING_BATTLE]: Keyboard,
-  [GAME_TYPES.DRAWING]: Palette,
-};
-
-const DEFAULT_GAMES = [
-  ...Object.entries(ARCADE_GAMES).map(([gameKey, game]) => ({ gameKey, name: game.name, status: 'AVAILABLE', description: game.subtitle, route: `/games/arcade/${gameKey}` })),
-  {
-    gameKey: GAME_TYPES.TYPING_BATTLE,
-    name: 'WorkRank Typing Battle',
-    status: 'AVAILABLE',
-    description: 'Đấu trường thi đấu đánh máy tốc độ cao, realtime 1v1, 2v2, 3v3 tích hợp trực tiếp BXH công ty.',
-    icon: 'Keyboard',
-    route: '/games/typing',
-  },
-  {
-    gameKey: GAME_TYPES.DRAWING,
-    name: 'Góc Sáng Tạo (Game Vẽ)',
-    status: 'AVAILABLE',
-    description: 'Không gian sáng tạo vẽ tranh nghệ thuật trên canvas siêu lớn & chia sẻ lên trang chủ WorkRank.',
-    icon: 'Palette',
-    route: '/games/drawing',
-  },
-];
-
+/**
+ * TRUNG TÂM TRÒ CHƠI — 5 trò, một ngôn ngữ visual.
+ *
+ * Card lấy tên/mô tả/chế độ từ GAME_REGISTRY, chỉ trạng thái mở chơi là đến từ
+ * server (admin bật/tắt). Không hardcode lại tên game ở đây.
+ */
 export default function GameHub() {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
-  const [games, setGames] = useState(DEFAULT_GAMES);
+  const { isAdmin } = useAuth();
+  const [statusMap, setStatusMap] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchCatalog = useCallback(async () => {
     try {
-      setError(null);
       const res = await gameCatalogApi.getCatalog();
-      if (res && Array.isArray(res.games)) {
-        const merged = DEFAULT_GAMES.map((def) => {
-          const serverGame = res.games.find((g) => (g.gameKey || g.game_key) === def.gameKey);
-          if (!serverGame) return def;
-          return {
-            ...def,
-            ...serverGame,
-            route: serverGame.route || def.route || `/games/${def.gameKey}`,
-          };
-        });
-
-        setGames(merged);
-      }
+      const list = res?.games || (Array.isArray(res) ? res : []);
+      const map = {};
+      list.forEach((game) => {
+        const key = game.gameKey || game.game_key;
+        if (key) map[key] = { status: game.status, enabled: game.enabled };
+      });
+      setStatusMap(map);
     } catch (err) {
-      // Keep defaults if fetch fails
-      console.warn('Failed to load game catalog, using default catalog list:', err);
+      // Không có catalog vẫn phải chơi được: mọi game trong registry mặc định mở.
+      console.warn('Không đọc được trạng thái game, dùng danh mục mặc định:', err);
     } finally {
       setLoading(false);
     }
@@ -75,364 +53,184 @@ export default function GameHub() {
 
   useEffect(() => {
     fetchCatalog();
+    const handleUpdate = () => fetchCatalog();
+    window.addEventListener('workrank:game-catalog-updated', handleUpdate);
+    return () => window.removeEventListener('workrank:game-catalog-updated', handleUpdate);
   }, [fetchCatalog]);
 
-  const availableGames = games.filter((g) => g.status === 'AVAILABLE' && g.enabled !== false);
-  const comingSoonGames = games.filter((g) => g.status === 'COMING_SOON' || g.enabled === false);
-
-  if (loading) {
-    return (
-      <PageShell>
-        <PageState type="loading" message="Đang tải danh mục trò chơi..." />
-      </PageShell>
-    );
-  }
+  const games = GAME_CENTER_ITEMS.map((game) => {
+    const state = statusMap[game.catalogKey] || {};
+    const available = state.status !== 'COMING_SOON' && state.enabled !== false;
+    return { ...game, available };
+  });
+  const availableGames = games.filter((game) => game.available);
+  const comingSoonGames = games.filter((game) => !game.available);
 
   return (
-    <PageShell>
-      <PageHeader
-        kicker="Trung Tâm Giải Trí & Đấu Trí"
-        title="Danh Mục Trò Chơi WorkRank"
-        description="Khám phá các trò chơi tương tác của WorkRank: đấu trường đánh máy tốc độ cao và không gian sáng tạo hội hoạ."
-        actions={
-          isAdmin && (
-            <Button
-              variant="secondary"
-              onClick={() => navigate('/settings?tab=games')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Settings size={15} />
-              Quản lý trạng thái game
-            </Button>
-          )
-        }
-      />
+    <PageShell className="game-center-page">
+      <header className="gc-hero">
+        <div className="gc-hero-copy">
+          <p className="gc-kicker"><Sparkles size={13} aria-hidden="true" /> WORK RANK ARCADE</p>
+          <h1>Trung tâm trò chơi</h1>
+          <p className="gc-hero-lead">
+            Năm trò chơi ngắn, vui và công bằng. Mỗi ván khoảng một phút — đủ để đổi nhịp giữa giờ làm,
+            đủ để leo bảng xếp hạng của công ty.
+          </p>
+          <ul className="gc-hero-facts">
+            <li><b>{GAME_CENTER_ITEMS.length}</b> trò đang mở</li>
+            <li><b>4</b> chế độ phòng</li>
+            <li><b>60s</b> mỗi ván arcade</li>
+          </ul>
+        </div>
+        <div className="gc-hero-art" aria-hidden="true">
+          <span className="gc-hero-sun" />
+          <span className="gc-hero-shelf" />
+          <span className="gc-hero-frame is-one">✦</span>
+          <span className="gc-hero-frame is-two">Aa</span>
+          <span className="gc-hero-frame is-three">↑</span>
+          <span className="gc-hero-figure"><span>•ᴗ•</span><i /></span>
+        </div>
+      </header>
 
-      {/* ── SECTION 1: ĐANG CÓ THỂ CHƠI ── */}
-      <section style={{ marginBottom: 40 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 16,
-            borderBottom: '1px solid rgba(15,23,42,0.08)',
-            paddingBottom: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: '#16a34a',
-                display: 'inline-block',
-              }}
-            />
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-              ĐANG CÓ THỂ CHƠI
-            </h2>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                background: 'var(--surface-muted)',
-                padding: '2px 8px',
-                borderRadius: 2,
-              }}
-            >
-              {availableGames.length}
-            </span>
-          </div>
+      <section className="gc-section" aria-labelledby="gc-available-title">
+        <div className="gc-section-head">
+          <span className="gc-live-dot" aria-hidden="true" />
+          <h2 id="gc-available-title">Đang có thể chơi</h2>
+          <span className="gc-count">{availableGames.length}</span>
+          <span className="gc-section-note">Bấm vào thẻ để vào sân</span>
         </div>
 
-        {availableGames.length === 0 ? (
+        {loading && !availableGames.length ? (
+          <div className="gc-grid" aria-label="Đang tải danh mục trò chơi">
+            {GAME_CENTER_ITEMS.map((game) => (
+              <div key={game.id} className="gc-card is-skeleton" aria-hidden="true">
+                <span className="gc-skeleton-poster" />
+                <span className="gc-skeleton-line is-title" />
+                <span className="gc-skeleton-line" />
+                <span className="gc-skeleton-line is-short" />
+              </div>
+            ))}
+          </div>
+        ) : availableGames.length === 0 ? (
           <EmptyState
             title="Chưa có trò chơi nào sẵn sàng"
-            description="Tất cả trò chơi hiện đang trong giai đoạn cập nhật hoặc bảo trì."
+            description="Tất cả trò chơi đang trong giai đoạn cập nhật hoặc bảo trì. Quay lại sau ít phút nhé."
           />
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-              gap: 20,
-            }}
-          >
+          <div className="gc-grid">
             {availableGames.map((game) => {
-              const Icon = GAME_ICONS[game.gameKey] || Gamepad2;
+              const Icon = game.icon;
               return (
-                <div
-                  key={game.gameKey}
-                  style={{
-                    background: 'var(--surface)',
-                    border: '1px solid rgba(15,23,42,0.1)',
-                    borderRadius: 'var(--radius-content)',
-                    padding: 24,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    transition: 'border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard)',
-                  }}
-                  className="hover:border-slate-400 hover:shadow-sm"
+                <article
+                  key={game.id}
+                  className="gc-card"
+                  data-game={game.id}
+                  style={{ '--gc-accent': game.theme.accent, '--gc-soft': game.theme.soft, '--gc-ink': game.theme.ink }}
                 >
-                  <div>
-                    {ARCADE_GAMES[game.gameKey] && <div style={{ marginBottom: 20 }}><ArcadePoster gameType={game.gameKey} /></div>}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        marginBottom: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 48,
-                          height: 48,
-                          background: 'var(--info-soft)',
-                          border: '1px solid var(--info-border)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--info)',
-                        }}
-                      >
-                        <Icon size={24} strokeWidth={2.2} />
-                      </div>
-                      <span
-                        style={{
-                          padding: '3px 8px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          background: 'rgba(34,197,94,0.12)',
-                          color: '#16a34a',
-                          border: '1px solid rgba(34,197,94,0.3)',
-                        }}
-                      >
-                        Sẵn sàng
-                      </span>
-                    </div>
-
-                    <h3
-                      style={{
-                        margin: '0 0 8px',
-                        fontSize: 17,
-                        fontWeight: 700,
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      {game.name}
-                    </h3>
-                    <p
-                      style={{
-                        margin: '0 0 20px',
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        color: 'var(--text-secondary)',
-                        minHeight: 40,
-                      }}
-                    >
-                      {game.description}{ARCADE_GAMES[game.gameKey] && <span style={{ display: 'block', marginTop: 8, fontSize: 10, letterSpacing: '0.1em', fontWeight: 700 }}>SOLO · DUO · TRIO</span>}
-                    </p>
+                  <div className="gc-card-poster">
+                    <ArcadePoster gameType={game.id} compact />
+                    <span className="gc-card-status"><i aria-hidden="true" /> Sẵn sàng</span>
                   </div>
 
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate(game.route)}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 8,
-                      fontWeight: 600,
-                      padding: '10px 16px',
-                    }}
-                  >
-                    <Play size={15} />
-                    Chơi ngay
-                  </Button>
-                </div>
+                  <div className="gc-card-body">
+                    <div className="gc-card-heading">
+                      <span className="gc-card-icon" aria-hidden="true"><Icon size={17} strokeWidth={2.2} /></span>
+                      <span className="gc-card-mark" aria-hidden="true">{game.mark}</span>
+                    </div>
+
+                    <h3 className="gc-card-name">{game.displayNameVi}</h3>
+                    <p className="gc-card-sub">{game.subtitleVi}</p>
+                    <p className="gc-card-desc">{game.descriptionVi}</p>
+
+                    <ul className="gc-card-modes" aria-label="Chế độ chơi">
+                      {game.modes.length
+                        ? game.modes.map((mode) => <li key={mode}>{MODE_SHORT_VI[mode] || mode}</li>)
+                        : <li>Tự do sáng tạo</li>}
+                    </ul>
+
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate(game.route)}
+                      className="gc-card-cta"
+                    >
+                      <Play size={15} aria-hidden="true" />
+                      Chơi ngay
+                      <ArrowRight size={15} aria-hidden="true" />
+                    </Button>
+                  </div>
+                </article>
               );
             })}
           </div>
         )}
       </section>
 
-      {/* ── SECTION 2: SẮP RA MẮT ── */}
-      <section style={{ marginBottom: 40 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 16,
-            borderBottom: '1px solid rgba(15,23,42,0.08)',
-            paddingBottom: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: '#f59e0b',
-                display: 'inline-block',
-              }}
-            />
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-              SẮP RA MẮT
-            </h2>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                background: 'var(--surface-muted)',
-                padding: '2px 8px',
-                borderRadius: 2,
-              }}
-            >
-              {comingSoonGames.length}
-            </span>
-          </div>
+      <Link to={GALLERY_NAV_ITEM.route} className="gc-gallery-strip">
+        <span className="gc-gallery-icon" aria-hidden="true"><Images size={22} /></span>
+        <span className="gc-gallery-copy">
+          <b>{GALLERY_NAV_ITEM.displayNameVi}</b>
+          <small>Tranh của mọi người trong công ty — thả tim, tải ảnh, xem chi tiết.</small>
+        </span>
+        <span className="gc-gallery-link">Mở thư viện <ArrowRight size={15} aria-hidden="true" /></span>
+      </Link>
+
+      <section className="gc-section" aria-labelledby="gc-soon-title">
+        <div className="gc-section-head">
+          <span className="gc-soon-dot" aria-hidden="true" />
+          <h2 id="gc-soon-title">Sắp ra mắt</h2>
+          <span className="gc-count">{comingSoonGames.length}</span>
         </div>
 
         {comingSoonGames.length === 0 ? (
-          <div
-            style={{
-              padding: 24,
-              background: 'var(--surface-soft)',
-              border: '1px dashed rgba(15,23,42,0.12)',
-              color: 'var(--text-secondary)',
-              fontSize: 13,
-              textAlign: 'center',
-            }}
-          >
-            Hiện tại tất cả trò chơi trong danh mục đều đã ra mắt và có thể chơi trực tiếp.
-          </div>
+          <p className="gc-soon-empty">
+            Tất cả trò chơi trong danh mục đều đã ra mắt và có thể chơi ngay.
+          </p>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-              gap: 20,
-            }}
-          >
+          <div className="gc-grid is-soon">
             {comingSoonGames.map((game) => {
-              const Icon = GAME_ICONS[game.gameKey] || Gamepad2;
+              const Icon = game.icon;
               return (
-                <div
-                  key={game.gameKey}
-                  style={{
-                    background: '#fafafa',
-                    border: '1px solid rgba(15,23,42,0.08)',
-                    borderRadius: 'var(--radius-content)',
-                    padding: 24,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    opacity: 0.9,
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        marginBottom: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 48,
-                          height: 48,
-                          background: 'rgba(245,158,11,0.08)',
-                          border: '1px solid rgba(245,158,11,0.2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#d97706',
-                        }}
-                      >
-                        <Icon size={24} strokeWidth={2.2} />
-                      </div>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '3px 8px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          background: 'rgba(245,158,11,0.12)',
-                          color: '#d97706',
-                          border: '1px solid rgba(245,158,11,0.3)',
-                        }}
-                      >
-                        <Clock size={11} strokeWidth={2.5} />
-                        Sắp ra mắt
-                      </span>
-                    </div>
-
-                    <h3
-                      style={{
-                        margin: '0 0 8px',
-                        fontSize: 17,
-                        fontWeight: 700,
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      {game.name}
-                    </h3>
-                    <p
-                      style={{
-                        margin: '0 0 20px',
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        color: 'var(--text-secondary)',
-                        minHeight: 40,
-                      }}
-                    >
-                      {game.description ||
-                        'Trò chơi đang trong quá trình phát triển và hoàn thiện các tính năng thi đấu.'}
-                    </p>
+                <article key={game.id} className="gc-card is-soon" data-game={game.id}>
+                  <div className="gc-card-poster">
+                    <ArcadePoster gameType={game.id} compact />
+                    <span className="gc-card-status is-soon"><Clock size={11} aria-hidden="true" /> Sắp ra mắt</span>
                   </div>
-
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="gc-card-body">
+                    <div className="gc-card-heading">
+                      <span className="gc-card-icon" aria-hidden="true"><Icon size={17} strokeWidth={2.2} /></span>
+                    </div>
+                    <h3 className="gc-card-name">{game.displayNameVi}</h3>
+                    <p className="gc-card-sub">{game.subtitleVi}</p>
+                    <p className="gc-card-desc">{game.descriptionVi}</p>
                     <Button
                       variant="secondary"
                       disabled={!isAdmin}
                       onClick={() => navigate(game.route)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        fontWeight: 600,
-                        padding: '10px 16px',
-                        background: 'var(--surface)',
-                        color: isAdmin ? 'var(--info)' : 'var(--text-muted)',
-                        cursor: isAdmin ? 'pointer' : 'default',
-                      }}
+                      className="gc-card-cta"
                     >
-                      {isAdmin ? 'Xem trước (Admin)' : 'Sắp ra mắt'}
+                      {isAdmin ? 'Xem trước (quản trị)' : 'Đang hoàn thiện'}
                     </Button>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
         )}
       </section>
+
+      <footer className="gc-footer">
+        <span><Trophy size={15} aria-hidden="true" /> Mọi kết quả đều được lưu vào bảng xếp hạng riêng của từng trò.</span>
+        {isAdmin && (
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/settings?tab=games')}
+            className="gc-admin-btn"
+          >
+            <Settings size={15} aria-hidden="true" />
+            Quản lý trạng thái trò chơi
+          </Button>
+        )}
+      </footer>
     </PageShell>
   );
 }

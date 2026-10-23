@@ -34,3 +34,4 @@
 @media(max-width:700px) { .direction-stack { height: 213px; }.direction-stack-track { width: 132px; height: 128px; left: calc(50% - 90px); top: 63px; }.direction-stack-face { width: 132px; height: 128px; border-radius: 23px; }.direction-stack-face>strong { font-size: 103px; }.direction-stack-hint { font-size: 88px; }.direction-stack-anchor { transform: translateX(calc(var(--arrow-slot) * 10px)); }.has-direction-queue .arcade-direction-rule strong { font-size: 12px; }.has-direction-queue .arcade-direction-rule>span { font-size: 10px; } }
 @media(prefers-reduced-motion:reduce) { .direction-stack *, .direction-runner-position { animation: none !important; transition: none !important; } }
 html[data-workrank-reduce-motion="true"] .direction-stack *,html[data-workrank-reduce-motion="true"] .direction-runner-position { animation: none !important; transition: none !important; }
+.direction-stack-caption em { font-style: normal; opacity: .62; }

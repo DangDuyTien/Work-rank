@@ -272,9 +272,9 @@ export default function Settings() {
       } else {
         setCreativeSettings((prev) => ({ ...prev, homeVisible: nextVal }));
       }
-      toast.success(nextVal ? 'Đã BẬT hiển thị Góc Sáng Tạo trên Trang chủ' : 'Đã ẨN Góc Sáng Tạo khỏi Trang chủ');
+      toast.success(nextVal ? 'Đã BẬT hiển thị Thư viện tranh trên Trang chủ' : 'Đã ẨN Thư viện tranh khỏi Trang chủ');
     } catch (err) {
-      toast.error(parseApiError(err, 'Không thể cập nhật cấu hình Góc Sáng Tạo.'));
+      toast.error(parseApiError(err, 'Không thể cập nhật cấu hình Thư viện tranh.'));
     } finally {
       setSavingCreativeSettings(false);
     }
@@ -1195,8 +1195,8 @@ export default function Settings() {
           <SettingSection
             id="settings-creative"
             icon={Palette}
-            title="Quản Lý Góc Sáng Tạo & Thư Viện Tranh"
-            desc="Cấu hình chế độ hiển thị khu vực Góc Sáng Tạo / Thư Viện Tranh trên Trang chủ (Home) của toàn công ty."
+            title="Quản Lý Thư Viện Tranh"
+            desc="Cấu hình chế độ hiển thị khu vực Thư viện tranh trên Trang chủ (Home) của toàn công ty."
             className="settings-card-wide"
           >
             <div style={{
@@ -1212,7 +1212,7 @@ export default function Settings() {
               <div style={{ maxWidth: 540 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>
-                    Hiển thị Góc Sáng Tạo trên Trang Chủ
+                    Hiển thị Thư viện tranh trên Trang Chủ
                   </strong>
                   <span
                     style={{

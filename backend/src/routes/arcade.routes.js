@@ -25,7 +25,7 @@ router.post('/rooms/:id/rematch', asyncHandler(async (req, res) => {
   if (room) { const availability = await catalog.checkGameAvailability(room.gameType, req.user); if (!availability.allowed) throw new ForbiddenError(availability.message); }
   res.json(await service.rematch(req.params.id, req.user));
 }));
-for (const action of ['join', 'ready', 'start', 'progress', 'finish', 'leave']) {
+for (const action of ['join', 'ready', 'team', 'start', 'progress', 'finish', 'leave']) {
   router.post(`/rooms/:id/${action}`, asyncHandler(async (req, res) => {
     const { id } = req.params, userId = req.user.id;
     if (action === 'join') {
@@ -34,9 +34,10 @@ for (const action of ['join', 'ready', 'start', 'progress', 'finish', 'leave']) 
     }
     const result = action === 'join' ? await service.join(id, userId)
       : action === 'ready' ? await service.ready(id, userId, req.body.ready)
-        : action === 'start' ? await service.begin(id, userId)
-          : action === 'leave' ? await service.leave(id, userId)
-            : await service.sync(id, userId, req.body, action === 'finish');
+        : action === 'team' ? await service.switchTeam(id, userId, req.body.team)
+          : action === 'start' ? await service.begin(id, userId)
+            : action === 'leave' ? await service.leave(id, userId)
+              : await service.sync(id, userId, req.body, action === 'finish');
     res.json(result);
   }));
 }

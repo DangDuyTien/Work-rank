@@ -385,7 +385,7 @@ export default function CreativeCornerSection({ standalone = false, forceVisible
         <div className="public-creative-hidden-notice" role="status">
           <EyeOff size={16} aria-hidden="true" />
           <span>
-            Góc Sáng Tạo đang bị <b>ẩn khỏi Trang chủ</b> — chỉ quản trị viên nhìn thấy. Tác phẩm
+            Thư viện tranh đang bị <b>ẩn khỏi Trang chủ</b> — chỉ quản trị viên nhìn thấy. Tác phẩm
             vẫn xem được đầy đủ tại trang Thư viện tranh.
           </span>
           <div className="public-creative-hidden-actions">
@@ -407,10 +407,10 @@ export default function CreativeCornerSection({ standalone = false, forceVisible
       {/* 1. Standard WorkRank Home Editorial Heading */}
       <div className="public-season-heading is-detail">
         <h2 id="creative-corner-title">
-          <span>Sáng tạo · Thư viện tranh</span>
+          <span>{standalone ? 'Tác phẩm trong thư viện' : 'Thư viện tranh'}</span>
         </h2>
         <div>
-          <p>{currentCount > 0 ? `${currentCount} Tác phẩm` : 'Studio nghệ thuật'}</p>
+          <p>{currentCount > 0 ? `${currentCount} tác phẩm` : 'Phòng nghệ thuật'}</p>
           <span>Nét vẽ cảm hứng &amp; sắc màu nghệ thuật từ nhân sự 3WIN MEDIA</span>
         </div>
       </div>
@@ -447,7 +447,7 @@ export default function CreativeCornerSection({ standalone = false, forceVisible
           )}
           <Link to="/games/drawing" className="public-editorial-link public-creative-studio-cta">
             <Palette size={16} aria-hidden="true" />
-            <span>Vào phòng vẽ tranh</span>
+            <span>Vào Xưởng Vẽ</span>
             <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
         </div>

@@ -1,0 +1,54 @@
+{
+  "measurements": [
+    {
+      "boardWidth": 304,
+      "boardScrollWidth": 296,
+      "boardClientWidth": 296,
+      "tileWidth": 49.6,
+      "tileHeight": 48.8,
+      "viewport": 430,
+      "columns": 5
+    },
+    {
+      "boardWidth": 304,
+      "boardScrollWidth": 296,
+      "boardClientWidth": 296,
+      "tileWidth": 49.6,
+      "tileHeight": 48.8,
+      "viewport": 390,
+      "columns": 5
+    }
+  ],
+  "checks": [
+    {
+      "name": "5x5 usable at 430px",
+      "status": "PASS",
+      "measurement": {
+        "boardWidth": 304,
+        "boardScrollWidth": 296,
+        "boardClientWidth": 296,
+        "tileWidth": 49.6,
+        "tileHeight": 48.8,
+        "viewport": 430,
+        "columns": 5
+      }
+    },
+    {
+      "name": "5x5 usable at 390px",
+      "status": "PASS",
+      "measurement": {
+        "boardWidth": 304,
+        "boardScrollWidth": 296,
+        "boardClientWidth": 296,
+        "tileWidth": 49.6,
+        "tileHeight": 48.8,
+        "viewport": 390,
+        "columns": 5
+      }
+    },
+    {
+      "name": "desktop 2V2 lobby shows two teams",
+      "status": "PASS"
+    }
+  ]
+}

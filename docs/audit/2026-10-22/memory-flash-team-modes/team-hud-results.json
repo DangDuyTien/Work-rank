@@ -1,0 +1,26 @@
+{
+  "measurements": [
+    {
+      "viewport": 430,
+      "hudHeight": 60,
+      "columns": 2,
+      "sideTops": [
+        225,
+        225
+      ],
+      "boardTop": 419,
+      "scrollY": 0
+    },
+    {
+      "viewport": 390,
+      "hudHeight": 60,
+      "columns": 2,
+      "sideTops": [
+        225,
+        225
+      ],
+      "boardTop": 419,
+      "scrollY": 0
+    }
+  ]
+}

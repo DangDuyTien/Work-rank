@@ -56,23 +56,101 @@ test('UX rules v2: readable trick rules, settled entrance timing and authoritati
   const first = challenge('direction_rush', 'fair', 0, 'mixed', { rulesVersion: 1 });
   assert.equal(first.revealMs, 0); assert.equal(first.expected, first.direction);
 });
-test('UX memory: separate size/targets/time ramp, pattern diversity and timeout evidence', async () => {
+test('Memory v3: reachable multi-dimensional ramp, harder patterns late and timeout evidence', async () => {
   const { challenge, memoryLevel, replay, memorySelectAt } = await engine;
-  assert.deepEqual([memoryLevel(5).targets, memoryLevel(5).revealMs], [memoryLevel(6).targets, memoryLevel(6).revealMs]);
-  assert.equal(memoryLevel(5).size, 3); assert.equal(memoryLevel(6).size, 4);
-  for (let level = 1; level < 14; level++) {
-    const before = memoryLevel((level - 1) * 3), after = memoryLevel(level * 3);
-    assert.ok(['size', 'targets', 'revealMs', 'selectMs'].filter((key) => before[key] !== after[key]).length <= 1, `Level ${level + 1} changes multiple variables`);
+  const memory = await import('../../shared/arcade/memory.mjs');
+
+  // 1. Mọi trục áp lực đều tăng theo nấc, không có bậc nào "dễ lại".
+  const curve = memory.memoryCurve();
+  for (let index = 1; index < curve.length; index++) {
+    const before = curve[index - 1], after = curve[index];
+    assert.ok(after.size >= before.size, `grid regressed at level ${after.level}`);
+    assert.ok(after.targets >= before.targets, `targets regressed at level ${after.level}`);
+    assert.ok(after.revealMs < before.revealMs, `reveal regressed at level ${after.level}`);
+    assert.ok(after.selectMs < before.selectMs, `answer window regressed at level ${after.level}`);
+    assert.ok(after.prepareMs < before.prepareMs, `prepare regressed at level ${after.level}`);
+    assert.ok(after.restMs < before.restMs, `transition regressed at level ${after.level}`);
   }
-  assert.equal(new Set(Array.from({ length: 10 }, (_, i) => challenge('memory_flash', 'variety', i).kind)).size, 5);
+  assert.deepEqual([curve[0].size, curve[0].targets, curve[0].revealMs, curve[0].selectMs], [3, 2, 2000, 5000]);
+  assert.ok(curve.at(-1).revealMs <= 800);
+  assert.ok(curve.at(-1).selectMs <= 2500);
+
+  // 2. Trong 60 giây, người chơi trung bình phải đi tới vùng RUSH.
+  const run = memory.simulateMemoryRun();
+  assert.ok(run.length >= 14, `only ${run.length} rounds fit in 60s`);
+  assert.ok(run.at(-1).level >= 9, `only reached level ${run.at(-1).level}`);
+  assert.ok(run.some((round) => round.stage === 'RUSH'));
+
+  // 3. Level thấp còn pattern dễ; level cao gần như không còn.
+  const easyKinds = new Set(['line', 'corners', 'block']);
+  const easyRatio = (index) => {
+    let easy = 0;
+    for (let seed = 0; seed < 120; seed++) if (easyKinds.has(challenge('memory_flash', `seed-${seed}`, index).kind)) easy++;
+    return easy / 120;
+  };
+  assert.ok(easyRatio(0) > easyRatio(22) + 0.15, `easy pattern ratio did not drop: ${easyRatio(0)} vs ${easyRatio(22)}`);
+
+  // 4. Pattern thật sự khó hơn khi lên nấc (không chỉ đổi grid).
+  const meanDifficulty = (index) => {
+    let total = 0;
+    for (let seed = 0; seed < 120; seed++) total += challenge('memory_flash', `seed-${seed}`, index).patternDifficulty;
+    return total / 120;
+  };
+  assert.ok(meanDifficulty(24) > meanDifficulty(4) + 12, `pattern difficulty did not ramp: ${meanDifficulty(4)} → ${meanDifficulty(24)}`);
+
+  // 5. Tất định, đúng số ô, không trùng, không tràn bảng.
+  for (let index = 0; index < 60; index++) {
+    const a = challenge('memory_flash', 'v3', index), b = challenge('memory_flash', 'v3', index);
+    assert.deepEqual(a, b);
+    assert.equal(a.cells.length, a.targets);
+    assert.equal(new Set(a.cells).size, a.targets);
+    assert.ok(a.cells.every((cell) => Number.isInteger(cell) && cell >= 0 && cell < a.size * a.size));
+    assert.ok(a.patternDifficulty >= 0 && a.patternDifficulty <= 100);
+  }
+
+  // 6. Hết giờ chọn là fail có bằng chứng, không phải im lặng.
   const c = challenge('memory_flash', 'variety', 0);
   const timeout = { index: 0, at: memorySelectAt(0, 0, c) + c.selectMs, cells: [c.cells[0]], timeout: true };
   assert.equal(replay('memory_flash', 'variety', [timeout]).timeoutCount, 1);
   assert.equal(replay('memory_flash', 'variety', [timeout]).correct, 0);
   assert.throws(() => replay('memory_flash', 'variety', [{ ...timeout, at: memorySelectAt(0, 0, c) + 200 }]));
-  assert.equal(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: false }).restMs, 800);
-  assert.equal(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: true }).restMs, 320);
+  assert.throws(() => replay('memory_flash', 'variety', [{ index: 0, at: memorySelectAt(0, 0, c) + c.selectMs + 400, cells: c.cells }]));
+
+  // 7. Sai thì được thở thêm một nhịp, nhưng vẫn ngắn hơn luật cũ.
+  assert.ok(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: false }).restMs > challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: true }).restMs);
+  assert.ok(challenge('memory_flash', 'variety', 1, 'mixed', { previousCorrect: false }).restMs <= 800);
+
+  // 8. Phòng cũ (rulesVersion 2) giữ nguyên luật để replay không lệch.
+  assert.equal(memoryLevel(0, 2).revealMs, 2000);
+  assert.equal(memoryLevel(0, 2).selectMs, 12000);
+  assert.equal(memoryLevel(0, 2).size, 3);
   assert.equal(challenge('memory_flash', 'variety', 0, 'mixed', { rulesVersion: 1 }).revealMs, 1800);
+});
+test('Memory rapid rounds: 120 challenges stay deterministic without duplicate or stale state', async () => {
+  const { challenge, replay, memorySelectAt } = await engine;
+  const durationMs = 600000;
+  let at = 0;
+  const events = [];
+  for (let index = 0; index < 120; index++) {
+    const c = challenge('memory_flash', 'rapid', index, 'mixed', { previousAt: at, durationMs });
+    const selectAt = memorySelectAt(at, index, c);
+    at = selectAt + 140;
+    events.push({ index, at, cells: c.cells });
+  }
+  const metrics = replay('memory_flash', 'rapid', events, { durationMs });
+  assert.equal(metrics.attempts, 120);
+  assert.equal(metrics.correct, 120);
+  assert.equal(metrics.timeoutCount, 0);
+  assert.equal(metrics.bestCombo, 120);
+  assert.ok(new Set(events.map((event) => event.cells.join(','))).size >= 110, 'gần như không có challenge trùng');
+  for (let index = 1; index < events.length; index++) assert.notDeepEqual(events[index].cells, events[index - 1].cells, `round ${index} repeats the previous pattern`);
+  // Mỗi vòng chỉ có một challenge tại index của nó; gọi lại vẫn ra đúng cái đó.
+  for (const index of [0, 17, 40, 119]) {
+    assert.deepEqual(challenge('memory_flash', 'rapid', index, 'mixed', { previousAt: events[index - 1]?.at || 0, durationMs }), challenge('memory_flash', 'rapid', index, 'mixed', { previousAt: events[index - 1]?.at || 0, durationMs }));
+  }
+  // Không có "ghost round": index trùng hoặc lùi thời gian đều bị từ chối.
+  assert.throws(() => replay('memory_flash', 'rapid', [events[0], { ...events[1], index: 0 }], { durationMs }));
+  assert.throws(() => replay('memory_flash', 'rapid', [events[0], { ...events[1], at: events[0].at - 10 }], { durationMs }));
 });
 test('Direction: four arrows, WASD, swipe, 55 rapid challenges, wrong, timeout, impossible reaction', async () => {
   const { challenge, replay, directionForKey, directionForSwipe } = await engine;

@@ -1,0 +1,666 @@
+{
+  "startedAt": "2026-10-22T14:40:57.386Z",
+  "checks": [
+    {
+      "name": "SOLO 60s reaches HARD/RUSH with shrinking reveal",
+      "status": "PASS",
+      "evidence": {
+        "rounds": 28,
+        "first": {
+          "index": 0,
+          "level": 1,
+          "size": 3,
+          "targets": 2,
+          "revealSeconds": 2,
+          "heading": "VÒNG 1 · NẤC 1 · 3 × 3",
+          "small": "2 ô sao · 2.0 giây để nhớ"
+        },
+        "last": {
+          "index": 27,
+          "level": 14,
+          "size": 5,
+          "targets": 11,
+          "revealSeconds": 0.7,
+          "heading": "VÒNG 28 · NẤC 14 · 5 × 5",
+          "small": "11 ô sao · 0.7 giây để nhớ"
+        },
+        "accuracy": 100
+      }
+    },
+    {
+      "name": "1V1 lobby has 2 seats",
+      "status": "PASS",
+      "evidence": {
+        "capacity": 2
+      }
+    },
+    {
+      "name": "1V1 all players received identical patterns",
+      "status": "PASS",
+      "evidence": {
+        "sharedRounds": 24,
+        "sample": [
+          [
+            "6",
+            "7"
+          ],
+          [
+            "6",
+            "7"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "1V1 result has two distinct ranks",
+      "status": "PASS",
+      "evidence": {
+        "ranks": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "name": "1V1 rematch opens a new room with a new seed",
+      "status": "PASS",
+      "evidence": {
+        "nextId": "2c3038cd-8c42-4fe0-82e0-6db8034f60a6"
+      }
+    },
+    {
+      "name": "2V2 lobby shows two teams with 2 players each",
+      "status": "PASS",
+      "evidence": {
+        "teams": [
+          {
+            "id": "A",
+            "players": [
+              "MF Audit 5",
+              "MF Audit 3"
+            ]
+          },
+          {
+            "id": "B",
+            "players": [
+              "MF Audit 4",
+              "MF Audit 6"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "2V2 compact team HUD is visible during play",
+      "status": "PASS",
+      "evidence": {
+        "hud": "TEAM A3000 ô đúng · 0%◇MF Audit 50◇MF Audit 30TEAM B3000 ô đúng · 0%◇MF Audit 40◇MF Audit 60"
+      }
+    },
+    {
+      "name": "2V2 all players received identical patterns",
+      "status": "PASS",
+      "evidence": {
+        "sharedRounds": 27,
+        "sample": [
+          [
+            "1",
+            "4"
+          ],
+          [
+            "1",
+            "4"
+          ],
+          [
+            "1",
+            "4"
+          ],
+          [
+            "1",
+            "4"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "2V2 team result screen and server team score",
+      "status": "PASS",
+      "evidence": {
+        "teamA": 14205,
+        "teamB": 14677,
+        "winner": "B"
+      }
+    },
+    {
+      "name": "2V2 rematch keeps teams and issues a new seed",
+      "status": "PASS",
+      "evidence": {
+        "nextId": "69c26dbb-8159-471b-94a3-029617b4f5fa",
+        "seedChanged": true
+      }
+    },
+    {
+      "name": "3V3 lobby shows two teams with 3 players each",
+      "status": "PASS",
+      "evidence": {
+        "teams": [
+          {
+            "id": "A",
+            "players": [
+              "MF Audit 3",
+              "MF Audit 1",
+              "MF Audit 5"
+            ]
+          },
+          {
+            "id": "B",
+            "players": [
+              "MF Audit 2",
+              "MF Audit 6",
+              "MF Audit 4"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "3V3 compact team HUD is visible during play",
+      "status": "PASS",
+      "evidence": {
+        "hud": "TEAM A3000 ô đúng · 0%◇MF Audit 30◇MF Audit 10◇MF Audit 50TEAM B3000 ô đúng · 0%◇MF Audit 20◇MF Audit 60◇MF Audit 40"
+      }
+    },
+    {
+      "name": "3V3 all players received identical patterns",
+      "status": "PASS",
+      "evidence": {
+        "sharedRounds": 22,
+        "sample": [
+          [
+            "4",
+            "8"
+          ],
+          [
+            "4",
+            "8"
+          ],
+          [
+            "4",
+            "8"
+          ],
+          [
+            "4",
+            "8"
+          ],
+          [
+            "4",
+            "8"
+          ],
+          [
+            "4",
+            "8"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "3V3 team result screen and server team score",
+      "status": "PASS",
+      "evidence": {
+        "teamA": 10449,
+        "teamB": 10450,
+        "winner": "B"
+      }
+    },
+    {
+      "name": "3V3 rematch keeps teams and issues a new seed",
+      "status": "PASS",
+      "evidence": {
+        "nextId": "dc6494e1-b4d4-4a90-a894-f73abd97cbc8",
+        "seedChanged": true
+      }
+    }
+  ],
+  "solo": {
+    "roomId": "384cc34e-50fd-4857-8abd-8f83dd4c8449",
+    "rounds": [
+      {
+        "index": 0,
+        "level": 1,
+        "size": 3,
+        "targets": 2,
+        "revealSeconds": 2,
+        "heading": "VÒNG 1 · NẤC 1 · 3 × 3",
+        "small": "2 ô sao · 2.0 giây để nhớ"
+      },
+      {
+        "index": 1,
+        "level": 1,
+        "size": 3,
+        "targets": 2,
+        "revealSeconds": 2,
+        "heading": "VÒNG 2 · NẤC 1 · 3 × 3",
+        "small": "2 ô sao · 2.0 giây để nhớ"
+      },
+      {
+        "index": 2,
+        "level": 2,
+        "size": 3,
+        "targets": 3,
+        "revealSeconds": 1.9,
+        "heading": "VÒNG 3 · NẤC 2 · 3 × 3",
+        "small": "3 ô sao · 1.9 giây để nhớ"
+      },
+      {
+        "index": 3,
+        "level": 2,
+        "size": 3,
+        "targets": 3,
+        "revealSeconds": 1.9,
+        "heading": "VÒNG 4 · NẤC 2 · 3 × 3",
+        "small": "3 ô sao · 1.9 giây để nhớ"
+      },
+      {
+        "index": 4,
+        "level": 3,
+        "size": 3,
+        "targets": 3,
+        "revealSeconds": 1.7,
+        "heading": "VÒNG 5 · NẤC 3 · 3 × 3",
+        "small": "3 ô sao · 1.7 giây để nhớ"
+      },
+      {
+        "index": 5,
+        "level": 3,
+        "size": 3,
+        "targets": 3,
+        "revealSeconds": 1.7,
+        "heading": "VÒNG 6 · NẤC 3 · 3 × 3",
+        "small": "3 ô sao · 1.7 giây để nhớ"
+      },
+      {
+        "index": 6,
+        "level": 4,
+        "size": 4,
+        "targets": 4,
+        "revealSeconds": 1.5,
+        "heading": "✦ LEVEL UP · 4 × 4",
+        "small": "4 ô sao · 1.5 giây để nhớ"
+      },
+      {
+        "index": 7,
+        "level": 4,
+        "size": 4,
+        "targets": 4,
+        "revealSeconds": 1.5,
+        "heading": "VÒNG 8 · NẤC 4 · 4 × 4",
+        "small": "4 ô sao · 1.5 giây để nhớ"
+      },
+      {
+        "index": 8,
+        "level": 5,
+        "size": 4,
+        "targets": 5,
+        "revealSeconds": 1.4,
+        "heading": "VÒNG 9 · NẤC 5 · 4 × 4",
+        "small": "5 ô sao · 1.4 giây để nhớ"
+      },
+      {
+        "index": 9,
+        "level": 5,
+        "size": 4,
+        "targets": 5,
+        "revealSeconds": 1.4,
+        "heading": "VÒNG 10 · NẤC 5 · 4 × 4",
+        "small": "5 ô sao · 1.4 giây để nhớ"
+      },
+      {
+        "index": 10,
+        "level": 6,
+        "size": 4,
+        "targets": 6,
+        "revealSeconds": 1.3,
+        "heading": "VÒNG 11 · NẤC 6 · 4 × 4",
+        "small": "6 ô sao · 1.3 giây để nhớ"
+      },
+      {
+        "index": 11,
+        "level": 6,
+        "size": 4,
+        "targets": 6,
+        "revealSeconds": 1.3,
+        "heading": "VÒNG 12 · NẤC 6 · 4 × 4",
+        "small": "6 ô sao · 1.3 giây để nhớ"
+      },
+      {
+        "index": 12,
+        "level": 7,
+        "size": 5,
+        "targets": 6,
+        "revealSeconds": 1.1,
+        "heading": "✦ LEVEL UP · 5 × 5",
+        "small": "6 ô sao · 1.1 giây để nhớ"
+      },
+      {
+        "index": 13,
+        "level": 7,
+        "size": 5,
+        "targets": 6,
+        "revealSeconds": 1.1,
+        "heading": "VÒNG 14 · NẤC 7 · 5 × 5",
+        "small": "6 ô sao · 1.1 giây để nhớ"
+      },
+      {
+        "index": 14,
+        "level": 8,
+        "size": 5,
+        "targets": 7,
+        "revealSeconds": 1,
+        "heading": "VÒNG 15 · NẤC 8 · 5 × 5",
+        "small": "7 ô sao · 1.0 giây để nhớ"
+      },
+      {
+        "index": 15,
+        "level": 8,
+        "size": 5,
+        "targets": 7,
+        "revealSeconds": 1,
+        "heading": "VÒNG 16 · NẤC 8 · 5 × 5",
+        "small": "7 ô sao · 1.0 giây để nhớ"
+      },
+      {
+        "index": 16,
+        "level": 9,
+        "size": 5,
+        "targets": 8,
+        "revealSeconds": 0.9,
+        "heading": "VÒNG 17 · NẤC 9 · 5 × 5",
+        "small": "8 ô sao · 0.9 giây để nhớ"
+      },
+      {
+        "index": 17,
+        "level": 9,
+        "size": 5,
+        "targets": 8,
+        "revealSeconds": 0.9,
+        "heading": "VÒNG 18 · NẤC 9 · 5 × 5",
+        "small": "8 ô sao · 0.9 giây để nhớ"
+      },
+      {
+        "index": 18,
+        "level": 10,
+        "size": 5,
+        "targets": 9,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 19 · NẤC 10 · 5 × 5",
+        "small": "9 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 19,
+        "level": 10,
+        "size": 5,
+        "targets": 9,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 20 · NẤC 10 · 5 × 5",
+        "small": "9 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 20,
+        "level": 11,
+        "size": 5,
+        "targets": 9,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 21 · NẤC 11 · 5 × 5",
+        "small": "9 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 21,
+        "level": 11,
+        "size": 5,
+        "targets": 9,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 22 · NẤC 11 · 5 × 5",
+        "small": "9 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 22,
+        "level": 12,
+        "size": 5,
+        "targets": 10,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 23 · NẤC 12 · 5 × 5",
+        "small": "10 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 23,
+        "level": 12,
+        "size": 5,
+        "targets": 10,
+        "revealSeconds": 0.8,
+        "heading": "VÒNG 24 · NẤC 12 · 5 × 5",
+        "small": "10 ô sao · 0.8 giây để nhớ"
+      },
+      {
+        "index": 24,
+        "level": 13,
+        "size": 5,
+        "targets": 10,
+        "revealSeconds": 0.7,
+        "heading": "VÒNG 25 · NẤC 13 · 5 × 5",
+        "small": "10 ô sao · 0.7 giây để nhớ"
+      },
+      {
+        "index": 25,
+        "level": 13,
+        "size": 5,
+        "targets": 10,
+        "revealSeconds": 0.7,
+        "heading": "VÒNG 26 · NẤC 13 · 5 × 5",
+        "small": "10 ô sao · 0.7 giây để nhớ"
+      },
+      {
+        "index": 26,
+        "level": 14,
+        "size": 5,
+        "targets": 11,
+        "revealSeconds": 0.7,
+        "heading": "VÒNG 27 · NẤC 14 · 5 × 5",
+        "small": "11 ô sao · 0.7 giây để nhớ"
+      },
+      {
+        "index": 27,
+        "level": 14,
+        "size": 5,
+        "targets": 11,
+        "revealSeconds": 0.7,
+        "heading": "VÒNG 28 · NẤC 14 · 5 × 5",
+        "small": "11 ô sao · 0.7 giây để nhớ"
+      }
+    ],
+    "result": {
+      "mode": "SOLO",
+      "rank": 1,
+      "team": null,
+      "combo": 27,
+      "score": 14378,
+      "userId": 10990,
+      "correct": 27,
+      "accuracy": 100,
+      "attempts": 27,
+      "eligible": true,
+      "gameType": "memory_flash",
+      "teamMode": false,
+      "attemptId": "384cc34e-50fd-4857-8abd-8f83dd4c8449",
+      "awardedXp": 30,
+      "bestCombo": 27,
+      "createdAt": "2026-10-22T14:40:58.000Z",
+      "forfeited": false,
+      "startedAt": "2026-10-22T14:41:01.000Z",
+      "finishedAt": "2026-10-22T14:42:02.010Z",
+      "wrongCount": 0,
+      "improvement": -1,
+      "lastCorrect": true,
+      "teamPending": false,
+      "validatedAt": "2026-10-22T14:42:02.010Z",
+      "perfectCount": 0,
+      "timeoutCount": 0,
+      "avgResponseMs": 322,
+      "isPersonalBest": false,
+      "lastResponseMs": 380,
+      "playerAttemptId": "c4167359-1da6-4473-af47-375639581008",
+      "personalBestScore": 14379,
+      "previousBestScore": 14379
+    }
+  },
+  "matches": [
+    {
+      "mode": "1V1",
+      "roomId": "eb083647-f735-495c-b967-494c52019ed7",
+      "nextId": "2c3038cd-8c42-4fe0-82e0-6db8034f60a6",
+      "players": [
+        {
+          "name": "MF Audit 2",
+          "team": null,
+          "score": 10845,
+          "correct": 23,
+          "accuracy": 95.83
+        },
+        {
+          "name": "MF Audit 1",
+          "team": null,
+          "score": 10846,
+          "correct": 23,
+          "accuracy": 95.83
+        }
+      ],
+      "teams": []
+    },
+    {
+      "mode": "2V2",
+      "roomId": "10c4b14c-f9ce-4d53-a254-c9f89d9b2890",
+      "nextId": "69c26dbb-8159-471b-94a3-029617b4f5fa",
+      "players": [
+        {
+          "name": "MF Audit 4",
+          "team": "B",
+          "score": 14374,
+          "correct": 27,
+          "accuracy": 100,
+          "teamScore": 14677,
+          "teamWon": true
+        },
+        {
+          "name": "MF Audit 6",
+          "team": "B",
+          "score": 14383,
+          "correct": 27,
+          "accuracy": 100,
+          "teamScore": 14677,
+          "teamWon": true
+        },
+        {
+          "name": "MF Audit 5",
+          "team": "A",
+          "score": 14377,
+          "correct": 27,
+          "accuracy": 100,
+          "teamScore": 14205,
+          "teamWon": false
+        },
+        {
+          "name": "MF Audit 3",
+          "team": "A",
+          "score": 13621,
+          "correct": 26,
+          "accuracy": 100,
+          "teamScore": 14205,
+          "teamWon": false
+        }
+      ],
+      "teams": [
+        {
+          "id": "A",
+          "score": 14205
+        },
+        {
+          "id": "B",
+          "score": 14677
+        }
+      ]
+    },
+    {
+      "mode": "3V3",
+      "roomId": "cd92e76e-a355-46eb-8558-e7b7de5170b5",
+      "nextId": "dc6494e1-b4d4-4a90-a894-f73abd97cbc8",
+      "players": [
+        {
+          "name": "MF Audit 2",
+          "team": "B",
+          "score": 10166,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10450,
+          "teamWon": true
+        },
+        {
+          "name": "MF Audit 3",
+          "team": "A",
+          "score": 10160,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10449,
+          "teamWon": false
+        },
+        {
+          "name": "MF Audit 6",
+          "team": "B",
+          "score": 10166,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10450,
+          "teamWon": true
+        },
+        {
+          "name": "MF Audit 1",
+          "team": "A",
+          "score": 10161,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10449,
+          "teamWon": false
+        },
+        {
+          "name": "MF Audit 4",
+          "team": "B",
+          "score": 10160,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10450,
+          "teamWon": true
+        },
+        {
+          "name": "MF Audit 5",
+          "team": "A",
+          "score": 10166,
+          "correct": 22,
+          "accuracy": 95.65,
+          "teamScore": 10449,
+          "teamWon": false
+        }
+      ],
+      "teams": [
+        {
+          "id": "A",
+          "score": 10449
+        },
+        {
+          "id": "B",
+          "score": 10450
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "finishedAt": "2026-10-22T14:45:43.256Z"
+}

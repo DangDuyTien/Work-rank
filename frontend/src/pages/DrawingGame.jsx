@@ -9,7 +9,7 @@ import {
   RotateCw,
   Trash2,
   Download,
-  Share2,
+  Save,
   Sparkles,
   ArrowLeft,
   CheckCircle2,
@@ -19,7 +19,7 @@ import {
   ZoomOut,
   Maximize2,
   Keyboard,
-  HelpCircle,
+  Brush,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { drawingApi } from '../services/api';
@@ -31,23 +31,28 @@ import '../components/arcade/drawing-arcade.css';
 import { PageShell, Button, AnimatedModal, Notice } from '../components/ui';
 
 const PRESET_COLORS = [
-  '#0f172a', // Slate Black
-  '#334155', // Charcoal
-  '#64748b', // Cool Grey
-  '#e2e8f0', // Light Grey
-  '#ffffff', // Pure White
-  '#ef4444', // Red
-  '#f97316', // Orange
-  '#f59e0b', // Amber
-  '#10b981', // Emerald
-  '#06b6d4', // Cyan
-  '#3b82f6', // Blue
-  '#6366f1', // Indigo
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#84cc16', // Lime
-  '#e11d48', // Crimson
+  { hex: '#0f172a', name: 'Đen mực' },
+  { hex: '#334155', name: 'Than chì' },
+  { hex: '#64748b', name: 'Xám khói' },
+  { hex: '#ffffff', name: 'Trắng giấy' },
+  { hex: '#ef4444', name: 'Đỏ son' },
+  { hex: '#f97316', name: 'Cam đất' },
+  { hex: '#f59e0b', name: 'Vàng nghệ' },
+  { hex: '#84cc16', name: 'Xanh lá' },
+  { hex: '#10b981', name: 'Xanh ngọc' },
+  { hex: '#06b6d4', name: 'Xanh cyan' },
+  { hex: '#3b82f6', name: 'Xanh biển' },
+  { hex: '#6366f1', name: 'Chàm' },
+  { hex: '#8b5cf6', name: 'Tím' },
+  { hex: '#ec4899', name: 'Hồng' },
 ];
+
+const TOOL_META = {
+  brush: { label: 'Cọ vẽ', short: 'CỌ VẼ', key: 'P', icon: Paintbrush },
+  eraser: { label: 'Tẩy', short: 'TẨY', key: 'E', icon: Eraser },
+  fill: { label: 'Đổ màu', short: 'ĐỔ MÀU', key: 'F', icon: PaintBucket },
+  select: { label: 'Di chuyển', short: 'DI CHUYỂN', key: 'V', icon: Hand },
+};
 
 const BRUSH_SIZES = [
   { size: 2, label: 'Siêu mảnh' },
@@ -56,6 +61,11 @@ const BRUSH_SIZES = [
   { size: 22, label: 'Lớn' },
   { size: 38, label: 'Rất lớn' },
 ];
+
+// Quy đổi cỡ cọ thật (px trên canvas 1200×700) sang đường kính xem trước.
+function previewDiameter(size) {
+  return Math.round(6 + (Math.min(size, 38) / 38) * 26);
+}
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 700;
@@ -118,6 +128,15 @@ export default function DrawingGame() {
   const [publishingAvailable,setPublishingAvailable]=useState(null);
   useEffect(()=>{let active=true;drawingApi.getSettings().then(data=>{if(active)setPublishingAvailable(data.publishing?.available ?? null);}).catch(()=>{});return()=>{active=false;};},[]);
   const [draftStatus,setDraftStatus]=useState('loading'),[publishedArtwork,setPublishedArtwork]=useState(null),[uploadPercent,setUploadPercent]=useState(0),[publishStage,setPublishStage]=useState('');
+  // Nhân vật trong xưởng: idle · drawing · undo · publish · success
+  const [studioMood,setStudioMood]=useState('idle');
+  const [saveToast,setSaveToast]=useState('');
+  const moodTimer=useRef(null),toastTimer=useRef(null);
+  const setMood=useCallback((next,hold=0)=>{
+    setStudioMood(next);clearTimeout(moodTimer.current);
+    if(hold)moodTimer.current=setTimeout(()=>setStudioMood('idle'),hold);
+  },[]);
+  useEffect(()=>()=>{clearTimeout(moodTimer.current);clearTimeout(toastTimer.current);},[]);
   const draftTimer=useRef(null),draftReady=useRef(false),draftRevision=useRef(0),publicationId=useRef(null),draftMeta=useRef(null);
   // Chặn double-click Publish: state isPublishing chỉ đổi sau khi React commit,
   // nên một cú double-click rất nhanh vẫn có thể lọt hai request.
@@ -291,8 +310,9 @@ export default function DrawingGame() {
     ctx.putImageData(previous, 0, 0);
     setCanUndo(undoStackRef.current.length > 1);
     setCanRedo(redoStackRef.current.length > 0);
+    setMood('undo', 700);
     queueDraft(true);
-  }, [queueDraft]);
+  }, [queueDraft, setMood]);
 
   // Redo action (synchronous & instant)
   const handleRedo = useCallback(() => {
@@ -306,8 +326,9 @@ export default function DrawingGame() {
     ctx.putImageData(nextState, 0, 0);
     setCanUndo(undoStackRef.current.length > 1);
     setCanRedo(redoStackRef.current.length > 0);
+    setMood('undo', 600);
     queueDraft(true);
-  }, [queueDraft]);
+  }, [queueDraft, setMood]);
 
   // Zoom management helper (centered at cursor position or viewport center)
   const updateZoom = useCallback((targetZoom, centerScreen) => {
@@ -638,6 +659,7 @@ export default function DrawingGame() {
     lastPointRef.current = coords;
     lastMidPointRef.current = coords;
     pointsCountRef.current = 1;
+    setMood('drawing');
 
     // Render initial contact dot immediately
     ctx.save();
@@ -732,6 +754,7 @@ export default function DrawingGame() {
     lastPointRef.current = null;
     lastMidPointRef.current = null;
     pointsCountRef.current = 0;
+    setMood('idle');
 
     if (e?.currentTarget?.hasPointerCapture && e.currentTarget.hasPointerCapture(e.pointerId)) {
       try {
@@ -774,6 +797,30 @@ export default function DrawingGame() {
     saveSnapshot();
     setShowClearConfirmModal(false);
   };
+
+  /**
+   * Lưu bản nháp ngay lập tức (không chờ debounce 400ms) và báo đúng nơi lưu:
+   * "trên thiết bị", không phải "đã lưu" chung chung.
+   */
+  const handleSaveDraft = useCallback(async () => {
+    clearTimeout(toastTimer.current);
+    if (!draftReady.current) {
+      setSaveToast('Chưa mở xong bản nháp · thử lại sau một nhịp');
+      toastTimer.current = setTimeout(() => setSaveToast(''), 2600);
+      return;
+    }
+    setDraftStatus('saving');
+    try {
+      await persistDraftNow();
+      setDraftStatus('saved');
+      setSaveToast('Đã lưu bản nháp trên thiết bị');
+      setMood('undo', 900);
+    } catch {
+      setDraftStatus('unavailable');
+      setSaveToast('Không lưu được bản nháp · hãy tải PNG để giữ tranh');
+    }
+    toastTimer.current = setTimeout(() => setSaveToast(''), 2800);
+  }, [persistDraftNow, setMood]);
 
   // Helper to get composited canvas with pure white background for download/export/publish
   const getCompositedCanvas = useCallback(() => {
@@ -859,7 +906,7 @@ export default function DrawingGame() {
     publishingRef.current = true;
 
     try {
-      setIsPublishing(true);setUploadPercent(0);setPublishStage('Đang giữ bản nháp trên thiết bị…');
+      setIsPublishing(true);setUploadPercent(0);setPublishStage('Đang giữ bản nháp trên thiết bị…');setMood('publish');
       setErrorMessage('');
       await persistDraftNow().catch(()=>setDraftStatus('unavailable'));
 
@@ -892,6 +939,7 @@ export default function DrawingGame() {
       setPreviewImageUrl(remoteUrl);setArtworkTitle(confirmed.title);setPublishedArtwork(confirmed);setUploadPercent(100);setPublishStage('Đã đăng lên Thư viện');
       await removeDrawingDraft(user.id).catch(()=>{});setDraftStatus('published');
       setPublishSuccess(true);
+      setMood('success');
     } catch (err) {
       console.error('Lỗi chia sẻ tác phẩm:', err);
       const msg =
@@ -899,6 +947,7 @@ export default function DrawingGame() {
         err.message ||
         'Không thể chia sẻ tác phẩm. Vui lòng thử lại.';
       setErrorMessage(msg);
+      setMood('idle');
     } finally {
       publishingRef.current = false;
       setIsPublishing(false);
@@ -906,213 +955,270 @@ export default function DrawingGame() {
   };
 
   const zoomPercent = Math.round(zoom * 100);
+  const activeTool = TOOL_META[tool] || TOOL_META.brush;
+  const ActiveToolIcon = activeTool.icon;
+  const moodLine = {
+    idle: 'Sẵn sàng cho nét đầu tiên?',
+    drawing: 'Nét này đẹp đó!',
+    undo: 'Quay lại một nhịp nhé.',
+    publish: 'Đang treo tranh lên tường…',
+    success: 'Tuyệt vời! Tranh đã lên thư viện.',
+  }[studioMood] || 'Sẵn sàng cho nét đầu tiên?';
 
   return (
-    <PageShell className="drawing-game-shell">
-      {/* Top Header */}
-      <div className="drawing-header">
-        <div className="drawing-header__left">
-          <Link to="/games" className="drawing-back-btn">
-            <ArrowLeft size={16} />
+    <PageShell className="drawing-game-shell studio-page">
+      {/* ── 1. Header xưởng vẽ ── */}
+      <header className="studio-header">
+        <div className="studio-header__left">
+          <Link to="/games" className="studio-back">
+            <ArrowLeft size={15} />
             <span>Trò chơi</span>
           </Link>
-          <div className="drawing-companion" data-published={!!publishedArtwork}><PlayerAvatar2D player={{userId:user.id,name:user.name,avatarUrl:user.avatarUrl,position:1}} state={publishedArtwork?'win':'ready'} feedbackId={tool}/></div>
-          <div className="drawing-header__title-group">
-            <div className="drawing-badge">
-              <Sparkles size={13} />
-              <span>WORK RANK ARCADE · GÓC SÁNG TẠO</span>
-            </div>
-            <h1 className="drawing-title">Game Vẽ Tranh WorkRank</h1>
+          <div className="studio-title-group">
+            <p className="studio-kicker">
+              <Sparkles size={12} aria-hidden="true" />
+              WORK RANK ARCADE · PHÒNG NGHỆ THUẬT
+            </p>
+            <h1 className="studio-title">Xưởng Vẽ</h1>
+            <p className="studio-subtitle">Vẽ sáng tạo · Chia sẻ tác phẩm</p>
           </div>
         </div>
 
-        <div className="drawing-header__actions">
-          <Link to="/" className="drawing-view-gallery-btn">
-            <ImageIcon size={15} />
-            <span>Xem góc sáng tạo trên Home</span>
+        <div className="studio-header__actions">
+          <Link to="/creative-corner" className="studio-ghost-btn">
+            <ImageIcon size={15} aria-hidden="true" />
+            <span>Thư viện tranh</span>
           </Link>
           <Button
             type="button"
             variant="primary"
             size="md"
             onClick={handleOpenPreview}
-            className="drawing-finish-btn"
+            className="studio-publish-btn"
           >
-            <Sparkles size={16} />
-            <span>Hoàn thành tác phẩm</span>
+            <Sparkles size={16} aria-hidden="true" />
+            <span>Đăng tranh</span>
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="drawing-save-hud" data-state={draftStatus} role="status"><span>{publishedArtwork?`✓ Đã đăng tranh lên Thư viện · Tác phẩm #${publishedArtwork.id}`:draftStatus==='loading'?'Đang mở bản nháp…':draftStatus==='saving'?'Đang lưu bản nháp trên thiết bị…':draftStatus==='restored'?'Đã khôi phục bản nháp trên thiết bị · Chưa đăng':draftStatus==='unavailable'?'Không lưu được bản nháp trên thiết bị · Hãy tải PNG để giữ tranh':'Đã lưu bản nháp trên thiết bị · Chưa đăng lên Thư viện'}</span><Link to="/creative-corner">Thư viện tranh →</Link></div>
-      {publishingAvailable===false&&<Notice type="info">Hiện chưa thể đăng tranh lên hệ thống. Bạn vẫn có thể vẽ, giữ nháp trên thiết bị và tải bản PNG.</Notice>}
-      {/* Main Drawing Stage (WHITEBOARD VIEWPORT WITH ZOOM & PAN) */}
-      <div className="drawing-stage-container">
-        <div
-          ref={viewportRef}
-          className={`drawing-viewport tool-${tool} ${isPanning ? 'is-panning' : ''} ${isSpacePressed ? 'is-space-pressed' : ''}`}
-          onPointerDown={handleViewportPointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        >
-          {/* Zoomable / Pannable Board Layer */}
-          <div
-            className="drawing-canvas-layer"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            }}
-          >
-            <div className="drawing-canvas-card">
-              <canvas
-                ref={canvasRef}
-                className="drawing-canvas"
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                style={{ touchAction: 'none' }}
-              />
-            </div>
+      {/* ── 2. Thanh trạng thái bản nháp ── */}
+      <div className="studio-savebar" data-state={draftStatus} role="status">
+        <span className="studio-savebar__dot" aria-hidden="true" />
+        <span className="studio-savebar__text">
+          {publishedArtwork
+            ? `✓ Đã đăng tranh lên Thư viện · Tác phẩm #${publishedArtwork.id}`
+            : draftStatus === 'loading' ? 'Đang mở bản nháp…'
+              : draftStatus === 'saving' ? 'Đang lưu bản nháp trên thiết bị…'
+                : draftStatus === 'restored' ? 'Đã khôi phục bản nháp trên thiết bị · Chưa đăng'
+                  : draftStatus === 'unavailable' ? 'Không lưu được bản nháp trên thiết bị · Hãy tải PNG để giữ tranh'
+                    : 'Đã lưu bản nháp trên thiết bị · Chưa đăng lên Thư viện'}
+        </span>
+        <button type="button" className="studio-save-now" onClick={handleSaveDraft}>
+          <Save size={13} aria-hidden="true" />
+          Lưu bản nháp
+        </button>
+        <Link to="/creative-corner" className="studio-savebar__link">Mở thư viện →</Link>
+      </div>
+      {saveToast && <p className="studio-toast motion-slide-down" role="status">{saveToast}</p>}
+
+      {publishingAvailable === false && (
+        <Notice type="info">
+          Hiện chưa thể đăng tranh lên hệ thống. Bạn vẫn vẽ, giữ nháp trên thiết bị và tải bản PNG được.
+        </Notice>
+      )}
+      {/* ── 3. Sàn xưởng: nhân vật bên trái, giá vẽ ở giữa ── */}
+      <div className="studio-body">
+        <aside className="studio-companion" data-mood={studioMood} aria-label="Nhân vật trong xưởng vẽ">
+          <div className="studio-companion__stage">
+            <PlayerAvatar2D
+              player={{ userId: user.id, name: user.name, avatarUrl: user.avatarUrl, position: 1 }}
+              state={studioMood === 'success' ? 'win' : studioMood === 'publish' ? 'combo' : studioMood === 'drawing' ? 'action' : 'ready'}
+              feedbackId={studioMood}
+            />
+            <span className="studio-brush-hand" aria-hidden="true"><Brush size={15} /></span>
+          </div>
+          <p className="studio-bubble" role="status">{moodLine}</p>
+          <span className="studio-companion__name">{user?.name || 'Bạn'}</span>
+        </aside>
+
+        <div className="studio-stage">
+          <div className="studio-wall" aria-hidden="true">
+            <span className="studio-wall-frame is-one">✦</span>
+            <span className="studio-wall-frame is-two">Aa</span>
+            <span className="studio-wall-frame is-three">↑</span>
+            <span className="studio-wall-shelf" />
+            <span className="studio-wall-pots"><i /><i /><i /></span>
+            <span className="studio-wall-star">✧</span>
           </div>
 
-          {/* Floating Zoom & View HUD in corner */}
-          <div className="drawing-viewport-hud">
-            <button
-              type="button"
-              className="hud-btn"
-              onClick={handleZoomOut}
-              title="Thu nhỏ (-)"
-              aria-label="Thu nhỏ"
+          <div className="studio-easel">
+            <span className="studio-easel-clip" aria-hidden="true" />
+            <div
+              ref={viewportRef}
+              className={`drawing-viewport studio-canvas tool-${tool} ${isPanning ? 'is-panning' : ''} ${isSpacePressed ? 'is-space-pressed' : ''}`}
+              onPointerDown={handleViewportPointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             >
-              <ZoomOut size={15} />
-            </button>
-            <span
-              className="hud-zoom-badge"
-              onClick={handleResetView}
-              title="Nhấn để đặt lại góc nhìn 100% (0)"
-            >
-              {zoomPercent}%
-            </span>
-            <button
-              type="button"
-              className="hud-btn"
-              onClick={handleZoomIn}
-              title="Phóng to (+)"
-              aria-label="Phóng to"
-            >
-              <ZoomIn size={15} />
-            </button>
-            <div className="hud-divider" />
-            <button
-              type="button"
-              className="hud-btn"
-              onClick={handleResetView}
-              title="Đặt lại khung nhìn (0)"
-              aria-label="Đặt lại khung nhìn"
-            >
-              <Maximize2 size={14} />
-            </button>
+              {/* Zoomable / Pannable Board Layer */}
+              <div
+                className="drawing-canvas-layer"
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                }}
+              >
+                <div className="drawing-canvas-card">
+                  <canvas
+                    ref={canvasRef}
+                    className="drawing-canvas"
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    style={{ touchAction: 'none' }}
+                  />
+                </div>
+              </div>
+
+              {/* Floating Zoom & View HUD in corner */}
+              <div className="drawing-viewport-hud">
+                <button
+                  type="button"
+                  className="hud-btn"
+                  onClick={handleZoomOut}
+                  title="Thu nhỏ (-)"
+                  aria-label="Thu nhỏ"
+                >
+                  <ZoomOut size={15} />
+                </button>
+                <span
+                  className="hud-zoom-badge"
+                  onClick={handleResetView}
+                  title="Nhấn để đặt lại góc nhìn 100% (0)"
+                >
+                  {zoomPercent}%
+                </span>
+                <button
+                  type="button"
+                  className="hud-btn"
+                  onClick={handleZoomIn}
+                  title="Phóng to (+)"
+                  aria-label="Phóng to"
+                >
+                  <ZoomIn size={15} />
+                </button>
+                <div className="hud-divider" />
+                <button
+                  type="button"
+                  className="hud-btn"
+                  onClick={handleResetView}
+                  title="Đặt lại khung nhìn (0)"
+                  aria-label="Đặt lại khung nhìn"
+                >
+                  <Maximize2 size={14} />
+                </button>
+              </div>
+            </div>
+            <span className="studio-easel-leg is-left" aria-hidden="true" />
+            <span className="studio-easel-leg is-right" aria-hidden="true" />
+            <span className="studio-easel-tray" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      {/* Compact Creative Toolbar */}
-      <div className="drawing-toolbar-container">
-        <div className="drawing-toolbar">
-          {/* Tool selectors (Brush, Eraser, Move/Pan, Fill) */}
-          <div className="toolbar-group">
-            <button
-              type="button"
-              className={`tool-btn ${tool === 'brush' ? 'is-active' : ''}`}
-              onClick={() => changeTool('brush')}
-              title="Cọ vẽ (P)"
-              aria-label="Cọ vẽ"
-            >
-              <Paintbrush size={18} />
-              <span className="tool-label">Cọ</span>
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${tool === 'eraser' ? 'is-active' : ''}`}
-              onClick={() => changeTool('eraser')}
-              title="Cục tẩy (E)"
-              aria-label="Cục tẩy"
-            >
-              <Eraser size={18} />
-              <span className="tool-label">Tẩy</span>
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${tool === 'select' ? 'is-active' : ''}`}
-              onClick={() => changeTool('select')}
-              title="Di chuyển canvas (V hoặc Giữ Space)"
-              aria-label="Di chuyển canvas"
-            >
-              <Hand size={18} />
-              <span className="tool-label">Di chuyển</span>
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${tool === 'fill' ? 'is-active' : ''}`}
-              onClick={() => changeTool('fill')}
-              title="Đổ màu (Paint Bucket)"
-              aria-label="Đổ màu"
-            >
-              <PaintBucket size={18} />
-              <span className="tool-label">Đổ màu</span>
-            </button>
+      {/* ── 4. Bàn dụng cụ ── */}
+      <div className="studio-tools">
+        <div className="studio-tools__bar">
+          <div className="studio-active" data-tool={tool}>
+            <span className="studio-active__icon" aria-hidden="true"><ActiveToolIcon size={18} /></span>
+            <span className="studio-active__text">
+              <b>{activeTool.short} · {brushSize}px</b>
+              <small>Phím {activeTool.key} · {activeTool.label}</small>
+            </span>
+            <span
+              className="studio-active__color"
+              style={{ background: tool === 'eraser' ? '#ffffff' : color }}
+              aria-hidden="true"
+            />
           </div>
 
-          <div className="toolbar-divider" />
+          <div className="studio-tool-group" role="group" aria-label="Dụng cụ vẽ">
+            {Object.entries(TOOL_META).map(([key, meta]) => {
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`studio-tool ${tool === key ? 'is-active' : ''}`}
+                  aria-pressed={tool === key}
+                  onClick={() => changeTool(key)}
+                  title={`${meta.label} (${meta.key})`}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{meta.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Brush sizes */}
-          <div className="toolbar-group sizes-group">
-            <span className="toolbar-group-label">Nét:</span>
+          <div className="studio-tool-group studio-sizes" role="group" aria-label="Cỡ cọ">
+            <span className="studio-brush-preview" aria-hidden="true">
+              <i
+                style={{
+                  width: previewDiameter(brushSize),
+                  height: previewDiameter(brushSize),
+                  background: tool === 'eraser' ? '#ffffff' : color,
+                }}
+              />
+            </span>
             {BRUSH_SIZES.map((b) => (
               <button
                 key={b.size}
                 type="button"
-                className={`size-btn ${brushSize === b.size ? 'is-active' : ''}`}
+                className={`studio-size ${brushSize === b.size ? 'is-active' : ''}`}
                 onClick={() => changeBrushSize(b.size)}
                 title={`${b.label} (${b.size}px)`}
-                aria-label={b.label}
+                aria-label={`${b.label}, ${b.size} pixel`}
+                aria-pressed={brushSize === b.size}
               >
                 <span
-                  className="size-dot"
+                  className="studio-size__dot"
                   style={{
-                    width: Math.max(4, Math.min(22, b.size * 0.75)),
-                    height: Math.max(4, Math.min(22, b.size * 0.75)),
-                    backgroundColor: tool === 'eraser' ? '#ef4444' : color,
+                    width: Math.max(5, Math.min(18, b.size * 0.5)),
+                    height: Math.max(5, Math.min(18, b.size * 0.5)),
+                    background: tool === 'eraser' ? '#ffffff' : color,
                   }}
                 />
+                <span className="studio-size__label">{b.size}</span>
               </button>
             ))}
           </div>
+        </div>
 
-          <div className="toolbar-divider" />
-
-          {/* Color swatches + Custom Color Picker */}
-          <div className="toolbar-group colors-group">
-            <div className="color-swatches">
-              {PRESET_COLORS.map((c) => (
+        <div className="studio-tools__bar is-secondary">
+          <div className="studio-palette" role="group" aria-label="Bảng màu">
+            <span className="studio-palette__label">Màu</span>
+            <div className="studio-swatches">
+              {PRESET_COLORS.map((preset) => (
                 <button
-                  key={c}
+                  key={preset.hex}
                   type="button"
-                  className={`color-swatch ${color === c && tool !== 'eraser' ? 'is-active' : ''}`}
-                  style={{ backgroundColor: c }}
+                  className={`studio-swatch ${color === preset.hex && tool !== 'eraser' ? 'is-active' : ''}`}
+                  style={{ '--swatch': preset.hex }}
                   onClick={() => {
-                    changeColor(c);
+                    changeColor(preset.hex);
                     if (tool === 'eraser' || tool === 'select') changeTool('brush');
                   }}
-                  title={c}
-                  aria-label={`Màu ${c}`}
+                  title={preset.name}
+                  aria-label={`Màu ${preset.name}`}
+                  aria-pressed={color === preset.hex && tool !== 'eraser'}
                 />
               ))}
             </div>
 
-            {/* Native Color Picker */}
-            <label className="custom-color-picker" title="Chọn màu tự do">
+            <label className="studio-custom-color" title="Chọn màu tự do">
               <input
                 type="color"
                 value={color}
@@ -1122,62 +1228,37 @@ export default function DrawingGame() {
                 }}
                 className="sr-only"
               />
-              <div className="color-wheel-btn" style={{ borderColor: color }}>
-                <PaletteIcon size={14} style={{ color }} />
-              </div>
+              <span className="studio-custom-color__ring" style={{ '--ring-color': color }} aria-hidden="true">
+                <PaletteIcon size={13} />
+              </span>
+              <span className="studio-custom-color__hex">{color.toUpperCase()}</span>
             </label>
           </div>
 
-          <div className="toolbar-divider" />
-
-          {/* Undo, Redo, Zoom, Clear, Download & Shortcuts Help */}
-          <div className="toolbar-group actions-group">
-            <button
-              type="button"
-              className="action-btn"
-              onClick={handleUndo}
-              disabled={!canUndo}
-              title="Hoàn tác (Ctrl+Z)"
-              aria-label="Hoàn tác"
-            >
-              <RotateCcw size={16} />
+          <div className="studio-actions" role="group" aria-label="Thao tác với tranh">
+            <button type="button" onClick={handleUndo} disabled={!canUndo} title="Hoàn tác (Ctrl+Z)">
+              <RotateCcw size={16} aria-hidden="true" />
+              <span>Hoàn tác</span>
             </button>
-            <button
-              type="button"
-              className="action-btn"
-              onClick={handleRedo}
-              disabled={!canRedo}
-              title="Làm lại (Ctrl+Y)"
-              aria-label="Làm lại"
-            >
-              <RotateCw size={16} />
+            <button type="button" onClick={handleRedo} disabled={!canRedo} title="Làm lại (Ctrl+Y)">
+              <RotateCw size={16} aria-hidden="true" />
+              <span>Làm lại</span>
             </button>
-            <button
-              type="button"
-              className="action-btn"
-              onClick={handleDownload}
-              title="Tải ảnh về máy"
-              aria-label="Tải ảnh về máy"
-            >
-              <Download size={16} />
+            <button type="button" onClick={handleSaveDraft} title="Lưu bản nháp trên thiết bị">
+              <Save size={16} aria-hidden="true" />
+              <span>Lưu nháp</span>
             </button>
-            <button
-              type="button"
-              className="action-btn danger"
-              onClick={() => setShowClearConfirmModal(true)}
-              title="Xóa toàn bộ tranh"
-              aria-label="Xóa toàn bộ tranh"
-            >
-              <Trash2 size={16} />
+            <button type="button" onClick={handleDownload} title="Tải ảnh PNG về máy">
+              <Download size={16} aria-hidden="true" />
+              <span>Tải PNG</span>
             </button>
-            <button
-              type="button"
-              className="action-btn"
-              onClick={() => setShowShortcutsModal(true)}
-              title="Bảng phím tắt (? hoặc H)"
-              aria-label="Bảng phím tắt"
-            >
-              <Keyboard size={16} />
+            <button type="button" className="is-danger" onClick={() => setShowClearConfirmModal(true)} title="Xóa toàn bộ tranh">
+              <Trash2 size={16} aria-hidden="true" />
+              <span>Xóa tranh</span>
+            </button>
+            <button type="button" onClick={() => setShowShortcutsModal(true)} title="Bảng phím tắt (? hoặc H)" aria-label="Bảng phím tắt">
+              <Keyboard size={16} aria-hidden="true" />
+              <span>Phím tắt</span>
             </button>
           </div>
         </div>
@@ -1187,7 +1268,7 @@ export default function DrawingGame() {
       <AnimatedModal
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
-        title="Phím tắt Whiteboard"
+        title="Phím tắt Xưởng Vẽ"
         maxWidth={500}
         actions={
           <Button
@@ -1208,13 +1289,13 @@ export default function DrawingGame() {
             </div>
           </div>
           <div className="shortcut-row">
-            <span className="shortcut-label">Cục tẩy</span>
+            <span className="shortcut-label">Tẩy</span>
             <div className="shortcut-keys">
               <kbd className="shortcut-kbd">E</kbd>
             </div>
           </div>
           <div className="shortcut-row">
-            <span className="shortcut-label">Di chuyển bảng vẽ (Pan)</span>
+            <span className="shortcut-label">Di chuyển bảng vẽ</span>
             <div className="shortcut-keys">
               <kbd className="shortcut-kbd">V</kbd>
             </div>
@@ -1256,7 +1337,7 @@ export default function DrawingGame() {
             </div>
           </div>
           <div className="shortcut-row">
-            <span className="shortcut-label">Hoàn tác (Undo)</span>
+            <span className="shortcut-label">Hoàn tác</span>
             <div className="shortcut-keys">
               <kbd className="shortcut-kbd">Ctrl/Cmd</kbd>
               <span className="shortcut-plus">+</span>
@@ -1264,7 +1345,7 @@ export default function DrawingGame() {
             </div>
           </div>
           <div className="shortcut-row">
-            <span className="shortcut-label">Làm lại (Redo)</span>
+            <span className="shortcut-label">Làm lại</span>
             <div className="shortcut-keys">
               <kbd className="shortcut-kbd">Ctrl/Cmd</kbd>
               <span className="shortcut-plus">+</span>
@@ -1284,7 +1365,7 @@ export default function DrawingGame() {
       <AnimatedModal
         isOpen={showClearConfirmModal}
         onClose={() => setShowClearConfirmModal(false)}
-        title="Xác nhận làm mới khung vẽ"
+        title="Xóa toàn bộ tranh?"
         maxWidth={440}
         actions={
           <>
@@ -1294,7 +1375,7 @@ export default function DrawingGame() {
               size="sm"
               onClick={() => setShowClearConfirmModal(false)}
             >
-              Hủy
+              Giữ lại
             </Button>
             <Button
               type="button"
@@ -1302,13 +1383,13 @@ export default function DrawingGame() {
               size="sm"
               onClick={handleClearCanvas}
             >
-              Xóa bảng vẽ
+              Xóa tranh
             </Button>
           </>
         }
       >
         <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Bạn có chắc chắn muốn xóa toàn bộ nét vẽ và làm mới khung tranh không? Thao tác này sẽ đặt lại khung vẽ về màu trắng ban đầu.
+          Toàn bộ nét vẽ sẽ bị xóa và khung tranh trở về tờ giấy trắng. Bạn vẫn hoàn tác được ngay sau đó.
         </p>
       </AnimatedModal>
 
@@ -1318,8 +1399,9 @@ export default function DrawingGame() {
         onClose={() => {
           if (!isPublishing) setShowPreviewModal(false);
         }}
-        title="Xem trước tác phẩm &amp; Hoàn thành"
+        title="Đăng tranh lên Thư viện"
         maxWidth={720}
+        className="studio-publish-modal"
         actions={
           publishSuccess ? (
             <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'flex-end' }}>
@@ -1332,7 +1414,7 @@ export default function DrawingGame() {
                   setArtworkTitle('');handleClearCanvas();
                 }}
               >
-                Vẽ tác phẩm mới 🎨
+                Vẽ tranh mới
               </Button>
               <Button
                 type="button"
@@ -1340,7 +1422,7 @@ export default function DrawingGame() {
                 size="md"
                 onClick={() => navigate('/creative-corner')}
               >
-                Xem trong Thư Viện Tranh
+                Xem trong Thư viện
               </Button>
             </div>
           ) : (
@@ -1380,15 +1462,18 @@ export default function DrawingGame() {
       >
         {publishSuccess ? (
           <div className="publish-success-state">
+            <span className="studio-confetti" aria-hidden="true">
+              <i /><i /><i /><i /><i /><i />
+            </span>
             <CheckCircle2 size={54} className="publish-success-icon" />
-            <h2 className="publish-success-title">Đã đăng tranh lên Thư viện!</h2>
+            <h2 className="publish-success-title">🎨 Đã đăng tranh!</h2>
             <p className="drawing-publish-id">✓ Tác phẩm #{publishedArtwork?.id} · Đã đọc lại bản ghi và tải ảnh thật từ kho lưu trữ</p>
             <p className="publish-success-desc">
-              Tác phẩm đã có trong <b>Thư Viện Tranh</b> và sẽ còn ở đó sau khi tải lại trang,
-              đổi trình duyệt hoặc khi hệ thống được deploy lại.
+              Tác phẩm đã có trong <b>Thư viện tranh</b> và sẽ còn ở đó sau khi tải lại trang,
+              đổi trình duyệt hoặc khi hệ thống được triển khai lại.
             </p>
             <div className="publish-preview-card">
-              <img src={previewImageUrl} alt={artworkTitle} className="publish-preview-img" />
+              <img src={previewImageUrl} alt={artworkTitle || 'Tác phẩm vừa đăng'} className="publish-preview-img" />
               <div className="publish-preview-info">
                 <div className="publish-preview-title">{artworkTitle}</div>
                 <div className="publish-preview-author">Tác giả: {user?.name || 'Bạn'} · Chế độ: Công khai</div>
@@ -1407,7 +1492,7 @@ export default function DrawingGame() {
             <div className="preview-image-container">
               <img
                 src={previewImageUrl}
-                alt="Artwork Preview"
+                alt="Xem trước tác phẩm"
                 className="preview-artwork-image"
               />
             </div>

@@ -1,0 +1,226 @@
+{
+  "checks": [
+    {
+      "name": "Không tràn ngang · Game Center 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Game Center",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Đủ 5 game trong menu dọc",
+      "status": "PASS",
+      "evidence": "Đua Gõ Chữ · Gõ Nhanh · Phản Xạ Bốn Hướng · Trí Nhớ Nhanh · Xưởng Vẽ"
+    },
+    {
+      "name": "Menu dọc không còn tên cũ",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "5 thẻ game đúng tên tiếng Việt",
+      "status": "PASS",
+      "evidence": "ĐUA GÕ CHỮ · GÕ NHANH · PHẢN XẠ BỐN HƯỚNG · TRÍ NHỚ NHANH · XƯỞNG VẼ"
+    },
+    {
+      "name": "Menu active đúng · Đua Gõ Chữ",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Đua Gõ Chữ",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Đua Gõ Chữ 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Menu active đúng · Gõ Nhanh",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Gõ Nhanh",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Gõ Nhanh 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Menu active đúng · Phản Xạ Bốn Hướng",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Phản Xạ Bốn Hướng",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Phản Xạ Bốn Hướng 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Menu active đúng · Trí Nhớ Nhanh",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Trí Nhớ Nhanh",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Trí Nhớ Nhanh 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Menu active đúng · Xưởng Vẽ",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Xưởng Vẽ",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Xưởng Vẽ 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Thông báo chưa đăng được tranh hiển thị đúng (local không có S3)",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Chip dụng cụ đang dùng rõ ràng",
+      "status": "PASS",
+      "evidence": "CỌ VẼ · 22px"
+    },
+    {
+      "name": "Toạ độ pointer → canvas chính xác (đỏ son đúng chỗ)",
+      "status": "PASS",
+      "evidence": "{\"r\":239,\"g\":68,\"b\":68,\"a\":255}"
+    },
+    {
+      "name": "Tẩy xóa đúng vùng",
+      "status": "PASS",
+      "evidence": "alpha=0"
+    },
+    {
+      "name": "Hoàn tác khôi phục nét",
+      "status": "PASS",
+      "evidence": "alpha=255"
+    },
+    {
+      "name": "Làm lại áp dụng lại thao tác",
+      "status": "PASS",
+      "evidence": "alpha=0"
+    },
+    {
+      "name": "Lưu nháp báo đúng nơi lưu",
+      "status": "PASS",
+      "evidence": "Đã lưu bản nháp trên thiết bị"
+    },
+    {
+      "name": "Đăng tranh thành công",
+      "status": "PASS",
+      "evidence": "🎨 Đã đăng tranh!"
+    },
+    {
+      "name": "Không tràn ngang · Thư viện tranh 1440",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Tranh vừa đăng xuất hiện trong Thư viện (mock storage)",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Game Center 1024",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Xưởng Vẽ 1024",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Game Center 430",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không còn chữ Anh trên UI · Game Center 430",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Xưởng Vẽ 430",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Vẽ được trên mobile, toạ độ đúng",
+      "status": "PASS",
+      "evidence": "{\"r\":59,\"g\":130,\"b\":246,\"a\":255,\"x\":540,\"y\":350}"
+    },
+    {
+      "name": "Không tràn ngang · Thư viện tranh 430",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Game Center 390",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Không tràn ngang · Xưởng Vẽ 390",
+      "status": "PASS",
+      "evidence": ""
+    }
+  ],
+  "errors": [],
+  "shots": [
+    "01-game-center-1440.png",
+    "01b-game-center-1440-full.png",
+    "01c-game-center-1440-row2.png",
+    "02-typing_battle-1440.png",
+    "03-computer_rush-1440.png",
+    "04-direction_rush-1440.png",
+    "05-memory_flash-1440.png",
+    "06-drawing-1440.png",
+    "07-drawing-drawn-1440.png",
+    "08-drawing-publish-modal-1440.png",
+    "09-drawing-publish-success-1440.png",
+    "10-gallery-1440.png",
+    "11-game-center-1024.png",
+    "12-drawing-1024.png",
+    "13-game-center-430.png",
+    "14-drawing-430.png",
+    "15-drawing-430-drawn.png",
+    "16-gallery-430.png",
+    "17-game-center-390.png",
+    "18-drawing-390.png",
+    "19-mobile-nav-drawer-390.png"
+  ],
+  "english": [],
+  "startedAt": "2026-10-22T16:31:07.025Z",
+  "finishedAt": "2026-10-22T16:31:46.213Z"
+}

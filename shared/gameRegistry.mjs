@@ -47,8 +47,8 @@ export const ARCADE_GAME_REGISTRY = Object.freeze([
     subtitle: 'Nhìn nhanh · Nhớ chuẩn',
     place: 'KHU VƯỜN TRÍ NHỚ',
     mark: '03',
-    description: 'Ngắm những ô sao, ghi nhớ rồi tìm lại khi ánh sáng tắt.',
-    controls: 'Chờ bảng sáng rồi tắt. Chọn đủ số ô sao; có thể bấm lại để bỏ chọn. Bảng tự chấm sau 220ms khi chọn đủ.',
+    description: 'Ngắm những ô sao, ghi nhớ rồi tìm lại khi ánh sáng tắt. Càng lên nấc, thời gian nhìn và thời gian chọn càng ngắn.',
+    controls: 'Chờ bảng sáng rồi tắt. Chọn đủ số ô sao trong thời gian cho phép; bấm lại để bỏ chọn. Bảng tự chấm sau 220ms khi chọn đủ. Hết giờ chọn = mất vòng.',
     icon: 'Brain',
   },
 ]);

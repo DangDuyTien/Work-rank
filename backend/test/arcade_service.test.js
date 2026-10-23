@@ -10,13 +10,13 @@ before(async () => {
   users = await Promise.all([0, 1, 2, 3].map((n) => User.create({ name: `Arcade ${n}`, email: `arcade-${n}@test.local`, passwordHash: 'hash' })));
 });
 after(() => service.stop());
-test('Computer SOLO → DUO → TRIO: room flow, seeds, privacy, final flush, rewards and rankings', async (t) => {
+test('Computer SOLO → 1V1 → TRIO: room flow, seeds, privacy, final flush, rewards and rankings', async (t) => {
   const { challenge } = await engine;
-  for (const mode of ['SOLO', 'DUO', 'TRIO']) await t.test(mode, async () => {
+  for (const mode of ['SOLO', '1V1', 'TRIO']) await t.test(mode, async () => {
     const created = await service.create({ gameType: 'computer_rush', mode }, users[0]);
     const id = created.room.id;
     if (mode === 'SOLO') {
-      assert.ok(!(await service.list('computer_rush', 'DUO')).some((r) => r.id === id));
+      assert.ok(!(await service.list('computer_rush', '1V1')).some((r) => r.id === id));
       await assert.rejects(service.join(id, users[1].id));
     } else {
       await assert.rejects(service.begin(id, users[0].id));
@@ -47,9 +47,9 @@ test('Computer SOLO → DUO → TRIO: room flow, seeds, privacy, final flush, re
     await assert.rejects(service.detail(id, users[3].id));
   });
 });
-test('Direction and Memory SOLO → DUO → TRIO: evidence replay, forged submissions, concurrent finalize idempotency', async (t) => {
+test('Direction and Memory SOLO → 1V1 → TRIO: evidence replay, forged submissions, concurrent finalize idempotency', async (t) => {
   const { challenge, memorySelectAt } = await engine;
-  for (const gameType of ['direction_rush', 'memory_flash']) for (const mode of ['SOLO', 'DUO', 'TRIO']) await t.test(`${gameType} ${mode}`, async () => {
+  for (const gameType of ['direction_rush', 'memory_flash']) for (const mode of ['SOLO', '1V1', 'TRIO']) await t.test(`${gameType} ${mode}`, async () => {
     const created = await service.create({ gameType, mode }, users[0]);
     const { id, seed, capacity } = created.room;
     if (mode !== 'SOLO') {
@@ -79,7 +79,7 @@ test('Direction and Memory SOLO → DUO → TRIO: evidence replay, forged submis
   });
 });
 test('Room lifecycle: transfer host, reset ready, last leave, disconnect expiry, reconnect heartbeat', async () => {
-  const a = await service.create({ gameType: 'computer_rush', mode: 'DUO' }, users[0]);
+  const a = await service.create({ gameType: 'computer_rush', mode: '1V1' }, users[0]);
   await service.join(a.room.id, users[1].id);
   await service.ready(a.room.id, users[1].id, true);
   await service.leave(a.room.id, users[0].id);
@@ -122,7 +122,7 @@ test('Quick replay keeps one shared party, new seed, same rules and prevents dup
   const next = await Promise.all(users.slice(0, 3).map((u) => service.rematch(a.room.id, u)));
   assert.equal(new Set(next.map((s) => s.room.id)).size, 1);
   assert.notEqual(next[0].room.seed, a.room.seed);
-  assert.equal(next[0].room.mode, 'TRIO'); assert.equal(next[0].room.rulesVersion, 2);
+  assert.equal(next[0].room.mode, 'TRIO'); assert.equal(next[0].room.rulesVersion, 3);
   assert.equal(next[0].room.durationSeconds, a.room.durationSeconds);
   const state = await service.rematch(a.room.id, users[0]);
   assert.equal(state.players.length, 3); assert.ok(state.players.every((p) => !p.ready));
@@ -160,13 +160,13 @@ test('Room creation keeps the host membership atomic and broadcasts authoritativ
   service.start({ to: (channel) => ({ emit: (event, payload) => emitted.push({ channel, event, payload }) }) });
   try {
     for (const gameType of ['computer_rush', 'direction_rush', 'memory_flash']) {
-      const created = await service.create({ gameType, mode: 'DUO' }, users[0]);
+      const created = await service.create({ gameType, mode: '1V1' }, users[0]);
       const players = await Player.findAll({ where: { roomId: created.room.id } });
       assert.equal(players.length, 1);
       assert.equal(String(players[0].userId), String(users[0].id));
       assert.equal(String(created.room.hostId), String(users[0].id));
       assert.ok(emitted.some((event) => event.event === 'arcade:roomsChanged' && event.payload.gameType === gameType));
-      const listed = await service.list(gameType, 'DUO');
+      const listed = await service.list(gameType, '1V1');
       assert.equal(listed.find((room) => room.id === created.room.id)?.capacity, 2);
       await service.leave(created.room.id, users[0].id);
     }
@@ -177,8 +177,8 @@ test('Room creation keeps the host membership atomic and broadcasts authoritativ
 
 test('Duplicate create and join are idempotent; concurrent Trio joins cannot exceed capacity', async () => {
   const creates = await Promise.allSettled([
-    service.create({ gameType: 'computer_rush', mode: 'DUO' }, users[0]),
-    service.create({ gameType: 'computer_rush', mode: 'DUO' }, users[0]),
+    service.create({ gameType: 'computer_rush', mode: '1V1' }, users[0]),
+    service.create({ gameType: 'computer_rush', mode: '1V1' }, users[0]),
   ]);
   const created = creates.filter((result) => result.status === 'fulfilled');
   assert.equal(created.length, 1);
@@ -205,12 +205,12 @@ test('Duplicate create and join are idempotent; concurrent Trio joins cannot exc
 test('20 create and leave cycles per new game leave no public or membership ghosts', async () => {
   for (const gameType of ['computer_rush', 'direction_rush', 'memory_flash']) {
     for (let iteration = 0; iteration < 20; iteration++) {
-      const created = await service.create({ gameType, mode: 'DUO' }, users[0]);
+      const created = await service.create({ gameType, mode: '1V1' }, users[0]);
       assert.equal(await Player.count({ where: { roomId: created.room.id, userId: users[0].id } }), 1);
       await service.leave(created.room.id, users[0].id);
       assert.equal((await Room.findByPk(created.room.id)).status, 'CLOSED');
       assert.equal(await Player.count({ where: { roomId: created.room.id } }), 0);
-      assert.ok(!(await service.list(gameType, 'DUO')).some((room) => room.id === created.room.id));
+      assert.ok(!(await service.list(gameType, '1V1')).some((room) => room.id === created.room.id));
     }
   }
 });

@@ -1,5 +1,4 @@
 import {
-  Activity,
   Trophy,
   Users,
   Swords,
@@ -8,19 +7,21 @@ import {
   Calendar,
   Award,
   Shield,
-  BadgeCheck,
   User,
   Tv,
   Building2,
   Gamepad2,
-  Keyboard,
-  Layers,
-  Palette,
-  Images,
   Target,
   Settings as SettingsIcon,
   Sliders,
+  ArrowUpRight,
 } from 'lucide-react';
+import {
+  GAME_MENU_ITEMS,
+  GALLERY_NAV_ITEM,
+  GAME_CENTER_NAV_ITEM,
+  gameByPath,
+} from '../games/arcade/catalog';
 
 /**
  * Authoritative Navigation Hierarchy for WorkRank V3.3.
@@ -29,9 +30,13 @@ import {
  * - Overview (Dashboard, YouTube Analytics, Leaderboard)
  * - Competition (Arena, Grand Championship)
  * - Collaboration (Members / Teams)
- * - Games (Typing Battle, Drawing)
+ * - Games (5 trò đang mở — dựng trực tiếp từ GAME_REGISTRY)
  * - Admin (People & Privileges, Teams & YouTube, Seasons, Grand Championship, Operations & Logs)
  * - Account (Profile, Settings)
+ *
+ * Nhóm Trò Chơi KHÔNG hardcode từng nút: mọi item đến từ `GAME_REGISTRY`, nên
+ * thêm/bớt game chỉ cần sửa một file. Đây là nguồn điều hướng duy nhất cho
+ * sidebar; Game Center đọc cùng registry đó.
  */
 export const NAVIGATION_CONFIG = [
   {
@@ -114,38 +119,35 @@ export const NAVIGATION_CONFIG = [
     collapsible: true,
     badge: 'Giải Trí',
     items: [
+      ...GAME_MENU_ITEMS.map((game) => ({
+        to: game.route,
+        label: game.menuNameVi,
+        shortLabel: game.menuNameVi,
+        icon: game.icon,
+        gameId: game.id,
+        matchPaths: game.matchPaths,
+        exactPaths: game.exactPaths,
+        catalogKey: game.catalogKey,
+        tourTarget: game.id === 'typing_battle' ? 'nav-typing-battle' : game.id === 'drawing' ? 'nav-drawing-game' : undefined,
+        description: game.subtitleVi,
+      })),
       {
-        to: '/games',
-        label: 'Danh mục trò chơi',
-        shortLabel: 'Trò chơi',
-        icon: Gamepad2,
-        description: 'Danh sách trò chơi và trạng thái mở chơi',
+        to: GALLERY_NAV_ITEM.route,
+        label: GALLERY_NAV_ITEM.menuNameVi,
+        shortLabel: GALLERY_NAV_ITEM.menuNameVi,
+        icon: GALLERY_NAV_ITEM.icon,
+        matchPaths: GALLERY_NAV_ITEM.matchPaths,
+        description: GALLERY_NAV_ITEM.descriptionVi,
       },
       {
-        to: '/games/typing',
-        label: 'WorkRank Typing Battle',
-        shortLabel: 'Typing Battle',
-        icon: Keyboard,
-        badge: 'Mới',
-        tourTarget: 'nav-typing-battle',
-        description: 'Đấu trường thi đấu đánh máy tốc độ cao 1v1, 2v2, 3v3',
-      },
-      {
-        to: '/games/drawing',
-        label: 'Góc Sáng Tạo (Game Vẽ)',
-        shortLabel: 'Game Vẽ Tranh',
-        icon: Palette,
-        badge: 'Mới',
-        tourTarget: 'nav-drawing-game',
-        description: 'Không gian vẽ tranh nghệ thuật & chia sẻ lên trang chủ WorkRank',
-      },
-      {
-        to: '/creative-corner',
-        label: 'Thư Viện Tranh',
-        shortLabel: 'Thư viện tranh',
-        icon: Images,
-        badge: 'Mới',
-        description: 'Bộ sưu tập tác phẩm của mọi người — thả tim, tải ảnh, xem chi tiết',
+        to: GAME_CENTER_NAV_ITEM.route,
+        label: GAME_CENTER_NAV_ITEM.menuNameVi,
+        shortLabel: 'Trung tâm',
+        icon: GAME_CENTER_NAV_ITEM.icon,
+        matchPaths: GAME_CENTER_NAV_ITEM.matchPaths,
+        trailingIcon: ArrowUpRight,
+        variant: 'overview',
+        description: GAME_CENTER_NAV_ITEM.descriptionVi,
       },
     ],
   },
@@ -256,6 +258,26 @@ export function isRouteActive(currentPath, targetPath) {
 }
 
 /**
+ * Trạng thái active của một item menu: ưu tiên `matchPaths` để một game có thể
+ * sở hữu nhiều URL (ví dụ Đua Gõ Chữ: /games/typing/passage, /games/typing/room/:id)
+ * mà không cần thêm nút riêng. `exactPaths` dành cho URL chỉ khớp chính xác,
+ * tránh chuyện /games/typing "nuốt" luôn /games/typing/words của Gõ Nhanh.
+ */
+export function isNavItemActive(currentPath, item) {
+  if (!item) return false;
+  const exactPaths = Array.isArray(item.exactPaths) ? item.exactPaths : [];
+  if (exactPaths.includes(currentPath)) return true;
+  const paths = Array.isArray(item.matchPaths) && item.matchPaths.length
+    ? item.matchPaths
+    : [item.to];
+  return paths.some((path) => (
+    typeof path === 'string'
+    && !exactPaths.includes(path)
+    && isRouteActive(currentPath, path)
+  ));
+}
+
+/**
  * Resolves the target URL for navigation items (handles dynamic functions).
  */
 export function resolveItemPath(item, userId) {
@@ -276,7 +298,13 @@ export function resolveCurrentTitle(pathname) {
   if (pathname.startsWith('/arena')) return 'Đấu Trường Mùa Giải';
   if (pathname.startsWith('/grand')) return 'Giải Vô Địch Năm (Grand)';
   if (pathname.startsWith('/friends')) return 'Thành Viên & Đội Nhóm';
-  if (pathname.startsWith('/games/typing')) return 'WorkRank Typing Battle';
+  if (pathname.startsWith('/creative-corner')) return 'Thư viện tranh';
+  if (pathname === '/games') return 'Trung tâm trò chơi';
+
+  // Game đang mở: lấy đúng tên tiếng Việt từ registry thay vì tên nội bộ.
+  const activeGame = gameByPath(pathname);
+  if (activeGame) return activeGame.menuNameVi;
+
   if (pathname.startsWith('/admin/kpi')) return 'Quản Lý KPI & Phòng Ban';
   if (pathname.startsWith('/admin/privileges')) return 'Quản Lý Nhân Sự & Đặc Quyền';
   if (pathname.startsWith('/admin/teams-youtube')) return 'Quản Lý Đội Nhóm & Kênh YouTube';

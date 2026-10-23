@@ -48,6 +48,7 @@ const Arena = lazyWithReload(() => import('./pages/Arena'));
 const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
+const TypingHub = lazyWithReload(() => import('./pages/TypingHub'));
 const ArcadeGame = lazyWithReload(() => import('./pages/ArcadeGame'));
 const DrawingGame = lazyWithReload(() => import('./pages/DrawingGame'));
 const CreativeGallery = lazyWithReload(() => import('./pages/CreativeGallery'));
@@ -204,7 +205,11 @@ function AppRoutes() {
             <Route path="/groups" element={<Navigate to="/friends" replace />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/games" element={<GameHub />} />
-            <Route path="/games/typing" element={<TypingBattle />} />
+            {/* WorkRank Typing: một game, hai chế độ (Gõ từ / Gõ đoạn). */}
+            <Route path="/games/typing" element={<TypingHub />} />
+            <Route path="/games/typing/words" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
+            <Route path="/games/typing/words/room/:roomId" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
+            <Route path="/games/typing/passage" element={<TypingBattle />} />
             <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
             <Route path="/games/typing/spectate/:roomId" element={<TypingBattle />} />
             <Route path="/games/arcade/:gameType" element={<ArcadeGame />} />

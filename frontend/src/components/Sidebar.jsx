@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
-import { NAVIGATION_CONFIG, isRouteActive, resolveItemPath } from '../config/navigation';
+import { NAVIGATION_CONFIG, isNavItemActive, resolveItemPath } from '../config/navigation';
 import BrandMark from './BrandMark';
 import VerifiedBadge from './VerifiedBadge';
 import JobTitleBadge from './JobTitleBadge';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { gameCatalogApi } from '../services/api';
-
-const GAME_ROUTE_TO_KEY = {
-  '/games/typing': 'typing_battle',
-  '/games/drawing': 'drawing',
-};
 
 /**
  * Sidebar Component for WorkRank V3.3.
@@ -31,22 +26,19 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
   const activeGroupIds = useMemo(() => {
     const ids = new Set();
     NAVIGATION_CONFIG.forEach((group) => {
-      const hasActiveChild = group.items.some((item) => {
-        const path = resolveItemPath(item, user?.id);
-        return isRouteActive(location.pathname, path);
-      });
+      const hasActiveChild = group.items.some((item) => isNavItemActive(location.pathname, item));
       if (hasActiveChild || !group.collapsible) {
         ids.add(group.id);
       }
     });
     return ids;
-  }, [location.pathname, user?.id]);
+  }, [location.pathname]);
 
   // State of manually expanded/collapsed groups
   const [expandedGroups, setExpandedGroups] = useState(() => {
     const initial = {};
     NAVIGATION_CONFIG.forEach((group) => {
-      initial[group.id] = !group.collapsible || group.id === 'competition' || activeGroupIds.has(group.id);
+      initial[group.id] = !group.collapsible || group.id === 'competition' || group.id === 'games' || activeGroupIds.has(group.id);
     });
     return initial;
   });
@@ -309,11 +301,12 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                   {group.items.map((item) => {
                     if (item.adminOnly && !isAdmin) return null;
                     const path = resolveItemPath(item, user?.id);
-                    const isActive = isRouteActive(location.pathname, path);
+                    const isActive = isNavItemActive(location.pathname, item);
                     const ItemIcon = item.icon;
+                    const TrailingIcon = item.trailingIcon;
+                    const isOverviewLink = item.variant === 'overview';
 
-                    const gameKey = GAME_ROUTE_TO_KEY[path];
-                    const isGameComingSoon = gameKey && catalogMap[gameKey] === 'COMING_SOON';
+                    const isGameComingSoon = Boolean(item.catalogKey) && catalogMap[item.catalogKey] === 'COMING_SOON';
                     const effectiveBadge = isGameComingSoon ? 'Sắp ra mắt' : item.badge;
                     const isBadgeWarning = isGameComingSoon || item.comingSoon;
 
@@ -321,25 +314,32 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                       <NavLink
                         key={path}
                         to={path}
+                        end={isOverviewLink}
                         data-tour={item.tourTarget}
+                        data-game-id={item.gameId}
                         aria-current={isActive ? 'page' : undefined}
                         onClick={handleLinkClick}
                         title={item.description || item.label}
                         tabIndex={isExpanded ? 0 : -1}
+                        className={`workrank-nav-item${isActive ? ' is-active' : ''}${isOverviewLink ? ' is-overview' : ''}`}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: 9,
-                          padding: '7px 9px',
+                          padding: isOverviewLink ? '5px 9px 5px 12px' : '7px 9px 7px 12px',
                           borderRadius: 6,
-                          fontSize: 13,
-                          fontWeight: isActive ? 600 : 500,
-                          color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                          background: isActive ? 'rgba(0,0,0,0.06)' : 'transparent',
+                          fontSize: isOverviewLink ? 12 : 13,
+                          fontWeight: isActive ? 650 : 500,
+                          color: isActive
+                            ? 'var(--text-primary)'
+                            : isOverviewLink
+                              ? 'var(--text-muted)'
+                              : 'var(--text-secondary)',
+                          background: isActive ? 'var(--accent-soft)' : 'transparent',
                           textDecoration: 'none',
                           lineHeight: 1.3,
                           position: 'relative',
-                          transition: 'background var(--motion-fast) ease, color var(--motion-fast) ease',
+                          transition: 'background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard)',
                         }}
                         onMouseEnter={(e) => {
                           if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
@@ -348,11 +348,12 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                           if (!isActive) e.currentTarget.style.background = 'transparent';
                         }}
                       >
+                        {isActive && <span className="workrank-nav-active-bar" aria-hidden="true" />}
                         <ItemIcon
                           size={15}
                           strokeWidth={isActive ? 2.3 : 1.8}
                           style={{
-                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                            color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                             flexShrink: 0,
                           }}
                         />
@@ -382,7 +383,14 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                             {effectiveBadge}
                           </span>
                         )}
-                        {isActive && !effectiveBadge && (
+                        {TrailingIcon && (
+                          <TrailingIcon
+                            size={13}
+                            aria-hidden="true"
+                            style={{ marginLeft: 'auto', color: 'var(--text-muted)', flexShrink: 0 }}
+                          />
+                        )}
+                        {isActive && !effectiveBadge && !TrailingIcon && (
                           <span
                             style={{
                               marginLeft: 'auto',

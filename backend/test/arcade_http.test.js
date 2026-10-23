@@ -18,7 +18,7 @@ test('Arcade HTTP auth, availability, strict modes, ownership, early finalize an
   assert.equal((await request(app).get(endpoint + '/active')).status, 401);
   assert.equal((await request(app).post(endpoint + '/rooms').set('Authorization', `Bearer ${token}`).send({ gameType: 'computer_rush', mode: 'constructor' })).status, 400);
   for (const gameType of ['computer_rush', 'direction_rush', 'memory_flash']) {
-    assert.equal((await request(app).post(endpoint + '/rooms').set('Authorization', `Bearer ${token}`).send({ gameType, mode: '2V2' })).status, 400);
+    assert.equal((await request(app).post(endpoint + '/rooms').set('Authorization', `Bearer ${token}`).send({ gameType, mode: '5V5' })).status, 400);
     const response = await request(app).post(endpoint + '/rooms').set('Authorization', `Bearer ${token}`).send({ gameType, mode: 'SOLO', seed: 'client-forged', durationSeconds: 999999 });
     assert.equal(response.status, 201);
     const { room } = response.body;

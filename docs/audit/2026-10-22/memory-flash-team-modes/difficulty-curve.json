@@ -1,0 +1,583 @@
+{
+  "generatedAt": "2026-10-22T14:20:55.213Z",
+  "rulesVersion": 3,
+  "curve": [
+    {
+      "level": 1,
+      "size": 3,
+      "targets": 2,
+      "revealMs": 2000,
+      "selectMs": 5000,
+      "prepareMs": 320,
+      "restMs": 420,
+      "stage": "EASY",
+      "patternDifficulty": {
+        "p10": 4.4,
+        "median": 20.4,
+        "p90": 26.4,
+        "mean": 16.1
+      },
+      "lowDifficultyRate": 0.915,
+      "easyPatternRate": 0.43,
+      "kinds": {
+        "line": 67,
+        "asymmetric": 51,
+        "edge_center": 38,
+        "scattered": 97,
+        "corners": 48,
+        "near_symmetry": 21,
+        "block": 57,
+        "split_clusters": 21
+      }
+    },
+    {
+      "level": 2,
+      "size": 3,
+      "targets": 3,
+      "revealMs": 1850,
+      "selectMs": 4800,
+      "prepareMs": 310,
+      "restMs": 400,
+      "stage": "EASY",
+      "patternDifficulty": {
+        "p10": 11.6,
+        "median": 20.3,
+        "p90": 36.9,
+        "mean": 23.4
+      },
+      "lowDifficultyRate": 0.83,
+      "easyPatternRate": 0.355,
+      "kinds": {
+        "asymmetric": 60,
+        "block": 63,
+        "scattered": 108,
+        "corners": 56,
+        "line": 23,
+        "near_symmetry": 20,
+        "edge_center": 37,
+        "split_clusters": 33
+      }
+    },
+    {
+      "level": 3,
+      "size": 3,
+      "targets": 3,
+      "revealMs": 1700,
+      "selectMs": 4600,
+      "prepareMs": 300,
+      "restMs": 380,
+      "stage": "EASY",
+      "patternDifficulty": {
+        "p10": 11.6,
+        "median": 20.3,
+        "p90": 35.6,
+        "mean": 24.2
+      },
+      "lowDifficultyRate": 0.838,
+      "easyPatternRate": 0.34,
+      "kinds": {
+        "block": 64,
+        "scattered": 110,
+        "corners": 63,
+        "asymmetric": 57,
+        "edge_center": 42,
+        "split_clusters": 33,
+        "near_symmetry": 22,
+        "line": 9
+      }
+    },
+    {
+      "level": 4,
+      "size": 4,
+      "targets": 4,
+      "revealMs": 1500,
+      "selectMs": 4300,
+      "prepareMs": 290,
+      "restMs": 360,
+      "stage": "MEDIUM",
+      "patternDifficulty": {
+        "p10": 20.3,
+        "median": 33.3,
+        "p90": 45.3,
+        "mean": 32.9
+      },
+      "lowDifficultyRate": 0.375,
+      "easyPatternRate": 0.053,
+      "kinds": {
+        "scattered": 131,
+        "asymmetric": 106,
+        "block": 9,
+        "line": 5,
+        "edge_center": 55,
+        "split_clusters": 47,
+        "near_symmetry": 40,
+        "corners": 7
+      }
+    },
+    {
+      "level": 5,
+      "size": 4,
+      "targets": 5,
+      "revealMs": 1380,
+      "selectMs": 4000,
+      "prepareMs": 280,
+      "restMs": 340,
+      "stage": "MEDIUM",
+      "patternDifficulty": {
+        "p10": 25.4,
+        "median": 39.1,
+        "p90": 50.8,
+        "mean": 38.2
+      },
+      "lowDifficultyRate": 0.193,
+      "easyPatternRate": 0.273,
+      "kinds": {
+        "scattered": 90,
+        "near_symmetry": 53,
+        "edge_center": 45,
+        "asymmetric": 72,
+        "block": 44,
+        "line": 40,
+        "split_clusters": 31,
+        "corners": 25
+      }
+    },
+    {
+      "level": 6,
+      "size": 4,
+      "targets": 6,
+      "revealMs": 1260,
+      "selectMs": 3800,
+      "prepareMs": 270,
+      "restMs": 320,
+      "stage": "MEDIUM",
+      "patternDifficulty": {
+        "p10": 30.5,
+        "median": 42.6,
+        "p90": 51.2,
+        "mean": 42.3
+      },
+      "lowDifficultyRate": 0.05,
+      "easyPatternRate": 0.285,
+      "kinds": {
+        "block": 34,
+        "asymmetric": 54,
+        "split_clusters": 39,
+        "scattered": 102,
+        "corners": 23,
+        "near_symmetry": 36,
+        "edge_center": 55,
+        "line": 57
+      }
+    },
+    {
+      "level": 7,
+      "size": 5,
+      "targets": 6,
+      "revealMs": 1140,
+      "selectMs": 3500,
+      "prepareMs": 260,
+      "restMs": 300,
+      "stage": "HARD",
+      "patternDifficulty": {
+        "p10": 35.1,
+        "median": 46.5,
+        "p90": 55.9,
+        "mean": 45.9
+      },
+      "lowDifficultyRate": 0.025,
+      "easyPatternRate": 0.225,
+      "kinds": {
+        "scattered": 114,
+        "asymmetric": 67,
+        "block": 48,
+        "line": 17,
+        "corners": 25,
+        "near_symmetry": 27,
+        "split_clusters": 47,
+        "edge_center": 55
+      }
+    },
+    {
+      "level": 8,
+      "size": 5,
+      "targets": 7,
+      "revealMs": 1030,
+      "selectMs": 3200,
+      "prepareMs": 250,
+      "restMs": 285,
+      "stage": "HARD",
+      "patternDifficulty": {
+        "p10": 40.4,
+        "median": 52.1,
+        "p90": 58.7,
+        "mean": 50.9
+      },
+      "lowDifficultyRate": 0.003,
+      "easyPatternRate": 0.21,
+      "kinds": {
+        "scattered": 102,
+        "asymmetric": 69,
+        "split_clusters": 53,
+        "edge_center": 43,
+        "near_symmetry": 49,
+        "line": 22,
+        "block": 39,
+        "corners": 23
+      }
+    },
+    {
+      "level": 9,
+      "size": 5,
+      "targets": 8,
+      "revealMs": 930,
+      "selectMs": 2900,
+      "prepareMs": 240,
+      "restMs": 270,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 45.8,
+        "median": 52.9,
+        "p90": 59.1,
+        "mean": 52.6
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.235,
+      "kinds": {
+        "corners": 25,
+        "scattered": 78,
+        "split_clusters": 47,
+        "asymmetric": 81,
+        "edge_center": 47,
+        "line": 33,
+        "block": 36,
+        "near_symmetry": 53
+      }
+    },
+    {
+      "level": 10,
+      "size": 5,
+      "targets": 9,
+      "revealMs": 850,
+      "selectMs": 2600,
+      "prepareMs": 230,
+      "restMs": 255,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 50.9,
+        "median": 56.7,
+        "p90": 62.1,
+        "mean": 56.8
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.248,
+      "kinds": {
+        "near_symmetry": 45,
+        "asymmetric": 83,
+        "scattered": 91,
+        "block": 41,
+        "line": 37,
+        "split_clusters": 45,
+        "edge_center": 37,
+        "corners": 21
+      }
+    },
+    {
+      "level": 11,
+      "size": 5,
+      "targets": 9,
+      "revealMs": 800,
+      "selectMs": 2450,
+      "prepareMs": 220,
+      "restMs": 245,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 50.3,
+        "median": 57.1,
+        "p90": 62.5,
+        "mean": 56.8
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.213,
+      "kinds": {
+        "line": 35,
+        "near_symmetry": 54,
+        "asymmetric": 72,
+        "edge_center": 43,
+        "scattered": 96,
+        "corners": 23,
+        "split_clusters": 50,
+        "block": 27
+      }
+    },
+    {
+      "level": 12,
+      "size": 5,
+      "targets": 10,
+      "revealMs": 770,
+      "selectMs": 2350,
+      "prepareMs": 210,
+      "restMs": 235,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 54.4,
+        "median": 58.4,
+        "p90": 63.4,
+        "mean": 58.7
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.18,
+      "kinds": {
+        "scattered": 90,
+        "edge_center": 42,
+        "asymmetric": 87,
+        "line": 23,
+        "block": 33,
+        "split_clusters": 46,
+        "corners": 16,
+        "near_symmetry": 63
+      }
+    },
+    {
+      "level": 13,
+      "size": 5,
+      "targets": 10,
+      "revealMs": 740,
+      "selectMs": 2250,
+      "prepareMs": 200,
+      "restMs": 225,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 57.8,
+        "median": 60.2,
+        "p90": 64.2,
+        "mean": 60.7
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.153,
+      "kinds": {
+        "scattered": 125,
+        "corners": 18,
+        "split_clusters": 25,
+        "near_symmetry": 57,
+        "asymmetric": 79,
+        "edge_center": 53,
+        "block": 24,
+        "line": 19
+      }
+    },
+    {
+      "level": 14,
+      "size": 5,
+      "targets": 11,
+      "revealMs": 720,
+      "selectMs": 2150,
+      "prepareMs": 190,
+      "restMs": 215,
+      "stage": "RUSH",
+      "patternDifficulty": {
+        "p10": 62.6,
+        "median": 64.7,
+        "p90": 67.3,
+        "mean": 64.5
+      },
+      "lowDifficultyRate": 0,
+      "easyPatternRate": 0.158,
+      "kinds": {
+        "split_clusters": 39,
+        "near_symmetry": 53,
+        "edge_center": 50,
+        "scattered": 113,
+        "asymmetric": 82,
+        "corners": 17,
+        "line": 22,
+        "block": 24
+      }
+    }
+  ],
+  "simulatedRun": {
+    "rounds": 17,
+    "last": {
+      "index": 16,
+      "level": 9,
+      "stage": "RUSH",
+      "size": 5,
+      "targets": 8,
+      "revealMs": 930,
+      "selectMs": 2900,
+      "submitAt": 57711
+    },
+    "timeline": [
+      {
+        "index": 0,
+        "level": 1,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 2,
+        "revealMs": 2000,
+        "selectMs": 5000,
+        "submitAt": 3830
+      },
+      {
+        "index": 1,
+        "level": 1,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 2,
+        "revealMs": 2000,
+        "selectMs": 5000,
+        "submitAt": 8080
+      },
+      {
+        "index": 2,
+        "level": 2,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 3,
+        "revealMs": 1850,
+        "selectMs": 4800,
+        "submitAt": 12105
+      },
+      {
+        "index": 3,
+        "level": 2,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 3,
+        "revealMs": 1850,
+        "selectMs": 4800,
+        "submitAt": 16130
+      },
+      {
+        "index": 4,
+        "level": 3,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 3,
+        "revealMs": 1700,
+        "selectMs": 4600,
+        "submitAt": 19930
+      },
+      {
+        "index": 5,
+        "level": 3,
+        "stage": "EASY",
+        "size": 3,
+        "targets": 3,
+        "revealMs": 1700,
+        "selectMs": 4600,
+        "submitAt": 23730
+      },
+      {
+        "index": 6,
+        "level": 4,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 4,
+        "revealMs": 1500,
+        "selectMs": 4300,
+        "submitAt": 27255
+      },
+      {
+        "index": 7,
+        "level": 4,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 4,
+        "revealMs": 1500,
+        "selectMs": 4300,
+        "submitAt": 30780
+      },
+      {
+        "index": 8,
+        "level": 5,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 5,
+        "revealMs": 1380,
+        "selectMs": 4000,
+        "submitAt": 34110
+      },
+      {
+        "index": 9,
+        "level": 5,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 5,
+        "revealMs": 1380,
+        "selectMs": 4000,
+        "submitAt": 37440
+      },
+      {
+        "index": 10,
+        "level": 6,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 6,
+        "revealMs": 1260,
+        "selectMs": 3800,
+        "submitAt": 40575
+      },
+      {
+        "index": 11,
+        "level": 6,
+        "stage": "MEDIUM",
+        "size": 4,
+        "targets": 6,
+        "revealMs": 1260,
+        "selectMs": 3800,
+        "submitAt": 43710
+      },
+      {
+        "index": 12,
+        "level": 7,
+        "stage": "HARD",
+        "size": 5,
+        "targets": 6,
+        "revealMs": 1140,
+        "selectMs": 3500,
+        "submitAt": 46650
+      },
+      {
+        "index": 13,
+        "level": 7,
+        "stage": "HARD",
+        "size": 5,
+        "targets": 6,
+        "revealMs": 1140,
+        "selectMs": 3500,
+        "submitAt": 49590
+      },
+      {
+        "index": 14,
+        "level": 8,
+        "stage": "HARD",
+        "size": 5,
+        "targets": 7,
+        "revealMs": 1030,
+        "selectMs": 3200,
+        "submitAt": 52353
+      },
+      {
+        "index": 15,
+        "level": 8,
+        "stage": "HARD",
+        "size": 5,
+        "targets": 7,
+        "revealMs": 1030,
+        "selectMs": 3200,
+        "submitAt": 55116
+      },
+      {
+        "index": 16,
+        "level": 9,
+        "stage": "RUSH",
+        "size": 5,
+        "targets": 8,
+        "revealMs": 930,
+        "selectMs": 2900,
+        "submitAt": 57711
+      }
+    ]
+  }
+}

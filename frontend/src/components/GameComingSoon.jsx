@@ -192,7 +192,7 @@ export default function GameComingSoon({
               }}
             >
               <Settings size={13} />
-              Cài đặt Game
+              Cài đặt trò chơi
             </button>
           </div>
         )}
