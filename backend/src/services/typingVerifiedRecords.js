@@ -11,6 +11,9 @@ async function verifiedRecords() {
     .concat(practices.filter((a) => a.result?.recorded).map((a) => ({ ...a.result, userId: a.userId })));
   const byUser = new Map();
   for (const r of records) {
+    // Music runs are ranked on flow-weighted score in their own leaderboard;
+    // letting them into the WPM board would compare two different games.
+    if (r.songId || r.music) continue;
     if (Number(r.metricVersion) !== METRIC_VERSION || !r.eligible || !r.validSubmission || !Number.isFinite(r.wpm)) continue;
     const id = Number(r.userId);
     const current = byUser.get(id) || { bestWpm: 0, bestAccuracy: 0, count: 0, best: null };

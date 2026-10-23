@@ -49,6 +49,7 @@ const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
 const TypingHub = lazyWithReload(() => import('./pages/TypingHub'));
+const MusicRace = lazyWithReload(() => import('./pages/MusicRace'));
 const ArcadeGame = lazyWithReload(() => import('./pages/ArcadeGame'));
 const DrawingGame = lazyWithReload(() => import('./pages/DrawingGame'));
 const CreativeGallery = lazyWithReload(() => import('./pages/CreativeGallery'));
@@ -209,6 +210,8 @@ function AppRoutes() {
             <Route path="/games/typing" element={<TypingHub />} />
             <Route path="/games/typing/words" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
             <Route path="/games/typing/words/room/:roomId" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
+            <Route path="/games/typing/music" element={<MusicRace />} />
+            <Route path="/games/typing/music/room/:roomId" element={<MusicRace />} />
             <Route path="/games/typing/passage" element={<TypingBattle />} />
             <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
             <Route path="/games/typing/spectate/:roomId" element={<TypingBattle />} />

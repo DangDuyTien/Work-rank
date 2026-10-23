@@ -26,6 +26,8 @@
 .arcade-word [data-char-state="wrong"] { color: #a12e3c; background: #f7d7d6; text-decoration: underline wavy; text-decoration-thickness: 2px; }
 .arcade-word [data-char-state="cursor"] { color: #243e30; box-shadow: 0 3px 0 #be9542; }
 .arcade-word [data-char-state="composing"] { color: #4e6875; background: #e4edf0; }
+/* Trạng thái trung gian của UniKey/IME (nguyên âm gốc trước khi đặt dấu) — không phải lỗi. */
+.arcade-word [data-char-state="typing"] { color: #4e6875; background: #e9eef2; border-radius: 3px; }
 .arcade-polished .arcade-computer-input { padding: 8px 22px 0; background: transparent; }
 .arcade-polished .arcade-computer-input label { margin-bottom: 7px; font-size: 11px; }
 .arcade-polished .arcade-computer-input input { font-size: 21px; text-align: center; min-height: 52px; border-radius: 10px; letter-spacing: .025em; padding: 10px 12px; }

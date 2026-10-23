@@ -1339,6 +1339,20 @@ export const typingGameApi = {
 };
 
 /**
+ * Đua Gõ Theo Nhạc — same game family (`typing_battle`), different challenge:
+ * a song with timed lyrics instead of a passage.
+ */
+export const musicRaceApi = {
+  listSongs: async () => (await api.get('/api/games/typing/music/songs')).data,
+  getSong: async (songId) => (await api.get(`/api/games/typing/music/songs/${songId}`)).data,
+  myStats: async () => (await api.get('/api/games/typing/music/my-stats')).data,
+  leaderboard: async (params = {}) => (await api.get('/api/games/typing/music/leaderboard', { params })).data,
+  createAttempt: async (data) => (await api.post('/api/games/typing/music/attempts', data)).data,
+  updateProgress: async (attemptId, data) => (await api.post(`/api/games/typing/music/attempts/${attemptId}/progress`, data)).data,
+  finish: async (data) => (await api.post('/api/games/typing/music/finish', data)).data,
+};
+
+/**
  * Best-effort final progress flush used when the tab is hidden/unloaded.
  * `keepalive` lets the request outlive the page; no response is awaited.
  */

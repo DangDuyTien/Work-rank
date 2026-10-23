@@ -1,0 +1,334 @@
+{
+  "checks": [
+    {
+      "name": "Chơi đủ 30 challenge",
+      "status": "PASS",
+      "evidence": "30"
+    },
+    {
+      "name": "≥15 challenge tiếng Việt có dấu",
+      "status": "PASS",
+      "evidence": "28/30"
+    },
+    {
+      "name": "30/30 từ hoàn thành, không kẹt",
+      "status": "PASS",
+      "evidence": "[]"
+    },
+    {
+      "name": "Không double-complete (mỗi từ +1 lượt)",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Focus giữ nguyên qua 30 lượt",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "Backspace xoá lỗi, trạng thái về hợp lệ",
+      "status": "PASS",
+      "evidence": "IN ẤN"
+    },
+    {
+      "name": "Backspace rồi hoàn thành từ đúng một lần",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "NFD input hoàn thành từ NFC",
+      "status": "PASS",
+      "evidence": "ĐIỂM ĐẾN"
+    },
+    {
+      "name": "Composition start/update/end hoàn thành từ",
+      "status": "PASS",
+      "evidence": "LỄ TÂN"
+    },
+    {
+      "name": "Trạng thái trung gian Telex không bị báo đỏ",
+      "status": "PASS",
+      "evidence": "10 bước"
+    },
+    {
+      "name": "Keyboard-hook IME hoàn thành từ",
+      "status": "PASS",
+      "evidence": "ÁNH NẮNG"
+    },
+    {
+      "name": "Chuyển Anh ↔ Việt trong cùng trận",
+      "status": "PASS",
+      "evidence": "18 EN · 2 VI"
+    },
+    {
+      "name": "3 input event trùng chỉ complete 1 lần",
+      "status": "PASS",
+      "evidence": "3 → 4"
+    },
+    {
+      "name": "Composition treo vẫn finalize (watchdog)",
+      "status": "PASS",
+      "evidence": "THÔNG BÁO"
+    },
+    {
+      "name": "Watchdog trả focus về input",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "name": "English regression: 10/10 từ",
+      "status": "PASS",
+      "evidence": "10"
+    },
+    {
+      "name": "Chuỗi tiếng Anh vẫn tăng",
+      "status": "PASS",
+      "evidence": "✦ x10 CHUỖI"
+    },
+    {
+      "name": "1V1: mọi người cùng chuỗi từ",
+      "status": "PASS",
+      "evidence": "6/6"
+    },
+    {
+      "name": "1V1: mọi người hoàn thành tiếng Việt giống nhau",
+      "status": "PASS",
+      "evidence": "6/6"
+    },
+    {
+      "name": "1V1: server chấm đúng cho cả phòng",
+      "status": "PASS",
+      "evidence": "[{\"name\":\"QA Gõ Nhanh 2\",\"correct\":6,\"attempts\":6,\"score\":981},{\"name\":\"QA Gõ Nhanh 1\",\"correct\":6,\"attempts\":6,\"score\":982}]"
+    },
+    {
+      "name": "TRIO: mọi người cùng chuỗi từ",
+      "status": "PASS",
+      "evidence": "5/5"
+    },
+    {
+      "name": "TRIO: mọi người hoàn thành tiếng Việt giống nhau",
+      "status": "PASS",
+      "evidence": "5/5"
+    },
+    {
+      "name": "TRIO: server chấm đúng cho cả phòng",
+      "status": "PASS",
+      "evidence": "[{\"name\":\"QA Gõ Nhanh 1\",\"correct\":5,\"attempts\":5,\"score\":800},{\"name\":\"QA Gõ Nhanh 2\",\"correct\":5,\"attempts\":5,\"score\":800},{\"name\":\"QA Gõ Nhanh 3\",\"correct\":5,\"attempts\":5,\"score\":799}]"
+    },
+    {
+      "name": "2V2: mọi người cùng chuỗi từ",
+      "status": "PASS",
+      "evidence": "4/4"
+    },
+    {
+      "name": "2V2: mọi người hoàn thành tiếng Việt giống nhau",
+      "status": "PASS",
+      "evidence": "4/4"
+    },
+    {
+      "name": "2V2: server chấm đúng cho cả phòng",
+      "status": "PASS",
+      "evidence": "[{\"name\":\"QA Gõ Nhanh 2\",\"correct\":4,\"attempts\":4,\"score\":611},{\"name\":\"QA Gõ Nhanh 3\",\"correct\":4,\"attempts\":4,\"score\":611},{\"name\":\"QA Gõ Nhanh 4\",\"correct\":4,\"attempts\":4,\"score\":610},{\"name\":\"QA Gõ Nhanh 1\",\"correct\":4,\"attempts\":4,\"score\":611}]"
+    }
+  ],
+  "errors": [],
+  "shots": [
+    "01-solo-30-run.png",
+    "02-solo-30-end.png",
+    "03-1v1-multiplayer.png",
+    "03-trio-multiplayer.png",
+    "03-2v2-multiplayer.png"
+  ],
+  "scenarios": {
+    "solo30": {
+      "total": 30,
+      "vietnamese": 28,
+      "failures": [],
+      "doubleJumps": 0,
+      "focusLoss": 0,
+      "wrongFlash": 0,
+      "turns": [
+        {
+          "word": "MICRO",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "LOA",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "NHẮC NHỞ",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "ĐỒ CHƠI",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "ĐỀ ÁN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "QUÁN ĂN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "CON SÔNG",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "TÌNH BẠN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "BẠN THÂN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "THƯ KÝ",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "MÙA THU",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "MÁI TÓC",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "VĂN PHÒNG",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "BỔ NHIỆM",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "HÒN ĐẢO",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "HÀM",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "TÁCH TRÀ",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "MÙA HÈ",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "TRỨNG GÀ",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "BỘ ẢNH",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "QUẢ BÓNG",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "CUỘC HỌP",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "GIẢI NÉN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "Ổ ĐĨA",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "KỊCH BẢN QUẢNG CÁO",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "HỌP NHÓM",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "MÔ ĐUN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "NỖI BUỒN",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "CÁP SẠC",
+          "delta": 1,
+          "ms": 0
+        },
+        {
+          "word": "KẾ HOẠCH KINH DOANH",
+          "delta": 1,
+          "ms": 0
+        }
+      ]
+    },
+    "backspace": {
+      "word": "IN ẤN",
+      "brokenWrong": true,
+      "repairedWrong": false,
+      "turn": 1
+    },
+    "keyboardHook": {
+      "word": "ÁNH NẮNG",
+      "steps": 10,
+      "falseRed": 0,
+      "delta": 1
+    },
+    "mixed": {
+      "mixedOk": 20,
+      "mixedFail": 0,
+      "sawEn": 18,
+      "sawVi": 2
+    },
+    "stuckComposition": {
+      "word": "THÔNG BÁO",
+      "delta": 1,
+      "active": "arcade-word-input"
+    },
+    "english": {
+      "englishOk": 10,
+      "englishFail": 0,
+      "comboText": "✦ x10 CHUỖI"
+    }
+  },
+  "startedAt": "2026-10-23T01:49:08.319Z",
+  "finishedAt": "2026-10-23T01:50:53.250Z"
+}

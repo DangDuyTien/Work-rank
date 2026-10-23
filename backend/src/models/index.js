@@ -60,6 +60,8 @@ const TypingPlayer = require('./TypingPlayer');
 const TypingMatchResult = require('./TypingMatchResult');
 const TypingUserStat = require('./TypingUserStat');
 const TypingPracticeAttempt = require('./TypingPracticeAttempt');
+// Đua Gõ Theo Nhạc (music typing race) — internal game type stays typing_battle
+const MusicSong = require('./MusicSong');
 // Creative Corner Drawing Models
 const Drawing = require('./Drawing');
 const DrawingLike = require('./DrawingLike');
@@ -302,6 +304,7 @@ module.exports = {
   TypingMatchResult,
   TypingUserStat,
   TypingPracticeAttempt,
+  MusicSong,
   // Creative Corner Drawing Models
   Drawing,
   DrawingLike,

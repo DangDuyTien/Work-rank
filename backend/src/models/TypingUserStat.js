@@ -27,6 +27,11 @@ TypingUserStat.init(
     dailyRankedCount: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, field: 'daily_ranked_count' },
     dailyPointsEarned: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, field: 'daily_points_earned' },
     dailyResetDate: { type: DataTypes.STRING(10), allowNull: true, field: 'daily_reset_date' }, // 'YYYY-MM-DD'
+    // Đua Gõ Theo Nhạc career counters
+    musicBestFlowPct: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0, field: 'music_best_flow_pct' },
+    musicBestScore: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, field: 'music_best_score' },
+    musicNoPauseRuns: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, field: 'music_no_pause_runs' },
+    musicBestStreak: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, field: 'music_best_streak' },
     lastPlayedAt: { type: DataTypes.DATE, allowNull: true, field: 'last_played_at' },
   },
   {

@@ -21,6 +21,7 @@ TypingMatchResult.init(
       field: 'match_type',
     },
     seasonId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'season_id' },
+    musicSongId: { type: DataTypes.STRING(64), allowNull: true, field: 'music_song_id' },
     winnerUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'winner_user_id' },
     winnerTeam: {
       type: DataTypes.ENUM('A', 'B', 'DRAW', 'NONE'),

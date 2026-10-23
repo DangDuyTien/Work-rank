@@ -1,4 +1,5 @@
 import { CHALLENGES, COMPUTER_SEQUENCE_LIMIT, entriesForDifficulty, tierForIndex } from './vocabulary/index.mjs';
+import { normalizeTypingKey, minimumTypingMs } from './typingText.mjs';
 import { ARCADE_GAME_TYPES } from '../gameRegistry.mjs';
 import { GAME_MODES, MODE_IDS, canonicalMode, modeSpec, capacityFor, aggregateTeams, teamOutcome, teamScore, balancedTeam, teamCounts, teamsAreBalanced, compareTeams } from './modes.mjs';
 import { memoryLevel as memoryLevelV3, buildMemoryPattern } from './memory.mjs';
@@ -22,7 +23,7 @@ export const DIRECTION_MIN_RESPONSE_MS = 60;
 export const EVENT_CLOCK_TOLERANCE_MS = 1500;
 export const ARROWS = Object.freeze({ UP: '↑', DOWN: '↓', LEFT: '←', RIGHT: '→' });
 export const OPPOSITE = Object.freeze({ UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT' });
-export const normalizeWord = (value) => String(value).normalize('NFC').trim().replace(/\s+/gu, ' ').toLocaleUpperCase('vi');
+export const normalizeWord = normalizeTypingKey;
 
 // Each challenge is indexed independently: clients cannot drift when a player is slower.
 function random(seed, index) {
@@ -295,7 +296,7 @@ export function replay(game, seed, events, { durationMs = 60000, elapsedMs = dur
     if (game === 'computer_rush') {
       if (typeof e.value !== 'string' || e.value.length > 120 || !Number.isInteger(e.errors) || e.errors < 0 || e.errors > 120) throw new Error('Nội dung gõ không hợp lệ');
       correct = normalizeWord(e.value) === normalizeWord(c.word);
-      if (response < Math.max(140, (correct ? Array.from(c.word).length : 1) * 35)) throw new Error('Hoàn thành từ quá nhanh');
+      if (response < (correct ? minimumTypingMs(c.word) : 140)) throw new Error('Hoàn thành từ quá nhanh');
       mistakes += e.errors;
     } else if (game === 'direction_rush') {
       response -= c.revealMs + (c.stumbleMs || 0);

@@ -13,25 +13,20 @@
 
 import { ENGLISH_GROUPS } from './english.mjs';
 import { VIETNAMESE_GROUPS } from './vietnamese.mjs';
+import { normalizeTypingKey } from '../typingText.mjs';
 
 export const COMPUTER_SEQUENCE_LIMIT = 512;
 
 const VI_LOCALE = 'vi';
 
-export function normalizeKey(value) {
-  return String(value ?? '')
-    .normalize('NFC')
-    .trim()
-    .replace(/\s+/gu, ' ')
-    .toLocaleUpperCase(VI_LOCALE);
-}
+/**
+ * Một nguồn chuẩn hoá duy nhất cho cả kho từ, client và server.
+ * Trước đây hàm này được copy ở đây và trong engine — hai bản có thể lệch nhau.
+ */
+export const normalizeKey = normalizeTypingKey;
 
 function displayText(value) {
-  return String(value ?? '')
-    .normalize('NFC')
-    .trim()
-    .replace(/\s+/gu, ' ')
-    .toLocaleUpperCase(VI_LOCALE);
+  return normalizeTypingKey(value);
 }
 
 function parseGroup(words) {

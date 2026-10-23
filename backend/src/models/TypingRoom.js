@@ -29,6 +29,8 @@ TypingRoom.init(
     },
     maxPlayers: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 2, field: 'max_players' },
     challengeId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'challenge_id' },
+    // Set only for Đua Gõ Theo Nhạc rooms; null keeps classic passage rooms working.
+    musicSongId: { type: DataTypes.STRING(64), allowNull: true, field: 'music_song_id' },
     targetWordCount: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, field: 'target_word_count' },
     challengeText: { type: DataTypes.TEXT, allowNull: true, field: 'challenge_text' },
     difficulty: {
