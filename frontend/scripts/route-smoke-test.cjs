@@ -27,6 +27,7 @@ const routes = [
   { name: 'ArcadeGame', path: '../src/pages/ArcadeGame.jsx' },
   { name: 'DrawingGame', path: '../src/pages/DrawingGame.jsx' },
   { name: 'CreativeGallery', path: '../src/pages/CreativeGallery.jsx' },
+  { name: 'PrivateMedia', path: '../src/pages/PrivateMedia.jsx' },
   { name: 'Layout', path: '../src/components/Layout.jsx' },
   { name: 'Sidebar', path: '../src/components/Sidebar.jsx' },
   { name: 'VerifiedBadge', path: '../src/components/VerifiedBadge.jsx' },

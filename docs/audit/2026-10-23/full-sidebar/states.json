@@ -1,0 +1,121 @@
+{
+  "empty": [
+    {
+      "route": "/dashboard",
+      "bodyLen": 1889,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/leaderboard?scope=teams",
+      "bodyLen": 1511,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/arena",
+      "bodyLen": 1146,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/grand",
+      "bodyLen": 1241,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/friends",
+      "bodyLen": 11297,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/games",
+      "bodyLen": 1916,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    },
+    {
+      "route": "/settings",
+      "bodyLen": 3463,
+      "hasEmptyCopy": true,
+      "hasZeroOnly": false,
+      "sample": "3WIN MEDIA CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng "
+    }
+  ],
+  "error": [
+    {
+      "route": "/dashboard",
+      "pattern": "**/api/dashboard/**",
+      "bodyLen": 2146,
+      "hasErrorCopy": true,
+      "hasRetryButton": true,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr"
+    },
+    {
+      "route": "/youtube",
+      "pattern": "**/api/youtube/**",
+      "bodyLen": 1386,
+      "hasErrorCopy": false,
+      "hasRetryButton": false,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr"
+    },
+    {
+      "route": "/leaderboard?scope=members",
+      "pattern": "**/api/rankings/**",
+      "bodyLen": 1102,
+      "hasErrorCopy": true,
+      "hasRetryButton": true,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr"
+    },
+    {
+      "route": "/admin/teams-youtube",
+      "pattern": "**/api/youtube/admin/**",
+      "bodyLen": 19501,
+      "hasErrorCopy": true,
+      "hasRetryButton": false,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr"
+    },
+    {
+      "route": "/games/typing/words",
+      "pattern": "**/api/games/arcade/**",
+      "bodyLen": 1711,
+      "hasErrorCopy": true,
+      "hasRetryButton": false,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr"
+    }
+  ],
+  "loading": [
+    {
+      "route": "/dashboard",
+      "pattern": "**/api/dashboard/**",
+      "hasSkeleton": 20,
+      "hasSpinner": 0,
+      "bodyLen": 2089,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên &"
+    },
+    {
+      "route": "/youtube",
+      "pattern": "**/api/youtube/**",
+      "hasSkeleton": 33,
+      "hasSpinner": 0,
+      "bodyLen": 924,
+      "blank": false,
+      "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên &"
+    }
+  ],
+  "consoleErrors": []
+}

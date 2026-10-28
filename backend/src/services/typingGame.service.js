@@ -16,7 +16,6 @@ const {
 } = require('../models');
 
 const typingEngine = require('./typingEngine');
-const musicScoring = require('./musicScoring');
 const typingTransaction = require('./typingTransaction');
 const { measureInput, chars, METRIC_VERSION } = require('./typingMetrics');
 const typingRealtime = require('./typingRealtime.service');
@@ -43,9 +42,6 @@ const matchFinalizationPromises = new Map();
 const typingSeatGraceTimers = new Map();
 const TYPING_SEAT_GRACE_MS = 5000;
 const TYPING_DRAFT_KEY = '_typingDraft';
-// Đua Gõ Theo Nhạc stores its server-validated evidence next to the typing draft.
-// Rooms without a song never read or write this key.
-const MUSIC_EVIDENCE_KEY = '_music';
 
 function getTypingDraft(player) {
   const payload = player?.finalPayload;
@@ -66,19 +62,6 @@ function withTypingDraft(player, text, revision, valid = true) {
       valid,
     },
   };
-}
-
-function getMusicEvidence(player) {
-  const payload = player?.finalPayload;
-  const value = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload[MUSIC_EVIDENCE_KEY] : null;
-  return value && typeof value === 'object' ? value : null;
-}
-
-function withMusicEvidence(player, evidence) {
-  const payload = player.finalPayload && typeof player.finalPayload === 'object' && !Array.isArray(player.finalPayload)
-    ? player.finalPayload
-    : {};
-  player.finalPayload = { ...payload, [MUSIC_EVIDENCE_KEY]: evidence };
 }
 
 function deriveTypingInput(challengeText, submittedText) {
@@ -339,7 +322,6 @@ async function createRoom(data, requestingUser) {
     difficulty = 'MEDIUM',
     language = 'VI',
     challengeId = null,
-    songId = null,
     durationLimitSeconds = 120, // Default 2 minutes (120s), or 60s (1 min), 300s (5 min)
   } = data;
 
@@ -353,20 +335,8 @@ async function createRoom(data, requestingUser) {
   // Pick or construct continuous challenge for the specified duration
   let challengeText = null;
   let selectedChallenge = null;
-  let musicSong = null;
-  let effectiveDuration = cleanDuration;
 
-  // Đua Gõ Theo Nhạc: the "challenge" is the song's timed lyrics, and the room
-  // clock is the song plus a pause budget. Everything else (seats, ready,
-  // broadcast, ranking, persistence) is the existing room engine untouched.
-  if (songId) {
-    musicSong = await require('./musicRace.service').getSong(songId);
-    if (!musicSong) throw new ValidationError('Bài hát không tồn tại hoặc chưa được phát hành');
-    challengeText = musicScoring.lyricText(musicSong);
-    effectiveDuration = Math.ceil(Number(musicSong.durationMs) / 1000) + require('./musicRace.service').PAUSE_BUDGET_SECONDS;
-  }
-
-  if (!challengeText && challengeId) {
+  if (challengeId) {
     try {
       selectedChallenge = await TypingChallenge.findByPk(challengeId);
       if (selectedChallenge) {
@@ -416,11 +386,10 @@ async function createRoom(data, requestingUser) {
         status: 'WAITING',
         maxPlayers,
         challengeId: selectedChallenge ? selectedChallenge.id : null,
-        musicSongId: musicSong ? musicSong.id : null,
         targetWordCount: challengeText.split(/\s+/).length,
         challengeText,
-        difficulty: musicSong ? musicSong.difficulty : (selectedChallenge ? selectedChallenge.difficulty : difficulty),
-        durationLimitSeconds: effectiveDuration,
+        difficulty: selectedChallenge ? selectedChallenge.difficulty : difficulty,
+        durationLimitSeconds: cleanDuration,
         winnerTeam: 'NONE',
       },
       { transaction: t }
@@ -921,7 +890,6 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
     challengeText: room.challengeText,
     startedAt: room.startedAt,
     durationLimitSeconds: room.durationLimitSeconds,
-    musicSongId: room.musicSongId || null,
   });
   // WAITING -> PLAYING moves the room between public lists for every lobby.
   typingRealtime.emitToRoom(room.id, 'typing:roomListChanged', { roomId: room.id });
@@ -938,14 +906,9 @@ async function startMatch(roomId, hostUserId, isAutomated = false) {
   }, 1000);
   liveTimer.unref?.();
   liveMetricTimers.set(room.id, liveTimer);
-  // Music rooms carry a long pause budget so a slow typist is never cut off.
-  // Their deadline is the song plus a short tail, not the whole budget.
-  const deadlineSeconds = room.musicSongId
-    ? Math.ceil((Number(room.durationLimitSeconds) - 240 + 150))
-    : Number(room.durationLimitSeconds);
   const matchTimer = setTimeout(() => {
     finalizeMatch(room.id).catch((e) => console.error('Match timeout error:', e.message));
-  }, (deadlineSeconds + 3) * 1000);
+  }, (room.durationLimitSeconds + 3) * 1000);
   matchDeadlineTimers.set(room.id, matchTimer);
 
   return detail;
@@ -996,18 +959,6 @@ async function updateProgress(roomId, userId, data) {
     player.errorCount = metrics.errorCount;
     withTypingDraft(player, metrics.text, nextRevision, plausibility.valid);
     player.performanceScore = plausibility.valid && metrics.typedChars >= 20 ? typingEngine.computeBasePerformanceScore({ wpm: player.wpm, accuracy: metrics.accuracy, errorCount: metrics.errorCount, completed: progressPct >= 90, difficulty: room.difficulty }) : 0;
-
-    // Music evidence is stored for reconnect recovery and for finalize; the
-    // score itself is only recomputed at finish from text + server clock.
-    if (room.musicSongId && data.music && typeof data.music === 'object') {
-      withMusicEvidence(player, {
-        songId: room.musicSongId,
-        pauseCount: Math.max(0, Math.floor(Number(data.music.pauseCount) || 0)),
-        bestNoPauseStreak: Math.max(0, Math.floor(Number(data.music.bestNoPauseStreak) || 0)),
-        lineIndex: Math.max(0, Math.floor(Number(data.music.lineIndex) || 0)),
-      });
-    }
-
     await player.save({ transaction });
     update = {
       userId: Number(userId),
@@ -1154,33 +1105,10 @@ async function submitFinish(roomId, userId, data) {
       ? typingEngine.computeBasePerformanceScore({ wpm: finalWpm, accuracy: finalAcc, errorCount: effectiveErrorCount, completed: isCompleted, difficulty: room.difficulty })
       : 0;
   }
-  // Đua Gõ Theo Nhạc: the room score becomes the flow-weighted music score.
-  // The client never sends a score — it sends pause claims, and the server
-  // bounds them with its own elapsed clock before scoring.
-  let musicPayload = null;
-  if (room.musicSongId) {
-    const musicSong = await require('./musicRace.service').getSong(room.musicSongId);
-    if (musicSong) {
-      const musicEvaluation = musicScoring.evaluateMusicEvidence({
-        song: musicSong,
-        typedText: finalText,
-        elapsedMs: effectiveDuration,
-        evidence: (data?.music && typeof data.music === 'object') ? data.music : (getMusicEvidence(player) || {}),
-      });
-      if (musicEvaluation.valid) {
-        player.performanceScore = musicEvaluation.score;
-        meetsParticipation = meetsParticipation && musicEvaluation.linesCompleted >= 1;
-      }
-      musicPayload = { ...musicEvaluation, songId: musicSong.id, songTitle: musicSong.title };
-    }
-  }
-
   player.finalPayload = {
     ...(finalPayload && typeof finalPayload === 'object' && !Array.isArray(finalPayload) ? finalPayload : {}),
-    ...(getMusicEvidence(player) ? { [MUSIC_EVIDENCE_KEY]: getMusicEvidence(player) } : {}),
     [TYPING_DRAFT_KEY]: { text: finalText, revision: finalRevision, valid: finalValid },
   };
-  if (musicPayload) player.finalPayload[MUSIC_EVIDENCE_KEY] = musicPayload;
   await player.save();
 
   typingRealtime.emitToRoom(room.id, 'typing:playerFinished', {
@@ -1483,18 +1411,6 @@ async function finalizeMatchOnce(roomId) {
         stat.avgWpm = Math.round(((stat.avgWpm * prevMatches + player.wpm) / stat.totalMatches) * 10) / 10;
         stat.avgAccuracy = Math.round(((stat.avgAccuracy * prevMatches + player.accuracy) / stat.totalMatches) * 10) / 10;
       }
-      // Music career counters ride on the same stat row, only for song rooms
-      // and only when the run actually counted.
-      if (room.musicSongId && meetsParticipation) {
-        const music = getMusicEvidence(player);
-        if (music && Number.isFinite(Number(music.score))) {
-          stat.musicBestScore = Math.max(Number(stat.musicBestScore || 0), Number(music.score) || 0);
-          stat.musicBestFlowPct = Math.max(Number(stat.musicBestFlowPct || 0), Number(music.flowPct) || 0);
-          stat.musicBestStreak = Math.max(Number(stat.musicBestStreak || 0), Number(music.bestNoPauseStreak) || 0);
-          stat.musicNoPauseRuns = Number(stat.musicNoPauseRuns || 0) + (Number(music.pauseCount) === 0 ? 1 : 0);
-        }
-      }
-
       stat.lastPlayedAt = now;
       await stat.save({ transaction: t });
 
@@ -1522,16 +1438,6 @@ async function finalizeMatchOnce(roomId) {
         scoreDelta: awardedPoints,
         isWinner,
         performanceScore: player.performanceScore,
-        ...(room.musicSongId && getMusicEvidence(player) ? {
-          songId: room.musicSongId,
-          music: true,
-          linesCompleted: getMusicEvidence(player).linesCompleted,
-          totalLines: getMusicEvidence(player).totalLines,
-          pauseCount: getMusicEvidence(player).pauseCount,
-          flowPct: getMusicEvidence(player).flowPct,
-          bestNoPauseStreak: getMusicEvidence(player).bestNoPauseStreak,
-          musicScore: getMusicEvidence(player).score,
-        } : {}),
       });
     }
 
@@ -1541,7 +1447,6 @@ async function finalizeMatchOnce(roomId) {
         roomId: room.id,
         mode: room.mode,
         matchType: room.matchType,
-        musicSongId: room.musicSongId || null,
         seasonId: activeSeason ? activeSeason.id : null,
         winnerUserId,
         winnerTeam,

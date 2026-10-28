@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/WorkRankPrivateMediaHelper-primary.dia",
+    "emit-module-dependencies" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/WorkRankPrivateMediaHelper-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/WorkRankPrivateMediaHelper-primary-emit-module.dia",
+    "pch" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/WorkRankPrivateMediaHelper-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/WorkRankPrivateMediaHelper-primary.swiftdeps"
+  },
+  "/Applications/du-an/workrank/workrank-realtime/mac-helper/Sources/WorkRankPrivateMediaHelper/main.swift" : {
+    "const-values" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.swiftconstvalues",
+    "dependencies" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.d",
+    "diagnostics" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.dia",
+    "index-unit-output-path" : "/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.o",
+    "llvm-bc" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.bc",
+    "object" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.o",
+    "swift-dependencies" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main.swiftdeps",
+    "swiftmodule" : "/Applications/du-an/workrank/workrank-realtime/mac-helper/.build/out/Intermediates.noindex/WorkRankPrivateMediaHelper.build/Debug/WorkRankPrivateMediaHelper-p.build/Objects-normal/arm64/main~partial.swiftmodule"
+  }
+}

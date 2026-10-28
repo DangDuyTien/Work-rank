@@ -1,4 +1,4 @@
-import { graphemes, normalizeText, foldCase } from './typingText.js';
+import { graphemes, normalizeText, foldCase } from './typingText';
 
 const isHighSurrogate = (code) => code >= 0xd800 && code <= 0xdbff;
 

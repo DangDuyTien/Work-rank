@@ -280,8 +280,8 @@ export default function AdminOperations() {
   return (
     <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
       {/* ── HEADER / OPERATIONS HERO ── */}
-      <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
-        <div>
+      <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', minWidth: 0, maxWidth: '100%' }}>
+        <div style={{ minWidth: 0, maxWidth: '100%' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px', background: 'rgba(180,83,9,0.08)', color: 'var(--accent)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
             <Activity size={14} />
             Trung tâm kiểm toán & Giám sát vận hành
@@ -289,6 +289,7 @@ export default function AdminOperations() {
           <h1 style={{ margin: '12px 0 6px', fontSize: 24, lineHeight: 1.25, color: 'var(--text-primary)', fontWeight: 700 }}>
             Giám Sát Vận Hành & Nhật Ký Kiểm Toán
           </h1>
+          <h2 className="sr-only">Tổng quan vận hành hệ thống</h2>
           <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
             Theo dõi sức khỏe hệ thống, hàng đợi sự kiện YouTube/Production, độ trễ Bảng Xếp Hạng và tra cứu toàn bộ Audit Logs.
           </p>

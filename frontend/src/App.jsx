@@ -1,9 +1,11 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UiProvider } from './context/UiContext';
 import Layout from './components/Layout';
+import DialogAccessibility from './components/DialogAccessibility';
 import { normalizeRankingParams } from './config/ranking';
+import { usePrivateMediaAccess } from './hooks/usePrivateMediaAccess';
 
 const CHUNK_RELOAD_KEY = 'workrank:chunk-reload-attempted';
 
@@ -49,12 +51,12 @@ const GrandHub = lazyWithReload(() => import('./pages/GrandHub'));
 const YouTubeOverview = lazyWithReload(() => import('./pages/YouTubeOverview'));
 const TypingBattle = lazyWithReload(() => import('./pages/TypingBattle'));
 const TypingHub = lazyWithReload(() => import('./pages/TypingHub'));
-const MusicRace = lazyWithReload(() => import('./pages/MusicRace'));
 const ArcadeGame = lazyWithReload(() => import('./pages/ArcadeGame'));
 const DrawingGame = lazyWithReload(() => import('./pages/DrawingGame'));
 const CreativeGallery = lazyWithReload(() => import('./pages/CreativeGallery'));
 const GameHub = lazyWithReload(() => import('./pages/GameHub'));
 const AdminKpi = lazyWithReload(() => import('./pages/AdminKpi'));
+const PrivateMedia = lazyWithReload(() => import('./pages/PrivateMedia'));
 
 
 const ProtectedRoute = ({ children }) => {
@@ -84,6 +86,61 @@ const AdminRoute = ({ children }) => {
   if (loading) return <PageFallback text="Đang kiểm tra quyền truy cập..." />;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
+/**
+ * Concealment page for the private capability.
+ *
+ * A user without entitlement must not be able to tell this route apart from a
+ * URL that simply does not exist — no "forbidden", no feature name, no hint.
+ */
+function ConcealedPage() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: 24 }}>
+      <div style={{ textAlign: 'center', maxWidth: 380 }}>
+        <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
+          Không tìm thấy trang
+        </h1>
+        <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+          Đường dẫn này không tồn tại hoặc đã được di chuyển.
+        </p>
+        <Link
+          to="/dashboard"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 38,
+            padding: '0 16px',
+            borderRadius: 'var(--radius-interactive)',
+            background: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}
+        >
+          Về trang tổng quan
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Route guard for /private/media.
+ *
+ * Client-side only for *presentation*: the backend returns 404 on every private
+ * endpoint for an unentitled caller, so bypassing this guard reveals nothing.
+ */
+const PrivateMediaRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  const access = usePrivateMediaAccess();
+
+  if (loading || access.loading) return <PageFallback text="Đang tải..." />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!access.entitled) return <ConcealedPage />;
   return children;
 };
 
@@ -210,8 +267,6 @@ function AppRoutes() {
             <Route path="/games/typing" element={<TypingHub />} />
             <Route path="/games/typing/words" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
             <Route path="/games/typing/words/room/:roomId" element={<ArcadeGame gameTypeOverride="computer_rush" />} />
-            <Route path="/games/typing/music" element={<MusicRace />} />
-            <Route path="/games/typing/music/room/:roomId" element={<MusicRace />} />
             <Route path="/games/typing/passage" element={<TypingBattle />} />
             <Route path="/games/typing/room/:roomId" element={<TypingBattle />} />
             <Route path="/games/typing/spectate/:roomId" element={<TypingBattle />} />
@@ -230,6 +285,8 @@ function AppRoutes() {
             <Route path="/admin/operations" element={<AdminRoute><AdminOperations /></AdminRoute>} />
             <Route path="/admin/games/*" element={<Navigate to="/settings?tab=games" replace />} />
             <Route path="/settings" element={<Settings />} />
+            {/* Private capability: hidden from nav, guarded route, backend-authorized. */}
+            <Route path="/private/media" element={<PrivateMediaRoute><PrivateMedia /></PrivateMediaRoute>} />
             <Route path="/users/:id" element={<UserDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -241,9 +298,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <UiProvider>
         <AuthProvider>
+          <DialogAccessibility />
           <RouteErrorBoundary>
             <AppRoutes />
           </RouteErrorBoundary>

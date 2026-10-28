@@ -99,6 +99,15 @@ export default function YouTubeOverview() {
   const [compareError, setCompareError] = useState('');
   const comparisonContext = `${user?.id}:${isAdmin}:${activeTab}:${teamAId}:${teamBId}`;
   const currentComparisonContext = useRef(comparisonContext);
+
+  // WR-AUDIT-015 — member không có tab So sánh: chuẩn hoá URL thay vì để
+  // ?tab=compare trỏ tới nội dung Tổng quan.
+  useEffect(() => {
+    if (requestedTab !== 'compare' || isAdmin) return;
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', 'overview');
+    setSearchParams(params, { replace: true });
+  }, [requestedTab, isAdmin, searchParams, setSearchParams]);
   currentComparisonContext.current = comparisonContext;
 
   useEffect(() => {

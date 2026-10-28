@@ -364,7 +364,7 @@ export default function AdminKpi() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
             <Target size={14} />
-            WorkRank KPI Foundation
+            Nền tảng KPI WorkRank
           </div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>
             Quản Lý Phòng Ban & Chỉ Tiêu KPI
@@ -414,7 +414,7 @@ export default function AdminKpi() {
       )}
 
       {/* NAVIGATION TABS */}
-      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 6, borderBottom: '1px solid var(--border)', marginBottom: 20, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', minWidth: 0, paddingBottom: 2 }}>
         {[
           { id: 'kpis', label: 'Quản Lý KPI', icon: Target, count: definitions.length },
           { id: 'departments', label: 'Phòng Ban', icon: Building2, count: departments.length },
@@ -474,6 +474,7 @@ export default function AdminKpi() {
               {/* Department Filter */}
               <select
                 value={filterDept}
+                aria-label="Lọc KPI theo phòng ban"
                 onChange={(e) => setFilterDept(e.target.value)}
                 style={{
                   padding: '7px 12px',
@@ -802,6 +803,7 @@ export default function AdminKpi() {
               {/* Department Filter */}
               <select
                 value={filterDept}
+                aria-label="Lọc KPI theo phòng ban"
                 onChange={(e) => setFilterDept(e.target.value)}
                 style={{
                   padding: '7px 12px',
@@ -1250,7 +1252,7 @@ export default function AdminKpi() {
                     <option value="manual">Thủ công (Manual)</option>
                     <option value="admin">Quản trị viên (Admin)</option>
                     <option value="production">Hệ thống Sản xuất (Production)</option>
-                    <option value="youtube">YouTube Studio Hub</option>
+                    <option value="youtube">Trung tâm YouTube Studio</option>
                     <option value="system">Hệ thống nội bộ (System)</option>
                     <option value="api">API tích hợp</option>
                   </select>

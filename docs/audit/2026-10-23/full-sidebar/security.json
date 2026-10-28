@@ -1,0 +1,165 @@
+{
+  "api": [
+    {
+      "name": "member đọc danh sách user (được phép)",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "name": "member sửa hồ sơ người khác",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "member tự nâng role=admin",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Bạn không có quyền chỉnh sửa chức danh, phòng ban, đội nhóm hoặc phân quyền/huy hiệu hệ thống. Vui lòng liên hệ Admin."
+    },
+    {
+      "name": "member tự cấp isVerified",
+      "status": 200,
+      "expected": [
+        403
+      ],
+      "ok": false
+    },
+    {
+      "name": "member tự đổi teamId",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Bạn không có quyền chỉnh sửa chức danh, phòng ban, đội nhóm hoặc phân quyền/huy hiệu hệ thống. Vui lòng liên hệ Admin."
+    },
+    {
+      "name": "member xóa user khác",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "member xóa tranh của người khác",
+      "status": 403,
+      "expected": [
+        403,
+        404
+      ],
+      "ok": true,
+      "message": "Bạn không có quyền xóa tác phẩm này."
+    },
+    {
+      "name": "member đọc KPI admin",
+      "status": 200,
+      "expected": [
+        403
+      ],
+      "ok": false,
+      "message": true
+    },
+    {
+      "name": "member đọc audit log",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "member đổi cài đặt drawing",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "member tạo nhân sự",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "member xem storage status",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "ok": true,
+      "message": "Forbidden"
+    },
+    {
+      "name": "admin đọc KPI",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "ok": true,
+      "message": true
+    }
+  ],
+  "routes": [
+    {
+      "route": "/admin/kpi",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1889
+    },
+    {
+      "route": "/admin/privileges",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1916
+    },
+    {
+      "route": "/admin/teams-youtube",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1916
+    },
+    {
+      "route": "/admin/competition/seasons",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1916
+    },
+    {
+      "route": "/admin/competition/rules",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1916
+    },
+    {
+      "route": "/admin/competition/grand",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1889
+    },
+    {
+      "route": "/admin/operations",
+      "finalUrl": "/dashboard",
+      "redirected": true,
+      "bodyLen": 1889
+    }
+  ],
+  "consoleErrors": []
+}

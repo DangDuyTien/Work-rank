@@ -1153,6 +1153,7 @@ export default function DrawingGame() {
                   type="button"
                   className={`studio-tool ${tool === key ? 'is-active' : ''}`}
                   aria-pressed={tool === key}
+                  aria-label={meta.label}
                   onClick={() => changeTool(key)}
                   title={`${meta.label} (${meta.key})`}
                 >
@@ -1236,23 +1237,23 @@ export default function DrawingGame() {
           </div>
 
           <div className="studio-actions" role="group" aria-label="Thao tác với tranh">
-            <button type="button" onClick={handleUndo} disabled={!canUndo} title="Hoàn tác (Ctrl+Z)">
+            <button type="button" onClick={handleUndo} disabled={!canUndo} title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác">
               <RotateCcw size={16} aria-hidden="true" />
               <span>Hoàn tác</span>
             </button>
-            <button type="button" onClick={handleRedo} disabled={!canRedo} title="Làm lại (Ctrl+Y)">
+            <button type="button" onClick={handleRedo} disabled={!canRedo} title="Làm lại (Ctrl+Y)" aria-label="Làm lại">
               <RotateCw size={16} aria-hidden="true" />
               <span>Làm lại</span>
             </button>
-            <button type="button" onClick={handleSaveDraft} title="Lưu bản nháp trên thiết bị">
+            <button type="button" onClick={handleSaveDraft} title="Lưu bản nháp trên thiết bị" aria-label="Lưu bản nháp">
               <Save size={16} aria-hidden="true" />
               <span>Lưu nháp</span>
             </button>
-            <button type="button" onClick={handleDownload} title="Tải ảnh PNG về máy">
+            <button type="button" onClick={handleDownload} title="Tải ảnh PNG về máy" aria-label="Tải ảnh PNG">
               <Download size={16} aria-hidden="true" />
               <span>Tải PNG</span>
             </button>
-            <button type="button" className="is-danger" onClick={() => setShowClearConfirmModal(true)} title="Xóa toàn bộ tranh">
+            <button type="button" className="is-danger" onClick={() => setShowClearConfirmModal(true)} title="Xóa toàn bộ tranh" aria-label="Xóa toàn bộ tranh">
               <Trash2 size={16} aria-hidden="true" />
               <span>Xóa tranh</span>
             </button>
@@ -1482,6 +1483,12 @@ export default function DrawingGame() {
           </div>
         ) : (
           <div className="drawing-preview-form">
+            {publishingAvailable === false && (
+              <Notice type="info">
+                Hiện chưa thể đăng tranh lên hệ thống vì kho lưu trữ chưa được cấu hình.
+                Bạn vẫn có thể lưu bản nháp trên thiết bị hoặc tải bản PNG.
+              </Notice>
+            )}
             {isPublishing&&<div className="drawing-save-progress" role="status">{publishStage}<progress value={uploadPercent} max={100}/></div>}
             {errorMessage && (
               <Notice type="error" className="preview-error-notice">

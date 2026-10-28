@@ -55,6 +55,7 @@ function formatMemberCode(user = {}) {
 }
 
 function Avatar({ user, size = 42 }) {
+  const [imgError, setImgError] = useState(false);
   const avatar = getUserAvatar(user, userIdOf(user));
   const name = user.name || user.email || 'User';
   return (
@@ -73,8 +74,13 @@ function Avatar({ user, size = 42 }) {
       position: 'relative',
       borderRadius: '50%',
     }}>
-      {avatar ? (
-        <img src={avatar} alt={`Ảnh ${name}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {avatar && !imgError ? (
+        <img
+          src={avatar}
+          alt={`Ảnh ${name}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setImgError(true)}
+        />
       ) : (
         initialsFromName(name)
       )}
@@ -664,6 +670,7 @@ export default function Friends() {
 
                 <select
                   value={departmentFilter}
+                  aria-label="Lọc theo phòng ban"
                   onChange={(e) => setDepartmentFilter(e.target.value)}
                   style={{
                     height: 40,
@@ -689,6 +696,7 @@ export default function Friends() {
 
                 <select
                   value={teamStatusFilter}
+                  aria-label="Lọc theo trạng thái đội nhóm"
                   onChange={(e) => setTeamStatusFilter(e.target.value)}
                   style={{
                     height: 40,
@@ -808,9 +816,6 @@ export default function Friends() {
                                 background: memberIsLeader ? 'var(--accent-soft)' : 'var(--info-soft)',
                                 border: memberIsLeader ? '1px solid var(--accent-border)' : '1px solid var(--info-border)',
                                 padding: '2px 8px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
                               }}>
                                 <Shield size={12} />
                                 {memberTeamName} {memberIsLeader && <><Crown size={12} /> Trưởng nhóm</>}

@@ -442,6 +442,7 @@ export default function UserDetail() {
               <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
                 {user.name || `User #${targetUserId}`}
               </h1>
+              <h2 className="sr-only">Tổng quan hồ sơ nhân sự</h2>
               {isVerified && <VerifiedBadge size={22} />}
               {isDev && (
                 <span
@@ -714,6 +715,9 @@ export default function UserDetail() {
           borderRadius: 6, padding: 6,
           marginBottom: 18, overflowX: 'auto',
           scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          minWidth: 0,
+          paddingRight: 8,
         }}
       >
         {[

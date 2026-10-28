@@ -1,0 +1,259 @@
+{
+  "routes": [
+    {
+      "route": "/dashboard",
+      "ok": true,
+      "h1": "Xin chào, Audit Admin",
+      "bodyLen": 2171,
+      "crashed": false,
+      "url": "/dashboard",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/youtube",
+      "ok": true,
+      "h1": "YouTube",
+      "bodyLen": 1988,
+      "crashed": false,
+      "url": "/youtube",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/leaderboard",
+      "ok": true,
+      "h1": "Bảng Xếp Hạng Toàn Công Ty",
+      "bodyLen": 2895,
+      "crashed": false,
+      "url": "/leaderboard?scope=kpi",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/arena",
+      "ok": true,
+      "h1": "Mùa Giải 2026",
+      "bodyLen": 1347,
+      "crashed": false,
+      "url": "/arena",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/grand",
+      "ok": true,
+      "h1": "Giải Vô Địch Năm 2026",
+      "bodyLen": 1440,
+      "crashed": false,
+      "url": "/grand",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/friends",
+      "ok": true,
+      "h1": "Thành Viên & Đội Nhóm",
+      "bodyLen": 11529,
+      "crashed": false,
+      "url": "/friends",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games",
+      "ok": true,
+      "h1": "Trung tâm trò chơi",
+      "bodyLen": 2159,
+      "crashed": false,
+      "url": "/games",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/typing",
+      "ok": true,
+      "h1": "Đua Gõ Chữ",
+      "bodyLen": 1470,
+      "crashed": false,
+      "url": "/games/typing",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/typing/passage",
+      "ok": true,
+      "h1": "ĐUA GÕ CHỮ",
+      "bodyLen": 1687,
+      "crashed": false,
+      "url": "/games/typing/passage",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/typing/words",
+      "ok": true,
+      "h1": "GÕ NHANH",
+      "bodyLen": 1673,
+      "crashed": false,
+      "url": "/games/typing/words",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/arcade/direction_rush",
+      "ok": true,
+      "h1": "PHẢN XẠ BỐN HƯỚNG",
+      "bodyLen": 1649,
+      "crashed": false,
+      "url": "/games/arcade/direction_rush",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/arcade/memory_flash",
+      "ok": true,
+      "h1": "TRÍ NHỚ NHANH",
+      "bodyLen": 1710,
+      "crashed": false,
+      "url": "/games/arcade/memory_flash",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/games/drawing",
+      "ok": true,
+      "h1": "Xưởng Vẽ",
+      "bodyLen": 1304,
+      "crashed": false,
+      "url": "/games/drawing",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/creative-corner",
+      "ok": true,
+      "h1": "Thư viện tranh",
+      "bodyLen": 1645,
+      "crashed": false,
+      "url": "/creative-corner",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "bad": []
+    },
+    {
+      "route": "/users/1",
+      "ok": true,
+      "h1": "Duy Tiến (Admin)",
+      "bodyLen": 1869,
+      "crashed": false,
+      "url": "/users/1",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/settings",
+      "ok": true,
+      "h1": "Cài đặt tài khoản",
+      "bodyLen": 4870,
+      "crashed": false,
+      "url": "/settings",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/kpi",
+      "ok": true,
+      "h1": "Quản Lý Phòng Ban & Chỉ Tiêu KPI",
+      "bodyLen": 5205,
+      "crashed": false,
+      "url": "/admin/kpi",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/privileges",
+      "ok": true,
+      "h1": "Nhân sự, Chức danh & Danh hiệu Vinh danh",
+      "bodyLen": 7930,
+      "crashed": false,
+      "url": "/admin/privileges",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/teams-youtube",
+      "ok": true,
+      "h1": "Quản Lý & Phân Tầng Dữ Liệu YouTube",
+      "bodyLen": 37239,
+      "crashed": false,
+      "url": "/admin/teams-youtube",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/competition/seasons",
+      "ok": true,
+      "h1": "Quản Lý Mùa Giải & Vinh Danh",
+      "bodyLen": 3492,
+      "crashed": false,
+      "url": "/admin/competition/seasons",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/competition/rules",
+      "ok": true,
+      "h1": "Quy tắc thi đấu",
+      "bodyLen": 2849,
+      "crashed": false,
+      "url": "/admin/competition/rules",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/competition/grand",
+      "ok": true,
+      "h1": "Quản Lý Grand Championship",
+      "bodyLen": 1638,
+      "crashed": false,
+      "url": "/admin/competition/grand",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/admin/operations",
+      "ok": true,
+      "h1": "Giám Sát Vận Hành & Nhật Ký Kiểm Toán",
+      "bodyLen": 2078,
+      "crashed": false,
+      "url": "/admin/operations",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/login",
+      "ok": true,
+      "h1": "Chào mừng đến WorkRank.",
+      "bodyLen": 524,
+      "crashed": false,
+      "url": "/login",
+      "errors": [],
+      "bad": []
+    },
+    {
+      "route": "/",
+      "ok": true,
+      "h1": "Người được vinh danh",
+      "bodyLen": 2218,
+      "crashed": false,
+      "url": "/",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "bad": []
+    }
+  ],
+  "errors": []
+}

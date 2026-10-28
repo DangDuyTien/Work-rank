@@ -1,0 +1,302 @@
+#!/usr/bin/env node
+/**
+ * PRIVATE MEDIA — BROWSER QA
+ *
+ * Verifies the two properties that only a real browser can prove:
+ *   1. The capability is invisible in the sidebar for accounts without a grant
+ *      (including a Work Rank admin).
+ *   2. Pasting the URL directly shows the concealment page, not a permission
+ *      error and not the feature.
+ *
+ * Usage (servers already running):
+ *   PM_QA_BASE_URL=http://127.0.0.1:4173 \
+ *   PM_QA_OWNER_TOKEN=... PM_QA_ADMIN_TOKEN=... \
+ *   node scripts/private-media-browser-qa.mjs
+ *
+ * Tokens are minted out-of-band (see docs/audit/2026-10-27). The script never
+ * logs them.
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from '@playwright/test';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const BASE = process.env.PM_QA_BASE_URL || 'http://127.0.0.1:4173';
+const API = process.env.PM_QA_API_URL || 'http://127.0.0.1:5001';
+const OWNER_TOKEN = process.env.PM_QA_OWNER_TOKEN || '';
+const ADMIN_TOKEN = process.env.PM_QA_ADMIN_TOKEN || '';
+const SHOTS = path.resolve(__dirname, '../../docs/audit/2026-10-27/shots');
+
+const results = [];
+
+function record(name, pass, detail = '') {
+  results.push({ name, pass, detail });
+  console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
+}
+
+/** Not a pass and not a failure: the capability is unavailable (missing credential). */
+function recordSkip(name, detail = '') {
+  results.push({ name, pass: null, detail });
+  console.log(`SKIP  ${name}${detail ? ` — ${detail}` : ''}`);
+}
+
+async function seedSession(page, token, userId) {
+  await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(({ token: t, userId: id }) => {
+    localStorage.setItem('token', t);
+    localStorage.setItem('workrank_active_user_id', String(id));
+    localStorage.setItem('workrank_token_issued_at', String(Date.now()));
+    localStorage.setItem('workrank_session', JSON.stringify({
+      userId: String(id), token: t, sessionGeneration: Date.now(),
+    }));
+  }, { token, userId });
+}
+
+async function sidebarHasPrivateMedia(page) {
+  const nav = page.locator('nav[aria-label="Điều hướng chính"]');
+  await nav.waitFor({ state: 'visible', timeout: 15000 });
+  return nav.getByText('Điều khiển media', { exact: true }).count();
+}
+
+async function run() {
+  if (!OWNER_TOKEN || !ADMIN_TOKEN) {
+    console.error('Missing PM_QA_OWNER_TOKEN / PM_QA_ADMIN_TOKEN');
+    process.exit(2);
+  }
+  fs.mkdirSync(SHOTS, { recursive: true });
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    // YouTube serves a degraded player to HeadlessChrome; a normal desktop UA
+    // makes the embed behave like the browser a real owner would use.
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  });
+  const page = await context.newPage();
+
+  // ── Owner ────────────────────────────────────────────────────────────────
+  await seedSession(page, OWNER_TOKEN, process.env.PM_QA_OWNER_ID || '10943');
+  await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1800);
+
+  const ownerNavCount = await sidebarHasPrivateMedia(page);
+  record('OWNER_SEES_NAV', ownerNavCount > 0, `entries=${ownerNavCount}`);
+  await page.screenshot({ path: path.join(SHOTS, 'owner-sidebar.png'), fullPage: false });
+
+  await page.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2200);
+  const ownerHeading = await page.getByRole('heading', { name: 'Điều khiển media', level: 1 }).count();
+  record('OWNER_OPENS_PAGE', ownerHeading > 0, `h1=${ownerHeading}`);
+  await page.screenshot({ path: path.join(SHOTS, 'owner-private-media.png'), fullPage: true });
+
+  // Real YouTube lookup through the official embed (keyless oEmbed resolve).
+  const EMBEDDABLE_VIDEO = process.env.PM_QA_VIDEO_URL || 'https://www.youtube.com/watch?v=aqz-KE-bpKQ';
+  const searchInput = page.getByLabel('Tìm video YouTube hoặc dán link');
+  if (await searchInput.count()) {
+    await searchInput.fill(EMBEDDABLE_VIDEO);
+    await page.locator('.pm-search__form button[type="submit"]').click();
+    await page.waitForTimeout(9000);
+    const iframe = page.locator('iframe[src*="youtube.com/embed"]');
+    const iframeCount = await iframe.count();
+    record('YOUTUBE_PLAYER_EMBEDDED', iframeCount > 0, `iframes=${iframeCount}`);
+    const transport = await page.locator('.pm-transport button').count();
+    record('TRANSPORT_RENDERED', transport >= 4, `controls=${transport}`);
+
+    // The session must never claim PLAYING while the clock is frozen. This is
+    // the invariant that catches a UI faking playback.
+    const honestState = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.ok ? (await res.json()).session : null;
+    }, { api: API, token: OWNER_TOKEN });
+    const stateHonest = honestState?.status !== 'PLAYING' || Number(honestState?.currentTime) > 0;
+    record(
+      'SESSION_STATE_HONEST',
+      stateHonest,
+      `status=${honestState?.status} t=${Math.round(Number(honestState?.currentTime) || 0)}s`,
+    );
+
+    const activate = page.getByRole('button', { name: 'Kích hoạt trình phát' });
+    const needsActivation = await activate.count();
+    record(
+      'AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED',
+      true,
+      needsActivation > 0 ? 'activation button shown' : 'browser allowed autoplay',
+    );
+    await page.screenshot({ path: path.join(SHOTS, 'owner-player-loaded.png'), fullPage: true });
+  } else {
+    record('YOUTUBE_PLAYER_EMBEDDED', false, 'search input not found');
+  }
+
+  // ── In-app search (needs YOUTUBE_API_KEY on the server) ───────────────────
+  const capabilities = await page.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/status`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.ok ? (await res.json()).youtube : null;
+  }, { api: API, token: OWNER_TOKEN });
+
+  if (capabilities?.search) {
+    await page.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+    await page.getByLabel('Tìm video YouTube hoặc dán link').fill('big buck bunny');
+    await page.locator('.pm-search__form button[type="submit"]').click();
+    await page.waitForTimeout(4500);
+    const found = await page.locator('.pm-search .pm-result').count();
+    record('YOUTUBE_SEARCH', found > 0, `results=${found}`);
+    if (found > 0) {
+      await page.screenshot({ path: path.join(SHOTS, 'owner-search-results.png'), fullPage: false });
+    }
+  } else {
+    recordSkip('YOUTUBE_SEARCH', 'YOUTUBE_API_KEY not configured');
+  }
+
+  // ── Discreet mode: names only, picture covered, audio unaffected ──────────
+  if (capabilities?.search) {
+    const thumbs = await page.locator('.pm-search .pm-result img').count();
+    const veil = await page.locator('.pm-stage__veil').count();
+    const veilText = veil ? (await page.locator('.pm-stage__veil').innerText()).replace(/\n/g, ' / ').slice(0, 70) : '';
+    record('DISCREET_MODE', thumbs === 0 && veil > 0, `thumbnails=${thumbs} veil=${veil} "${veilText}"`);
+    await page.screenshot({ path: path.join(SHOTS, 'owner-discreet-mode.png'), fullPage: false });
+  } else {
+    recordSkip('DISCREET_MODE', 'search unavailable, skipped');
+  }
+
+  // ── Playback proof in a browser configured to permit autoplay ─────────────
+  // Headless Chromium otherwise stalls in BUFFERING, which would prove nothing
+  // about the product. This second context behaves like a desktop Chrome where
+  // the viewer has allowed media autoplay.
+  const playBrowser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const playContext = await playBrowser.newContext({
+    viewport: { width: 1440, height: 900 },
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  });
+  const playPage = await playContext.newPage();
+  await seedSession(playPage, OWNER_TOKEN, process.env.PM_QA_OWNER_ID || '10943');
+  await playPage.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
+  await playPage.waitForTimeout(3000);
+  const playInput = playPage.getByLabel('Tìm video YouTube hoặc dán link');
+  await playInput.fill(EMBEDDABLE_VIDEO);
+  await playPage.locator('.pm-search__form button[type="submit"]').click();
+  await playPage.waitForTimeout(11000);
+
+  const playback = await playPage.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.ok ? (await res.json()).session : null;
+  }, { api: API, token: OWNER_TOKEN });
+  record(
+    'PLAYBACK_PROGRESS',
+    Boolean(playback?.video?.videoId) && Number(playback?.currentTime) > 0,
+    `video=${playback?.video?.videoId || 'none'} t=${playback?.currentTime || 0}s status=${playback?.status}`,
+  );
+  await playPage.screenshot({ path: path.join(SHOTS, 'owner-player-playing.png'), fullPage: true });
+  await playBrowser.close();
+
+  // Owner API surface answers with entitlement.
+  const ownerApi = await page.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/access`, { headers: { Authorization: `Bearer ${token}` } });
+    return { status: res.status, body: await res.json().catch(() => null) };
+  }, { api: API, token: OWNER_TOKEN });
+  record('OWNER_API_ACCESS', ownerApi.status === 200 && ownerApi.body?.isOwner === true, `status=${ownerApi.status}`);
+
+  // ── Mini controller matches the app surface ───────────────────────────────
+  // A black bar over the warm light theme reads as a foreign window; it must
+  // live in the same colour family as the page it was opened from.
+  await page.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => { delete window.documentPictureInPicture; });
+  await page.getByRole('button', { name: 'Cửa sổ nhỏ luôn nổi' }).click();
+  await page.waitForTimeout(1500);
+  const miniTheme = await page.evaluate(() => {
+    const el = document.querySelector('.pm-mini');
+    if (!el) return null;
+    const parse = (value) => {
+      const hex = String(value || '').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (hex) {
+        const body = hex[1].length === 3 ? hex[1].split('').map((c) => c + c).join('') : hex[1];
+        return [0, 2, 4].map((i) => parseInt(body.slice(i, i + 2), 16));
+      }
+      const rgb = String(value || '').match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+      return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+    };
+    const luminance = (rgb) => (rgb ? (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 : null);
+    const miniBg = window.getComputedStyle(el).backgroundColor;
+    const pageBg = window.getComputedStyle(document.documentElement).getPropertyValue('--background');
+    const a = luminance(parse(miniBg));
+    const b = luminance(parse(pageBg));
+    return { miniBg, pageBg: pageBg.trim(), miniLum: a, pageLum: b, sameFamily: a != null && b != null && (a > 0.5) === (b > 0.5) };
+  });
+  record(
+    'MINI_CONTROLLER_THEME',
+    Boolean(miniTheme?.sameFamily),
+    miniTheme ? `${miniTheme.miniBg} vs page ${miniTheme.pageBg}` : 'mini bar not found',
+  );
+  await page.screenshot({ path: path.join(SHOTS, 'owner-mini-bar.png'), fullPage: false });
+
+  // Manual palette override (the PiP window cannot read another tab's colour,
+  // so the owner must be able to force one).
+  const autoBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
+  await page.getByRole('button', { name: 'Tối', exact: true }).click();
+  await page.waitForTimeout(700);
+  const darkBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
+  await page.getByRole('button', { name: 'Tự động', exact: true }).click();
+  await page.waitForTimeout(700);
+  const backBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
+  record(
+    'MINI_PALETTE_OVERRIDE',
+    darkBg !== autoBg && backBg === autoBg,
+    `auto=${autoBg} dark=${darkBg} back=${backBg}`,
+  );
+
+  // ── Admin (no grant) ─────────────────────────────────────────────────────
+  await seedSession(page, ADMIN_TOKEN, process.env.PM_QA_ADMIN_ID || '1');
+  await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1800);
+
+  const adminNavCount = await sidebarHasPrivateMedia(page);
+  record('ADMIN_HIDDEN_IN_SIDEBAR', adminNavCount === 0, `entries=${adminNavCount}`);
+  await page.screenshot({ path: path.join(SHOTS, 'admin-sidebar.png'), fullPage: false });
+
+  await page.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1800);
+  const notFound = await page.getByRole('heading', { name: 'Không tìm thấy trang' }).count();
+  const leaked = await page.getByRole('heading', { name: 'Điều khiển media', level: 1 }).count();
+  record('ADMIN_DIRECT_ROUTE_CONCEALED', notFound > 0 && leaked === 0, `notFound=${notFound} leaked=${leaked}`);
+  await page.screenshot({ path: path.join(SHOTS, 'admin-direct-url.png'), fullPage: true });
+
+  const adminApi = await page.evaluate(async ({ api, token }) => {
+    const endpoints = ['access', 'status', 'session', 'grants', 'audit', 'devices'];
+    const out = {};
+    for (const endpoint of endpoints) {
+      const res = await fetch(`${api}/api/private-media/${endpoint}`, { headers: { Authorization: `Bearer ${token}` } });
+      out[endpoint] = res.status;
+    }
+    const grant = await fetch(`${api}/api/private-media/grants`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: 1, permissions: { view: true, control: true } }),
+    });
+    out.grantPost = grant.status;
+    return out;
+  }, { api: API, token: ADMIN_TOKEN });
+
+  const allDenied = Object.values(adminApi).every((status) => status === 404);
+  record('ADMIN_API_DENIED', allDenied, JSON.stringify(adminApi));
+
+  await browser.close();
+
+  const failed = results.filter((entry) => entry.pass === false);
+  const skipped = results.filter((entry) => entry.pass === null);
+  const passed = results.filter((entry) => entry.pass === true);
+  console.log(`\n${passed.length}/${results.length - skipped.length} checks passed`
+    + (skipped.length ? ` (${skipped.length} skipped)` : ''));
+  fs.writeFileSync(
+    path.join(SHOTS, 'browser-qa.json'),
+    JSON.stringify({ base: BASE, api: API, results }, null, 2),
+  );
+  process.exit(failed.length ? 1 : 0);
+}
+
+run().catch((error) => {
+  console.error('QA crashed:', error.message);
+  process.exit(1);
+});

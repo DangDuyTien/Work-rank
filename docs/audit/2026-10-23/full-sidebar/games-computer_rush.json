@@ -1,0 +1,74 @@
+{
+  "games": [
+    {
+      "gameType": "computer_rush",
+      "route": "/games/typing/words",
+      "steps": [
+        {
+          "name": "open menu",
+          "ok": true,
+          "data": {
+            "h1": "GÕ NHANH",
+            "url": "/games/typing/words"
+          }
+        },
+        {
+          "name": "BXH panel",
+          "ok": true,
+          "data": {
+            "rows": 0,
+            "empty": 1
+          }
+        },
+        {
+          "name": "room created",
+          "ok": true,
+          "data": {
+            "url": "/games/typing/words/room/bdf4a7e8-4526-4a5c-b4f6-79929322d93a"
+          }
+        },
+        {
+          "name": "playing surface",
+          "ok": true,
+          "data": {
+            "arcadeWorld": 1,
+            "countdown": 0
+          }
+        },
+        {
+          "name": "gameplay activity",
+          "ok": true,
+          "data": {
+            "typed": 375
+          }
+        },
+        {
+          "name": "result screen",
+          "ok": true,
+          "data": {
+            "hasActions": 1,
+            "text": "✦ VÁN CHƠI CỦA BẠN KỶ LỤC MỚI! ✓ Kết quả đã lưu trên hệ thống Thành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình! AA ✦ ✧ ✦ P1 Audit Admin ĐIỂM CỦA BẠN 33.839 +30 XP · Đã ghi nhận Từ đúng 147 Chính xác 100% Chuỗi tốt nhất x147 Phản hồi TB 408 ms Chơi lại BXH Trung tâm trò chơi Một chạm · "
+          }
+        },
+        {
+          "name": "replay",
+          "ok": true,
+          "data": {
+            "before": "/games/typing/words/room/bdf4a7e8-4526-4a5c-b4f6-79929322d93a",
+            "after": "/games/typing/words/room/055f3543-3dc4-4084-a621-15c12b4d10cc",
+            "changed": true
+          }
+        },
+        {
+          "name": "leave room",
+          "ok": true,
+          "data": {
+            "url": "/games/typing/words"
+          }
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "badResponses": []
+}

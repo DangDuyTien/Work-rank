@@ -846,7 +846,7 @@ export default function Leaderboard() {
             ? periods.find((entry) => String(entry.id) === urlKpiPeriodId)
             : periods.find((entry) => entry.code === currentCode);
           const resultsRes = selectedPeriod
-            ? await fetchWithCache(CACHE_KEYS.KPI_RESULTS({ periodId: selectedPeriod.id }), () => kpiApi.getResults({ periodId: selectedPeriod.id }), { ttl: CACHE_TTL.SHORT, force: isManual })
+            ? await fetchWithCache(CACHE_KEYS.KPI_RESULTS({ periodId: selectedPeriod.id }), () => kpiApi.getLeaderboardResults({ periodId: selectedPeriod.id }), { ttl: CACHE_TTL.SHORT, force: isManual })
             : { data: [] };
           if (requestId !== fetchId.current) return;
           const depts = deptsRes?.data || deptsRes || [];
@@ -955,17 +955,17 @@ export default function Leaderboard() {
       >
         <div>
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgba(255, 255, 255, 0.75)', marginBottom: 6 }}>
             <span
               onClick={handleBackToCompany}
-              style={{ color: 'var(--border-2)', cursor: selectedTeamId ? 'pointer' : 'default', textDecoration: selectedTeamId ? 'underline' : 'none' }}
+              style={{ color: 'rgba(255, 255, 255, 0.85)', cursor: selectedTeamId ? 'pointer' : 'default', textDecoration: selectedTeamId ? 'underline' : 'none' }}
             >
               Công Ty (Tất cả)
             </span>
             {selectedTeamId && (
               <>
-                <ChevronRight size={13} color="var(--text-secondary)" />
-                <span style={{ color: '#f59e0b', fontWeight: 600 }}>{selectedTeamDetails?.teamName || `Team #${selectedTeamId}`}</span>
+                <ChevronRight size={13} color="rgba(255, 255, 255, 0.6)" />
+                <span style={{ color: '#fbbf24', fontWeight: 600 }}>{selectedTeamDetails?.teamName || `Team #${selectedTeamId}`}</span>
               </>
             )}
           </div>
@@ -976,7 +976,7 @@ export default function Leaderboard() {
               {selectedTeamId ? `Xếp Hạng Nội Bộ · ${selectedTeamDetails?.teamName || `Đội #${selectedTeamId}`}` : 'Bảng Xếp Hạng Toàn Công Ty'}
             </h1>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'rgba(255, 255, 255, 0.75)' }}>
             {selectedTeamId
               ? 'Phân cấp Đội Nhóm: Theo dõi thành viên thi đấu và danh sách kênh YouTube thuộc đội.'
               : 'Xếp hạng phân cấp: Cấp 1 Công ty → Cấp 2 Đội nhóm → Cấp 3 Cá nhân & Kênh YouTube.'}
@@ -1057,6 +1057,7 @@ export default function Leaderboard() {
               WebkitOverflowScrolling: 'touch',
               flex: '1 1 auto',
               minWidth: 0,
+              paddingRight: 8,
             }}
           >
             {[

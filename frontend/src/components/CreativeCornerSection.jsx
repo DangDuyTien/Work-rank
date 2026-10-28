@@ -583,7 +583,7 @@ export default function CreativeCornerSection({ standalone = false, forceVisible
                   }}
                 >
                   <div className="public-artwork-canvas-backdrop">
-                    {failedImages[item.id] ? (
+                    {(failedImages[item.id] || !item.imageUrl) ? (
                       <div className="public-artwork-img-fallback" role="img" aria-label="Ảnh tác phẩm không còn khả dụng">
                         <ImageOff size={26} aria-hidden="true" />
                         <span>Ảnh tác phẩm không còn khả dụng</span>
@@ -675,7 +675,7 @@ export default function CreativeCornerSection({ standalone = false, forceVisible
           <div className="public-artwork-modal-body">
             {/* Modal Image Exhibition Frame */}
             <div className="public-artwork-modal-frame">
-              {failedImages[lightboxArtwork.id] ? (
+              {(failedImages[lightboxArtwork.id] || !lightboxArtwork.imageUrl) ? (
                 <div className="public-artwork-img-fallback is-large" role="img" aria-label="Ảnh tác phẩm không còn khả dụng">
                   <ImageOff size={34} aria-hidden="true" />
                   <span>Ảnh tác phẩm không còn khả dụng</span>

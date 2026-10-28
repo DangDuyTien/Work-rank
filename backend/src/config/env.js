@@ -54,6 +54,16 @@ const env = {
   bcryptRounds: Number(process.env.BCRYPT_ROUNDS || 12),
   competitionProcessingEnabled: process.env.COMPETITION_PROCESSING_ENABLED !== 'false',
   competitionShadowMode: process.env.COMPETITION_SHADOW_MODE === 'true',
+  // ── Private Media (owner-only capability) ──────────────────────────────────
+  // Secrets stay server-side only. Never expose these through an API response.
+  privateMedia: {
+    // Bootstrap only: resolved ONCE into a canonical user id, then ignored.
+    bootstrapOwnerEmail: (process.env.PRIVATE_MEDIA_BOOTSTRAP_OWNER_EMAIL || 'tienddph50842@gmail.com').trim().toLowerCase(),
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    youtubeApiKey: process.env.YOUTUBE_API_KEY || '',
+    pairingCodeTtlMs: Number(process.env.PRIVATE_MEDIA_PAIRING_TTL_MS || 10 * 60 * 1000),
+    sessionKey: 'primary',
+  },
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT || 3306),

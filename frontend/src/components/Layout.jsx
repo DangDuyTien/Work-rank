@@ -11,6 +11,7 @@ import { isVerifiedAccount } from '../utils/account';
 import { getStoredAvatar, removeStoredAvatar, initialsFromName, getUserAvatar, AVATAR_UPDATED_EVENT } from '../utils/avatar';
 import { PageTransition, PageTransitionSkeleton } from './ui';
 import { sendBrowserNotification } from '../utils/notifications';
+import { usePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 
 const APP_SETTINGS_STORAGE_KEY = 'workrank:app-settings:v1';
 const WORKRANK_NOTIFICATION_EVENT = 'workrank:notification';
@@ -67,6 +68,7 @@ function notificationTone(type) {
 
 export default function Layout() {
   const { user, isAdmin, logout } = useAuth();
+  const privateMedia = usePrivateMediaAccess();
   const location = useLocation();
   const navigate = useNavigate();
   const navigationType = useNavigationType();
@@ -245,7 +247,7 @@ export default function Layout() {
   }, [location.hash, location.key, location.pathname, location.search, navigationType]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const pageTitle = resolveCurrentTitle(location.pathname)
+  const pageTitle = resolveCurrentTitle(location.pathname, { privateMediaEntitled: privateMedia.entitled })
     || (location.pathname.startsWith('/users') ? 'Hồ Sơ Cá Nhân' : (location.pathname.startsWith('/games') ? 'Trò Chơi Doanh Nghiệp' : 'WorkRank Realtime'));
 
   const accountInitials = initialsFromName(user?.name || user?.email || '??');

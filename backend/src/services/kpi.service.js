@@ -252,6 +252,38 @@ class KpiService {
   /**
    * ─── 4. KPI RESULTS & AUDIT TRAIL ───────────────────────────
    */
+  /**
+   * Projection tối thiểu cho BXH KPI: chỉ danh tính + % hoàn thành.
+   * Không trả target/actual/source/metadata hay audit trail.
+   */
+  async getLeaderboardResults({ departmentId, periodId } = {}) {
+    const where = {};
+    if (departmentId) where.departmentId = departmentId;
+    if (periodId) where.periodId = periodId;
+
+    const results = await KpiResult.findAll({
+      where,
+      attributes: ['id', 'userId', 'departmentId', 'targetValue', 'actualValue'],
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'avatarUrl'] },
+      ],
+      order: [['id', 'DESC']],
+    });
+
+    return results.map((r) => {
+      const plain = r.toJSON();
+      const target = Number(plain.targetValue || 0);
+      const actual = Number(plain.actualValue || 0);
+      const progress = target > 0 ? Math.min(100, Math.round((actual / target) * 100)) : 0;
+      return {
+        userId: plain.userId,
+        departmentId: plain.departmentId,
+        progressPct: progress,
+        user: plain.user,
+      };
+    });
+  }
+
   async getResults({ departmentId, periodId, userId } = {}) {
     const where = {};
     if (departmentId) where.departmentId = departmentId;

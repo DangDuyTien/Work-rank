@@ -157,7 +157,7 @@ export default function ProductionKpiPanel({ onNotice = () => {} }) {
             </div>}
             <div style={{ marginTop: 12, maxHeight: 220, overflow: 'auto', border: '1px solid var(--border)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                <thead><tr style={{ background: 'var(--surface-soft)', textAlign: 'left' }}><th style={{ padding: 8 }}>Role</th><th style={{ padding: 8 }}>Task</th><th style={{ padding: 8 }}>Benchmark</th><th style={{ padding: 8 }}>Nguồn</th></tr></thead>
+                <thead><tr style={{ background: 'var(--surface-soft)', textAlign: 'left' }}><th style={{ padding: 8 }}>Vai trò</th><th style={{ padding: 8 }}>Đầu việc</th><th style={{ padding: 8 }}>Định mức</th><th style={{ padding: 8 }}>Nguồn</th></tr></thead>
                 <tbody>{previewRows.slice(0, 40).map((row) => <tr key={`${row.sourceSheetName}-${row.sourceRowIndex}`} style={{ borderTop: '1px solid var(--surface-muted)' }}><td style={{ padding: 8 }}>{row.role}</td><td style={{ padding: 8 }}>{row.taskType}</td><td style={{ padding: 8 }}>{row.standardTime} {row.unit}</td><td style={{ padding: 8 }}>{row.sourceSheetName} : {row.sourceRowIndex}</td></tr>)}</tbody>
               </table>
             </div>

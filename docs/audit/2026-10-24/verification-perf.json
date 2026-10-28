@@ -1,0 +1,81 @@
+{
+  "checks": [
+    {
+      "id": "006",
+      "name": "Teams YouTube DOM/options",
+      "ok": true,
+      "detail": {
+        "domNodes": 6655,
+        "options": 382,
+        "maxOptions": 255,
+        "unlabeled": 0,
+        "rows": 107,
+        "loadMs": 4173
+      }
+    },
+    {
+      "id": "011",
+      "name": "Unlabeled controls",
+      "ok": true,
+      "detail": {
+        "unlabeled": 0
+      }
+    },
+    {
+      "id": "007",
+      "name": "Seasons user loading",
+      "ok": true,
+      "detail": {
+        "userCalls": 0,
+        "selects": 0,
+        "maxOptions": 0,
+        "searchWorked": true,
+        "resultCount": 15
+      }
+    },
+    {
+      "id": "009",
+      "name": "Duplicate requests",
+      "ok": true,
+      "detail": {
+        "leaderboard": {
+          "friends": 1,
+          "requests": 1,
+          "unread": 1,
+          "catalog": 1
+        },
+        "adminKpi": {
+          "departments": 1,
+          "definitions": 1,
+          "periods": 1,
+          "users": 1
+        }
+      }
+    },
+    {
+      "id": "013",
+      "name": "Small touch targets",
+      "ok": true,
+      "detail": {
+        "/games/drawing": 0,
+        "/creative-corner": 0,
+        "/dashboard": 0
+      }
+    },
+    {
+      "id": "020",
+      "name": "Idle polling + router warnings",
+      "ok": true,
+      "detail": {
+        "activeCallsIn10s": 1,
+        "routerWarnings": 0
+      }
+    },
+    {
+      "id": "004b",
+      "name": "Responsive 430/768/1440",
+      "ok": true,
+      "detail": []
+    }
+  ]
+}

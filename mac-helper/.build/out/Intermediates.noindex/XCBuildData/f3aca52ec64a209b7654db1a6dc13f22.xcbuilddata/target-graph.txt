@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'AllExcludingTests' in project 'Aggregate'
+➜ Explicit dependency on target 'WorkRankPrivateMediaHelper-product' in project 'WorkRankPrivateMediaHelper'
+Target 'WorkRankPrivateMediaHelper-product' in project 'WorkRankPrivateMediaHelper' (no dependencies)

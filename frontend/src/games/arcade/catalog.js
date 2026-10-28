@@ -1,4 +1,4 @@
-import { Brain, Gamepad2, Images, Keyboard, Monitor, Move, Music, Palette } from 'lucide-react';
+import { Brain, Gamepad2, Images, Keyboard, Monitor, Move, Palette } from 'lucide-react';
 import { ARCADE_GAME_REGISTRY, GAME_TYPES } from '../../../../shared/gameRegistry.mjs';
 
 /**
@@ -28,22 +28,20 @@ export const GAME_REGISTRY = Object.freeze([
     gameType: GAME_TYPES.TYPING_BATTLE,
     catalogKey: GAME_TYPES.TYPING_BATTLE,
     kind: 'typing',
-    route: '/games/typing/music',
+    route: '/games/typing/passage',
     hubRoute: '/games/typing',
-    // Music is the canonical mode; the classic passage stays reachable so the
-    // old engine (and its records) keep working.
-    matchPaths: ['/games/typing/music', '/games/typing/passage', '/games/typing/room', '/games/typing/spectate'],
+    matchPaths: ['/games/typing/passage', '/games/typing/room', '/games/typing/spectate'],
     exactPaths: ['/games/typing'],
-    menuNameVi: 'Đua Gõ Theo Nhạc',
-    displayNameVi: 'ĐUA GÕ THEO NHẠC',
-    subtitleVi: 'Gõ đúng lời · Giữ nhạc tiếp tục',
-    descriptionVi: 'Gõ đúng lời bài hát đang phát và giữ cho nhạc không phải dừng.',
-    longDescriptionVi: 'Nhạc chạy liên tục, lời hiện theo từng câu. Gõ đúng và đúng nhịp thì bài hát không ngắt; nếu còn sai khi hết câu, nhạc dừng đúng ở cuối câu đó rồi chạy tiếp khi bạn gõ xong. Điểm cộng theo độ liền mạch, không chỉ tốc độ.',
-    place: 'SÂN KHẤU ÂM NHẠC',
+    menuNameVi: 'Đua Gõ Chữ',
+    displayNameVi: 'ĐUA GÕ CHỮ',
+    subtitleVi: 'Gõ chính xác · Vượt đối thủ',
+    descriptionVi: 'Gõ chính xác và vượt qua đối thủ.',
+    longDescriptionVi: 'Đua cả đoạn văn tiếng Việt theo từng ký tự, đo tốc độ và độ chính xác. Chơi một mình để luyện nhịp, hoặc lập phòng 1 chọi 1, 2 chọi 2, 3 chọi 3.',
+    place: 'ĐẤU TRƯỜNG GÕ PHÍM',
     mark: '01',
-    icon: Music,
-    theme: { accent: '#8f4a24', soft: '#f7ead9', ink: '#43291a', floor: '#e6d3b6' },
-    modes: ['SOLO', '1V1', 'TRIO'],
+    icon: Keyboard,
+    theme: { accent: '#38506f', soft: '#e7ecf4', ink: '#243449', floor: '#ccd7e6' },
+    modes: ['SOLO', '1V1', '2V2', '3V3'],
     menuVisible: true,
     gameCenterVisible: true,
   },

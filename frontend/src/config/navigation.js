@@ -289,9 +289,15 @@ export function resolveItemPath(item, userId) {
 
 /**
  * Resolves the display title for the current route path.
+ *
+ * `options.privateMediaEntitled` keeps the private capability concealed: without
+ * it the header must not name a page the viewer cannot see.
  */
-export function resolveCurrentTitle(pathname) {
+export function resolveCurrentTitle(pathname, options = {}) {
   if (!pathname) return 'WorkRank';
+  if (pathname.startsWith('/private/media')) {
+    return options.privateMediaEntitled ? 'Điều khiển media' : 'WorkRank';
+  }
   if (pathname === '/dashboard' || pathname === '/kpi') return 'Tổng quan';
   if (pathname.startsWith('/leaderboard') || pathname.startsWith('/rankings')) return 'Bảng Xếp Hạng';
   if (pathname.startsWith('/youtube')) return 'Số liệu YouTube';

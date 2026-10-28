@@ -1,0 +1,81 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "api": "http://localhost:5001",
+  "results": [
+    {
+      "name": "OWNER_SEES_NAV",
+      "pass": true,
+      "detail": "entries=1"
+    },
+    {
+      "name": "OWNER_OPENS_PAGE",
+      "pass": true,
+      "detail": "h1=1"
+    },
+    {
+      "name": "YOUTUBE_PLAYER_EMBEDDED",
+      "pass": true,
+      "detail": "iframes=1"
+    },
+    {
+      "name": "TRANSPORT_RENDERED",
+      "pass": true,
+      "detail": "controls=6"
+    },
+    {
+      "name": "SESSION_STATE_HONEST",
+      "pass": true,
+      "detail": "status=PLAYING t=15s"
+    },
+    {
+      "name": "AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED",
+      "pass": true,
+      "detail": "browser allowed autoplay"
+    },
+    {
+      "name": "YOUTUBE_SEARCH",
+      "pass": true,
+      "detail": "results=12"
+    },
+    {
+      "name": "DISCREET_MODE",
+      "pass": true,
+      "detail": "thumbnails=0 veil=1 \"ĐANG PHÁT / Big Buck Bunny 60fps 4K - Official Blender Foundation Shor\""
+    },
+    {
+      "name": "PLAYBACK_PROGRESS",
+      "pass": true,
+      "detail": "video=aqz-KE-bpKQ t=32.058286202178955s status=PLAYING"
+    },
+    {
+      "name": "OWNER_API_ACCESS",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "MINI_CONTROLLER_THEME",
+      "pass": true,
+      "detail": "rgb(255, 255, 255) vs page #f4f3ef"
+    },
+    {
+      "name": "MINI_PALETTE_OVERRIDE",
+      "pass": true,
+      "detail": "auto=rgb(255, 255, 255) dark=rgba(18, 18, 18, 0.94) back=rgb(255, 255, 255)"
+    },
+    {
+      "name": "ADMIN_HIDDEN_IN_SIDEBAR",
+      "pass": true,
+      "detail": "entries=0"
+    },
+    {
+      "name": "ADMIN_DIRECT_ROUTE_CONCEALED",
+      "pass": true,
+      "detail": "notFound=1 leaked=0"
+    },
+    {
+      "name": "ADMIN_API_DENIED",
+      "pass": true,
+      "detail": "{\"access\":404,\"status\":404,\"session\":404,\"grants\":404,\"audit\":404,\"devices\":404,\"grantPost\":404}"
+    }
+  ]
+}

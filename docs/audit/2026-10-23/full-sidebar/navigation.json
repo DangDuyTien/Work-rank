@@ -1,0 +1,425 @@
+{
+  "groups": [
+    {
+      "label": "Giải Đấu & Thi Đua Thi Đua",
+      "expandedBefore": "true",
+      "expandedAfter": "false",
+      "expandedRestored": "true",
+      "visibleItemsWhenOpen": 2
+    },
+    {
+      "label": "Cộng tác",
+      "expandedBefore": "false",
+      "expandedAfter": "true",
+      "expandedRestored": "false",
+      "visibleItemsWhenOpen": 1
+    },
+    {
+      "label": "Trò Chơi Giải Trí",
+      "expandedBefore": "true",
+      "expandedAfter": "false",
+      "expandedRestored": "true",
+      "visibleItemsWhenOpen": 7
+    },
+    {
+      "label": "Quản Trị Hệ Thống Quản Trị",
+      "expandedBefore": "false",
+      "expandedAfter": "true",
+      "expandedRestored": "false",
+      "visibleItemsWhenOpen": 7
+    },
+    {
+      "label": "Tài Khoản & Cài Đặt",
+      "expandedBefore": "false",
+      "expandedAfter": "true",
+      "expandedRestored": "false",
+      "visibleItemsWhenOpen": 2
+    }
+  ],
+  "items": [
+    {
+      "label": "Tổng quan",
+      "href": "/dashboard",
+      "clicked": true,
+      "url": "/dashboard",
+      "activeText": "Tổng quan",
+      "activeHref": "/dashboard",
+      "h1": "Xin chào, Audit Admin",
+      "bodyLen": 2144,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Số liệu YouTube",
+      "href": "/youtube",
+      "clicked": true,
+      "url": "/youtube",
+      "activeText": "Số liệu YouTube",
+      "activeHref": "/youtube",
+      "h1": "YouTube",
+      "bodyLen": 1999,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Bảng xếp hạng",
+      "href": "/leaderboard",
+      "clicked": true,
+      "url": "/leaderboard?scope=kpi",
+      "activeText": "Bảng xếp hạng",
+      "activeHref": "/leaderboard",
+      "h1": "Bảng Xếp Hạng Toàn Công Ty",
+      "bodyLen": 2895,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Đấu Trường Mùa Giải",
+      "href": "/arena",
+      "clicked": true,
+      "url": "/arena",
+      "activeText": "Đấu Trường Mùa Giải",
+      "activeHref": "/arena",
+      "h1": "Sec Season 1792203291661",
+      "bodyLen": 1361,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Giải Vô Địch Năm (Grand)",
+      "href": "/grand",
+      "clicked": true,
+      "url": "/grand",
+      "activeText": "Giải Vô Địch Năm (Grand)",
+      "activeHref": "/grand",
+      "h1": "Perf Grand Championship 1791772700125",
+      "bodyLen": 1456,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Thành Viên & Đội Nhóm",
+      "href": "/friends",
+      "clicked": true,
+      "url": "/friends",
+      "activeText": "Thành Viên & Đội Nhóm",
+      "activeHref": "/friends",
+      "h1": "Thành Viên & Đội Nhóm",
+      "bodyLen": 11529,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Đua Gõ Chữ",
+      "href": "/games/typing/passage",
+      "clicked": true,
+      "url": "/games/typing/passage",
+      "activeText": "Đua Gõ Chữ",
+      "activeHref": "/games/typing/passage",
+      "h1": "ĐUA GÕ CHỮ",
+      "bodyLen": 1670,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Gõ Nhanh",
+      "href": "/games/typing/words",
+      "clicked": true,
+      "url": "/games/typing/words",
+      "activeText": "Gõ Nhanh",
+      "activeHref": "/games/typing/words",
+      "h1": "GÕ NHANH",
+      "bodyLen": 1678,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Phản Xạ Bốn Hướng",
+      "href": "/games/arcade/direction_rush",
+      "clicked": true,
+      "url": "/games/arcade/direction_rush",
+      "activeText": "Phản Xạ Bốn Hướng",
+      "activeHref": "/games/arcade/direction_rush",
+      "h1": "PHẢN XẠ BỐN HƯỚNG",
+      "bodyLen": 1649,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Trí Nhớ Nhanh",
+      "href": "/games/arcade/memory_flash",
+      "clicked": true,
+      "url": "/games/arcade/memory_flash",
+      "activeText": "Trí Nhớ Nhanh",
+      "activeHref": "/games/arcade/memory_flash",
+      "h1": "TRÍ NHỚ NHANH",
+      "bodyLen": 1718,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Xưởng Vẽ",
+      "href": "/games/drawing",
+      "clicked": true,
+      "url": "/games/drawing",
+      "activeText": "Xưởng Vẽ",
+      "activeHref": "/games/drawing",
+      "h1": "Xưởng Vẽ",
+      "bodyLen": 1304,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Thư viện tranh",
+      "href": "/creative-corner",
+      "clicked": true,
+      "url": "/creative-corner",
+      "activeText": "Thư viện tranh",
+      "activeHref": "/creative-corner",
+      "h1": "Thư viện tranh",
+      "bodyLen": 1646,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": [
+        "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+      ]
+    },
+    {
+      "label": "Trung tâm trò chơi",
+      "href": "/games",
+      "clicked": true,
+      "url": "/games",
+      "activeText": "Trung tâm trò chơi",
+      "activeHref": "/games",
+      "h1": "Trung tâm trò chơi",
+      "bodyLen": 2159,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Quản Lý KPI & Phòng Ban MỚI",
+      "href": "/admin/kpi",
+      "clicked": true,
+      "url": "/admin/kpi",
+      "activeText": "Quản Lý KPI & Phòng BanMới",
+      "activeHref": "/admin/kpi",
+      "h1": "Quản Lý Phòng Ban & Chỉ Tiêu KPI",
+      "bodyLen": 5207,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Quản Lý Nhân Sự & Đặc Quyền",
+      "href": "/admin/privileges",
+      "clicked": true,
+      "url": "/admin/privileges",
+      "activeText": "Quản Lý Nhân Sự & Đặc Quyền",
+      "activeHref": "/admin/privileges",
+      "h1": "Nhân sự, Chức danh & Danh hiệu Vinh danh",
+      "bodyLen": 7930,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Quản Lý Đội Nhóm & Kênh YouTube",
+      "href": "/admin/teams-youtube",
+      "clicked": true,
+      "url": "/admin/teams-youtube",
+      "activeText": "Quản Lý Đội Nhóm & Kênh YouTube",
+      "activeHref": "/admin/teams-youtube",
+      "h1": "Quản Lý & Phân Tầng Dữ Liệu YouTube",
+      "bodyLen": 855269,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Quản Lý Mùa Giải",
+      "href": "/admin/competition/seasons",
+      "clicked": true,
+      "url": "/admin/competition/seasons",
+      "activeText": "Quản Lý Mùa Giải",
+      "activeHref": "/admin/competition/seasons",
+      "h1": "Quản Lý Mùa Giải & Vinh Danh",
+      "bodyLen": 3603,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Rule Builder & Mô Phỏng",
+      "href": "/admin/competition/rules",
+      "clicked": true,
+      "url": "/admin/competition/rules",
+      "activeText": "Rule Builder & Mô Phỏng",
+      "activeHref": "/admin/competition/rules",
+      "h1": "Quy tắc thi đấu",
+      "bodyLen": 2849,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Quản Lý Giải Vô Địch Năm",
+      "href": "/admin/competition/grand",
+      "clicked": true,
+      "url": "/admin/competition/grand",
+      "activeText": "Quản Lý Giải Vô Địch Năm",
+      "activeHref": "/admin/competition/grand",
+      "h1": "Quản Lý Grand Championship",
+      "bodyLen": 1677,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Giám Sát & Nhật Ký Kiểm Toán",
+      "href": "/admin/operations",
+      "clicked": true,
+      "url": "/admin/operations",
+      "activeText": "Giám Sát & Nhật Ký Kiểm Toán",
+      "activeHref": "/admin/operations",
+      "h1": "Giám Sát Vận Hành & Nhật Ký Kiểm Toán",
+      "bodyLen": 2056,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Hồ Sơ Cá Nhân",
+      "href": "/users/11002",
+      "clicked": true,
+      "url": "/users/11002",
+      "activeText": "Hồ Sơ Cá Nhân",
+      "activeHref": "/users/11002",
+      "h1": "Audit Admin",
+      "bodyLen": 1833,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    },
+    {
+      "label": "Cài đặt tài khoản",
+      "href": "/settings",
+      "clicked": true,
+      "url": "/settings",
+      "activeText": "Cài đặt tài khoản",
+      "activeHref": "/settings",
+      "h1": "Cài đặt tài khoản",
+      "bodyLen": 4870,
+      "title": "3WIN MEDIA — Nền tảng Hiệu suất, Thi đấu & Vinh danh",
+      "urlOk": true,
+      "activeOk": true,
+      "newConsoleErrors": []
+    }
+  ],
+  "mobile": {
+    "toggleVisible": true,
+    "drawerVisible": true,
+    "drawerBox": {
+      "x": 0,
+      "y": 0,
+      "width": 280,
+      "height": 844
+    },
+    "drawerItems": 22,
+    "drawerOverflow": {
+      "scrollWidth": 280,
+      "clientWidth": 280
+    },
+    "afterClick": {
+      "url": "/dashboard",
+      "drawerStillVisible": false,
+      "expectedHref": "/dashboard"
+    }
+  },
+  "truncation": [
+    {
+      "text": "Giải Vô Địch Năm (Grand)",
+      "clientWidth": 149,
+      "scrollWidth": 154,
+      "title": "Cuộc đua vô địch năm và bảng xếp hạng điểm tích lũy"
+    },
+    {
+      "text": "Quản Lý KPI & Phòng Ban",
+      "clientWidth": 111,
+      "scrollWidth": 155,
+      "title": "Cấu hình phòng ban, thiết lập chỉ tiêu KPI và quản lý kết quả thực hiện"
+    },
+    {
+      "text": "Quản Lý Nhân Sự & Đặc Quyền",
+      "clientWidth": 149,
+      "scrollWidth": 188,
+      "title": "Danh sách nhân viên, gán team/chức danh, cấp tích xanh & trao thưởng"
+    },
+    {
+      "text": "Quản Lý Đội Nhóm & Kênh YouTube",
+      "clientWidth": 149,
+      "scrollWidth": 215,
+      "title": "Cấu hình teams, phân bổ phòng ban, kết nối & đồng bộ kênh YouTube"
+    },
+    {
+      "text": "Rule Builder & Mô Phỏng",
+      "clientWidth": 149,
+      "scrollWidth": 152,
+      "title": "Kiểm tra, mô phỏng và phát hành phiên bản luật đã được kiểm duyệt"
+    },
+    {
+      "text": "Quản Lý Giải Vô Địch Năm",
+      "clientWidth": 149,
+      "scrollWidth": 157,
+      "title": "Thiết lập giải đấu năm và kết toán điểm tích lũy"
+    },
+    {
+      "text": "Giám Sát & Nhật Ký Kiểm Toán",
+      "clientWidth": 149,
+      "scrollWidth": 185,
+      "title": "Sức khỏe hệ thống, hàng đợi sự kiện, đồng bộ BXH & Audit Logs"
+    }
+  ],
+  "console": [
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "errors": [],
+  "sidebarBox": {
+    "x": 0,
+    "y": 0,
+    "width": 240,
+    "height": 900
+  }
+}

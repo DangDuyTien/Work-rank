@@ -3,8 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const typingGameController = require('../controllers/typingGame.controller');
-const musicRaceController = require('../controllers/musicRace.controller');
-const { auth, requireRole } = require('../middlewares/auth.middleware');
+const { auth } = require('../middlewares/auth.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
 // Game availability check
@@ -16,17 +15,6 @@ router.get('/leaderboard', auth, asyncHandler(typingGameController.getLeaderboar
 router.get('/challenges', auth, asyncHandler(typingGameController.getChallenges));
 
 router.get('/history', auth, asyncHandler(async(req,res)=>res.json(await require('../services/typingGame.service').getHistory(req.user.id,req.query))));
-
-// Đua Gõ Theo Nhạc — music-synchronised typing race.
-// The internal game type stays `typing_battle`; only the challenge shape changes.
-router.get('/music/songs', auth, asyncHandler(musicRaceController.listSongs));
-router.get('/music/songs/:songId', auth, asyncHandler(musicRaceController.getSong));
-router.post('/music/songs', auth, requireRole('admin'), asyncHandler(musicRaceController.publishSong));
-router.get('/music/my-stats', auth, asyncHandler(musicRaceController.myStats));
-router.get('/music/leaderboard', auth, asyncHandler(musicRaceController.leaderboard));
-router.post('/music/attempts', auth, asyncHandler(musicRaceController.createAttempt));
-router.post('/music/attempts/:attemptId/progress', auth, asyncHandler(musicRaceController.progress));
-router.post('/music/finish', auth, asyncHandler(musicRaceController.finish));
 
 // Room management
 router.get('/rooms', auth, asyncHandler(typingGameController.listRooms));

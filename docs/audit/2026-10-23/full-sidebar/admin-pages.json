@@ -1,0 +1,402 @@
+{
+  "pages": [
+    {
+      "id": "admin-kpi",
+      "route": "/admin/kpi",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 3037,
+            "domNodes": 1150,
+            "bodyText": 5207,
+            "buttons": 97,
+            "tables": 1,
+            "rows": 26,
+            "selects": 1,
+            "h1": "Quản Lý Phòng Ban & Chỉ Tiêu KPI"
+          }
+        },
+        {
+          "name": "tab Quản Lý KPI",
+          "ok": true,
+          "data": {
+            "before": 5207,
+            "after": 5207,
+            "rows": 26,
+            "changed": false
+          }
+        },
+        {
+          "name": "tab Phòng Ban",
+          "ok": true,
+          "data": {
+            "before": 5207,
+            "after": 2045,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Kết Quả & Tiến Độ",
+          "ok": true,
+          "data": {
+            "before": 2045,
+            "after": 4540,
+            "rows": 13,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Nhật Ký & Lịch Sử",
+          "ok": true,
+          "data": {
+            "before": 4540,
+            "after": 2246,
+            "rows": 13,
+            "changed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-privileges",
+      "route": "/admin/privileges",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 2439,
+            "domNodes": 3177,
+            "bodyText": 7930,
+            "buttons": 372,
+            "tables": 0,
+            "rows": 0,
+            "selects": 0,
+            "h1": "Nhân sự, Chức danh & Danh hiệu Vinh danh"
+          }
+        },
+        {
+          "name": "tab Tất cả",
+          "ok": true,
+          "data": {
+            "before": 7930,
+            "after": 7930,
+            "rows": 0,
+            "changed": false
+          }
+        },
+        {
+          "name": "tab Có tích xanh",
+          "ok": true,
+          "data": {
+            "before": 7930,
+            "after": 1497,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Developer",
+          "ok": true,
+          "data": {
+            "before": 1497,
+            "after": 1287,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Quản trị viên",
+          "ok": true,
+          "data": {
+            "before": 1287,
+            "after": 1377,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Chưa định danh",
+          "ok": true,
+          "data": {
+            "before": 1377,
+            "after": 7686,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "modal Thêm Nhân Sự Mới",
+          "ok": true,
+          "data": {
+            "open": true,
+            "role": null,
+            "ariaModal": null,
+            "title": "Thêm Nhân Sự Mới Vào Hệ Thống",
+            "inputs": 9,
+            "text": "Thêm Nhân Sự Mới Vào Hệ Thống Họ và Tên Nhân Viên * Email Đăng Nhập * Mật Khẩu Khởi Tạo * Chức Danh & Bậc Huy Hiệu Editor Content Quản lý kênh Trưởng phòng Phó giám đốc Giám đốc Editor Phòng Ban Trực "
+          }
+        },
+        {
+          "name": "modal closed Thêm Nhân Sự Mới",
+          "ok": true,
+          "data": {
+            "stillOpen": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-teams-youtube",
+      "route": "/admin/teams-youtube",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 3721,
+            "domNodes": 33706,
+            "bodyText": 854948,
+            "buttons": 342,
+            "tables": 1,
+            "rows": 107,
+            "selects": 108,
+            "h1": "Quản Lý & Phân Tầng Dữ Liệu YouTube"
+          }
+        },
+        {
+          "name": "tab Kênh YouTube & Đồng Bộ",
+          "ok": true,
+          "data": {
+            "before": 854948,
+            "after": 854948,
+            "rows": 107,
+            "changed": false
+          }
+        },
+        {
+          "name": "tab Đội Nhóm & Phòng Ban",
+          "ok": true,
+          "data": {
+            "before": 854948,
+            "after": 45530,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "filter select#0",
+          "ok": true,
+          "data": {
+            "options": 8,
+            "before": 45530,
+            "after": 1522
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-seasons",
+      "route": "/admin/competition/seasons",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 2551,
+            "domNodes": 1012,
+            "bodyText": 3603,
+            "buttons": 57,
+            "tables": 0,
+            "rows": 0,
+            "selects": 0,
+            "h1": "Quản Lý Mùa Giải & Vinh Danh"
+          }
+        },
+        {
+          "name": "tab Quản Lý Mùa Giải",
+          "ok": true,
+          "data": {
+            "before": 3603,
+            "after": 3603,
+            "rows": 0,
+            "changed": false
+          }
+        },
+        {
+          "name": "tab Vinh Danh Trang Chủ & Lịch Sử",
+          "ok": true,
+          "data": {
+            "before": 3603,
+            "after": 40020,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "filter select#1",
+          "ok": true,
+          "data": {
+            "options": 1083,
+            "before": 40020,
+            "after": 40020
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-rules",
+      "route": "/admin/competition/rules",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 1939,
+            "domNodes": 671,
+            "bodyText": 2849,
+            "buttons": 37,
+            "tables": 0,
+            "rows": 0,
+            "selects": 0,
+            "h1": "Quy tắc thi đấu"
+          }
+        },
+        {
+          "name": "tab Company Analytics",
+          "ok": true,
+          "data": {
+            "before": 2849,
+            "after": 1388,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Rule Sets",
+          "ok": true,
+          "data": {
+            "before": 1388,
+            "after": 2849,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab State Monitor",
+          "ok": true,
+          "data": {
+            "before": 2849,
+            "after": 1168,
+            "rows": 0,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Score Inspector",
+          "ok": true,
+          "data": {
+            "before": 1168,
+            "after": 1034,
+            "rows": 0,
+            "changed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-grand",
+      "route": "/admin/competition/grand",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 1848,
+            "domNodes": 456,
+            "bodyText": 1677,
+            "buttons": 28,
+            "tables": 0,
+            "rows": 0,
+            "selects": 0,
+            "h1": "Quản Lý Grand Championship"
+          }
+        },
+        {
+          "name": "modal Tạo Grand Championship",
+          "ok": true,
+          "data": {
+            "open": true,
+            "role": null,
+            "ariaModal": null,
+            "title": "Tạo Grand Championship Mới",
+            "inputs": 7,
+            "text": "Tạo Grand Championship Mới Tên Giải Vô Địch Slug Năm Thi Đấu Ngày Bắt Đầu Ngày Kết Thúc Mô tả Thứ Tự Tie-Break Mặc định: grand_points,season_wins,podium_count,earliest_award Hủy Tạo Giải"
+          }
+        },
+        {
+          "name": "modal closed Tạo Grand Championship",
+          "ok": true,
+          "data": {
+            "stillOpen": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "admin-operations",
+      "route": "/admin/operations",
+      "steps": [
+        {
+          "name": "load",
+          "ok": true,
+          "data": {
+            "ms": 2834,
+            "domNodes": 505,
+            "bodyText": 2054,
+            "buttons": 18,
+            "tables": 0,
+            "rows": 0,
+            "selects": 0,
+            "h1": "Giám Sát Vận Hành & Nhật Ký Kiểm Toán"
+          }
+        },
+        {
+          "name": "tab Sức Khỏe Hệ Thống",
+          "ok": true,
+          "data": {
+            "before": 2054,
+            "after": 2054,
+            "rows": 0,
+            "changed": false
+          }
+        },
+        {
+          "name": "tab Nhật Ký Kiểm Toán",
+          "ok": true,
+          "data": {
+            "before": 2054,
+            "after": 4659,
+            "rows": 32,
+            "changed": true
+          }
+        },
+        {
+          "name": "tab Hàng Đợi Sự Kiện",
+          "ok": true,
+          "data": {
+            "before": 4659,
+            "after": 10150,
+            "rows": 83,
+            "changed": true
+          }
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "badResponses": []
+}

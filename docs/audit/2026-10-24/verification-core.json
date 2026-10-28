@@ -1,0 +1,206 @@
+{
+  "checks": [
+    {
+      "id": "001",
+      "name": "KPI authz",
+      "ok": true,
+      "detail": {
+        "memberResults": 403,
+        "memberHistory": 403,
+        "memberProjection": 200,
+        "projectionKeys": [
+          "userId",
+          "departmentId",
+          "progressPct",
+          "user"
+        ],
+        "adminResults": 200
+      }
+    },
+    {
+      "id": "002",
+      "name": "Grand H1 contrast",
+      "ok": true,
+      "detail": {
+        "h1": "Giải Vô Địch Năm 2026",
+        "color": "rgb(255, 255, 255)",
+        "bg": "rgb(20, 20, 20)",
+        "h1Width": 642,
+        "bodyWidth": 1048,
+        "vw": 1440,
+        "contrast": 18.42
+      }
+    },
+    {
+      "id": "003",
+      "name": "Drawing like integrity",
+      "ok": true,
+      "detail": {
+        "before": "0",
+        "after": "1",
+        "reverted": "0",
+        "apiCount": 0,
+        "detailCount": 0
+      }
+    },
+    {
+      "id": "004",
+      "name": "Responsive mobile clipping",
+      "ok": true,
+      "detail": [
+        {
+          "route": "/arena",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": 304
+        },
+        {
+          "route": "/grand",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": 296
+        },
+        {
+          "route": "/admin/operations",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": null
+        },
+        {
+          "route": "/admin/competition/seasons",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": null
+        },
+        {
+          "route": "/admin/competition/rules",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": null
+        },
+        {
+          "route": "/admin/competition/grand",
+          "ok": true,
+          "vw": 390,
+          "scrollWidth": 390,
+          "segOverflowX": "auto",
+          "segScrollable": true,
+          "heroWidth": null
+        }
+      ]
+    },
+    {
+      "id": "005",
+      "name": "Modal accessibility",
+      "ok": true,
+      "detail": {
+        "exists": true,
+        "role": "dialog",
+        "ariaModal": "true",
+        "label": "Gia Nhập Đội Bằng Mã Mời",
+        "focusInside": true,
+        "afterEscape": 0
+      }
+    },
+    {
+      "id": "008",
+      "name": "Drawing image host",
+      "ok": true,
+      "detail": {
+        "badUrls": 0,
+        "failedLocalhost": 0,
+        "fallbackCards": 1
+      }
+    },
+    {
+      "id": "010",
+      "name": "Recipients copy",
+      "ok": true,
+      "detail": {
+        "homeH1": "Người được vinh danh",
+        "loginHasRecipients": false
+      }
+    },
+    {
+      "id": "012",
+      "name": "Sidebar full label",
+      "ok": true,
+      "detail": {
+        "title": "Quản Lý Đội Nhóm & Kênh YouTube — Cấu hình teams, phân bổ phòng ban, kết nối & đồng bộ kênh YouTube",
+        "aria": "Quản Lý Đội Nhóm & Kênh YouTube"
+      }
+    },
+    {
+      "id": "014",
+      "name": "Publish modal explains disabled state",
+      "ok": true,
+      "detail": {
+        "hasReason": true
+      }
+    },
+    {
+      "id": "015",
+      "name": "YouTube compare URL normalized",
+      "ok": true,
+      "detail": {
+        "url": "/youtube?tab=overview"
+      }
+    },
+    {
+      "id": "016",
+      "name": "English leftovers",
+      "ok": true,
+      "detail": {
+        "badKpi": false,
+        "badDash": false
+      }
+    },
+    {
+      "id": "017",
+      "name": "Toast role + heading order",
+      "ok": true,
+      "detail": {
+        "toastRole": 1,
+        "skips": {
+          "/users/1": 0,
+          "/admin/competition/seasons": 0,
+          "/admin/operations": 0
+        }
+      }
+    },
+    {
+      "id": "018",
+      "name": "Human season/grand names",
+      "ok": true,
+      "detail": {
+        "arenaH1": "Mùa Giải 2026",
+        "grandH1": "Giải Vô Địch Năm 2026"
+      }
+    },
+    {
+      "id": "019",
+      "name": "Admin Teams error retry",
+      "ok": true,
+      "detail": {
+        "retryButtons": 1,
+        "alerts": 3
+      }
+    }
+  ],
+  "consoleErrors": []
+}

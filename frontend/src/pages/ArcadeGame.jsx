@@ -126,18 +126,32 @@ export default function ArcadeGame({ gameTypeOverride }) {
   useEffect(() => {
     if (roomId || !ARCADE_GAMES[gameType]) return undefined;
     let alive = true;
+    // WR-AUDIT-020 — trước đây poll /active + /leaderboard mỗi 3s kể cả khi tab
+    // ẩn hoặc đang ở menu. Giờ chỉ poll trạng thái phòng mỗi 8s khi tab hiển thị;
+    // leaderboard chỉ tải khi đổi game/mode/difficulty.
     const refresh = async () => {
+      if (document.visibilityState === 'hidden') return;
       try {
-        const [resume, board] = await Promise.all([
-          arcadeApi('/active'),
-          arcadeApi(`/leaderboard?gameType=${gameType}&mode=${mode}&period=all&difficulty=${difficulty}`),
-        ]);
-        if (alive) { setActive(resume); setPersonal(board.personal); }
-      } catch (e) { if (alive) setError(gameErrorVi(e, 'Không tải được phòng chơi.')); }
+        const resume = await arcadeApi('/active');
+        if (alive) setActive(resume);
+      } catch (e) {
+        if (alive) setError(gameErrorVi(e, 'Không tải được phòng chơi.'));
+      }
+    };
+    const loadBoard = async () => {
+      try {
+        const board = await arcadeApi(`/leaderboard?gameType=${gameType}&mode=${mode}&period=all&difficulty=${difficulty}`);
+        if (alive) setPersonal(board.personal);
+      } catch (e) {
+        if (alive) setError(gameErrorVi(e, 'Không tải được phòng chơi.'));
+      }
     };
     refresh();
-    const timer = setInterval(refresh, 3000);
-    return () => { alive = false; clearInterval(timer); };
+    loadBoard();
+    const timer = setInterval(refresh, 8000);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { alive = false; clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
   }, [roomId, gameType, mode, difficulty]);
 
   useEffect(() => {

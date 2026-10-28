@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { ChevronDown, LogOut, Settings as SettingsIcon, MonitorPlay } from 'lucide-react';
 import { NAVIGATION_CONFIG, isNavItemActive, resolveItemPath } from '../config/navigation';
 import BrandMark from './BrandMark';
 import VerifiedBadge from './VerifiedBadge';
 import JobTitleBadge from './JobTitleBadge';
 import { getUserAvatar, initialsFromName } from '../utils/avatar';
 import { gameCatalogApi } from '../services/api';
+import { usePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 
 /**
  * Sidebar Component for WorkRank V3.3.
@@ -22,17 +23,44 @@ import { gameCatalogApi } from '../services/api';
 export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false }) {
   const location = useLocation();
 
+  // Private Media is an isolated capability, not a role. The entry exists only
+  // when the server says this account is the owner or an explicit grantee.
+  const privateMedia = usePrivateMediaAccess();
+
+  const navGroups = useMemo(() => {
+    if (!privateMedia.entitled) return NAVIGATION_CONFIG;
+    const privateMediaGroup = {
+      id: 'privateMedia',
+      label: 'Riêng tư',
+      icon: MonitorPlay,
+      collapsible: false,
+      items: [
+        {
+          to: '/private/media',
+          label: 'Điều khiển media',
+          shortLabel: 'Media',
+          icon: MonitorPlay,
+          description: 'Tìm và điều khiển video từ xa bằng Telegram hoặc bàn phím',
+        },
+      ],
+    };
+    const index = NAVIGATION_CONFIG.findIndex((group) => group.id === 'account');
+    const next = [...NAVIGATION_CONFIG];
+    next.splice(index === -1 ? next.length : index, 0, privateMediaGroup);
+    return next;
+  }, [privateMedia.entitled]);
+
   // Compute which groups should be open by default based on active route
   const activeGroupIds = useMemo(() => {
     const ids = new Set();
-    NAVIGATION_CONFIG.forEach((group) => {
+    navGroups.forEach((group) => {
       const hasActiveChild = group.items.some((item) => isNavItemActive(location.pathname, item));
       if (hasActiveChild || !group.collapsible) {
         ids.add(group.id);
       }
     });
     return ids;
-  }, [location.pathname]);
+  }, [location.pathname, navGroups]);
 
   // State of manually expanded/collapsed groups
   const [expandedGroups, setExpandedGroups] = useState(() => {
@@ -181,9 +209,9 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
           gap: 12,
         }}
       >
-        {NAVIGATION_CONFIG.map((group) => {
+        {navGroups.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
-          const isExpanded = !!expandedGroups[group.id];
+          const isExpanded = group.collapsible ? !!expandedGroups[group.id] : true;
           const hasActiveChild = activeGroupIds.has(group.id);
           const GroupIcon = group.icon;
 
@@ -318,8 +346,9 @@ export default function Sidebar({ user, isAdmin, onNavigate, isMobile = false })
                         data-tour={item.tourTarget}
                         data-game-id={item.gameId}
                         aria-current={isActive ? 'page' : undefined}
+                        aria-label={item.label}
                         onClick={handleLinkClick}
-                        title={item.description || item.label}
+                        title={item.description ? `${item.label} — ${item.description}` : item.label}
                         tabIndex={isExpanded ? 0 : -1}
                         className={`workrank-nav-item${isActive ? ' is-active' : ''}${isOverviewLink ? ' is-overview' : ''}`}
                         style={{

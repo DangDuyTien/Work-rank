@@ -1,0 +1,376 @@
+{
+  "results": [
+    {
+      "name": "YouTube — tab list",
+      "url": "/youtube",
+      "detail": [
+        "Tổng quan",
+        "Kênh theo đội",
+        "So sánh"
+      ]
+    },
+    {
+      "name": "YouTube — tab Kênh theo đội",
+      "url": "/youtube?tab=team_detail",
+      "detail": {
+        "url": "http://127.0.0.1:5173/youtube?tab=team_detail",
+        "h1": "YouTube · Đội bạn",
+        "hasTabParam": true
+      },
+      "ok": true
+    },
+    {
+      "name": "YouTube — tab So sánh",
+      "url": "/youtube?tab=compare",
+      "detail": {
+        "url": "http://127.0.0.1:5173/youtube?tab=compare",
+        "h1": "YouTube · So sánh đội",
+        "hasTabParam": true
+      },
+      "ok": true
+    },
+    {
+      "name": "YouTube — tab Tổng quan",
+      "url": "/youtube?tab=overview",
+      "detail": {
+        "url": "http://127.0.0.1:5173/youtube?tab=overview",
+        "h1": "YouTube",
+        "hasTabParam": true
+      },
+      "ok": true
+    },
+    {
+      "name": "YouTube — deep link ?tab=compare",
+      "url": "/youtube?tab=compare",
+      "detail": {
+        "h1": "YouTube · So sánh đội",
+        "selects": 2,
+        "bodyLen": 14905
+      }
+    },
+    {
+      "name": "YouTube — tab không hợp lệ",
+      "url": "/youtube?tab=khong_ton_tai",
+      "detail": {
+        "url": "/youtube?tab=khong_ton_tai",
+        "h1": "YouTube"
+      }
+    },
+    {
+      "name": "YouTube — Làm mới",
+      "url": "/youtube",
+      "detail": {
+        "toastVisible": true
+      },
+      "ok": true
+    },
+    {
+      "name": "YouTube — toggle Subs",
+      "url": "/youtube",
+      "detail": {
+        "clicked": true,
+        "bodyLen": 2041
+      }
+    },
+    {
+      "name": "Leaderboard — BXH KPI",
+      "url": "/leaderboard?scope=kpi",
+      "detail": {
+        "url": "/leaderboard?scope=kpi",
+        "h1": "Bảng Xếp Hạng Toàn Công Ty",
+        "rows": 13,
+        "empty": true,
+        "bodyLen": 2895
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — BXH Đội Nhóm",
+      "url": "/leaderboard?scope=teams&period=season",
+      "detail": {
+        "url": "/leaderboard?scope=teams&period=season",
+        "h1": "Bảng Xếp Hạng Toàn Công Ty",
+        "rows": 1,
+        "empty": true,
+        "bodyLen": 1726
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — BXH Thành Viên",
+      "url": "/leaderboard?scope=members&period=all-time",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=all-time",
+        "h1": "Bảng Xếp Hạng Toàn Công Ty",
+        "rows": 100,
+        "empty": false,
+        "bodyLen": 11008
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — BXH YouTube",
+      "url": "/leaderboard?scope=youtube&metric=views&view=channels",
+      "detail": {
+        "url": "/leaderboard?scope=youtube&metric=views&view=channels",
+        "h1": "Bảng Xếp Hạng Toàn Công Ty",
+        "rows": 100,
+        "empty": false,
+        "bodyLen": 9992
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — Bảng Vinh Danh",
+      "url": "/leaderboard?scope=hall-of-fame",
+      "detail": {
+        "url": "/leaderboard?scope=hall-of-fame",
+        "h1": "Bảng Xếp Hạng Toàn Công Ty",
+        "rows": 0,
+        "empty": true,
+        "bodyLen": 2027
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — kỳ Mùa Giải",
+      "url": "/leaderboard?scope=members&period=season",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=season",
+        "rows": 1,
+        "bodyLen": 1683
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — kỳ Vô Địch Năm (Grand)",
+      "url": "/leaderboard?scope=members&period=grand",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=grand",
+        "rows": 2,
+        "bodyLen": 1452
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — kỳ Điểm hiện tại",
+      "url": "/leaderboard?scope=members&period=all-time",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=all-time",
+        "rows": 100,
+        "bodyLen": 11008
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — tìm kiếm \"Audit\"",
+      "url": "/leaderboard?scope=members&period=all-time&search=Audit",
+      "detail": {
+        "before": 100,
+        "after": 14,
+        "containsAudit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "Leaderboard — tìm kiếm rỗng",
+      "url": "/leaderboard?scope=members&period=all-time&search=zzzz_khong_ton_tai",
+      "detail": {
+        "rows": 1,
+        "hasEmptyMessage": true
+      }
+    },
+    {
+      "name": "Leaderboard — phân trang",
+      "url": "/leaderboard?scope=members&period=all-time&page=2",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=all-time&page=2",
+        "rows": 100
+      }
+    },
+    {
+      "name": "Arena — tab BXH Cá Nhân",
+      "url": "/arena",
+      "detail": {
+        "bodyLen": 1345,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr",
+        "hasError": false
+      },
+      "ok": true
+    },
+    {
+      "name": "Arena — tab Thử Thách",
+      "url": "/arena",
+      "detail": {
+        "bodyLen": 1282,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr",
+        "hasError": false
+      },
+      "ok": true
+    },
+    {
+      "name": "Arena — tab Luật Chơi",
+      "url": "/arena",
+      "detail": {
+        "bodyLen": 1431,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr",
+        "hasError": false
+      },
+      "ok": true
+    },
+    {
+      "name": "Arena — tab BXH Đội",
+      "url": "/arena",
+      "detail": {
+        "bodyLen": 1361,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh Xưởng Vẽ Thư viện tr",
+        "hasError": false
+      },
+      "ok": true
+    },
+    {
+      "name": "Arena — Cập nhật",
+      "url": "/arena",
+      "detail": {
+        "bodyLen": 1361
+      }
+    },
+    {
+      "name": "Grand — tab BXH Cá Nhân",
+      "url": "/grand",
+      "detail": {
+        "bodyLen": 1531,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh "
+      },
+      "ok": true
+    },
+    {
+      "name": "Grand — tab Dòng Thời Gian",
+      "url": "/grand",
+      "detail": {
+        "bodyLen": 1469,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh "
+      },
+      "ok": true
+    },
+    {
+      "name": "Grand — tab Hành Trình Đội",
+      "url": "/grand",
+      "detail": {
+        "bodyLen": 1438,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh "
+      },
+      "ok": true
+    },
+    {
+      "name": "Grand — tab Vinh Danh",
+      "url": "/grand",
+      "detail": {
+        "bodyLen": 1494,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh "
+      },
+      "ok": true
+    },
+    {
+      "name": "Grand — tab BXH Đội",
+      "url": "/grand",
+      "detail": {
+        "bodyLen": 1456,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ Gõ Nhanh Phản Xạ Bốn Hướng Trí Nhớ Nhanh "
+      },
+      "ok": true
+    },
+    {
+      "name": "Dashboard — Làm mới",
+      "url": "/dashboard",
+      "detail": {
+        "bodyLen": 2144,
+        "disabled": false
+      }
+    },
+    {
+      "name": "Dashboard — anchor YouTube",
+      "url": "/dashboard#dashboard-youtube",
+      "detail": {
+        "hash": "#dashboard-youtube",
+        "inView": true
+      },
+      "ok": true
+    },
+    {
+      "name": "Dashboard — CTA BXH cá nhân",
+      "url": "/leaderboard?scope=members&period=season",
+      "detail": {
+        "url": "/leaderboard?scope=members&period=season"
+      }
+    },
+    {
+      "name": "Friends — tab Đội Nhóm Của Tôi",
+      "url": "/friends",
+      "detail": {
+        "bodyLen": 21244,
+        "sample": "3WIN MEDIA ADMIN CÔNG VIỆC Tổng quan Số liệu YouTube Bảng xếp hạng Giải Đấu & Thi Đua Thi Đua Đấu Trường Mùa Giải Giải Vô Địch Năm (Grand) Cộng tác Thành Viên & Đội Nhóm Trò Chơi Giải Trí Đua Gõ Chữ G"
+      }
+    },
+    {
+      "name": "Friends — tìm \"Audit Member\"",
+      "url": "/friends",
+      "detail": {
+        "found": true
+      }
+    },
+    {
+      "name": "Friends — mở modal nhập mã mời",
+      "url": "/friends",
+      "detail": {
+        "modalCount": 0
+      }
+    },
+    {
+      "name": "Friends — đóng modal bằng Escape",
+      "url": "/friends",
+      "detail": {
+        "modalAfter": 0
+      }
+    },
+    {
+      "name": "Settings — lưu bio + reload",
+      "url": "/settings",
+      "detail": {
+        "toast": true,
+        "persisted": true,
+        "value": "[audit 1792756742705]"
+      },
+      "ok": true
+    },
+    {
+      "name": "Settings — đổi mật khẩu sai",
+      "url": "/settings",
+      "detail": {
+        "hasError": false,
+        "sample": "3WIN MEDIA\nADMIN\nCÔNG VIỆC\nTổng quan\nSố liệu YouTube\nBảng xếp hạng\nGiải Đấu & Thi Đua\nThi Đua\nĐấu Trường Mùa Giải\nGiải Vô Địch Năm (Grand)\nCộng tác\nThành Viên & Đội Nhóm\nTrò Chơi\nGiải Trí\nĐua Gõ Chữ\nG"
+      }
+    },
+    {
+      "name": "Settings — modal xóa tài khoản",
+      "url": "/settings",
+      "detail": {
+        "dialogs": 1
+      }
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "console",
+      "text": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "url": "http://127.0.0.1:5173/settings"
+    }
+  ],
+  "failed": [
+    {
+      "status": 400,
+      "url": "http://localhost:5001/api/auth/password",
+      "page": "http://127.0.0.1:5173/settings"
+    }
+  ]
+}

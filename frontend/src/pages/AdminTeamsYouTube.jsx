@@ -34,6 +34,7 @@ import {
   Crown,
 } from 'lucide-react';
 import VerifiedBadge from '../components/VerifiedBadge';
+import LazyTeamSelect from '../components/LazyTeamSelect';
 import { youtube, groups as groupsApi, users as usersApi } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
@@ -100,6 +101,7 @@ export default function AdminTeamsYouTube() {
     setSearchParams(nextParams);
   };
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   // Teams State
@@ -143,20 +145,34 @@ export default function AdminTeamsYouTube() {
     else setRefreshing(true);
 
     try {
-      const [groupsRes, channelsRes, overviewRes, usersRes] = await Promise.all([
-        groupsApi.listAll().catch(() => ({ data: [] })),
-        youtube.adminGetChannels().catch(() => ({ items: [], channels: [] })),
-        youtube.adminGetOverview().catch(() => null),
-        usersApi.list({ limit: 300 }).catch(() => ({ data: [] })),
+      // WR-AUDIT-019 — không nuốt lỗi từng API: allSettled để biết nguồn nào fail
+      // và hiển thị banner + nút Thử lại thay vì trang trống.
+      const [groupsRes, channelsRes, overviewRes, usersRes] = await Promise.allSettled([
+        groupsApi.listAll(),
+        youtube.adminGetChannels(),
+        youtube.adminGetOverview(),
+        usersApi.list({ limit: 300 }),
       ]);
 
-      setTeams(groupsRes.data || []);
-      const channelItems = channelsRes.items || channelsRes.channels || (Array.isArray(channelsRes) ? channelsRes : []);
-      setChannels(channelItems);
-      setOverview(overviewRes);
-      setAllUsers(usersRes.data || []);
+      setTeams(groupsRes.status === 'fulfilled' ? (groupsRes.value.data || []) : []);
+      const channelPayload = channelsRes.status === 'fulfilled' ? channelsRes.value : null;
+      setChannels(channelPayload
+        ? (channelPayload.items || channelPayload.channels || (Array.isArray(channelPayload) ? channelPayload : []))
+        : []);
+      setOverview(overviewRes.status === 'fulfilled' ? overviewRes.value : null);
+      setAllUsers(usersRes.status === 'fulfilled' ? (usersRes.value.data || []) : []);
+
+      if (channelsRes.status === 'rejected') {
+        const message = parseApiError(channelsRes.reason, 'Không thể tải danh sách kênh YouTube.');
+        setLoadError(message);
+        toast.error(message);
+      } else {
+        setLoadError('');
+      }
     } catch (err) {
-      toast.error(parseApiError(err, 'Không thể tải dữ liệu Đội nhóm & Kênh YouTube.'));
+      const message = parseApiError(err, 'Không thể tải dữ liệu Đội nhóm & Kênh YouTube.');
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -513,6 +529,12 @@ export default function AdminTeamsYouTube() {
 
   return (
     <div className="admin-data-page" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
+      {loadError && (
+        <div role="alert" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', fontSize: 12 }}>
+          <span>{loadError}</span>
+          <Button variant="secondary" size="sm" onClick={() => loadData()}>Thử lại</Button>
+        </div>
+      )}
       {/* ── 1. COMPANY OVERVIEW KPI BAR (TIER 1) ── */}
       <section style={{ ...CARD, padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
         <div>
@@ -797,6 +819,7 @@ export default function AdminTeamsYouTube() {
                   <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Đội:</span>
                   <select
                     value={channelTeamFilter}
+                    aria-label="Lọc kênh theo đội"
                     onChange={(e) => setChannelTeamFilter(e.target.value)}
                     style={{ padding: '5px 8px', fontSize: 11, border: '1px solid rgba(15,23,42,0.12)', background: 'var(--surface)' }}
                   >
@@ -839,8 +862,8 @@ export default function AdminTeamsYouTube() {
             </div>
 
             {/* Channels Table */}
-            <div style={{ ...CARD, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
+            <div style={{ ...CARD, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-soft)', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
                     <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.04em' }}>Kênh YouTube</th>
@@ -910,8 +933,10 @@ export default function AdminTeamsYouTube() {
 
                           {/* 2. Team Mapping */}
                           <td style={{ padding: '12px 14px' }}>
-                            <select
+                            <LazyTeamSelect
                               value={ch.teamId || ''}
+                              teams={teams}
+                              ariaLabel={`Đội phụ trách cho kênh ${ch.name || ch.channelId || ch.id}`}
                               onChange={(e) => handleLinkChannel(ch.id, e.target.value)}
                               disabled={linkingChannelId === ch.id}
                               style={{
@@ -921,12 +946,7 @@ export default function AdminTeamsYouTube() {
                                 opacity: linkingChannelId === ch.id ? 0.6 : 1,
                                 cursor: linkingChannelId === ch.id ? 'not-allowed' : 'pointer',
                               }}
-                            >
-                              <option value="">-- Chưa gán đội (Độc lập) --</option>
-                              {teams.map((t) => (
-                                <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
-                              ))}
-                            </select>
+                            />
                           </td>
 
                           {/* 3. Views */}

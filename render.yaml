@@ -48,4 +48,12 @@ services:
         sync: false
       - key: STORAGE_FORCE_PATH_STYLE
         value: "true"
+      # ── Private Media (owner-only capability) ──
+      # Bật YouTube Data API v3 trong Google Cloud rồi dán key vào dashboard.
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: PRIVATE_MEDIA_BOOTSTRAP_OWNER_EMAIL
+        value: tienddph50842@gmail.com
 

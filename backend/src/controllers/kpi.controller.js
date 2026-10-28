@@ -101,6 +101,18 @@ exports.createPeriod = async (req, res, next) => {
 };
 
 // ── KPI Result & History Handlers ──
+// Projection công khai cho bảng xếp hạng: không trả target/actual/source/metadata.
+exports.getResultsLeaderboard = async (req, res, next) => {
+  try {
+    const departmentId = req.query.departmentId ? Number(req.query.departmentId) : undefined;
+    const periodId = req.query.periodId ? Number(req.query.periodId) : undefined;
+    const rows = await kpiService.getLeaderboardResults({ departmentId, periodId });
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 exports.getResults = async (req, res, next) => {
   try {
     const departmentId = req.query.departmentId ? Number(req.query.departmentId) : undefined;

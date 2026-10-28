@@ -1,0 +1,79 @@
+{
+  "steps": [
+    {
+      "name": "host select 1V1",
+      "ok": true,
+      "data": {
+        "createLabel": "Tạo phòng · 1 chọi 1"
+      }
+    },
+    {
+      "name": "host created room",
+      "ok": true,
+      "data": {
+        "url": "/games/arcade/computer_rush/room/6e73e9b6-e46e-41a9-9bae-6c708c845a88"
+      }
+    },
+    {
+      "name": "guest sees room list",
+      "ok": true,
+      "data": {
+        "listCount": 1,
+        "text": "Gõ Nhanh Audit Admin · 1V1 · Chủ phòng: Audit Admin 1/2 ĐANG CHỜ →"
+      }
+    },
+    {
+      "name": "guest joined",
+      "ok": true,
+      "data": {
+        "url": "/games/arcade/computer_rush/room/6e73e9b6-e46e-41a9-9bae-6c708c845a88",
+        "sameRoom": true
+      }
+    },
+    {
+      "name": "host ready",
+      "ok": true,
+      "data": {
+        "pressed": 1
+      }
+    },
+    {
+      "name": "guest ready",
+      "ok": true,
+      "data": {
+        "pressed": 1
+      }
+    },
+    {
+      "name": "host start enabled",
+      "ok": true,
+      "data": {
+        "startEnabled": true
+      }
+    },
+    {
+      "name": "both playing",
+      "ok": true,
+      "data": {
+        "host": 1,
+        "guest": 1
+      }
+    },
+    {
+      "name": "both submitted input",
+      "ok": true,
+      "data": {
+        "hostScore": "CÒN LẠI 55s #1/2 x6 · CHUỖI ĐIỂM CỦA BẠN 988"
+      }
+    },
+    {
+      "name": "host left room",
+      "ok": true,
+      "data": {
+        "url": "/games/arcade/computer_rush"
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "badResponses": []
+}

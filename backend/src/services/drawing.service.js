@@ -1,6 +1,6 @@
 'use strict';
 
-const { Op } = require('sequelize');
+const { Op, fn, col, literal } = require('sequelize');
 const { Drawing, DrawingLike, User, Team, UserProfilePreference, SystemSetting } = require('../models');
 const { ValidationError, NotFoundError, ForbiddenError, StorageError } = require('../utils/errors');
 const { resolveStorageConfig } = require('../config/storage');
@@ -112,21 +112,60 @@ function canViewDrawing(drawing, { userId = null, teamId = null, isAdmin = false
   return plain.visibility === 'TEAM' && teamId != null && Number(plain.author?.teamId) === Number(teamId);
 }
 
-function formatDrawing(drawing, likedDrawingIds = new Set()) {
+/**
+ * Số like thật từ bảng drawing_likes — nguồn sự thật duy nhất.
+ * Cột denormalized `drawings.likes_count` chỉ là cache và có thể lệch sau seed/
+ * migration, nên mọi response đọc đều dùng COUNT thực tế.
+ */
+async function exactLikeCounts(drawingIds) {
+  const ids = [...new Set((drawingIds || []).map(Number).filter(Boolean))];
+  if (!ids.length) return new Map();
+  const rows = await DrawingLike.findAll({
+    where: { drawingId: { [Op.in]: ids } },
+    attributes: ['drawingId', [fn('COUNT', col('id')), 'count']],
+    group: ['drawingId'],
+    raw: true,
+  });
+  return new Map(rows.map((row) => [Number(row.drawingId), Number(row.count)]));
+}
+
+/**
+ * URL ảnh công khai — không bao giờ trả host localhost/127.0.0.1 đã chết.
+ * - s3 đang cấu hình: public URL từ storage key
+ * - local: backend phục vụ /uploads/<key>
+ * - dữ liệu cũ không có key: giữ URL gốc nếu là host công khai, ngược lại trả ''
+ *   để frontend hiển thị fallback "ảnh không còn khả dụng".
+ */
+function resolvePublicImageUrl(plain, storageConfig) {
+  const key = plain.storageKey || plain.storage_key;
+  if (key) {
+    if (storageConfig.provider === 's3' && storageConfig.ok) {
+      return getDrawingStorage().getPublicUrl(key);
+    }
+    if (storageConfig.provider === 'local') {
+      return `/uploads/${String(key).replace(/^\/+/, '')}`;
+    }
+  }
+  const raw = plain.imageUrl || plain.image_url || '';
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/)/i.test(raw)) return '';
+  return raw;
+}
+
+function formatDrawing(drawing, likedDrawingIds = new Set(), likeCounts = null) {
   const plain = drawing.get ? drawing.get({ plain: true }) : drawing;
   const storageConfig = resolveStorageConfig();
+  const exact = likeCounts ? likeCounts.get(Number(plain.id)) : undefined;
   return {
     id: plain.id,
     title: plain.title || 'Tác phẩm không tên',
-    imageUrl: plain.storageProvider === 's3' && plain.storageKey && storageConfig.provider === 's3' && storageConfig.ok
-      ? getDrawingStorage().getPublicUrl(plain.storageKey) : plain.imageUrl || plain.image_url,
+    imageUrl: resolvePublicImageUrl(plain, storageConfig),
     storageProvider: plain.storageProvider || null,
     storagePersistent: plain.storageProvider === 's3',
     width: plain.width || 1200,
     height: plain.height || 700,
     visibility: plain.visibility || 'PUBLIC',
     status: plain.status || 'ACTIVE',
-    likesCount: plain.likesCount || plain.likes_count || 0,
+    likesCount: exact !== undefined ? exact : (plain.likesCount || plain.likes_count || 0),
     viewsCount: plain.viewsCount || plain.views_count || 0,
     metadata: plain.metadata || {},
     createdAt: plain.createdAt || plain.created_at,
@@ -184,7 +223,11 @@ async function getGallery({
 
   let order = [['created_at', 'DESC']];
   if (filter === 'top' || filter === 'popular') {
-    order = [['likes_count', 'DESC'], ['created_at', 'DESC']];
+    // Đếm trực tiếp từ drawing_likes: cache likes_count có thể lệch.
+    order = [
+      [literal('(SELECT COUNT(*) FROM drawing_likes dl WHERE dl.drawing_id = `Drawing`.`id`)'), 'DESC'],
+      ['created_at', 'DESC'],
+    ];
   }
 
   const { rows, count } = await Drawing.findAndCountAll({
@@ -228,8 +271,14 @@ async function getGallery({
     userLikes.forEach((l) => likedSet.add(l.drawingId));
   }
 
-  const items = rows.map((r) => formatDrawing(r, likedSet));
+  const likeCounts = await exactLikeCounts(rows.map((r) => r.id));
+  const items = rows.map((r) => formatDrawing(r, likedSet, likeCounts));
   const settings = await getSettings();
+
+  // "Nhiều tim nhất" phải xếp theo số like thật, không theo cache có thể lệch.
+  if (filter === 'top' || filter === 'popular') {
+    items.sort((a, b) => b.likesCount - a.likesCount || new Date(b.createdAt) - new Date(a.createdAt));
+  }
 
   return {
     drawings: items,
@@ -295,7 +344,8 @@ async function getById(drawingId, { userId = null, teamId = null, isAdmin = fals
   }
 
   const likedSet = new Set(hasLiked ? [drawing.id] : []);
-  return formatDrawing(drawing, likedSet);
+  const likeCounts = await exactLikeCounts([drawing.id]);
+  return formatDrawing(drawing, likedSet, likeCounts);
 }
 
 /**
@@ -490,7 +540,8 @@ async function getUserDrawings({ userId, currentUserId = null, currentUserTeamId
     userLikes.forEach((l) => likedSet.add(l.drawingId));
   }
 
-  const items = rows.map((r) => formatDrawing(r, likedSet));
+  const likeCounts = await exactLikeCounts(rows.map((r) => r.id));
+  const items = rows.map((r) => formatDrawing(r, likedSet, likeCounts));
 
   return {
     drawings: items,

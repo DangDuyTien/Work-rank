@@ -60,11 +60,18 @@ const TypingPlayer = require('./TypingPlayer');
 const TypingMatchResult = require('./TypingMatchResult');
 const TypingUserStat = require('./TypingUserStat');
 const TypingPracticeAttempt = require('./TypingPracticeAttempt');
-// Đua Gõ Theo Nhạc (music typing race) — internal game type stays typing_battle
-const MusicSong = require('./MusicSong');
 // Creative Corner Drawing Models
 const Drawing = require('./Drawing');
 const DrawingLike = require('./DrawingLike');
+// Private Media (isolated capability — never role-based)
+const PrivateMediaOwner = require('./PrivateMediaOwner');
+const PrivateMediaGrant = require('./PrivateMediaGrant');
+const PrivateMediaDevice = require('./PrivateMediaDevice');
+const PrivateMediaTelegramBinding = require('./PrivateMediaTelegramBinding');
+const PrivateMediaPairingCode = require('./PrivateMediaPairingCode');
+const PrivateMediaSession = require('./PrivateMediaSession');
+const PrivateMediaCommand = require('./PrivateMediaCommand');
+const PrivateMediaAuditLog = require('./PrivateMediaAuditLog');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -236,6 +243,17 @@ DrawingLike.belongsTo(Drawing, { as: 'drawing', foreignKey: 'drawingId' });
 User.hasMany(DrawingLike, { as: 'drawingLikes', foreignKey: 'userId' });
 DrawingLike.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
+// Private Media associations (no FK constraints on purpose: this capability is
+// isolated and must not influence core schema migration order).
+PrivateMediaGrant.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
+PrivateMediaGrant.belongsTo(User, { as: 'grantedBy', foreignKey: 'grantedByUserId', constraints: false });
+PrivateMediaDevice.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
+PrivateMediaTelegramBinding.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
+PrivateMediaOwner.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
+PrivateMediaSession.belongsTo(User, { as: 'controller', foreignKey: 'controllerUserId', constraints: false });
+PrivateMediaCommand.belongsTo(PrivateMediaSession, { as: 'session', foreignKey: 'sessionId', constraints: false });
+PrivateMediaCommand.belongsTo(User, { as: 'issuedBy', foreignKey: 'issuedByUserId', constraints: false });
+
 module.exports = {
   ArcadeRoom,
   ArcadePlayer,
@@ -304,10 +322,18 @@ module.exports = {
   TypingMatchResult,
   TypingUserStat,
   TypingPracticeAttempt,
-  MusicSong,
   // Creative Corner Drawing Models
   Drawing,
   DrawingLike,
+  // Private Media (isolated capability)
+  PrivateMediaOwner,
+  PrivateMediaGrant,
+  PrivateMediaDevice,
+  PrivateMediaTelegramBinding,
+  PrivateMediaPairingCode,
+  PrivateMediaSession,
+  PrivateMediaCommand,
+  PrivateMediaAuditLog,
 };
 
 

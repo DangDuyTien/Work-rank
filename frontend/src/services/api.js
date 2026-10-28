@@ -5,6 +5,38 @@ import { clearCache, invalidateCache } from './cache.js';
 const apiBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '';
 const api = axios.create({ baseURL: apiBaseUrl });
 
+/**
+ * WR-AUDIT-009 — Dedupe GET trong một cửa sổ ngắn.
+ *
+ * React StrictMode mount/unmount/mount và nhiều component cùng hỏi một endpoint
+ * (friends, unread, catalog, KPI...) tạo 3–4 request giống hệt khi mở trang.
+ * Các caller nhận cùng một promise trong 400ms; request thật chỉ chạy một lần.
+ * Caller cần bỏ qua dedupe có thể truyền `{ dedupe: false }`.
+ */
+const inflightGets = new Map();
+const originalGet = api.get.bind(api);
+api.get = (url, config = {}) => {
+  if (config?.dedupe === false) return originalGet(url, config);
+  const key = `${url}|${JSON.stringify(config?.params || {})}`;
+  const now = Date.now();
+  const existing = inflightGets.get(key);
+  if (existing && now - existing.at < 400) return existing.promise;
+
+  const promise = originalGet(url, config);
+  inflightGets.set(key, { promise, at: now });
+  const cleanup = () => {
+    const current = inflightGets.get(key);
+    if (current?.promise === promise) inflightGets.delete(key);
+  };
+  // Giữ entry thêm 500ms sau khi request xong để mount thứ hai (StrictMode)
+  // dùng lại kết quả thay vì bắn request trùng.
+  promise.then(
+    () => { setTimeout(cleanup, 500); },
+    () => { setTimeout(cleanup, 0); },
+  );
+  return promise;
+};
+
 const AUTH_UPDATED_EVENT = 'workrank:auth-updated';
 const AUTH_EXPIRED_EVENT = 'workrank:auth-expired';
 export const AUTH_CHANNEL_NAME = 'workrank:auth';
@@ -1197,6 +1229,10 @@ export const kpiApi = {
     const res = await api.get('/api/kpi/results', { params });
     return res.data;
   },
+  getLeaderboardResults: async (params = {}) => {
+    const res = await api.get('/api/kpi/results/leaderboard', { params });
+    return res.data;
+  },
   recordResult: async (data) => {
     const res = await api.post('/api/kpi/results', data);
     return res.data;
@@ -1336,20 +1372,6 @@ export const typingGameApi = {
     const res = await api.post('/api/games/typing/practice/finish', data);
     return res.data;
   },
-};
-
-/**
- * Đua Gõ Theo Nhạc — same game family (`typing_battle`), different challenge:
- * a song with timed lyrics instead of a passage.
- */
-export const musicRaceApi = {
-  listSongs: async () => (await api.get('/api/games/typing/music/songs')).data,
-  getSong: async (songId) => (await api.get(`/api/games/typing/music/songs/${songId}`)).data,
-  myStats: async () => (await api.get('/api/games/typing/music/my-stats')).data,
-  leaderboard: async (params = {}) => (await api.get('/api/games/typing/music/leaderboard', { params })).data,
-  createAttempt: async (data) => (await api.post('/api/games/typing/music/attempts', data)).data,
-  updateProgress: async (attemptId, data) => (await api.post(`/api/games/typing/music/attempts/${attemptId}/progress`, data)).data,
-  finish: async (data) => (await api.post('/api/games/typing/music/finish', data)).data,
 };
 
 /**

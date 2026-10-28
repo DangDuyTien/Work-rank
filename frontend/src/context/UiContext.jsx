@@ -104,7 +104,7 @@ export function UiProvider({ children }) {
           return (
             <div
               key={item.id}
-              role="status"
+              role={item.type === 'error' ? 'alert' : 'status'}
               className={item.isExiting ? 'motion-toast-exit' : 'motion-toast-enter'}
               style={{
                 display: 'flex',

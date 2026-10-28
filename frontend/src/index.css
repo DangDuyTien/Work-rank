@@ -1802,7 +1802,13 @@ textarea {
   width: min(var(--page-max), 100%);
   margin: 0 auto;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: var(--space-4);
+}
+
+.ui-page-shell > * {
+  min-width: 0;
 }
 
 .ui-page-shell--narrow {
@@ -2025,10 +2031,16 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-interactive);
   background: var(--surface-soft);
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .ui-segmented__button {
   min-height: 32px;
+  flex: 0 0 auto;
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -10754,6 +10766,12 @@ html[data-workrank-reduce-motion="true"] .workrank-nav-active-bar { animation: n
 .admin-data-page {
   gap: var(--space-4) !important;
   max-width: 1200px !important;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-data-page > * {
+  min-width: 0;
 }
 
 .admin-data-page > section,
@@ -11094,6 +11112,8 @@ html[data-workrank-reduce-motion="true"] .workrank-nav-active-bar { animation: n
 .dashboard-details__body {
   padding: 0 16px 16px;
   border-top: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-hero {
@@ -13919,7 +13939,11 @@ html[data-workrank-reduce-motion="true"] .board-tile-card.is-active-landed {
   }
 }
 
-html[data-workrank-reduce-motion="true"] .public-floating-heart,
+html[data-workrank-reduce-motion="true"] .public-floating-heart {
+  animation: none !important;
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .public-floating-heart {
     animation: none !important;
@@ -14105,5 +14129,41 @@ html[data-workrank-reduce-motion="true"] .public-floating-heart,
   }
   .typing-hub-card__name {
     font-size: 19px;
+  }
+}
+
+/* WR-AUDIT-013 — Vùng chạm tối thiểu 44px cho điều khiển icon trên thiết bị cảm ứng.
+   Chỉ áp dụng với pointer coarse để không phá mật độ bảng trên desktop. */
+@media (pointer: coarse) {
+  .workrank-sidebar-inner a[aria-label],
+  .workrank-mobile-drawer a[aria-label],
+  button[aria-label],
+  a[aria-label] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* WR-AUDIT-017 — tiện ích heading ẩn cho screen reader (giữ cấu trúc h1→h2). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (pointer: coarse) {
+  .mobile-brand-mark,
+  .studio-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
   }
 }

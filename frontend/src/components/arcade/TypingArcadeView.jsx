@@ -21,7 +21,7 @@ function TypingFinish({ players, result, practiceResult, user, best, combo, time
   const mine = ranked.find(p => String(p.userId) === String(user.id)) || {};
   const podium = ranked.slice(0,3).map((p,i) => ({ ...p, name: p.user?.name || players.find(x => String(x.userId)===String(p.userId))?.user?.name || user.name, position: i+1, score: p.wpm || 0, unit: 'WPM' }));
   const record = best > 0 && mine.eligible !== false && mine.wpm > best && (result || practiceResult?.recorded);
-  return <section className="arcade-result arcade-result-polished typing-finish"><p className="arcade-kicker">VĂN BẢN CỔ ĐIỂN · ĐÃ VỀ ĐÍCH</p><h2>{record ? 'KỶ LỤC MỚI!' : ranked.length>1 ? `Bạn về đích #${mine.individualRank || '—'}` : 'Đường đua đã có dấu chân bạn!'}</h2>
+  return <section className="arcade-result arcade-result-polished typing-finish"><p className="arcade-kicker">ĐUA GÕ CHỮ · ĐÃ VỀ ĐÍCH</p><h2>{record ? 'KỶ LỤC MỚI!' : ranked.length>1 ? `Bạn về đích #${mine.individualRank || '—'}` : 'Đường đua đã có dấu chân bạn!'}</h2>
     <ArcadePodium players={podium} />
     <p className="arcade-result-saved">✓ Kết quả đã lưu trên hệ thống · Hạng #{mine.individualRank || 1} · {mine.performanceScore || 0} điểm thành tích · {mine.awardedXp ?? mine.scoreDelta ?? 0} XP</p>
     <dl className="arcade-result-highlights">{[['Tốc độ',`${mine.wpm || 0} WPM`],['Chính xác',`${mine.accuracy || 0}%`],['Thời gian',`${Math.round((mine.completionTimeMs || time*1000)/1000)} giây`],['Chuỗi tốt nhất',`x${combo || 0}`]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
@@ -68,7 +68,7 @@ export default function TypingArcadeView({ user, room, players, isSpectator, roo
   const done=readyResult&&resultVisible;
   const create=async()=>{setCreating(true);await onCreate(mode,selectedDuration);setCreating(false);};
   return <div ref={root} className="arcade-page typing_battle typing-page"><header className="arcade-topbar"><button type="button" onClick={onLeave}><ArrowLeft size={17}/>{room?'Rời phòng':'Đổi chế độ gõ'}</button><span className="arcade-brand">WORK RANK <b>ARCADE</b></span><ArcadeSoundControl/></header>
-    <div className="typing-arcade-heading"><div><p className="arcade-kicker">VĂN BẢN CỔ ĐIỂN</p><h1>ĐUA GÕ CHỮ</h1><p>Chế độ gốc · Gõ cả đoạn văn · Tính WPM</p></div>{!room&&<span className="arcade-best-chip">★ Kỷ lục: {myStats?.bestWpm ? `${myStats.bestWpm} WPM` : 'chưa có'}</span>}</div>
+    <div className="typing-arcade-heading"><div><p className="arcade-kicker">01 · ĐUA GÕ CHỮ</p><h1>ĐUA GÕ CHỮ</h1><p>Gõ đúng · Giữ nhịp · Chạy tới đích</p></div>{!room&&<span className="arcade-best-chip">★ Kỷ lục: {myStats?.bestWpm ? `${myStats.bestWpm} WPM` : 'chưa có'}</span>}</div>
     {(roomError||practiceError)&&<div className="arcade-notice" role="alert">{roomError||practiceError}<Button variant="secondary" onClick={onRetry}>Thử lại</Button></div>}
     {!room&&<div className="typing-arcade-tabs">{[['practice','Một mình · Luyện nhịp'],['arena','Đấu nhóm'],['leaderboard','BXH'],['history','Lịch sử']].map(([k,l])=><button type="button" key={k} aria-pressed={activeTab===k} onClick={()=>setActiveTab(k)}>{l}</button>)}</div>}
     <TabTransition key={room?'room':activeTab} minHeight={500}>

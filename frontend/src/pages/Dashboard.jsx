@@ -401,7 +401,7 @@ export default function Dashboard() {
         <div>
           <div className="dashboard-eyebrow">
             <Activity size={14} />
-            WorkRank Performance Center
+            Trung tâm hiệu suất WorkRank
           </div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span>Xin chào, {user?.name || 'Bạn'}</span>

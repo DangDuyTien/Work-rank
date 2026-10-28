@@ -1,0 +1,142 @@
+{
+  "games": [
+    {
+      "gameType": "direction_rush",
+      "route": "/games/arcade/direction_rush",
+      "steps": [
+        {
+          "name": "open menu",
+          "ok": true,
+          "data": {
+            "h1": "PHẢN XẠ BỐN HƯỚNG",
+            "url": "/games/arcade/direction_rush"
+          }
+        },
+        {
+          "name": "BXH panel",
+          "ok": true,
+          "data": {
+            "rows": 0,
+            "empty": 1
+          }
+        },
+        {
+          "name": "room created",
+          "ok": true,
+          "data": {
+            "url": "/games/arcade/direction_rush/room/b2c478c3-41da-4d4e-b7ee-0920014b76cc"
+          }
+        },
+        {
+          "name": "playing surface",
+          "ok": true,
+          "data": {
+            "arcadeWorld": 1,
+            "countdown": 0
+          }
+        },
+        {
+          "name": "gameplay activity",
+          "ok": true,
+          "data": {
+            "pressed": 169
+          }
+        },
+        {
+          "name": "result screen",
+          "ok": true,
+          "data": {
+            "hasActions": 1,
+            "text": "🏆 VÁN CHƠI CỦA BẠN Thêm một ván nữa nhé? ✓ Kết quả đã lưu trên hệ thống Giữ nhịp thêm một chút, chuỗi tiếp theo có thể sẽ là kỷ lục. AA ✦ ✧ ✦ P1 Audit Admin ĐIỂM CỦA BẠN 3.292 Một bước gần hơn tới kỷ lục Hướng đúng 23 Chính xác 23.71% Chuỗi tốt nhất x3 Phản xạ TB 247 ms 23 hướng đúng · 74 lần lỡ nh"
+          }
+        },
+        {
+          "name": "replay",
+          "ok": true,
+          "data": {
+            "before": "/games/arcade/direction_rush/room/b2c478c3-41da-4d4e-b7ee-0920014b76cc",
+            "after": "/games/arcade/direction_rush/room/6379a3e8-19cc-48c1-8667-c120d46a7473",
+            "changed": true
+          }
+        },
+        {
+          "name": "leave room",
+          "ok": true,
+          "data": {
+            "url": "/games/arcade/direction_rush"
+          }
+        }
+      ]
+    },
+    {
+      "gameType": "memory_flash",
+      "route": "/games/arcade/memory_flash",
+      "steps": [
+        {
+          "name": "open menu",
+          "ok": true,
+          "data": {
+            "h1": "TRÍ NHỚ NHANH",
+            "url": "/games/arcade/memory_flash"
+          }
+        },
+        {
+          "name": "BXH panel",
+          "ok": true,
+          "data": {
+            "rows": 1,
+            "empty": 0
+          }
+        },
+        {
+          "name": "room created",
+          "ok": true,
+          "data": {
+            "url": "/games/arcade/memory_flash/room/44585ac4-3967-4e8b-b036-bce7774fb0a5"
+          }
+        },
+        {
+          "name": "playing surface",
+          "ok": true,
+          "data": {
+            "arcadeWorld": 1,
+            "countdown": 0
+          }
+        },
+        {
+          "name": "gameplay activity",
+          "ok": true,
+          "data": {
+            "rounds": 23
+          }
+        },
+        {
+          "name": "result screen",
+          "ok": true,
+          "data": {
+            "hasActions": 1,
+            "text": "✦ VÁN CHƠI CỦA BẠN KỶ LỤC MỚI! ✓ Kết quả đã lưu trên hệ thống Thành tích đầu tiên đã có tên bạn. Giờ hãy thử vượt chính mình! AA ✦ ✧ ✦ P1 Audit Admin ĐIỂM CỦA BẠN 10.166 +30 XP · Đã ghi nhận Vòng đúng 22 Chính xác 95.65% Chuỗi tốt nhất x22 Phản hồi TB 359 ms Chơi lại BXH Trung tâm trò chơi Một chạm "
+          }
+        },
+        {
+          "name": "replay",
+          "ok": true,
+          "data": {
+            "before": "/games/arcade/memory_flash/room/44585ac4-3967-4e8b-b036-bce7774fb0a5",
+            "after": "/games/arcade/memory_flash/room/77474cb3-56cf-42a3-b6cb-a8d1ea64e776",
+            "changed": true
+          }
+        },
+        {
+          "name": "leave room",
+          "ok": true,
+          "data": {
+            "url": "/games/arcade/memory_flash"
+          }
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "badResponses": []
+}

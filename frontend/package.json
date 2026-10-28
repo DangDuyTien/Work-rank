@@ -11,8 +11,7 @@
     "build": "node scripts/verify-frontend.js && vite build",
     "preview": "vite preview",
     "test:e2e": "npm run build && playwright test",
-    "test:e2e:list": "playwright test --list",
-    "test:music": "node --test tests/music-engine.test.mjs"
+    "test:e2e:list": "playwright test --list"
   },
   "dependencies": {
     "axios": "^1.6.7",

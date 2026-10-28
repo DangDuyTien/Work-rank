@@ -26,9 +26,12 @@ router.get('/periods', auth, asyncHandler(kpiController.getPeriods));
 router.post('/periods', auth, requireRole('admin'), asyncHandler(kpiController.createPeriod));
 
 // ── 5. KPI Results & History ──
-router.get('/results', auth, asyncHandler(kpiController.getResults));
+// Kết quả chi tiết và audit trail là dữ liệu hiệu suất cá nhân: chỉ admin/manager.
+// Member dùng projection công khai /results/leaderboard (chỉ điểm xếp hạng).
+router.get('/results/leaderboard', auth, asyncHandler(kpiController.getResultsLeaderboard));
+router.get('/results', auth, requireRole('admin', 'manager'), asyncHandler(kpiController.getResults));
 router.post('/results', auth, requireRole('admin'), asyncHandler(kpiController.recordResult));
-router.get('/results/history', auth, asyncHandler(kpiController.getResultHistory));
+router.get('/results/history', auth, requireRole('admin', 'manager'), asyncHandler(kpiController.getResultHistory));
 
 // ── 6. Production KPI Engine ──────────────────────────────────────────────────
 const multer = require('multer');

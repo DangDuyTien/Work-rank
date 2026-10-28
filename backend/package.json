@@ -15,6 +15,7 @@
     "db:seed": "sequelize-cli db:seed:all",
     "db:migrate-drawings": "node scripts/migrate-drawing-images.js",
     "db:reset-clean": "node scripts/reset-and-seed-local.js",
+    "youtube:key": "node scripts/set-youtube-key.js",
     "test:load": "node scripts/api-load-smoke-test.js"
   },
   "keywords": [],

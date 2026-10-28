@@ -31,7 +31,7 @@ function MvpVisualAward({ data, loading, error, retry }) {
         <BrandMark size={28} showLabel={false} /><span>WORKRANK<small>3WIN MEDIA</small></span>
       </Link>
       <div className="public-auth-editorial-heading">
-        <h2>Recipients</h2>
+        <h2>Người được vinh danh</h2>
         <p>{data?.season?.name || (loading ? 'Đang tải mùa giải…' : error ? 'Chưa tải được mùa giải' : 'Chưa có mùa giải công bố')}</p>
       </div>
       <SpotlightFeedback loading={loading} error={error} retry={retry} />

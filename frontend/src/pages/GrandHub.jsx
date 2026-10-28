@@ -175,9 +175,9 @@ export default function GrandHub() {
       >
         <div
           className="grand-hero-body"
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, width: '100%', maxWidth: '100%', minWidth: 0 }}
         >
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <span
                 style={{
@@ -200,7 +200,7 @@ export default function GrandHub() {
               </span>
             </div>
 
-            <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 8px 0', letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0, maxWidth: '100%', color: 'var(--surface)', overflowWrap: 'anywhere' }}>
               <Trophy size={26} color="var(--accent, var(--accent))" /> {grand.name}
             </h1>
             <p style={{ margin: '0 0 16px 0', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontWeight: 400, maxWidth: 600 }}>

@@ -4,11 +4,12 @@ import {
   Calendar, Target, AlertTriangle, Clock, Sparkles, Star, Trash2, Edit3, Save,
   History, RotateCcw,
 } from 'lucide-react';
-import { competition, groups, users as usersApi } from '../services/api';
+import { competition, groups } from '../services/api';
 import { useToast, useConfirm } from '../context/UiContext';
 import { parseApiError } from '../utils/errors';
 import { Card, EmptyState, PageState, Button, SegmentedControl, TabTransition, AnimatedModal } from '../components/ui';
 import MvpCupAwardModal from '../components/MvpCupAwardModal';
+import UserPicker from '../components/UserPicker';
 
 
 export default function AdminSeasons() {
@@ -40,7 +41,6 @@ export default function AdminSeasons() {
   // Add Team Modal State
   const [selectedSeasonForTeam, setSelectedSeasonForTeam] = useState(null);
   const [availableTeams, setAvailableTeams] = useState([]);
-  const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [teamColor, setTeamColor] = useState('var(--accent)');
 
@@ -103,19 +103,6 @@ export default function AdminSeasons() {
     }
   };
 
-  const fetchAvailableUsers = async () => {
-    try {
-      const first = await usersApi.list({ limit: 100 });
-      const remaining = await Promise.all(Array.from(
-        { length: Math.max(0, (first.pagination?.totalPages || 1) - 1) },
-        (_, index) => usersApi.list({ limit: 100, page: index + 2 }),
-      ));
-      setAvailableUsers([...(first.data || []), ...remaining.flatMap((res) => res.data || [])]);
-    } catch (err) {
-      toast.error(parseApiError(err, 'Không thể tải danh sách thành viên'));
-    }
-  };
-
   const fetchSpotlightAndArchives = useCallback(async () => {
     try {
       setLoadingSpotlight(true);
@@ -145,7 +132,6 @@ export default function AdminSeasons() {
   useEffect(() => {
     fetchSeasons();
     fetchAvailableTeams();
-    fetchAvailableUsers();
   }, [fetchSeasons]);
 
   useEffect(() => {
@@ -385,6 +371,7 @@ export default function AdminSeasons() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy size={22} color="#f97316" />
             <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Quản Lý Mùa Giải & Vinh Danh</h1>
+            <h2 className="sr-only">Danh sách mùa giải và vinh danh</h2>
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
             Thiết lập lịch trình, đội tham gia, đóng băng kết quả, và quản lý vinh danh trang chủ các năm.
@@ -814,16 +801,14 @@ export default function AdminSeasons() {
               </h4>
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">Chọn Cá nhân (User)</label>
-                <select
+                <UserPicker
                   value={spotlightConfig.userId}
-                  onChange={(e) => setSpotlightConfig({ ...spotlightConfig, userId: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-                >
-                  <option value="">-- Tự động từ mùa giải gần nhất --</option>
-                  {availableUsers.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.jobTitle || 'Nhân viên'})</option>
-                  ))}
-                </select>
+                  onChange={(user) => setSpotlightConfig({ ...spotlightConfig, userId: user ? String(user.id) : '' })}
+                  allowEmpty
+                  emptyLabel="-- Tự động từ mùa giải gần nhất --"
+                  ariaLabel="Chọn cá nhân MVP cho spotlight"
+                  placeholder="Tìm cá nhân MVP…"
+                />
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">Tiêu đề vinh danh MVP (Tuỳ chỉnh)</label>
@@ -1063,34 +1048,17 @@ export default function AdminSeasons() {
             </div>
             <div>
               <span id="archive-members-label" className="text-xs font-semibold text-slate-700 block mb-1">Thành viên đội ({archiveForm.memberIds.length} đã chọn)</span>
-              <div role="group" aria-labelledby="archive-members-label" className="max-h-48 overflow-y-auto bg-white border border-slate-300 rounded-lg p-2">
-                {availableUsers.map((user) => (
-                  <label key={user.id} className="flex items-center gap-2 p-2 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={archiveForm.memberIds.includes(String(user.id))}
-                      onChange={(e) => setArchiveForm((form) => ({
-                        ...form,
-                        memberIds: e.target.checked
-                          ? [...form.memberIds, String(user.id)]
-                          : form.memberIds.filter((id) => id !== String(user.id)),
-                      }))}
-                    />
-                    <span className="min-w-0 break-words">{user.name} · #{user.id}{user.teamName ? ` · ${user.teamName}` : ''}</span>
-                  </label>
-                ))}
-                {archiveForm.memberIds.filter((id) => !availableUsers.some((user) => String(user.id) === id)).map((id) => (
-                  <label key={id} className="flex items-center gap-2 p-2 text-sm">
-                    <input type="checkbox" checked onChange={() => setArchiveForm((form) => ({
-                      ...form, memberIds: form.memberIds.filter((memberId) => memberId !== id),
-                    }))} />
-                    <span className="min-w-0 break-words">
-                      {editingArchive?.championTeam?.members?.find((m) => String(m.userId || m.id) === id)?.name || `Thành viên #${id}`} (không có trong danh sách hiện tại)
-                    </span>
-                  </label>
-                ))}
-                {availableUsers.length === 0 && <p className="text-xs text-slate-500 p-2">Chưa tải được danh sách thành viên.</p>}
-              </div>
+              <UserPicker
+                multiple
+                value={archiveForm.memberIds}
+                selectedUsers={(editingArchive?.championTeam?.members || []).map((member) => ({
+                  id: member.userId || member.id,
+                  name: member.name,
+                }))}
+                onChange={(ids) => setArchiveForm((form) => ({ ...form, memberIds: ids }))}
+                ariaLabel="Chọn thành viên đội vô địch"
+                placeholder="Tìm và thêm thành viên…"
+              />
               {archiveForm.legacyMembers.length > 0 && (
                 <div className="mt-2 text-xs text-amber-800">
                   <p>Thành viên cũ chưa liên kết tài khoản:</p>
@@ -1113,24 +1081,19 @@ export default function AdminSeasons() {
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="archive-mvp-user" className="text-xs font-semibold text-slate-700 block mb-1">Cá nhân MVP *</label>
-                <select
-                  id="archive-mvp-user"
-                  required
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Cá nhân MVP *</label>
+                <UserPicker
                   value={archiveForm.mvpUserId}
-                  onChange={(e) => {
-                    const user = availableUsers.find((u) => String(u.id) === e.target.value);
-                    setArchiveForm({ ...archiveForm, mvpUserId: e.target.value,
-                      mvpJobTitle: user?.jobTitle || '', mvpIsVerified: Boolean(user?.isVerified) });
-                  }}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-                >
-                  <option value="">-- Chọn thành viên --</option>
-                  {availableUsers.map((user) => <option key={user.id} value={user.id}>{user.name} · #{user.id}</option>)}
-                  {archiveForm.mvpUserId && !availableUsers.some((u) => String(u.id) === archiveForm.mvpUserId) && (
-                    <option value={archiveForm.mvpUserId}>{editingArchive?.mvp?.name} · #{archiveForm.mvpUserId}</option>
-                  )}
-                </select>
+                  selectedUsers={editingArchive?.mvp?.userId ? [{ id: editingArchive.mvp.userId, name: editingArchive.mvp.name }] : []}
+                  onChange={(user) => setArchiveForm({
+                    ...archiveForm,
+                    mvpUserId: user ? String(user.id) : '',
+                    mvpJobTitle: user?.jobTitle || '',
+                    mvpIsVerified: Boolean(user?.isVerified),
+                  })}
+                  ariaLabel="Chọn cá nhân MVP của mùa giải"
+                  placeholder="Tìm cá nhân MVP…"
+                />
                 {editingArchive?.mvp?.name && !editingArchive.mvp.userId && (
                   <p className="text-xs text-amber-800 mt-1">MVP cũ: {editingArchive.mvp.name} (chưa liên kết tài khoản)</p>
                 )}

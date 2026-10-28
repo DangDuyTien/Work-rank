@@ -1,0 +1,138 @@
+{
+  "steps": [
+    {
+      "name": "canvas present",
+      "ok": true,
+      "data": {
+        "width": 1200,
+        "height": 700,
+        "rect": {
+          "x": 658.6275024414062,
+          "y": 357.40875244140625,
+          "w": 527.9999389648438,
+          "h": 308
+        }
+      }
+    },
+    {
+      "name": "draw stroke",
+      "ok": true,
+      "data": {
+        "paintedSamples": 32
+      }
+    },
+    {
+      "name": "color palette",
+      "ok": true,
+      "data": {
+        "swatches": 1
+      }
+    },
+    {
+      "name": "draft status text",
+      "ok": true,
+      "data": {
+        "draftStatus": "Đã lưu bản nháp"
+      }
+    },
+    {
+      "name": "draft restored after reload",
+      "ok": true,
+      "data": {
+        "canvas": true,
+        "paintedSamples": 32,
+        "status": "Đã khôi phục bản nháp trên thiết bị · Chưa đăng"
+      }
+    },
+    {
+      "name": "publish modal",
+      "ok": true,
+      "data": {
+        "hasModal": true
+      }
+    },
+    {
+      "name": "publish submit enabled",
+      "ok": true,
+      "data": {
+        "enabled": false
+      }
+    },
+    {
+      "name": "publish unavailable",
+      "ok": true,
+      "data": {
+        "notice": "Hiện chưa thể đăng tranh lên hệ thống. Bạn vẫn vẽ, giữ nháp trên thiết bị và tải bản PNG được."
+      }
+    },
+    {
+      "name": "gallery render",
+      "ok": true,
+      "data": {
+        "cards": 5,
+        "images": 4,
+        "broken": 0,
+        "titles": [
+          "Mầm Xanh Hy Vọng Trên Đỉnh Cao 3Win",
+          "Vũ Điệu Ánh Sáng Vũ Trụ (Bản Vuông)",
+          "QA Persistent 2026-10-22T07-56-32-228Z",
+          "Xác minh storage 14:32:11",
+          "Bình Minh Trên Đỉnh Vinh Quang 3Win"
+        ]
+      }
+    },
+    {
+      "name": "gallery sort Mới nhất",
+      "ok": true,
+      "data": {
+        "pressed": "true"
+      }
+    },
+    {
+      "name": "gallery sort Nhiều tim nhất",
+      "ok": true,
+      "data": {
+        "pressed": "true"
+      }
+    },
+    {
+      "name": "gallery like toggle",
+      "ok": true,
+      "data": {
+        "before": "12",
+        "after": "1",
+        "changed": true
+      }
+    },
+    {
+      "name": "lightbox open",
+      "ok": true,
+      "data": {
+        "open": true,
+        "role": "dialog",
+        "ariaModal": "true"
+      }
+    },
+    {
+      "name": "lightbox Escape close",
+      "ok": true,
+      "data": {
+        "stillOpen": 0
+      }
+    },
+    {
+      "name": "gallery download",
+      "ok": true,
+      "data": {
+        "downloaded": true,
+        "filename": "Mầm Xanh Hy Vọng Trên Đỉnh Cao 3Win.png"
+      }
+    }
+  ],
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "badResponses": []
+}

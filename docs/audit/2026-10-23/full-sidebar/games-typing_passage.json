@@ -1,0 +1,78 @@
+{
+  "games": [
+    {
+      "gameType": "typing_passage",
+      "route": "/games/typing/passage",
+      "steps": [
+        {
+          "name": "open",
+          "ok": true,
+          "data": {
+            "h1": "ĐUA GÕ CHỮ"
+          }
+        },
+        {
+          "name": "BXH tab",
+          "ok": true,
+          "data": {
+            "bodyLen": 1106,
+            "hasTable": 1
+          }
+        },
+        {
+          "name": "history tab",
+          "ok": true,
+          "data": {
+            "bodyLen": 1134
+          }
+        },
+        {
+          "name": "duration 30s",
+          "ok": true,
+          "data": {
+            "value": "30"
+          }
+        },
+        {
+          "name": "solo practice started",
+          "ok": true,
+          "data": {
+            "inputVisible": true
+          }
+        },
+        {
+          "name": "passage loaded",
+          "ok": true,
+          "data": {
+            "length": 424,
+            "sample": "bữa cơm gia đình ấm cúng với bát canh rau muống luộc cùng đĩa cà pháo giòn tan l"
+          }
+        },
+        {
+          "name": "typed 120 chars",
+          "ok": true,
+          "data": {
+            "chars": "121/1004",
+            "accuracy": "100"
+          }
+        },
+        {
+          "name": "result after 30s",
+          "ok": true,
+          "data": {
+            "text": "01 · ĐUA GÕ CHỮ ĐUA GÕ CHỮ Gõ đúng · Giữ nhịp · Chạy tới đích ★ Kỷ lục: chưa có Một mình · Luyện nhịp Đấu nhóm BXH Lịch sử ĐUA GÕ CHỮ · ĐÃ VỀ ĐÍCH Đường đua đã có dấu chân bạn! 🥇 AA ✦ ✧ ✦ P1 Audit Admin 0 #1 · WPM ✓ Kết quả đã lưu trên hệ thống · Hạng #1 · 0 điểm thành tích · 0 XP Tốc độ 0 WPM Chính xác 100% Thời gian 30 giây Chuỗi tốt nhất x0 Khởi động nhanh · lượt từ 2 phút đủ điều kiện sẽ được ghi bảng xếp hạng. Đang mở ván… BXH Trung tâm trò chơi © 2026 3WIN MEDIA Platform. Đấu Trường Thi Đấu & Bảng Xếp Hạng. Chính sách bảo mật Điều khoản dịch vụ Tài liệu API Đồng nghiệp Danh bạ nội bộ ĐANG HOẠT ĐỘNG Chưa có liên hệ nào. Dùng ô tìm kiếm để nhắn tin cho đồng nghiệp. Thành Viên & Đội Nhóm"
+          }
+        },
+        {
+          "name": "replay/new challenge",
+          "ok": true,
+          "data": {
+            "chars": "Ký tự 1 / 952"
+          }
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "badResponses": []
+}

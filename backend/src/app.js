@@ -21,12 +21,16 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      // youtube.com / s.ytimg.com are required by the official YouTube IFrame
+      // Player API used by the (owner-only) Private Media page.
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://www.youtube.com', 'https://s.ytimg.com'],
       scriptSrcAttr: ["'none'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       workerSrc: ["'self'", "blob:"],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      // Official player embeds only — no third-party frame origins.
+      frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
       connectSrc: ["'self'", 'https:', 'wss:', 'ws:', '*'],
     },
   },
@@ -68,6 +72,9 @@ app.get('/api/health/ready', asyncHandler(healthController.ready));
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), {
   setHeaders: (res) => {
     res.set('X-Content-Type-Options', 'nosniff');
+    // Ảnh tranh được nhúng từ frontend origin khác (dev 5173 ⇄ API 5001,
+    // hoặc domain CDN). Cho phép đọc cross-origin nhưng không cho thực thi.
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
   },
 }));
 

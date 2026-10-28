@@ -1,0 +1,52 @@
+{
+  "games": [
+    {
+      "id": "typing",
+      "route": "/games/typing/passage",
+      "start": {},
+      "surface": 1,
+      "interacted": true,
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "computer_rush",
+      "route": "/games/typing/words",
+      "start": {},
+      "surface": 1,
+      "interacted": true,
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "direction_rush",
+      "route": "/games/arcade/direction_rush",
+      "start": {},
+      "surface": 1,
+      "interacted": true,
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "memory_flash",
+      "route": "/games/arcade/memory_flash",
+      "start": {},
+      "surface": 1,
+      "interacted": true,
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "drawing",
+      "canvas": 1,
+      "painted": 14,
+      "ok": true
+    },
+    {
+      "id": "gallery",
+      "cards": 5,
+      "ok": true
+    }
+  ],
+  "consoleErrors": []
+}

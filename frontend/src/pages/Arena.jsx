@@ -186,9 +186,9 @@ export default function Arena() {
       >
         <div
           className="arena-hero-body"
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, width: '100%', maxWidth: '100%', minWidth: 0 }}
         >
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <span
                 style={{
@@ -209,7 +209,7 @@ export default function Arena() {
               </span>
             </div>
 
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 6px 0', lineHeight: 1.3, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 6px 0', lineHeight: 1.3, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0, maxWidth: '100%', overflowWrap: 'anywhere' }}>
               <Flame size={24} color="var(--accent, var(--accent))" /> {season.name}
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.55, fontWeight: 400 }}>

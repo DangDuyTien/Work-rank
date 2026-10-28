@@ -1,0 +1,4281 @@
+{
+  "responsive": [
+    {
+      "route": "/dashboard",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 399,
+              "text": "Đạt Được"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 631,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 631,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 631,
+              "text": "Tên Chỉ Số / Nhiệm VụMục TiêuĐạt ĐượcTiế"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 539,
+              "text": "Tiến Độ"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 631,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 631,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/youtube",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/leaderboard",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 490,
+              "text": "BXH YouTube"
+            },
+            {
+              "tag": "svg",
+              "cls": "[object SVGAnimatedString]",
+              "right": 395,
+              "text": ""
+            },
+            {
+              "tag": "rect",
+              "cls": "[object SVGAnimatedString]",
+              "right": 394,
+              "text": ""
+            },
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 490,
+              "text": "BXH YouTube"
+            },
+            {
+              "tag": "span",
+              "cls": "",
+              "right": 479,
+              "text": "BXH YouTube"
+            },
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 735,
+              "text": "HạngThành viênĐội nhómTiến độ KPITrạng t"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 601,
+              "text": "Tiến độ KPI"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/arena",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 421,
+              "text": "Đang diễn ra 68d 9h 44m Sec Season 17922"
+            },
+            {
+              "tag": "div",
+              "cls": "arena-hero-body",
+              "right": 392,
+              "text": "Đang diễn ra 68d 9h 44m Sec Season 17922"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 392,
+              "text": "Đang diễn ra 68d 9h 44m Sec Season 17922"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 392,
+              "text": "Đang diễn ra 68d 9h 44m"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 392,
+              "text": "Sec Season 1792203291661"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 392,
+              "text": "Giải đấu YouTube Production & Quality Ba"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/grand",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 554,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "grand-hero-body",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 521,
+              "text": "Perf Grand Championship 1791772700125"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 521,
+              "text": "Giải đấu lớn nhất toàn công ty tích lũy "
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 554,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "grand-hero-body",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày Perf Grand Champion"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 521,
+              "text": "NĂM 2026 Còn 68 ngày"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 521,
+              "text": "Perf Grand Championship 1791772700125"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 521,
+              "text": "Giải đấu lớn nhất toàn công ty tích lũy "
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/friends",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 430,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 430,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 430,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 430,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 430,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 478,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 478,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 478,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 478,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 478,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 797,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 797,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1070,
+              "text": ""
+            },
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1070,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1285,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games/typing/passage",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games/typing/words",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 425,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 473,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 773,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1030,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games/arcade/direction_rush",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 425,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 473,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 773,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1030,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games/arcade/memory_flash",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 425,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 473,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 773,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "span",
+              "cls": "arcade-poster-floor",
+              "right": 1030,
+              "text": ""
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/games/drawing",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "a",
+              "w": 31,
+              "h": 31,
+              "label": "Trò chơi"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 31,
+              "label": "Cọ vẽ"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "a",
+              "w": 31,
+              "h": 31,
+              "label": "Trò chơi"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 31,
+              "label": "Cọ vẽ"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 25,
+              "h": 25,
+              "label": "Màu Đen mực"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Than chì"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 25,
+              "h": 25,
+              "label": "Màu Đen mực"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Than chì"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 25,
+              "h": 25,
+              "label": "Màu Đen mực"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Than chì"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Xám khói"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Thu nhỏ"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Phóng to"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Đặt lại khung nhìn"
+            },
+            {
+              "tag": "button",
+              "w": 25,
+              "h": 25,
+              "label": "Màu Đen mực"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Than chì"
+            },
+            {
+              "tag": "button",
+              "w": 22,
+              "h": 22,
+              "label": "Màu Xám khói"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/creative-corner",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 28,
+              "h": 28,
+              "label": "Xóa tác phẩm"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/users/1",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 585,
+              "text": "Nghiệp Vụ & Đóng Góp"
+            },
+            {
+              "tag": "span",
+              "cls": "",
+              "right": 571,
+              "text": "Nghiệp Vụ & Đóng Góp"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 810,
+              "text": "Lịch Sử Mùa Giải13 Mùa"
+            },
+            {
+              "tag": "span",
+              "cls": "",
+              "right": 796,
+              "text": "13 Mùa"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/settings",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/kpi",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 404,
+              "text": "Kết Quả & Tiến Độ0"
+            },
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 415,
+              "text": "Mục Tiêu Mặc Định"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 753,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "button",
+              "cls": "",
+              "right": 524,
+              "text": "Nhật Ký & Lịch Sử0"
+            },
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 753,
+              "text": "Mã & Tên KPIPhòng BanMục Tiêu Mặc ĐịnhCh"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 484,
+              "text": "Chu Kỳ"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 753,
+              "text": "Video Kịch Bản Hoàn ThànhCONT_VID_179171"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 31,
+              "h": 25,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/privileges",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": ""
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/teams-youtube",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 462,
+              "text": "Hệ Thống YouTube Toàn Công TyQuản Lý & P"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 439,
+              "text": "Hệ Thống YouTube Toàn Công TyQuản Lý & P"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 439,
+              "text": "Quản Lý & Phân Tầng Dữ Liệu YouTube"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 439,
+              "text": "Mô hình phân cấp: Công ty (Company Total"
+            },
+            {
+              "tag": "strong",
+              "cls": "",
+              "right": 404,
+              "text": "Đội nhóm (Team Total)"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 462,
+              "text": "Tổng Lượt Xem107K+0.0% tăng trưởng 30DTổ"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 462,
+              "text": "Hệ Thống YouTube Toàn Công TyQuản Lý & P"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 439,
+              "text": "Hệ Thống YouTube Toàn Công TyQuản Lý & P"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 439,
+              "text": "Quản Lý & Phân Tầng Dữ Liệu YouTube"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 439,
+              "text": "Mô hình phân cấp: Công ty (Company Total"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 462,
+              "text": "Tổng Lượt Xem107K+0.0% tăng trưởng 30DTổ"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 462,
+              "text": "Tổng Subscribers10.7KNgười theo dõi toàn"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 1128,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 1128,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1128,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 807,
+              "text": "Lượt Xem (Views)"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 1128,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1128,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 1136,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 1136,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1136,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 1136,
+              "text": "Thao Tác"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 1136,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1136,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "table",
+              "cls": "",
+              "right": 1384,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "thead",
+              "cls": "",
+              "right": 1384,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1384,
+              "text": "Kênh YouTubeĐội Phụ TráchLượt Xem (Views"
+            },
+            {
+              "tag": "th",
+              "cls": "",
+              "right": 1384,
+              "text": "Thao Tác"
+            },
+            {
+              "tag": "tbody",
+              "cls": "",
+              "right": 1384,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            },
+            {
+              "tag": "tr",
+              "cls": "",
+              "right": 1384,
+              "text": "Admin Registered Channel(@admin_chan)ID:"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 1
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/competition/seasons",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 575,
+              "text": "Tất cả (11)Đang diễn raSắp diễn raTạm dừ"
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 489,
+              "text": "Đã hoàn thành"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 575,
+              "text": "Tất cả (11)Đang diễn raSắp diễn raTạm dừ"
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 489,
+              "text": "Đã hoàn thành"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/competition/rules",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 510,
+              "text": "Company AnalyticsRule Sets (10)State Mon"
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 506,
+              "text": "Score Inspector"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 510,
+              "text": "Company AnalyticsRule Sets (10)State Mon"
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 506,
+              "text": "Score Inspector"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/competition/grand",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 515,
+              "text": "Tất cảBản nhápĐã lên lịchĐang diễn raĐã "
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 440,
+              "text": "Đã kết thúc"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "div",
+              "cls": "ui-segmented",
+              "right": 515,
+              "text": "Tất cảBản nhápĐã lên lịchĐang diễn raĐã "
+            },
+            {
+              "tag": "button",
+              "cls": "ui-segmented__button",
+              "right": 440,
+              "text": "Đã kết thúc"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    },
+    {
+      "route": "/admin/operations",
+      "widths": [
+        {
+          "width": 390,
+          "viewport": 390,
+          "scrollWidth": 390,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 710,
+              "text": "Trung tâm kiểm toán & Giám sát vận hànhG"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 687,
+              "text": "Trung tâm kiểm toán & Giám sát vận hànhG"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 687,
+              "text": "Giám Sát Vận Hành & Nhật Ký Kiểm Toán"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 687,
+              "text": "Theo dõi sức khỏe hệ thống, hàng đợi sự "
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 441,
+              "text": "Trạng Thái Vận HànhỔn ĐịnhSự Kiện Xử Lý8"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 441,
+              "text": "Nhật Ký Audit32"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 430,
+          "viewport": 430,
+          "scrollWidth": 430,
+          "overflow": false,
+          "clipped": [
+            {
+              "tag": "section",
+              "cls": "",
+              "right": 710,
+              "text": "Trung tâm kiểm toán & Giám sát vận hànhG"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 687,
+              "text": "Trung tâm kiểm toán & Giám sát vận hànhG"
+            },
+            {
+              "tag": "h1",
+              "cls": "",
+              "right": 687,
+              "text": "Giám Sát Vận Hành & Nhật Ký Kiểm Toán"
+            },
+            {
+              "tag": "p",
+              "cls": "",
+              "right": 687,
+              "text": "Theo dõi sức khỏe hệ thống, hàng đợi sự "
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 441,
+              "text": "Trạng Thái Vận HànhỔn ĐịnhSự Kiện Xử Lý8"
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "right": 441,
+              "text": "Nhật Ký Audit32"
+            }
+          ],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 768,
+          "viewport": 768,
+          "scrollWidth": 768,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1024,
+          "viewport": 1024,
+          "scrollWidth": 1024,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "a",
+              "w": 24,
+              "h": 24,
+              "label": "3WIN MEDIA — Trang chủ vinh da"
+            },
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1280,
+          "viewport": 1280,
+          "scrollWidth": 1280,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        },
+        {
+          "width": 1920,
+          "viewport": 1920,
+          "scrollWidth": 1920,
+          "overflow": false,
+          "clipped": [],
+          "smallTargets": [
+            {
+              "tag": "button",
+              "w": 30,
+              "h": 30,
+              "label": "Thu gọn"
+            }
+          ],
+          "tableOverflow": 0
+        }
+      ]
+    }
+  ],
+  "a11y": [
+    {
+      "route": "/dashboard",
+      "buttons": 23,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/youtube",
+      "buttons": 18,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/leaderboard",
+      "buttons": 19,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 2,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/arena",
+      "buttons": 16,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/grand",
+      "buttons": 17,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/friends",
+      "buttons": 117,
+      "buttonsNoName": 0,
+      "images": 3,
+      "imagesNoAlt": 0,
+      "inputs": 4,
+      "inputsUnlabeled": 2,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games",
+      "buttons": 17,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games/typing/passage",
+      "buttons": 18,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 3,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games/typing/words",
+      "buttons": 23,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 2,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games/arcade/direction_rush",
+      "buttons": 23,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games/arcade/memory_flash",
+      "buttons": 23,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/games/drawing",
+      "buttons": 45,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/creative-corner",
+      "buttons": 33,
+      "buttonsNoName": 0,
+      "images": 5,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/users/1",
+      "buttons": 24,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 1
+    },
+    {
+      "route": "/settings",
+      "buttons": 36,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 13,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/kpi",
+      "buttons": 96,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 3,
+      "inputsUnlabeled": 1,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/privileges",
+      "buttons": 371,
+      "buttonsNoName": 0,
+      "images": 2,
+      "imagesNoAlt": 0,
+      "inputs": 2,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/teams-youtube",
+      "buttons": 341,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 110,
+      "inputsUnlabeled": 108,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/competition/seasons",
+      "buttons": 56,
+      "buttonsNoName": 1,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 1
+    },
+    {
+      "route": "/admin/competition/rules",
+      "buttons": 36,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/competition/grand",
+      "buttons": 27,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 0
+    },
+    {
+      "route": "/admin/operations",
+      "buttons": 17,
+      "buttonsNoName": 0,
+      "images": 1,
+      "imagesNoAlt": 0,
+      "inputs": 1,
+      "inputsUnlabeled": 0,
+      "h1Count": 1,
+      "headingSkips": 1
+    }
+  ]
+}

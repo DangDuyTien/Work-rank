@@ -24,6 +24,13 @@ export function resolveAssetUrl(url) {
     return value;
   }
 
+  // Ảnh upload: ở dev API chạy localhost và Vite đã proxy /uploads → dùng đường
+  // dẫn tương đối để ảnh same-origin (tránh CORP + tránh URL localhost lộ ra UI).
+  if (value.startsWith('/uploads/')) {
+    if (!API_BASE_URL || /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/i.test(API_BASE_URL)) return value;
+    return `${API_BASE_URL}${value}`;
+  }
+
   if (!API_BASE_URL) return value;
   return `${API_BASE_URL}${value.startsWith('/') ? '' : '/'}${value}`;
 }

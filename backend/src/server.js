@@ -78,6 +78,28 @@ async function start() {
   }
 
   registerSockets(io);
+
+  // ─── Private Media (isolated owner-only capability) ───────────────────────
+  // Own namespace, own authorization. Failure here must never block startup of
+  // the rest of Work Rank, and it must never fall back to a permissive mode.
+  try {
+    require('./sockets/privateMedia').registerPrivateMediaNamespace(io);
+    const accessService = require('./services/privateMedia/access.service');
+    const ownerUserId = await accessService.resolveOwnerUserId({ force: true });
+    if (ownerUserId) {
+      console.log(`[PrivateMedia] Owner resolved to Work Rank user #${ownerUserId}.`);
+    } else {
+      console.warn('[PrivateMedia] Owner unresolved — capability is denied for everyone (fail-closed).');
+    }
+    if (process.env.NODE_ENV !== 'test') {
+      require('./services/privateMedia/telegram.service').start().catch((error) => {
+        console.warn('[PrivateMedia] Telegram bot not started:', error.message);
+      });
+    }
+  } catch (error) {
+    console.error('[PrivateMedia] Initialization failed (capability stays denied):', error.message);
+  }
+
   const retryDrawingDeletes = () => require('./services/drawing.service').retryPendingDeletes().then((ids) => {
     for (const drawingId of ids) io.emit('drawing:deleted', { drawingId });
   }).catch((err) => console.warn('[Drawing cleanup]', err.message));
@@ -102,6 +124,7 @@ async function shutdown(signal) {
       competitionEngineWorker.stop(),
       outboxDispatcherWorker.stop(),
       Promise.resolve(youtubeSyncWorker.stopPeriodicSync?.()),
+      require('./services/privateMedia/telegram.service').stop(),
     ]);
     console.log('[Server] Background workers stopped.');
   } catch (workerErr) {
