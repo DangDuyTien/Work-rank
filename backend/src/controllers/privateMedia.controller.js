@@ -33,7 +33,7 @@ async function getAccess(req, res) {
 async function getStatus(req, res) {
   try {
     const isOwner = Boolean(req.privateMedia?.isOwner);
-    const session = await sessionService.getSessionState();
+    const session = await sessionService.getSessionState(req.user.id);
 
     let devices = [];
     if (accessService.hasPermission(req.privateMedia, 'hotkey')) {
@@ -51,7 +51,7 @@ async function getStatus(req, res) {
       session,
       player: {
         online: Boolean(session?.playerOnline),
-        socketCount: realtime.playerCount(),
+        socketCount: realtime.playerCount(session?.sessionKey),
       },
       telegram: {
         // Bot configuration is not a secret; the token itself never appears here.
@@ -73,7 +73,7 @@ async function getStatus(req, res) {
 /** GET /api/private-media/session */
 async function getSessionState(req, res) {
   try {
-    return res.status(200).json({ session: await sessionService.getSessionState() });
+    return res.status(200).json({ session: await sessionService.getSessionState(req.user.id) });
   } catch (error) {
     return fail(res, error);
   }
@@ -92,7 +92,8 @@ async function issueCommand(req, res) {
     });
 
     if (!result.duplicate) {
-      realtime.broadcastCommand(result.command);
+      // Scoped to the caller's own playback session.
+      realtime.broadcastCommand(result.command, result.state?.sessionKey);
       realtime.broadcastState(result.state);
     }
 
@@ -373,7 +374,9 @@ async function listAudit(req, res) {
 /** GET /api/private-media/commands/recent */
 async function recentCommands(req, res) {
   try {
-    return res.status(200).json({ commands: await sessionService.recentCommands({ limit: req.query.limit }) });
+    return res.status(200).json({
+      commands: await sessionService.recentCommands({ limit: req.query.limit, userId: req.user.id }),
+    });
   } catch (error) {
     return fail(res, error);
   }
@@ -382,7 +385,9 @@ async function recentCommands(req, res) {
 /** GET /api/private-media/recent — keyless quick replay list. */
 async function recentVideos(req, res) {
   try {
-    return res.status(200).json({ videos: await sessionService.recentVideos({ limit: req.query.limit }) });
+    return res.status(200).json({
+      videos: await sessionService.recentVideos({ limit: req.query.limit, userId: req.user.id }),
+    });
   } catch (error) {
     return fail(res, error);
   }
@@ -417,7 +422,8 @@ async function deviceCommand(req, res) {
     });
 
     if (!result.duplicate) {
-      realtime.broadcastCommand(result.command);
+      // Scoped to the caller's own playback session.
+      realtime.broadcastCommand(result.command, result.state?.sessionKey);
       realtime.broadcastState(result.state);
     }
 

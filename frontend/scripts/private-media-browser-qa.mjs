@@ -144,12 +144,21 @@ async function run() {
       visible: bar.getBoundingClientRect().height > 0,
       enabled: btns.filter((b) => !b.disabled).length,
       labels: btns.map((b) => b.getAttribute('aria-label')),
+      hasSeek: Boolean(bar.querySelector('.pm-seek__range')),
+      hasVolume: Boolean(bar.querySelector('.pm-vol__range')),
     };
   });
   record(
     'INLINE_CONTROLS',
-    Boolean(inlineBar) && inlineBar.visible && inlineBar.count === 5 && inlineBar.enabled === 5,
-    inlineBar ? `buttons=${inlineBar.count} enabled=${inlineBar.enabled} [${inlineBar.labels.join(', ')}]` : 'inline bar missing',
+    Boolean(inlineBar)
+      && inlineBar.visible
+      && inlineBar.count === 5
+      && inlineBar.enabled === 5
+      && inlineBar.hasSeek
+      && inlineBar.hasVolume,
+    inlineBar
+      ? `buttons=${inlineBar.count} enabled=${inlineBar.enabled} seek=${inlineBar.hasSeek} volume=${inlineBar.hasVolume} [${inlineBar.labels.join(', ')}]`
+      : 'inline bar missing',
   );
 
   if (inlineBar?.count === 5) {
@@ -158,9 +167,76 @@ async function run() {
     await page.waitForTimeout(2500);
     const afterInline = await readStatus();
     record('INLINE_COMMAND_WORKS', beforeInline !== afterInline, `${beforeInline} → ${afterInline}`);
+
+    // Volume: a real level control with a percentage, not just a mute icon.
+    const readVolume = () => page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.ok ? (await res.json()).session.volume : null;
+    }, { api: API, token: OWNER_TOKEN });
+
+    const volRange = page.locator('.pm-vol__range');
+    const volBox = await volRange.boundingBox();
+    await page.mouse.move(volBox.x + volBox.width * 0.9, volBox.y + volBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(volBox.x + volBox.width * 0.4, volBox.y + volBox.height / 2, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(1800);
+    const volAfterDrag = await readVolume();
+    const volLabel = (await page.locator('.pm-vol__value').innerText()).trim();
+
+    await page.locator('.pm-vol__btn').click();
+    await page.waitForTimeout(1500);
+    const volMuted = await readVolume();
+    await page.locator('.pm-vol__btn').click();
+    await page.waitForTimeout(1500);
+    const volRestored = await readVolume();
+
+    record(
+      'VOLUME_SLIDER',
+      volAfterDrag !== null
+        && Math.abs(volAfterDrag - 40) <= 10
+        && volLabel === `${volAfterDrag}%`
+        && volMuted === 0
+        && volRestored === volAfterDrag,
+      `drag=${volAfterDrag} label=${volLabel} mute=${volMuted} unmute=${volRestored}`,
+    );
+
+    // ±10 seconds: page-only buttons that move the real playhead.
+    const t0 = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      const s = res.ok ? (await res.json()).session : null;
+      return s ? Math.round(Number(s.currentTime) || 0) : null;
+    }, { api: API, token: OWNER_TOKEN });
+
+    await page.locator('.pm-inline .pm-mini__btn[aria-label="Tua tới 10 giây"]').click();
+    await page.waitForTimeout(2200);
+    const tFwd = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      const s = res.ok ? (await res.json()).session : null;
+      return s ? Math.round(Number(s.currentTime) || 0) : null;
+    }, { api: API, token: OWNER_TOKEN });
+
+    await page.locator('.pm-inline .pm-mini__btn[aria-label="Tua lại 10 giây"]').click();
+    await page.waitForTimeout(2200);
+    const tBack = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      const s = res.ok ? (await res.json()).session : null;
+      return s ? Math.round(Number(s.currentTime) || 0) : null;
+    }, { api: API, token: OWNER_TOKEN });
+
+    record(
+      'SEEK_BUTTONS_10S',
+      t0 !== null && tFwd !== null && tBack !== null
+        && Math.abs(tFwd - (t0 + 10)) <= 4
+        && Math.abs(tBack - t0) <= 4,
+      `${t0}s → +10 ${tFwd}s → -10 ${tBack}s`,
+    );
+
     await page.screenshot({ path: path.join(SHOTS, 'owner-inline-controls.png'), fullPage: false });
   } else {
     recordSkip('INLINE_COMMAND_WORKS', 'inline bar missing');
+    recordSkip('VOLUME_SLIDER', 'inline bar missing');
+    recordSkip('SEEK_BUTTONS_10S', 'inline bar missing');
   }
 
   // ── Floating controller (real Document PiP window) ────────────────────────
@@ -388,6 +464,16 @@ async function run() {
     return { status: res.status, body: await res.json().catch(() => null) };
   }, { api: API, token: OWNER_TOKEN });
   record('OWNER_API_ACCESS', ownerApi.status === 200 && ownerApi.body?.isOwner === true, `status=${ownerApi.status}`);
+
+  const ownSession = await page.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.ok ? (await res.json()).session : null;
+  }, { api: API, token: OWNER_TOKEN });
+  record(
+    'SESSION_IS_ACCOUNT_SCOPED',
+    Boolean(ownSession?.sessionKey) && ownSession.sessionKey === 'primary',
+    `sessionKey=${ownSession?.sessionKey}`,
+  );
 
   // ── Admin (no grant) ─────────────────────────────────────────────────────
   await seedSession(page, ADMIN_TOKEN, process.env.PM_QA_ADMIN_ID || '1');

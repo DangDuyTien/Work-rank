@@ -78,12 +78,21 @@ function registerPrivateMediaNamespace(io) {
     }
   });
 
-  nsp.on('connection', (socket) => {
+  nsp.on('connection', async (socket) => {
     const userId = Number(socket.user.id);
     let isPlayer = false;
     let lastProgressBroadcast = 0;
 
-    socket.join('pm:controllers');
+    // Every account has its own playback session; the rooms are scoped to it so
+    // one user's state never reaches another user's browser.
+    let sessionKey = sessionService.DEFAULT_SESSION_KEY;
+    try {
+      sessionKey = await sessionService.sessionKeyFor(userId);
+    } catch {
+      // Fall back to the default room rather than dropping the connection.
+    }
+    socket.sessionKey = sessionKey;
+    socket.join(realtime.controllersRoom(sessionKey));
 
     const emitState = (state) => {
       if (!state) return;
@@ -91,14 +100,14 @@ function registerPrivateMediaNamespace(io) {
     };
 
     // Initial snapshot: the connecting client never has to guess.
-    sessionService.getSessionState()
+    sessionService.getSessionState(userId)
       .then(emitState)
       .catch(() => {});
 
     socket.on('private-media:subscribe', async (ack) => {
       try {
-        socket.join('pm:controllers');
-        const state = await sessionService.getSessionState();
+        socket.join(realtime.controllersRoom(sessionKey));
+        const state = await sessionService.getSessionState(userId);
         socket.emit('private-media:state', state);
         if (typeof ack === 'function') ack({ ok: true, state });
       } catch (error) {
@@ -112,12 +121,12 @@ function registerPrivateMediaNamespace(io) {
         if (!accessService.hasPermission(socket.entitlement, 'control')) throw new Error('FORBIDDEN');
 
         isPlayer = true;
-        socket.join('pm:players');
-        realtime.registerPlayer(socket.id);
+        socket.join(realtime.playersRoom(sessionKey));
+        realtime.registerPlayer(socket.id, sessionKey);
 
-        const state = await sessionService.setPlayerPresence(true);
-        realtime.broadcastPlayerPresence(true, state);
-        realtime.broadcastState(state);
+        const state = await sessionService.setPlayerPresence(true, userId);
+        realtime.broadcastPlayerPresence(true, state, sessionKey);
+        realtime.broadcastState(state, sessionKey);
         if (typeof ack === 'function') ack({ ok: true, state });
       } catch (error) {
         if (typeof ack === 'function') ack({ ok: false, error: error.message || 'PLAYER_HELLO_FAILED' });
@@ -127,11 +136,11 @@ function registerPrivateMediaNamespace(io) {
     socket.on('private-media:player-progress', async (payload = {}) => {
       try {
         if (!isPlayer) return;
-        const state = await sessionService.syncPlayerProgress(payload);
+        const state = await sessionService.syncPlayerProgress(payload, userId);
         const now = Date.now();
         if (now - lastProgressBroadcast >= PROGRESS_BROADCAST_INTERVAL_MS) {
           lastProgressBroadcast = now;
-          realtime.broadcastState(state);
+          realtime.broadcastState(state, sessionKey);
         }
       } catch {
         // Progress is best-effort telemetry; commands remain the source of truth.
@@ -147,7 +156,7 @@ function registerPrivateMediaNamespace(io) {
           state: payload.state || {},
           errorCode: payload.errorCode || null,
         });
-        if (result.applied) realtime.broadcastState(result.state);
+        if (result.applied) realtime.broadcastState(result.state, sessionKey);
         if (typeof ack === 'function') ack({ ok: true, state: result.state });
       } catch (error) {
         if (typeof ack === 'function') ack({ ok: false, error: error.message || 'ACK_FAILED' });
@@ -177,8 +186,8 @@ function registerPrivateMediaNamespace(io) {
         });
 
         if (!result.duplicate) {
-          realtime.broadcastCommand(result.command);
-          realtime.broadcastState(result.state);
+          realtime.broadcastCommand(result.command, sessionKey);
+          realtime.broadcastState(result.state, sessionKey);
         }
         if (typeof ack === 'function') ack({ ok: true, ...result });
       } catch (error) {
@@ -191,12 +200,12 @@ function registerPrivateMediaNamespace(io) {
     socket.on('disconnect', async () => {
       if (!isPlayer) return;
       isPlayer = false;
-      const remaining = realtime.unregisterPlayer(socket.id);
+      const remaining = realtime.unregisterPlayer(socket.id, sessionKey);
       if (remaining > 0) return;
       try {
-        const state = await sessionService.setPlayerPresence(false);
-        realtime.broadcastPlayerPresence(false, state);
-        realtime.broadcastState(state);
+        const state = await sessionService.setPlayerPresence(false, userId);
+        realtime.broadcastPlayerPresence(false, state, sessionKey);
+        realtime.broadcastState(state, sessionKey);
       } catch {
         // Presence is advisory; the next player-hello repairs it.
       }

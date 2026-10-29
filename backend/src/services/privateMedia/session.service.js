@@ -22,7 +22,32 @@ const env = require('../../config/env');
 const { PrivateMediaSession, PrivateMediaCommand } = require('../../models');
 const audit = require('./audit.service');
 
-const SESSION_KEY = env.privateMedia?.sessionKey || 'primary';
+const DEFAULT_SESSION_KEY = env.privateMedia?.sessionKey || 'primary';
+
+/**
+ * One playback session PER ACCOUNT.
+ *
+ * The owner keeps the historical `primary` key (so existing state is not lost);
+ * every granted account gets `user:<id>`. That is what makes listening private:
+ * two people with access no longer share one playhead, one queue and one volume
+ * — each browser plays its own audio, and a delegated user changing the volume
+ * cannot make the owner's speakers louder.
+ *
+ * Devices (Mac helper) and Telegram commands carry the owner's user id, so they
+ * still drive the owner's session.
+ */
+async function sessionKeyFor(userId) {
+  if (!userId) return DEFAULT_SESSION_KEY;
+  try {
+    // Lazy require: access.service is loaded by the middleware and importing it
+    // at module scope would create a cycle.
+    const accessService = require('./access.service');
+    if (await accessService.isOwner(userId)) return DEFAULT_SESSION_KEY;
+  } catch {
+    // Fail closed to the caller's own session, never to somebody else's.
+  }
+  return `user:${Number(userId)}`;
+}
 
 const ACTIONS = Object.freeze({
   LOAD_VIDEO: 'LOAD_VIDEO',
@@ -99,6 +124,7 @@ function serializeSession(session) {
   if (!session) return null;
   return {
     sessionId: session.id,
+    sessionKey: session.sessionKey || DEFAULT_SESSION_KEY,
     status: session.status,
     video: session.currentVideoId
       ? {
@@ -119,16 +145,24 @@ function serializeSession(session) {
   };
 }
 
-async function getSession() {
+async function getSession(userId) {
+  const sessionKey = await sessionKeyFor(userId);
   const [session] = await PrivateMediaSession.findOrCreate({
-    where: { sessionKey: SESSION_KEY },
-    defaults: { sessionKey: SESSION_KEY },
+    where: { sessionKey },
+    defaults: { sessionKey },
   });
   return session;
 }
 
-async function getSessionState() {
-  const session = await getSession();
+/** Resolve the session a command belongs to (used by acks, which carry an id). */
+async function getSessionById(sessionId) {
+  if (!sessionId) return getSession();
+  const session = await PrivateMediaSession.findByPk(sessionId);
+  return session || getSession();
+}
+
+async function getSessionState(userId) {
+  const session = await getSession(userId);
   return serializeSession(session);
 }
 
@@ -255,12 +289,12 @@ async function issueCommand({ commandId, action, source = 'WEB', actorUserId, pa
   if (existing) {
     return {
       command: serializeCommand(existing),
-      state: await getSessionState(),
+      state: serializeSession(await getSessionById(existing.sessionId)),
       duplicate: true,
     };
   }
 
-  const session = await getSession();
+  const session = await getSession(actorUserId);
 
   if (REQUIRES_VIDEO.has(normalizedAction) && !session.currentVideoId) {
     throw new PrivateMediaCommandError('NO_ACTIVE_MEDIA_SESSION', 'Chưa có video nào đang phát', 409);
@@ -283,7 +317,11 @@ async function issueCommand({ commandId, action, source = 'WEB', actorUserId, pa
     if (error?.name === 'SequelizeUniqueConstraintError') {
       // Lost a race with an identical command — treat it as a duplicate.
       const raced = await PrivateMediaCommand.findOne({ where: { commandId: dedupeKey } });
-      return { command: serializeCommand(raced), state: await getSessionState(), duplicate: true };
+      return {
+        command: serializeCommand(raced),
+        state: serializeSession(await getSessionById(raced?.sessionId)),
+        duplicate: true,
+      };
     }
     throw error;
   }
@@ -318,9 +356,9 @@ async function acknowledgeCommand({ commandId, actorUserId, state = {}, errorCod
   if (!key) return { applied: false, state: await getSessionState() };
 
   const command = await PrivateMediaCommand.findOne({ where: { commandId: key } });
-  if (!command) return { applied: false, state: await getSessionState() };
+  if (!command) return { applied: false, state: await getSessionState(actorUserId) };
 
-  const session = await getSession();
+  const session = await getSessionById(command.sessionId);
   const changes = {};
 
   if (errorCode) {
@@ -335,7 +373,12 @@ async function acknowledgeCommand({ commandId, actorUserId, state = {}, errorCod
     if (['PLAYING', 'PAUSED', 'STOPPED', 'LOADING', 'IDLE', 'ERROR'].includes(reportedStatus)) {
       changes.status = reportedStatus;
     }
-    if (Number.isFinite(Number(state.currentTime))) {
+    // A SEEK ack is sent as soon as the command arrives, i.e. usually BEFORE the
+    // player has moved: echoing `currentTime` there would write the old position
+    // back and undo the jump (the playhead visibly snapped back). The command
+    // itself is the authority for position, so the ack only confirms execution.
+    const isSeek = command.action === ACTIONS.SEEK;
+    if (!isSeek && Number.isFinite(Number(state.currentTime))) {
       changes.currentTime = clampNumber(state.currentTime, 0, 24 * 3600, 0);
     }
     if (Number.isFinite(Number(state.durationSeconds))) {
@@ -357,8 +400,8 @@ async function acknowledgeCommand({ commandId, actorUserId, state = {}, errorCod
   };
 }
 
-async function setPlayerPresence(online) {
-  const session = await getSession();
+async function setPlayerPresence(online, userId) {
+  const session = await getSession(userId);
   await session.update({
     playerOnline: Boolean(online),
     playerLastSeenAt: new Date(),
@@ -400,8 +443,15 @@ async function hasRecentCommand(actions) {
 }
 
 /** Heartbeat from the browser player: keeps currentTime warm without a command. */
-async function syncPlayerProgress({ currentTime, durationSeconds, status }) {
-  const session = await getSession();
+async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId) {
+  const session = await getSession(userId);
+  // Identity of the newest SEEK this tick could have seen. Compared after the
+  // write: anything newer was issued while this tick was in flight.
+  const seekBefore = await PrivateMediaCommand.findOne({
+    where: { action: ACTIONS.SEEK },
+    order: [['id', 'DESC']],
+    attributes: ['id'],
+  });
   const changes = { playerLastSeenAt: new Date(), playerOnline: true };
   if (Number.isFinite(Number(currentTime))) changes.currentTime = clampNumber(currentTime, 0, 24 * 3600, 0);
   if (Number.isFinite(Number(durationSeconds))) changes.durationSeconds = Math.max(0, Math.round(Number(durationSeconds)));
@@ -423,12 +473,38 @@ async function syncPlayerProgress({ currentTime, durationSeconds, status }) {
   }
 
   await session.update(changes);
+
+  // Repair pass. The check above is not atomic with the write: a SEEK can be
+  // issued between them, and this tick would then overwrite the jump with the
+  // old position (the player would visibly rewind). The journal is cheap to
+  // re-read, and the seek target always wins over a heartbeat.
+  if (changes.currentTime !== undefined) {
+    const seekAfter = await PrivateMediaCommand.findOne({
+      where: { action: ACTIONS.SEEK },
+      order: [['id', 'DESC']],
+    });
+    if (seekAfter && seekAfter.id !== seekBefore?.id) {
+      const raw = seekAfter.payload;
+      let payload = raw;
+      if (typeof raw === 'string') {
+        try { payload = JSON.parse(raw); } catch { payload = null; }
+      }
+      const target = Number(payload?.position);
+      if (Number.isFinite(target)) {
+        const max = Number(session.durationSeconds) || 24 * 3600;
+        await session.update({ currentTime: clampNumber(target, 0, max, target) });
+      }
+    }
+  }
+
   return serializeSession(session);
 }
 
 /** Recent commands (owner/ops visibility; no secrets involved). */
-async function recentCommands({ limit = 20 } = {}) {
+async function recentCommands({ limit = 20, userId } = {}) {
+  const session = await getSession(userId);
   const rows = await PrivateMediaCommand.findAll({
+    where: { sessionId: session.id },
     order: [['createdAt', 'DESC']],
     limit: Math.min(Number(limit) || 20, 100),
   });
@@ -442,9 +518,10 @@ async function recentCommands({ limit = 20 } = {}) {
  * zero credentials — it is the keyless way to replay something you already
  * loaded without searching again.
  */
-async function recentVideos({ limit = 12 } = {}) {
+async function recentVideos({ limit = 12, userId } = {}) {
+  const session = await getSession(userId);
   const rows = await PrivateMediaCommand.findAll({
-    where: { action: ACTIONS.LOAD_VIDEO },
+    where: { action: ACTIONS.LOAD_VIDEO, sessionId: session.id },
     order: [['createdAt', 'DESC']],
     limit: 120,
     attributes: ['payload', 'createdAt', 'source'],
@@ -478,7 +555,10 @@ module.exports = {
   ACTION_LIST,
   PrivateMediaCommandError,
   getSession,
+  getSessionById,
   getSessionState,
+  sessionKeyFor,
+  DEFAULT_SESSION_KEY,
   serializeSession,
   issueCommand,
   acknowledgeCommand,

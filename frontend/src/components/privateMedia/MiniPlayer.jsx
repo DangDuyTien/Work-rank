@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Pause, Play, SkipForward, Square, Volume1, Volume2 } from 'lucide-react';
+import { Pause, Play, RotateCcw, RotateCw, SkipForward, Square, Volume1, Volume2 } from 'lucide-react';
 
 /**
  * PRIVATE MEDIA — MEDIA CONTROLS
@@ -22,10 +22,10 @@ import { Pause, Play, SkipForward, Square, Volume1, Volume2 } from 'lucide-react
 // 5 buttons: 24 + 36 + 30 + 30 + 24 = 144px, gaps 4×6 = 24px, padding 2×8 = 16px
 // → 184px of content. The window gets a few extra pixels so Chrome's own
 // rounding never clips the last button.
-export const PIP_WIDTH = 196;
-export const PIP_HEIGHT = 52;
-const PIP_CONTENT_WIDTH = 184;
-const PIP_CONTENT_HEIGHT = 38;
+export const PIP_WIDTH = 150;
+export const PIP_HEIGHT = 38;
+const PIP_CONTENT_WIDTH = 142;
+const PIP_CONTENT_HEIGHT = 30;
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 // The PiP document does not inherit the app stylesheet, so colours are resolved
@@ -122,27 +122,31 @@ function miniCss(theme) {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 4px 5px;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
 .pm-mini .pm-mini__btn {
-  flex: 0 0 auto;
+  /* Flex, not fixed widths: the buttons always divide the window they are in,
+     so a window that ends up narrower than requested shrinks them instead of
+     clipping the outer ones (which looked like "there is only a mute button"). */
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 26px; padding: 0;
+  height: 100%; padding: 0;
   border: 1px solid ${p.btnBorder};
-  border-radius: 5px; background: ${p.btnBg}; color: ${p.btnText};
+  border-radius: 4px; background: ${p.btnBg}; color: ${p.btnText};
   cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
 }
 .pm-mini .pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
 .pm-mini .pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.pm-mini .pm-mini__btn.is-narrow { width: 24px; }
+.pm-mini .pm-mini__btn.is-narrow { flex: 0.72 1 0; }
 .pm-mini .pm-mini__btn.is-primary {
-  width: 36px;
+  flex: 1.25 1 0;
   background: ${p.primaryBg}; color: ${p.primaryText}; border-color: transparent;
 }
 .pm-mini .pm-mini__btn.is-primary:hover:not(:disabled) { background: ${p.primaryHover}; }
@@ -205,7 +209,7 @@ const VOLUME_STEP = 10;
  * every extra element makes the bar bigger and more conspicuous. The state is
  * shared with the page, so the play/pause icon always reflects reality.
  */
-export function MediaControls({ session, canControl, onCommand, variant = 'mini' }) {
+export function MediaControls({ session, canControl, onCommand, variant = 'mini', showVolume = true, showSeek = false }) {
   const video = session?.video || null;
   const playing = session?.status === 'PLAYING';
   const volume = Math.min(100, Math.max(0, Number(session?.volume ?? 100)));
@@ -217,18 +221,41 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
     onCommand('SET_VOLUME', { volume: Math.min(100, Math.max(0, volume + delta)) });
   };
 
+  // ±10 seconds. Only the page shows these; the floating window stays 5 buttons.
+  const seekBy = (delta) => {
+    if (disabled) return;
+    const duration = Number(session?.durationSeconds) || 0;
+    const target = (Number(session?.currentTime) || 0) + delta;
+    const clamped = Math.max(0, duration > 0 ? Math.min(duration, target) : target);
+    onCommand('SEEK', { position: Math.round(clamped) });
+  };
+
   return (
     <div className={variant === 'inline' ? 'pm-inline' : 'pm-mini'}>
-      <button
-        type="button"
-        className="pm-mini__btn is-narrow"
-        onClick={() => changeVolume(-VOLUME_STEP)}
-        disabled={!canControl || volume <= 0}
-        aria-label="Nhỏ hơn"
-        title={`Nhỏ hơn (${volume}%)`}
-      >
-        <Volume1 size={13} aria-hidden="true" />
-      </button>
+      {showVolume && (
+        <button
+          type="button"
+          className="pm-mini__btn is-narrow"
+          onClick={() => changeVolume(-VOLUME_STEP)}
+          disabled={!canControl || volume <= 0}
+          aria-label="Nhỏ hơn"
+          title={`Nhỏ hơn (${volume}%)`}
+        >
+          <Volume1 size={13} aria-hidden="true" />
+        </button>
+      )}
+      {showSeek && (
+        <button
+          type="button"
+          className="pm-mini__btn is-narrow"
+          onClick={() => seekBy(-10)}
+          disabled={disabled}
+          aria-label="Tua lại 10 giây"
+          title="Tua lại 10 giây"
+        >
+          <RotateCcw size={13} aria-hidden="true" />
+        </button>
+      )}
       <button
         type="button"
         className="pm-mini__btn is-primary"
@@ -259,16 +286,30 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
       >
         <SkipForward size={13} aria-hidden="true" />
       </button>
-      <button
-        type="button"
-        className="pm-mini__btn is-narrow"
-        onClick={() => changeVolume(VOLUME_STEP)}
-        disabled={!canControl || volume >= 100}
-        aria-label="To hơn"
-        title={`To hơn (${volume}%)`}
-      >
-        <Volume2 size={13} aria-hidden="true" />
-      </button>
+      {showSeek && (
+        <button
+          type="button"
+          className="pm-mini__btn is-narrow"
+          onClick={() => seekBy(10)}
+          disabled={disabled}
+          aria-label="Tua tới 10 giây"
+          title="Tua tới 10 giây"
+        >
+          <RotateCw size={13} aria-hidden="true" />
+        </button>
+      )}
+      {showVolume && (
+        <button
+          type="button"
+          className="pm-mini__btn is-narrow"
+          onClick={() => changeVolume(VOLUME_STEP)}
+          disabled={!canControl || volume >= 100}
+          aria-label="To hơn"
+          title={`To hơn (${volume}%)`}
+        >
+          <Volume2 size={13} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

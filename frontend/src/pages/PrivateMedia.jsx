@@ -34,6 +34,7 @@ import {
 import YouTubeStage, { formatTime } from '../components/privateMedia/YouTubeStage';
 import MiniPlayer, { MediaControls, PIP_WIDTH, PIP_HEIGHT } from '../components/privateMedia/MiniPlayer';
 import SeekBar from '../components/privateMedia/SeekBar';
+import VolumeBar from '../components/privateMedia/VolumeBar';
 import { privateMediaApi, codeFrom, messageFrom } from '../services/privateMediaApi';
 import { usePrivateMediaAccess, invalidatePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 import { useAuth } from '../context/AuthContext';
@@ -109,6 +110,7 @@ export default function PrivateMedia() {
   // Bumped on every scrub so the hidden player jumps immediately instead of
   // waiting for the command round-trip (and possibly a stale heartbeat).
   const [seekSignal, setSeekSignal] = useState(null);
+
 
   // The mini window cannot read the colour of other tabs (cross-origin), so the
   // owner picks a palette once and it is remembered.
@@ -294,6 +296,14 @@ export default function PrivateMedia() {
       if (options.track !== false) setBusyAction(null);
     }
   }, [access.permissions.control, navigate]);
+
+  // Seek is issued through one helper: the player jumps immediately (no waiting
+  // for the round-trip) and the command keeps the session in sync.
+  const seekTo = useCallback((position) => {
+    const target = Math.max(0, Math.round(Number(position) || 0));
+    setSeekSignal({ position: target, at: Date.now() });
+    sendCommand('SEEK', { position: target }, { track: false });
+  }, [sendCommand]);
 
   const loadVideo = useCallback(async (video, queue = []) => {
     if (!video?.videoId) return;
@@ -735,18 +745,26 @@ export default function PrivateMedia() {
               currentTime={session?.currentTime || 0}
               duration={session?.durationSeconds || session?.video?.durationSeconds || 0}
               canControl={access.permissions.control}
-              onSeek={(position) => {
-                setSeekSignal({ position, at: Date.now() });
-                sendCommand('SEEK', { position }, { track: false });
-              }}
+              onSeek={seekTo}
             />
             <div className="pm-inline-bar__row">
-              <MediaControls
-                variant="inline"
-                session={session}
-                canControl={access.permissions.control}
-                onCommand={(action, payload) => sendCommand(action, payload)}
-              />
+              <div className="pm-inline-bar__transport">
+                <MediaControls
+                  variant="inline"
+                  showVolume={false}
+                  showSeek
+                  session={session}
+                  canControl={access.permissions.control}
+                  onCommand={(action, payload) => (
+                    action === 'SEEK' ? seekTo(payload?.position) : sendCommand(action, payload)
+                  )}
+                />
+                <VolumeBar
+                  volume={session?.volume ?? 100}
+                  canControl={access.permissions.control}
+                  onVolume={(value) => sendCommand('SET_VOLUME', { volume: value }, { track: false })}
+                />
+              </div>
               <span className="pm-inline-bar__state">
                 {session?.video
                   ? (session.status === 'PLAYING' ? 'Đang phát' : session.status === 'PAUSED' ? 'Tạm dừng' : 'Đã dừng')

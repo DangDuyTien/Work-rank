@@ -401,6 +401,65 @@ test('PROGRESS_AFTER_SEEK — a stale tick cannot rewind the playhead', async ()
 // 5. Device (Mac helper) authorization
 // ───────────────────────────────────────────────────────────────────────────
 
+test('SEEK_ACK — a player ack cannot undo a seek', async () => {
+  await sessionService.issueCommand({
+    commandId: 'ack-load-1',
+    action: 'LOAD_VIDEO',
+    source: 'WEB',
+    actorUserId: users.owner.id,
+    payload: { videoId: 'aqz-KE-bpKQ', durationSeconds: 635 },
+  });
+  await sessionService.issueCommand({
+    commandId: 'ack-seek-1',
+    action: 'SEEK',
+    source: 'WEB',
+    actorUserId: users.owner.id,
+    payload: { position: 300 },
+  });
+
+  // The player acks immediately, still reporting where it was before the jump.
+  const ack = await sessionService.acknowledgeCommand({
+    commandId: 'ack-seek-1',
+    actorUserId: users.owner.id,
+    state: { status: 'PLAYING', currentTime: 12 },
+  });
+  assert.equal(Math.round(ack.state.currentTime), 300, 'seek ack must not rewind the playhead');
+});
+
+test('PER_ACCOUNT_SESSION — every granted account listens separately', async () => {
+  // Owner loads a video.
+  const ownerLoad = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.ownerToken))
+    .send({ commandId: 'owner-load-1', action: 'LOAD_VIDEO', payload: { videoId: 'dQw4w9WgXcQ', title: 'Owner pick' } });
+  assert.equal(ownerLoad.status, 200, JSON.stringify(ownerLoad.body));
+
+  // The delegate's session starts empty — no shared playhead.
+  const delegateSession = await request(app).get(`${BASE}/session`).set(bearer(users.delegateToken));
+  assert.equal(delegateSession.status, 200);
+  assert.notEqual(delegateSession.body.session?.video?.videoId, 'dQw4w9WgXcQ', 'delegate must not inherit the owner video');
+  assert.notEqual(delegateSession.body.session?.sessionId, ownerLoad.body.state?.sessionId);
+
+  // Delegate plays something else, at their own volume.
+  const delegateLoad = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.delegateToken))
+    .send({ commandId: 'delegate-load-1', action: 'LOAD_VIDEO', payload: { videoId: 'aqz-KE-bpKQ', title: 'Delegate pick' } });
+  assert.equal(delegateLoad.status, 200, JSON.stringify(delegateLoad.body));
+
+  const delegateVolume = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.delegateToken))
+    .send({ commandId: 'delegate-vol-1', action: 'SET_VOLUME', payload: { volume: 20 } });
+  assert.equal(delegateVolume.status, 200);
+  assert.equal(Number(delegateVolume.body.state.volume), 20);
+
+  // Owner is untouched: same video, same volume.
+  const ownerSession = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken));
+  assert.equal(ownerSession.body.session?.video?.videoId, 'dQw4w9WgXcQ');
+  assert.notEqual(Number(ownerSession.body.session?.volume), 20, 'delegate volume must not reach the owner');
+});
+
 test('DEVICE_AUTHZ — pairing issues a scoped token; revocation kills it instantly', async () => {
   const codeRes = await request(app)
     .post(`${BASE}/devices/code`)
@@ -422,6 +481,14 @@ test('DEVICE_AUTHZ — pairing issues a scoped token; revocation kills it instan
   assert.equal(pair.status, 200, JSON.stringify(pair.body));
   const deviceToken = pair.body.deviceToken;
   assert.ok(deviceToken.startsWith('pmd_'));
+
+  // The delegate has their own playback session, so load a video into it first:
+  // a transport command with nothing loaded is correctly rejected (409).
+  const delegateLoad = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.delegateToken))
+    .send({ commandId: 'delegate-preload', action: 'LOAD_VIDEO', payload: { videoId: 'aqz-KE-bpKQ', title: 'Preload' } });
+  assert.equal(delegateLoad.status, 200, JSON.stringify(delegateLoad.body));
 
   // A device token can issue HOTKEY commands as its owner.
   const hotkey = await request(app)

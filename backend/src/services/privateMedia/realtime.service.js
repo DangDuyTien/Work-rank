@@ -6,13 +6,31 @@
  * Thin wrapper around the `/private-media` Socket.IO namespace so HTTP
  * controllers can push state without importing socket internals.
  *
- * Rooms:
- *   pm:controllers  every entitled viewer/controller (state fan-out)
- *   pm:players      browser player tabs (command fan-out)
+ * Rooms are per playback session, because each account now has its own:
+ *   pm:<sessionKey>:controllers  that account's viewers/controllers
+ *   pm:<sessionKey>:players      that account's player tabs
+ *
+ * Without the key in the room name, one user's pause would reach everybody's
+ * browser — which is exactly the "shared listening" that had to be fixed.
  */
 
 let namespace = null;
-const playerSockets = new Set();
+// sessionKey -> Set<socketId>
+const playerSockets = new Map();
+
+const DEFAULT_KEY = 'primary';
+
+function controllersRoom(sessionKey) {
+  return `pm:${sessionKey || DEFAULT_KEY}:controllers`;
+}
+
+function playersRoom(sessionKey) {
+  return `pm:${sessionKey || DEFAULT_KEY}:players`;
+}
+
+function roomKeyOf(state, fallback) {
+  return state?.sessionKey || fallback || DEFAULT_KEY;
+}
 
 function attach(nsp) {
   namespace = nsp;
@@ -22,36 +40,42 @@ function isAttached() {
   return Boolean(namespace);
 }
 
-function broadcastState(state) {
+function broadcastState(state, sessionKey) {
   if (!namespace || !state) return;
-  namespace.to('pm:controllers').emit('private-media:state', state);
+  namespace.to(controllersRoom(roomKeyOf(state, sessionKey))).emit('private-media:state', state);
 }
 
-function broadcastCommand(command) {
+function broadcastCommand(command, sessionKey) {
   if (!namespace || !command) return;
-  namespace.to('pm:players').emit('private-media:command', command);
+  namespace.to(playersRoom(sessionKey)).emit('private-media:command', command);
 }
 
-function broadcastPlayerPresence(online, state = null) {
+function broadcastPlayerPresence(online, state = null, sessionKey) {
   if (!namespace) return;
-  namespace.to('pm:controllers').emit(
+  namespace.to(controllersRoom(roomKeyOf(state, sessionKey))).emit(
     online ? 'private-media:player-online' : 'private-media:player-offline',
     state || { online: Boolean(online) },
   );
 }
 
-function registerPlayer(socketId) {
-  playerSockets.add(socketId);
-  return playerSockets.size;
+function registerPlayer(socketId, sessionKey) {
+  const key = sessionKey || DEFAULT_KEY;
+  if (!playerSockets.has(key)) playerSockets.set(key, new Set());
+  playerSockets.get(key).add(socketId);
+  return playerSockets.get(key).size;
 }
 
-function unregisterPlayer(socketId) {
-  playerSockets.delete(socketId);
-  return playerSockets.size;
+function unregisterPlayer(socketId, sessionKey) {
+  const key = sessionKey || DEFAULT_KEY;
+  const set = playerSockets.get(key);
+  if (!set) return 0;
+  set.delete(socketId);
+  return set.size;
 }
 
-function playerCount() {
-  return playerSockets.size;
+function playerCount(sessionKey) {
+  const key = sessionKey || DEFAULT_KEY;
+  return playerSockets.get(key)?.size || 0;
 }
 
 /**
@@ -104,4 +128,6 @@ module.exports = {
   playerCount,
   revokeUser,
   revokeDevice,
+  controllersRoom,
+  playersRoom,
 };

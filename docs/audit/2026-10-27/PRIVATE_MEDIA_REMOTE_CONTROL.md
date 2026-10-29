@@ -11,15 +11,15 @@
 ```text
 Root owner bootstrap : tienddph50842@gmail.com → Work Rank user #10943 (role = user)
 Module               : /api/private-media/* + socket namespace /private-media + mac-helper
-Backend tests        : 28/28 PASS
-Browser QA           : 21/21 PASS
+Backend tests        : 30/30 PASS
+Browser QA           : 24/24 PASS
 Migration            : applied on dev MySQL (forward, repeatable)
 Global F8            : UNVERIFIED  (OS-level key injection bị chặn quyền Accessibility)
 Telegram real bot    : BLOCKED_BY_CREDENTIAL (chưa có TELEGRAM_BOT_TOKEN)
 YouTube search       : PASS (key đã gắn, search thật trả kết quả)
 YouTube player       : PASS (video thật, currentTime > 0)
 Mini controller      : PASS (5 nút: volume −/+, play/pause, stop, next —
-                       hiện cả trên trang lẫn cửa sổ nổi 196×52)
+                       hiện cả trên trang lẫn cửa sổ nổi 150×38)
 ```
 
 Điểm quan trọng nhất — **admin không phải owner** — được chứng minh ở 3 tầng độc lập:
@@ -341,15 +341,23 @@ phím tắt, quyền, nhật ký).
 render ngay trong trang, dùng chung component `MediaControls` với cửa sổ nổi nên cùng state,
 cùng command bus.
 
-| Nút | Kích thước | Lệnh |
+| Thành phần | Kích thước | Hành vi |
 |---|---|---|
-| loa nhỏ | 28×30 | `SET_VOLUME` −10 |
+| tua lại 10 giây | 28×30 | `SEEK` vị trí − 10 (kẹp ở 0) |
 | phát / tạm dừng | 40×30 | `TOGGLE_PLAY_PAUSE` |
 | dừng | 34×30 | `STOP` |
 | chuyển tiếp | 34×30 | `NEXT` |
-| loa to | 28×30 | `SET_VOLUME` +10 |
+| tua tới 10 giây | 28×30 | `SEEK` vị trí + 10 (kẹp ở duration) |
+| loa (bấm = tắt/bật tiếng) | 24×24 | `SET_VOLUME` 0 / khôi phục mức cũ |
+| **thanh âm lượng** | 84px + % | `SET_VOLUME` 0–100, hiện số % |
 
 Bên phải thanh có nhãn trạng thái nhỏ (`Đang phát` / `Tạm dừng` / `Đã dừng` / `Chưa có video`).
+
+Hai nút tua ±10 chỉ có trên trang — cửa sổ nổi giữ đúng 5 nút như yêu cầu.
+
+Thanh âm lượng là **thanh trượt có số %**, không phải chỉ một nút loa: nút loa đơn độc bị hiểu
+là "chỉ có tắt tiếng" (đúng phản hồi của owner). Kéo thả commit một lần khi nhả tay; bấm loa thì
+tắt tiếng và bấm lại khôi phục đúng mức trước đó.
 
 ### Thanh tua (chỉ trên trang — cửa sổ nổi giữ nguyên 5 nút)
 
@@ -394,15 +402,18 @@ Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, 
 
 ### Nội dung
 
-**5 nút, không chữ** — thanh 184×38, cửa sổ xin **196×52**:
+**5 nút, không chữ** — cửa sổ xin **150×38** (trước là 196×52):
 
-| Nút | Kích thước | Hành vi |
+| Nút | Tỉ lệ | Hành vi |
 |---|---|---|
-| loa nhỏ | 24×26 | `SET_VOLUME` −10 (dừng ở 0) |
-| phát / tạm dừng | 36×26 | `TOGGLE_PLAY_PAUSE` |
-| dừng | 30×26 | `STOP` |
-| chuyển tiếp | 30×26 | `NEXT` |
-| loa to | 24×26 | `SET_VOLUME` +10 (dừng ở 100) |
+| loa nhỏ | 0.72 | `SET_VOLUME` −10 (dừng ở 0) |
+| phát / tạm dừng | 1.25 | `TOGGLE_PLAY_PAUSE` |
+| dừng | 1 | `STOP` |
+| chuyển tiếp | 1 | `NEXT` |
+| loa to | 0.72 | `SET_VOLUME` +10 (dừng ở 100) |
+
+Nút dùng `flex: 1 1 0` + `min-width: 0` chứ **không** đặt width cố định: cửa sổ hẹp hơn yêu cầu
+thì nút co lại, không bao giờ bị cắt. Đo ở 150×38, 132×40 và cả 120×36: **không tràn, đủ 5 nút**.
 
 Không tên video, không đồng hồ, không thanh tiến trình. Nút âm lượng tự disable khi đã ở
 0% / 100% để có phản hồi mà không cần hiện số.
@@ -419,17 +430,20 @@ Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
 
 Đã sửa:
 
-* `PIP_WIDTH = 196`, `PIP_HEIGHT = 52` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
+* `PIP_WIDTH = 150`, `PIP_HEIGHT = 38` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
+* Nút dùng `flex: 1 1 0` — cửa sổ hẹp hơn yêu cầu thì nút co lại thay vì bị cắt (lớp bảo vệ thứ hai,
+  độc lập với kích thước).
 * Gọi thêm `win.resizeTo(PIP_WIDTH, PIP_HEIGHT)` sau khi mở, phòng khi Chrome bỏ qua tham số.
 * CSS thanh: `width: 100%; height: 100%; overflow: hidden`, và `html, body { height: 100% }` được
   set **trực tiếp trên document của cửa sổ** (không đặt trong stylesheet dùng chung, tránh rò sang trang).
 * QA mới kiểm tra `fits` và `overflow`: fail nếu mép phải của nút cuối vượt khỏi khung.
 
-Kiểm chứng bằng cách replay chính document của cửa sổ ở đúng 196×52:
+Kiểm chứng bằng cách replay chính document của cửa sổ ở nhiều kích thước:
 
 ```text
-viewport 194×50 · bar 194×50 · 5 nút · nút đầu x=13 · nút cuối kết thúc x=181
-scrollWidth 192 = clientWidth 192 → không cắt
+150×38 → vw 148 · nút [19,31,25,25,19] · không tràn
+132×40 → vw 130 · nút [16,27,22,22,16] · không tràn
+120×36 → vw 118 · nút [14,23,19,19,14] · không tràn
 ```
 
 ### Vì sao trước đây nó "chỉ hiện trong trang 3WIN, không sang tab khác"
@@ -498,6 +512,38 @@ MINI_CLOSE             window closed=true
 
 ---
 
+## 10b. MỖI TÀI KHOẢN NGHE RIÊNG
+
+Trước đây chỉ có **một** session (`session_key = 'primary'`) cho tất cả mọi người: hai người có
+quyền mở cùng lúc thì cùng một playhead, cùng một queue, cùng một mức âm lượng — và cả hai trình
+duyệt cùng phát tiếng, nên nghe thành "chung".
+
+Giờ mỗi tài khoản có session riêng:
+
+| Ai | `session_key` | Ghi chú |
+|---|---|---|
+| Owner | `primary` | giữ nguyên key cũ nên không mất trạng thái đang có |
+| Tài khoản được cấp quyền | `user:<id>` | session riêng, bắt đầu trống |
+
+* `session.service.sessionKeyFor(userId)` quyết định key; owner giữ `primary`.
+* Socket room đổi thành `pm:<key>:controllers` / `pm:<key>:players` — trạng thái và lệnh chỉ
+  phát trong phòng của chính tài khoản đó.
+* Thiết bị (Mac helper) và Telegram mang `userId` của chủ sở hữu → vẫn điều khiển session của owner.
+* `recentCommands` / `recentVideos` lọc theo `sessionId` → danh sách "đã phát gần đây" cũng riêng.
+
+Bằng chứng (đo thật, 2 tài khoản mở cùng lúc):
+
+```text
+owner     : sessionKey=primary   video=aqz-KE-bpKQ  t=19  vol=40
+delegate  : sessionKey=user:1    video=null         t=0   vol=100
+delegate tự phát dQw4w9WgXcQ @ 20%  →  owner vẫn aqz-KE-bpKQ @ 40%
+```
+
+Test `PER_ACCOUNT_SESSION` khoá lại: delegate không thấy video của owner, và âm lượng của delegate
+không chạm tới owner.
+
+---
+
 ## 11. SECURITY
 
 | Hạng mục | Cách làm |
@@ -537,8 +583,11 @@ PASS  OWNER_OPENS_PAGE                  h1=1
 PASS  YOUTUBE_PLAYER_EMBEDDED           iframes=1
 PASS  SESSION_STATE_HONEST              status=PLAYING t=8s
 PASS  AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED  browser allowed autoplay
-PASS  INLINE_CONTROLS                   buttons=5 enabled=5 [Nhỏ hơn, Tạm dừng, Dừng, Video tiếp theo, To hơn]
+PASS  INLINE_CONTROLS                   buttons=5 enabled=5 seek=true volume=true [Tua lại 10 giây, Tạm dừng, Dừng, Video tiếp theo, Tua tới 10 giây]
 PASS  INLINE_COMMAND_WORKS              PLAYING → PAUSED
+PASS  VOLUME_SLIDER                     drag=40 label=40% mute=0 unmute=40
+PASS  SEEK_BUTTONS_10S                 363s → +10 373s → -10 363s
+PASS  SESSION_IS_ACCOUNT_SCOPED         sessionKey=primary
 PASS  MINI_PIP_WINDOW                   buttons=5 text="" fits=true overflow=false
 PASS  MINI_CONTROLLER_THEME             bg=rgb(255,255,255)
 PASS  MINI_PALETTE_OVERRIDE             auto=white dark=rgba(18,18,18,.94) back=white
@@ -567,7 +616,7 @@ Screenshots: `docs/audit/2026-10-27/shots/`
 | `owner-private-media.png` | trang đầy đủ (search, player, rail) |
 | `owner-search-results.png` | search thật: 12 kết quả, title sạch, có thumbnail + thời lượng |
 | `owner-mini-bar.png` | cửa sổ nhỏ 5 nút (đang phát) |
-| `owner-inline-controls.png` | thanh 5 nút + thanh tua ngay trên trang, dưới ô tìm |
+| `owner-inline-controls.png` | thanh tua + 5 nút (có ±10s) + thanh âm lượng |
 | `owner-seek-bar.png` | sau khi tua 55%: vị trí mới, vẫn phát |
 | `owner-web-no-player.png` | trang web: chỉ ô tìm + danh sách tên, không có player |
 | `owner-web-keyless.png` | trạng thái dùng được **không cần key**: dán link + "Đã phát gần đây" |
@@ -622,7 +671,7 @@ Ma trận quyền:
 ### Backend — `backend/test/private_media_authz.test.js`
 
 ```text
-# tests 28
+# tests 30
 # pass 27
 # fail 0
 ```
@@ -648,6 +697,8 @@ Ma trận quyền:
 | 17 | YOUTUBE_NORMALIZATION (HTML entity, ISO duration, video id) | YOUTUBE_SEARCH |
 | 18 | PROGRESS_QUIET_WINDOW (tick cũ không đảo được lệnh) | WEBSOCKET_REALTIME |
 | 19 | PROGRESS_AFTER_SEEK (tick cũ không kéo lùi playhead) | WEBSOCKET_REALTIME |
+| 20 | SEEK_ACK (ack của player không được kéo lùi) | WEBSOCKET_REALTIME |
+| 21 | PER_ACCOUNT_SESSION (mỗi tài khoản nghe riêng) | ISOLATION |
 | 19 | DEVICE_AUTHZ (pair → use → revoke) | DEVICE_AUTHZ |
 | 20 | DEVICE_AUTHZ (member cannot mint) | DEVICE_AUTHZ |
 | 21 | TELEGRAM_AUTHZ (unbound/one-time/revoked) | TELEGRAM_AUTHZ |
@@ -745,8 +796,9 @@ TELEGRAM_BINDING:                    PASS
 TELEGRAM_AUTHZ:                      PASS
 TELEGRAM_REMOTE_CONTROL:             BLOCKED_BY_CREDENTIAL
 MAC_HELPER:                          PASS (tùy chọn — không bắt buộc)
-MINI_CONTROLLER:                     PASS (PiP thật 196×52, 5 nút, không cắt)
-WEB_INLINE_CONTROLS:                 PASS (5 nút + thanh tua ngay trên trang)
+MINI_CONTROLLER:                     PASS (PiP thật 150×38, 5 nút, không cắt)
+WEB_INLINE_CONTROLS:                 PASS (5 nút + thanh tua + thanh âm lượng)
+PER_ACCOUNT_SESSION:                 PASS (mỗi tài khoản một session)
 WEB_NAMES_ONLY:                      PASS (không khung video, vẫn phát tiếng)
 GLOBAL_F8_HOTKEY:                    UNVERIFIED (tùy chọn)
 DEVICE_AUTHZ:                        PASS
@@ -757,7 +809,7 @@ SECRETS_NOT_EXPOSED:                 PASS
 OTHER_WORKRANK_PERMISSIONS_UNCHANGED: PASS
 FRONTEND_CHECK:                      PASS
 FRONTEND_BUILD:                      PASS
-BACKEND_TESTS:                       PASS (module 28/28; full suite 685/696 —
+BACKEND_TESTS:                       PASS (module 30/30; full suite 685/696 —
                                           10 fail thuộc 6 suite competition/integration
                                           có sẵn từ baseline, không file nào bị sửa)
 OVERALL:                             PASS (1 mục BLOCKED do thiếu Telegram token

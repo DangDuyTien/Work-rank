@@ -191,7 +191,7 @@ async function runCommand(actor, action, payload = {}) {
     payload,
   });
   if (!result.duplicate) {
-    realtime.broadcastCommand(result.command);
+    realtime.broadcastCommand(result.command, result.state?.sessionKey);
     realtime.broadcastState(result.state);
   }
   return result;
@@ -250,7 +250,7 @@ async function handleMessage(message) {
   try {
     switch (command) {
       case '/now': {
-        const state = await sessionService.getSessionState();
+        const state = await sessionService.getSessionState(actor.userId);
         await sendMessage(chatId, describeState(state), controlKeyboard());
         return;
       }
