@@ -18,14 +18,9 @@
       "detail": "iframes=1"
     },
     {
-      "name": "TRANSPORT_RENDERED",
-      "pass": true,
-      "detail": "controls=6"
-    },
-    {
       "name": "SESSION_STATE_HONEST",
       "pass": true,
-      "detail": "status=PLAYING t=15s"
+      "detail": "status=PLAYING t=190s"
     },
     {
       "name": "AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED",
@@ -33,34 +28,54 @@
       "detail": "browser allowed autoplay"
     },
     {
-      "name": "YOUTUBE_SEARCH",
+      "name": "MINI_PIP_WINDOW",
       "pass": true,
-      "detail": "results=12"
-    },
-    {
-      "name": "DISCREET_MODE",
-      "pass": true,
-      "detail": "thumbnails=0 veil=1 \"ĐANG PHÁT / Big Buck Bunny 60fps 4K - Official Blender Foundation Shor\""
-    },
-    {
-      "name": "PLAYBACK_PROGRESS",
-      "pass": true,
-      "detail": "video=aqz-KE-bpKQ t=32.058286202178955s status=PLAYING"
-    },
-    {
-      "name": "OWNER_API_ACCESS",
-      "pass": true,
-      "detail": "status=200"
+      "detail": "buttons=5 text=\"\""
     },
     {
       "name": "MINI_CONTROLLER_THEME",
       "pass": true,
-      "detail": "rgb(255, 255, 255) vs page #f4f3ef"
+      "detail": "bg=rgb(255, 255, 255)"
     },
     {
       "name": "MINI_PALETTE_OVERRIDE",
       "pass": true,
       "detail": "auto=rgb(255, 255, 255) dark=rgba(18, 18, 18, 0.94) back=rgb(255, 255, 255)"
+    },
+    {
+      "name": "MINI_COMMAND_WORKS",
+      "pass": true,
+      "detail": "PLAYING → PAUSED"
+    },
+    {
+      "name": "MINI_VOLUME",
+      "pass": true,
+      "detail": "90 → 80 → 90"
+    },
+    {
+      "name": "MINI_CLOSE",
+      "pass": true,
+      "detail": "window closed=true"
+    },
+    {
+      "name": "YOUTUBE_SEARCH",
+      "pass": true,
+      "detail": "results=12"
+    },
+    {
+      "name": "NAMES_ONLY_UI",
+      "pass": true,
+      "detail": "thumbnails=0 visiblePlayer=0 audioIframe=1"
+    },
+    {
+      "name": "PLAYBACK_PROGRESS",
+      "pass": true,
+      "detail": "video=aqz-KE-bpKQ t=211.48225791226196s status=PLAYING"
+    },
+    {
+      "name": "OWNER_API_ACCESS",
+      "pass": true,
+      "detail": "status=200"
     },
     {
       "name": "ADMIN_HIDDEN_IN_SIDEBAR",

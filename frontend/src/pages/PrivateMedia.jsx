@@ -4,16 +4,12 @@ import { io } from 'socket.io-client';
 import {
   Cast,
   Check,
-  Eye,
-  EyeOff,
   Copy,
   Keyboard,
   Link2,
   Loader2,
-  Lock,
   MonitorPlay,
   MonitorSmartphone,
-  Pause,
   PictureInPicture2,
   Play,
   Radio,
@@ -21,12 +17,8 @@ import {
   Search,
   Send,
   ShieldCheck,
-  SkipBack,
-  SkipForward,
-  Square,
   Trash2,
   UserPlus,
-  Volume2,
   X,
 } from 'lucide-react';
 import {
@@ -54,7 +46,6 @@ import './privateMedia.css';
  */
 
 const SOCKET_NAMESPACE = '/private-media';
-const DISCREET_KEY = 'workrank:private-media:discreet';
 const MINI_THEME_KEY = 'workrank:private-media:mini-theme';
 
 function newCommandId() {
@@ -111,17 +102,9 @@ export default function PrivateMedia() {
   const [socketConnected, setSocketConnected] = useState(false);
   const [error, setError] = useState(null);
   const [busyAction, setBusyAction] = useState(null);
-  const [volumeDraft, setVolumeDraft] = useState(100);
   const [miniOpen, setMiniOpen] = useState(false);
-  // Discreet mode: the page shows names only and the player picture is covered.
-  // Playback and audio are unaffected — the iframe keeps its real size.
-  const [discreet, setDiscreet] = useState(() => {
-    try {
-      return localStorage.getItem(DISCREET_KEY) !== '0';
-    } catch {
-      return true;
-    }
-  });
+  const [miniWindow, setMiniWindow] = useState(null);
+  const [miniNote, setMiniNote] = useState(null);
 
   // The mini window cannot read the colour of other tabs (cross-origin), so the
   // owner picks a palette once and it is remembered.
@@ -139,20 +122,48 @@ export default function PrivateMedia() {
     try { localStorage.setItem(MINI_THEME_KEY, value); } catch { /* private mode */ }
   }, []);
 
-  const toggleDiscreet = useCallback(() => {
-    setDiscreet((value) => {
-      const next = !value;
-      try { localStorage.setItem(DISCREET_KEY, next ? '1' : '0'); } catch { /* private mode */ }
-      return next;
-    });
-  }, []);
+  /**
+   * Open the floating controller.
+   *
+   * `requestWindow()` MUST run synchronously inside the click handler: Chrome
+   * requires transient user activation, and calling it from a useEffect (one
+   * tick later) makes it reject — which is why the window previously fell back
+   * to an in-page bar and "would not follow to other tabs".
+   */
+  const openMini = useCallback(async () => {
+    setMiniNote(null);
+
+    if (miniOpen) {
+      setMiniOpen(false);
+      try { miniWindow?.close(); } catch { /* already closed */ }
+      setMiniWindow(null);
+      return;
+    }
+
+    setMiniOpen(true);
+
+    if (typeof window === 'undefined' || !('documentPictureInPicture' in window)) {
+      setMiniNote('Trình duyệt này không hỗ trợ cửa sổ nổi (cần Chrome/Edge 116+). Đang dùng thanh nổi trong trang.');
+      return;
+    }
+
+    try {
+      const win = await window.documentPictureInPicture.requestWindow({
+        width: 132,
+        height: 44,
+        disallowReturnToOpener: false,
+      });
+      setMiniWindow(win);
+    } catch (error) {
+      setMiniNote(`Không mở được cửa sổ nổi (${error?.name || 'lỗi'}). Đang dùng thanh nổi trong trang.`);
+    }
+  }, [miniOpen, miniWindow]);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searchNote, setSearchNote] = useState(null);
 
-  const volumeTimerRef = useRef(null);
 
   // ── Data loading ──────────────────────────────────────────────────────────
   const refreshStatus = useCallback(async () => {
@@ -220,26 +231,6 @@ export default function PrivateMedia() {
       setSocketConnected(false);
     };
   }, [access.entitled, navigate]);
-
-  // ── Volume: debounce the slider so dragging sends one command, not twenty ──
-  useEffect(() => {
-    if (session?.volume != null) setVolumeDraft(Number(session.volume));
-  }, [session?.volume]);
-
-  const commitVolume = useCallback((value) => {
-    if (!access.permissions.control) return;
-    if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
-    volumeTimerRef.current = setTimeout(() => {
-      privateMediaApi
-        .sendCommand({ commandId: newCommandId(), action: 'SET_VOLUME', payload: { volume: value } })
-        .then((result) => { if (result?.state) setSession(result.state); })
-        .catch(() => {});
-    }, 320);
-  }, [access.permissions.control]);
-
-  useEffect(() => () => {
-    if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
-  }, []);
 
   // ── Commands ──────────────────────────────────────────────────────────────
   const sendCommand = useCallback(async (action, payload = {}, options = {}) => {
@@ -371,10 +362,7 @@ export default function PrivateMedia() {
   }, [access.entitled, loadRecent, session?.video?.videoId]);
 
   const currentVideoId = session?.video?.videoId || null;
-  const playing = session?.status === 'PLAYING';
 
-  const transportDisabled = !access.permissions.control || busyAction !== null;
-  const noVideo = !currentVideoId;
 
   // ── Owner: access management ──────────────────────────────────────────────
   const [grants, setGrants] = useState([]);
@@ -567,12 +555,24 @@ export default function PrivateMedia() {
         title="Điều khiển media"
         description="Tìm và điều khiển video từ xa bằng Telegram hoặc bàn phím."
         actions={(
-          <Button variant="secondary" size="sm" onClick={refreshStatus} disabled={loading}>
-            <RefreshCw size={14} aria-hidden="true" />
-            Làm mới
-          </Button>
+          <>
+            <Button variant="secondary" size="sm" onClick={refreshStatus} disabled={loading}>
+              <RefreshCw size={14} aria-hidden="true" />
+              Làm mới
+            </Button>
+            <Button variant={miniOpen ? 'primary' : 'accent'} size="sm" onClick={openMini}>
+              <PictureInPicture2 size={14} aria-hidden="true" />
+              {miniOpen ? 'Đóng cửa sổ nhỏ' : 'Cửa sổ nhỏ'}
+            </Button>
+          </>
         )}
       />
+
+      {miniNote && (
+        <div className="pm-inline-notice">
+          <Notice type="info" icon={PictureInPicture2}>{miniNote}</Notice>
+        </div>
+      )}
 
       {error && (
         <div className="pm-inline-notice">
@@ -638,18 +638,8 @@ export default function PrivateMedia() {
             {!searching && results.length > 0 && (
               <ul className="pm-results">
                 {results.map((item, index) => (
-                  <li key={item.videoId} className={`pm-result${discreet ? ' pm-result--text' : ''}${currentVideoId === item.videoId ? ' is-current' : ''}`}>
-                    {discreet ? (
-                      <span className="pm-result__index" aria-hidden="true">{index + 1}</span>
-                    ) : (
-                      <img
-                        src={item.thumbnailUrl || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`}
-                        alt=""
-                        loading="lazy"
-                        width={104}
-                        height={60}
-                      />
-                    )}
+                  <li key={item.videoId} className={`pm-result pm-result--text${currentVideoId === item.videoId ? ' is-current' : ''}`}>
+                    <span className="pm-result__index" aria-hidden="true">{index + 1}</span>
                     <div className="pm-result__body">
                       <strong title={item.title || item.videoId}>{item.title || item.videoId}</strong>
                       <span>
@@ -681,18 +671,8 @@ export default function PrivateMedia() {
                 </div>
                 <ul className="pm-results">
                   {recentVideos.map((item, index) => (
-                    <li key={item.videoId} className={`pm-result${discreet ? ' pm-result--text' : ''}${currentVideoId === item.videoId ? ' is-current' : ''}`}>
-                      {discreet ? (
-                        <span className="pm-result__index" aria-hidden="true">{index + 1}</span>
-                      ) : (
-                        <img
-                          src={item.thumbnailUrl || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`}
-                          alt=""
-                          loading="lazy"
-                          width={104}
-                          height={60}
-                        />
-                      )}
+                    <li key={item.videoId} className={`pm-result pm-result--text${currentVideoId === item.videoId ? ' is-current' : ''}`}>
+                      <span className="pm-result__index" aria-hidden="true">{index + 1}</span>
                       <div className="pm-result__body">
                         <strong title={item.title || item.videoId}>{item.title || item.videoId}</strong>
                         <span>
@@ -716,111 +696,15 @@ export default function PrivateMedia() {
             )}
           </Card>
 
-          <Card className="pm-player">
+          {/* The player stays mounted but out of view: audio keeps playing
+              while nothing about the video is shown on the page. */}
+          <div className="pm-audio-host" aria-hidden="true">
             <YouTubeStage
               session={session}
               socket={socket}
               canControl={access.permissions.control}
-              discreet={discreet}
-              onReveal={() => { if (discreet) toggleDiscreet(); }}
             />
-
-            <div className="pm-transport">
-              <button
-                type="button"
-                className="pm-transport__btn"
-                onClick={() => sendCommand('PREVIOUS')}
-                disabled={transportDisabled || noVideo}
-                aria-label="Video trước"
-                title="Video trước"
-              >
-                <SkipBack size={18} aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                className="pm-transport__btn is-primary"
-                onClick={() => sendCommand('TOGGLE_PLAY_PAUSE')}
-                disabled={transportDisabled || noVideo}
-                aria-label={playing ? 'Tạm dừng' : 'Phát'}
-                title={playing ? 'Tạm dừng (F8)' : 'Phát (F8)'}
-              >
-                {busyAction === 'TOGGLE_PLAY_PAUSE'
-                  ? <Loader2 size={20} className="pm-spin" aria-hidden="true" />
-                  : playing ? <Pause size={20} aria-hidden="true" /> : <Play size={20} aria-hidden="true" />}
-              </button>
-
-              <button
-                type="button"
-                className="pm-transport__btn"
-                onClick={() => sendCommand('STOP')}
-                disabled={transportDisabled || noVideo}
-                aria-label="Dừng"
-                title="Dừng (Shift + F8)"
-              >
-                <Square size={17} aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                className="pm-transport__btn"
-                onClick={() => sendCommand('NEXT')}
-                disabled={transportDisabled || noVideo}
-                aria-label="Video tiếp theo"
-                title="Video tiếp theo (F9)"
-              >
-                <SkipForward size={18} aria-hidden="true" />
-              </button>
-
-              <div className="pm-volume">
-                <Volume2 size={16} aria-hidden="true" />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={volumeDraft}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    setVolumeDraft(next);
-                    commitVolume(next);
-                  }}
-                  disabled={transportDisabled}
-                  aria-label="Âm lượng"
-                />
-                <span>{volumeDraft}%</span>
-              </div>
-
-              <button
-                type="button"
-                className={`pm-transport__btn pm-transport__mini${discreet ? ' is-active' : ''}`}
-                onClick={toggleDiscreet}
-                aria-pressed={discreet}
-                aria-label={discreet ? 'Đang ẩn hình — bấm để hiện video' : 'Đang hiện hình — bấm để ẩn video'}
-                title={discreet ? 'Đang ẩn hình (chỉ tên + tiếng). Bấm để hiện video.' : 'Đang hiện hình. Bấm để ẩn, chỉ giữ tiếng.'}
-              >
-                {discreet ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
-              </button>
-
-              <button
-                type="button"
-                className={`pm-transport__btn pm-transport__mini${miniOpen ? ' is-active' : ''}`}
-                onClick={() => setMiniOpen((value) => !value)}
-                aria-pressed={miniOpen}
-                aria-label="Cửa sổ nhỏ luôn nổi"
-                title="Cửa sổ nhỏ luôn nổi — 3 nút: phát/tạm dừng, dừng, tiếp"
-              >
-                <PictureInPicture2 size={17} aria-hidden="true" />
-              </button>
-            </div>
-
-            {!access.permissions.control && (
-              <p className="pm-player__readonly">
-                <Lock size={13} aria-hidden="true" />
-                Bạn chỉ có quyền xem. Liên hệ chủ sở hữu để được cấp quyền điều khiển.
-              </p>
-            )}
-          </Card>
+          </div>
         </div>
 
         <aside className="pm-rail">
@@ -1094,10 +978,11 @@ export default function PrivateMedia() {
 
       <MiniPlayer
         open={miniOpen}
+        pipWindow={miniWindow}
         onClose={() => setMiniOpen(false)}
         session={session}
         canControl={access.permissions.control}
-        onCommand={(action) => sendCommand(action)}
+        onCommand={(action, payload) => sendCommand(action, payload)}
         themeMode={miniTheme}
       />
 

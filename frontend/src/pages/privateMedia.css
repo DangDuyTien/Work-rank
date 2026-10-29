@@ -129,14 +129,6 @@
   pointer-events: none;
 }
 
-.pm-result img {
-  width: 104px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
-  background: var(--surface-muted);
-}
 
 .pm-result__body {
   flex: 1;
@@ -206,14 +198,21 @@
   max-height: 260px;
 }
 
+/* ── Player (kept mounted, never shown) ──────────────────────────────────────
+   The iframe must keep a real, non-zero size or Chrome stops playback. It is
+   moved outside the viewport instead of being hidden. */
+.pm-audio-host {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 320px;
+  height: 180px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* ── Player ───────────────────────────────────────────────────────────────── */
 
-.pm-player {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
 .pm-stage {
   display: flex;
@@ -306,24 +305,6 @@
   background: #ffffff;
 }
 
-/* ── Discreet mode: cover the picture, keep the audio ─────────────────────── */
-/* The iframe keeps its full size underneath (playback and sound continue);
-   this panel only hides what is on screen. */
-.pm-stage__veil {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 20px;
-  text-align: center;
-  background: var(--surface-soft);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-content);
-}
 
 .pm-stage__veil-kicker {
   font-size: 10px;
@@ -446,84 +427,16 @@
 
 /* ── Transport ────────────────────────────────────────────────────────────── */
 
-.pm-transport {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-top: 2px;
-}
 
-.pm-transport__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border-2);
-  border-radius: var(--radius-interactive);
-  background: var(--surface);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), opacity var(--motion-fast) var(--ease-standard);
-}
 
-.pm-transport__btn:hover:not(:disabled) {
-  background: var(--surface-soft);
-  border-color: var(--border-strong);
-}
 
-.pm-transport__btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 
-.pm-transport__btn.is-primary {
-  width: 48px;
-  height: 48px;
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-}
 
-.pm-transport__btn.is-primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
-}
 
-.pm-volume {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 11.5px;
-  min-width: 0;
-}
 
-.pm-volume input[type="range"] {
-  width: 96px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
 
-.pm-transport__mini {
-  flex-shrink: 0;
-}
 
-.pm-transport__mini.is-active {
-  background: var(--accent-soft);
-  border-color: var(--accent-border);
-  color: var(--accent);
-}
 
-.pm-player__readonly {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-muted);
-}
 
 .pm-spin {
   animation: pm-spin 900ms linear infinite;

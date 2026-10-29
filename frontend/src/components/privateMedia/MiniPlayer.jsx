@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Pause, Play, SkipForward, Square } from 'lucide-react';
+import { Pause, Play, SkipForward, Square, Volume1, Volume2 } from 'lucide-react';
 
 /**
  * PRIVATE MEDIA — MINI CONTROLLER (Picture-in-Picture)
@@ -123,6 +123,7 @@ function miniCss(theme) {
 }
 .pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
 .pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pm-mini__btn.is-narrow { width: 24px; }
 .pm-mini__btn.is-primary { background: ${p.primaryBg}; color: ${p.primaryText}; border-color: transparent; width: 36px; }
 .pm-mini__btn.is-primary:hover:not(:disabled) { background: ${p.primaryHover}; }
 .pm-mini__fallback {
@@ -186,13 +187,32 @@ function useThemePalette() {
  * every extra element makes the bar bigger and more conspicuous. The state is
  * still shared with the page, so the play/pause icon always reflects reality.
  */
+const VOLUME_STEP = 10;
+
 function MiniControls({ session, canControl, onCommand }) {
   const video = session?.video || null;
   const playing = session?.status === 'PLAYING';
+  const volume = Math.min(100, Math.max(0, Number(session?.volume ?? 100)));
   const disabled = !canControl || !video;
+
+  // Volume works even with nothing loaded, so it only needs control permission.
+  const changeVolume = (delta) => {
+    if (!canControl) return;
+    onCommand('SET_VOLUME', { volume: Math.min(100, Math.max(0, volume + delta)) });
+  };
 
   return (
     <div className="pm-mini">
+      <button
+        type="button"
+        className="pm-mini__btn is-narrow"
+        onClick={() => changeVolume(-VOLUME_STEP)}
+        disabled={!canControl || volume <= 0}
+        aria-label="Nhỏ hơn"
+        title={`Nhỏ hơn (${volume}%)`}
+      >
+        <Volume1 size={13} aria-hidden="true" />
+      </button>
       <button
         type="button"
         className="pm-mini__btn is-primary"
@@ -223,108 +243,58 @@ function MiniControls({ session, canControl, onCommand }) {
       >
         <SkipForward size={13} aria-hidden="true" />
       </button>
+      <button
+        type="button"
+        className="pm-mini__btn is-narrow"
+        onClick={() => changeVolume(VOLUME_STEP)}
+        disabled={!canControl || volume >= 100}
+        aria-label="To hơn"
+        title={`To hơn (${volume}%)`}
+      >
+        <Volume2 size={13} aria-hidden="true" />
+      </button>
     </div>
   );
 }
 
-export default function MiniPlayer({ open, onClose, session, canControl, onCommand, themeMode = 'auto' }) {
-  // `themeMode` lets the owner force a palette: a floating window sits next to
-  // whatever they are looking at, and no web API can read another site's
-  // colour (cross-origin). Forcing it is the only reliable way to blend in.
+export default function MiniPlayer({ open, pipWindow, onClose, session, canControl, onCommand, themeMode = 'auto' }) {
   const palette = useThemePalette();
-  const [pipWindow, setPipWindow] = useState(null);
-  const [fallback, setFallback] = useState(false);
-  const fallbackRef = useRef(false);
-  // The in-page fallback lives inside the page, so it follows the app; the real
-  // PiP window is a separate OS window and follows the system appearance.
-  const theme = themeMode === 'auto' ? (fallback ? palette.app : palette.os) : themeMode;
-  const themeRef = useRef(theme);
+  // A real PiP window is an OS window, so it follows the system appearance;
+  // the in-page fallback lives inside the page and follows the app.
+  const theme = themeMode === 'auto' ? (pipWindow ? palette.os : palette.app) : themeMode;
   const styleRef = useRef(null);
 
-  const supported = typeof window !== 'undefined' && 'documentPictureInPicture' in window;
-
+  // Inject the palette into the PiP document (it inherits nothing from the app).
   useEffect(() => {
-    if (!open) {
-      setPipWindow(null);
-      setFallback(false);
-      return undefined;
-    }
+    if (!pipWindow?.document) return undefined;
 
-    if (!supported) {
-      setFallback(true);
-      return undefined;
-    }
+    const style = pipWindow.document.createElement('style');
+    style.textContent = miniCss(theme);
+    styleRef.current = style;
+    pipWindow.document.head.appendChild(style);
+    pipWindow.document.title = 'WorkRank Media';
+    pipWindow.document.body.style.margin = '0';
 
-    let cancelled = false;
-    let opened = null;
-    let settled = false;
-
-    // Some environments (headless, restricted window managers, kiosk policies)
-    // never settle requestWindow. Without a guard the button would silently do
-    // nothing, so after 1.5s we fall back to the in-page floating bar.
-    const guard = setTimeout(() => {
-      if (cancelled || settled) return;
-      fallbackRef.current = true;
-      setFallback(true);
-    }, 1500);
-
-    window.documentPictureInPicture
-      .requestWindow({ width: 132, height: 44, disallowReturnToOpener: false })
-      .then((win) => {
-        settled = true;
-        clearTimeout(guard);
-        if (cancelled) {
-          win.close();
-          return;
-        }
-        opened = win;
-
-        const style = win.document.createElement('style');
-        style.textContent = miniCss(themeRef.current);
-        styleRef.current = style;
-        win.document.head.appendChild(style);
-        win.document.title = 'WorkRank Media';
-        win.document.body.style.margin = '0';
-
-        win.addEventListener('pagehide', () => {
-          setPipWindow(null);
-          if (!fallbackRef.current) onClose();
-        });
-
-        setPipWindow(win);
-      })
-      .catch(() => {
-        // User gesture missing, policy blocked, or headless environment.
-        settled = true;
-        clearTimeout(guard);
-        fallbackRef.current = true;
-        setFallback(true);
-      });
+    // Closing the OS window must also reset the page state.
+    const handleHide = () => onClose();
+    pipWindow.addEventListener('pagehide', handleHide);
 
     return () => {
-      cancelled = true;
-      clearTimeout(guard);
-      try {
-        opened?.close();
-      } catch {
-        // Already closed.
-      }
+      pipWindow.removeEventListener('pagehide', handleHide);
+      try { style.remove(); } catch { /* window already gone */ }
+      styleRef.current = null;
     };
-  }, [open, supported, onClose]);
+    // Recreating the <style> on every theme change would flicker; the separate
+    // effect below patches it in place instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pipWindow, onClose]);
 
   useEffect(() => {
-    fallbackRef.current = fallback;
-  }, [fallback]);
-
-  // Keep the PiP window's palette in sync if the app theme changes while it is
-  // open (the injected <style> is a snapshot, not a live stylesheet).
-  useEffect(() => {
-    themeRef.current = theme;
     if (styleRef.current) styleRef.current.textContent = miniCss(theme);
   }, [theme]);
 
-  const handleCommand = useCallback((action) => {
-    onCommand(action);
+  const handleCommand = useCallback((action, payload) => {
+    onCommand(action, payload);
   }, [onCommand]);
 
   if (!open) return null;
@@ -341,15 +311,12 @@ export default function MiniPlayer({ open, onClose, session, canControl, onComma
     return createPortal(body, pipWindow.document.body);
   }
 
-  if (fallback) {
-    return createPortal(
-      <>
-        <style>{miniCss(theme)}</style>
-        <div className="pm-mini__fallback">{body}</div>
-      </>,
-      document.body,
-    );
-  }
-
-  return null;
+  // No PiP window available: keep a working control surface inside the page.
+  return createPortal(
+    <>
+      <style>{miniCss(theme)}</style>
+      <div className="pm-mini__fallback">{body}</div>
+    </>,
+    document.body,
+  );
 }

@@ -101,8 +101,6 @@ async function run() {
     const iframe = page.locator('iframe[src*="youtube.com/embed"]');
     const iframeCount = await iframe.count();
     record('YOUTUBE_PLAYER_EMBEDDED', iframeCount > 0, `iframes=${iframeCount}`);
-    const transport = await page.locator('.pm-transport button').count();
-    record('TRANSPORT_RENDERED', transport >= 4, `controls=${transport}`);
 
     // The session must never claim PLAYING while the clock is frozen. This is
     // the invariant that catches a UI faking playback.
@@ -129,6 +127,95 @@ async function run() {
     record('YOUTUBE_PLAYER_EMBEDDED', false, 'search input not found');
   }
 
+  // ── Floating controller (real Document PiP window) ────────────────────────
+  await page.locator('.ui-page-actions button').first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: 'Cửa sổ nhỏ', exact: true }).click();
+  await page.waitForTimeout(2000);
+
+  const readPip = () => page.evaluate(() => {
+    const win = window.documentPictureInPicture?.window;
+    if (!win) return null;
+    const el = win.document.querySelector('.pm-mini');
+    return {
+      buttons: Array.from(win.document.querySelectorAll('.pm-mini__btn')).map((b) => b.getAttribute('aria-label')),
+      bg: el ? window.getComputedStyle(el).backgroundColor : null,
+      text: win.document.body.innerText.trim(),
+    };
+  });
+
+  const pip = await readPip();
+  const expectedButtons = ['Nhỏ hơn', 'Tạm dừng', 'Dừng', 'Video tiếp theo', 'To hơn'];
+  record(
+    'MINI_PIP_WINDOW',
+    Boolean(pip) && expectedButtons.every((label, i) => pip.buttons[i] === label) && pip.text === '',
+    pip ? `buttons=${pip.buttons.length} text="${pip.text}"` : 'no PiP window opened',
+  );
+
+  if (pip) {
+    record('MINI_CONTROLLER_THEME', pip.bg === 'rgb(255, 255, 255)', `bg=${pip.bg}`);
+
+    // Manual palette override from the rail control.
+    await page.getByRole('button', { name: 'Tối', exact: true }).click();
+    await page.waitForTimeout(700);
+    const dark = await readPip();
+    await page.getByRole('button', { name: 'Tự động', exact: true }).click();
+    await page.waitForTimeout(700);
+    const back = await readPip();
+    record(
+      'MINI_PALETTE_OVERRIDE',
+      Boolean(dark) && dark.bg !== pip.bg && back?.bg === pip.bg,
+      `auto=${pip.bg} dark=${dark?.bg} back=${back?.bg}`,
+    );
+
+    // A click inside the floating window must reach the shared command bus.
+    const before = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.ok ? (await res.json()).session.status : null;
+    }, { api: API, token: OWNER_TOKEN });
+    await page.evaluate(() => {
+      window.documentPictureInPicture?.window?.document.querySelector('.pm-mini__btn.is-primary')?.click();
+    });
+    await page.waitForTimeout(2500);
+    const after = await page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.ok ? (await res.json()).session.status : null;
+    }, { api: API, token: OWNER_TOKEN });
+    record('MINI_COMMAND_WORKS', before !== after, `${before} → ${after}`);
+
+    // Volume: two extra buttons step the session volume by 10.
+    const readVolume = () => page.evaluate(async ({ api, token }) => {
+      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.ok ? (await res.json()).session.volume : null;
+    }, { api: API, token: OWNER_TOKEN });
+    const volBefore = await readVolume();
+    await page.evaluate(() => {
+      window.documentPictureInPicture?.window?.document.querySelector('.pm-mini__btn[aria-label="Nhỏ hơn"]')?.click();
+    });
+    await page.waitForTimeout(2000);
+    const volDown = await readVolume();
+    await page.evaluate(() => {
+      window.documentPictureInPicture?.window?.document.querySelector('.pm-mini__btn[aria-label="To hơn"]')?.click();
+    });
+    await page.waitForTimeout(2000);
+    const volUp = await readVolume();
+    record(
+      'MINI_VOLUME',
+      volDown === Math.max(0, volBefore - 10) && volUp === volDown + 10,
+      `${volBefore} → ${volDown} → ${volUp}`,
+    );
+
+    await page.screenshot({ path: path.join(SHOTS, 'owner-mini-bar.png'), fullPage: false });
+    await page.getByRole('button', { name: 'Đóng cửa sổ nhỏ', exact: true }).click();
+    await page.waitForTimeout(1200);
+    const stillOpen = await page.evaluate(() => Boolean(window.documentPictureInPicture?.window));
+    record('MINI_CLOSE', stillOpen === false, `window closed=${!stillOpen}`);
+  } else {
+    recordSkip('MINI_CONTROLLER_THEME', 'no PiP window');
+    recordSkip('MINI_PALETTE_OVERRIDE', 'no PiP window');
+    recordSkip('MINI_COMMAND_WORKS', 'no PiP window');
+    recordSkip('MINI_CLOSE', 'no PiP window');
+  }
+
   // ── In-app search (needs YOUTUBE_API_KEY on the server) ───────────────────
   const capabilities = await page.evaluate(async ({ api, token }) => {
     const res = await fetch(`${api}/api/private-media/status`, { headers: { Authorization: `Bearer ${token}` } });
@@ -150,16 +237,16 @@ async function run() {
     recordSkip('YOUTUBE_SEARCH', 'YOUTUBE_API_KEY not configured');
   }
 
-  // ── Discreet mode: names only, picture covered, audio unaffected ──────────
-  if (capabilities?.search) {
-    const thumbs = await page.locator('.pm-search .pm-result img').count();
-    const veil = await page.locator('.pm-stage__veil').count();
-    const veilText = veil ? (await page.locator('.pm-stage__veil').innerText()).replace(/\n/g, ' / ').slice(0, 70) : '';
-    record('DISCREET_MODE', thumbs === 0 && veil > 0, `thumbnails=${thumbs} veil=${veil} "${veilText}"`);
-    await page.screenshot({ path: path.join(SHOTS, 'owner-discreet-mode.png'), fullPage: false });
-  } else {
-    recordSkip('DISCREET_MODE', 'search unavailable, skipped');
-  }
+  // ── Names only: no thumbnails anywhere, and no visible player ─────────────
+  const thumbs = await page.locator('.pm-search .pm-result img').count();
+  const visiblePlayer = await page.locator('.pm-player, .pm-stage__veil').count();
+  const audioHost = await page.locator('.pm-audio-host iframe').count();
+  record(
+    'NAMES_ONLY_UI',
+    thumbs === 0 && visiblePlayer === 0 && audioHost === 1,
+    `thumbnails=${thumbs} visiblePlayer=${visiblePlayer} audioIframe=${audioHost}`,
+  );
+  await page.screenshot({ path: path.join(SHOTS, 'owner-discreet-mode.png'), fullPage: false });
 
   // ── Playback proof in a browser configured to permit autoplay ─────────────
   // Headless Chromium otherwise stalls in BUFFERING, which would prove nothing
@@ -197,55 +284,6 @@ async function run() {
     return { status: res.status, body: await res.json().catch(() => null) };
   }, { api: API, token: OWNER_TOKEN });
   record('OWNER_API_ACCESS', ownerApi.status === 200 && ownerApi.body?.isOwner === true, `status=${ownerApi.status}`);
-
-  // ── Mini controller matches the app surface ───────────────────────────────
-  // A black bar over the warm light theme reads as a foreign window; it must
-  // live in the same colour family as the page it was opened from.
-  await page.goto(`${BASE}/private/media`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2500);
-  await page.evaluate(() => { delete window.documentPictureInPicture; });
-  await page.getByRole('button', { name: 'Cửa sổ nhỏ luôn nổi' }).click();
-  await page.waitForTimeout(1500);
-  const miniTheme = await page.evaluate(() => {
-    const el = document.querySelector('.pm-mini');
-    if (!el) return null;
-    const parse = (value) => {
-      const hex = String(value || '').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-      if (hex) {
-        const body = hex[1].length === 3 ? hex[1].split('').map((c) => c + c).join('') : hex[1];
-        return [0, 2, 4].map((i) => parseInt(body.slice(i, i + 2), 16));
-      }
-      const rgb = String(value || '').match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
-      return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
-    };
-    const luminance = (rgb) => (rgb ? (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 : null);
-    const miniBg = window.getComputedStyle(el).backgroundColor;
-    const pageBg = window.getComputedStyle(document.documentElement).getPropertyValue('--background');
-    const a = luminance(parse(miniBg));
-    const b = luminance(parse(pageBg));
-    return { miniBg, pageBg: pageBg.trim(), miniLum: a, pageLum: b, sameFamily: a != null && b != null && (a > 0.5) === (b > 0.5) };
-  });
-  record(
-    'MINI_CONTROLLER_THEME',
-    Boolean(miniTheme?.sameFamily),
-    miniTheme ? `${miniTheme.miniBg} vs page ${miniTheme.pageBg}` : 'mini bar not found',
-  );
-  await page.screenshot({ path: path.join(SHOTS, 'owner-mini-bar.png'), fullPage: false });
-
-  // Manual palette override (the PiP window cannot read another tab's colour,
-  // so the owner must be able to force one).
-  const autoBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
-  await page.getByRole('button', { name: 'Tối', exact: true }).click();
-  await page.waitForTimeout(700);
-  const darkBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
-  await page.getByRole('button', { name: 'Tự động', exact: true }).click();
-  await page.waitForTimeout(700);
-  const backBg = await page.evaluate(() => window.getComputedStyle(document.querySelector('.pm-mini')).backgroundColor);
-  record(
-    'MINI_PALETTE_OVERRIDE',
-    darkBg !== autoBg && backBg === autoBg,
-    `auto=${autoBg} dark=${darkBg} back=${backBg}`,
-  );
 
   // ── Admin (no grant) ─────────────────────────────────────────────────────
   await seedSession(page, ADMIN_TOKEN, process.env.PM_QA_ADMIN_ID || '1');

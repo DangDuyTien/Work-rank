@@ -12,7 +12,7 @@
 Root owner bootstrap : tienddph50842@gmail.com → Work Rank user #10943 (role = user)
 Module               : /api/private-media/* + socket namespace /private-media + mac-helper
 Backend tests        : 27/27 PASS
-Browser QA           : 15/15 PASS
+Browser QA           : 18/18 PASS
 Migration            : applied on dev MySQL (forward, repeatable)
 Global F8            : UNVERIFIED  (OS-level key injection bị chặn quyền Accessibility)
 Telegram real bot    : BLOCKED_BY_CREDENTIAL (chưa có TELEGRAM_BOT_TOKEN)
@@ -323,45 +323,76 @@ Lưu ý thực tế: trên Mac để hàng phím mặc định là media key, `F
 
 ---
 
-## 9. MINI CONTROLLER (Picture-in-Picture)
+## 9. TRANG WEB: CHỈ TÌM, KHÔNG HIỆN VIDEO
 
-Cửa sổ nhỏ luôn nổi, **3 nút**: phát/tạm dừng · dừng · chuyển tiếp. Không cần ghép nối,
-không cần token thiết bị, không cần cài gì — bấm là có.
+Bản web **không còn khung xem video**. Trang chỉ có: ô tìm/dán link, danh sách kết quả
+(chỉ tên), cột phải (kết nối, màu cửa sổ nhỏ, Telegram, phím tắt, quyền, nhật ký).
 
-### Cách hoạt động
-
-| | |
+| Trước | Giờ |
 |---|---|
-| API | Document Picture-in-Picture (`window.documentPictureInPicture.requestWindow`) |
-| Nội dung | **chỉ 3 nút** — phát/tạm dừng · dừng · chuyển tiếp. Không tên video, không đồng hồ, không thanh tiến trình |
-| Kích thước | thanh **126 × 40** · cửa sổ PiP **132 × 44** |
-| Nút | phát/tạm dừng 36×26 · dừng 30×26 · chuyển tiếp 30×26 |
-| Màu | **tự khớp theme app** — đọc `--background` thật của trang rồi chọn palette sáng/tối (xem dưới) |
-| Cửa sổ | luôn nổi trên **mọi ứng dụng** (không chỉ tab trình duyệt) |
-| Render | `createPortal` vào `pipWindow.document.body` → **dùng chung React tree**, cùng state, cùng command bus |
-| Style | CSS tự chứa (PiP document không kế thừa stylesheet của app) |
-| Đóng | cửa sổ PiP: nút X của OS · thanh nổi trong trang: bấm lại nút ⧉ trên thanh điều khiển |
-| Fallback | API không có / bị chặn / promise treo > 1.5s → thanh nổi cố định góc phải dưới trong trang |
+| Khung 16:9 + tấm che + thanh điều khiển + âm lượng | **không có gì** — chỉ tên video trong danh sách |
+| Ảnh thumbnail trong kết quả | số thứ tự + tên + kênh · thời lượng |
 
-Lý do bỏ hết chữ: mỗi phần tử thêm vào đều làm thanh to hơn và dễ bị chú ý hơn, trong khi
-người dùng đã biết mình đang xem gì. Icon phát/tạm dừng vẫn lấy từ state thật của phiên nên
-không bao giờ hiển thị sai.
+### Vẫn phát tiếng bằng cách nào
 
-### Màu theo theme (không còn "hộp đen" lạc lõng)
+Iframe YouTube **vẫn mounted** trong `.pm-audio-host` — một khung 320×180 đặt **ngoài viewport**
+(`left: -10000px`), `pointer-events: none`, `aria-hidden`. Không dùng `display:none` /
+`visibility:hidden` / kích thước 0 vì những cách đó khiến Chrome **dừng phát**.
 
-Có **2 nguồn màu**, chọn ở thẻ "Màu cửa sổ nhỏ" trong cột phải:
+Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, và session
+`PLAYING t=20 → t=26` trong 5 giây khi iframe nằm ở `x = -9716`.
+
+---
+
+## 10. CỬA SỔ NHỎ (3 nút, luôn nổi)
+
+### Nội dung
+
+**5 nút, không chữ** — thanh 186×40, cửa sổ PiP 190×44:
+
+| Nút | Kích thước | Hành vi |
+|---|---|---|
+| loa nhỏ | 24×26 | `SET_VOLUME` −10 (dừng ở 0) |
+| phát / tạm dừng | 36×26 | `TOGGLE_PLAY_PAUSE` |
+| dừng | 30×26 | `STOP` |
+| chuyển tiếp | 30×26 | `NEXT` |
+| loa to | 24×26 | `SET_VOLUME` +10 (dừng ở 100) |
+
+Không tên video, không đồng hồ, không thanh tiến trình. Nút âm lượng tự disable khi đã ở
+0% / 100% để có phản hồi mà không cần hiện số.
+
+### Vì sao trước đây nó "chỉ hiện trong trang 3WIN, không sang tab khác"
+
+`requestWindow()` **bắt buộc phải gọi trong user gesture**. Bản cũ gọi nó trong `useEffect`
+(một nhịp sau cú click) → Chrome từ chối → code rơi về **thanh nổi trong trang**, mà thanh đó
+là một phần của trang nên đổi tab là mất.
+
+Đã sửa: `openMini()` gọi `requestWindow()` **ngay trong handler click** (trước mọi `await`),
+rồi truyền `window` xuống `MiniPlayer` qua prop `pipWindow`.
+
+```js
+const win = await window.documentPictureInPicture.requestWindow({ width: 132, height: 44 });
+setMiniWindow(win);
+```
+
+Khi mở được cửa sổ thật, nó là **cửa sổ OS** nên vẫn nổi khi bạn chuyển tab hoặc chuyển app —
+trên cả macOS và Windows (cùng một API `documentPictureInPicture`, Chrome/Edge 116+).
+
+### Fallback có thông báo
+
+Nếu trình duyệt không hỗ trợ hoặc bị chặn, trang hiện Notice nói rõ lý do và dùng thanh nổi
+trong trang (vẫn đủ 3 nút). Không im lặng nữa.
+
+### Màu
 
 | Lựa chọn | Ý nghĩa |
 |---|---|
-| **Tự động** (mặc định) | Cửa sổ PiP theo **giao diện sáng/tối của macOS** — đúng thứ thanh tab Chrome cũng theo. Thanh nổi trong trang thì theo theme của chính trang. |
-| **Sáng** | Luôn palette sáng |
-| **Tối** | Luôn palette tối |
+| **Tự động** (mặc định) | Cửa sổ PiP theo **giao diện sáng/tối của macOS** — đúng thứ thanh tab Chrome theo. Thanh trong trang thì theo theme của trang. |
+| **Sáng** / **Tối** | Cố định palette |
 
 Lưu ở `localStorage['workrank:private-media:mini-theme']`.
 
 ### Vì sao không "khớp màu tab Chrome đang mở" được
-
-Đây là giới hạn của trình duyệt, không phải của code. Bằng chứng đo được:
 
 ```text
 window.open('https://example.com') → đọc w.location.href
@@ -369,92 +400,18 @@ window.open('https://example.com') → đọc w.location.href
    from accessing a cross-origin frame
 ```
 
-* Mỗi tab là một **origin** riêng; JavaScript của WorkRank **không được phép** đọc DOM/màu của
-  `youtube.com`, `facebook.com`…
-* Chrome **không có API** trả về "màu nền của tab đang active" hay "màu thanh tab".
-* Cửa sổ PiP là **document con của trang WorkRank**, không phải của Chrome — nó không thấy tab khác.
+Mỗi tab là một origin riêng; Chrome cũng không có API trả về màu tab đang active. Nên giải pháp
+là **theo OS** + **cho chọn tay**.
 
-Nên giải pháp đúng là: **theo giao diện hệ điều hành** (thứ Chrome cũng theo) + **cho chọn tay**
-khi cần. Không có cách nào đọc màu trang khác.
-
-### Palette
-
-* `light`: nền `#ffffff`, chữ `#111`, nút `#f0eee9`, nút chính `#141414`, fill `#b45309`,
-  viền `rgba(0,0,0,0.10)`.
-* `dark`: nền `rgba(18,18,18,0.94)`, chữ trắng, fill `#f59e0b`.
-* Tự cập nhật khi: OS đổi `prefers-color-scheme`, hoặc `<html>` đổi `class`/`style`/`data-theme`
-  (MutationObserver). Cửa sổ PiP đang mở cũng được vá palette tại chỗ.
-
-Bằng chứng (browser QA):
+### Bằng chứng (browser QA, cửa sổ PiP thật)
 
 ```text
-MINI_CONTROLLER_THEME    rgb(255,255,255) vs page #f4f3ef      (cùng họ sáng)
-MINI_PALETTE_OVERRIDE    auto=rgb(255,255,255) dark=rgba(18,18,18,0.94) back=rgb(255,255,255)
-```
-
-Không có "kết nối" nào cả: mini window gọi đúng `POST /api/private-media/commands` như các
-nút trên trang, nên trạng thái luôn khớp giữa web, mini window và Telegram.
-
-### Đã verify (browser thật)
-
-```text
-chỉ 3 nút, không có text: ["Tạm dừng","Dừng","Video tiếp theo"]
-kích thước thanh: 126×40 · nút 36x26 / 30x26 / 30x26 · innerText = ""
-
-1 load   : PLAYING t=97
-2 pause  : PAUSED  t=99     ← dừng thật
-3 resume : PLAYING t=100    ← phát lại thật
-4 stop   : STOPPED t=0
-5 next   : video khác
-```
-
-Mạng: mỗi lần bấm phát ra đúng 1 `POST /api/private-media/commands` với `TOGGLE_PLAY_PAUSE`
-(không gửi trùng, không gửi rỗng).
-
-### Ba bug thật lộ ra khi test mini bar
-
-| Bug | Nguyên nhân | Sửa |
-|---|---|---|
-| Bấm pause nhưng video tự phát lại | Player ack bằng trạng thái **tức thời** (`getPlayerState()` vẫn là PLAYING vì `pauseVideo()` chưa kịp đổi) → backend ghi đè lệnh | Ack gửi **ý định** vừa áp dụng, không gửi trạng thái tức thời |
-| Tick 2s cũ bay tới sau lệnh, đảo lại trạng thái | Heartbeat gửi `status` cũ ngay trước khi lệnh tới server | Backend bỏ qua `status` trong **3s** sau lệnh trạng thái (`PROGRESS_QUIET_WINDOW`) |
-| Video chậm khởi động bị coi là "autoplay bị chặn" → bị pause oan | Probe 1.6s thấy `BUFFERING` + `t=0` liền kết luận bị chặn | Probe sớm **tha cho BUFFERING**; chỉ probe muộn (4.2s) mới kết luận |
-
-### Giới hạn đã biết
-
-Cửa sổ PiP là **cửa sổ OS thật**, nên trong môi trường headless của Playwright nó mở rồi đóng
-ngay và không chụp được. Vì vậy phần "cửa sổ nổi" được verify bằng **fallback bar** (cùng một
-component, cùng handler); trên Chrome/Edge desktop có cửa sổ thật thì `requestWindow` trả về
-window và portal render vào đó. Safari/Firefox chưa hỗ trợ API này → tự động dùng thanh nổi.
-
----
-
-## 10. DISCREET MODE (chỉ tên, vẫn có tiếng)
-
-Mặc định **bật**. Trang chỉ hiện tên video; hình ảnh bị che; âm thanh và tiến trình phát
-không đổi. Bấm nút 👁 trên thanh điều khiển (hoặc "Hiện video" trên tấm che) để xem lại.
-
-| Thành phần | Khi bật chế độ kín đáo |
-|---|---|
-| Kết quả tìm kiếm | **bỏ thumbnail**, chỉ còn số thứ tự + tên + kênh · thời lượng |
-| "Đã phát gần đây" | như trên |
-| Khung phát | tấm che màu nền app: `ĐANG PHÁT / TẠM DỪNG` + **tên video** + kênh + nút "Hiện video" |
-| Meta dưới khung | bỏ tên (đã có trên tấm che), chỉ giữ đồng hồ + thanh tiến trình |
-| Trạng thái lưu | `localStorage['workrank:private-media:discreet']` (`'0'` = tắt) |
-
-### Cách che mà không làm mất tiếng
-
-Iframe YouTube **vẫn mounted đúng kích thước 16:9**; tấm che chỉ là một lớp
-`position: absolute` phủ lên trên (`z-index: 2`). Không dùng `display:none`, `visibility:hidden`
-hay kích thước 0 — những cách đó khiến Chrome dừng phát. Nút "Kích hoạt trình phát" được đặt
-`z-index: 3` để vẫn bấm được khi autoplay bị chặn.
-
-Bằng chứng (browser QA, chế độ kín đáo đang bật):
-
-```text
-thumbnails=0   veil=1   "ĐANG PHÁT / Big Buck Bunny 60fps 4K - Official Blender Foundation"
-iframe vẫn mounted: 1
-session: PLAYING t=51 → t=55 (đồng hồ chạy tiếp = vẫn phát)
-bấm "Hiện video" → veil=0, thumbnails=1, vẫn PLAYING
+MINI_PIP_WINDOW        buttons=5 text=""
+MINI_CONTROLLER_THEME  bg=rgb(255,255,255)
+MINI_PALETTE_OVERRIDE  auto=white dark=rgba(18,18,18,.94) back=white
+MINI_COMMAND_WORKS     PLAYING → PAUSED      (bấm trong cửa sổ điều khiển được video)
+MINI_VOLUME            90 → 80 → 90          (hai nút âm lượng, bước 10%)
+MINI_CLOSE             window closed=true
 ```
 
 ---
@@ -500,11 +457,15 @@ PASS  TRANSPORT_RENDERED                controls=5
 PASS  SESSION_STATE_HONEST              status=LOADING t=19s
 PASS  AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED  browser allowed autoplay
 PASS  YOUTUBE_SEARCH                    results=12
-PASS  DISCREET_MODE                     thumbnails=0 veil=1
+PASS  NAMES_ONLY_UI                     thumbnails=0 visiblePlayer=0 audioIframe=1
 PASS  PLAYBACK_PROGRESS                 video=aqz-KE-bpKQ t=18.7s
 PASS  OWNER_API_ACCESS                  status=200
-PASS  MINI_CONTROLLER_THEME             rgb(255,255,255) vs page #f4f3ef
-PASS  MINI_PALETTE_OVERRIDE              auto=white dark=rgba(18,18,18,.94) back=white
+PASS  MINI_PIP_WINDOW                   buttons=5 text=""
+PASS  MINI_CONTROLLER_THEME             bg=rgb(255,255,255)
+PASS  MINI_PALETTE_OVERRIDE             auto=white dark=rgba(18,18,18,.94) back=white
+PASS  MINI_COMMAND_WORKS                PLAYING → PAUSED
+PASS  MINI_VOLUME                       90 → 80 → 90
+PASS  MINI_CLOSE                        window closed=true
 PASS  ADMIN_HIDDEN_IN_SIDEBAR           entries=0
 PASS  ADMIN_DIRECT_ROUTE_CONCEALED      notFound=1 leaked=0
 PASS  ADMIN_API_DENIED                  {"access":404,...,"grantPost":404}
@@ -521,8 +482,8 @@ Screenshots: `docs/audit/2026-10-27/shots/`
 | `owner-sidebar.png` | sidebar owner có nhóm "Riêng tư" |
 | `owner-private-media.png` | trang đầy đủ (search, player, rail) |
 | `owner-search-results.png` | search thật: 12 kết quả, title sạch, có thumbnail + thời lượng |
-| `owner-mini-bar.png` | cửa sổ nhỏ: đúng 3 nút, 126×40, góc phải dưới |
-| `owner-discreet-mode.png` | chế độ kín đáo: kết quả chỉ có tên, khung phát bị che |
+| `owner-mini-bar.png` | trang web không còn khung video, chỉ tên + nút mở cửa sổ nhỏ |
+| `owner-web-no-player.png` | trang web: chỉ ô tìm + danh sách tên, không có player |
 | `owner-web-keyless.png` | trạng thái dùng được **không cần key**: dán link + "Đã phát gần đây" |
 | `owner-player-playing.png` | video thật đang phát 0:11 / 10:35 |
 | `admin-sidebar.png` | sidebar admin **không** có mục nào |
@@ -697,8 +658,8 @@ TELEGRAM_BINDING:                    PASS
 TELEGRAM_AUTHZ:                      PASS
 TELEGRAM_REMOTE_CONTROL:             BLOCKED_BY_CREDENTIAL
 MAC_HELPER:                          PASS (tùy chọn — không bắt buộc)
-MINI_CONTROLLER:                     PASS (3 nút, 126×40, tự động + chọn tay)
-DISCREET_MODE:                       PASS (chỉ tên, giữ tiếng)
+MINI_CONTROLLER:                     PASS (cửa sổ PiP thật, 5 nút, 186×40)
+WEB_NAMES_ONLY:                      PASS (không khung video, vẫn phát tiếng)
 GLOBAL_F8_HOTKEY:                    UNVERIFIED (tùy chọn)
 DEVICE_AUTHZ:                        PASS
 REVOKE_PROPAGATION:                  PASS

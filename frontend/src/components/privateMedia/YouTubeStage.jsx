@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Eye, Loader2, MonitorPlay, Play } from 'lucide-react';
+import { Loader2, MonitorPlay, Play } from 'lucide-react';
 
 /**
  * PRIVATE MEDIA — YOUTUBE STAGE
@@ -68,7 +68,7 @@ function statusFromPlayerState(playerState) {
   }
 }
 
-export default function YouTubeStage({ session, socket, canControl, discreet = false, onReveal }) {
+export default function YouTubeStage({ session, socket, canControl }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const loadedVideoIdRef = useRef(null);
@@ -91,7 +91,6 @@ export default function YouTubeStage({ session, socket, canControl, discreet = f
 
   const video = session?.video || null;
   const desiredStatus = session?.status || 'IDLE';
-  const playing = desiredStatus === 'PLAYING';
 
   // The player instance is created once and outlives React renders, so its
   // event handlers must read the socket from a ref — a closure over the initial
@@ -119,7 +118,6 @@ export default function YouTubeStage({ session, socket, canControl, discreet = f
             status: 'PAUSED',
             currentTime: player.getCurrentTime?.() || 0,
             durationSeconds: player.getDuration?.() || null,
-            volume: player.getVolume?.(),
           },
         });
       }
@@ -154,7 +152,9 @@ export default function YouTubeStage({ session, socket, canControl, discreet = f
         status: statusOverride || statusFromPlayerState(player.getPlayerState()) || desiredStatus,
         currentTime: typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : 0,
         durationSeconds: typeof player.getDuration === 'function' ? player.getDuration() : null,
-        volume: typeof player.getVolume === 'function' ? player.getVolume() : undefined,
+        // Volume is NOT echoed back: the player applies `setVolume()` on its next
+        // tick, so reporting the instantaneous value here would undo the command
+        // that just changed it (same race as the pause ack).
       },
     });
   }, [socket, desiredStatus]);
@@ -417,27 +417,7 @@ export default function YouTubeStage({ session, socket, canControl, discreet = f
   return (
     <div className="pm-stage">
       <div className="pm-stage__frame">
-        {/* The iframe stays mounted at full size so playback and audio continue
-            normally; only the picture is covered by this panel. */}
         <div ref={containerRef} className="pm-stage__canvas" />
-
-        {discreet && video && (
-          <div className="pm-stage__veil">
-            <span className="pm-stage__veil-kicker">
-              {playing ? 'Đang phát' : desiredStatus === 'PAUSED' ? 'Tạm dừng' : 'Đang mở'}
-            </span>
-            <strong className="pm-stage__veil-title" title={video.title || ''}>
-              {video.title || video.videoId}
-            </strong>
-            {video.channelTitle && <span className="pm-stage__veil-channel">{video.channelTitle}</span>}
-            {onReveal && (
-              <button type="button" className="pm-stage__veil-btn" onClick={onReveal}>
-                <Eye size={13} aria-hidden="true" />
-                Hiện video
-              </button>
-            )}
-          </div>
-        )}
 
         {!video && (
           <div className="pm-stage__placeholder">
@@ -476,15 +456,11 @@ export default function YouTubeStage({ session, socket, canControl, discreet = f
 
       {video && (
         <div className="pm-stage__meta">
-          {/* In discreet mode the veil already shows the name, so repeating it
-              here would only add noise. The clock stays useful either way. */}
-          {!discreet && (
-            <div className="pm-stage__meta-copy">
-              <strong>{video.title || video.videoId}</strong>
-              {video.channelTitle && <span>{video.channelTitle}</span>}
-            </div>
-          )}
-          <span className="pm-stage__time" style={discreet ? { marginLeft: 'auto' } : undefined}>
+          <div className="pm-stage__meta-copy">
+            <strong>{video.title || video.videoId}</strong>
+            {video.channelTitle && <span>{video.channelTitle}</span>}
+          </div>
+          <span className="pm-stage__time">
             {formatTime(session?.currentTime || localTime)}
             {duration > 0 ? ` / ${formatTime(duration)}` : ''}
           </span>
