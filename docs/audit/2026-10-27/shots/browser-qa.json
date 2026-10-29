@@ -20,7 +20,7 @@
     {
       "name": "SESSION_STATE_HONEST",
       "pass": true,
-      "detail": "status=PLAYING t=190s"
+      "detail": "status=PLAYING t=329s"
     },
     {
       "name": "AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED",
@@ -28,9 +28,19 @@
       "detail": "browser allowed autoplay"
     },
     {
+      "name": "INLINE_CONTROLS",
+      "pass": true,
+      "detail": "buttons=5 enabled=5 [Nhỏ hơn, Tạm dừng, Dừng, Video tiếp theo, To hơn]"
+    },
+    {
+      "name": "INLINE_COMMAND_WORKS",
+      "pass": true,
+      "detail": "PLAYING → PAUSED"
+    },
+    {
       "name": "MINI_PIP_WINDOW",
       "pass": true,
-      "detail": "buttons=5 text=\"\""
+      "detail": "buttons=5 text=\"\" fits=true overflow=false"
     },
     {
       "name": "MINI_CONTROLLER_THEME",
@@ -45,7 +55,7 @@
     {
       "name": "MINI_COMMAND_WORKS",
       "pass": true,
-      "detail": "PLAYING → PAUSED"
+      "detail": "PAUSED → PLAYING"
     },
     {
       "name": "MINI_VOLUME",
@@ -70,7 +80,12 @@
     {
       "name": "PLAYBACK_PROGRESS",
       "pass": true,
-      "detail": "video=aqz-KE-bpKQ t=211.48225791226196s status=PLAYING"
+      "detail": "video=aqz-KE-bpKQ t=9.442112917984009s status=PLAYING"
+    },
+    {
+      "name": "SEEK_WORKS",
+      "pass": true,
+      "detail": "target≈349s got=350s → +2.5s 354s"
     },
     {
       "name": "OWNER_API_ACCESS",

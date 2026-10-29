@@ -127,6 +127,42 @@ async function run() {
     record('YOUTUBE_PLAYER_EMBEDDED', false, 'search input not found');
   }
 
+  // ── Controls on the page itself ───────────────────────────────────────────
+  // The floating window is an extra, never the only way to pause or change
+  // volume: the page must always render the same five buttons.
+  const readStatus = () => page.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.ok ? (await res.json()).session.status : null;
+  }, { api: API, token: OWNER_TOKEN });
+
+  const inlineBar = await page.evaluate(() => {
+    const bar = document.querySelector('.pm-inline-bar');
+    if (!bar) return null;
+    const btns = Array.from(bar.querySelectorAll('.pm-mini__btn'));
+    return {
+      count: btns.length,
+      visible: bar.getBoundingClientRect().height > 0,
+      enabled: btns.filter((b) => !b.disabled).length,
+      labels: btns.map((b) => b.getAttribute('aria-label')),
+    };
+  });
+  record(
+    'INLINE_CONTROLS',
+    Boolean(inlineBar) && inlineBar.visible && inlineBar.count === 5 && inlineBar.enabled === 5,
+    inlineBar ? `buttons=${inlineBar.count} enabled=${inlineBar.enabled} [${inlineBar.labels.join(', ')}]` : 'inline bar missing',
+  );
+
+  if (inlineBar?.count === 5) {
+    const beforeInline = await readStatus();
+    await page.locator('.pm-inline .pm-mini__btn.is-primary').click();
+    await page.waitForTimeout(2500);
+    const afterInline = await readStatus();
+    record('INLINE_COMMAND_WORKS', beforeInline !== afterInline, `${beforeInline} → ${afterInline}`);
+    await page.screenshot({ path: path.join(SHOTS, 'owner-inline-controls.png'), fullPage: false });
+  } else {
+    recordSkip('INLINE_COMMAND_WORKS', 'inline bar missing');
+  }
+
   // ── Floating controller (real Document PiP window) ────────────────────────
   await page.locator('.ui-page-actions button').first().waitFor({ state: 'visible', timeout: 15000 });
   await page.getByRole('button', { name: 'Cửa sổ nhỏ', exact: true }).click();
@@ -144,11 +180,44 @@ async function run() {
   });
 
   const pip = await readPip();
-  const expectedButtons = ['Nhỏ hơn', 'Tạm dừng', 'Dừng', 'Video tiếp theo', 'To hơn'];
+  // The primary button label follows the real session status (Phát / Tạm dừng),
+  // so only its position is fixed — the rest are stable.
+  const expectedButtons = ['Nhỏ hơn', 'Dừng', 'Video tiếp theo', 'To hơn'];
+  const primaryIsPlayState = (label) => label === 'Phát' || label === 'Tạm dừng';
+  const pipLabelsOk = Boolean(pip)
+    && pip.buttons.length === 5
+    && primaryIsPlayState(pip.buttons[1])
+    && expectedButtons.every((label, i) => pip.buttons[i === 0 ? 0 : i + 1] === label);
+
+  // The window must be big enough for its content. Requesting less than the
+  // content width clips the outer buttons — that is exactly how the controller
+  // once shipped "with no buttons" on Windows.
+  const pipFit = await page.evaluate(() => {
+    const win = window.documentPictureInPicture?.window;
+    const el = win?.document.querySelector('.pm-mini');
+    if (!el) return null;
+    const btns = Array.from(el.querySelectorAll('.pm-mini__btn'));
+    const bar = el.getBoundingClientRect();
+    const last = btns[btns.length - 1].getBoundingClientRect();
+    return {
+      overflow: el.scrollWidth > el.clientWidth,
+      lastRight: Math.round(last.right),
+      width: Math.round(bar.width),
+      fits: last.right <= bar.right + 0.5,
+    };
+  });
+
   record(
     'MINI_PIP_WINDOW',
-    Boolean(pip) && expectedButtons.every((label, i) => pip.buttons[i] === label) && pip.text === '',
-    pip ? `buttons=${pip.buttons.length} text="${pip.text}"` : 'no PiP window opened',
+    Boolean(pip)
+      && pipLabelsOk
+      && pip.text === ''
+      && Boolean(pipFit)
+      && pipFit.fits
+      && !pipFit.overflow,
+    pip
+      ? `buttons=${pip.buttons.length} text="${pip.text}" fits=${pipFit?.fits} overflow=${pipFit?.overflow}`
+      : 'no PiP window opened',
   );
 
   if (pip) {
@@ -276,6 +345,41 @@ async function run() {
     `video=${playback?.video?.videoId || 'none'} t=${playback?.currentTime || 0}s status=${playback?.status}`,
   );
   await playPage.screenshot({ path: path.join(SHOTS, 'owner-player-playing.png'), fullPage: true });
+
+  // ── Seek (scrub bar on the page) ──────────────────────────────────────────
+  // The scrub must move the real playhead and must NOT be rewound by the
+  // heartbeat that was already in flight when the command landed.
+  const readPlay = () => playPage.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return null;
+    const s = (await res.json()).session;
+    return { t: Math.round(Number(s.currentTime) || 0), status: s.status, dur: Number(s.durationSeconds || s.video?.durationSeconds || 0) };
+  }, { api: API, token: OWNER_TOKEN });
+
+  const seekBar = playPage.locator('.pm-seek__range');
+  if (await seekBar.count()) {
+    const before = await readPlay();
+    const box = await seekBar.boundingBox();
+    await playPage.mouse.move(box.x + box.width * 0.1, box.y + box.height / 2);
+    await playPage.mouse.down();
+    await playPage.mouse.move(box.x + box.width * 0.55, box.y + box.height / 2, { steps: 10 });
+    await playPage.mouse.up();
+    await playPage.waitForTimeout(2500);
+    const after = await readPlay();
+    await playPage.waitForTimeout(2500);
+    const later = await readPlay();
+
+    const target = Math.round((before?.dur || 0) * 0.55);
+    record(
+      'SEEK_WORKS',
+      Boolean(after) && target > 0 && Math.abs(after.t - target) < 30 && later.t >= after.t,
+      `target≈${target}s got=${after?.t}s → +2.5s ${later?.t}s`,
+    );
+    await playPage.screenshot({ path: path.join(SHOTS, 'owner-seek-bar.png'), fullPage: false });
+  } else {
+    recordSkip('SEEK_WORKS', 'seek bar missing');
+  }
+
   await playBrowser.close();
 
   // Owner API surface answers with entitlement.

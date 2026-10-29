@@ -32,7 +32,8 @@ import {
   Skeleton,
 } from '../components/ui';
 import YouTubeStage, { formatTime } from '../components/privateMedia/YouTubeStage';
-import MiniPlayer from '../components/privateMedia/MiniPlayer';
+import MiniPlayer, { MediaControls, PIP_WIDTH, PIP_HEIGHT } from '../components/privateMedia/MiniPlayer';
+import SeekBar from '../components/privateMedia/SeekBar';
 import { privateMediaApi, codeFrom, messageFrom } from '../services/privateMediaApi';
 import { usePrivateMediaAccess, invalidatePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 import { useAuth } from '../context/AuthContext';
@@ -105,6 +106,9 @@ export default function PrivateMedia() {
   const [miniOpen, setMiniOpen] = useState(false);
   const [miniWindow, setMiniWindow] = useState(null);
   const [miniNote, setMiniNote] = useState(null);
+  // Bumped on every scrub so the hidden player jumps immediately instead of
+  // waiting for the command round-trip (and possibly a stale heartbeat).
+  const [seekSignal, setSeekSignal] = useState(null);
 
   // The mini window cannot read the colour of other tabs (cross-origin), so the
   // owner picks a palette once and it is remembered.
@@ -122,42 +126,70 @@ export default function PrivateMedia() {
     try { localStorage.setItem(MINI_THEME_KEY, value); } catch { /* private mode */ }
   }, []);
 
+  const miniWindowRef = useRef(null);
+
+  const closeMini = useCallback(() => {
+    setMiniOpen(false);
+    const win = miniWindowRef.current;
+    miniWindowRef.current = null;
+    setMiniWindow(null);
+    try { win?.close(); } catch { /* already closed */ }
+  }, []);
+
   /**
    * Open the floating controller.
    *
-   * `requestWindow()` MUST run synchronously inside the click handler: Chrome
-   * requires transient user activation, and calling it from a useEffect (one
-   * tick later) makes it reject — which is why the window previously fell back
-   * to an in-page bar and "would not follow to other tabs".
+   * `requestWindow()` MUST run synchronously inside the click handler: the API
+   * requires transient user activation, and awaiting anything first makes it
+   * reject — that is why the window previously fell back to an in-page bar and
+   * "would not follow to other tabs".
+   *
+   * The window is requested at exactly the size the controls need. Requesting
+   * less than the content width clips the last buttons, which is what made the
+   * controller look like it had "no buttons" on Windows.
    */
   const openMini = useCallback(async () => {
     setMiniNote(null);
 
     if (miniOpen) {
-      setMiniOpen(false);
-      try { miniWindow?.close(); } catch { /* already closed */ }
-      setMiniWindow(null);
+      closeMini();
       return;
     }
 
-    setMiniOpen(true);
+    if (typeof window === 'undefined' || !window.isSecureContext) {
+      setMiniNote('Cửa sổ nổi cần HTTPS hoặc localhost. Trang đang chạy qua HTTP nên chỉ dùng thanh điều khiển trong trang (vẫn đủ 5 nút).');
+      return;
+    }
 
-    if (typeof window === 'undefined' || !('documentPictureInPicture' in window)) {
-      setMiniNote('Trình duyệt này không hỗ trợ cửa sổ nổi (cần Chrome/Edge 116+). Đang dùng thanh nổi trong trang.');
+    if (!('documentPictureInPicture' in window)) {
+      setMiniNote('Trình duyệt này không hỗ trợ cửa sổ nổi (cần Chrome/Edge 116+). Dùng thanh điều khiển trong trang — vẫn đủ 5 nút.');
       return;
     }
 
     try {
       const win = await window.documentPictureInPicture.requestWindow({
-        width: 132,
-        height: 44,
+        width: PIP_WIDTH,
+        height: PIP_HEIGHT,
         disallowReturnToOpener: false,
       });
+      miniWindowRef.current = win;
+      // Chrome does not always honour the requested size (it may reuse the last
+      // remembered geometry). Resize explicitly so the 5 buttons are never cut.
+      try { win.resizeTo(PIP_WIDTH, PIP_HEIGHT); } catch { /* not supported */ }
       setMiniWindow(win);
+      setMiniOpen(true);
     } catch (error) {
-      setMiniNote(`Không mở được cửa sổ nổi (${error?.name || 'lỗi'}). Đang dùng thanh nổi trong trang.`);
+      setMiniNote(`Không mở được cửa sổ nổi (${error?.name || 'lỗi'}). Dùng thanh điều khiển trong trang.`);
     }
-  }, [miniOpen, miniWindow]);
+  }, [miniOpen, closeMini]);
+
+  // Leaving the page stops the audio host, so a floating controller would only
+  // show dead buttons — close it with the page.
+  useEffect(() => () => {
+    const win = miniWindowRef.current;
+    miniWindowRef.current = null;
+    try { win?.close(); } catch { /* already closed */ }
+  }, []);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -696,6 +728,33 @@ export default function PrivateMedia() {
             )}
           </Card>
 
+          {/* Controls are always available on the page itself — the floating
+              window is an extra, never the only way to pause or change volume. */}
+          <div className="pm-inline-bar">
+            <SeekBar
+              currentTime={session?.currentTime || 0}
+              duration={session?.durationSeconds || session?.video?.durationSeconds || 0}
+              canControl={access.permissions.control}
+              onSeek={(position) => {
+                setSeekSignal({ position, at: Date.now() });
+                sendCommand('SEEK', { position }, { track: false });
+              }}
+            />
+            <div className="pm-inline-bar__row">
+              <MediaControls
+                variant="inline"
+                session={session}
+                canControl={access.permissions.control}
+                onCommand={(action, payload) => sendCommand(action, payload)}
+              />
+              <span className="pm-inline-bar__state">
+                {session?.video
+                  ? (session.status === 'PLAYING' ? 'Đang phát' : session.status === 'PAUSED' ? 'Tạm dừng' : 'Đã dừng')
+                  : 'Chưa có video'}
+              </span>
+            </div>
+          </div>
+
           {/* The player stays mounted but out of view: audio keeps playing
               while nothing about the video is shown on the page. */}
           <div className="pm-audio-host" aria-hidden="true">
@@ -703,6 +762,7 @@ export default function PrivateMedia() {
               session={session}
               socket={socket}
               canControl={access.permissions.control}
+              seekSignal={seekSignal}
             />
           </div>
         </div>
@@ -979,7 +1039,7 @@ export default function PrivateMedia() {
       <MiniPlayer
         open={miniOpen}
         pipWindow={miniWindow}
-        onClose={() => setMiniOpen(false)}
+        onClose={closeMini}
         session={session}
         canControl={access.permissions.control}
         onCommand={(action, payload) => sendCommand(action, payload)}

@@ -364,6 +364,39 @@ test('PROGRESS_QUIET_WINDOW — a stale player tick cannot undo a fresh command'
   assert.equal(settled.status, 'PAUSED');
 });
 
+test('PROGRESS_AFTER_SEEK — a stale tick cannot rewind the playhead', async () => {
+  await sessionService.issueCommand({
+    commandId: 'seek-load-1',
+    action: 'LOAD_VIDEO',
+    source: 'WEB',
+    actorUserId: users.owner.id,
+    payload: { videoId: 'aqz-KE-bpKQ', title: 'Big Buck Bunny', durationSeconds: 635 },
+  });
+
+  const seek = await sessionService.issueCommand({
+    commandId: 'seek-1',
+    action: 'SEEK',
+    source: 'WEB',
+    actorUserId: users.owner.id,
+    payload: { position: 318 },
+  });
+  assert.equal(Math.round(seek.state.currentTime), 318);
+
+  // The tick that was already in flight still carries the pre-seek position.
+  // Writing it back would make the session (and therefore the player) jump
+  // backwards to where the video was before the scrub.
+  const stale = await sessionService.syncPlayerProgress({ currentTime: 12, status: 'PLAYING' });
+  assert.equal(Math.round(stale.currentTime), 318, 'a stale tick must not rewind the playhead');
+
+  // Once the quiet window has passed, real progress is accepted again.
+  await sequelize.query(
+    'UPDATE private_media_commands SET created_at = :ts WHERE command_id = :id',
+    { replacements: { ts: new Date(Date.now() - 10_000), id: 'seek-1' } },
+  );
+  const settled = await sessionService.syncPlayerProgress({ currentTime: 322, status: 'PLAYING' });
+  assert.equal(Math.round(settled.currentTime), 322);
+});
+
 // ───────────────────────────────────────────────────────────────────────────
 // 5. Device (Mac helper) authorization
 // ───────────────────────────────────────────────────────────────────────────

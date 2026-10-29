@@ -11,14 +11,15 @@
 ```text
 Root owner bootstrap : tienddph50842@gmail.com → Work Rank user #10943 (role = user)
 Module               : /api/private-media/* + socket namespace /private-media + mac-helper
-Backend tests        : 27/27 PASS
-Browser QA           : 18/18 PASS
+Backend tests        : 28/28 PASS
+Browser QA           : 21/21 PASS
 Migration            : applied on dev MySQL (forward, repeatable)
 Global F8            : UNVERIFIED  (OS-level key injection bị chặn quyền Accessibility)
 Telegram real bot    : BLOCKED_BY_CREDENTIAL (chưa có TELEGRAM_BOT_TOKEN)
 YouTube search       : PASS (key đã gắn, search thật trả kết quả)
 YouTube player       : PASS (video thật, currentTime > 0)
-Mini controller      : PASS (cửa sổ nhỏ 3 nút, không cần ghép nối)
+Mini controller      : PASS (5 nút: volume −/+, play/pause, stop, next —
+                       hiện cả trên trang lẫn cửa sổ nổi 196×52)
 ```
 
 Điểm quan trọng nhất — **admin không phải owner** — được chứng minh ở 3 tầng độc lập:
@@ -323,15 +324,60 @@ Lưu ý thực tế: trên Mac để hàng phím mặc định là media key, `F
 
 ---
 
-## 9. TRANG WEB: CHỈ TÌM, KHÔNG HIỆN VIDEO
+## 9. TRANG WEB: TÌM + 5 NÚT, KHÔNG HIỆN VIDEO
 
-Bản web **không còn khung xem video**. Trang chỉ có: ô tìm/dán link, danh sách kết quả
-(chỉ tên), cột phải (kết nối, màu cửa sổ nhỏ, Telegram, phím tắt, quyền, nhật ký).
+Bản web **không có khung xem video**. Trang gồm: ô tìm/dán link, danh sách kết quả (chỉ tên),
+**thanh điều khiển 5 nút ngay dưới ô tìm**, và cột phải (kết nối, màu cửa sổ nhỏ, Telegram,
+phím tắt, quyền, nhật ký).
 
 | Trước | Giờ |
 |---|---|
-| Khung 16:9 + tấm che + thanh điều khiển + âm lượng | **không có gì** — chỉ tên video trong danh sách |
+| Khung 16:9 + thanh điều khiển nằm trong khung | **không khung**; thanh điều khiển **luôn hiện trên trang** |
 | Ảnh thumbnail trong kết quả | số thứ tự + tên + kênh · thời lượng |
+
+### Thanh điều khiển trên trang (luôn có)
+
+Đây là điểm quan trọng: **cửa sổ nổi chỉ là phần thêm, không phải cách duy nhất**. Thanh này
+render ngay trong trang, dùng chung component `MediaControls` với cửa sổ nổi nên cùng state,
+cùng command bus.
+
+| Nút | Kích thước | Lệnh |
+|---|---|---|
+| loa nhỏ | 28×30 | `SET_VOLUME` −10 |
+| phát / tạm dừng | 40×30 | `TOGGLE_PLAY_PAUSE` |
+| dừng | 34×30 | `STOP` |
+| chuyển tiếp | 34×30 | `NEXT` |
+| loa to | 28×30 | `SET_VOLUME` +10 |
+
+Bên phải thanh có nhãn trạng thái nhỏ (`Đang phát` / `Tạm dừng` / `Đã dừng` / `Chưa có video`).
+
+### Thanh tua (chỉ trên trang — cửa sổ nổi giữ nguyên 5 nút)
+
+Phía trên 5 nút là một thanh tua nhỏ: `thời gian hiện tại — [slider] — tổng thời lượng`.
+
+* Kéo thả → gửi **một** lệnh `SEEK` khi nhả tay (không bắn lệnh mỗi pixel).
+* Trong lúc kéo, thumb bám ngón tay chứ không bám đồng hồ server (heartbeat 2s sẽ giật lại).
+* Bàn phím (←/→) commit ngay từng bước.
+* Không có video / không có quyền → thanh mờ, không bấm được.
+
+Bằng chứng: `INLINE_CONTROLS — buttons=5 enabled=5`, `INLINE_COMMAND_WORKS — PLAYING → PAUSED`,
+`SEEK_WORKS — target≈349s got=350s → +2.5s 354s`.
+
+### Bug tua đã phát hiện và sửa
+
+Lần đầu thử, tua 318s xong video **nhảy về 13s**. Nguyên nhân là một race giữa heartbeat và lệnh:
+
+1. Player gửi tick 2 giây một lần, mang vị trí **cũ** (13s).
+2. Lệnh `SEEK` đặt `currentTime = 318`.
+3. Tick đang bay tới sau đó ghi đè `currentTime` về 13 → server lùi.
+4. Client thấy server lùi → gọi `seekTo(13)` → video thật sự nhảy về.
+
+Sửa ở **hai phía**:
+
+* **Backend**: `syncPlayerProgress` bỏ qua `currentTime` trong 3 giây sau một lệnh `SEEK`
+  (trước đây chỉ status được gate). Test `PROGRESS_AFTER_SEEK` khoá lại.
+* **Frontend**: thanh tua phát tín hiệu seek trực tiếp xuống player (không chờ round-trip), và
+  reconciliation bỏ qua giá trị server nằm xa đích vừa seek trong 2.5 giây (đó là echo cũ).
 
 ### Vẫn phát tiếng bằng cách nào
 
@@ -344,11 +390,11 @@ Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, 
 
 ---
 
-## 10. CỬA SỔ NHỎ (3 nút, luôn nổi)
+## 10. CỬA SỔ NHỎ (5 nút, luôn nổi)
 
 ### Nội dung
 
-**5 nút, không chữ** — thanh 186×40, cửa sổ PiP 190×44:
+**5 nút, không chữ** — thanh 184×38, cửa sổ xin **196×52**:
 
 | Nút | Kích thước | Hành vi |
 |---|---|---|
@@ -361,6 +407,31 @@ Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, 
 Không tên video, không đồng hồ, không thanh tiến trình. Nút âm lượng tự disable khi đã ở
 0% / 100% để có phản hồi mà không cần hiện số.
 
+### Vì sao bản Windows "không thấy nút nào"
+
+Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
+
+1. **Xin cửa sổ nhỏ hơn nội dung.** `requestWindow({ width: 132 })` trong khi 5 nút cần **184px**.
+   Thanh dùng `justify-content: center` + `overflow: hidden` → Chrome cắt **đều hai bên**, mất nút
+   đầu và nút cuối; cửa sổ trông như một hộp trắng rỗng, và vì quá nhỏ nên gần như không thấy.
+2. **Chrome không phải lúc nào cũng tôn trọng kích thước yêu cầu** — nó có thể dùng lại geometry
+   đã nhớ của cửa sổ PiP lần trước, càng hẹp hơn.
+
+Đã sửa:
+
+* `PIP_WIDTH = 196`, `PIP_HEIGHT = 52` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
+* Gọi thêm `win.resizeTo(PIP_WIDTH, PIP_HEIGHT)` sau khi mở, phòng khi Chrome bỏ qua tham số.
+* CSS thanh: `width: 100%; height: 100%; overflow: hidden`, và `html, body { height: 100% }` được
+  set **trực tiếp trên document của cửa sổ** (không đặt trong stylesheet dùng chung, tránh rò sang trang).
+* QA mới kiểm tra `fits` và `overflow`: fail nếu mép phải của nút cuối vượt khỏi khung.
+
+Kiểm chứng bằng cách replay chính document của cửa sổ ở đúng 196×52:
+
+```text
+viewport 194×50 · bar 194×50 · 5 nút · nút đầu x=13 · nút cuối kết thúc x=181
+scrollWidth 192 = clientWidth 192 → không cắt
+```
+
 ### Vì sao trước đây nó "chỉ hiện trong trang 3WIN, không sang tab khác"
 
 `requestWindow()` **bắt buộc phải gọi trong user gesture**. Bản cũ gọi nó trong `useEffect`
@@ -371,23 +442,34 @@ là một phần của trang nên đổi tab là mất.
 rồi truyền `window` xuống `MiniPlayer` qua prop `pipWindow`.
 
 ```js
-const win = await window.documentPictureInPicture.requestWindow({ width: 132, height: 44 });
-setMiniWindow(win);
+const win = await window.documentPictureInPicture.requestWindow({ width: PIP_WIDTH, height: PIP_HEIGHT });
 ```
 
-Khi mở được cửa sổ thật, nó là **cửa sổ OS** nên vẫn nổi khi bạn chuyển tab hoặc chuyển app —
+Khi mở được cửa sổ thật, nó là **cửa sổ OS** nên vẫn nổi khi chuyển tab hoặc chuyển app —
 trên cả macOS và Windows (cùng một API `documentPictureInPicture`, Chrome/Edge 116+).
+
+### Đóng cửa sổ — ba đường, đều đồng bộ state
+
+| Cách | Hành vi |
+|---|---|
+| Nút **"Đóng cửa sổ nhỏ"** trên header | đóng cửa sổ + reset state |
+| Nút **×** của OS | `MiniPlayer` poll `pipWindow.closed` mỗi 500ms → nhãn tự về "Cửa sổ nhỏ" |
+| Rời khỏi trang | đóng luôn (audio host unmount nên nút sẽ chết) |
+
+Poll `closed` thay vì chỉ dựa vào `pagehide`: sự kiện đó không bắn nhất quán cho document PiP
+trên Windows.
 
 ### Fallback có thông báo
 
-Nếu trình duyệt không hỗ trợ hoặc bị chặn, trang hiện Notice nói rõ lý do và dùng thanh nổi
-trong trang (vẫn đủ 3 nút). Không im lặng nữa.
+Nếu thiếu **secure context** (mở qua `http://192.168.x.x`) hoặc trình duyệt không hỗ trợ
+(Safari/Firefox/Chrome < 116), trang hiện Notice nói rõ **lý do cụ thể** và thanh 5 nút trong
+trang vẫn dùng bình thường. Không im lặng, không giả vờ đã mở.
 
 ### Màu
 
 | Lựa chọn | Ý nghĩa |
 |---|---|
-| **Tự động** (mặc định) | Cửa sổ PiP theo **giao diện sáng/tối của macOS** — đúng thứ thanh tab Chrome theo. Thanh trong trang thì theo theme của trang. |
+| **Tự động** (mặc định) | Cửa sổ PiP theo **giao diện sáng/tối của máy** — đúng thứ thanh tab Chrome theo. Thanh trong trang thì theo theme của trang. |
 | **Sáng** / **Tối** | Cố định palette |
 
 Lưu ở `localStorage['workrank:private-media:mini-theme']`.
@@ -406,10 +488,10 @@ là **theo OS** + **cho chọn tay**.
 ### Bằng chứng (browser QA, cửa sổ PiP thật)
 
 ```text
-MINI_PIP_WINDOW        buttons=5 text=""
+MINI_PIP_WINDOW        buttons=5 text="" fits=true overflow=false
 MINI_CONTROLLER_THEME  bg=rgb(255,255,255)
 MINI_PALETTE_OVERRIDE  auto=white dark=rgba(18,18,18,.94) back=white
-MINI_COMMAND_WORKS     PLAYING → PAUSED      (bấm trong cửa sổ điều khiển được video)
+MINI_COMMAND_WORKS     PAUSED → PLAYING      (bấm trong cửa sổ điều khiển được video)
 MINI_VOLUME            90 → 80 → 90          (hai nút âm lượng, bước 10%)
 MINI_CLOSE             window closed=true
 ```
@@ -453,19 +535,21 @@ Script: `frontend/scripts/private-media-browser-qa.mjs` (Playwright, chạy trê
 PASS  OWNER_SEES_NAV                    entries=1
 PASS  OWNER_OPENS_PAGE                  h1=1
 PASS  YOUTUBE_PLAYER_EMBEDDED           iframes=1
-PASS  TRANSPORT_RENDERED                controls=5
-PASS  SESSION_STATE_HONEST              status=LOADING t=19s
+PASS  SESSION_STATE_HONEST              status=PLAYING t=8s
 PASS  AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED  browser allowed autoplay
-PASS  YOUTUBE_SEARCH                    results=12
-PASS  NAMES_ONLY_UI                     thumbnails=0 visiblePlayer=0 audioIframe=1
-PASS  PLAYBACK_PROGRESS                 video=aqz-KE-bpKQ t=18.7s
-PASS  OWNER_API_ACCESS                  status=200
-PASS  MINI_PIP_WINDOW                   buttons=5 text=""
+PASS  INLINE_CONTROLS                   buttons=5 enabled=5 [Nhỏ hơn, Tạm dừng, Dừng, Video tiếp theo, To hơn]
+PASS  INLINE_COMMAND_WORKS              PLAYING → PAUSED
+PASS  MINI_PIP_WINDOW                   buttons=5 text="" fits=true overflow=false
 PASS  MINI_CONTROLLER_THEME             bg=rgb(255,255,255)
 PASS  MINI_PALETTE_OVERRIDE             auto=white dark=rgba(18,18,18,.94) back=white
-PASS  MINI_COMMAND_WORKS                PLAYING → PAUSED
+PASS  MINI_COMMAND_WORKS                PAUSED → PLAYING
 PASS  MINI_VOLUME                       90 → 80 → 90
 PASS  MINI_CLOSE                        window closed=true
+PASS  YOUTUBE_SEARCH                    results=12
+PASS  NAMES_ONLY_UI                     thumbnails=0 visiblePlayer=0 audioIframe=1
+PASS  PLAYBACK_PROGRESS                 video=aqz-KE-bpKQ t=30.4s
+PASS  SEEK_WORKS                        target≈349s got=350s → +2.5s 354s
+PASS  OWNER_API_ACCESS                  status=200
 PASS  ADMIN_HIDDEN_IN_SIDEBAR           entries=0
 PASS  ADMIN_DIRECT_ROUTE_CONCEALED      notFound=1 leaked=0
 PASS  ADMIN_API_DENIED                  {"access":404,...,"grantPost":404}
@@ -482,7 +566,9 @@ Screenshots: `docs/audit/2026-10-27/shots/`
 | `owner-sidebar.png` | sidebar owner có nhóm "Riêng tư" |
 | `owner-private-media.png` | trang đầy đủ (search, player, rail) |
 | `owner-search-results.png` | search thật: 12 kết quả, title sạch, có thumbnail + thời lượng |
-| `owner-mini-bar.png` | trang web không còn khung video, chỉ tên + nút mở cửa sổ nhỏ |
+| `owner-mini-bar.png` | cửa sổ nhỏ 5 nút (đang phát) |
+| `owner-inline-controls.png` | thanh 5 nút + thanh tua ngay trên trang, dưới ô tìm |
+| `owner-seek-bar.png` | sau khi tua 55%: vị trí mới, vẫn phát |
 | `owner-web-no-player.png` | trang web: chỉ ô tìm + danh sách tên, không có player |
 | `owner-web-keyless.png` | trạng thái dùng được **không cần key**: dán link + "Đã phát gần đây" |
 | `owner-player-playing.png` | video thật đang phát 0:11 / 10:35 |
@@ -536,7 +622,7 @@ Ma trận quyền:
 ### Backend — `backend/test/private_media_authz.test.js`
 
 ```text
-# tests 27
+# tests 28
 # pass 27
 # fail 0
 ```
@@ -561,6 +647,7 @@ Ma trận quyền:
 | 16 | RECENT_VIDEOS (owner 200 / admin 404 / dedupe) | API_AUTHZ |
 | 17 | YOUTUBE_NORMALIZATION (HTML entity, ISO duration, video id) | YOUTUBE_SEARCH |
 | 18 | PROGRESS_QUIET_WINDOW (tick cũ không đảo được lệnh) | WEBSOCKET_REALTIME |
+| 19 | PROGRESS_AFTER_SEEK (tick cũ không kéo lùi playhead) | WEBSOCKET_REALTIME |
 | 19 | DEVICE_AUTHZ (pair → use → revoke) | DEVICE_AUTHZ |
 | 20 | DEVICE_AUTHZ (member cannot mint) | DEVICE_AUTHZ |
 | 21 | TELEGRAM_AUTHZ (unbound/one-time/revoked) | TELEGRAM_AUTHZ |
@@ -658,7 +745,8 @@ TELEGRAM_BINDING:                    PASS
 TELEGRAM_AUTHZ:                      PASS
 TELEGRAM_REMOTE_CONTROL:             BLOCKED_BY_CREDENTIAL
 MAC_HELPER:                          PASS (tùy chọn — không bắt buộc)
-MINI_CONTROLLER:                     PASS (cửa sổ PiP thật, 5 nút, 186×40)
+MINI_CONTROLLER:                     PASS (PiP thật 196×52, 5 nút, không cắt)
+WEB_INLINE_CONTROLS:                 PASS (5 nút + thanh tua ngay trên trang)
 WEB_NAMES_ONLY:                      PASS (không khung video, vẫn phát tiếng)
 GLOBAL_F8_HOTKEY:                    UNVERIFIED (tùy chọn)
 DEVICE_AUTHZ:                        PASS
@@ -669,7 +757,7 @@ SECRETS_NOT_EXPOSED:                 PASS
 OTHER_WORKRANK_PERMISSIONS_UNCHANGED: PASS
 FRONTEND_CHECK:                      PASS
 FRONTEND_BUILD:                      PASS
-BACKEND_TESTS:                       PASS (module 27/27; full suite 685/696 —
+BACKEND_TESTS:                       PASS (module 28/28; full suite 685/696 —
                                           10 fail thuộc 6 suite competition/integration
                                           có sẵn từ baseline, không file nào bị sửa)
 OVERALL:                             PASS (1 mục BLOCKED do thiếu Telegram token

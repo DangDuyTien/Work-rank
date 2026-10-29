@@ -3,21 +3,29 @@ import { createPortal } from 'react-dom';
 import { Pause, Play, SkipForward, Square, Volume1, Volume2 } from 'lucide-react';
 
 /**
- * PRIVATE MEDIA — MINI CONTROLLER (Picture-in-Picture)
+ * PRIVATE MEDIA — MEDIA CONTROLS
  *
- * A small always-on-top window with three controls: play/pause, stop, next.
- * It exists so the owner does NOT need the Mac helper, a device token or any
- * pairing step just to control playback while another app has focus.
+ * One component, two mount points:
+ *   variant="inline" → a compact bar inside the page (always available)
+ *   variant="mini"   → the floating Picture-in-Picture window (Chrome/Edge 116+)
  *
- * Uses the Document Picture-in-Picture API (Chrome/Edge 116+): the window is a
- * real OS-level floating window, so it stays above other applications.
- * Where the API is unavailable the same UI renders as a fixed floating bar
- * inside the page, so the feature degrades instead of disappearing.
+ * Both share the parent's React tree, so they read the same session state and
+ * send commands through the same command bus — there is no second source of
+ * truth and no extra connection to configure.
  *
- * The mini window shares the parent's React tree through a portal, so it reads
- * the same session state and sends commands through the same command bus —
- * there is no second source of truth and no extra connection to configure.
+ * Layout is measured, not guessed: `PIP_WIDTH` / `PIP_HEIGHT` below are the
+ * single source of truth for the requested window size. Requesting a window
+ * smaller than the content clips the buttons (that bug shipped once already).
  */
+
+// ── Sizes ───────────────────────────────────────────────────────────────────
+// 5 buttons: 24 + 36 + 30 + 30 + 24 = 144px, gaps 4×6 = 24px, padding 2×8 = 16px
+// → 184px of content. The window gets a few extra pixels so Chrome's own
+// rounding never clips the last button.
+export const PIP_WIDTH = 196;
+export const PIP_HEIGHT = 52;
+const PIP_CONTENT_WIDTH = 184;
+const PIP_CONTENT_HEIGHT = 38;
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 // The PiP document does not inherit the app stylesheet, so colours are resolved
@@ -98,6 +106,11 @@ function readThemeKind() {
   }
 }
 
+/**
+ * Styles for the PiP document. Every rule is scoped under `.pm-mini` so this
+ * stylesheet can never leak into the page (it is appended to the PiP document,
+ * but the fallback bar injects it into the page's <head>).
+ */
 function miniCss(theme) {
   const p = PALETTES[theme] || PALETTES.light;
   return `
@@ -105,30 +118,37 @@ function miniCss(theme) {
   font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   background: ${p.bg};
   border: 1px solid ${p.border};
+  box-sizing: border-box;
+  width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 6px 8px;
-  box-sizing: border-box;
+  overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
-.pm-mini__btn {
+.pm-mini .pm-mini__btn {
+  flex: 0 0 auto;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 26px; border: 1px solid ${p.btnBorder};
+  width: 30px; height: 26px; padding: 0;
+  border: 1px solid ${p.btnBorder};
   border-radius: 5px; background: ${p.btnBg}; color: ${p.btnText};
   cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
 }
-.pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
-.pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.pm-mini__btn.is-narrow { width: 24px; }
-.pm-mini__btn.is-primary { background: ${p.primaryBg}; color: ${p.primaryText}; border-color: transparent; width: 36px; }
-.pm-mini__btn.is-primary:hover:not(:disabled) { background: ${p.primaryHover}; }
+.pm-mini .pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
+.pm-mini .pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pm-mini .pm-mini__btn.is-narrow { width: 24px; }
+.pm-mini .pm-mini__btn.is-primary {
+  width: 36px;
+  background: ${p.primaryBg}; color: ${p.primaryText}; border-color: transparent;
+}
+.pm-mini .pm-mini__btn.is-primary:hover:not(:disabled) { background: ${p.primaryHover}; }
 .pm-mini__fallback {
   position: fixed; right: 14px; bottom: 14px; z-index: 4000;
-  width: max-content; height: max-content;
+  width: ${PIP_CONTENT_WIDTH + 16}px; height: ${PIP_CONTENT_HEIGHT + 12}px;
   border-radius: 7px; overflow: hidden;
   box-shadow: ${p.shadow};
 }
@@ -146,12 +166,8 @@ function readOsTheme() {
 
 /**
  * Tracks both palettes we care about:
- *   app → the WorkRank page (for the in-page floating bar)
+ *   app → the WorkRank page (for the in-page bars)
  *   os  → the operating system / browser chrome (for the separate PiP window)
- *
- * A floating window sits next to Chrome, not inside the page, so the OS
- * appearance is what it should blend with. Re-reads on colour-scheme changes
- * and on any class/style/data-theme mutation of <html>.
  */
 function useThemePalette() {
   const [palette, setPalette] = useState(() => ({ app: readThemeKind(), os: readOsTheme() }));
@@ -180,16 +196,16 @@ function useThemePalette() {
   return palette;
 }
 
+const VOLUME_STEP = 10;
+
 /**
- * Three buttons, nothing else.
+ * Five buttons, nothing else.
  *
  * No title, no clock, no progress bar: the owner knows what is playing, and
  * every extra element makes the bar bigger and more conspicuous. The state is
- * still shared with the page, so the play/pause icon always reflects reality.
+ * shared with the page, so the play/pause icon always reflects reality.
  */
-const VOLUME_STEP = 10;
-
-function MiniControls({ session, canControl, onCommand }) {
+export function MediaControls({ session, canControl, onCommand, variant = 'mini' }) {
   const video = session?.video || null;
   const playing = session?.status === 'PLAYING';
   const volume = Math.min(100, Math.max(0, Number(session?.volume ?? 100)));
@@ -202,7 +218,7 @@ function MiniControls({ session, canControl, onCommand }) {
   };
 
   return (
-    <div className="pm-mini">
+    <div className={variant === 'inline' ? 'pm-inline' : 'pm-mini'}>
       <button
         type="button"
         className="pm-mini__btn is-narrow"
@@ -257,41 +273,66 @@ function MiniControls({ session, canControl, onCommand }) {
   );
 }
 
+/**
+ * The floating window renderer.
+ *
+ * `pipWindow` is owned by the page (it must be requested synchronously inside
+ * the click handler, see `openMini`). This component only portals the controls
+ * into that window and keeps the palette in sync.
+ *
+ * Deliberately does NOT close the window on re-render or on unmount of this
+ * component: the window belongs to the document, and closing it from a React
+ * cleanup is what made it disappear on tab switches before.
+ */
 export default function MiniPlayer({ open, pipWindow, onClose, session, canControl, onCommand, themeMode = 'auto' }) {
   const palette = useThemePalette();
-  // A real PiP window is an OS window, so it follows the system appearance;
-  // the in-page fallback lives inside the page and follows the app.
   const theme = themeMode === 'auto' ? (pipWindow ? palette.os : palette.app) : themeMode;
   const styleRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   // Inject the palette into the PiP document (it inherits nothing from the app).
+  // Depends on `pipWindow` only: `onClose` is read through a ref so a parent
+  // re-render does not tear the stylesheet down and rebuild it (which flickered).
   useEffect(() => {
-    if (!pipWindow?.document) return undefined;
+    if (!pipWindow?.document?.head) return undefined;
 
     const style = pipWindow.document.createElement('style');
     style.textContent = miniCss(theme);
     styleRef.current = style;
     pipWindow.document.head.appendChild(style);
     pipWindow.document.title = 'WorkRank Media';
+    // Set on the PiP document only — the same stylesheet is injected into the
+    // page for the fallback, so these must not live in `miniCss`.
+    pipWindow.document.documentElement.style.height = '100%';
     pipWindow.document.body.style.margin = '0';
-
-    // Closing the OS window must also reset the page state.
-    const handleHide = () => onClose();
-    pipWindow.addEventListener('pagehide', handleHide);
+    pipWindow.document.body.style.height = '100%';
+    pipWindow.document.body.style.overflow = 'hidden';
 
     return () => {
-      pipWindow.removeEventListener('pagehide', handleHide);
       try { style.remove(); } catch { /* window already gone */ }
       styleRef.current = null;
     };
-    // Recreating the <style> on every theme change would flicker; the separate
-    // effect below patches it in place instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pipWindow, onClose]);
+  }, [pipWindow]);
 
   useEffect(() => {
     if (styleRef.current) styleRef.current.textContent = miniCss(theme);
   }, [theme]);
+
+  // Detect the window being closed by the user (the × in the OS title bar).
+  // Polling `closed` is deterministic across platforms; `pagehide` alone is not
+  // fired consistently for Document PiP documents on Windows.
+  useEffect(() => {
+    if (!pipWindow) return undefined;
+    const timer = setInterval(() => {
+      if (pipWindow.closed) {
+        clearInterval(timer);
+        closeRef.current?.();
+      }
+    }, 500);
+    return () => clearInterval(timer);
+  }, [pipWindow]);
 
   const handleCommand = useCallback((action, payload) => {
     onCommand(action, payload);
@@ -300,7 +341,7 @@ export default function MiniPlayer({ open, pipWindow, onClose, session, canContr
   if (!open) return null;
 
   const body = (
-    <MiniControls
+    <MediaControls
       session={session}
       canControl={canControl}
       onCommand={handleCommand}
@@ -311,7 +352,7 @@ export default function MiniPlayer({ open, pipWindow, onClose, session, canContr
     return createPortal(body, pipWindow.document.body);
   }
 
-  // No PiP window available: keep a working control surface inside the page.
+  // No PiP window: keep a working control surface inside the page as well.
   return createPortal(
     <>
       <style>{miniCss(theme)}</style>

@@ -377,17 +377,26 @@ const STATUS_ACTIONS = [
  * otherwise land afterwards and undo it (pause, then a stale "still playing"
  * report resumes playback). The command journal is the authority here, so the
  * backend ignores reported status for a short window after any status command.
+ *
+ * The same race applies to the playhead after a SEEK: the tick that was already
+ * in flight still carries the OLD position, so writing it back would drag the
+ * session to where the video was before the jump — and the player, which treats
+ * the session as authoritative, would then seek backwards. Both fields are
+ * therefore gated, each by its own command type.
  */
 const POST_COMMAND_QUIET_MS = 3000;
 
-async function hasRecentStatusCommand() {
-  const recent = await PrivateMediaCommand.findOne({
-    where: { action: { [Op.in]: STATUS_ACTIONS } },
+const TIME_ACTIONS = [ACTIONS.SEEK];
+
+/** True when one of `actions` was issued within the quiet window. */
+async function hasRecentCommand(actions) {
+  const row = await PrivateMediaCommand.findOne({
+    where: { action: { [Op.in]: actions } },
     order: [['createdAt', 'DESC']],
     attributes: ['createdAt'],
   });
-  if (!recent) return false;
-  return Date.now() - new Date(recent.createdAt).getTime() < POST_COMMAND_QUIET_MS;
+  if (!row) return false;
+  return Date.now() - new Date(row.createdAt).getTime() < POST_COMMAND_QUIET_MS;
 }
 
 /** Heartbeat from the browser player: keeps currentTime warm without a command. */
@@ -397,10 +406,18 @@ async function syncPlayerProgress({ currentTime, durationSeconds, status }) {
   if (Number.isFinite(Number(currentTime))) changes.currentTime = clampNumber(currentTime, 0, 24 * 3600, 0);
   if (Number.isFinite(Number(durationSeconds))) changes.durationSeconds = Math.max(0, Math.round(Number(durationSeconds)));
 
+  const [statusQuiet, timeQuiet] = await Promise.all([
+    hasRecentCommand(STATUS_ACTIONS),
+    hasRecentCommand(TIME_ACTIONS),
+  ]);
+
+  // A tick that was in flight during a SEEK still reports the pre-seek position.
+  if (timeQuiet) delete changes.currentTime;
+
   const normalizedStatus = status ? String(status).toUpperCase() : null;
   if (normalizedStatus && ['PLAYING', 'PAUSED', 'STOPPED', 'LOADING', 'IDLE', 'ERROR'].includes(normalizedStatus)) {
     // Progress still updates time; only the status is gated.
-    if (!await hasRecentStatusCommand()) {
+    if (!statusQuiet) {
       changes.status = normalizedStatus;
     }
   }

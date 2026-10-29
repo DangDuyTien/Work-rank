@@ -198,6 +198,150 @@
   max-height: 260px;
 }
 
+/* ── Inline controls (always on the page) ────────────────────────────────────
+   The floating window is an extra; these buttons must never be the only way to
+   pause, stop, skip or change volume. Same 5 buttons, page palette. */
+.pm-inline-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-interactive, 10px);
+  background: var(--surface-soft, #f7f6f2);
+  border: 1px solid var(--border-2, rgba(0, 0, 0, 0.08));
+}
+
+.pm-inline-bar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ── Seek bar ─────────────────────────────────────────────────────────────── */
+.pm-seek {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.pm-seek.is-disabled {
+  opacity: 0.5;
+}
+
+.pm-seek__time {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #777777);
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.pm-seek__time:last-child {
+  text-align: right;
+}
+
+.pm-seek__range {
+  flex: 1;
+  height: 4px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 999px;
+  background: var(--border-2, rgba(0, 0, 0, 0.12));
+  cursor: pointer;
+}
+
+.pm-seek__range:disabled {
+  cursor: not-allowed;
+}
+
+.pm-seek__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--text-primary, #141414);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+.pm-seek__range::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--text-primary, #141414);
+}
+
+.pm-seek__range:focus-visible {
+  outline: 2px solid var(--accent, #b45309);
+  outline-offset: 3px;
+}
+
+.pm-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-inline .pm-mini__btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border-2, rgba(0, 0, 0, 0.1));
+  border-radius: 7px;
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #111111);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.pm-inline .pm-mini__btn:hover:not(:disabled) {
+  background: var(--surface-hover, #f0eee9);
+}
+
+.pm-inline .pm-mini__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pm-inline .pm-mini__btn.is-narrow {
+  width: 28px;
+}
+
+.pm-inline .pm-mini__btn.is-primary {
+  width: 40px;
+  border-color: transparent;
+  background: var(--text-primary, #141414);
+  color: var(--surface, #ffffff);
+}
+
+.pm-inline .pm-mini__btn.is-primary:hover:not(:disabled) {
+  background: var(--text-primary, #141414);
+  opacity: 0.88;
+}
+
+.pm-inline-bar__state {
+  font-size: 11.5px;
+  color: var(--text-muted, #777777);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .pm-inline-bar__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
 /* ── Player (kept mounted, never shown) ──────────────────────────────────────
    The iframe must keep a real, non-zero size or Chrome stops playback. It is
    moved outside the viewport instead of being hidden. */

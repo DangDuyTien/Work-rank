@@ -55,6 +55,14 @@ function loadYouTubeApi() {
   return youtubeApiPromise;
 }
 
+// A gap larger than this between the session playhead and the player means a
+// SEEK command, not heartbeat lag.
+const SEEK_TOLERANCE_SECONDS = 3;
+
+// How long a session position is treated as a possible echo of a seek we just
+// performed (a heartbeat that was already in flight carries the old position).
+const SEEK_ECHO_GUARD_MS = 2500;
+
 function statusFromPlayerState(playerState) {
   switch (playerState) {
     case YT_PLAYER_STATE.PLAYING: return 'PLAYING';
@@ -68,7 +76,7 @@ function statusFromPlayerState(playerState) {
   }
 }
 
-export default function YouTubeStage({ session, socket, canControl }) {
+export default function YouTubeStage({ session, socket, canControl, seekSignal }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const loadedVideoIdRef = useRef(null);
@@ -77,6 +85,9 @@ export default function YouTubeStage({ session, socket, canControl }) {
   const autoplayTimersRef = useRef([]);
   const appliedStatusRef = useRef(null);
   const needsActivationRef = useRef(false);
+  // Last seek we performed: { at, target }. A stale heartbeat that still
+  // carries the pre-seek position must not drag the player back.
+  const lastSeekRef = useRef({ at: 0, target: 0 });
 
   const [ready, setReady] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -304,6 +315,30 @@ export default function YouTubeStage({ session, socket, canControl }) {
       player.setVolume(volume);
     }
 
+    // Seek reconciliation. The server owns the playhead: a SEEK command writes
+    // `currentTime` and the player must follow it. Only a LARGE gap is a seek —
+    // the 2-second heartbeat keeps the two within a second or two of each other,
+    // so a small difference is lag, not an instruction, and seeking on it would
+    // make the player fight its own progress reports.
+    const serverTime = Number(session?.currentTime);
+    if (Number.isFinite(serverTime) && typeof player.getCurrentTime === 'function') {
+      const localTime = Number(player.getCurrentTime()) || 0;
+      const gap = Math.abs(serverTime - localTime);
+      // A tick that was already in flight when we seeked still reports the OLD
+      // position. Treating it as an instruction would yank the video back, so a
+      // value far from our own last seek target is ignored briefly.
+      const sinceSeek = Date.now() - lastSeekRef.current.at;
+      const staleEcho = sinceSeek < SEEK_ECHO_GUARD_MS
+        && Math.abs(serverTime - lastSeekRef.current.target) > SEEK_TOLERANCE_SECONDS * 2;
+
+      if (gap > SEEK_TOLERANCE_SECONDS && !staleEcho) {
+        try {
+          player.seekTo(serverTime, true);
+          lastSeekRef.current = { at: Date.now(), target: serverTime };
+        } catch { /* detached */ }
+      }
+    }
+
     // Reconcile against the player's REAL state, not against what we last
     // applied. A stale "already applied" marker would silently swallow a
     // pause/resume whenever the player had drifted (e.g. autoplay kicked in
@@ -363,6 +398,23 @@ export default function YouTubeStage({ session, socket, canControl }) {
       pendingAckRef.current = null;
     }
   }, [ready, playerGeneration, session, video, desiredStatus, reportAck, clearAutoplayTimers, flagAutoplayBlocked]);
+
+  // ── Explicit seek (the scrub bar) ─────────────────────────────────────────
+  // Applied straight from the UI intent, not from a round-trip: the command
+  // response and a heartbeat can arrive in either order, and waiting for the
+  // session to settle would make the thumb feel laggy.
+  useEffect(() => {
+    if (!seekSignal?.position) return;
+    const player = playerRef.current;
+    if (!player?.seekTo) return;
+    const target = Math.max(0, Number(seekSignal.position) || 0);
+    try {
+      player.seekTo(target, true);
+      lastSeekRef.current = { at: Date.now(), target };
+    } catch {
+      // Detached player: the session reconciliation will catch up.
+    }
+  }, [seekSignal]);
 
   // ── Progress heartbeat ────────────────────────────────────────────────────
   // Reports time always, but reports STATUS only when it is a settled state
