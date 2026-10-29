@@ -120,15 +120,73 @@ function normalizeVideoId(value) {
   return raw;
 }
 
-function publicVideo(entry) {
+function publicVideo(entry, addedBy = undefined) {
   if (!entry) return null;
   return {
     videoId: entry.videoId || entry.video_id || null,
     title: entry.title || null,
-    channelTitle: entry.channelTitle || entry.channel_title || null,
-    thumbnailUrl: entry.thumbnailUrl || entry.thumbnail_url || null,
+    channelTitle: entry.channelTitle || null,
+    thumbnailUrl: entry.thumbnailUrl || null,
     durationSeconds: entry.durationSeconds ?? entry.duration_seconds ?? null,
+    // Who contributed the track. Internal only: used to rotate the shared room.
+    addedBy: addedBy !== undefined ? addedBy : (entry.addedBy ?? null),
   };
+}
+
+/** Queue entry without the contributor id — this is what clients receive. */
+function publicVideoForClient(entry) {
+  const video = publicVideo(entry);
+  if (!video) return null;
+  delete video.addedBy;
+  return video;
+}
+
+/** Remove duplicate videoIds, keeping the first occurrence. */
+function dedupeQueue(entries) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of entries) {
+    const video = publicVideo(entry);
+    if (!video?.videoId || seen.has(video.videoId)) continue;
+    seen.add(video.videoId);
+    out.push(video);
+  }
+  return out;
+}
+
+/**
+ * Interleave the tail of the shared queue so turns alternate between people:
+ * one track from each contributor, then the next round, until every list runs
+ * out. Without this the room played one person's whole list before the other's.
+ *
+ * `lastContributor` moves to the back, so whoever just played does not get the
+ * next turn again when a new list arrives.
+ */
+function roundRobinTail(entries, lastContributor) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const key = entry.addedBy ?? 0;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
+  }
+
+  const keys = [...groups.keys()];
+  const at = keys.indexOf(lastContributor);
+  const ordered = at >= 0 ? [...keys.slice(at + 1), ...keys.slice(0, at + 1)] : keys;
+
+  const out = [];
+  for (let round = 0; ; round += 1) {
+    let added = false;
+    for (const key of ordered) {
+      const list = groups.get(key);
+      if (round < list.length) {
+        out.push(list[round]);
+        added = true;
+      }
+    }
+    if (!added) break;
+  }
+  return out;
 }
 
 /** Serializable session shape shared by HTTP and socket payloads. */
@@ -149,7 +207,7 @@ function serializeSession(session) {
       : null,
     currentTime: Number(session.currentTime || 0),
     volume: Number(session.volume ?? 100),
-    queue: Array.isArray(session.queue) ? session.queue.map(publicVideo).filter(Boolean) : [],
+    queue: Array.isArray(session.queue) ? session.queue.map(publicVideoForClient).filter(Boolean) : [],
     queueIndex: Number(session.queueIndex ?? -1),
     playerOnline: Boolean(session.playerOnline),
     controllerUserId: session.controllerUserId || null,
@@ -198,11 +256,8 @@ function planTransition(session, action, payload = {}) {
     case ACTIONS.LOAD_VIDEO: {
       const videoId = normalizeVideoId(payload.videoId);
       if (!videoId) throw new PrivateMediaCommandError('INVALID_VIDEO_ID', 'Video không hợp lệ');
-      const queue = Array.isArray(payload.queue) && payload.queue.length
-        ? payload.queue.map(publicVideo).filter((item) => item?.videoId).slice(0, 50)
-        : (Array.isArray(session.queue) ? session.queue : []);
-      const queueIndex = queue.findIndex((item) => item.videoId === videoId);
-      return {
+
+      const common = {
         status: 'LOADING',
         currentVideoId: videoId,
         title: payload.title ? String(payload.title).slice(0, 255) : null,
@@ -211,10 +266,38 @@ function planTransition(session, action, payload = {}) {
         durationSeconds: Number.isFinite(Number(payload.durationSeconds)) ? Math.max(0, Math.round(Number(payload.durationSeconds))) : null,
         currentTime: 0,
         volume: Number.isFinite(Number(payload.volume)) ? clampNumber(payload.volume, 0, 100, session.volume) : Number(session.volume ?? 100),
-        queue,
-        queueIndex,
         controllerUserId: payload.actorUserId || session.controllerUserId,
       };
+
+      const incoming = Array.isArray(payload.queue) && payload.queue.length
+        ? payload.queue.map((item) => publicVideo(item, payload.actorUserId)).filter((item) => item?.videoId).slice(0, 50)
+        : [];
+
+      // Private session: "play this list now" — replace, as before.
+      if (normalizeRoom(payload.room) !== 'shared') {
+        const queue = incoming.length ? incoming : (Array.isArray(session.queue) ? session.queue : []);
+        return { ...common, queue, queueIndex: queue.findIndex((item) => item.videoId === videoId) };
+      }
+
+      // Shared room: everybody contributes to ONE pool. The track that was just
+      // requested plays now; everything already queued stays, and the tail is
+      // re-interleaved so turns keep alternating between people.
+      const existing = Array.isArray(session.queue) ? session.queue.map((item) => publicVideo(item)) : [];
+      const index = Number(session.queueIndex ?? -1);
+      const upcoming = existing.slice(index + 1);
+      const contributed = payload.append ? incoming : [];
+
+      const currentEntry = publicVideo({
+        videoId,
+        title: common.title,
+        channelTitle: common.channelTitle,
+        thumbnailUrl: common.thumbnailUrl,
+        durationSeconds: common.durationSeconds,
+      }, payload.actorUserId);
+
+      const rest = dedupeQueue([...upcoming, ...contributed]).filter((item) => item.videoId !== videoId);
+      const queue = [currentEntry, ...roundRobinTail(rest, payload.actorUserId)];
+      return { ...common, queue, queueIndex: 0 };
     }
 
     case ACTIONS.PLAY:
@@ -312,7 +395,7 @@ async function issueCommand({ commandId, action, source = 'WEB', actorUserId, pa
     throw new PrivateMediaCommandError('NO_ACTIVE_MEDIA_SESSION', 'Chưa có video nào đang phát', 409);
   }
 
-  const changes = planTransition(session, normalizedAction, { ...payload, actorUserId });
+  const changes = planTransition(session, normalizedAction, { ...payload, actorUserId, room });
 
   let command;
   try {
@@ -455,7 +538,7 @@ async function hasRecentCommand(actions) {
 }
 
 /** Heartbeat from the browser player: keeps currentTime warm without a command. */
-async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId, room) {
+async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId, room, { solo = true } = {}) {
   const session = await getSession(userId, room);
   // Identity of the newest SEEK this tick could have seen. Compared after the
   // write: anything newer was issued while this tick was in flight.
@@ -479,7 +562,10 @@ async function syncPlayerProgress({ currentTime, durationSeconds, status }, user
   const normalizedStatus = status ? String(status).toUpperCase() : null;
   if (normalizedStatus && ['PLAYING', 'PAUSED', 'STOPPED', 'LOADING', 'IDLE', 'ERROR'].includes(normalizedStatus)) {
     // Progress still updates time; only the status is gated.
-    if (!statusQuiet) {
+    // In a shared room with several players, each tab reports its own state and
+    // they would overwrite each other every two seconds (playing/paused flicker).
+    // There the last COMMAND owns the status; the players are made to follow it.
+    if (!statusQuiet && solo) {
       changes.status = normalizedStatus;
     }
   }
@@ -510,6 +596,45 @@ async function syncPlayerProgress({ currentTime, durationSeconds, status }, user
   }
 
   return serializeSession(session);
+}
+
+/**
+ * Auto-advance, like YouTube: when the player reports the end of a video, the
+ * next queue entry starts on its own. This replaces the manual "next" button.
+ *
+ * It is intentionally NOT a command: nobody issued it, so there is no command id
+ * to dedupe. The session is still the authority and the broadcast carries the
+ * new videoId, which every player follows.
+ */
+async function autoAdvance({ userId, room } = {}) {
+  const session = await getSession(userId, room);
+  const next = nextQueueEntry(session, 1);
+
+  if (!next) {
+    // Nothing queued: settle on STOPPED at the end instead of looping forever.
+    if (session.status !== 'STOPPED') await session.update({ status: 'STOPPED' });
+    return { advanced: false, state: serializeSession(session) };
+  }
+
+  await session.update({
+    status: 'LOADING',
+    currentVideoId: next.entry.videoId,
+    title: next.entry.title || null,
+    channelTitle: next.entry.channelTitle || null,
+    thumbnailUrl: next.entry.thumbnailUrl || null,
+    durationSeconds: next.entry.durationSeconds ?? null,
+    currentTime: 0,
+    queueIndex: next.index,
+  });
+
+  await audit.record({
+    action: 'NEXT',
+    actorUserId: null,
+    source: 'SYSTEM',
+    metadata: { videoId: next.entry.videoId, auto: true },
+  });
+
+  return { advanced: true, state: serializeSession(session) };
 }
 
 /** Recent commands (owner/ops visibility; no secrets involved). */
@@ -578,6 +703,7 @@ module.exports = {
   acknowledgeCommand,
   setPlayerPresence,
   syncPlayerProgress,
+  autoAdvance,
   recentCommands,
   recentVideos,
   normalizeVideoId,

@@ -197,9 +197,17 @@ export default function PrivateMedia() {
         disallowReturnToOpener: false,
       });
       miniWindowRef.current = win;
-      // Chrome does not always honour the requested size (it may reuse the last
-      // remembered geometry). Resize explicitly so the 5 buttons are never cut.
-      try { win.resizeTo(PIP_WIDTH, PIP_HEIGHT); } catch { /* not supported */ }
+
+      // Chrome treats width/height as hints and remembers the geometry per
+      // origin, so a window that was once opened larger stays larger. Resize
+      // explicitly, and retry: the first call can land before the window has
+      // finished being created.
+      const enforceSize = () => {
+        try { win.resizeTo(PIP_WIDTH, PIP_HEIGHT); } catch { /* not supported */ }
+      };
+      enforceSize();
+      setTimeout(enforceSize, 120);
+      setTimeout(enforceSize, 500);
       setMiniWindow(win);
       setMiniOpen(true);
     } catch (error) {
@@ -330,7 +338,7 @@ export default function PrivateMedia() {
     sendCommand('SEEK', { position: target }, { track: false });
   }, [sendCommand]);
 
-  const loadVideo = useCallback(async (video, queue = []) => {
+  const loadVideo = useCallback(async (video, queue = [], options = {}) => {
     if (!video?.videoId) return;
     await sendCommand('LOAD_VIDEO', {
       videoId: video.videoId,
@@ -339,6 +347,9 @@ export default function PrivateMedia() {
       thumbnailUrl: video.thumbnailUrl || null,
       durationSeconds: video.durationSeconds ?? null,
       queue,
+      // In the shared room this marks a deliberate list: it is appended to the
+      // pool (and rotated) instead of replacing what other people queued.
+      append: Boolean(options.append),
     }, { busyKey: `load:${video.videoId}` });
   }, [sendCommand]);
 
@@ -376,9 +387,9 @@ export default function PrivateMedia() {
         }
 
         setResults(resolved);
-        await loadVideo(resolved[0], resolved);
+        await loadVideo(resolved[0], resolved, { append: resolved.length > 1 });
         setSearchNote(resolved.length > 1
-          ? `Đã nạp ${resolved.length} video vào danh sách phát. Dùng ⏭ để chuyển bài.`
+          ? `Đã nạp ${resolved.length} video vào danh sách phát — hết bài sẽ tự chuyển bài.`
           : 'Đã nạp video từ link.');
         return;
       }

@@ -11,7 +11,7 @@
 ```text
 Root owner bootstrap : tienddph50842@gmail.com → Work Rank user #10943 (role = user)
 Module               : /api/private-media/* + socket namespace /private-media + mac-helper
-Backend tests        : 31/31 PASS
+Backend tests        : 33/33 PASS
 Browser QA           : 25/25 PASS
 Migration            : applied on dev MySQL (forward, repeatable)
 Global F8            : UNVERIFIED  (OS-level key injection bị chặn quyền Accessibility)
@@ -402,15 +402,20 @@ Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, 
 
 ### Nội dung
 
-**5 nút, không chữ** — cửa sổ xin **90×22** (196×52 → 150×38 → 90×22, nhỏ hơn ~7 lần diện tích so với bản đầu):
+**4 nút, không chữ** — cửa sổ xin **84×20** (196×52 → 150×38 → 90×22 → 84×20):
 
 | Nút | Tỉ lệ | Hành vi |
 |---|---|---|
-| loa nhỏ | 0.72 | `SET_VOLUME` −10 (dừng ở 0) |
+| loa nhỏ | 0.75 | `SET_VOLUME` −10 (dừng ở 0) |
 | phát / tạm dừng | 1.25 | `TOGGLE_PLAY_PAUSE` |
 | dừng | 1 | `STOP` |
-| chuyển tiếp | 1 | `NEXT` |
-| loa to | 0.72 | `SET_VOLUME` +10 (dừng ở 100) |
+| loa to | 0.75 | `SET_VOLUME` +10 (dừng ở 100) |
+
+Nút **chuyển tiếp đã bị bỏ** — thay bằng tự động chuyển bài (mục 10d). Cửa sổ nhỏ đi kèm cũng
+nhỏ lại vì bớt một nút.
+
+Mỗi nút có `max-width` (24 / 28 / 20px) nên nếu Chrome mở cửa sổ rộng hơn yêu cầu thì các nút
+vẫn là một cụm nhỏ ở giữa, không bị kéo giãn thành nút to.
 
 Nút dùng `flex: 1 1 0` + `min-width: 0` chứ **không** đặt width cố định: cửa sổ hẹp hơn yêu cầu
 thì nút co lại, không bao giờ bị cắt. Đo ở 150×38, 132×40 và cả 120×36: **không tràn, đủ 5 nút**.
@@ -430,7 +435,7 @@ Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
 
 Đã sửa:
 
-* `PIP_WIDTH = 90`, `PIP_HEIGHT = 22` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
+* `PIP_WIDTH = 84`, `PIP_HEIGHT = 20` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
 * Nút dùng `flex: 1 1 0` — cửa sổ hẹp hơn yêu cầu thì nút co lại thay vì bị cắt (lớp bảo vệ thứ hai,
   độc lập với kích thước).
 * Gọi thêm `win.resizeTo(PIP_WIDTH, PIP_HEIGHT)` sau khi mở, phòng khi Chrome bỏ qua tham số.
@@ -441,9 +446,7 @@ Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
 Kiểm chứng bằng cách replay chính document của cửa sổ ở nhiều kích thước:
 
 ```text
-90×22  → vw 88 · nút [12,19,15,15,12] · icon 10px · không tràn
-80×20  → vw 78 · nút [10,16,13,13,10] · không tràn
-100×24 → vw 98 · nút [13,21,17,17,13] · không tràn
+84×20 → vw 82 · nút [14,23,19,14] · icon 9px · không tràn
 ```
 
 ### Vì sao trước đây nó "chỉ hiện trong trang 3WIN, không sang tab khác"
@@ -554,6 +557,50 @@ của bản đầu tiên: một session chung cho tất cả.
 | Nghe riêng (mặc định) | `primary` (owner) / `user:<id>` | mỗi người một playhead, queue, âm lượng |
 | Nghe chung | `room:shared` | ai bật cũng thấy **cùng** video, vị trí, âm lượng |
 
+### Danh sách chung + xoay vòng
+
+**Bug đã sửa:** trước đây ai bấm phát trong phòng chung thì `LOAD_VIDEO` **thay** toàn bộ queue —
+danh sách của người trước biến mất, và phòng phát hết list của người vừa bấm rồi mới tới người kia.
+
+Giờ trong phòng chung:
+
+* Mỗi track mang `addedBy` (id người thêm, **không** trả về client).
+* Ai dán một **danh sách** (nhiều link) → `append: true` → các bài được **gộp** vào pool chung,
+  không xoá của người khác. Bấm một kết quả lẻ → chỉ bài đó vào pool.
+* Đuôi queue được **xen kẽ theo người**: một bài của mỗi người, rồi vòng tiếp, đến khi hết list
+  (`roundRobinTail`). Người vừa phát bị đẩy xuống cuối vòng nên không được phát 2 bài liên tiếp.
+* Thứ tự được lưu ngay trong `queue` nên `autoAdvance` chỉ cần đi tiếp index — không cần bảng mới.
+
+```text
+A thêm [A1, A2]           → queue: A1, A2        (đang phát A1)
+B thêm [B1, B2]           → queue: B1, A2, B2    (đang phát B1)
+hết bài → autoAdvance     → A2  →  B2
+```
+
+Ngoài ra: khi phòng có **nhiều player**, trạng thái play/pause lấy từ **lệnh**, không lấy từ
+heartbeat của từng tab (nếu không hai tab sẽ giành nhau mỗi 2 giây). Phòng chỉ có một player thì
+vẫn báo trạng thái thật như cũ.
+
+### Bug: vào phòng nhưng "không ai vào được"
+
+Đổi phòng **thay socket** (room nằm trong `auth`). Player đã ready từ trước nên `onReady` không
+bắn lại → tab mới **không tự giới thiệu** với phòng:
+
+* không vào room `pm:<key>:players` → **không nhận được lệnh** play/pause/tua của người khác;
+* `playerOnline` = false → chip hiện "Trình phát Ngoại tuyến", nhìn như không ai ở trong phòng.
+
+Sửa: `YouTubeStage` lắng nghe `connect` của socket và gửi lại `private-media:player-hello`
+(kèm nhánh "socket đã connected sẵn"). QA giờ kiểm tra `playerOnline=true` ngay sau khi vào phòng.
+
+Đo lại với 2 tài khoản thật:
+
+```text
+owner    : Đang phát: Big Buck Bunny…   | Trình phát Đã kết nối
+delegate : Đang phát: Big Buck Bunny…   | Trình phát Đã kết nối
+owner nạp bài khác → delegate đổi theo ngay (cùng session)
+PAUSE từ owner → cả 2 player nhận ["PAUSE"], room PAUSED
+```
+
 Cách hoạt động:
 
 * Client gửi `X-PM-Room: shared|private` trên mọi request private-media (axios interceptor)
@@ -572,6 +619,26 @@ SHARED  : id=8  key=room:shared  video=jNQXAC9IVRw
 nạp video từ UI khi đang ở phòng → chỉ room:shared đổi; primary giữ nguyên
 nút +10s khi đang ở phòng       → room:shared 0 → 10
 SHARED_ROOM_OPT_IN — shared=room:shared private=primary toggled=shared→private
+```
+
+---
+
+## 10d. TỰ ĐỘNG CHUYỂN BÀI (thay nút Next)
+
+Không còn nút "chuyển tiếp". Khi player báo hết video (`ENDED`), nó phát
+`private-media:player-ended`; server gọi `sessionService.autoAdvance()`:
+
+* còn bài trong queue → chuyển sang bài kế (`LOADING`, `currentTime = 0`, `queueIndex + 1`),
+  broadcast state cho mọi controller của session đó;
+* hết queue → `STOPPED`, **không quay vòng**.
+
+Đây không phải command (không ai bấm nên không có `commandId` để dedupe); session vẫn là nguồn
+sự thật và player tự nạp video mới khi thấy `videoId` đổi.
+
+```text
+load 2 bài          → đang phát aqz-KE-bpKQ, queue=2
+player-ended lần 1  → jNQXAC9IVRw, LOADING, index=1
+player-ended lần 2  → STOPPED (không quay lại bài đầu)
 ```
 
 ---
@@ -615,13 +682,13 @@ PASS  OWNER_OPENS_PAGE                  h1=1
 PASS  YOUTUBE_PLAYER_EMBEDDED           iframes=1
 PASS  SESSION_STATE_HONEST              status=PLAYING t=8s
 PASS  AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED  browser allowed autoplay
-PASS  INLINE_CONTROLS                   buttons=5 enabled=5 seek=true volume=true [Tua lại 10 giây, Tạm dừng, Dừng, Video tiếp theo, Tua tới 10 giây]
+PASS  INLINE_CONTROLS                   buttons=4 enabled=4 seek=true volume=true [Tua lại 10 giây, Tạm dừng, Dừng, Tua tới 10 giây]
 PASS  INLINE_COMMAND_WORKS              PLAYING → PAUSED
 PASS  VOLUME_SLIDER                     drag=40 label=40% mute=0 unmute=40
 PASS  SEEK_BUTTONS_10S                 363s → +10 373s → -10 363s
 PASS  SESSION_IS_ACCOUNT_SCOPED         sessionKey=primary
 PASS  SHARED_ROOM_OPT_IN                shared=room:shared private=primary toggled=shared→private
-PASS  MINI_PIP_WINDOW                   buttons=5 text="" fits=true overflow=false
+PASS  MINI_PIP_WINDOW                   buttons=4 text="" fits=true overflow=false
 PASS  MINI_CONTROLLER_THEME             bg=rgb(255,255,255)
 PASS  MINI_PALETTE_OVERRIDE             auto=white dark=rgba(18,18,18,.94) back=white
 PASS  MINI_COMMAND_WORKS                PAUSED → PLAYING
@@ -705,7 +772,7 @@ Ma trận quyền:
 ### Backend — `backend/test/private_media_authz.test.js`
 
 ```text
-# tests 31
+# tests 33
 # pass 27
 # fail 0
 ```
@@ -734,6 +801,8 @@ Ma trận quyền:
 | 20 | SEEK_ACK (ack của player không được kéo lùi) | WEBSOCKET_REALTIME |
 | 21 | PER_ACCOUNT_SESSION (mỗi tài khoản nghe riêng) | ISOLATION |
 | 22 | SHARED_ROOM (phòng chung tách khỏi riêng) | ISOLATION |
+| 23 | AUTO_ADVANCE (hết bài tự sang bài, hết queue thì dừng) | YOUTUBE_PLAYER |
+| 24 | SHARED_QUEUE_ROTATION (gộp list + xoay vòng theo người) | ISOLATION |
 | 19 | DEVICE_AUTHZ (pair → use → revoke) | DEVICE_AUTHZ |
 | 20 | DEVICE_AUTHZ (member cannot mint) | DEVICE_AUTHZ |
 | 21 | TELEGRAM_AUTHZ (unbound/one-time/revoked) | TELEGRAM_AUTHZ |
@@ -831,10 +900,11 @@ TELEGRAM_BINDING:                    PASS
 TELEGRAM_AUTHZ:                      PASS
 TELEGRAM_REMOTE_CONTROL:             BLOCKED_BY_CREDENTIAL
 MAC_HELPER:                          PASS (tùy chọn — không bắt buộc)
-MINI_CONTROLLER:                     PASS (PiP thật 150×38, 5 nút, không cắt)
-WEB_INLINE_CONTROLS:                 PASS (5 nút + thanh tua + thanh âm lượng)
+MINI_CONTROLLER:                     PASS (PiP thật 84×20, 4 nút, không cắt)
+WEB_INLINE_CONTROLS:                 PASS (4 nút + thanh tua + thanh âm lượng)
 PER_ACCOUNT_SESSION:                 PASS (mỗi tài khoản một session)
 SHARED_ROOM:                         PASS (bật/tắt được, tách khỏi riêng)
+SHARED_QUEUE_ROTATION:               PASS (B1, A2, B2 — không xoá list của nhau)
 WEB_NAMES_ONLY:                      PASS (không khung video, vẫn phát tiếng)
 GLOBAL_F8_HOTKEY:                    UNVERIFIED (tùy chọn)
 DEVICE_AUTHZ:                        PASS
@@ -845,7 +915,7 @@ SECRETS_NOT_EXPOSED:                 PASS
 OTHER_WORKRANK_PERMISSIONS_UNCHANGED: PASS
 FRONTEND_CHECK:                      PASS
 FRONTEND_BUILD:                      PASS
-BACKEND_TESTS:                       PASS (module 31/31; full suite 685/696 —
+BACKEND_TESTS:                       PASS (module 33/33; full suite 685/696 —
                                           10 fail thuộc 6 suite competition/integration
                                           có sẵn từ baseline, không file nào bị sửa)
 OVERALL:                             PASS (1 mục BLOCKED do thiếu Telegram token

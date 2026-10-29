@@ -460,6 +460,83 @@ test('PER_ACCOUNT_SESSION — every granted account listens separately', async (
   assert.notEqual(Number(ownerSession.body.session?.volume), 20, 'delegate volume must not reach the owner');
 });
 
+test('AUTO_ADVANCE — the queue moves on by itself when a video ends', async () => {
+  const queue = [
+    { videoId: 'dQw4w9WgXcQ', title: 'One' },
+    { videoId: 'aqz-KE-bpKQ', title: 'Two' },
+  ];
+
+  await sessionService.issueCommand({
+    commandId: 'auto-load-1',
+    action: 'LOAD_VIDEO',
+    source: 'WEB',
+    actorUserId: users.owner.id,
+    payload: { videoId: queue[0].videoId, title: queue[0].title, queue },
+  });
+
+  const first = await sessionService.autoAdvance({ userId: users.owner.id });
+  assert.equal(first.advanced, true);
+  assert.equal(first.state.video.videoId, 'aqz-KE-bpKQ');
+  assert.equal(first.state.status, 'LOADING');
+
+  // End of the last entry: stop instead of wrapping around.
+  const last = await sessionService.autoAdvance({ userId: users.owner.id });
+  assert.equal(last.advanced, false);
+  assert.equal(last.state.status, 'STOPPED');
+});
+
+test('SHARED_QUEUE_ROTATION — lists merge, turns alternate, nothing is wiped', async () => {
+  const shared = { 'X-PM-Room': 'shared' };
+
+  const a = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.ownerToken))
+    .set(shared)
+    .send({
+      commandId: 'rot-a1',
+      action: 'LOAD_VIDEO',
+      payload: {
+        videoId: 'aaaaaaaaaaa',
+        title: 'A1',
+        append: true,
+        queue: [{ videoId: 'aaaaaaaaaaa', title: 'A1' }, { videoId: 'bbbbbbbbbbb', title: 'A2' }],
+      },
+    });
+  assert.equal(a.status, 200, JSON.stringify(a.body));
+  assert.deepEqual(a.body.state.queue.map((q) => q.title), ['A1', 'A2']);
+
+  // The second person adds a list: it must NOT replace the first person's.
+  const b = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.delegateToken))
+    .set(shared)
+    .send({
+      commandId: 'rot-b1',
+      action: 'LOAD_VIDEO',
+      payload: {
+        videoId: 'ccccccccccc',
+        title: 'B1',
+        append: true,
+        queue: [{ videoId: 'ccccccccccc', title: 'B1' }, { videoId: 'ddddddddddd', title: 'B2' }],
+      },
+    });
+  assert.equal(b.status, 200, JSON.stringify(b.body));
+  assert.deepEqual(
+    b.body.state.queue.map((q) => q.title),
+    ['B1', 'A2', 'B2'],
+    'turns must alternate: B plays now, then A, then B',
+  );
+
+  // The contributor id is internal — never exposed to clients.
+  assert.ok(!('addedBy' in b.body.state.queue[0]), 'addedBy must not leak');
+
+  // Advancing walks the rotated order, one turn at a time.
+  const first = await sessionService.autoAdvance({ userId: users.owner.id, room: 'shared' });
+  assert.equal(first.state.video.title, 'A2');
+  const second = await sessionService.autoAdvance({ userId: users.owner.id, room: 'shared' });
+  assert.equal(second.state.video.title, 'B2');
+});
+
 test('SHARED_ROOM — everyone who joins hears the same thing, private stays private', async () => {
   const shared = { 'X-PM-Room': 'shared' };
 

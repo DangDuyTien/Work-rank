@@ -141,7 +141,10 @@ function registerPrivateMediaNamespace(io) {
     socket.on('private-media:player-progress', async (payload = {}) => {
       try {
         if (!isPlayer) return;
-        const state = await sessionService.syncPlayerProgress(payload, userId, socket.pmRoom);
+        // Only a room with a single player may report status: with two players
+        // each tab would fight over "playing"/"paused".
+        const solo = realtime.playerCount(sessionKey) <= 1;
+        const state = await sessionService.syncPlayerProgress(payload, userId, socket.pmRoom, { solo });
         const now = Date.now();
         if (now - lastProgressBroadcast >= PROGRESS_BROADCAST_INTERVAL_MS) {
           lastProgressBroadcast = now;
@@ -149,6 +152,19 @@ function registerPrivateMediaNamespace(io) {
         }
       } catch {
         // Progress is best-effort telemetry; commands remain the source of truth.
+      }
+    });
+
+    // The video ended: advance the queue automatically (YouTube behaviour).
+    // There is no "next" button any more — this is the only way forward.
+    socket.on('private-media:player-ended', async () => {
+      try {
+        if (!isPlayer) return;
+        const result = await sessionService.autoAdvance({ userId, room: socket.pmRoom });
+        if (!result.advanced) return;
+        realtime.broadcastState(result.state, sessionKey);
+      } catch {
+        // Ending is best-effort: a failure must not break the socket.
       }
     });
 

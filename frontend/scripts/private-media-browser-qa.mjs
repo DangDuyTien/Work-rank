@@ -152,8 +152,8 @@ async function run() {
     'INLINE_CONTROLS',
     Boolean(inlineBar)
       && inlineBar.visible
-      && inlineBar.count === 5
-      && inlineBar.enabled === 5
+      && inlineBar.count === 4
+      && inlineBar.enabled === 4
       && inlineBar.hasSeek
       && inlineBar.hasVolume,
     inlineBar
@@ -161,7 +161,7 @@ async function run() {
       : 'inline bar missing',
   );
 
-  if (inlineBar?.count === 5) {
+  if (inlineBar?.count === 4) {
     const beforeInline = await readStatus();
     await page.locator('.pm-inline .pm-mini__btn.is-primary').click();
     await page.waitForTimeout(2500);
@@ -258,10 +258,10 @@ async function run() {
   const pip = await readPip();
   // The primary button label follows the real session status (Phát / Tạm dừng),
   // so only its position is fixed — the rest are stable.
-  const expectedButtons = ['Nhỏ hơn', 'Dừng', 'Video tiếp theo', 'To hơn'];
+  const expectedButtons = ['Nhỏ hơn', 'Dừng', 'To hơn'];
   const primaryIsPlayState = (label) => label === 'Phát' || label === 'Tạm dừng';
   const pipLabelsOk = Boolean(pip)
-    && pip.buttons.length === 5
+    && pip.buttons.length === 4
     && primaryIsPlayState(pip.buttons[1])
     && expectedButtons.every((label, i) => pip.buttons[i === 0 ? 0 : i + 1] === label);
 
@@ -488,8 +488,19 @@ async function run() {
   }, { api: API, token: OWNER_TOKEN });
 
   await page.getByRole('button', { name: 'Nghe chung', exact: true }).click();
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(3000);
   const roomActive = await page.evaluate(() => localStorage.getItem('workrank:private-media:room'));
+
+  // After the room switch the socket reconnects: the player must re-announce
+  // itself, otherwise the room shows "Ngoại tuyến" and receives no commands.
+  const roomLive = await page.evaluate(async ({ api, token }) => {
+    const res = await fetch(`${api}/api/private-media/session`, {
+      headers: { Authorization: `Bearer ${token}`, 'X-PM-Room': 'shared' },
+    });
+    if (!res.ok) return null;
+    const s = (await res.json()).session;
+    return { online: Boolean(s.playerOnline), key: s.sessionKey };
+  }, { api: API, token: OWNER_TOKEN });
 
   await page.getByRole('button', { name: 'Nghe riêng', exact: true }).click();
   await page.waitForTimeout(1500);
@@ -500,8 +511,9 @@ async function run() {
     Boolean(roomSessions.shared?.sessionKey) && roomSessions.shared.sessionKey === 'room:shared'
       && roomSessions.shared.sessionId !== roomSessions.private?.sessionId
       && roomActive === 'shared'
-      && roomBack === 'private',
-    `shared=${roomSessions.shared?.sessionKey} private=${roomSessions.private?.sessionKey} toggled=${roomActive}→${roomBack}`,
+      && roomBack === 'private'
+      && roomLive?.online === true,
+    `shared=${roomSessions.shared?.sessionKey} private=${roomSessions.private?.sessionKey} toggled=${roomActive}→${roomBack} playerOnline=${roomLive?.online}`,
   );
 
 

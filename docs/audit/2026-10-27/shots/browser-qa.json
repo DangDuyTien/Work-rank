@@ -20,7 +20,7 @@
     {
       "name": "SESSION_STATE_HONEST",
       "pass": true,
-      "detail": "status=PLAYING t=362s"
+      "detail": "status=PLAYING t=363s"
     },
     {
       "name": "AUTOPLAY_GESTURE_OFFERED_OR_ALLOWED",
@@ -30,7 +30,7 @@
     {
       "name": "INLINE_CONTROLS",
       "pass": true,
-      "detail": "buttons=5 enabled=5 seek=true volume=true [Tua lại 10 giây, Tạm dừng, Dừng, Video tiếp theo, Tua tới 10 giây]"
+      "detail": "buttons=4 enabled=4 seek=true volume=true [Tua lại 10 giây, Tạm dừng, Dừng, Tua tới 10 giây]"
     },
     {
       "name": "INLINE_COMMAND_WORKS",
@@ -50,7 +50,7 @@
     {
       "name": "MINI_PIP_WINDOW",
       "pass": true,
-      "detail": "buttons=5 text=\"\" fits=true overflow=false"
+      "detail": "buttons=4 text=\"\" fits=true overflow=false"
     },
     {
       "name": "MINI_CONTROLLER_THEME",
@@ -90,12 +90,12 @@
     {
       "name": "PLAYBACK_PROGRESS",
       "pass": true,
-      "detail": "video=aqz-KE-bpKQ t=10.262384154495239s status=PLAYING"
+      "detail": "video=aqz-KE-bpKQ t=9.201161040054322s status=LOADING"
     },
     {
       "name": "SEEK_WORKS",
       "pass": true,
-      "detail": "target≈349s got=350s → +2.5s 354s"
+      "detail": "target≈349s got=352s → +2.5s 354s"
     },
     {
       "name": "OWNER_API_ACCESS",
@@ -110,7 +110,7 @@
     {
       "name": "SHARED_ROOM_OPT_IN",
       "pass": true,
-      "detail": "shared=room:shared private=primary toggled=shared→private"
+      "detail": "shared=room:shared private=primary toggled=shared→private playerOnline=true"
     },
     {
       "name": "ADMIN_HIDDEN_IN_SIDEBAR",

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Pause, Play, RotateCcw, RotateCw, SkipForward, Square, Volume1, Volume2 } from 'lucide-react';
+import { Pause, Play, RotateCcw, RotateCw, Square, Volume1, Volume2 } from 'lucide-react';
 
 /**
  * PRIVATE MEDIA — MEDIA CONTROLS
@@ -22,10 +22,10 @@ import { Pause, Play, RotateCcw, RotateCw, SkipForward, Square, Volume1, Volume2
 // 5 buttons: 24 + 36 + 30 + 30 + 24 = 144px, gaps 4×6 = 24px, padding 2×8 = 16px
 // → 184px of content. The window gets a few extra pixels so Chrome's own
 // rounding never clips the last button.
-export const PIP_WIDTH = 90;
-export const PIP_HEIGHT = 22;
-const PIP_CONTENT_WIDTH = 84;
-const PIP_CONTENT_HEIGHT = 16;
+export const PIP_WIDTH = 84;
+export const PIP_HEIGHT = 20;
+const PIP_CONTENT_WIDTH = 78;
+const PIP_CONTENT_HEIGHT = 14;
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 // The PiP document does not inherit the app stylesheet, so colours are resolved
@@ -136,18 +136,20 @@ function miniCss(theme) {
      clipping the outer ones (which looked like "there is only a mute button"). */
   flex: 1 1 0;
   min-width: 0;
+  max-width: 24px;
   display: inline-flex; align-items: center; justify-content: center;
   height: 100%; padding: 0;
   border: 1px solid ${p.btnBorder};
   border-radius: 3px; background: ${p.btnBg}; color: ${p.btnText};
   cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
 }
-.pm-mini .pm-mini__btn svg { width: 10px; height: 10px; }
+.pm-mini .pm-mini__btn svg { width: 9px; height: 9px; }
 .pm-mini .pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
 .pm-mini .pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.pm-mini .pm-mini__btn.is-narrow { flex: 0.72 1 0; }
+.pm-mini .pm-mini__btn.is-narrow { flex: 0.75 1 0; max-width: 20px; }
 .pm-mini .pm-mini__btn.is-primary {
   flex: 1.25 1 0;
+  max-width: 28px;
   background: ${p.primaryBg}; color: ${p.primaryText}; border-color: transparent;
 }
 .pm-mini .pm-mini__btn.is-primary:hover:not(:disabled) { background: ${p.primaryHover}; }
@@ -276,16 +278,6 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
         title="Dừng"
       >
         <Square size={11} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="pm-mini__btn"
-        onClick={() => onCommand('NEXT')}
-        disabled={disabled}
-        aria-label="Video tiếp theo"
-        title="Video tiếp theo"
-      >
-        <SkipForward size={13} aria-hidden="true" />
       </button>
       {showSeek && (
         <button

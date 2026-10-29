@@ -205,6 +205,13 @@ export default function YouTubeStage({ session, socket, canControl, seekSignal }
             },
             onStateChange: (event) => {
               const status = statusFromPlayerState(event.data);
+
+              // End of the video: let the backend advance the queue. This is the
+              // only way forward now — there is no "next" button any more.
+              if (event.data === YT_PLAYER_STATE.ENDED && socketRef.current) {
+                socketRef.current.emit('private-media:player-ended', {});
+              }
+
               if (status === 'PLAYING') {
                 needsActivationRef.current = false;
                 setNeedsActivation(false);
@@ -249,6 +256,24 @@ export default function YouTubeStage({ session, socket, canControl, seekSignal }
     // Intentionally mount-only: the player instance must survive re-renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Re-announce on every (re)connect ──────────────────────────────────────
+  // Switching between private and the shared room replaces the socket. The
+  // player is already ready by then, so `onReady` will not fire again — without
+  // this the tab never joins the room's player channel, never receives
+  // commands and the room shows "Ngoại tuyến" even though it is playing.
+  useEffect(() => {
+    if (!socket) return undefined;
+    const announce = () => {
+      if (!ready || !playerRef.current) return;
+      socket.emit('private-media:player-hello', {});
+    };
+    socket.on('connect', announce);
+    // A socket that is already connected when this effect runs (e.g. the room
+    // changed but the transport was reused) must announce too.
+    if (socket.connected) announce();
+    return () => socket.off('connect', announce);
+  }, [socket, ready]);
 
   // ── Command correlation: remember which command we are acknowledging ───────
   useEffect(() => {
