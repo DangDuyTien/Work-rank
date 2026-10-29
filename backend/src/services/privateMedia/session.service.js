@@ -36,7 +36,19 @@ const DEFAULT_SESSION_KEY = env.privateMedia?.sessionKey || 'primary';
  * Devices (Mac helper) and Telegram commands carry the owner's user id, so they
  * still drive the owner's session.
  */
-async function sessionKeyFor(userId) {
+const SHARED_ROOM_KEY = 'room:shared';
+
+/** Only the two known modes are accepted; anything else is treated as private. */
+function normalizeRoom(room) {
+  return String(room || '').toLowerCase() === 'shared' ? 'shared' : 'private';
+}
+
+/**
+ * @param {number} userId
+ * @param {'private'|'shared'} [room]  shared = the listening room everyone joins
+ */
+async function sessionKeyFor(userId, room) {
+  if (normalizeRoom(room) === 'shared') return SHARED_ROOM_KEY;
   if (!userId) return DEFAULT_SESSION_KEY;
   try {
     // Lazy require: access.service is loaded by the middleware and importing it
@@ -145,8 +157,8 @@ function serializeSession(session) {
   };
 }
 
-async function getSession(userId) {
-  const sessionKey = await sessionKeyFor(userId);
+async function getSession(userId, room) {
+  const sessionKey = await sessionKeyFor(userId, room);
   const [session] = await PrivateMediaSession.findOrCreate({
     where: { sessionKey },
     defaults: { sessionKey },
@@ -161,8 +173,8 @@ async function getSessionById(sessionId) {
   return session || getSession();
 }
 
-async function getSessionState(userId) {
-  const session = await getSession(userId);
+async function getSessionState(userId, room) {
+  const session = await getSession(userId, room);
   return serializeSession(session);
 }
 
@@ -275,7 +287,7 @@ function serializeCommand(command) {
  * @param {object} [input.payload]
  * @returns {Promise<{command: object, state: object, duplicate: boolean}>}
  */
-async function issueCommand({ commandId, action, source = 'WEB', actorUserId, payload = {} }) {
+async function issueCommand({ commandId, action, source = 'WEB', actorUserId, payload = {}, room }) {
   const normalizedAction = String(action || '').toUpperCase();
   if (!ACTION_LIST.includes(normalizedAction)) {
     throw new PrivateMediaCommandError('UNKNOWN_ACTION', 'Lệnh không hợp lệ');
@@ -294,7 +306,7 @@ async function issueCommand({ commandId, action, source = 'WEB', actorUserId, pa
     };
   }
 
-  const session = await getSession(actorUserId);
+  const session = await getSession(actorUserId, room);
 
   if (REQUIRES_VIDEO.has(normalizedAction) && !session.currentVideoId) {
     throw new PrivateMediaCommandError('NO_ACTIVE_MEDIA_SESSION', 'Chưa có video nào đang phát', 409);
@@ -400,8 +412,8 @@ async function acknowledgeCommand({ commandId, actorUserId, state = {}, errorCod
   };
 }
 
-async function setPlayerPresence(online, userId) {
-  const session = await getSession(userId);
+async function setPlayerPresence(online, userId, room) {
+  const session = await getSession(userId, room);
   await session.update({
     playerOnline: Boolean(online),
     playerLastSeenAt: new Date(),
@@ -443,8 +455,8 @@ async function hasRecentCommand(actions) {
 }
 
 /** Heartbeat from the browser player: keeps currentTime warm without a command. */
-async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId) {
-  const session = await getSession(userId);
+async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId, room) {
+  const session = await getSession(userId, room);
   // Identity of the newest SEEK this tick could have seen. Compared after the
   // write: anything newer was issued while this tick was in flight.
   const seekBefore = await PrivateMediaCommand.findOne({
@@ -501,8 +513,8 @@ async function syncPlayerProgress({ currentTime, durationSeconds, status }, user
 }
 
 /** Recent commands (owner/ops visibility; no secrets involved). */
-async function recentCommands({ limit = 20, userId } = {}) {
-  const session = await getSession(userId);
+async function recentCommands({ limit = 20, userId, room } = {}) {
+  const session = await getSession(userId, room);
   const rows = await PrivateMediaCommand.findAll({
     where: { sessionId: session.id },
     order: [['createdAt', 'DESC']],
@@ -518,8 +530,8 @@ async function recentCommands({ limit = 20, userId } = {}) {
  * zero credentials — it is the keyless way to replay something you already
  * loaded without searching again.
  */
-async function recentVideos({ limit = 12, userId } = {}) {
-  const session = await getSession(userId);
+async function recentVideos({ limit = 12, userId, room } = {}) {
+  const session = await getSession(userId, room);
   const rows = await PrivateMediaCommand.findAll({
     where: { action: ACTIONS.LOAD_VIDEO, sessionId: session.id },
     order: [['createdAt', 'DESC']],
@@ -558,7 +570,9 @@ module.exports = {
   getSessionById,
   getSessionState,
   sessionKeyFor,
+  normalizeRoom,
   DEFAULT_SESSION_KEY,
+  SHARED_ROOM_KEY,
   serializeSession,
   issueCommand,
   acknowledgeCommand,

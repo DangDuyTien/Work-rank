@@ -49,6 +49,11 @@ function registerPrivateMediaNamespace(io) {
     try {
       const auth = socket.handshake.auth || {};
 
+      // Devices and the shared room: a device always drives its owner's private
+      // session; browsers may opt into the shared listening room.
+      const room = sessionService.normalizeRoom(auth.room);
+      socket.pmRoom = room;
+
       if (auth.deviceToken) {
         const device = await deviceService.authenticateToken(auth.deviceToken);
         if (!device) return next(unauthorized());
@@ -87,7 +92,7 @@ function registerPrivateMediaNamespace(io) {
     // one user's state never reaches another user's browser.
     let sessionKey = sessionService.DEFAULT_SESSION_KEY;
     try {
-      sessionKey = await sessionService.sessionKeyFor(userId);
+      sessionKey = await sessionService.sessionKeyFor(userId, socket.pmRoom);
     } catch {
       // Fall back to the default room rather than dropping the connection.
     }
@@ -100,14 +105,14 @@ function registerPrivateMediaNamespace(io) {
     };
 
     // Initial snapshot: the connecting client never has to guess.
-    sessionService.getSessionState(userId)
+    sessionService.getSessionState(userId, socket.pmRoom)
       .then(emitState)
       .catch(() => {});
 
     socket.on('private-media:subscribe', async (ack) => {
       try {
         socket.join(realtime.controllersRoom(sessionKey));
-        const state = await sessionService.getSessionState(userId);
+        const state = await sessionService.getSessionState(userId, socket.pmRoom);
         socket.emit('private-media:state', state);
         if (typeof ack === 'function') ack({ ok: true, state });
       } catch (error) {
@@ -124,7 +129,7 @@ function registerPrivateMediaNamespace(io) {
         socket.join(realtime.playersRoom(sessionKey));
         realtime.registerPlayer(socket.id, sessionKey);
 
-        const state = await sessionService.setPlayerPresence(true, userId);
+        const state = await sessionService.setPlayerPresence(true, userId, socket.pmRoom);
         realtime.broadcastPlayerPresence(true, state, sessionKey);
         realtime.broadcastState(state, sessionKey);
         if (typeof ack === 'function') ack({ ok: true, state });
@@ -136,7 +141,7 @@ function registerPrivateMediaNamespace(io) {
     socket.on('private-media:player-progress', async (payload = {}) => {
       try {
         if (!isPlayer) return;
-        const state = await sessionService.syncPlayerProgress(payload, userId);
+        const state = await sessionService.syncPlayerProgress(payload, userId, socket.pmRoom);
         const now = Date.now();
         if (now - lastProgressBroadcast >= PROGRESS_BROADCAST_INTERVAL_MS) {
           lastProgressBroadcast = now;
@@ -183,6 +188,7 @@ function registerPrivateMediaNamespace(io) {
           source: socket.clientType === 'device' ? 'HOTKEY' : 'WEB',
           actorUserId: userId,
           payload: payload.payload || {},
+          room: socket.pmRoom,
         });
 
         if (!result.duplicate) {
@@ -203,7 +209,7 @@ function registerPrivateMediaNamespace(io) {
       const remaining = realtime.unregisterPlayer(socket.id, sessionKey);
       if (remaining > 0) return;
       try {
-        const state = await sessionService.setPlayerPresence(false, userId);
+        const state = await sessionService.setPlayerPresence(false, userId, socket.pmRoom);
         realtime.broadcastPlayerPresence(false, state, sessionKey);
         realtime.broadcastState(state, sessionKey);
       } catch {

@@ -460,6 +460,42 @@ test('PER_ACCOUNT_SESSION — every granted account listens separately', async (
   assert.notEqual(Number(ownerSession.body.session?.volume), 20, 'delegate volume must not reach the owner');
 });
 
+test('SHARED_ROOM — everyone who joins hears the same thing, private stays private', async () => {
+  const shared = { 'X-PM-Room': 'shared' };
+
+  const ownerLoad = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.ownerToken))
+    .set(shared)
+    .send({ commandId: 'room-load-1', action: 'LOAD_VIDEO', payload: { videoId: 'dQw4w9WgXcQ', title: 'Room pick' } });
+  assert.equal(ownerLoad.status, 200, JSON.stringify(ownerLoad.body));
+
+  // The delegate joins the same room and sees the same playhead...
+  const delegateRoom = await request(app).get(`${BASE}/session`).set(bearer(users.delegateToken)).set(shared);
+  assert.equal(delegateRoom.status, 200);
+  assert.equal(delegateRoom.body.session?.video?.videoId, 'dQw4w9WgXcQ');
+  assert.equal(delegateRoom.body.session?.sessionId, ownerLoad.body.state?.sessionId);
+
+  // ...while their private session is a different one.
+  const delegatePrivate = await request(app).get(`${BASE}/session`).set(bearer(users.delegateToken));
+  assert.notEqual(delegatePrivate.body.session?.sessionId, ownerLoad.body.state?.sessionId);
+
+  // A command issued in the room reaches every member of the room.
+  const roomVolume = await request(app)
+    .post(`${BASE}/commands`)
+    .set(bearer(users.delegateToken))
+    .set(shared)
+    .send({ commandId: 'room-vol-1', action: 'SET_VOLUME', payload: { volume: 30 } });
+  assert.equal(roomVolume.status, 200);
+  assert.equal(Number(roomVolume.body.state.volume), 30);
+
+  const ownerRoom = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken)).set(shared);
+  assert.equal(Number(ownerRoom.body.session?.volume), 30, 'room volume is shared');
+
+  const ownerPrivate = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken));
+  assert.notEqual(Number(ownerPrivate.body.session?.volume), 30, 'private volume is untouched');
+});
+
 test('DEVICE_AUTHZ — pairing issues a scoped token; revocation kills it instantly', async () => {
   const codeRes = await request(app)
     .post(`${BASE}/devices/code`)

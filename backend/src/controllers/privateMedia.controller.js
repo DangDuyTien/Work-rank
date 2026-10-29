@@ -10,6 +10,11 @@
 const accessService = require('../services/privateMedia/access.service');
 const sessionService = require('../services/privateMedia/session.service');
 const realtime = require('../services/privateMedia/realtime.service');
+
+/** Which playback session the caller is looking at: private (default) or the shared room. */
+function roomOf(req) {
+  return sessionService.normalizeRoom(req.get('x-pm-room'));
+}
 const deviceService = require('../services/privateMedia/device.service');
 const telegramService = require('../services/privateMedia/telegram.service');
 const youtubeService = require('../services/privateMedia/youtube.service');
@@ -33,7 +38,7 @@ async function getAccess(req, res) {
 async function getStatus(req, res) {
   try {
     const isOwner = Boolean(req.privateMedia?.isOwner);
-    const session = await sessionService.getSessionState(req.user.id);
+    const session = await sessionService.getSessionState(req.user.id, roomOf(req));
 
     let devices = [];
     if (accessService.hasPermission(req.privateMedia, 'hotkey')) {
@@ -73,7 +78,7 @@ async function getStatus(req, res) {
 /** GET /api/private-media/session */
 async function getSessionState(req, res) {
   try {
-    return res.status(200).json({ session: await sessionService.getSessionState(req.user.id) });
+    return res.status(200).json({ session: await sessionService.getSessionState(req.user.id, roomOf(req)) });
   } catch (error) {
     return fail(res, error);
   }
@@ -89,6 +94,7 @@ async function issueCommand(req, res) {
       source: 'WEB',
       actorUserId: req.user.id,
       payload: payload || {},
+      room: roomOf(req),
     });
 
     if (!result.duplicate) {
@@ -375,7 +381,7 @@ async function listAudit(req, res) {
 async function recentCommands(req, res) {
   try {
     return res.status(200).json({
-      commands: await sessionService.recentCommands({ limit: req.query.limit, userId: req.user.id }),
+      commands: await sessionService.recentCommands({ limit: req.query.limit, userId: req.user.id, room: roomOf(req) }),
     });
   } catch (error) {
     return fail(res, error);
@@ -386,7 +392,7 @@ async function recentCommands(req, res) {
 async function recentVideos(req, res) {
   try {
     return res.status(200).json({
-      videos: await sessionService.recentVideos({ limit: req.query.limit, userId: req.user.id }),
+      videos: await sessionService.recentVideos({ limit: req.query.limit, userId: req.user.id, room: roomOf(req) }),
     });
   } catch (error) {
     return fail(res, error);

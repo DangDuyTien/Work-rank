@@ -475,6 +475,37 @@ async function run() {
     `sessionKey=${ownSession?.sessionKey}`,
   );
 
+  // ── Shared listening room ────────────────────────────────────────────────
+  // Default is private; the room is opt-in and is its own session.
+  const roomSessions = await page.evaluate(async ({ api, token }) => {
+    const read = async (room) => {
+      const res = await fetch(`${api}/api/private-media/session`, {
+        headers: { Authorization: `Bearer ${token}`, 'X-PM-Room': room },
+      });
+      return res.ok ? (await res.json()).session : null;
+    };
+    return { shared: await read('shared'), private: await read('private') };
+  }, { api: API, token: OWNER_TOKEN });
+
+  await page.getByRole('button', { name: 'Nghe chung', exact: true }).click();
+  await page.waitForTimeout(2500);
+  const roomActive = await page.evaluate(() => localStorage.getItem('workrank:private-media:room'));
+
+  await page.getByRole('button', { name: 'Nghe riêng', exact: true }).click();
+  await page.waitForTimeout(1500);
+  const roomBack = await page.evaluate(() => localStorage.getItem('workrank:private-media:room'));
+
+  record(
+    'SHARED_ROOM_OPT_IN',
+    Boolean(roomSessions.shared?.sessionKey) && roomSessions.shared.sessionKey === 'room:shared'
+      && roomSessions.shared.sessionId !== roomSessions.private?.sessionId
+      && roomActive === 'shared'
+      && roomBack === 'private',
+    `shared=${roomSessions.shared?.sessionKey} private=${roomSessions.private?.sessionKey} toggled=${roomActive}→${roomBack}`,
+  );
+
+
+
   // ── Admin (no grant) ─────────────────────────────────────────────────────
   await seedSession(page, ADMIN_TOKEN, process.env.PM_QA_ADMIN_ID || '1');
   await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });

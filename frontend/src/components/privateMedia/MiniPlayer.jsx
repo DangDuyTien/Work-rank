@@ -22,10 +22,10 @@ import { Pause, Play, RotateCcw, RotateCw, SkipForward, Square, Volume1, Volume2
 // 5 buttons: 24 + 36 + 30 + 30 + 24 = 144px, gaps 4×6 = 24px, padding 2×8 = 16px
 // → 184px of content. The window gets a few extra pixels so Chrome's own
 // rounding never clips the last button.
-export const PIP_WIDTH = 150;
-export const PIP_HEIGHT = 38;
-const PIP_CONTENT_WIDTH = 142;
-const PIP_CONTENT_HEIGHT = 30;
+export const PIP_WIDTH = 90;
+export const PIP_HEIGHT = 22;
+const PIP_CONTENT_WIDTH = 84;
+const PIP_CONTENT_HEIGHT = 16;
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 // The PiP document does not inherit the app stylesheet, so colours are resolved
@@ -124,8 +124,8 @@ function miniCss(theme) {
   display: flex;
   align-items: stretch;
   justify-content: center;
-  gap: 4px;
-  padding: 4px 5px;
+  gap: 2px;
+  padding: 2px 3px;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -139,9 +139,10 @@ function miniCss(theme) {
   display: inline-flex; align-items: center; justify-content: center;
   height: 100%; padding: 0;
   border: 1px solid ${p.btnBorder};
-  border-radius: 4px; background: ${p.btnBg}; color: ${p.btnText};
+  border-radius: 3px; background: ${p.btnBg}; color: ${p.btnText};
   cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
 }
+.pm-mini .pm-mini__btn svg { width: 10px; height: 10px; }
 .pm-mini .pm-mini__btn:hover:not(:disabled) { background: ${p.btnHoverBg}; }
 .pm-mini .pm-mini__btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .pm-mini .pm-mini__btn.is-narrow { flex: 0.72 1 0; }

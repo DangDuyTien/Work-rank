@@ -11,8 +11,8 @@
 ```text
 Root owner bootstrap : tienddph50842@gmail.com → Work Rank user #10943 (role = user)
 Module               : /api/private-media/* + socket namespace /private-media + mac-helper
-Backend tests        : 30/30 PASS
-Browser QA           : 24/24 PASS
+Backend tests        : 31/31 PASS
+Browser QA           : 25/25 PASS
 Migration            : applied on dev MySQL (forward, repeatable)
 Global F8            : UNVERIFIED  (OS-level key injection bị chặn quyền Accessibility)
 Telegram real bot    : BLOCKED_BY_CREDENTIAL (chưa có TELEGRAM_BOT_TOKEN)
@@ -402,7 +402,7 @@ Bằng chứng: `NAMES_ONLY_UI — thumbnails=0 visiblePlayer=0 audioIframe=1`, 
 
 ### Nội dung
 
-**5 nút, không chữ** — cửa sổ xin **150×38** (trước là 196×52):
+**5 nút, không chữ** — cửa sổ xin **90×22** (196×52 → 150×38 → 90×22, nhỏ hơn ~7 lần diện tích so với bản đầu):
 
 | Nút | Tỉ lệ | Hành vi |
 |---|---|---|
@@ -430,7 +430,7 @@ Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
 
 Đã sửa:
 
-* `PIP_WIDTH = 150`, `PIP_HEIGHT = 38` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
+* `PIP_WIDTH = 90`, `PIP_HEIGHT = 22` là **hằng số duy nhất**, dùng cho cả `requestWindow` lẫn CSS.
 * Nút dùng `flex: 1 1 0` — cửa sổ hẹp hơn yêu cầu thì nút co lại thay vì bị cắt (lớp bảo vệ thứ hai,
   độc lập với kích thước).
 * Gọi thêm `win.resizeTo(PIP_WIDTH, PIP_HEIGHT)` sau khi mở, phòng khi Chrome bỏ qua tham số.
@@ -441,9 +441,9 @@ Hai lỗi cộng lại, cả hai đều là lỗi kích thước:
 Kiểm chứng bằng cách replay chính document của cửa sổ ở nhiều kích thước:
 
 ```text
-150×38 → vw 148 · nút [19,31,25,25,19] · không tràn
-132×40 → vw 130 · nút [16,27,22,22,16] · không tràn
-120×36 → vw 118 · nút [14,23,19,19,14] · không tràn
+90×22  → vw 88 · nút [12,19,15,15,12] · icon 10px · không tràn
+80×20  → vw 78 · nút [10,16,13,13,10] · không tràn
+100×24 → vw 98 · nút [13,21,17,17,13] · không tràn
 ```
 
 ### Vì sao trước đây nó "chỉ hiện trong trang 3WIN, không sang tab khác"
@@ -544,6 +544,38 @@ không chạm tới owner.
 
 ---
 
+## 10c. PHÒNG NGHE CHUNG (tùy chọn)
+
+Mặc định là **nghe riêng**. Ai muốn nghe cùng nhau thì bật *Nghe chung* — đó chính là hành vi
+của bản đầu tiên: một session chung cho tất cả.
+
+| Chế độ | `session_key` | Ai thấy gì |
+|---|---|---|
+| Nghe riêng (mặc định) | `primary` (owner) / `user:<id>` | mỗi người một playhead, queue, âm lượng |
+| Nghe chung | `room:shared` | ai bật cũng thấy **cùng** video, vị trí, âm lượng |
+
+Cách hoạt động:
+
+* Client gửi `X-PM-Room: shared|private` trên mọi request private-media (axios interceptor)
+  và `room` trong `auth` của socket.
+* Server chuẩn hoá: chỉ `shared` mới vào phòng, mọi giá trị khác rơi về `private`
+  (`sessionService.normalizeRoom`). Không có cách nào để một chuỗi lạ trỏ sang session người khác.
+* Đổi chế độ → socket nối lại (room nằm trong deps) và trạng thái + danh sách "đã phát gần đây"
+  được nạp lại theo session mới.
+* Lựa chọn lưu ở `localStorage['workrank:private-media:room']`.
+
+Bằng chứng (UI thật):
+
+```text
+PRIVATE : id=2  key=primary      video=AiwYeEkJLcg
+SHARED  : id=8  key=room:shared  video=jNQXAC9IVRw
+nạp video từ UI khi đang ở phòng → chỉ room:shared đổi; primary giữ nguyên
+nút +10s khi đang ở phòng       → room:shared 0 → 10
+SHARED_ROOM_OPT_IN — shared=room:shared private=primary toggled=shared→private
+```
+
+---
+
 ## 11. SECURITY
 
 | Hạng mục | Cách làm |
@@ -588,6 +620,7 @@ PASS  INLINE_COMMAND_WORKS              PLAYING → PAUSED
 PASS  VOLUME_SLIDER                     drag=40 label=40% mute=0 unmute=40
 PASS  SEEK_BUTTONS_10S                 363s → +10 373s → -10 363s
 PASS  SESSION_IS_ACCOUNT_SCOPED         sessionKey=primary
+PASS  SHARED_ROOM_OPT_IN                shared=room:shared private=primary toggled=shared→private
 PASS  MINI_PIP_WINDOW                   buttons=5 text="" fits=true overflow=false
 PASS  MINI_CONTROLLER_THEME             bg=rgb(255,255,255)
 PASS  MINI_PALETTE_OVERRIDE             auto=white dark=rgba(18,18,18,.94) back=white
@@ -617,6 +650,7 @@ Screenshots: `docs/audit/2026-10-27/shots/`
 | `owner-search-results.png` | search thật: 12 kết quả, title sạch, có thumbnail + thời lượng |
 | `owner-mini-bar.png` | cửa sổ nhỏ 5 nút (đang phát) |
 | `owner-inline-controls.png` | thanh tua + 5 nút (có ±10s) + thanh âm lượng |
+| `owner-room-mode.png` | thẻ "Chế độ nghe" (Nghe riêng / Nghe chung) |
 | `owner-seek-bar.png` | sau khi tua 55%: vị trí mới, vẫn phát |
 | `owner-web-no-player.png` | trang web: chỉ ô tìm + danh sách tên, không có player |
 | `owner-web-keyless.png` | trạng thái dùng được **không cần key**: dán link + "Đã phát gần đây" |
@@ -671,7 +705,7 @@ Ma trận quyền:
 ### Backend — `backend/test/private_media_authz.test.js`
 
 ```text
-# tests 30
+# tests 31
 # pass 27
 # fail 0
 ```
@@ -699,6 +733,7 @@ Ma trận quyền:
 | 19 | PROGRESS_AFTER_SEEK (tick cũ không kéo lùi playhead) | WEBSOCKET_REALTIME |
 | 20 | SEEK_ACK (ack của player không được kéo lùi) | WEBSOCKET_REALTIME |
 | 21 | PER_ACCOUNT_SESSION (mỗi tài khoản nghe riêng) | ISOLATION |
+| 22 | SHARED_ROOM (phòng chung tách khỏi riêng) | ISOLATION |
 | 19 | DEVICE_AUTHZ (pair → use → revoke) | DEVICE_AUTHZ |
 | 20 | DEVICE_AUTHZ (member cannot mint) | DEVICE_AUTHZ |
 | 21 | TELEGRAM_AUTHZ (unbound/one-time/revoked) | TELEGRAM_AUTHZ |
@@ -799,6 +834,7 @@ MAC_HELPER:                          PASS (tùy chọn — không bắt buộc)
 MINI_CONTROLLER:                     PASS (PiP thật 150×38, 5 nút, không cắt)
 WEB_INLINE_CONTROLS:                 PASS (5 nút + thanh tua + thanh âm lượng)
 PER_ACCOUNT_SESSION:                 PASS (mỗi tài khoản một session)
+SHARED_ROOM:                         PASS (bật/tắt được, tách khỏi riêng)
 WEB_NAMES_ONLY:                      PASS (không khung video, vẫn phát tiếng)
 GLOBAL_F8_HOTKEY:                    UNVERIFIED (tùy chọn)
 DEVICE_AUTHZ:                        PASS
@@ -809,7 +845,7 @@ SECRETS_NOT_EXPOSED:                 PASS
 OTHER_WORKRANK_PERMISSIONS_UNCHANGED: PASS
 FRONTEND_CHECK:                      PASS
 FRONTEND_BUILD:                      PASS
-BACKEND_TESTS:                       PASS (module 30/30; full suite 685/696 —
+BACKEND_TESTS:                       PASS (module 31/31; full suite 685/696 —
                                           10 fail thuộc 6 suite competition/integration
                                           có sẵn từ baseline, không file nào bị sửa)
 OVERALL:                             PASS (1 mục BLOCKED do thiếu Telegram token

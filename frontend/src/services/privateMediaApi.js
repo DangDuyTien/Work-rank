@@ -10,6 +10,29 @@ import api from './api';
 
 const BASE = '/api/private-media';
 
+// Which playback session this tab talks to. 'private' is the default: every
+// account has its own. 'shared' joins the one listening room everybody shares.
+let roomMode = 'private';
+
+/** Called by the page when the owner switches between private and the room. */
+export function setPrivateMediaRoom(mode) {
+  roomMode = mode === 'shared' ? 'shared' : 'private';
+  return roomMode;
+}
+
+export function getPrivateMediaRoom() {
+  return roomMode;
+}
+
+// Attach the room to every private-media request; other modules are untouched.
+api.interceptors.request.use((config) => {
+  if (typeof config.url === 'string' && config.url.startsWith(BASE)) {
+    config.headers = config.headers || {};
+    config.headers['X-PM-Room'] = roomMode;
+  }
+  return config;
+});
+
 function isConcealed(error) {
   return error?.response?.status === 404;
 }

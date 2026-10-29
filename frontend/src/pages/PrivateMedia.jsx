@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Trash2,
   UserPlus,
+  Users,
   X,
 } from 'lucide-react';
 import {
@@ -35,7 +36,7 @@ import YouTubeStage, { formatTime } from '../components/privateMedia/YouTubeStag
 import MiniPlayer, { MediaControls, PIP_WIDTH, PIP_HEIGHT } from '../components/privateMedia/MiniPlayer';
 import SeekBar from '../components/privateMedia/SeekBar';
 import VolumeBar from '../components/privateMedia/VolumeBar';
-import { privateMediaApi, codeFrom, messageFrom } from '../services/privateMediaApi';
+import { privateMediaApi, setPrivateMediaRoom, codeFrom, messageFrom } from '../services/privateMediaApi';
 import { usePrivateMediaAccess, invalidatePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 import { useAuth } from '../context/AuthContext';
 import './privateMedia.css';
@@ -49,6 +50,7 @@ import './privateMedia.css';
 
 const SOCKET_NAMESPACE = '/private-media';
 const MINI_THEME_KEY = 'workrank:private-media:mini-theme';
+const ROOM_KEY = 'workrank:private-media:room';
 
 function newCommandId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -114,6 +116,26 @@ export default function PrivateMedia() {
 
   // The mini window cannot read the colour of other tabs (cross-origin), so the
   // owner picks a palette once and it is remembered.
+  // Private by default. 'shared' joins the one listening room, which behaves
+  // like the original single session: same video, same playhead, same volume.
+  const [roomMode, setRoomMode] = useState(() => {
+    try {
+      return localStorage.getItem(ROOM_KEY) === 'shared' ? 'shared' : 'private';
+    } catch {
+      return 'private';
+    }
+  });
+
+  // Keep the API client in sync before any request is made.
+  setPrivateMediaRoom(roomMode);
+
+  const changeRoomMode = useCallback((value) => {
+    const next = value === 'shared' ? 'shared' : 'private';
+    setRoomMode(next);
+    setPrivateMediaRoom(next);
+    try { localStorage.setItem(ROOM_KEY, next); } catch { /* private mode */ }
+  }, []);
+
   const [miniTheme, setMiniTheme] = useState(() => {
     try {
       const stored = localStorage.getItem(MINI_THEME_KEY);
@@ -220,8 +242,11 @@ export default function PrivateMedia() {
 
   useEffect(() => {
     if (!access.entitled) return;
+    setPrivateMediaRoom(roomMode);
     refreshStatus();
-  }, [access.entitled, refreshStatus]);
+    // The recent list belongs to a session too, so it must follow the room.
+    loadRecent?.();
+  }, [access.entitled, refreshStatus, roomMode]);
 
   // ── Realtime channel (dedicated namespace) ────────────────────────────────
   useEffect(() => {
@@ -231,7 +256,7 @@ export default function PrivateMedia() {
 
     const base = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '';
     const client = io(`${base}${SOCKET_NAMESPACE}`, {
-      auth: { token, clientType: 'web' },
+      auth: { token, clientType: 'web', room: roomMode },
       transports: ['websocket', 'polling'],
     });
 
@@ -264,7 +289,7 @@ export default function PrivateMedia() {
       setSocket(null);
       setSocketConnected(false);
     };
-  }, [access.entitled, navigate]);
+  }, [access.entitled, navigate, roomMode]);
 
   // ── Commands ──────────────────────────────────────────────────────────────
   const sendCommand = useCallback(async (action, payload = {}, options = {}) => {
@@ -810,6 +835,27 @@ export default function PrivateMedia() {
                 Đang phát: <strong>{session.video.title || session.video.videoId}</strong>
               </p>
             )}
+          </Card>
+
+          <Card className="pm-rail-card">
+            <h2 className="pm-rail__title">
+              <Users size={15} aria-hidden="true" />
+              Chế độ nghe
+            </h2>
+            <SegmentedControl
+              ariaLabel="Chế độ nghe"
+              value={roomMode}
+              onChange={changeRoomMode}
+              options={[
+                { key: 'private', label: 'Nghe riêng' },
+                { key: 'shared', label: 'Nghe chung' },
+              ]}
+            />
+            <p className="pm-rail__note">
+              {roomMode === 'shared'
+                ? 'Đang ở phòng nghe chung: ai có quyền cũng thấy cùng video, cùng vị trí và cùng âm lượng.'
+                : 'Mặc định mỗi tài khoản nghe riêng — video, vị trí và âm lượng của bạn không ảnh hưởng người khác.'}
+            </p>
           </Card>
 
           <Card className="pm-rail-card">
