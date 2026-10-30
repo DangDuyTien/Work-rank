@@ -149,6 +149,8 @@ async function createGrant(req, res) {
       note,
     });
 
+    // Permission changes also evict existing subscriptions before more broadcasts.
+    realtime.revokeUser(Number(userId), 'permissions-changed');
     await audit.record({
       action: 'GRANT_ACCESS',
       actorUserId: req.user.id,
@@ -168,6 +170,7 @@ async function createGrant(req, res) {
         userId: grant.userId,
         permissions: {
           view: grant.canView,
+          queue: Boolean(grant.canQueue || grant.canControl),
           control: grant.canControl,
           telegram: grant.canTelegram,
           hotkey: grant.canHotkey,
@@ -425,6 +428,7 @@ async function deviceCommand(req, res) {
       source: 'HOTKEY',
       actorUserId: device.userId,
       payload: payload || {},
+      room: req.get('x-pm-room') || (realtime.isListening(device.userId, sessionService.SHARED_ROOM_KEY) ? 'shared' : 'private'),
     });
 
     if (!result.duplicate) {

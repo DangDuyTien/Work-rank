@@ -17,6 +17,7 @@ const PrivateMediaGrant = sequelize.define(
     userId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, unique: true, field: 'user_id' },
     grantedByUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false, field: 'granted_by_user_id' },
     canView: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true, field: 'can_view' },
+    canQueue: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_queue' },
     canControl: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_control' },
     canTelegram: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_telegram' },
     canHotkey: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_hotkey' },

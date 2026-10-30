@@ -19,11 +19,13 @@ const EMPTY = {
   entitled: false,
   isOwner: false,
   permissions: {
-    view: false, control: false, telegram: false, hotkey: false, manageAccess: false,
+    view: false, queue: false, control: false, telegram: false, hotkey: false, manageAccess: false,
   },
 };
 
 let cache = { userId: null, value: null, promise: null };
+const invalidationListeners = new Set();
+let cacheGeneration = 0;
 
 function snapshotFrom(data) {
   if (!data || data.entitled !== true) {
@@ -31,7 +33,7 @@ function snapshotFrom(data) {
       loading: false,
       entitled: false,
       isOwner: false,
-      permissions: { view: false, control: false, telegram: false, hotkey: false, manageAccess: false },
+      permissions: { view: false, queue: false, control: false, telegram: false, hotkey: false, manageAccess: false },
     };
   }
   return {
@@ -40,6 +42,7 @@ function snapshotFrom(data) {
     isOwner: Boolean(data.isOwner),
     permissions: {
       view: Boolean(data.permissions?.view),
+      queue: Boolean(data.permissions?.queue),
       control: Boolean(data.permissions?.control),
       telegram: Boolean(data.permissions?.telegram),
       hotkey: Boolean(data.permissions?.hotkey),
@@ -54,10 +57,12 @@ function load(userId) {
   if (cache.userId === String(userId) && cache.promise) return cache.promise;
 
   cache = { userId: String(userId), value: null, promise: null };
+  const generation = cacheGeneration;
   const promise = privateMediaApi.getAccess()
     .then((data) => snapshotFrom(data))
     .catch(() => snapshotFrom(null))
     .then((value) => {
+      if (generation !== cacheGeneration) return snapshotFrom(null);
       cache = { userId: String(userId), value, promise: null };
       return value;
     });
@@ -72,7 +77,9 @@ export function getPrivateMediaSnapshot() {
 }
 
 export function invalidatePrivateMediaAccess() {
+  cacheGeneration++;
   cache = { userId: null, value: null, promise: null };
+  for (const invalidate of invalidationListeners) invalidate();
 }
 
 export function usePrivateMediaAccess() {
@@ -82,6 +89,12 @@ export function usePrivateMediaAccess() {
     const cached = getPrivateMediaSnapshot();
     return cache.userId === String(userId) && cache.value ? cached : { ...EMPTY };
   });
+
+  useEffect(() => {
+    const invalidate = () => setState(snapshotFrom(null));
+    invalidationListeners.add(invalidate);
+    return () => invalidationListeners.delete(invalidate);
+  }, []);
 
   useEffect(() => {
     let active = true;

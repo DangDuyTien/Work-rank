@@ -170,8 +170,9 @@ async function run() {
 
     // Volume: a real level control with a percentage, not just a mute icon.
     const readVolume = () => page.evaluate(async ({ api, token }) => {
-      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.ok ? (await res.json()).session.volume : null;
+      const id = localStorage.getItem('workrank_active_user_id');
+      const output = JSON.parse(localStorage.getItem(`workrank:private-media:output:v1:${id}`) || 'null');
+      return output ? (output.muted ? 0 : output.volume) : 70;
     }, { api: API, token: OWNER_TOKEN });
 
     const volRange = page.locator('.pm-vol__range');
@@ -327,10 +328,11 @@ async function run() {
     }, { api: API, token: OWNER_TOKEN });
     record('MINI_COMMAND_WORKS', before !== after, `${before} → ${after}`);
 
-    // Volume: two extra buttons step the session volume by 10.
+    // Volume: two extra buttons step this device volume by 10.
     const readVolume = () => page.evaluate(async ({ api, token }) => {
-      const res = await fetch(`${api}/api/private-media/session`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.ok ? (await res.json()).session.volume : null;
+      const id = localStorage.getItem('workrank_active_user_id');
+      const output = JSON.parse(localStorage.getItem(`workrank:private-media:output:v1:${id}`) || 'null');
+      return output ? (output.muted ? 0 : output.volume) : 70;
     }, { api: API, token: OWNER_TOKEN });
     const volBefore = await readVolume();
     await page.evaluate(() => {

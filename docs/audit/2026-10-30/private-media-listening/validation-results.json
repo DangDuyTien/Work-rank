@@ -1,0 +1,19 @@
+{
+  "backend": {
+    "pass": 38,
+    "fail": 0,
+    "command": "node --import ./test/setup/teardown-db.mjs --test --test-concurrency=1 test/private_media_authz.test.js test/private_media_shared_listening.test.js"
+  },
+  "browser": {
+    "pass": 18,
+    "fail": 0,
+    "mockPlayer": false
+  },
+  "frontendCheck": {
+    "status": "PASS",
+    "files": 104
+  },
+  "frontendBuild": "PASS",
+  "staticNoSharedVolume": "PASS",
+  "gitDiffCheck": "PASS"
+}

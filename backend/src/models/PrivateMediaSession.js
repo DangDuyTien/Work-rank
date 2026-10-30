@@ -3,11 +3,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-/**
- * Single logical media session (V1). The browser player is a *renderer* of this
- * state; Telegram, hotkey and the web UI all mutate the same row so the three
- * control surfaces can never disagree about what is playing.
- */
+// Existing private sessions and opt-in shared listening use the same model.
+// Timeline/queue are shared; volume and mute are device preferences.
 const PrivateMediaSession = sequelize.define(
   'PrivateMediaSession',
   {
@@ -24,7 +21,10 @@ const PrivateMediaSession = sequelize.define(
     thumbnailUrl: { type: DataTypes.STRING(512), allowNull: true, field: 'thumbnail_url' },
     durationSeconds: { type: DataTypes.INTEGER, allowNull: true, field: 'duration_seconds' },
     currentTime: { type: DataTypes.DOUBLE, allowNull: false, defaultValue: 0, field: 'current_time' },
-    volume: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 100 },
+    revision: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    referenceTime: { type: DataTypes.DATE, allowNull: true, field: 'reference_time' },
+    currentQueueItemId: { type: DataTypes.STRING(36), allowNull: true, field: 'current_queue_item_id' },
+    lastFailure: { type: DataTypes.JSON, allowNull: true, field: 'last_failure' },
     queue: { type: DataTypes.JSON, allowNull: true },
     queueIndex: { type: DataTypes.INTEGER, allowNull: false, defaultValue: -1, field: 'queue_index' },
     controllerUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'controller_user_id' },

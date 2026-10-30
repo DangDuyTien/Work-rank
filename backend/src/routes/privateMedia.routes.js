@@ -39,7 +39,7 @@ router.get('/status', requirePrivateMedia('view'), asyncHandler(controller.getSt
 router.get('/session', requirePrivateMedia('view'), asyncHandler(controller.getSessionState));
 
 // Player control
-router.post('/commands', requirePrivateMedia('control'), privateMediaCommandLimiter, asyncHandler(controller.issueCommand));
+router.post('/commands', requirePrivateMedia('view'), privateMediaCommandLimiter, asyncHandler(controller.issueCommand));
 router.get('/commands/recent', requirePrivateMedia('view'), asyncHandler(controller.recentCommands));
 router.get('/recent', requirePrivateMedia('view'), asyncHandler(controller.recentVideos));
 

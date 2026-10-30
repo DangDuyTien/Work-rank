@@ -1,240 +1,124 @@
 'use strict';
 
-/**
- * PRIVATE MEDIA — SOCKET NAMESPACE `/private-media`
- *
- * A dedicated namespace keeps this capability fully isolated from the main
- * application socket: no extra events leak into `io`, and authorization is
- * re-evaluated on every connection (a revoked user cannot keep a live socket).
- *
- * Two kinds of principals:
- *   browser (JWT)      -> controllers / players
- *   Mac helper (device token) -> HOTKEY command source only
- */
-
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const { User } = require('../models');
-const accessService = require('../services/privateMedia/access.service');
-const sessionService = require('../services/privateMedia/session.service');
+const access = require('../services/privateMedia/access.service');
+const sessions = require('../services/privateMedia/session.service');
 const realtime = require('../services/privateMedia/realtime.service');
-const deviceService = require('../services/privateMedia/device.service');
-
+const devices = require('../services/privateMedia/device.service');
+const audit = require('../services/privateMedia/audit.service');
 const NAMESPACE = '/private-media';
-const PROGRESS_BROADCAST_INTERVAL_MS = 1200;
-
-function unauthorized(message = 'Unauthorized') {
-  return new Error(message);
-}
-
-async function authenticateBrowser(auth = {}) {
-  const token = auth.token || auth.accessToken;
-  if (!token) return null;
-
-  const payload = jwt.verify(token, env.jwtSecret);
-  if (payload.tokenType === 'refresh') return null;
-
-  const user = await User.findByPk(payload.sub, { attributes: ['id', 'name', 'email', 'status', 'tokenVersion'] });
-  if (!user || user.status !== 'active') return null;
-  if (payload.tokenVersion !== undefined && Number(payload.tokenVersion) !== Number(user.tokenVersion || 0)) return null;
-
-  return user;
-}
 
 function registerPrivateMediaNamespace(io) {
   const nsp = io.of(NAMESPACE);
   realtime.attach(nsp);
-
   nsp.use(async (socket, next) => {
     try {
       const auth = socket.handshake.auth || {};
-
-      // Devices and the shared room: a device always drives its owner's private
-      // session; browsers may opt into the shared listening room.
-      const room = sessionService.normalizeRoom(auth.room);
-      socket.pmRoom = room;
-
+      socket.pmRoom = sessions.normalizeRoom(auth.room);
       if (auth.deviceToken) {
-        const device = await deviceService.authenticateToken(auth.deviceToken);
-        if (!device) return next(unauthorized());
-
-        const entitlement = await accessService.getEntitlement(device.userId);
-        if (!accessService.hasPermission(entitlement, 'hotkey')) return next(unauthorized());
-
-        socket.user = { id: device.userId };
-        socket.device = device;
+        socket.device = await devices.authenticateToken(auth.deviceToken);
+        if (!socket.device) throw new Error();
+        socket.user = { id: socket.device.userId };
         socket.clientType = 'device';
-        socket.entitlement = entitlement;
-        return next();
+      } else {
+        const payload = jwt.verify(auth.token || auth.accessToken, env.jwtSecret);
+        if (payload.tokenType === 'refresh') throw new Error();
+        const user = await User.findByPk(payload.sub);
+        if (!user || user.status !== 'active' || (payload.tokenVersion !== undefined && Number(payload.tokenVersion) !== Number(user.tokenVersion || 0))) throw new Error();
+        socket.user = user;
+        socket.clientType = 'web';
       }
-
-      const user = await authenticateBrowser(auth);
-      if (!user) return next(unauthorized());
-
-      const entitlement = await accessService.getEntitlement(user.id);
-      if (!entitlement) return next(unauthorized());
-
-      socket.user = user;
-      socket.entitlement = entitlement;
-      socket.clientType = 'web';
-      return next();
-    } catch {
-      return next(unauthorized());
-    }
+      const e = await access.getEntitlement(socket.user.id);
+      if (!access.hasPermission(e, socket.device ? 'hotkey' : 'view')) throw new Error();
+      next();
+    } catch { next(new Error('Unauthorized')); }
   });
-
   nsp.on('connection', async (socket) => {
     const userId = Number(socket.user.id);
+    const room = socket.pmRoom;
+    const key = await sessions.sessionKeyFor(userId, room);
     let isPlayer = false;
-    let lastProgressBroadcast = 0;
-
-    // Every account has its own playback session; the rooms are scoped to it so
-    // one user's state never reaches another user's browser.
-    let sessionKey = sessionService.DEFAULT_SESSION_KEY;
-    try {
-      sessionKey = await sessionService.sessionKeyFor(userId, socket.pmRoom);
-    } catch {
-      // Fall back to the default room rather than dropping the connection.
-    }
-    socket.sessionKey = sessionKey;
-    socket.join(realtime.controllersRoom(sessionKey));
-
-    const emitState = (state) => {
-      if (!state) return;
-      socket.emit('private-media:state', state);
+    let lastTick = 0;
+    // Re-check each inbound event, including subscribe/progress/ended/ack.
+    const authorized = async () => {
+      const e = await access.getEntitlement(userId);
+      const deviceValid = !socket.device || await devices.authenticateToken(socket.handshake.auth.deviceToken);
+      if (!socket.connected || !deviceValid || !access.hasPermission(e, socket.device ? 'hotkey' : 'view')) {
+        socket.emit('private-media:access-revoked', { reason: 'access-revoked' }); socket.disconnect(true); return false;
+      }
+      return true;
     };
-
-    // Initial snapshot: the connecting client never has to guess.
-    sessionService.getSessionState(userId, socket.pmRoom)
-      .then(emitState)
-      .catch(() => {});
-
+    const snapshot = async () => {
+      if (!await authorized()) return;
+      socket.join(realtime.controllersRoom(key));
+      const state = await sessions.getSessionState(userId, room);
+      if (socket.connected) socket.emit('private-media:state', state);
+      return state;
+    };
     socket.on('private-media:subscribe', async (ack) => {
-      try {
-        socket.join(realtime.controllersRoom(sessionKey));
-        const state = await sessionService.getSessionState(userId, socket.pmRoom);
-        socket.emit('private-media:state', state);
-        if (typeof ack === 'function') ack({ ok: true, state });
-      } catch (error) {
-        if (typeof ack === 'function') ack({ ok: false, error: 'STATE_UNAVAILABLE' });
-      }
+      try { const state = await snapshot(); if (typeof ack === 'function') ack({ ok: Boolean(state), state }); } catch { /* reconnect retries snapshot */ }
     });
-
-    socket.on('private-media:player-hello', async (payload = {}, ack) => {
+    socket.on('private-media:player-hello', async (_, ack) => {
       try {
-        if (socket.clientType !== 'web') throw new Error('DEVICE_CANNOT_RENDER');
-        if (!accessService.hasPermission(socket.entitlement, 'control')) throw new Error('FORBIDDEN');
-
+        if (!await authorized() || socket.clientType !== 'web') return;
+        const first = !isPlayer;
         isPlayer = true;
-        socket.join(realtime.playersRoom(sessionKey));
-        realtime.registerPlayer(socket.id, sessionKey);
-
-        const state = await sessionService.setPlayerPresence(true, userId, socket.pmRoom);
-        realtime.broadcastPlayerPresence(true, state, sessionKey);
-        realtime.broadcastState(state, sessionKey);
+        socket.join(realtime.playersRoom(key));
+        realtime.registerPlayer(socket.id, key, userId);
+        const state = await sessions.setPlayerPresence(true, userId, room);
+        if (!socket.connected) { realtime.unregisterPlayer(socket.id, key); return; }
+        realtime.broadcastState(state, key);
+        if (first && room === 'shared') await audit.record({ action: 'JOIN_LISTENING_SESSION', actorUserId: userId, source: 'WEB', metadata: { sessionId: state.sessionId } });
         if (typeof ack === 'function') ack({ ok: true, state });
-      } catch (error) {
-        if (typeof ack === 'function') ack({ ok: false, error: error.message || 'PLAYER_HELLO_FAILED' });
-      }
+      } catch { /* next hello repairs presence */ }
     });
-
     socket.on('private-media:player-progress', async (payload = {}) => {
+      if (!isPlayer || Date.now() - lastTick < 1500) return;
+      lastTick = Date.now();
       try {
-        if (!isPlayer) return;
-        // Only a room with a single player may report status: with two players
-        // each tab would fight over "playing"/"paused".
-        const solo = realtime.playerCount(sessionKey) <= 1;
-        const state = await sessionService.syncPlayerProgress(payload, userId, socket.pmRoom, { solo });
-        const now = Date.now();
-        if (now - lastProgressBroadcast >= PROGRESS_BROADCAST_INTERVAL_MS) {
-          lastProgressBroadcast = now;
-          realtime.broadcastState(state, sessionKey);
-        }
-      } catch {
-        // Progress is best-effort telemetry; commands remain the source of truth.
-      }
+        if (!await authorized()) return;
+        const state = await sessions.syncPlayerProgress(payload, userId, room);
+        socket.emit('private-media:state', state);
+      } catch { /* progress is advisory */ }
     });
-
-    // The video ended: advance the queue automatically (YouTube behaviour).
-    // There is no "next" button any more — this is the only way forward.
-    socket.on('private-media:player-ended', async () => {
+    const ended = async (payload = {}, error = false) => {
       try {
-        if (!isPlayer) return;
-        const result = await sessionService.autoAdvance({ userId, room: socket.pmRoom });
-        if (!result.advanced) return;
-        realtime.broadcastState(result.state, sessionKey);
-      } catch {
-        // Ending is best-effort: a failure must not break the socket.
-      }
-    });
-
+        if (!isPlayer || !await authorized()) return;
+        const result = await sessions.autoAdvance({ userId, room, currentQueueItemId: payload.currentQueueItemId, errorCode: error ? payload.errorCode : null });
+        if (!result.stale && !result.premature) realtime.broadcastState(result.state, key);
+      } catch { /* canonical snapshot repairs a failed report */ }
+    };
+    socket.on('private-media:player-ended', (payload) => ended(payload));
+    socket.on('private-media:player-error', (payload) => ended(payload, true));
     socket.on('private-media:player-ack', async (payload = {}, ack) => {
       try {
-        if (!isPlayer) throw new Error('NOT_A_PLAYER');
-        const result = await sessionService.acknowledgeCommand({
-          commandId: payload.commandId,
-          actorUserId: userId,
-          state: payload.state || {},
-          errorCode: payload.errorCode || null,
-        });
-        if (result.applied) realtime.broadcastState(result.state, sessionKey);
+        if (!isPlayer || !await authorized()) return;
+        const result = await sessions.acknowledgeCommand({ ...payload, actorUserId: userId, room });
         if (typeof ack === 'function') ack({ ok: true, state: result.state });
-      } catch (error) {
-        if (typeof ack === 'function') ack({ ok: false, error: error.message || 'ACK_FAILED' });
-      }
+      } catch { /* acknowledgements cannot mutate playback */ }
     });
-
     socket.on('private-media:command', async (payload = {}, ack) => {
       try {
-        const requiredPermission = socket.clientType === 'device' ? 'hotkey' : 'control';
-        // Re-resolve on every command so a revoke lands immediately, even while
-        // a socket is still open.
-        const fresh = await accessService.getEntitlement(userId);
-        if (!accessService.hasPermission(fresh, requiredPermission)) {
-          socket.emit('private-media:access-revoked', { reason: 'access-revoked' });
-          socket.disconnect(true);
-          if (typeof ack === 'function') ack({ ok: false, error: 'ACCESS_REVOKED' });
-          return;
-        }
-        socket.entitlement = fresh;
-
-        const result = await sessionService.issueCommand({
-          commandId: payload.commandId,
-          action: payload.action,
-          source: socket.clientType === 'device' ? 'HOTKEY' : 'WEB',
-          actorUserId: userId,
-          payload: payload.payload || {},
-          room: socket.pmRoom,
-        });
-
-        if (!result.duplicate) {
-          realtime.broadcastCommand(result.command, sessionKey);
-          realtime.broadcastState(result.state, sessionKey);
-        }
+        if (!await authorized()) return;
+        const result = await sessions.issueCommand({ commandId: payload.commandId, action: payload.action, payload: payload.payload || {}, actorUserId: userId, room, source: socket.device ? 'HOTKEY' : 'WEB' });
+        if (!result.duplicate) { realtime.broadcastCommand(result.command, key); realtime.broadcastState(result.state, key); }
         if (typeof ack === 'function') ack({ ok: true, ...result });
-      } catch (error) {
-        if (typeof ack === 'function') {
-          ack({ ok: false, error: error.code || 'COMMAND_FAILED', message: error.message });
-        }
-      }
+      } catch (error) { if (typeof ack === 'function') ack({ ok: false, error: error.code || 'COMMAND_FAILED', message: error.message }); }
     });
-
     socket.on('disconnect', async () => {
       if (!isPlayer) return;
       isPlayer = false;
-      const remaining = realtime.unregisterPlayer(socket.id, sessionKey);
-      if (remaining > 0) return;
+      realtime.unregisterPlayer(socket.id, key);
       try {
-        const state = await sessionService.setPlayerPresence(false, userId, socket.pmRoom);
-        realtime.broadcastPlayerPresence(false, state, sessionKey);
-        realtime.broadcastState(state, sessionKey);
-      } catch {
-        // Presence is advisory; the next player-hello repairs it.
-      }
+        const state = await sessions.setPlayerPresence(realtime.playerCount(key) > 0, userId, room);
+        realtime.broadcastState(state, key);
+        if (room === 'shared') await audit.record({ action: 'LEAVE_LISTENING_SESSION', actorUserId: userId, source: 'WEB', metadata: { sessionId: state.sessionId } });
+      } catch { /* next hello repairs presence */ }
     });
+    snapshot().catch(() => {});
   });
-
   return nsp;
 }
-
 module.exports = { registerPrivateMediaNamespace, NAMESPACE };

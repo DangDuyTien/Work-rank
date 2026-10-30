@@ -88,7 +88,7 @@ test('OWNER_ACCESS — root owner sees the capability with full permissions', as
   assert.equal(res.body.entitled, true);
   assert.equal(res.body.isOwner, true);
   assert.deepEqual(res.body.permissions, {
-    view: true, control: true, telegram: true, hotkey: true, manageAccess: true,
+    view: true, queue: true, control: true, telegram: true, hotkey: true, manageAccess: true,
   });
 
   const status = await request(app).get(`${BASE}/status`).set(bearer(users.ownerToken));
@@ -278,7 +278,7 @@ test('YOUTUBE_PLAYER — loading a real video updates the shared session', async
     });
 
   assert.equal(load.status, 200, JSON.stringify(load.body));
-  assert.equal(load.body.state.status, 'LOADING');
+  assert.equal(load.body.state.status, 'PLAYING');
   assert.equal(load.body.state.video.videoId, 'dQw4w9WgXcQ');
 
   const play = await request(app)
@@ -306,7 +306,7 @@ test('IDEMPOTENCY — replaying a commandId never executes twice', async () => {
   assert.equal(rows.length, 1);
 });
 
-test('MULTI_CONTROLLER_CONSISTENCY — a player ack becomes the shared truth', async () => {
+test('MULTI_CONTROLLER_CONSISTENCY — local autoplay refusals never pause other participants', async () => {
   // Simulate the browser refusing autoplay: the player reports PAUSED.
   const ack = await sessionService.acknowledgeCommand({
     commandId: 'play-1',
@@ -317,7 +317,7 @@ test('MULTI_CONTROLLER_CONSISTENCY — a player ack becomes the shared truth', a
 
   assert.equal(ack.applied, true);
   assert.equal(ack.state.status, 'PAUSED');
-  assert.equal(ack.command.status, 'FAILED');
+  assert.equal(ack.command.status, 'EXECUTED');
 
   const viaHttp = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken));
   assert.equal(viaHttp.body.session.status, 'PAUSED');
@@ -353,15 +353,15 @@ test('PROGRESS_QUIET_WINDOW — a stale player tick cannot undo a fresh command'
   // state. The backend must keep the command's intent.
   const stale = await sessionService.syncPlayerProgress({ status: 'PAUSED', currentTime: 7 });
   assert.equal(stale.status, 'PLAYING', 'stale tick must not undo the command');
-  assert.equal(Math.round(stale.currentTime), 7, 'progress time is still accepted');
+  assert.ok(stale.currentTime < 2, 'player reports cannot replace server position');
 
-  // Once the quiet window has passed, the player is the authority again.
+  // The server keeps authority even after the legacy quiet window.
   await sequelize.query(
     'UPDATE private_media_commands SET created_at = :ts WHERE command_id = :id',
     { replacements: { ts: new Date(Date.now() - 10_000), id: 'quiet-play-1' } },
   );
   const settled = await sessionService.syncPlayerProgress({ status: 'PAUSED', currentTime: 7 });
-  assert.equal(settled.status, 'PAUSED');
+  assert.equal(settled.status, 'PLAYING');
 });
 
 test('PROGRESS_AFTER_SEEK — a stale tick cannot rewind the playhead', async () => {
@@ -388,13 +388,13 @@ test('PROGRESS_AFTER_SEEK — a stale tick cannot rewind the playhead', async ()
   const stale = await sessionService.syncPlayerProgress({ currentTime: 12, status: 'PLAYING' });
   assert.equal(Math.round(stale.currentTime), 318, 'a stale tick must not rewind the playhead');
 
-  // Once the quiet window has passed, real progress is accepted again.
+  // Later telemetry also cannot replace the server reference clock.
   await sequelize.query(
     'UPDATE private_media_commands SET created_at = :ts WHERE command_id = :id',
     { replacements: { ts: new Date(Date.now() - 10_000), id: 'seek-1' } },
   );
   const settled = await sessionService.syncPlayerProgress({ currentTime: 322, status: 'PLAYING' });
-  assert.equal(Math.round(settled.currentTime), 322);
+  assert.equal(Math.round(settled.currentTime), 318);
 });
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -447,130 +447,12 @@ test('PER_ACCOUNT_SESSION — every granted account listens separately', async (
     .send({ commandId: 'delegate-load-1', action: 'LOAD_VIDEO', payload: { videoId: 'aqz-KE-bpKQ', title: 'Delegate pick' } });
   assert.equal(delegateLoad.status, 200, JSON.stringify(delegateLoad.body));
 
-  const delegateVolume = await request(app)
-    .post(`${BASE}/commands`)
-    .set(bearer(users.delegateToken))
+  const forbiddenVolume = await request(app).post(`${BASE}/commands`).set(bearer(users.delegateToken))
     .send({ commandId: 'delegate-vol-1', action: 'SET_VOLUME', payload: { volume: 20 } });
-  assert.equal(delegateVolume.status, 200);
-  assert.equal(Number(delegateVolume.body.state.volume), 20);
-
-  // Owner is untouched: same video, same volume.
+  assert.equal(forbiddenVolume.status, 400, 'output preference is not a server command');
   const ownerSession = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken));
-  assert.equal(ownerSession.body.session?.video?.videoId, 'dQw4w9WgXcQ');
-  assert.notEqual(Number(ownerSession.body.session?.volume), 20, 'delegate volume must not reach the owner');
-});
-
-test('AUTO_ADVANCE — the queue moves on by itself when a video ends', async () => {
-  const queue = [
-    { videoId: 'dQw4w9WgXcQ', title: 'One' },
-    { videoId: 'aqz-KE-bpKQ', title: 'Two' },
-  ];
-
-  await sessionService.issueCommand({
-    commandId: 'auto-load-1',
-    action: 'LOAD_VIDEO',
-    source: 'WEB',
-    actorUserId: users.owner.id,
-    payload: { videoId: queue[0].videoId, title: queue[0].title, queue },
-  });
-
-  const first = await sessionService.autoAdvance({ userId: users.owner.id });
-  assert.equal(first.advanced, true);
-  assert.equal(first.state.video.videoId, 'aqz-KE-bpKQ');
-  assert.equal(first.state.status, 'LOADING');
-
-  // End of the last entry: stop instead of wrapping around.
-  const last = await sessionService.autoAdvance({ userId: users.owner.id });
-  assert.equal(last.advanced, false);
-  assert.equal(last.state.status, 'STOPPED');
-});
-
-test('SHARED_QUEUE_ROTATION — lists merge, turns alternate, nothing is wiped', async () => {
-  const shared = { 'X-PM-Room': 'shared' };
-
-  const a = await request(app)
-    .post(`${BASE}/commands`)
-    .set(bearer(users.ownerToken))
-    .set(shared)
-    .send({
-      commandId: 'rot-a1',
-      action: 'LOAD_VIDEO',
-      payload: {
-        videoId: 'aaaaaaaaaaa',
-        title: 'A1',
-        append: true,
-        queue: [{ videoId: 'aaaaaaaaaaa', title: 'A1' }, { videoId: 'bbbbbbbbbbb', title: 'A2' }],
-      },
-    });
-  assert.equal(a.status, 200, JSON.stringify(a.body));
-  assert.deepEqual(a.body.state.queue.map((q) => q.title), ['A1', 'A2']);
-
-  // The second person adds a list: it must NOT replace the first person's.
-  const b = await request(app)
-    .post(`${BASE}/commands`)
-    .set(bearer(users.delegateToken))
-    .set(shared)
-    .send({
-      commandId: 'rot-b1',
-      action: 'LOAD_VIDEO',
-      payload: {
-        videoId: 'ccccccccccc',
-        title: 'B1',
-        append: true,
-        queue: [{ videoId: 'ccccccccccc', title: 'B1' }, { videoId: 'ddddddddddd', title: 'B2' }],
-      },
-    });
-  assert.equal(b.status, 200, JSON.stringify(b.body));
-  assert.deepEqual(
-    b.body.state.queue.map((q) => q.title),
-    ['B1', 'A2', 'B2'],
-    'turns must alternate: B plays now, then A, then B',
-  );
-
-  // The contributor id is internal — never exposed to clients.
-  assert.ok(!('addedBy' in b.body.state.queue[0]), 'addedBy must not leak');
-
-  // Advancing walks the rotated order, one turn at a time.
-  const first = await sessionService.autoAdvance({ userId: users.owner.id, room: 'shared' });
-  assert.equal(first.state.video.title, 'A2');
-  const second = await sessionService.autoAdvance({ userId: users.owner.id, room: 'shared' });
-  assert.equal(second.state.video.title, 'B2');
-});
-
-test('SHARED_ROOM — everyone who joins hears the same thing, private stays private', async () => {
-  const shared = { 'X-PM-Room': 'shared' };
-
-  const ownerLoad = await request(app)
-    .post(`${BASE}/commands`)
-    .set(bearer(users.ownerToken))
-    .set(shared)
-    .send({ commandId: 'room-load-1', action: 'LOAD_VIDEO', payload: { videoId: 'dQw4w9WgXcQ', title: 'Room pick' } });
-  assert.equal(ownerLoad.status, 200, JSON.stringify(ownerLoad.body));
-
-  // The delegate joins the same room and sees the same playhead...
-  const delegateRoom = await request(app).get(`${BASE}/session`).set(bearer(users.delegateToken)).set(shared);
-  assert.equal(delegateRoom.status, 200);
-  assert.equal(delegateRoom.body.session?.video?.videoId, 'dQw4w9WgXcQ');
-  assert.equal(delegateRoom.body.session?.sessionId, ownerLoad.body.state?.sessionId);
-
-  // ...while their private session is a different one.
-  const delegatePrivate = await request(app).get(`${BASE}/session`).set(bearer(users.delegateToken));
-  assert.notEqual(delegatePrivate.body.session?.sessionId, ownerLoad.body.state?.sessionId);
-
-  // A command issued in the room reaches every member of the room.
-  const roomVolume = await request(app)
-    .post(`${BASE}/commands`)
-    .set(bearer(users.delegateToken))
-    .set(shared)
-    .send({ commandId: 'room-vol-1', action: 'SET_VOLUME', payload: { volume: 30 } });
-  assert.equal(roomVolume.status, 200);
-  assert.equal(Number(roomVolume.body.state.volume), 30);
-
-  const ownerRoom = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken)).set(shared);
-  assert.equal(Number(ownerRoom.body.session?.volume), 30, 'room volume is shared');
-
-  const ownerPrivate = await request(app).get(`${BASE}/session`).set(bearer(users.ownerToken));
-  assert.notEqual(Number(ownerPrivate.body.session?.volume), 30, 'private volume is untouched');
+  assert.equal(ownerSession.body.session.video.videoId, 'dQw4w9WgXcQ');
+  assert.ok(!('volume' in ownerSession.body.session));
 });
 
 test('DEVICE_AUTHZ — pairing issues a scoped token; revocation kills it instantly', async () => {

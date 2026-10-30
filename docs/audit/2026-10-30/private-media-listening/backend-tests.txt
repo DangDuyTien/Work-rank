@@ -1,0 +1,185 @@
+◇ injected env (21) from .env // tip: ⌘ suppress logs { quiet: true }
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ PRIVATE_MEDIA_OWNER_RESOLVED — bootstrap email maps to a canonical user id (33.572458ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 200 138 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/status HTTP/1.1" 200 663 "-" "-"
+✔ OWNER_ACCESS — root owner sees the capability with full permissions (25.943583ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/status HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/audit HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/devices HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/telegram HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/users/search?q=root HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/commands/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/youtube/search?q=music HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/devices/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/telegram/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/youtube/resolve HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/devices/1 HTTP/1.1" 404 42 "-" "-"
+✔ ADMIN_HIDDEN — a Work Rank admin is denied on every private media endpoint (56.788084ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/status HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/audit HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/devices HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/telegram HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/users/search?q=root HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/commands/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/youtube/search?q=music HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/devices/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/telegram/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/youtube/resolve HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/devices/1 HTTP/1.1" 404 42 "-" "-"
+✔ SUPER_ADMIN_HIDDEN — admin + isDev + verified is still denied everywhere (40.654125ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/status HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/audit HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/devices HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/telegram HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/users/search?q=root HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/commands/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/recent HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/youtube/search?q=music HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/devices/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/telegram/code HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/youtube/resolve HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/devices/1 HTTP/1.1" 404 42 "-" "-"
+✔ NORMAL_MEMBER_HIDDEN — a normal member is denied everywhere (45.911792ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/status HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/grants HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/audit HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/devices HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/telegram HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/users/search?q=root HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/commands/recent HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/recent HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/youtube/search?q=music HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/devices/code HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/telegram/code HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/youtube/resolve HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 401 34 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/devices/1 HTTP/1.1" 401 34 "-" "-"
+✔ API_AUTHZ — anonymous callers are rejected before any private data is read (19.52875ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 200 182 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 200 140 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 200 182 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 200 144 "-" "-"
+✔ OWNER_CAN_GRANT — owner grants a scoped surface and the grantee sees it (12.607459ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/audit HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/users/search?q=a HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/6 HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 404 42 "-" "-"
+✔ DELEGATED_CANNOT_GRANT — a delegated user cannot escalate or delegate (22.878417ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 200 352 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 404 42 "-" "-"
+✔ DELEGATED_ACCESS — view-only user can read state but cannot control (6.211708ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/grants HTTP/1.1" 404 42 "-" "-"
+✔ ADMIN_CANNOT_SELF_GRANT — admin cannot write its own grant row (2.09125ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "DELETE /api/private-media/grants/1 HTTP/1.1" 400 96 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/access HTTP/1.1" 200 138 "-" "-"
+✔ OWNER_CANNOT_BE_REMOVED — no API can revoke, replace or downgrade the owner (5.712375ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 409 79 "-" "-"
+✔ NO_ACTIVE_MEDIA_SESSION — control without a loaded video fails safely (3.662958ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 200 744 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 200 736 "-" "-"
+✔ YOUTUBE_PLAYER — loading a real video updates the shared session (9.142625ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 200 784 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "POST /api/private-media/commands HTTP/1.1" 200 800 "-" "-"
+✔ IDEMPOTENCY — replaying a commandId never executes twice (8.0145ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/session HTTP/1.1" 200 586 "-" "-"
+✔ MULTI_CONTROLLER_CONSISTENCY — local autoplay refusals never pause other participants (4.117209ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:31 +0000] "GET /api/private-media/recent HTTP/1.1" 200 218 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/recent HTTP/1.1" 404 42 "-" "-"
+✔ RECENT_VIDEOS — keyless quick-replay list, authorized like the rest (6.369875ms)
+✔ PROGRESS_QUIET_WINDOW — a stale player tick cannot undo a fresh command (4.883208ms)
+✔ PROGRESS_AFTER_SEEK — a stale tick cannot rewind the playhead (7.810375ms)
+✔ SEEK_ACK — a player ack cannot undo a seek (6.71375ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/commands HTTP/1.1" 200 709 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/session HTTP/1.1" 200 352 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/commands HTTP/1.1" 200 710 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/commands HTTP/1.1" 400 62 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/session HTTP/1.1" 200 518 "-" "-"
+✔ PER_ACCOUNT_SESSION — every granted account listens separately (15.8145ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/devices/code HTTP/1.1" 200 113 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/devices/pair HTTP/1.1" 200 155 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/commands HTTP/1.1" 200 709 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/device/commands HTTP/1.1" 200 724 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/device/commands HTTP/1.1" 404 42 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "DELETE /api/private-media/grants/5 HTTP/1.1" 200 27 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/device/commands HTTP/1.1" 404 42 "-" "-"
+✔ DEVICE_AUTHZ — pairing issues a scoped token; revocation kills it instantly (29.928167ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/devices/code HTTP/1.1" 404 42 "-" "-"
+✔ DEVICE_AUTHZ — a member with no grant cannot even mint a pairing code (1.957375ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/grants HTTP/1.1" 200 183 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/telegram/code HTTP/1.1" 503 119 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "DELETE /api/private-media/grants/5 HTTP/1.1" 200 27 "-" "-"
+✔ TELEGRAM_AUTHZ — unbound chats and revoked grants cannot control (11.796916ms)
+✔ YOUTUBE_NORMALIZATION — escaped snippets and ISO durations are cleaned (0.465666ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/status HTTP/1.1" 200 828 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/audit HTTP/1.1" 200 - "-" "-"
+✔ SECRETS_NOT_EXPOSED — status/audit payloads never contain tokens (7.290583ms)
+✔ AUDIT_LOG — grant, revoke and device pairing are recorded with actor and source (1.460791ms)
+✔ MIGRATION — repeatable, and enforces the uniqueness the authorization relies on (12.400875ms)
+✔ NO_ROLE_BYPASS — the module source contains no role/admin shortcut (1.14625ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/dashboard/overview HTTP/1.1" 200 36 "-" "-"
+✔ OTHER_WORKRANK_PERMISSIONS_UNCHANGED — adding the capability does not shift existing roles (2.8245ms)
+✔ WEBSOCKET_REALTIME — the private media namespace is separate from the app socket (0.500959ms)
+◇ injected env (21) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+(sequelize) Warning: SQLite does not support 'BIGINT' with UNSIGNED or ZEROFILL. Plain 'BIGINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'INTEGER' with UNSIGNED or ZEROFILL. Plain 'INTEGER' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support 'SMALLINT' with UNSIGNED or ZEROFILL. Plain 'SMALLINT' will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+(sequelize) Warning: SQLite does not support TEXT with options. Plain `TEXT` will be used instead. 
+>> Check: https://www.sqlite.org/datatype3.html
+✔ FIFO, join mid-track, authoritative pause/resume and automatic A → B → C → IDLE (61.852041ms)
+✔ five simultaneous ENDED reports advance once, including same-video repeats (13.6875ms)
+✔ concurrent adds lose no songs; retries are scoped and do not duplicate (21.156208ms)
+✔ queue permissions, reorder/remove, unavailable skip; volume cannot enter snapshots or journal (11.286875ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "DELETE /api/private-media/grants/3 HTTP/1.1" 200 27 "-" "-"
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "GET /api/private-media/session HTTP/1.1" 404 42 "-" "-"
+✔ WebSocket denies admin, renders for ACCESS-only users, evicts revoked listeners immediately (56.600625ms)
+✔ Telegram QUEUE_ADD uses the shared queue, dedupes callback and respects queue-only grant (10.681292ms)
+::ffff:127.0.0.1 - - [30/Oct/2026:07:18:32 +0000] "POST /api/private-media/device/commands HTTP/1.1" 200 - "-" "-"
+✔ hotkey device shares the listening session and still requires CONTROL (14.264ms)
+✔ migration can be applied twice and preserves existing session/queue data (9.651ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1922.039041

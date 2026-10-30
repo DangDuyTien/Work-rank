@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
   Cast,
+  Plus,
+  SkipForward,
+  ArrowUp,
   Check,
   Copy,
   Keyboard,
@@ -31,14 +34,18 @@ import {
   AnimatedModal,
   SegmentedControl,
   Skeleton,
+  AnimatedList,
+  AnimatedListItem,
 } from '../components/ui';
-import YouTubeStage, { formatTime } from '../components/privateMedia/YouTubeStage';
+import YouTubeStage, { formatTime, expectedPosition } from '../components/privateMedia/YouTubeStage';
 import MiniPlayer, { MediaControls, PIP_WIDTH, PIP_HEIGHT } from '../components/privateMedia/MiniPlayer';
 import SeekBar from '../components/privateMedia/SeekBar';
 import VolumeBar from '../components/privateMedia/VolumeBar';
 import { privateMediaApi, setPrivateMediaRoom, codeFrom, messageFrom } from '../services/privateMediaApi';
 import { usePrivateMediaAccess, invalidatePrivateMediaAccess } from '../hooks/usePrivateMediaAccess';
 import { useAuth } from '../context/AuthContext';
+import usePrivateMediaVolume from '../hooks/usePrivateMediaVolume';
+import { useToast } from '../context/UiContext';
 import './privateMedia.css';
 
 /**
@@ -80,7 +87,13 @@ const AUDIT_LABEL = {
   NEXT: 'Video tiếp theo',
   PREVIOUS: 'Video trước',
   SEEK: 'Tua',
-  SET_VOLUME: 'Đổi âm lượng',
+  JOIN_LISTENING_SESSION: 'Vào nghe chung',
+  LEAVE_LISTENING_SESSION: 'Rời nghe chung',
+  QUEUE_ADD: 'Thêm bài vào hàng chờ',
+  QUEUE_REMOVE: 'Xóa bài khỏi hàng chờ',
+  QUEUE_REORDER: 'Sắp xếp hàng chờ',
+  QUEUE_CLEAR: 'Xóa hàng chờ',
+  AUTO_ADVANCE: 'Tự chuyển bài',
 };
 
 function relativeTime(value) {
@@ -98,8 +111,34 @@ export default function PrivateMedia() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const access = usePrivateMediaAccess();
+  const toast = useToast();
+  const failureRef = useRef(null);
 
-  const [session, setSession] = useState(null);
+  const [session, updateSession] = useState(null);
+  const modeRef = useRef('private');
+  const setSession = useCallback((next) => {
+    if (!next) return;
+    const shared = next.sessionKey === 'room:shared';
+    if (shared !== (modeRef.current === 'shared')) return;
+    updateSession((prev) => {
+      if (prev?.sessionId === next.sessionId && (prev.sessionRevision > next.sessionRevision || (prev.sessionRevision === next.sessionRevision && prev.serverNow > next.serverNow))) return prev;
+      return { ...next, receivedAt: Date.now() };
+    });
+  }, []);
+  useEffect(() => {
+    const failure = session?.lastFailure;
+    if (failure && failureRef.current !== failure.itemId) {
+      failureRef.current = failure.itemId;
+      toast.warning(failure.message);
+    }
+  }, [session?.lastFailure, toast]);
+  const output = usePrivateMediaVolume(user?.id);
+  const playerActions = useRef(null);
+  const [activationNeeded, setActivationNeeded] = useState(false);
+  const [playerNotice, setPlayerNotice] = useState(null);
+  const [, tick] = useState(0);
+  useEffect(() => { const timer = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(timer); }, []);
+  const displaySession = session ? { ...session, currentTime: expectedPosition(session) } : null;
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState(null);
@@ -117,7 +156,7 @@ export default function PrivateMedia() {
   // The mini window cannot read the colour of other tabs (cross-origin), so the
   // owner picks a palette once and it is remembered.
   // Private by default. 'shared' joins the one listening room, which behaves
-  // like the original single session: same video, same playhead, same volume.
+  // like the original single session: same video, same playhead; output is local.
   const [roomMode, setRoomMode] = useState(() => {
     try {
       return localStorage.getItem(ROOM_KEY) === 'shared' ? 'shared' : 'private';
@@ -127,10 +166,12 @@ export default function PrivateMedia() {
   });
 
   // Keep the API client in sync before any request is made.
+  modeRef.current = roomMode;
   setPrivateMediaRoom(roomMode);
 
   const changeRoomMode = useCallback((value) => {
     const next = value === 'shared' ? 'shared' : 'private';
+    updateSession(null);
     setRoomMode(next);
     setPrivateMediaRoom(next);
     try { localStorage.setItem(ROOM_KEY, next); } catch { /* private mode */ }
@@ -246,14 +287,14 @@ export default function PrivateMedia() {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, setSession]);
 
   useEffect(() => {
     if (!access.entitled) return;
     setPrivateMediaRoom(roomMode);
     refreshStatus();
     // The recent list belongs to a session too, so it must follow the room.
-    loadRecent?.();
+    // The recent list is refreshed by its own effect below.
   }, [access.entitled, refreshStatus, roomMode]);
 
   // ── Realtime channel (dedicated namespace) ────────────────────────────────
@@ -278,12 +319,6 @@ export default function PrivateMedia() {
     client.on('private-media:state', (next) => {
       if (next) setSession(next);
     });
-    client.on('private-media:player-online', () => {
-      setSession((prev) => (prev ? { ...prev, playerOnline: true } : prev));
-    });
-    client.on('private-media:player-offline', () => {
-      setSession((prev) => (prev ? { ...prev, playerOnline: false } : prev));
-    });
     client.on('private-media:access-revoked', () => {
       invalidatePrivateMediaAccess();
       navigate('/dashboard', { replace: true });
@@ -301,7 +336,7 @@ export default function PrivateMedia() {
 
   // ── Commands ──────────────────────────────────────────────────────────────
   const sendCommand = useCallback(async (action, payload = {}, options = {}) => {
-    if (!access.permissions.control) return null;
+    if (!(action === 'QUEUE_ADD' ? access.permissions.queue : access.permissions.control)) return null;
     if (options.track !== false) setBusyAction(options.busyKey || action);
     try {
       const result = await privateMediaApi.sendCommand({ commandId: newCommandId(), action, payload });
@@ -328,7 +363,7 @@ export default function PrivateMedia() {
     } finally {
       if (options.track !== false) setBusyAction(null);
     }
-  }, [access.permissions.control, navigate]);
+  }, [access.permissions.control, access.permissions.queue, navigate, setSession]);
 
   // Seek is issued through one helper: the player jumps immediately (no waiting
   // for the round-trip) and the command keeps the session in sync.
@@ -340,18 +375,9 @@ export default function PrivateMedia() {
 
   const loadVideo = useCallback(async (video, queue = [], options = {}) => {
     if (!video?.videoId) return;
-    await sendCommand('LOAD_VIDEO', {
-      videoId: video.videoId,
-      title: video.title || null,
-      channelTitle: video.channelTitle || null,
-      thumbnailUrl: video.thumbnailUrl || null,
-      durationSeconds: video.durationSeconds ?? null,
-      queue,
-      // In the shared room this marks a deliberate list: it is appended to the
-      // pool (and rotated) instead of replacing what other people queued.
-      append: Boolean(options.append),
-    }, { busyKey: `load:${video.videoId}` });
-  }, [sendCommand]);
+    const enqueue = !options.playNow && roomMode === 'shared';
+    return sendCommand(enqueue ? 'QUEUE_ADD' : 'LOAD_VIDEO', { ...video, queue }, { busyKey: `load:${video.videoId}` });
+  }, [sendCommand, roomMode]);
 
   // ── Search / paste link(s) ────────────────────────────────────────────────
   const runSearch = useCallback(async (event) => {
@@ -387,10 +413,10 @@ export default function PrivateMedia() {
         }
 
         setResults(resolved);
-        await loadVideo(resolved[0], resolved, { append: resolved.length > 1 });
+        await loadVideo(resolved[0], resolved);
         setSearchNote(resolved.length > 1
           ? `Đã nạp ${resolved.length} video vào danh sách phát — hết bài sẽ tự chuyển bài.`
-          : 'Đã nạp video từ link.');
+          : 'Đã thêm video. Nếu đang có bài phát, bài mới nằm trong hàng chờ.');
         return;
       }
 
@@ -411,16 +437,7 @@ export default function PrivateMedia() {
     }
   }, [query, loadVideo]);
 
-  const playFromResults = useCallback((item) => {
-    const queue = results.map((entry) => ({
-      videoId: entry.videoId,
-      title: entry.title,
-      channelTitle: entry.channelTitle,
-      thumbnailUrl: entry.thumbnailUrl,
-      durationSeconds: entry.durationSeconds,
-    }));
-    loadVideo(item, queue);
-  }, [results, loadVideo]);
+  const playFromResults = useCallback((item, playNow = false) => loadVideo(item, [], { playNow }), [loadVideo]);
 
   // ── Recent videos (keyless quick replay) ──────────────────────────────────
   const [recentVideos, setRecentVideos] = useState([]);
@@ -437,7 +454,7 @@ export default function PrivateMedia() {
   useEffect(() => {
     if (!access.entitled) return;
     loadRecent();
-  }, [access.entitled, loadRecent, session?.video?.videoId]);
+  }, [access.entitled, loadRecent, roomMode, session?.video?.videoId]);
 
   const currentVideoId = session?.video?.videoId || null;
 
@@ -449,7 +466,7 @@ export default function PrivateMedia() {
   const [people, setPeople] = useState([]);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [grantTarget, setGrantTarget] = useState(null);
-  const [grantDraft, setGrantDraft] = useState({ view: true, control: true, telegram: false, hotkey: false });
+  const [grantDraft, setGrantDraft] = useState({ view: true, queue: true, control: true, telegram: false, hotkey: false });
   const [grantSaving, setGrantSaving] = useState(false);
   const [grantError, setGrantError] = useState(null);
 
@@ -497,7 +514,7 @@ export default function PrivateMedia() {
     const existing = grants.find((grant) => String(grant.userId) === String(person.id) && grant.active);
     setGrantDraft(existing
       ? { ...existing.permissions }
-      : { view: true, control: true, telegram: false, hotkey: false });
+      : { view: true, queue: true, control: true, telegram: false, hotkey: false });
   };
 
   const submitGrant = async () => {
@@ -687,7 +704,7 @@ export default function PrivateMedia() {
               </div>
               <Button type="submit" variant="primary" disabled={searching || !query.trim()}>
                 {searching ? <Loader2 size={15} className="pm-spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
-                {searchAvailable ? 'Tìm' : 'Phát'}
+                {searchAvailable ? 'Tìm' : roomMode === 'shared' ? 'Thêm bài' : 'Phát'}
               </Button>
             </form>
 
@@ -729,11 +746,12 @@ export default function PrivateMedia() {
                       variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
                       size="sm"
                       onClick={() => playFromResults(item)}
-                      disabled={!access.permissions.control || busyAction === `load:${item.videoId}`}
+                      disabled={!(roomMode === 'shared' ? access.permissions.queue : access.permissions.control) || busyAction === `load:${item.videoId}`}
                     >
                       {busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
-                      Phát
+                      {roomMode === 'shared' ? 'Thêm vào hàng chờ' : 'Phát'}
                     </Button>
+                    {roomMode === 'shared' && <Button size="sm" variant="secondary" disabled={!access.permissions.control || Boolean(busyAction)} onClick={() => playFromResults(item, true)}>Phát ngay</Button>}
                   </li>
                 ))}
               </ul>
@@ -762,11 +780,12 @@ export default function PrivateMedia() {
                         variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
                         size="sm"
                         onClick={() => playFromResults(item)}
-                        disabled={!access.permissions.control || busyAction === `load:${item.videoId}`}
+                        disabled={!(roomMode === 'shared' ? access.permissions.queue : access.permissions.control) || busyAction === `load:${item.videoId}`}
                       >
                         {busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
-                        Phát
+                        {roomMode === 'shared' ? 'Thêm vào hàng chờ' : 'Phát'}
                       </Button>
+                      {roomMode === 'shared' && <Button size="sm" variant="secondary" disabled={!access.permissions.control || Boolean(busyAction)} onClick={() => playFromResults(item, true)}>Phát ngay</Button>}
                     </li>
                   ))}
                 </ul>
@@ -774,11 +793,25 @@ export default function PrivateMedia() {
             )}
           </Card>
 
+          {roomMode === 'shared' && (
+            <Card className="pm-listening">
+              <div className="pm-listening__head"><h2>Nghe chung</h2><span>{session?.participantCount || 0} người đang nghe</span></div>
+              <small>ĐANG PHÁT</small>
+              <p className="pm-listening__current">{session?.video?.title || 'Chưa có bài đang phát'}</p>
+              <div className="pm-listening__actions">
+                <Button size="sm" variant="secondary" disabled={!access.permissions.control || !session?.video || Boolean(busyAction)} onClick={() => sendCommand('NEXT')}><SkipForward size={15} /> Bài tiếp theo</Button>
+                <Button size="sm" variant="secondary" onClick={() => document.querySelector('.pm-search__field input')?.focus()}><Plus size={15} /> Thêm bài</Button>
+              </div>
+            </Card>
+          )}
+
           {/* Controls are always available on the page itself — the floating
               window is an extra, never the only way to pause or change volume. */}
+          {activationNeeded && <Button size="sm" variant="accent" onClick={() => playerActions.current?.activate()}><Play size={15} /> Kích hoạt trình phát trên thiết bị này</Button>}
+          {playerNotice && <p role="status" className="pm-search__note">{playerNotice}</p>}
           <div className="pm-inline-bar">
             <SeekBar
-              currentTime={session?.currentTime || 0}
+              currentTime={displaySession?.currentTime || 0}
               duration={session?.durationSeconds || session?.video?.durationSeconds || 0}
               canControl={access.permissions.control}
               onSeek={seekTo}
@@ -789,16 +822,18 @@ export default function PrivateMedia() {
                   variant="inline"
                   showVolume={false}
                   showSeek
-                  session={session}
+                  session={displaySession}
                   canControl={access.permissions.control}
                   onCommand={(action, payload) => (
                     action === 'SEEK' ? seekTo(payload?.position) : sendCommand(action, payload)
                   )}
                 />
+                <span className="pm-volume-label">Âm lượng của bạn</span>
                 <VolumeBar
-                  volume={session?.volume ?? 100}
-                  canControl={access.permissions.control}
-                  onVolume={(value) => sendCommand('SET_VOLUME', { volume: value }, { track: false })}
+                  volume={output.volume}
+                  muted={output.muted}
+                  onToggleMute={output.toggleMute}
+                  onVolume={output.setVolume}
                 />
               </div>
               <span className="pm-inline-bar__state">
@@ -809,14 +844,41 @@ export default function PrivateMedia() {
             </div>
           </div>
 
+          {roomMode === 'shared' && (
+            <Card className="pm-listening">
+              <h3>Đang chờ · {session?.queue?.length || 0}</h3>
+              {session?.queue?.length ? (
+                <AnimatedList className="pm-queue">
+                  {session.queue.map((item, index) => (
+                    <AnimatedListItem key={item.id} index={index} className="pm-queue__row">
+                      <span>{index + 1}</span><strong>{item.title || item.videoId}</strong>
+                      {access.permissions.control && <>
+                        <button type="button" disabled={index === 0 || Boolean(busyAction)} aria-label={`Đưa ${item.title} lên trước`} onClick={() => {
+                          const ids = session.queue.map((q) => q.id); [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
+                          sendCommand('QUEUE_REORDER', { itemIds: ids });
+                        }}><ArrowUp size={16} /></button>
+                        <button type="button" disabled={Boolean(busyAction)} aria-label={`Xóa ${item.title} khỏi hàng chờ`} onClick={() => sendCommand('QUEUE_REMOVE', { itemId: item.id })}><Trash2 size={16} /></button>
+                      </>}
+                    </AnimatedListItem>
+                  ))}
+                </AnimatedList>
+              ) : <p className="pm-rail__note">Hàng chờ đang trống</p>}
+              {access.permissions.control && session?.queue?.length > 0 && <Button size="sm" variant="secondary" disabled={Boolean(busyAction)} onClick={() => sendCommand('QUEUE_CLEAR')}>Xóa hàng chờ</Button>}
+            </Card>
+          )}
+
           {/* The player stays mounted but out of view: audio keeps playing
               while nothing about the video is shown on the page. */}
           <div className="pm-audio-host" aria-hidden="true">
             <YouTubeStage
               session={session}
               socket={socket}
-              canControl={access.permissions.control}
+              volume={output.volume}
+              muted={output.muted}
               seekSignal={seekSignal}
+              activationRef={playerActions}
+              onActivationNeeded={setActivationNeeded}
+              onPlayerNotice={setPlayerNotice}
             />
           </div>
         </div>
@@ -864,8 +926,8 @@ export default function PrivateMedia() {
             />
             <p className="pm-rail__note">
               {roomMode === 'shared'
-                ? 'Đang ở phòng nghe chung: ai có quyền cũng thấy cùng video, cùng vị trí và cùng âm lượng.'
-                : 'Mặc định mỗi tài khoản nghe riêng — video, vị trí và âm lượng của bạn không ảnh hưởng người khác.'}
+                ? 'Bài hát, timeline và hàng chờ dùng chung. Âm lượng và tắt tiếng chỉ áp dụng cho bạn.'
+                : 'Phiên nghe riêng của bạn. Âm lượng được ghi nhớ trên thiết bị này.'}
             </p>
           </Card>
 
@@ -1054,7 +1116,8 @@ export default function PrivateMedia() {
                         {grant.isOwner && <em className="is-owner">Chủ sở hữu</em>}
                         {!grant.isOwner && grant.active && (
                           <>
-                            {grant.permissions.view && <em>Xem</em>}
+                            {grant.permissions.view && <em>Nghe</em>}
+                            {grant.permissions.queue && <em>Thêm bài</em>}
                             {grant.permissions.control && <em>Điều khiển</em>}
                             {grant.permissions.telegram && <em>Telegram</em>}
                             {grant.permissions.hotkey && <em>Hotkey</em>}
@@ -1115,7 +1178,9 @@ export default function PrivateMedia() {
         open={miniOpen}
         pipWindow={miniWindow}
         onClose={closeMini}
-        session={session}
+        volume={output.muted ? 0 : output.volume}
+        onVolume={output.setVolume}
+        session={displaySession}
         canControl={access.permissions.control}
         onCommand={(action, payload) => sendCommand(action, payload)}
         themeMode={miniTheme}
@@ -1142,6 +1207,7 @@ export default function PrivateMedia() {
         <div className="pm-perms">
           {[
             { key: 'view', label: 'Xem', hint: 'Mở trang và theo dõi trạng thái phát' },
+            { key: 'queue', label: 'Thêm bài', hint: 'Thêm video vào hàng chờ chung' },
             { key: 'control', label: 'Điều khiển', hint: 'Phát, tạm dừng, dừng, đổi video' },
             { key: 'telegram', label: 'Telegram', hint: 'Liên kết Telegram để điều khiển từ xa' },
             { key: 'hotkey', label: 'Hotkey', hint: 'Ghép nối Mac helper và dùng F8' },

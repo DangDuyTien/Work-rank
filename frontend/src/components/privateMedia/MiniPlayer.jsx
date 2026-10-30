@@ -212,16 +212,14 @@ const VOLUME_STEP = 10;
  * every extra element makes the bar bigger and more conspicuous. The state is
  * shared with the page, so the play/pause icon always reflects reality.
  */
-export function MediaControls({ session, canControl, onCommand, variant = 'mini', showVolume = true, showSeek = false }) {
+export function MediaControls({ session, canControl, onCommand, volume = 70, onVolume, variant = 'mini', showVolume = true, showSeek = false }) {
   const video = session?.video || null;
   const playing = session?.status === 'PLAYING';
-  const volume = Math.min(100, Math.max(0, Number(session?.volume ?? 100)));
   const disabled = !canControl || !video;
 
   // Volume works even with nothing loaded, so it only needs control permission.
   const changeVolume = (delta) => {
-    if (!canControl) return;
-    onCommand('SET_VOLUME', { volume: Math.min(100, Math.max(0, volume + delta)) });
+    onVolume?.(Math.min(100, Math.max(0, volume + delta)));
   };
 
   // ±10 seconds. Only the page shows these; the floating window stays 5 buttons.
@@ -240,7 +238,7 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
           type="button"
           className="pm-mini__btn is-narrow"
           onClick={() => changeVolume(-VOLUME_STEP)}
-          disabled={!canControl || volume <= 0}
+          disabled={volume <= 0}
           aria-label="Nhỏ hơn"
           title={`Nhỏ hơn (${volume}%)`}
         >
@@ -296,7 +294,7 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
           type="button"
           className="pm-mini__btn is-narrow"
           onClick={() => changeVolume(VOLUME_STEP)}
-          disabled={!canControl || volume >= 100}
+          disabled={volume >= 100}
           aria-label="To hơn"
           title={`To hơn (${volume}%)`}
         >
@@ -318,7 +316,7 @@ export function MediaControls({ session, canControl, onCommand, variant = 'mini'
  * component: the window belongs to the document, and closing it from a React
  * cleanup is what made it disappear on tab switches before.
  */
-export default function MiniPlayer({ open, pipWindow, onClose, session, canControl, onCommand, themeMode = 'auto' }) {
+export default function MiniPlayer({ open, pipWindow, onClose, session, canControl, onCommand, volume, onVolume, themeMode = 'auto' }) {
   const palette = useThemePalette();
   const theme = themeMode === 'auto' ? (pipWindow ? palette.os : palette.app) : themeMode;
   const styleRef = useRef(null);
@@ -376,6 +374,8 @@ export default function MiniPlayer({ open, pipWindow, onClose, session, canContr
 
   const body = (
     <MediaControls
+      volume={volume}
+      onVolume={onVolume}
       session={session}
       canControl={canControl}
       onCommand={handleCommand}

@@ -1,0 +1,186 @@
+{
+  "startedAt": "2026-10-30T07:36:56.560Z",
+  "checks": [
+    {
+      "name": "A actual YouTube media plays",
+      "status": "PASS",
+      "evidence": {
+        "currentTime": 1.345107,
+        "duration": 634.601,
+        "paused": false,
+        "muted": false,
+        "volume": 0.7,
+        "readyState": 4
+      }
+    },
+    {
+      "name": "B joins actual media near 01:30",
+      "status": "PASS",
+      "evidence": {
+        "a": {
+          "currentTime": 94.333261,
+          "duration": 634.601,
+          "paused": false,
+          "muted": false,
+          "volume": 0.7,
+          "readyState": 4
+        },
+        "b": {
+          "currentTime": 94.415493,
+          "duration": 634.601,
+          "paused": false,
+          "muted": false,
+          "volume": 0.7,
+          "readyState": 4
+        }
+      }
+    },
+    {
+      "name": "Independent A25/B100 local volume",
+      "status": "PASS",
+      "evidence": [
+        {
+          "currentTime": 95.264833,
+          "duration": 634.601,
+          "paused": false,
+          "muted": false,
+          "volume": 0.25,
+          "readyState": 4
+        },
+        {
+          "currentTime": 95.327678,
+          "duration": 634.601,
+          "paused": false,
+          "muted": false,
+          "volume": 1,
+          "readyState": 4
+        }
+      ]
+    },
+    {
+      "name": "A40 does not affect B100",
+      "status": "PASS",
+      "evidence": {
+        "currentTime": 95.746114,
+        "duration": 634.601,
+        "paused": false,
+        "muted": false,
+        "volume": 0.4,
+        "readyState": 4
+      }
+    },
+    {
+      "name": "B local mute; A continues",
+      "status": "PASS",
+      "evidence": [
+        {
+          "currentTime": 96.326795,
+          "duration": 634.601,
+          "paused": false,
+          "muted": false,
+          "volume": 0.4,
+          "readyState": 4
+        },
+        {
+          "currentTime": 96.417685,
+          "duration": 634.601,
+          "paused": false,
+          "muted": true,
+          "volume": 1,
+          "readyState": 4
+        }
+      ]
+    },
+    {
+      "name": "Unmute restores B100 locally",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared pause A/B",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared FIFO B then C appears in A/B",
+      "status": "PASS"
+    },
+    {
+      "name": "A refresh restores volume40 and timeline",
+      "status": "PASS"
+    },
+    {
+      "name": "B refresh restores local mute and timeline",
+      "status": "PASS"
+    },
+    {
+      "name": "Natural ENDED advances to B · Me at the zoo exactly once",
+      "status": "PASS",
+      "evidence": [
+        {
+          "currentTime": 0.648168,
+          "duration": 19.021,
+          "paused": false,
+          "muted": false,
+          "volume": 0.4,
+          "readyState": 4
+        },
+        {
+          "currentTime": 0.741891,
+          "duration": 19.021,
+          "paused": false,
+          "muted": true,
+          "volume": 1,
+          "readyState": 4
+        }
+      ]
+    },
+    {
+      "name": "Natural ENDED advances to C · YouTube IFrame API demo exactly once",
+      "status": "PASS",
+      "evidence": [
+        {
+          "currentTime": 0.574971,
+          "duration": 1343.661,
+          "paused": false,
+          "muted": false,
+          "volume": 0.4,
+          "readyState": 4
+        },
+        {
+          "currentTime": 0.637323,
+          "duration": 1343.661,
+          "paused": false,
+          "muted": true,
+          "volume": 1,
+          "readyState": 4
+        }
+      ]
+    },
+    {
+      "name": "Pasted YouTube link through B UI queues without interrupting C",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared Next UI loads queued actual media on A/B",
+      "status": "PASS"
+    },
+    {
+      "name": "Participant count remains two across refreshes",
+      "status": "PASS"
+    },
+    {
+      "name": "Unavailable YouTube video skips once to queued recovery and shows toast",
+      "status": "PASS"
+    },
+    {
+      "name": "Mobile no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked B leaves player and loses sidebar entry immediately",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "playerMode": "youtube",
+  "finishedAt": "2026-10-30T07:37:30.364Z"
+}

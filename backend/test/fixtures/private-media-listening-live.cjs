@@ -1,0 +1,23 @@
+'use strict';
+if (process.env.NODE_ENV !== 'test' || process.env.DB_DIALECT !== 'sqlite' || process.env.DB_STORAGE !== ':memory:') throw new Error('Isolated SQLite only');
+const http = require('node:http');
+const bcrypt = require('bcryptjs');
+const { Server } = require('socket.io');
+const { sequelize, User } = require('../../src/models');
+const env = require('../../src/config/env');
+const app = require('../../src/app');
+(async () => {
+  await sequelize.sync();
+  const passwordHash = await bcrypt.hash('PrivateMediaAudit123!', 4);
+  const owner = await User.create({ name: 'QA Owner', email: 'tienddph50842@gmail.com', passwordHash, status: 'active', role: 'user' });
+  const b = await User.create({ name: 'QA Listener B', email: 'pm-listener@audit.test', passwordHash, status: 'active', role: 'user' });
+  await User.create({ name: 'QA Admin', email: 'pm-admin@audit.test', passwordHash, status: 'active', role: 'admin' });
+  const access = require('../../src/services/privateMedia/access.service');
+  await access.resolveOwnerUserId({ force: true });
+  await access.grantAccess({ actorUserId: owner.id, targetUserId: b.id, permissions: { view: true, queue: true, control: true } });
+  const server = http.createServer(app), io = new Server(server, require('../../src/config/socket'));
+  require('../../src/sockets/privateMedia').registerPrivateMediaNamespace(io);
+  server.listen(env.port, '127.0.0.1', () => console.log(`Private media QA ready ${env.port}`));
+  const close = () => io.close(() => sequelize.close().finally(() => process.exit(0)));
+  process.on('SIGTERM', close); process.on('SIGINT', close);
+})().catch((e) => { console.error(e.message); process.exit(1); });

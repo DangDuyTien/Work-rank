@@ -1,21 +1,9 @@
 'use strict';
 
-/**
- * PRIVATE MEDIA — REALTIME BUS
- *
- * Thin wrapper around the `/private-media` Socket.IO namespace so HTTP
- * controllers can push state without importing socket internals.
- *
- * Rooms are per playback session, because each account now has its own:
- *   pm:<sessionKey>:controllers  that account's viewers/controllers
- *   pm:<sessionKey>:players      that account's player tabs
- *
- * Without the key in the room name, one user's pause would reach everybody's
- * browser — which is exactly the "shared listening" that had to be fixed.
- */
+// Authenticated per-session realtime bus. Output preferences stay on each device.
 
 let namespace = null;
-// sessionKey -> Set<socketId>
+// sessionKey -> Map<socketId, userId> (count people, including multiple tabs).
 const playerSockets = new Map();
 
 const DEFAULT_KEY = 'primary';
@@ -33,6 +21,7 @@ function roomKeyOf(state, fallback) {
 }
 
 function attach(nsp) {
+  if (namespace !== nsp) playerSockets.clear();
   namespace = nsp;
 }
 
@@ -42,7 +31,7 @@ function isAttached() {
 
 function broadcastState(state, sessionKey) {
   if (!namespace || !state) return;
-  namespace.to(controllersRoom(roomKeyOf(state, sessionKey))).emit('private-media:state', state);
+  namespace.to(controllersRoom(roomKeyOf(state, sessionKey))).emit('private-media:state', { ...state, participantCount: playerCount(roomKeyOf(state, sessionKey)) });
 }
 
 function broadcastCommand(command, sessionKey) {
@@ -58,10 +47,10 @@ function broadcastPlayerPresence(online, state = null, sessionKey) {
   );
 }
 
-function registerPlayer(socketId, sessionKey) {
+function registerPlayer(socketId, sessionKey, userId) {
   const key = sessionKey || DEFAULT_KEY;
-  if (!playerSockets.has(key)) playerSockets.set(key, new Set());
-  playerSockets.get(key).add(socketId);
+  if (!playerSockets.has(key)) playerSockets.set(key, new Map());
+  playerSockets.get(key).set(socketId, Number(userId));
   return playerSockets.get(key).size;
 }
 
@@ -70,12 +59,13 @@ function unregisterPlayer(socketId, sessionKey) {
   const set = playerSockets.get(key);
   if (!set) return 0;
   set.delete(socketId);
+  if (!set.size) playerSockets.delete(key);
   return set.size;
 }
 
 function playerCount(sessionKey) {
   const key = sessionKey || DEFAULT_KEY;
-  return playerSockets.get(key)?.size || 0;
+  return new Set(playerSockets.get(key)?.values() || []).size;
 }
 
 /**
@@ -118,6 +108,7 @@ function revokeDevice(deviceId, reason = 'device-revoked') {
 }
 
 module.exports = {
+  isListening: (userId, key) => [...(playerSockets.get(key)?.values() || [])].includes(Number(userId)),
   attach,
   isAttached,
   broadcastState,

@@ -1,710 +1,226 @@
 'use strict';
 
-/**
- * PRIVATE MEDIA — MEDIA SESSION SERVICE
- *
- * One logical session (V1). All three control surfaces (web UI, Telegram,
- * Mac helper hotkey) funnel through `issueCommand`, so there is exactly one
- * place where a command is authorized, deduped, applied and broadcast.
- *
- * Consistency model:
- *   command issued  -> logical state updated optimistically
- *   player ack      -> logical state reconciled with what the browser really did
- *   state broadcast -> every controller (web/telegram/hotkey) sees the same thing
- *
- * The browser is a renderer, not the source of truth: autoplay refusals and
- * player errors are reported back through `acknowledgeCommand` and immediately
- * pushed to every controller.
- */
-
-const { Op } = require('sequelize');
+// One existing session per private account, plus the opt-in room:shared session.
+// All surfaces use the same locked command journal and server reference clock.
+const crypto = require('node:crypto');
 const env = require('../../config/env');
-const { PrivateMediaSession, PrivateMediaCommand } = require('../../models');
+const { PrivateMediaSession: Session, PrivateMediaCommand: Command } = require('../../models');
+const transaction = require('../typingTransaction');
+const access = require('./access.service');
 const audit = require('./audit.service');
-
 const DEFAULT_SESSION_KEY = env.privateMedia?.sessionKey || 'primary';
-
-/**
- * One playback session PER ACCOUNT.
- *
- * The owner keeps the historical `primary` key (so existing state is not lost);
- * every granted account gets `user:<id>`. That is what makes listening private:
- * two people with access no longer share one playhead, one queue and one volume
- * — each browser plays its own audio, and a delegated user changing the volume
- * cannot make the owner's speakers louder.
- *
- * Devices (Mac helper) and Telegram commands carry the owner's user id, so they
- * still drive the owner's session.
- */
 const SHARED_ROOM_KEY = 'room:shared';
-
-/** Only the two known modes are accepted; anything else is treated as private. */
-function normalizeRoom(room) {
-  return String(room || '').toLowerCase() === 'shared' ? 'shared' : 'private';
-}
-
-/**
- * @param {number} userId
- * @param {'private'|'shared'} [room]  shared = the listening room everyone joins
- */
+const normalizeRoom = (room) => String(room || '').toLowerCase() === 'shared' ? 'shared' : 'private';
 async function sessionKeyFor(userId, room) {
   if (normalizeRoom(room) === 'shared') return SHARED_ROOM_KEY;
-  if (!userId) return DEFAULT_SESSION_KEY;
-  try {
-    // Lazy require: access.service is loaded by the middleware and importing it
-    // at module scope would create a cycle.
-    const accessService = require('./access.service');
-    if (await accessService.isOwner(userId)) return DEFAULT_SESSION_KEY;
-  } catch {
-    // Fail closed to the caller's own session, never to somebody else's.
-  }
-  return `user:${Number(userId)}`;
+  return !userId || await access.isOwner(userId) ? DEFAULT_SESSION_KEY : `user:${Number(userId)}`;
 }
-
-const ACTIONS = Object.freeze({
-  LOAD_VIDEO: 'LOAD_VIDEO',
-  PLAY: 'PLAY',
-  PAUSE: 'PAUSE',
-  TOGGLE_PLAY_PAUSE: 'TOGGLE_PLAY_PAUSE',
-  STOP: 'STOP',
-  NEXT: 'NEXT',
-  PREVIOUS: 'PREVIOUS',
-  SEEK: 'SEEK',
-  SET_VOLUME: 'SET_VOLUME',
-});
-
+const ACTIONS = Object.freeze(Object.fromEntries([
+  'LOAD_VIDEO', 'QUEUE_ADD', 'QUEUE_REMOVE', 'QUEUE_REORDER', 'QUEUE_CLEAR',
+  'PLAY', 'PAUSE', 'TOGGLE_PLAY_PAUSE', 'STOP', 'NEXT', 'PREVIOUS', 'SEEK',
+].map((x) => [x, x])));
 const ACTION_LIST = Object.values(ACTIONS);
-
-// Actions that only make sense once a video is loaded.
-const REQUIRES_VIDEO = new Set([
-  ACTIONS.PLAY,
-  ACTIONS.PAUSE,
-  ACTIONS.TOGGLE_PLAY_PAUSE,
-  ACTIONS.STOP,
-  ACTIONS.SEEK,
-  ACTIONS.NEXT,
-  ACTIONS.PREVIOUS,
-]);
-
-// Actions that change what is on screen (audited by name).
-const AUDIT_ACTION_BY_COMMAND = {
-  [ACTIONS.LOAD_VIDEO]: 'VIDEO_SELECTED',
-  [ACTIONS.PLAY]: 'PLAY',
-  [ACTIONS.PAUSE]: 'PAUSE',
-  [ACTIONS.TOGGLE_PLAY_PAUSE]: 'TOGGLE_PLAY_PAUSE',
-  [ACTIONS.STOP]: 'STOP',
-  [ACTIONS.NEXT]: 'NEXT',
-  [ACTIONS.PREVIOUS]: 'PREVIOUS',
-  [ACTIONS.SEEK]: 'SEEK',
-  [ACTIONS.SET_VOLUME]: 'SET_VOLUME',
-};
-
 class PrivateMediaCommandError extends Error {
-  constructor(code, message, status = 400) {
-    super(message || code);
-    this.name = 'PrivateMediaCommandError';
-    this.code = code;
-    this.status = status;
-  }
+  constructor(code, message, status = 400) { super(message || code); this.code = code; this.status = status; }
 }
-
-function clampNumber(value, min, max, fallback = 0) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return Math.min(Math.max(numeric, min), max);
-}
-
-function normalizeVideoId(value) {
-  const raw = String(value || '').trim();
-  if (!/^[A-Za-z0-9_-]{11}$/.test(raw)) return null;
-  return raw;
-}
-
-function publicVideo(entry, addedBy = undefined) {
-  if (!entry) return null;
+const fail = (code, message, status) => { throw new PrivateMediaCommandError(code, message, status); };
+const number = (value, min = 0, max = 86400) => Math.min(max, Math.max(min, Number(value) || 0));
+const normalizeVideoId = (value) => /^[A-Za-z0-9_-]{11}$/.test(String(value || '').trim()) ? String(value).trim() : null;
+function video(entry) {
+  const videoId = normalizeVideoId(entry?.videoId);
+  if (!videoId) fail('INVALID_VIDEO_ID', 'Video không hợp lệ');
   return {
-    videoId: entry.videoId || entry.video_id || null,
-    title: entry.title || null,
-    channelTitle: entry.channelTitle || null,
-    thumbnailUrl: entry.thumbnailUrl || null,
-    durationSeconds: entry.durationSeconds ?? entry.duration_seconds ?? null,
-    // Who contributed the track. Internal only: used to rotate the shared room.
-    addedBy: addedBy !== undefined ? addedBy : (entry.addedBy ?? null),
+    videoId, title: String(entry.title || '').slice(0, 255) || null,
+    channelTitle: String(entry.channelTitle || '').slice(0, 191) || null,
+    thumbnailUrl: String(entry.thumbnailUrl || '').slice(0, 512) || null,
+    durationSeconds: entry.durationSeconds > 0 ? Math.round(number(entry.durationSeconds)) : null,
   };
 }
-
-/** Queue entry without the contributor id — this is what clients receive. */
-function publicVideoForClient(entry) {
-  const video = publicVideo(entry);
-  if (!video) return null;
-  delete video.addedBy;
-  return video;
+function position(session, now = Date.now()) {
+  const elapsed = session.status === 'PLAYING' && session.referenceTime
+    ? Math.max(0, (now - new Date(session.referenceTime).getTime()) / 1000) : 0;
+  return number(Number(session.currentTime || 0) + elapsed, 0, Number(session.durationSeconds) || 86400);
 }
-
-/** Remove duplicate videoIds, keeping the first occurrence. */
-function dedupeQueue(entries) {
-  const seen = new Set();
-  const out = [];
-  for (const entry of entries) {
-    const video = publicVideo(entry);
-    if (!video?.videoId || seen.has(video.videoId)) continue;
-    seen.add(video.videoId);
-    out.push(video);
-  }
-  return out;
-}
-
-/**
- * Interleave the tail of the shared queue so turns alternate between people:
- * one track from each contributor, then the next round, until every list runs
- * out. Without this the room played one person's whole list before the other's.
- *
- * `lastContributor` moves to the back, so whoever just played does not get the
- * next turn again when a new list arrives.
- */
-function roundRobinTail(entries, lastContributor) {
-  const groups = new Map();
-  for (const entry of entries) {
-    const key = entry.addedBy ?? 0;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(entry);
-  }
-
-  const keys = [...groups.keys()];
-  const at = keys.indexOf(lastContributor);
-  const ordered = at >= 0 ? [...keys.slice(at + 1), ...keys.slice(0, at + 1)] : keys;
-
-  const out = [];
-  for (let round = 0; ; round += 1) {
-    let added = false;
-    for (const key of ordered) {
-      const list = groups.get(key);
-      if (round < list.length) {
-        out.push(list[round]);
-        added = true;
-      }
-    }
-    if (!added) break;
-  }
-  return out;
-}
-
-/** Serializable session shape shared by HTTP and socket payloads. */
-function serializeSession(session) {
-  if (!session) return null;
+function serializeSession(s) {
+  if (!s) return null;
   return {
-    sessionId: session.id,
-    sessionKey: session.sessionKey || DEFAULT_SESSION_KEY,
-    status: session.status,
-    video: session.currentVideoId
-      ? {
-        videoId: session.currentVideoId,
-        title: session.title,
-        channelTitle: session.channelTitle,
-        thumbnailUrl: session.thumbnailUrl,
-        durationSeconds: session.durationSeconds,
-      }
-      : null,
-    currentTime: Number(session.currentTime || 0),
-    volume: Number(session.volume ?? 100),
-    queue: Array.isArray(session.queue) ? session.queue.map(publicVideoForClient).filter(Boolean) : [],
-    queueIndex: Number(session.queueIndex ?? -1),
-    playerOnline: Boolean(session.playerOnline),
-    controllerUserId: session.controllerUserId || null,
-    updatedAt: session.updatedAt,
+    sessionId: s.id, sessionKey: s.sessionKey, sessionRevision: Number(s.revision),
+    currentQueueItemId: s.currentQueueItemId, status: s.status,
+    video: s.currentVideoId ? { videoId: s.currentVideoId, title: s.title, channelTitle: s.channelTitle, thumbnailUrl: s.thumbnailUrl, durationSeconds: s.durationSeconds } : null,
+    currentTime: position(s), positionAtReference: Number(s.currentTime || 0),
+    serverReferenceTime: s.referenceTime, serverNow: Date.now(),
+    queue: (s.queue || []).filter((q) => q.status === 'QUEUED').map(({ addedBy, ...q }, i) => ({ ...q, position: i + 1 })),
+    playerOnline: Boolean(s.playerOnline), controllerUserId: s.controllerUserId,
+    participantCount: require('./realtime.service').playerCount(s.sessionKey),
+    lastFailure: s.lastFailure || null, updatedAt: s.updatedAt,
   };
 }
-
-async function getSession(userId, room) {
+async function getSession(userId, room, t) {
   const sessionKey = await sessionKeyFor(userId, room);
-  const [session] = await PrivateMediaSession.findOrCreate({
-    where: { sessionKey },
-    defaults: { sessionKey },
-  });
-  return session;
+  const [s] = await Session.findOrCreate({ where: { sessionKey }, defaults: { sessionKey }, transaction: t });
+  if (t) await s.reload({ transaction: t, lock: t.LOCK.UPDATE });
+  // Upgrade the old queue/index shape once, without changing the current song.
+  if ((s.queue || []).some((q) => !q.id || !q.status) || (s.currentVideoId && !s.currentQueueItemId)) {
+    const index = Number(s.queueIndex ?? -1);
+    const queue = (s.queue || []).map((q, i) => ({ ...video(q), id: q.id || crypto.randomUUID(), status: i <= index ? 'PLAYED' : 'QUEUED' }));
+    s.queue = queue;
+    s.currentQueueItemId = s.currentQueueItemId || (s.currentVideoId ? crypto.randomUUID() : null);
+    s.referenceTime = s.referenceTime || new Date();
+    if (s.status === 'LOADING') s.status = 'PLAYING';
+    await s.save({ transaction: t });
+  }
+  return s;
 }
-
-/** Resolve the session a command belongs to (used by acks, which carry an id). */
-async function getSessionById(sessionId) {
-  if (!sessionId) return getSession();
-  const session = await PrivateMediaSession.findByPk(sessionId);
-  return session || getSession();
-}
-
+async function getSessionById(id) { return id ? Session.findByPk(id) : null; }
 async function getSessionState(userId, room) {
-  const session = await getSession(userId, room);
-  return serializeSession(session);
+  return transaction(async (t) => serializeSession(await getSession(userId, room, t)));
 }
-
-function nextQueueEntry(session, direction) {
-  const queue = Array.isArray(session.queue) ? session.queue : [];
-  if (!queue.length) return null;
-  const index = Number(session.queueIndex ?? -1);
-  const targetIndex = index + direction;
-  if (targetIndex < 0 || targetIndex >= queue.length) return null;
-  return { entry: queue[targetIndex], index: targetIndex };
-}
-
-/**
- * Apply the logical transition for one command.
- * Returns the fields to persist on the session.
- */
-function planTransition(session, action, payload = {}) {
-  const currentVideoId = session.currentVideoId;
-
-  switch (action) {
-    case ACTIONS.LOAD_VIDEO: {
-      const videoId = normalizeVideoId(payload.videoId);
-      if (!videoId) throw new PrivateMediaCommandError('INVALID_VIDEO_ID', 'Video không hợp lệ');
-
-      const common = {
-        status: 'LOADING',
-        currentVideoId: videoId,
-        title: payload.title ? String(payload.title).slice(0, 255) : null,
-        channelTitle: payload.channelTitle ? String(payload.channelTitle).slice(0, 191) : null,
-        thumbnailUrl: payload.thumbnailUrl ? String(payload.thumbnailUrl).slice(0, 512) : null,
-        durationSeconds: Number.isFinite(Number(payload.durationSeconds)) ? Math.max(0, Math.round(Number(payload.durationSeconds))) : null,
-        currentTime: 0,
-        volume: Number.isFinite(Number(payload.volume)) ? clampNumber(payload.volume, 0, 100, session.volume) : Number(session.volume ?? 100),
-        controllerUserId: payload.actorUserId || session.controllerUserId,
-      };
-
-      const incoming = Array.isArray(payload.queue) && payload.queue.length
-        ? payload.queue.map((item) => publicVideo(item, payload.actorUserId)).filter((item) => item?.videoId).slice(0, 50)
-        : [];
-
-      // Private session: "play this list now" — replace, as before.
-      if (normalizeRoom(payload.room) !== 'shared') {
-        const queue = incoming.length ? incoming : (Array.isArray(session.queue) ? session.queue : []);
-        return { ...common, queue, queueIndex: queue.findIndex((item) => item.videoId === videoId) };
-      }
-
-      // Shared room: everybody contributes to ONE pool. The track that was just
-      // requested plays now; everything already queued stays, and the tail is
-      // re-interleaved so turns keep alternating between people.
-      const existing = Array.isArray(session.queue) ? session.queue.map((item) => publicVideo(item)) : [];
-      const index = Number(session.queueIndex ?? -1);
-      const upcoming = existing.slice(index + 1);
-      const contributed = payload.append ? incoming : [];
-
-      const currentEntry = publicVideo({
-        videoId,
-        title: common.title,
-        channelTitle: common.channelTitle,
-        thumbnailUrl: common.thumbnailUrl,
-        durationSeconds: common.durationSeconds,
-      }, payload.actorUserId);
-
-      const rest = dedupeQueue([...upcoming, ...contributed]).filter((item) => item.videoId !== videoId);
-      const queue = [currentEntry, ...roundRobinTail(rest, payload.actorUserId)];
-      return { ...common, queue, queueIndex: 0 };
-    }
-
-    case ACTIONS.PLAY:
-      return { status: 'PLAYING' };
-
-    case ACTIONS.PAUSE:
-      return { status: 'PAUSED' };
-
-    case ACTIONS.TOGGLE_PLAY_PAUSE:
-      return { status: session.status === 'PLAYING' ? 'PAUSED' : 'PLAYING' };
-
-    case ACTIONS.STOP:
-      return { status: 'STOPPED', currentTime: 0 };
-
-    case ACTIONS.SEEK:
-      return { currentTime: clampNumber(payload.position, 0, Number(session.durationSeconds) || 24 * 3600, Number(session.currentTime || 0)) };
-
-    case ACTIONS.SET_VOLUME:
-      return { volume: clampNumber(payload.volume, 0, 100, Number(session.volume ?? 100)) };
-
-    case ACTIONS.NEXT:
-    case ACTIONS.PREVIOUS: {
-      const next = nextQueueEntry(session, action === ACTIONS.NEXT ? 1 : -1);
-      if (!next) {
-        throw new PrivateMediaCommandError(
-          action === ACTIONS.NEXT ? 'NO_NEXT_TRACK' : 'NO_PREVIOUS_TRACK',
-          action === ACTIONS.NEXT ? 'Không còn video tiếp theo' : 'Không có video trước đó',
-        );
-      }
-      return {
-        status: 'LOADING',
-        currentVideoId: next.entry.videoId,
-        title: next.entry.title || null,
-        channelTitle: next.entry.channelTitle || null,
-        thumbnailUrl: next.entry.thumbnailUrl || null,
-        durationSeconds: next.entry.durationSeconds ?? null,
-        currentTime: 0,
-        queueIndex: next.index,
-      };
-    }
-
-    default:
-      throw new PrivateMediaCommandError('UNKNOWN_ACTION', 'Lệnh không hợp lệ');
-  }
-}
-
-function serializeCommand(command) {
-  if (!command) return null;
-  return {
-    commandId: command.commandId,
-    action: command.action,
-    source: command.source,
-    status: command.status,
-    errorCode: command.errorCode || null,
-    issuedByUserId: command.issuedByUserId || null,
-    payload: command.payload || null,
-    createdAt: command.createdAt,
-    executedAt: command.executedAt,
-  };
-}
-
-/**
- * Issue a control command.
- *
- * @param {object} input
- * @param {string} input.commandId     client-generated UUID; dedupe key
- * @param {string} input.action        one of ACTIONS
- * @param {'WEB'|'TELEGRAM'|'HOTKEY'|'SYSTEM'} input.source
- * @param {number} input.actorUserId
- * @param {object} [input.payload]
- * @returns {Promise<{command: object, state: object, duplicate: boolean}>}
- */
-async function issueCommand({ commandId, action, source = 'WEB', actorUserId, payload = {}, room }) {
-  const normalizedAction = String(action || '').toUpperCase();
-  if (!ACTION_LIST.includes(normalizedAction)) {
-    throw new PrivateMediaCommandError('UNKNOWN_ACTION', 'Lệnh không hợp lệ');
-  }
-
-  const dedupeKey = String(commandId || '').trim().slice(0, 64);
-  if (!dedupeKey) throw new PrivateMediaCommandError('MISSING_COMMAND_ID', 'Thiếu mã lệnh');
-
-  // Idempotency first: a duplicate must not mutate state a second time.
-  const existing = await PrivateMediaCommand.findOne({ where: { commandId: dedupeKey } });
-  if (existing) {
-    return {
-      command: serializeCommand(existing),
-      state: serializeSession(await getSessionById(existing.sessionId)),
-      duplicate: true,
-    };
-  }
-
-  const session = await getSession(actorUserId, room);
-
-  if (REQUIRES_VIDEO.has(normalizedAction) && !session.currentVideoId) {
-    throw new PrivateMediaCommandError('NO_ACTIVE_MEDIA_SESSION', 'Chưa có video nào đang phát', 409);
-  }
-
-  const changes = planTransition(session, normalizedAction, { ...payload, actorUserId, room });
-
-  let command;
-  try {
-    command = await PrivateMediaCommand.create({
-      commandId: dedupeKey,
-      sessionId: session.id,
-      action: normalizedAction,
-      source: ['WEB', 'TELEGRAM', 'HOTKEY', 'SYSTEM'].includes(source) ? source : 'SYSTEM',
-      issuedByUserId: actorUserId || null,
-      payload: payload && Object.keys(payload).length ? payload : null,
-      status: 'QUEUED',
-    });
-  } catch (error) {
-    if (error?.name === 'SequelizeUniqueConstraintError') {
-      // Lost a race with an identical command — treat it as a duplicate.
-      const raced = await PrivateMediaCommand.findOne({ where: { commandId: dedupeKey } });
-      return {
-        command: serializeCommand(raced),
-        state: serializeSession(await getSessionById(raced?.sessionId)),
-        duplicate: true,
-      };
-    }
-    throw error;
-  }
-
-  await session.update(changes);
-
-  const auditAction = AUDIT_ACTION_BY_COMMAND[normalizedAction];
-  if (auditAction) {
-    await audit.record({
-      action: auditAction,
-      actorUserId: actorUserId || null,
-      source: command.source,
-      metadata: {
-        commandId: dedupeKey,
-        videoId: session.currentVideoId,
-        title: session.title,
-        position: normalizedAction === ACTIONS.SEEK ? changes.currentTime : undefined,
-        volume: normalizedAction === ACTIONS.SET_VOLUME ? changes.volume : undefined,
-      },
-    });
-  }
-
-  return { command: serializeCommand(command), state: serializeSession(session), duplicate: false };
-}
-
-/**
- * Browser player acknowledgement. The player wins on facts it can observe
- * (real playback status, current time, duration); the backend keeps the intent.
- */
-async function acknowledgeCommand({ commandId, actorUserId, state = {}, errorCode = null }) {
-  const key = String(commandId || '').trim().slice(0, 64);
-  if (!key) return { applied: false, state: await getSessionState() };
-
-  const command = await PrivateMediaCommand.findOne({ where: { commandId: key } });
-  if (!command) return { applied: false, state: await getSessionState(actorUserId) };
-
-  const session = await getSessionById(command.sessionId);
-  const changes = {};
-
-  if (errorCode) {
-    command.status = 'FAILED';
-    command.errorCode = String(errorCode).slice(0, 64);
-    if (String(errorCode).startsWith('AUTOPLAY')) {
-      changes.status = 'PAUSED';
-    }
+function setCurrent(s, item) {
+  const queue = s.queue || [];
+  s.queue = queue.map((q) => q.status === 'PLAYING' ? { ...q, status: 'PLAYED' } : q);
+  if (!item) {
+    Object.assign(s, { status: 'IDLE', currentVideoId: null, title: null, channelTitle: null, thumbnailUrl: null, durationSeconds: null, currentQueueItemId: null, currentTime: 0 });
   } else {
-    command.status = 'EXECUTED';
-    const reportedStatus = String(state.status || '').toUpperCase();
-    if (['PLAYING', 'PAUSED', 'STOPPED', 'LOADING', 'IDLE', 'ERROR'].includes(reportedStatus)) {
-      changes.status = reportedStatus;
-    }
-    // A SEEK ack is sent as soon as the command arrives, i.e. usually BEFORE the
-    // player has moved: echoing `currentTime` there would write the old position
-    // back and undo the jump (the playhead visibly snapped back). The command
-    // itself is the authority for position, so the ack only confirms execution.
-    const isSeek = command.action === ACTIONS.SEEK;
-    if (!isSeek && Number.isFinite(Number(state.currentTime))) {
-      changes.currentTime = clampNumber(state.currentTime, 0, 24 * 3600, 0);
-    }
-    if (Number.isFinite(Number(state.durationSeconds))) {
-      changes.durationSeconds = Math.max(0, Math.round(Number(state.durationSeconds)));
-    }
-    if (Number.isFinite(Number(state.volume))) {
-      changes.volume = clampNumber(state.volume, 0, 100, 100);
-    }
+    Object.assign(s, { status: 'PLAYING', currentVideoId: item.videoId, title: item.title, channelTitle: item.channelTitle, thumbnailUrl: item.thumbnailUrl, durationSeconds: item.durationSeconds, currentQueueItemId: item.id, currentTime: 0 });
+    s.queue = s.queue.map((q) => q.id === item.id ? { ...q, status: 'PLAYING' } : q);
   }
-
-  command.executedAt = new Date();
-  await command.save();
-  if (Object.keys(changes).length) await session.update(changes);
-
-  return {
-    applied: true,
-    command: serializeCommand(command),
-    state: serializeSession(session),
-  };
 }
-
+function advance(s, failed = false) {
+  if (failed) s.queue = (s.queue || []).map((q) => q.id === s.currentQueueItemId ? { ...q, status: 'FAILED' } : q);
+  const next = (s.queue || []).find((q) => q.status === 'QUEUED');
+  setCurrent(s, next);
+  return Boolean(next);
+}
+function transition(s, action, payload, actorUserId, room) {
+  if (['LOAD_VIDEO', 'QUEUE_ADD'].includes(action)) {
+    const raw = Array.isArray(payload.queue) && payload.queue.length ? payload.queue : [payload];
+    if (raw.length > 50) fail('QUEUE_LIMIT', 'Mỗi lần thêm tối đa 50 bài');
+    const incoming = raw.map((q) => ({ ...video(q), id: crypto.randomUUID(), requestedByUserId: actorUserId, createdAt: new Date().toISOString(), status: 'QUEUED' }));
+    const selected = video(payload);
+    if (!incoming.some((q) => q.videoId === selected.videoId)) incoming.unshift({ ...selected, id: crypto.randomUUID(), requestedByUserId: actorUserId, createdAt: new Date().toISOString(), status: 'QUEUED' });
+    const old = (s.queue || []).filter((q) => ['QUEUED', 'PLAYING'].includes(q.status)).concat((s.queue || []).filter((q) => !['QUEUED', 'PLAYING'].includes(q.status)).slice(-50));
+    if (old.filter((q) => q.status === 'QUEUED').length + incoming.length > 100) fail('QUEUE_LIMIT', 'Hàng chờ tối đa 100 bài');
+    s.queue = action === 'LOAD_VIDEO' && normalizeRoom(room) !== 'shared' ? incoming : [...old, ...incoming];
+    if (action === 'LOAD_VIDEO') { s.lastFailure = null; setCurrent(s, incoming.find((q) => q.videoId === selected.videoId)); }
+    else if (!s.currentVideoId || s.status === 'IDLE') advance(s);
+    return;
+  }
+  if (action === 'QUEUE_REMOVE') {
+    if (!(s.queue || []).some((q) => q.id === payload.itemId && q.status === 'QUEUED')) fail('QUEUE_ITEM_NOT_FOUND', 'Bài không còn trong hàng chờ');
+    s.queue = s.queue.map((q) => q.id === payload.itemId ? { ...q, status: 'REMOVED' } : q); return;
+  }
+  if (action === 'QUEUE_CLEAR') { s.queue = (s.queue || []).map((q) => q.status === 'QUEUED' ? { ...q, status: 'REMOVED' } : q); return; }
+  if (action === 'QUEUE_REORDER') {
+    const waiting = (s.queue || []).filter((q) => q.status === 'QUEUED');
+    const ids = payload.itemIds;
+    if (!Array.isArray(ids) || ids.length !== waiting.length || new Set(ids).size !== ids.length || ids.some((id) => !waiting.some((q) => q.id === id))) fail('INVALID_QUEUE_ORDER', 'Hàng chờ đã thay đổi, vui lòng thử lại');
+    s.queue = [...s.queue.filter((q) => q.status !== 'QUEUED'), ...ids.map((id) => waiting.find((q) => q.id === id))]; return;
+  }
+  if (!s.currentVideoId) fail('NO_ACTIVE_MEDIA_SESSION', 'Chưa có video nào đang phát', 409);
+  switch (action) {
+    case 'PLAY': s.status = 'PLAYING'; break;
+    case 'PAUSE': s.status = 'PAUSED'; break;
+    case 'TOGGLE_PLAY_PAUSE': s.status = s.status === 'PLAYING' ? 'PAUSED' : 'PLAYING'; break;
+    case 'STOP': s.status = 'STOPPED'; s.currentTime = 0; break;
+    case 'SEEK': s.currentTime = number(payload.position, 0, Number(s.durationSeconds) || 86400); break;
+    case 'NEXT': s.lastFailure = null; advance(s); break;
+    case 'PREVIOUS': {
+      const previous = [...(s.queue || [])].reverse().find((q) => q.status === 'PLAYED');
+      if (!previous) fail('NO_PREVIOUS_TRACK', 'Không có video trước đó');
+      setCurrent(s, previous); break;
+    }
+    default: fail('UNKNOWN_ACTION', 'Lệnh không hợp lệ');
+  }
+}
+function serializeCommand(c) {
+  return c ? { commandId: c.commandId, action: c.action, source: c.source, status: c.status, errorCode: c.errorCode, createdAt: c.createdAt, executedAt: c.executedAt } : null;
+}
+async function authorize(actorUserId, action, source) {
+  const e = await access.getEntitlement(actorUserId);
+  const permission = action === 'QUEUE_ADD' ? 'queue' : 'control';
+  if (!access.hasPermission(e, permission) || (source === 'HOTKEY' && !access.hasPermission(e, 'hotkey')) || (source === 'TELEGRAM' && !access.hasPermission(e, 'telegram'))) fail('NOT_FOUND', 'Not found', 404);
+}
+async function issueCommand({ commandId, action, source = 'WEB', actorUserId, payload = {}, room }) {
+  action = String(action || '').toUpperCase();
+  await authorize(actorUserId, action, source);
+  if (!ACTION_LIST.includes(action)) fail('UNKNOWN_ACTION', 'Lệnh không hợp lệ');
+  const key = String(commandId || '').trim();
+  if (!key || key.length > 64) fail('MISSING_COMMAND_ID', 'Mã lệnh không hợp lệ');
+  // Explicit whitelist: output preferences never enter the journal or broadcasts.
+  const safe = Object.fromEntries(['videoId', 'title', 'channelTitle', 'thumbnailUrl', 'durationSeconds', 'queue', 'position', 'itemId', 'itemIds'].filter((k) => payload[k] !== undefined).map((k) => [k, payload[k]]));
+  if (safe.queue) {
+    if (!Array.isArray(safe.queue)) fail('INVALID_QUEUE', 'Hàng chờ không hợp lệ');
+    safe.queue = safe.queue.map(video);
+  }
+  const result = await transaction(async (t) => {
+    const s = await getSession(actorUserId, room, t);
+    const existing = await Command.findOne({ where: { commandId: key }, transaction: t, lock: t.LOCK.UPDATE });
+    if (existing) {
+      if (Number(existing.sessionId) !== Number(s.id) || Number(existing.issuedByUserId) !== Number(actorUserId)) fail('COMMAND_ID_CONFLICT', 'Mã lệnh đã được dùng', 409);
+      return { command: serializeCommand(existing), state: serializeSession(s), duplicate: true };
+    }
+    s.currentTime = position(s);
+    transition(s, action, safe, actorUserId, room);
+    s.referenceTime = new Date(); s.revision++; s.controllerUserId = actorUserId;
+    const c = await Command.create({ commandId: key, sessionId: s.id, action, source, issuedByUserId: actorUserId, payload: safe, status: 'EXECUTED', executedAt: new Date() }, { transaction: t });
+    await s.save({ transaction: t });
+    return { command: serializeCommand(c), state: serializeSession(s), duplicate: false };
+  }).catch((error) => {
+    if (error.name === 'SequelizeUniqueConstraintError') fail('COMMAND_ID_CONFLICT', 'Mã lệnh đã được dùng', 409);
+    throw error;
+  });
+  if (!result.duplicate) await audit.record({ action: action === 'LOAD_VIDEO' ? 'VIDEO_SELECTED' : action, actorUserId, source, metadata: { commandId: key, sessionId: result.state.sessionId, videoId: result.state.video?.videoId } });
+  return result;
+}
+async function acknowledgeCommand({ commandId, actorUserId, room }) {
+  // Browser facts (buffering, autoplay, volume) cannot overwrite session intent.
+  const s = await getSessionState(actorUserId, room);
+  const c = await Command.findOne({ where: { commandId, sessionId: s.sessionId } });
+  return { applied: Boolean(c), command: serializeCommand(c), state: s };
+}
 async function setPlayerPresence(online, userId, room) {
-  const session = await getSession(userId, room);
-  await session.update({
-    playerOnline: Boolean(online),
-    playerLastSeenAt: new Date(),
+  return transaction(async (t) => {
+    const s = await getSession(userId, room, t);
+    await s.update({ playerOnline: Boolean(online), playerLastSeenAt: new Date() }, { transaction: t });
+    return serializeSession(s);
   });
-  return serializeSession(session);
 }
-
-/** Status a command may legitimately set; used for the post-command quiet window. */
-const STATUS_ACTIONS = [
-  ACTIONS.LOAD_VIDEO, ACTIONS.PLAY, ACTIONS.PAUSE, ACTIONS.TOGGLE_PLAY_PAUSE,
-  ACTIONS.STOP, ACTIONS.NEXT, ACTIONS.PREVIOUS,
-];
-
-/**
- * A player tick that was already in flight when a command was issued would
- * otherwise land afterwards and undo it (pause, then a stale "still playing"
- * report resumes playback). The command journal is the authority here, so the
- * backend ignores reported status for a short window after any status command.
- *
- * The same race applies to the playhead after a SEEK: the tick that was already
- * in flight still carries the OLD position, so writing it back would drag the
- * session to where the video was before the jump — and the player, which treats
- * the session as authoritative, would then seek backwards. Both fields are
- * therefore gated, each by its own command type.
- */
-const POST_COMMAND_QUIET_MS = 3000;
-
-const TIME_ACTIONS = [ACTIONS.SEEK];
-
-/** True when one of `actions` was issued within the quiet window. */
-async function hasRecentCommand(actions) {
-  const row = await PrivateMediaCommand.findOne({
-    where: { action: { [Op.in]: actions } },
-    order: [['createdAt', 'DESC']],
-    attributes: ['createdAt'],
-  });
-  if (!row) return false;
-  return Date.now() - new Date(row.createdAt).getTime() < POST_COMMAND_QUIET_MS;
-}
-
-/** Heartbeat from the browser player: keeps currentTime warm without a command. */
-async function syncPlayerProgress({ currentTime, durationSeconds, status }, userId, room, { solo = true } = {}) {
-  const session = await getSession(userId, room);
-  // Identity of the newest SEEK this tick could have seen. Compared after the
-  // write: anything newer was issued while this tick was in flight.
-  const seekBefore = await PrivateMediaCommand.findOne({
-    where: { action: ACTIONS.SEEK },
-    order: [['id', 'DESC']],
-    attributes: ['id'],
-  });
-  const changes = { playerLastSeenAt: new Date(), playerOnline: true };
-  if (Number.isFinite(Number(currentTime))) changes.currentTime = clampNumber(currentTime, 0, 24 * 3600, 0);
-  if (Number.isFinite(Number(durationSeconds))) changes.durationSeconds = Math.max(0, Math.round(Number(durationSeconds)));
-
-  const [statusQuiet, timeQuiet] = await Promise.all([
-    hasRecentCommand(STATUS_ACTIONS),
-    hasRecentCommand(TIME_ACTIONS),
-  ]);
-
-  // A tick that was in flight during a SEEK still reports the pre-seek position.
-  if (timeQuiet) delete changes.currentTime;
-
-  const normalizedStatus = status ? String(status).toUpperCase() : null;
-  if (normalizedStatus && ['PLAYING', 'PAUSED', 'STOPPED', 'LOADING', 'IDLE', 'ERROR'].includes(normalizedStatus)) {
-    // Progress still updates time; only the status is gated.
-    // In a shared room with several players, each tab reports its own state and
-    // they would overwrite each other every two seconds (playing/paused flicker).
-    // There the last COMMAND owns the status; the players are made to follow it.
-    if (!statusQuiet && solo) {
-      changes.status = normalizedStatus;
+async function syncPlayerProgress(payload, userId, room) {
+  return transaction(async (t) => {
+    const s = await getSession(userId, room, t);
+    // Time/status belong to the server. Only learn duration for this exact track.
+    if (payload.currentQueueItemId === s.currentQueueItemId && !s.durationSeconds && payload.durationSeconds > 0) {
+      s.durationSeconds = Math.round(number(payload.durationSeconds)); s.revision++;
+      await s.save({ transaction: t });
     }
-  }
-
-  await session.update(changes);
-
-  // Repair pass. The check above is not atomic with the write: a SEEK can be
-  // issued between them, and this tick would then overwrite the jump with the
-  // old position (the player would visibly rewind). The journal is cheap to
-  // re-read, and the seek target always wins over a heartbeat.
-  if (changes.currentTime !== undefined) {
-    const seekAfter = await PrivateMediaCommand.findOne({
-      where: { action: ACTIONS.SEEK },
-      order: [['id', 'DESC']],
-    });
-    if (seekAfter && seekAfter.id !== seekBefore?.id) {
-      const raw = seekAfter.payload;
-      let payload = raw;
-      if (typeof raw === 'string') {
-        try { payload = JSON.parse(raw); } catch { payload = null; }
-      }
-      const target = Number(payload?.position);
-      if (Number.isFinite(target)) {
-        const max = Number(session.durationSeconds) || 24 * 3600;
-        await session.update({ currentTime: clampNumber(target, 0, max, target) });
-      }
-    }
-  }
-
-  return serializeSession(session);
-}
-
-/**
- * Auto-advance, like YouTube: when the player reports the end of a video, the
- * next queue entry starts on its own. This replaces the manual "next" button.
- *
- * It is intentionally NOT a command: nobody issued it, so there is no command id
- * to dedupe. The session is still the authority and the broadcast carries the
- * new videoId, which every player follows.
- */
-async function autoAdvance({ userId, room } = {}) {
-  const session = await getSession(userId, room);
-  const next = nextQueueEntry(session, 1);
-
-  if (!next) {
-    // Nothing queued: settle on STOPPED at the end instead of looping forever.
-    if (session.status !== 'STOPPED') await session.update({ status: 'STOPPED' });
-    return { advanced: false, state: serializeSession(session) };
-  }
-
-  await session.update({
-    status: 'LOADING',
-    currentVideoId: next.entry.videoId,
-    title: next.entry.title || null,
-    channelTitle: next.entry.channelTitle || null,
-    thumbnailUrl: next.entry.thumbnailUrl || null,
-    durationSeconds: next.entry.durationSeconds ?? null,
-    currentTime: 0,
-    queueIndex: next.index,
+    return serializeSession(s);
   });
-
-  await audit.record({
-    action: 'NEXT',
-    actorUserId: null,
-    source: 'SYSTEM',
-    metadata: { videoId: next.entry.videoId, auto: true },
-  });
-
-  return { advanced: true, state: serializeSession(session) };
 }
-
-/** Recent commands (owner/ops visibility; no secrets involved). */
+async function autoAdvance({ userId, room, currentQueueItemId, errorCode } = {}) {
+  if (!access.hasPermission(await access.getEntitlement(userId), 'view')) fail('NOT_FOUND', 'Not found', 404);
+  return transaction(async (t) => {
+    const s = await getSession(userId, room, t);
+    if (!currentQueueItemId || currentQueueItemId !== s.currentQueueItemId || !s.currentVideoId) return { advanced: false, stale: true, state: serializeSession(s) };
+    const failed = ['2', '5', '100', '101', '150', '153'].includes(String(errorCode));
+    if (!failed && (s.status !== 'PLAYING' || !s.durationSeconds || position(s) < s.durationSeconds - 3)) return { advanced: false, premature: true, state: serializeSession(s) };
+    const previousId = s.currentQueueItemId;
+    if (!failed) s.lastFailure = null;
+    if (failed) s.lastFailure = { itemId: previousId, at: new Date().toISOString(), message: 'Không thể phát bài này, đã chuyển sang bài tiếp theo.' };
+    const advanced = advance(s, failed);
+    s.referenceTime = new Date(); s.revision++;
+    await s.save({ transaction: t });
+    await audit.record({ action: 'AUTO_ADVANCE', actorUserId: userId, source: 'SYSTEM', metadata: { sessionId: s.id, previousId, failed, advanced } });
+    return { advanced, state: serializeSession(s) };
+  });
+}
 async function recentCommands({ limit = 20, userId, room } = {}) {
-  const session = await getSession(userId, room);
-  const rows = await PrivateMediaCommand.findAll({
-    where: { sessionId: session.id },
-    order: [['createdAt', 'DESC']],
-    limit: Math.min(Number(limit) || 20, 100),
-  });
-  return rows.map(serializeCommand);
+  const s = await getSessionState(userId, room);
+  return (await Command.findAll({ where: { sessionId: s.sessionId }, order: [['id', 'DESC']], limit: Math.min(Number(limit) || 20, 100) })).map(serializeCommand);
 }
-
-/**
- * Recently played videos, newest first, deduped by videoId.
- *
- * Derived from the command journal, so it needs no extra table and works with
- * zero credentials — it is the keyless way to replay something you already
- * loaded without searching again.
- */
 async function recentVideos({ limit = 12, userId, room } = {}) {
-  const session = await getSession(userId, room);
-  const rows = await PrivateMediaCommand.findAll({
-    where: { action: ACTIONS.LOAD_VIDEO, sessionId: session.id },
-    order: [['createdAt', 'DESC']],
-    limit: 120,
-    attributes: ['payload', 'createdAt', 'source'],
-  });
-
+  const s = await getSessionState(userId, room);
+  const rows = await Command.findAll({ where: { sessionId: s.sessionId, action: 'LOAD_VIDEO' }, order: [['id', 'DESC']], limit: 120 });
   const seen = new Set();
-  const videos = [];
-
-  for (const row of rows) {
-    const payload = row.payload || {};
-    const videoId = normalizeVideoId(payload.videoId);
-    if (!videoId || seen.has(videoId)) continue;
-    seen.add(videoId);
-    videos.push({
-      videoId,
-      title: payload.title || null,
-      channelTitle: payload.channelTitle || null,
-      thumbnailUrl: payload.thumbnailUrl || null,
-      durationSeconds: Number.isFinite(Number(payload.durationSeconds)) ? Number(payload.durationSeconds) : null,
-      lastPlayedAt: row.createdAt,
-      lastSource: row.source,
-    });
-    if (videos.length >= Math.min(Number(limit) || 12, 50)) break;
-  }
-
-  return videos;
+  return rows.filter((r) => { const id = r.payload?.videoId; if (!normalizeVideoId(id) || seen.has(id)) return false; seen.add(id); return true; }).slice(0, Math.min(Number(limit) || 12, 50)).map((r) => ({ ...video(r.payload), lastPlayedAt: r.createdAt, lastSource: r.source }));
 }
-
-module.exports = {
-  ACTIONS,
-  ACTION_LIST,
-  PrivateMediaCommandError,
-  getSession,
-  getSessionById,
-  getSessionState,
-  sessionKeyFor,
-  normalizeRoom,
-  DEFAULT_SESSION_KEY,
-  SHARED_ROOM_KEY,
-  serializeSession,
-  issueCommand,
-  acknowledgeCommand,
-  setPlayerPresence,
-  syncPlayerProgress,
-  autoAdvance,
-  recentCommands,
-  recentVideos,
-  normalizeVideoId,
-};
+module.exports = { ACTIONS, ACTION_LIST, PrivateMediaCommandError, DEFAULT_SESSION_KEY, SHARED_ROOM_KEY, normalizeRoom, sessionKeyFor, getSession, getSessionById, getSessionState, serializeSession, issueCommand, acknowledgeCommand, setPlayerPresence, syncPlayerProgress, autoAdvance, recentCommands, recentVideos, normalizeVideoId };

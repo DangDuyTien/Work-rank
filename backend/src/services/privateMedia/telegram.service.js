@@ -88,10 +88,13 @@ function describeState(state) {
     state.video.durationSeconds
       ? `Thời lượng: ${formatDuration(state.currentTime)} / ${formatDuration(state.video.durationSeconds)}`
       : `Đang ở: ${formatDuration(state.currentTime)}`,
-    `Âm lượng: ${state.volume}%`,
     state.playerOnline ? 'Trình phát: Đã kết nối' : 'Trình phát đang offline',
   ].filter(Boolean);
   return lines.join('\n');
+}
+
+function describeQueue(state) {
+  return `Đang phát:\n${state?.video?.title || 'Chưa có bài'}\n\nĐang chờ:\n${state?.queue?.map((q, i) => `${i + 1}. ${q.title || q.videoId}`).join('\n') || 'Hàng chờ đang trống'}`;
 }
 
 function controlKeyboard() {
@@ -102,6 +105,7 @@ function controlKeyboard() {
       { text: '⏹ Dừng', callback_data: 'pm:stop' },
     ], [
       { text: '🔁 Đảo trạng thái', callback_data: 'pm:toggle' },
+      { text: '⏭ Tiếp theo', callback_data: 'pm:next' },
     ]],
   };
 }
@@ -129,7 +133,7 @@ async function resolveActor(telegramUserId) {
   if (!binding) return { ok: false, reason: 'NOT_BOUND' };
 
   const entitlement = await accessService.getEntitlement(binding.userId);
-  if (!entitlement || !entitlement.canTelegram || !entitlement.canControl) {
+  if (!accessService.hasPermission(entitlement, 'telegram')) {
     return { ok: false, reason: 'NO_ACCESS', userId: binding.userId };
   }
 
@@ -181,14 +185,15 @@ async function bindChat({ code, telegramUser, chatId }) {
   return { ok: true, userId: consumed.userId };
 }
 
-async function runCommand(actor, action, payload = {}) {
-  const commandId = `tg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+async function runCommand(actor, action, payload = {}, identity) {
+  const commandId = identity || `tg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   const result = await sessionService.issueCommand({
     commandId,
     action,
     source: 'TELEGRAM',
     actorUserId: actor.userId,
     payload,
+    room: 'shared',
   });
   if (!result.duplicate) {
     realtime.broadcastCommand(result.command, result.state?.sessionKey);
@@ -250,27 +255,23 @@ async function handleMessage(message) {
   try {
     switch (command) {
       case '/now': {
-        const state = await sessionService.getSessionState(actor.userId);
+        const state = await sessionService.getSessionState(actor.userId, 'shared');
         await sendMessage(chatId, describeState(state), controlKeyboard());
         return;
       }
       case '/play':
       case '/pause':
       case '/stop':
+      case '/next':
       case '/toggle': {
-        const action = command === '/play' ? 'PLAY' : command === '/pause' ? 'PAUSE' : command === '/stop' ? 'STOP' : 'TOGGLE_PLAY_PAUSE';
-        const result = await runCommand(actor, action);
+        const action = command === '/play' ? 'PLAY' : command === '/pause' ? 'PAUSE' : command === '/stop' ? 'STOP' : command === '/next' ? 'NEXT' : 'TOGGLE_PLAY_PAUSE';
+        const result = await runCommand(actor, action, {}, `tg_msg_${chatId}_${message.message_id}`);
         await sendMessage(chatId, describeState(result.state), controlKeyboard());
         return;
       }
-      case '/volume': {
-        const volume = Number(argument);
-        if (!Number.isFinite(volume) || volume < 0 || volume > 100) {
-          await sendMessage(chatId, 'Dùng: /volume 0-100');
-          return;
-        }
-        const result = await runCommand(actor, 'SET_VOLUME', { volume });
-        await sendMessage(chatId, describeState(result.state), controlKeyboard());
+      case '/queue': {
+        const state = await sessionService.getSessionState(actor.userId, 'shared');
+        await sendMessage(chatId, describeQueue(state));
         return;
       }
       case '/search': {
@@ -287,16 +288,16 @@ async function handleMessage(message) {
           chatId,
           `Kết quả cho "${argument}":`,
           {
-            inline_keyboard: results.items.map((item) => ([{
-              text: `${item.title || item.videoId}`.slice(0, 60),
-              callback_data: `pm:load:${item.videoId}`,
-            }])),
+            inline_keyboard: results.items.flatMap((item) => ([
+              [{ text: `${item.title || item.videoId}`.slice(0, 60), callback_data: `pm:add:${item.videoId}` }],
+              [{ text: '➕ Thêm vào hàng chờ', callback_data: `pm:add:${item.videoId}` }, { text: '▶ Phát ngay', callback_data: `pm:load:${item.videoId}` }],
+            ])),
           },
         );
         return;
       }
       default:
-        await sendMessage(chatId, 'Lệnh hỗ trợ: /now /play /pause /toggle /stop /volume <0-100> /search <từ khoá>');
+        await sendMessage(chatId, 'Lệnh hỗ trợ: /now /queue /next /play /pause /toggle /stop /search <từ khoá>');
     }
   } catch (error) {
     if (error?.code && commandErrorMessage(error) !== `Không thực hiện được lệnh (${error.code}).`) {
@@ -334,17 +335,17 @@ async function handleCallbackQuery(query) {
   }
 
   try {
-    if (data === 'pm:play' || data === 'pm:pause' || data === 'pm:stop' || data === 'pm:toggle') {
-      const action = data === 'pm:play' ? 'PLAY' : data === 'pm:pause' ? 'PAUSE' : data === 'pm:stop' ? 'STOP' : 'TOGGLE_PLAY_PAUSE';
-      const result = await runCommand(actor, action);
+    if (data === 'pm:play' || data === 'pm:pause' || data === 'pm:stop' || data === 'pm:toggle' || data === 'pm:next') {
+      const action = data === 'pm:play' ? 'PLAY' : data === 'pm:pause' ? 'PAUSE' : data === 'pm:stop' ? 'STOP' : data === 'pm:next' ? 'NEXT' : 'TOGGLE_PLAY_PAUSE';
+      const result = await runCommand(actor, action, {}, `tg_cb_${query.id}`);
       if (chatId) await sendMessage(chatId, describeState(result.state), controlKeyboard());
       return;
     }
 
-    if (data.startsWith('pm:load:')) {
-      const videoId = data.slice('pm:load:'.length);
+    if (data.startsWith('pm:load:') || data.startsWith('pm:add:')) {
+      const videoId = data.split(':')[2];
       const video = await youtube.resolveVideo(videoId);
-      const result = await runCommand(actor, 'LOAD_VIDEO', video);
+      const result = await runCommand(actor, data.startsWith('pm:add:') ? 'QUEUE_ADD' : 'LOAD_VIDEO', video, `tg_cb_${query.id}`);
       if (chatId) await sendMessage(chatId, describeState(result.state), controlKeyboard());
     }
   } catch (error) {
@@ -460,6 +461,7 @@ module.exports = {
   createBindingCode,
   resolveActor,
   describeState,
+  describeQueue,
   controlKeyboard,
   // exported for tests
   handleUpdate,

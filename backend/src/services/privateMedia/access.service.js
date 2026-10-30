@@ -27,7 +27,7 @@ const {
 } = require('../../models');
 
 const OWNER_CACHE_TTL_MS = 30_000;
-const PERMISSION_KEYS = ['canView', 'canControl', 'canTelegram', 'canHotkey'];
+const PERMISSION_KEYS = ['canView', 'canQueue', 'canControl', 'canTelegram', 'canHotkey'];
 
 let ownerCache = { userId: null, at: 0 };
 
@@ -104,6 +104,7 @@ function emptyEntitlement(isOwner = false) {
   return {
     isOwner,
     canView: isOwner,
+    canQueue: isOwner,
     canControl: isOwner,
     canTelegram: isOwner,
     canHotkey: isOwner,
@@ -141,6 +142,7 @@ async function getEntitlement(userId) {
     return {
       isOwner: false,
       canView: Boolean(grant.canView),
+      canQueue: Boolean(grant.canQueue || grant.canControl),
       canControl: Boolean(grant.canControl),
       canTelegram: Boolean(grant.canTelegram),
       canHotkey: Boolean(grant.canHotkey),
@@ -174,6 +176,7 @@ function toPublicEntitlement(entitlement) {
     isOwner: Boolean(entitlement.isOwner),
     permissions: {
       view: Boolean(entitlement.canView),
+      queue: Boolean(entitlement.canQueue || entitlement.canControl),
       control: Boolean(entitlement.canControl),
       telegram: Boolean(entitlement.canTelegram),
       hotkey: Boolean(entitlement.canHotkey),
@@ -185,15 +188,17 @@ function toPublicEntitlement(entitlement) {
 function normalizePermissions(input = {}) {
   const permissions = {
     canView: input.view !== false,
+    canQueue: Boolean(input.queue || input.control),
     canControl: Boolean(input.control),
     canTelegram: Boolean(input.telegram),
     canHotkey: Boolean(input.hotkey),
   };
   // Control surfaces imply the ability to see the session they act on.
-  if (permissions.canControl || permissions.canTelegram || permissions.canHotkey) {
+  if (permissions.canQueue || permissions.canControl || permissions.canTelegram || permissions.canHotkey) {
     permissions.canView = true;
   }
   if (!permissions.canView) {
+    permissions.canQueue = false;
     permissions.canControl = false;
     permissions.canTelegram = false;
     permissions.canHotkey = false;
@@ -306,6 +311,7 @@ async function listGrants() {
     active: !row.revokedAt,
     permissions: {
       view: row.canView,
+      queue: Boolean(row.canQueue || row.canControl),
       control: row.canControl,
       telegram: row.canTelegram,
       hotkey: row.canHotkey,
@@ -358,8 +364,9 @@ function hasPermission(entitlement, permission) {
   if (!entitlement) return false;
   switch (permission) {
     case 'view': return Boolean(entitlement.canView);
+    case 'queue': return Boolean(entitlement.canQueue || entitlement.canControl);
     case 'control': return Boolean(entitlement.canControl);
-    case 'telegram': return Boolean(entitlement.canTelegram && entitlement.canControl);
+    case 'telegram': return Boolean(entitlement.canTelegram && entitlement.canView);
     case 'hotkey': return Boolean(entitlement.canHotkey && entitlement.canControl);
     case 'manage_access': return Boolean(entitlement.canManageAccess && entitlement.isOwner);
     default: return false;

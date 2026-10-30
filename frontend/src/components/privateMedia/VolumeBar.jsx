@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Volume1, Volume2, VolumeX } from 'lucide-react';
 
 /**
@@ -12,16 +12,13 @@ import { Volume1, Volume2, VolumeX } from 'lucide-react';
  * Drag commits once on release; the thumb follows the finger meanwhile so the
  * 2-second session heartbeat cannot yank it back mid-drag.
  */
-export default function VolumeBar({ volume, canControl, onVolume }) {
-  const current = Math.min(100, Math.max(0, Math.round(Number(volume ?? 100))));
+export default function VolumeBar({ volume, muted, onToggleMute, onVolume }) {
+  const current = Math.min(100, Math.max(0, Math.round(Number(volume ?? 70))));
   const [dragging, setDragging] = useState(false);
   const [draft, setDraft] = useState(current);
-  // What to restore when un-muting — never restore 0, that would be a no-op.
-  const lastAudibleRef = useRef(current > 0 ? current : 70);
 
   useEffect(() => {
     if (!dragging) setDraft(current);
-    if (current > 0) lastAudibleRef.current = current;
   }, [current, dragging]);
 
   useEffect(() => {
@@ -39,16 +36,15 @@ export default function VolumeBar({ volume, canControl, onVolume }) {
   }, [dragging, draft, onVolume]);
 
   const shown = dragging ? draft : current;
-  const muted = shown === 0;
-  const Icon = muted ? VolumeX : (shown < 50 ? Volume1 : Volume2);
+  const silent = muted || shown === 0;
+  const Icon = silent ? VolumeX : (shown < 50 ? Volume1 : Volume2);
 
   return (
-    <div className={`pm-vol${canControl ? '' : ' is-disabled'}`}>
+    <div className="pm-vol" title="Chỉ thay đổi âm lượng trên thiết bị này">
       <button
         type="button"
         className="pm-vol__btn"
-        onClick={() => onVolume(muted ? lastAudibleRef.current : 0)}
-        disabled={!canControl}
+        onClick={onToggleMute}
         aria-label={muted ? 'Bật tiếng' : 'Tắt tiếng'}
         title={muted ? 'Bật tiếng' : 'Tắt tiếng'}
       >
@@ -61,9 +57,8 @@ export default function VolumeBar({ volume, canControl, onVolume }) {
         max="100"
         step="5"
         value={shown}
-        disabled={!canControl}
-        aria-label="Âm lượng"
-        onPointerDown={() => { if (canControl) setDragging(true); }}
+        aria-label="Âm lượng của bạn"
+        onPointerDown={() => setDragging(true)}
         onChange={(event) => {
           const next = Number(event.target.value);
           setDraft(next);
@@ -71,7 +66,7 @@ export default function VolumeBar({ volume, canControl, onVolume }) {
           if (!dragging) onVolume(next);
         }}
       />
-      <span className="pm-vol__value">{shown}%</span>
+      <span className="pm-vol__value">{muted ? 'Tắt' : `${shown}%`}</span>
     </div>
   );
 }
