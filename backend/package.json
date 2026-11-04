@@ -16,7 +16,9 @@
     "db:migrate-drawings": "node scripts/migrate-drawing-images.js",
     "db:reset-clean": "node scripts/reset-and-seed-local.js",
     "youtube:key": "node scripts/set-youtube-key.js",
-    "test:load": "node scripts/api-load-smoke-test.js"
+    "test:load": "node scripts/api-load-smoke-test.js",
+    "private-media:catalog": "node scripts/sync-private-media-catalog.js",
+    "private-media:catalog:apply": "node scripts/sync-private-media-catalog.js --apply"
   },
   "keywords": [],
   "author": "",

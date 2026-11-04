@@ -1,0 +1,20 @@
+{
+  "measuredAt": "2026-11-04T08:43:38.914Z",
+  "socketConnections": 1,
+  "duringChat": {
+    "totalRequests": 3,
+    "playlistRequests": 0,
+    "sessionRequests": 0,
+    "socketRequests": 0,
+    "longTasks": 0,
+    "iframes": 1
+  },
+  "onDashboard": {
+    "iframes": 1,
+    "audioOnly": true,
+    "offscreen": true,
+    "visibleIframes": 0
+  },
+  "totalRequestsWholeRun": 139,
+  "iframeBeforeChat": 1
+}

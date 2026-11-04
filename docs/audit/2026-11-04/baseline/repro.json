@@ -1,0 +1,48 @@
+{
+  "startedAt": "2026-11-04T06:58:33.689Z",
+  "steps": [
+    {
+      "step": "playing",
+      "before": {
+        "currentTime": 5.89,
+        "paused": false,
+        "readyState": 4,
+        "src": "blob:https://www.youtube.com/7ace876f-6c59-43aa-92ed-f315864"
+      },
+      "markerBefore": 1,
+      "iframeCount": 1
+    },
+    {
+      "step": "on /dashboard",
+      "iframes": 0,
+      "marker": 0
+    },
+    {
+      "step": "on /leaderboard",
+      "iframes": 0,
+      "marker": 0
+    },
+    {
+      "step": "on /games",
+      "iframes": 0,
+      "marker": 0
+    },
+    {
+      "step": "back on media",
+      "after": {
+        "currentTime": 19.74,
+        "paused": false,
+        "readyState": 4,
+        "src": "blob:https://www.youtube.com/e49ff116-486c-4fb6-9c2c-87c88e4"
+      },
+      "marker": 0
+    }
+  ],
+  "summary": {
+    "timeBefore": 5.89,
+    "timeAfter": 19.74,
+    "iframeNavigations": 2,
+    "resetToZero": false
+  },
+  "finishedAt": "2026-11-04T06:58:54.780Z"
+}

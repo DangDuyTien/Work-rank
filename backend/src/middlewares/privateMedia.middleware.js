@@ -76,4 +76,25 @@ const privateMediaCommandLimiter = rateLimit({
   },
 });
 
-module.exports = { requirePrivateMedia, privateMediaPairingLimiter, privateMediaCommandLimiter, NOT_FOUND_BODY };
+/**
+ * Chat has its own (tighter) HTTP guard. The service also applies a per-user
+ * sliding window, which is what protects the WebSocket path too.
+ */
+const privateMediaChatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `pm-chat:${req.user?.id || 'anonymous'}`,
+  handler(req, res) {
+    res.status(429).json({ message: 'Bạn gửi tin nhắn quá nhanh. Vui lòng thử lại.', code: 'CHAT_RATE_LIMITED' });
+  },
+});
+
+module.exports = {
+  requirePrivateMedia,
+  privateMediaPairingLimiter,
+  privateMediaCommandLimiter,
+  privateMediaChatLimiter,
+  NOT_FOUND_BODY,
+};

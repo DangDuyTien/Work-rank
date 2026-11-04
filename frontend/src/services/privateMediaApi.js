@@ -142,6 +142,63 @@ export const privateMediaApi = {
     const res = await api.get(`${BASE}/audit`, { params: { limit } });
     return res.data;
   },
+
+  // ── Playlists ────────────────────────────────────────────────────────────
+  async listPlaylists() {
+    const res = await api.get(`${BASE}/playlists`);
+    return res.data;
+  },
+
+  async getPlaylist(playlistId) {
+    const res = await api.get(`${BASE}/playlists/${playlistId}`);
+    return res.data;
+  },
+
+  async createPlaylist(payload) {
+    const res = await api.post(`${BASE}/playlists`, payload);
+    return res.data;
+  },
+
+  async updatePlaylist(playlistId, patch) {
+    const res = await api.patch(`${BASE}/playlists/${playlistId}`, patch);
+    return res.data;
+  },
+
+  async deletePlaylist(playlistId) {
+    const res = await api.delete(`${BASE}/playlists/${playlistId}`);
+    return res.data;
+  },
+
+  async addPlaylistItems(playlistId, items) {
+    const res = await api.post(`${BASE}/playlists/${playlistId}/items`, { items });
+    return res.data;
+  },
+
+  async removePlaylistItem(playlistId, itemId) {
+    const res = await api.delete(`${BASE}/playlists/${playlistId}/items/${itemId}`);
+    return res.data;
+  },
+
+  async reorderPlaylistItems(playlistId, itemIds) {
+    const res = await api.patch(`${BASE}/playlists/${playlistId}/items`, { itemIds });
+    return res.data;
+  },
+
+  async importPlaylist(payload) {
+    const res = await api.post(`${BASE}/playlists/import`, payload);
+    return res.data;
+  },
+
+  // ── Shared listening chat ────────────────────────────────────────────────
+  async listChat({ limit = 30, before = null } = {}) {
+    const res = await api.get(`${BASE}/chat`, { params: { limit, ...(before ? { before } : {}) } });
+    return res.data;
+  },
+
+  async sendChat({ content, clientMessageId }) {
+    const res = await api.post(`${BASE}/chat`, { content, clientMessageId });
+    return res.data;
+  },
 };
 
 export { isConcealed, messageFrom, codeFrom, BASE as PRIVATE_MEDIA_BASE };

@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import DialogAccessibility from './components/DialogAccessibility';
 import { normalizeRankingParams } from './config/ranking';
 import { usePrivateMediaAccess } from './hooks/usePrivateMediaAccess';
+import PrivateMediaProvider from './context/PrivateMediaContext';
 
 const CHUNK_RELOAD_KEY = 'workrank:chunk-reload-attempted';
 
@@ -302,9 +303,14 @@ export default function App() {
       <UiProvider>
         <AuthProvider>
           <DialogAccessibility />
-          <RouteErrorBoundary>
-            <AppRoutes />
-          </RouteErrorBoundary>
+          {/* The media controller sits ABOVE RouteErrorBoundary on purpose: that
+              boundary is keyed by location, so anything inside it is remounted on
+              every navigation. The player, its socket and the chat must not be. */}
+          <PrivateMediaProvider>
+            <RouteErrorBoundary>
+              <AppRoutes />
+            </RouteErrorBoundary>
+          </PrivateMediaProvider>
         </AuthProvider>
       </UiProvider>
     </BrowserRouter>

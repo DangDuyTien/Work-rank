@@ -39,8 +39,16 @@ function broadcastCommand(command, sessionKey) {
   namespace.to(playersRoom(sessionKey)).emit('private-media:command', command);
 }
 
-function broadcastPlayerPresence(online, state = null, sessionKey) {
-  if (!namespace) return;
+/**
+ * Chat is scoped to the playback session's controller room. Everyone entitled to
+ * that session receives it; nobody else is in the room.
+ */
+function broadcastChat(sessionKey, message) {
+  if (!namespace || !message) return;
+  namespace.to(controllersRoom(sessionKey)).emit('private-media:chat-message', message);
+}
+
+function broadcastPlayerPresence(online, state = null, sessionKey) {  if (!namespace) return;
   namespace.to(controllersRoom(roomKeyOf(state, sessionKey))).emit(
     online ? 'private-media:player-online' : 'private-media:player-offline',
     state || { online: Boolean(online) },
@@ -113,6 +121,7 @@ module.exports = {
   isAttached,
   broadcastState,
   broadcastCommand,
+  broadcastChat,
   broadcastPlayerPresence,
   registerPlayer,
   unregisterPlayer,

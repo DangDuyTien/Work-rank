@@ -1,0 +1,364 @@
+{
+  "startedAt": "2026-11-04T08:41:54.429Z",
+  "checks": [
+    {
+      "name": "PLAYER_ROUTE_PERSISTENCE",
+      "status": "PASS",
+      "evidence": {
+        "before": {
+          "currentTime": 6.76,
+          "duration": 634.6,
+          "paused": false,
+          "muted": false,
+          "volume": 0.4,
+          "readyState": 4,
+          "src": "blob:https://www.youtube.com/280d548c-99"
+        },
+        "after": {
+          "currentTime": 11.48,
+          "duration": 634.6,
+          "paused": false,
+          "muted": false,
+          "volume": 0.4,
+          "readyState": 4,
+          "src": "blob:https://www.youtube.com/280d548c-99"
+        },
+        "routeTrace": [
+          {
+            "route": "/dashboard",
+            "media": {
+              "currentTime": 7.22,
+              "duration": 634.6,
+              "paused": false,
+              "muted": false,
+              "volume": 0.4,
+              "readyState": 4,
+              "src": "blob:https://www.youtube.com/280d548c-99"
+            },
+            "marked": 1,
+            "sameNode": true,
+            "audioOnly": true,
+            "offscreen": true,
+            "visibleVideo": false
+          },
+          {
+            "route": "/leaderboard",
+            "media": {
+              "currentTime": 7.64,
+              "duration": 634.6,
+              "paused": false,
+              "muted": false,
+              "volume": 0.4,
+              "readyState": 4,
+              "src": "blob:https://www.youtube.com/280d548c-99"
+            },
+            "marked": 1,
+            "sameNode": true,
+            "audioOnly": true,
+            "offscreen": true,
+            "visibleVideo": false
+          },
+          {
+            "route": "/games",
+            "media": {
+              "currentTime": 8.06,
+              "duration": 634.6,
+              "paused": false,
+              "muted": false,
+              "volume": 0.4,
+              "readyState": 4,
+              "src": "blob:https://www.youtube.com/280d548c-99"
+            },
+            "marked": 1,
+            "sameNode": true,
+            "audioOnly": true,
+            "offscreen": true,
+            "visibleVideo": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "PLAYER_NO_RESET_TO_ZERO",
+      "status": "PASS",
+      "evidence": {
+        "before": 6.76,
+        "after": 11.48
+      }
+    },
+    {
+      "name": "LOCAL_VOLUME_INDEPENDENT",
+      "status": "PASS",
+      "evidence": {
+        "set": 0.4,
+        "afterReturn": 0.4
+      }
+    },
+    {
+      "name": "BROWSER_TAB_BEHAVIOR_VERIFIED",
+      "status": "PASS",
+      "evidence": {
+        "before": 11.48,
+        "after": 18.99,
+        "advancedSeconds": 7.5,
+        "paused": false,
+        "backgroundAudio": "continued while another tab was focused"
+      }
+    },
+    {
+      "name": "SHARED_LISTENING_STABLE",
+      "status": "PASS",
+      "evidence": {
+        "joinDrift": 0.21,
+        "bWhileAway": 26.73,
+        "aAway": 26.53,
+        "aBack": 26.96,
+        "bAfter": 27.16,
+        "bPaused": false,
+        "finalDrift": 0.2
+      }
+    },
+    {
+      "name": "PLAYER_REFRESH_RESTORE",
+      "status": "PASS",
+      "evidence": {
+        "before": 28.88,
+        "after": 30.65,
+        "volumeBefore": 0.4,
+        "volumeAfter": 0.4,
+        "paused": false
+      }
+    },
+    {
+      "name": "REALTIME_CHAT",
+      "status": "PASS",
+      "evidence": {
+        "bRealtimeCount": 10
+      }
+    },
+    {
+      "name": "CHAT_PERSISTENCE",
+      "status": "PASS",
+      "evidence": {
+        "bRealtimeCount": 10,
+        "aAfterReload": 10,
+        "bAfterReload": 10,
+        "uniqueA": 10,
+        "hasBReplyOnA": true,
+        "hasBReplyOnB": true
+      }
+    },
+    {
+      "name": "CONAN_EPISODE_CATALOG_VERIFIED",
+      "status": "PASS",
+      "evidence": {
+        "episodes": 200,
+        "first": "p90V7QNJuX8",
+        "last": "mGWdWl2_60U",
+        "uniqueVideoIds": 200,
+        "channel": "POPS Anime"
+      }
+    },
+    {
+      "name": "DO_MIXI_PLAYLIST_VERIFIED",
+      "status": "PASS",
+      "evidence": {
+        "videos": 85,
+        "channel": "MixiGaming",
+        "sourceUrl": "https://www.youtube.com/playlist?list=PLio30oCA4I3d9kgQesZx_KfmHfDLeP4az"
+      }
+    },
+    {
+      "name": "CONAN_SEQUENTIAL_PLAYBACK",
+      "status": "PASS",
+      "evidence": {
+        "renderedItems": 200,
+        "ep1": "p90V7QNJuX8",
+        "ep2": "9mbGOrXLMhE",
+        "mode": "sequential"
+      }
+    },
+    {
+      "name": "PLAYLIST_RESUME",
+      "status": "PASS",
+      "evidence": {
+        "label": "Tiếp tục từ Tập 2",
+        "videoId": "9mbGOrXLMhE"
+      }
+    },
+    {
+      "name": "PLAYLIST_CREATE",
+      "status": "PASS",
+      "evidence": {
+        "id": 9
+      }
+    },
+    {
+      "name": "PLAYLIST_ADD_VIDEO",
+      "status": "PASS",
+      "evidence": {
+        "items": 10
+      }
+    },
+    {
+      "name": "PLAYLIST_PERSISTENCE",
+      "status": "PASS",
+      "evidence": {
+        "afterRefresh": 1
+      }
+    },
+    {
+      "name": "PLAYLIST_SHUFFLE_NO_PREMATURE_REPEAT",
+      "status": "PASS",
+      "evidence": {
+        "order": [
+          "9bZkp7q19f0",
+          "OPf0YbXqDm0",
+          "aqz-KE-bpKQ",
+          "kJQP7kiw5Fk",
+          "hT_nvWreIhg",
+          "CevxZvSJLk8",
+          "M7lc1UVf-VE",
+          "JGwWNGJdvx8",
+          "RgKAFK5djSk",
+          "jNQXAC9IVRw"
+        ],
+        "unique": 10,
+        "plays": 10,
+        "total": 10,
+        "itemCount": 10
+      }
+    },
+    {
+      "name": "PLAYLIST_DELETE_VIDEO",
+      "status": "PASS",
+      "evidence": {
+        "remaining": 9
+      }
+    },
+    {
+      "name": "QUEUE_PRIORITY",
+      "status": "PASS",
+      "evidence": {
+        "current": "p90V7QNJuX8",
+        "manual": "jNQXAC9IVRw",
+        "resumed": "9mbGOrXLMhE"
+      }
+    },
+    {
+      "name": "DOUBLE_ENDED_IDEMPOTENCY",
+      "status": "PASS",
+      "evidence": {
+        "before": "jNQXAC9IVRw",
+        "after": "M7lc1UVf-VE",
+        "queueAfter": 0
+      }
+    },
+    {
+      "name": "AUTO_ADVANCE",
+      "status": "PASS",
+      "evidence": {
+        "from": "jNQXAC9IVRw",
+        "to": "M7lc1UVf-VE",
+        "skippedManualItem": false
+      }
+    },
+    {
+      "name": "ADMIN_ACCESS_DENIED",
+      "status": "PASS",
+      "evidence": {
+        "status": 404,
+        "session": 404,
+        "chat": 404,
+        "playlists": 404,
+        "sidebarEntry": 0,
+        "concealed": true
+      }
+    },
+    {
+      "name": "MULTI_TAB_PLAYER_OWNERSHIP",
+      "status": "PASS",
+      "evidence": {
+        "ownership": [
+          {
+            "iframe": 1,
+            "handoff": false
+          },
+          {
+            "iframe": 0,
+            "handoff": true
+          }
+        ],
+        "afterTakeover": [
+          0,
+          1
+        ],
+        "restored": 1
+      }
+    },
+    {
+      "name": "PLAYLIST_CREATE_UI",
+      "status": "PASS",
+      "evidence": {
+        "created": 1,
+        "remainingAfterDelete": 0
+      }
+    },
+    {
+      "name": "MOBILE_390",
+      "status": "PASS",
+      "evidence": [
+        {
+          "width": 390,
+          "layout": {
+            "scrollWidth": 390,
+            "innerWidth": 390,
+            "overflow": 0,
+            "audioHost": {
+              "x": -10000,
+              "w": 320,
+              "h": 180,
+              "offscreen": true
+            },
+            "nowCard": {
+              "w": 362
+            },
+            "chatToggleVisible": true
+          },
+          "chatCollapsed": true,
+          "mediaBefore": 15.02,
+          "mediaAfter": 16.48,
+          "paused": false
+        },
+        {
+          "width": 430,
+          "layout": {
+            "scrollWidth": 430,
+            "innerWidth": 430,
+            "overflow": 0,
+            "audioHost": {
+              "x": -10000,
+              "w": 320,
+              "h": 180,
+              "offscreen": true
+            },
+            "nowCard": {
+              "w": 402
+            },
+            "chatToggleVisible": true
+          },
+          "chatCollapsed": true,
+          "mediaBefore": 18.07,
+          "mediaAfter": 19.53,
+          "paused": false
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "browser": "Chromium 148.0.7778.96",
+  "finishedAt": "2026-11-04T08:42:57.797Z",
+  "summary": {
+    "PASS": 24
+  }
+}

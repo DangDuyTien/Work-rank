@@ -96,6 +96,17 @@ async function start() {
         console.warn('[PrivateMedia] Telegram bot not started:', error.message);
       });
     }
+    // Curated playlists are data, not code: load the reviewed catalog once so a
+    // fresh deployment has "Vịt Độ Mixi" and Conan without any manual step.
+    // Failure is non-fatal — the capability keeps working without the catalog.
+    try {
+      const applied = await require('./services/privateMedia/playlist.service').seedCuratedCatalog();
+      if (applied.length) {
+        console.log(`[PrivateMedia] Curated catalog ready: ${applied.map((entry) => `${entry.slug}=${entry.items}`).join(', ')}`);
+      }
+    } catch (error) {
+      console.warn('[PrivateMedia] Curated catalog not loaded:', error.message);
+    }
   } catch (error) {
     console.error('[PrivateMedia] Initialization failed (capability stays denied):', error.message);
   }

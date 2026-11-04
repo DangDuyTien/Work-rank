@@ -94,7 +94,20 @@ function describeState(state) {
 }
 
 function describeQueue(state) {
-  return `Đang phát:\n${state?.video?.title || 'Chưa có bài'}\n\nĐang chờ:\n${state?.queue?.map((q, i) => `${i + 1}. ${q.title || q.videoId}`).join('\n') || 'Hàng chờ đang trống'}`;
+  const playlist = state?.playlist
+    ? `\n\nDanh sách phát: ${state.playlist.title} (${state.playlist.mode === 'shuffle' ? 'ngẫu nhiên' : 'tuần tự'}, còn ${state.playlist.remaining}/${state.playlist.total})${
+      state.playlist.next ? `\nTiếp theo từ danh sách: ${state.playlist.next.title || state.playlist.next.videoId}` : ''}`
+    : '';
+  return `Đang phát:\n${state?.video?.title || 'Chưa có bài'}\n\nĐang chờ:\n${state?.queue?.map((q, i) => `${i + 1}. ${q.title || q.videoId}`).join('\n') || 'Hàng chờ đang trống'}${playlist}`;
+}
+
+/** Curated + shared + own playlists the caller may start from Telegram. */
+function describePlaylists(playlists) {
+  if (!playlists.length) return 'Chưa có danh sách phát nào.';
+  return playlists.slice(0, 12).map((playlist, index) => {
+    const scope = playlist.kind === 'curated' ? 'có sẵn' : playlist.isOwner ? 'của tôi' : 'được chia sẻ';
+    return `${index + 1}. ${playlist.title} — ${playlist.itemCount} video (${scope})`;
+  }).join('\n');
 }
 
 function controlKeyboard() {
@@ -274,6 +287,28 @@ async function handleMessage(message) {
         await sendMessage(chatId, describeQueue(state));
         return;
       }
+      case '/playlist':
+      case '/playlists': {
+        const playlistService = require('./playlist.service');
+        const playlists = await playlistService.listPlaylists({ userId: actor.userId });
+        await sendMessage(chatId, `📚 Danh sách phát\n\n${describePlaylists(playlists)}\n\nDùng /shuffle <số> để phát ngẫu nhiên.`);
+        return;
+      }
+      case '/shuffle': {
+        const playlistService = require('./playlist.service');
+        const playlists = await playlistService.listPlaylists({ userId: actor.userId });
+        const index = Number(argument) - 1;
+        const chosen = Number.isInteger(index) && playlists[index]
+          ? playlists[index]
+          : playlists.find((playlist) => playlist.kind === 'curated');
+        if (!chosen) {
+          await sendMessage(chatId, 'Chưa có danh sách phát nào để phát ngẫu nhiên. Xem /playlist.');
+          return;
+        }
+        const result = await runCommand(actor, 'PLAYLIST_SHUFFLE', { playlistId: chosen.id, mode: 'shuffle' }, `tg_msg_${chatId}_${message.message_id}`);
+        await sendMessage(chatId, `🔀 ${chosen.title}\n\n${describeState(result.state)}`, controlKeyboard());
+        return;
+      }
       case '/search': {
         if (!argument) {
           await sendMessage(chatId, 'Dùng: /search <từ khoá>');
@@ -297,7 +332,7 @@ async function handleMessage(message) {
         return;
       }
       default:
-        await sendMessage(chatId, 'Lệnh hỗ trợ: /now /queue /next /play /pause /toggle /stop /search <từ khoá>');
+        await sendMessage(chatId, 'Lệnh hỗ trợ: /now /queue /next /play /pause /toggle /stop /search <từ khoá> /playlist /shuffle [số]');
     }
   } catch (error) {
     if (error?.code && commandErrorMessage(error) !== `Không thực hiện được lệnh (${error.code}).`) {
@@ -462,6 +497,7 @@ module.exports = {
   resolveActor,
   describeState,
   describeQueue,
+  describePlaylists,
   controlKeyboard,
   // exported for tests
   handleUpdate,

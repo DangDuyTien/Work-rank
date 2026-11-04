@@ -72,6 +72,10 @@ const PrivateMediaPairingCode = require('./PrivateMediaPairingCode');
 const PrivateMediaSession = require('./PrivateMediaSession');
 const PrivateMediaCommand = require('./PrivateMediaCommand');
 const PrivateMediaAuditLog = require('./PrivateMediaAuditLog');
+const PrivateMediaPlaylist = require('./PrivateMediaPlaylist');
+const PrivateMediaPlaylistItem = require('./PrivateMediaPlaylistItem');
+const PrivateMediaChatMessage = require('./PrivateMediaChatMessage');
+const PrivateMediaPlaylistProgress = require('./PrivateMediaPlaylistProgress');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
 User.belongsTo(Team, { foreignKey: 'teamId' });
@@ -253,6 +257,13 @@ PrivateMediaOwner.belongsTo(User, { as: 'user', foreignKey: 'userId', constraint
 PrivateMediaSession.belongsTo(User, { as: 'controller', foreignKey: 'controllerUserId', constraints: false });
 PrivateMediaCommand.belongsTo(PrivateMediaSession, { as: 'session', foreignKey: 'sessionId', constraints: false });
 PrivateMediaCommand.belongsTo(User, { as: 'issuedBy', foreignKey: 'issuedByUserId', constraints: false });
+PrivateMediaPlaylist.belongsTo(User, { as: 'owner', foreignKey: 'ownerUserId', constraints: false });
+PrivateMediaPlaylist.hasMany(PrivateMediaPlaylistItem, { as: 'items', foreignKey: 'playlistId', constraints: false });
+PrivateMediaPlaylistItem.belongsTo(PrivateMediaPlaylist, { as: 'playlist', foreignKey: 'playlistId', constraints: false });
+PrivateMediaChatMessage.belongsTo(PrivateMediaSession, { as: 'session', foreignKey: 'sessionId', constraints: false });
+PrivateMediaChatMessage.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
+PrivateMediaPlaylistProgress.belongsTo(PrivateMediaPlaylist, { as: 'playlist', foreignKey: 'playlistId', constraints: false });
+PrivateMediaPlaylistProgress.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
 
 module.exports = {
   ArcadeRoom,
@@ -334,6 +345,10 @@ module.exports = {
   PrivateMediaSession,
   PrivateMediaCommand,
   PrivateMediaAuditLog,
+  PrivateMediaPlaylist,
+  PrivateMediaPlaylistItem,
+  PrivateMediaChatMessage,
+  PrivateMediaPlaylistProgress,
 };
 
 

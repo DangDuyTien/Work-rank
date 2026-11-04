@@ -19,6 +19,8 @@ const deviceService = require('../services/privateMedia/device.service');
 const telegramService = require('../services/privateMedia/telegram.service');
 const youtubeService = require('../services/privateMedia/youtube.service');
 const audit = require('../services/privateMedia/audit.service');
+const playlistService = require('../services/privateMedia/playlist.service');
+const chatService = require('../services/privateMedia/chat.service');
 
 function fail(res, error, fallbackMessage = 'Không thực hiện được yêu cầu') {
   const status = Number(error?.status) || 500;
@@ -402,13 +404,173 @@ async function recentVideos(req, res) {
   }
 }
 
+// ── Playlists ───────────────────────────────────────────────────────────────
+
+/** GET /api/private-media/playlists — curated + own + shared. */
+async function listPlaylists(req, res) {
+  try {
+    return res.status(200).json({ playlists: await playlistService.listPlaylists({ userId: req.user.id }) });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** GET /api/private-media/playlists/:id */
+async function getPlaylist(req, res) {
+  try {
+    return res.status(200).json({
+      playlist: await playlistService.getPlaylist({ userId: req.user.id, playlistId: req.params.id, withItems: true }),
+    });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** POST /api/private-media/playlists */
+async function createPlaylist(req, res) {
+  try {
+    const playlist = await playlistService.createPlaylist({
+      userId: req.user.id,
+      title: req.body?.title,
+      description: req.body?.description,
+      visibility: req.body?.visibility,
+      playbackMode: req.body?.playbackMode,
+      repeatMode: req.body?.repeatMode,
+    });
+    await audit.record({ action: 'PLAYLIST_CREATE', actorUserId: req.user.id, source: 'WEB', metadata: { playlistId: playlist.id } });
+    return res.status(201).json({ playlist });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** PATCH /api/private-media/playlists/:id */
+async function updatePlaylist(req, res) {
+  try {
+    return res.status(200).json({
+      playlist: await playlistService.updatePlaylist({ userId: req.user.id, playlistId: req.params.id, patch: req.body || {} }),
+    });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** DELETE /api/private-media/playlists/:id */
+async function deletePlaylist(req, res) {
+  try {
+    const result = await playlistService.deletePlaylist({ userId: req.user.id, playlistId: req.params.id });
+    await audit.record({ action: 'PLAYLIST_DELETE', actorUserId: req.user.id, source: 'WEB', metadata: { playlistId: result.id } });
+    return res.status(200).json(result);
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** POST /api/private-media/playlists/:id/items */
+async function addPlaylistItems(req, res) {
+  try {
+    const result = await playlistService.addItems({
+      userId: req.user.id,
+      playlistId: req.params.id,
+      items: req.body?.items || [],
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** DELETE /api/private-media/playlists/:id/items/:itemId */
+async function removePlaylistItem(req, res) {
+  try {
+    return res.status(200).json({
+      playlist: await playlistService.removeItem({
+        userId: req.user.id,
+        playlistId: req.params.id,
+        itemId: req.params.itemId,
+      }),
+    });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** PATCH /api/private-media/playlists/:id/items — { itemIds: [] } */
+async function reorderPlaylistItems(req, res) {
+  try {
+    return res.status(200).json({
+      playlist: await playlistService.reorderItems({
+        userId: req.user.id,
+        playlistId: req.params.id,
+        itemIds: req.body?.itemIds || [],
+      }),
+    });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** POST /api/private-media/playlists/import — { input, title, visibility } */
+async function importPlaylist(req, res) {
+  try {
+    const result = await playlistService.importPlaylist({
+      userId: req.user.id,
+      input: req.body?.input,
+      title: req.body?.title,
+      visibility: req.body?.visibility,
+    });
+    await audit.record({
+      action: 'PLAYLIST_IMPORT',
+      actorUserId: req.user.id,
+      source: 'WEB',
+      metadata: { playlistId: result.playlist.id, imported: result.imported },
+    });
+    return res.status(201).json(result);
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+// ── Shared listening chat ───────────────────────────────────────────────────
+
+/** GET /api/private-media/chat?before=&limit= */
+async function listChat(req, res) {
+  try {
+    return res.status(200).json(await chatService.listMessages({
+      userId: req.user.id,
+      room: roomOf(req),
+      beforeId: req.query.before || null,
+      limit: req.query.limit,
+    }));
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** POST /api/private-media/chat — { content, clientMessageId } */
+async function sendChat(req, res) {
+  try {
+    const result = await chatService.createMessage({
+      userId: req.user.id,
+      room: roomOf(req),
+      content: req.body?.content,
+      clientMessageId: req.body?.clientMessageId,
+    });
+    if (!result.duplicate) {
+      realtime.broadcastChat(result.sessionKey, result.message);
+    }
+    return res.status(201).json(result);
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 /**
  * POST /api/private-media/device/commands
  *
  * Hotkey path. Authenticated by device token (never by a user JWT), scoped to
  * the device owner, and re-checked against the live entitlement on every call.
- */
-async function deviceCommand(req, res) {
+ */async function deviceCommand(req, res) {
   try {
     // Header only: a token in the body would be far easier to leak into logs.
     const raw = req.headers['x-device-token'];
@@ -473,5 +635,16 @@ module.exports = {
   listAudit,
   recentCommands,
   recentVideos,
+  listPlaylists,
+  getPlaylist,
+  createPlaylist,
+  updatePlaylist,
+  deletePlaylist,
+  addPlaylistItems,
+  removePlaylistItem,
+  reorderPlaylistItems,
+  importPlaylist,
+  listChat,
+  sendChat,
   deviceCommand,
 };

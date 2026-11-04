@@ -252,6 +252,113 @@ function capabilities() {
   };
 }
 
+/**
+ * Accepts a playlist URL (list=…), a raw playlist id (PL/UU/OL/FL…) or a
+ * watch URL that carries a list parameter.
+ */
+function parsePlaylistId(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return null;
+  if (/^(PL|UU|OL|FL|LL|RD)[A-Za-z0-9_-]{10,}$/.test(raw)) return raw;
+
+  let url;
+  try {
+    url = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.replace(/^www\./, '').toLowerCase();
+  if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'].includes(host)) return null;
+  const list = url.searchParams.get('list');
+  return list && /^[A-Za-z0-9_-]{10,}$/.test(list) ? list : null;
+}
+
+/**
+ * Read a whole playlist through the official Data API, following
+ * `nextPageToken` so a 200-item list is never truncated to the first page.
+ * Every item is checked for public + embeddable before it is offered for import.
+ */
+async function fetchPlaylist({ playlistId, maxItems = 500 } = {}) {
+  if (!hasApiKey()) {
+    throw new YouTubeUnavailableError('YOUTUBE_SEARCH_UNAVAILABLE', 'Chưa cấu hình YOUTUBE_API_KEY nên không nhập được playlist.', 503);
+  }
+  const id = parsePlaylistId(playlistId);
+  if (!id) throw new YouTubeUnavailableError('INVALID_PLAYLIST', 'Link hoặc mã playlist YouTube không hợp lệ', 400);
+
+  const metaUrl = new URL('https://www.googleapis.com/youtube/v3/playlists');
+  metaUrl.searchParams.set('part', 'snippet,contentDetails');
+  metaUrl.searchParams.set('id', id);
+  metaUrl.searchParams.set('key', apiKey());
+  const meta = await fetchJson(metaUrl.toString());
+  const info = meta.items?.[0];
+  if (!info) throw new YouTubeUnavailableError('PLAYLIST_NOT_FOUND', 'Không tìm thấy playlist này', 404);
+
+  const rows = [];
+  let pageToken = '';
+  do {
+    const url = new URL('https://www.googleapis.com/youtube/v3/playlistItems');
+    url.searchParams.set('part', 'snippet,contentDetails');
+    url.searchParams.set('playlistId', id);
+    url.searchParams.set('maxResults', '50');
+    url.searchParams.set('key', apiKey());
+    if (pageToken) url.searchParams.set('pageToken', pageToken);
+    const data = await fetchJson(url.toString());
+    for (const entry of data.items || []) {
+      const title = decodeHtmlEntities(entry.snippet?.title)?.trim() || '';
+      if (!title || /^(Private video|Deleted video)$/i.test(title)) continue;
+      const videoId = entry.contentDetails?.videoId || entry.snippet?.resourceId?.videoId;
+      if (!videoId) continue;
+      rows.push({ videoId, title, position: rows.length });
+      if (rows.length >= maxItems) break;
+    }
+    pageToken = rows.length >= maxItems ? '' : (data.nextPageToken || '');
+  } while (pageToken);
+
+  const details = new Map();
+  const ids = [...new Set(rows.map((row) => row.videoId))];
+  for (let i = 0; i < ids.length; i += 50) {
+    try {
+      const url = new URL('https://www.googleapis.com/youtube/v3/videos');
+      url.searchParams.set('part', 'status,contentDetails,snippet');
+      url.searchParams.set('id', ids.slice(i, i + 50).join(','));
+      url.searchParams.set('key', apiKey());
+      const data = await fetchJson(url.toString());
+      (data.items || []).forEach((item) => details.set(item.id, item));
+    } catch {
+      // Availability is advisory on import: the row is kept and flagged instead
+      // of silently dropping the user's content.
+    }
+  }
+
+  const items = rows.map((row) => {
+    const detail = details.get(row.videoId);
+    const reason = !detail ? null
+      : detail.status?.privacyStatus !== 'public' ? 'NOT_PUBLIC'
+        : detail.status?.embeddable !== true ? 'NOT_EMBEDDABLE' : null;
+    return {
+      videoId: row.videoId,
+      title: row.title,
+      channelTitle: decodeHtmlEntities(detail?.snippet?.channelTitle)?.trim() || null,
+      thumbnailUrl: `https://i.ytimg.com/vi/${row.videoId}/mqdefault.jpg`,
+      durationSeconds: parseIsoDuration(detail?.contentDetails?.duration) || null,
+      position: row.position,
+      available: !reason,
+      unavailableReason: reason,
+    };
+  });
+
+  return {
+    playlistId: id,
+    title: decodeHtmlEntities(info.snippet?.title)?.trim() || 'Playlist YouTube',
+    channelTitle: decodeHtmlEntities(info.snippet?.channelTitle)?.trim() || null,
+    coverUrl: items.find((item) => item.available)?.thumbnailUrl || null,
+    declaredCount: Number(info.contentDetails?.itemCount) || items.length,
+    items,
+    skipped: Math.max(0, (Number(info.contentDetails?.itemCount) || items.length) - items.length),
+  };
+}
+
+
 module.exports = {
   YouTubeUnavailableError,
   hasApiKey,
@@ -261,4 +368,6 @@ module.exports = {
   resolveVideo,
   search,
   capabilities,
+  parsePlaylistId,
+  fetchPlaylist,
 };

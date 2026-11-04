@@ -15,6 +15,8 @@ const app = require('../../src/app');
   const access = require('../../src/services/privateMedia/access.service');
   await access.resolveOwnerUserId({ force: true });
   await access.grantAccess({ actorUserId: owner.id, targetUserId: b.id, permissions: { view: true, queue: true, control: true } });
+  // Real curated catalog so playlist QA exercises the shipped data.
+  await require('../../src/services/privateMedia/playlist.service').seedCuratedCatalog();
   const server = http.createServer(app), io = new Server(server, require('../../src/config/socket'));
   require('../../src/sockets/privateMedia').registerPrivateMediaNamespace(io);
   server.listen(env.port, '127.0.0.1', () => console.log(`Private media QA ready ${env.port}`));

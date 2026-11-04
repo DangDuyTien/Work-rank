@@ -30,6 +30,16 @@ const PrivateMediaSession = sequelize.define(
     controllerUserId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'controller_user_id' },
     playerOnline: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'player_online' },
     playerLastSeenAt: { type: DataTypes.DATE, allowNull: true, field: 'player_last_seen_at' },
+    // ── Playlist playback (V2) ─────────────────────────────────────────────
+    // `playlistOrder` is a self-contained snapshot of the remaining cycle, so a
+    // playlist edit during playback never corrupts the queue that is running.
+    activePlaylistId: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true, field: 'active_playlist_id' },
+    playlistTitle: { type: DataTypes.STRING(191), allowNull: true, field: 'playlist_title' },
+    playlistMode: { type: DataTypes.STRING(16), allowNull: true, field: 'playlist_mode' },
+    playlistRepeat: { type: DataTypes.STRING(16), allowNull: true, field: 'playlist_repeat' },
+    playlistOrder: { type: DataTypes.JSON, allowNull: true, field: 'playlist_order' },
+    playlistCursor: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'playlist_cursor' },
+    playlistHistory: { type: DataTypes.JSON, allowNull: true, field: 'playlist_history' },
   },
   { tableName: 'private_media_sessions', underscored: true, timestamps: true },
 );

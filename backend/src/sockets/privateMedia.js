@@ -8,6 +8,7 @@ const sessions = require('../services/privateMedia/session.service');
 const realtime = require('../services/privateMedia/realtime.service');
 const devices = require('../services/privateMedia/device.service');
 const audit = require('../services/privateMedia/audit.service');
+const chats = require('../services/privateMedia/chat.service');
 const NAMESPACE = '/private-media';
 
 function registerPrivateMediaNamespace(io) {
@@ -106,6 +107,26 @@ function registerPrivateMediaNamespace(io) {
         if (!result.duplicate) { realtime.broadcastCommand(result.command, key); realtime.broadcastState(result.state, key); }
         if (typeof ack === 'function') ack({ ok: true, ...result });
       } catch (error) { if (typeof ack === 'function') ack({ ok: false, error: error.code || 'COMMAND_FAILED', message: error.message }); }
+    });
+    /**
+     * Chat rides the same authenticated socket as playback, so a revoked account
+     * loses it at the same moment it loses the player. The sender identity is
+     * `userId` from the handshake — never a field in the payload.
+     */
+    socket.on('private-media:chat-send', async (payload = {}, ack) => {
+      try {
+        if (!await authorized()) return;
+        const result = await chats.createMessage({
+          userId,
+          room,
+          content: payload.content,
+          clientMessageId: payload.clientMessageId,
+        });
+        if (!result.duplicate) realtime.broadcastChat(key, result.message);
+        if (typeof ack === 'function') ack({ ok: true, message: result.message, duplicate: result.duplicate });
+      } catch (error) {
+        if (typeof ack === 'function') ack({ ok: false, error: error.code || 'CHAT_FAILED', message: error.message });
+      }
     });
     socket.on('disconnect', async () => {
       if (!isPlayer) return;

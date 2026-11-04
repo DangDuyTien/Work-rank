@@ -20,6 +20,7 @@ const {
   requirePrivateMedia,
   privateMediaPairingLimiter,
   privateMediaCommandLimiter,
+  privateMediaChatLimiter,
 } = require('../middlewares/privateMedia.middleware');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -46,6 +47,23 @@ router.get('/recent', requirePrivateMedia('view'), asyncHandler(controller.recen
 // YouTube lookup (official Data API; link resolution works without a key)
 router.get('/youtube/search', requirePrivateMedia('view'), asyncHandler(controller.searchYouTube));
 router.post('/youtube/resolve', requirePrivateMedia('view'), asyncHandler(controller.resolveYouTube));
+
+// ── Playlists (curated catalog + user libraries) ────────────────────────────
+// Reading is open to any entitled account; writes are owner-only inside the
+// service and never depend on a role.
+router.get('/playlists', requirePrivateMedia('view'), asyncHandler(controller.listPlaylists));
+router.post('/playlists', requirePrivateMedia('view'), asyncHandler(controller.createPlaylist));
+router.post('/playlists/import', requirePrivateMedia('view'), privateMediaCommandLimiter, asyncHandler(controller.importPlaylist));
+router.get('/playlists/:id', requirePrivateMedia('view'), asyncHandler(controller.getPlaylist));
+router.patch('/playlists/:id', requirePrivateMedia('view'), asyncHandler(controller.updatePlaylist));
+router.delete('/playlists/:id', requirePrivateMedia('view'), asyncHandler(controller.deletePlaylist));
+router.post('/playlists/:id/items', requirePrivateMedia('view'), asyncHandler(controller.addPlaylistItems));
+router.patch('/playlists/:id/items', requirePrivateMedia('view'), asyncHandler(controller.reorderPlaylistItems));
+router.delete('/playlists/:id/items/:itemId', requirePrivateMedia('view'), asyncHandler(controller.removePlaylistItem));
+
+// ── Shared listening chat ───────────────────────────────────────────────────
+router.get('/chat', requirePrivateMedia('view'), asyncHandler(controller.listChat));
+router.post('/chat', requirePrivateMedia('view'), privateMediaChatLimiter, asyncHandler(controller.sendChat));
 
 // Access management — owner only, no delegation of this permission
 router.get('/grants', requirePrivateMedia('manage_access'), asyncHandler(controller.listGrants));
