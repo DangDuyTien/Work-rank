@@ -11,6 +11,9 @@ import { useToast } from '../context/UiContext';
 import PersistentPlayer from '../components/privateMedia/PersistentPlayer';
 import { createPlayerOwnership } from '../components/privateMedia/playerOwnership';
 import {
+  isStaleDay, mergeMessages, msUntilBoundary,
+} from '../components/privateMedia/chatFeed';
+import {
   bindAudioUnlock, notificationPermission, playNotificationTing, readNotifyPrefs,
   requestNotificationPermission, setTabBadge, showDesktopNotification, writeNotifyPrefs,
 } from '../utils/mediaNotifications';
@@ -92,6 +95,14 @@ export function PrivateMediaProvider({ children }) {
 
   const output = usePrivateMediaVolume(user?.id);
 
+  // ── Shared listening presence ────────────────────────────────────────────
+  // Distinct accounts in the shared room, pushed by the server on every
+  // join/leave. Declared before `refreshStatus` so the first paint already has
+  // the avatars instead of an empty strip that fills in a second later.
+  const [participants, setParticipants] = useState([]);
+  const chatMetaRef = useRef(null);
+  const chatDayEventRef = useRef(null);
+
   // ── Player lease (multi-tab) ─────────────────────────────────────────────
   const ownershipRef = useRef(null);
   if (!ownershipRef.current && typeof window !== 'undefined') ownershipRef.current = createPlayerOwnership();
@@ -132,6 +143,8 @@ export function PrivateMediaProvider({ children }) {
       const data = await privateMediaApi.getStatus();
       setStatus(data);
       setSession(data.session);
+      setParticipants(Array.isArray(data.participants) ? data.participants : []);
+      chatMetaRef.current?.(data.chat);
       setError(null);
       return data;
     } catch (err) {
@@ -183,6 +196,15 @@ export function PrivateMediaProvider({ children }) {
     });
     client.on('private-media:chat-message', (message) => {
       if (message) chatPushRef.current?.(message);
+    });
+    // Who is listening together, deduplicated per account by the server.
+    client.on('private-media:participants', (payload) => {
+      if (payload) setParticipants(Array.isArray(payload.participants) ? payload.participants : []);
+    });
+    // Authoritative 00:00 switch (and the connect snapshot). The handler is a
+    // ref because the chat feed is declared further down in this component.
+    client.on('private-media:chat-day', (payload) => {
+      if (payload) chatDayEventRef.current?.(payload);
     });
     // A read marker set in another tab of this account clears the badge here.
     client.on('private-media:chat-read', () => setChatUnread(0));
@@ -260,23 +282,100 @@ export function PrivateMediaProvider({ children }) {
     socket?.emit('private-media:player-hello', {});
   }, [socketConnected, lease.isOwner, socket]);
 
-  // ── Chat ─────────────────────────────────────────────────────────────────
-  // The feed lives here, above the router, so a route change cannot drop it.
-  // The server is the source of truth: history on mount, `after=` cursor on
-  // reconnect, and a read marker so the badge survives a refresh.
+  // ── Chat chung ───────────────────────────────────────────────────────────
+  // ONE feed for the whole system: Nghe riêng and Nghe chung read and write the
+  // same channel, so switching mode never clears it. The feed lives here, above
+  // the router, so a route change cannot drop it either.
+  //
+  // The server owns the day (Asia/Ho_Chi_Minh) and stamps every message with it.
+  // The client keeps `chatDay` + `chatDayEndsAt` only to schedule the midnight
+  // switch and to ignore a message that crossed the boundary in flight.
   const [chatMessages, setChatMessages] = useState([]);
   const [chatHasMore, setChatHasMore] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
   const [chatUnread, setChatUnread] = useState(0);
   const [chatVisible, setChatVisible] = useState(false);
+  const [chatDay, setChatDay] = useState(null);
+  const [chatDayEndsAt, setChatDayEndsAt] = useState(null);
+  const [chatClockTick, setChatClockTick] = useState(0);
   const chatIdsRef = useRef(new Set());
   const chatLastIdRef = useRef(0);
+  const chatMessagesRef = useRef([]);
   const chatOpenRef = useRef(false);
   const chatPushRef = useRef(null);
   const chatSyncRef = useRef(null);
   const chatMarkTimerRef = useRef(null);
   const socketRef = useRef(null);
+  // Day bookkeeping is kept in refs as well: a socket callback or a timer must
+  // read the CURRENT day, not the value captured when it was created.
+  const chatDayRef = useRef(null);
+  const chatDayEndsAtRef = useRef(null);
+  const chatSkewRef = useRef(0);
+  const chatLoadRef = useRef(null);
+
+  /**
+   * Adopt the server's day metadata. Returns true when the day actually changed,
+   * which is the only case where the feed must be emptied.
+   */
+  const applyChatMeta = useCallback((meta) => {
+    if (!meta) return false;
+    const serverNow = Number(meta.serverNow);
+    if (Number.isFinite(serverNow)) chatSkewRef.current = serverNow - Date.now();
+    if (meta.dayEndsAt) {
+      chatDayEndsAtRef.current = meta.dayEndsAt;
+      setChatDayEndsAt(meta.dayEndsAt);
+    }
+    if (!meta.day) return false;
+    if (chatDayRef.current === meta.day) return false;
+    chatDayRef.current = meta.day;
+    setChatDay(meta.day);
+    return true;
+  }, []);
+  chatMetaRef.current = applyChatMeta;
+
+  /**
+   * Single writer for the feed. The ref is the source of truth so a socket
+   * message that lands while a REST page is in flight cannot be overwritten by
+   * that page — the union is recomputed from the ref, not from stale React state.
+   */
+  const commitChat = useCallback((next) => {
+    const list = Array.isArray(next) ? next : [];
+    chatMessagesRef.current = list;
+    chatIdsRef.current = new Set(list.map((message) => Number(message.id)));
+    chatLastIdRef.current = list.reduce((max, message) => Math.max(max, Number(message.id) || 0), 0);
+    setChatMessages(list);
+  }, []);
+
+  /** Empty the feed without touching the server (used at 00:00 and on rollover). */
+  const resetChatFeed = useCallback(() => {
+    commitChat([]);
+    setChatHasMore(false);
+    setChatUnread(0);
+  }, [commitChat]);
+
+  /**
+   * Switch to a new day: drop yesterday from the screen immediately, then load
+   * the (usually empty) new day. No page reload, no stale message left behind.
+   */
+  const rolloverChat = useCallback((nextDay = null) => {
+    if (nextDay && nextDay !== chatDayRef.current) {
+      chatDayRef.current = nextDay;
+      setChatDay(nextDay);
+    }
+    resetChatFeed();
+    chatLoadRef.current?.();
+  }, [resetChatFeed]);
+
+  const onChatDayEvent = useCallback((payload) => {
+    if (!payload?.day) return;
+    // The connect snapshot only teaches this tab which day it is; the initial
+    // page load already fetches it. A LATER day change is the real rollover.
+    const hadDay = Boolean(chatDayRef.current);
+    const changed = applyChatMeta(payload);
+    if (changed && hadDay) rolloverChat(payload.day);
+  }, [applyChatMeta, rolloverChat]);
+  chatDayEventRef.current = onChatDayEvent;
 
   // ── Notification preferences (per user, per device) ──────────────────────
   const [notifyPrefs, setNotifyPrefs] = useState(() => readNotifyPrefs(user?.id));
@@ -325,9 +424,11 @@ export function PrivateMediaProvider({ children }) {
 
   const chatPush = useCallback((message, { live = true } = {}) => {
     if (!message?.id || chatIdsRef.current.has(message.id)) return;
-    chatIdsRef.current.add(message.id);
-    chatLastIdRef.current = Math.max(chatLastIdRef.current || 0, Number(message.id) || 0);
-    setChatMessages((previous) => [...previous, message]);
+    // A message written at 23:59:59 can land after this tab switched to the new
+    // day. It belongs to yesterday's feed, so it is dropped rather than shown
+    // on top of an empty morning.
+    if (isStaleDay(message.day, chatDayRef.current)) return;
+    commitChat(mergeMessages(chatMessagesRef.current, [message]));
 
     const mine = Number(message.user?.id) === Number(user?.id);
     // Own messages, history loads and reconnect catch-up never notify.
@@ -339,25 +440,27 @@ export function PrivateMediaProvider({ children }) {
     if (prefs.sound) playNotificationTing(prefs.volume);
     if (prefs.notify) {
       showDesktopNotification({
-        title: '3WIN MEDIA · Nghe chung',
+        title: '3WIN MEDIA · Chat chung',
         body: `${message.user?.name || 'Thành viên'}: ${String(message.content || '').slice(0, 140)}`,
-        tag: `pm-chat-${modeRef.current}`,
+        tag: 'pm-chat-global',
         onClick: () => navigate('/private/media'),
       });
     }
-  }, [isChatOnScreen, navigate, scheduleMarkRead, user?.id]);
+  }, [commitChat, isChatOnScreen, navigate, scheduleMarkRead, user?.id]);
   chatPushRef.current = chatPush;
 
   const mergeChat = useCallback((list) => {
-    const fresh = (list || []).filter((message) => message?.id && !chatIdsRef.current.has(message.id));
+    const fresh = (list || []).filter((message) => (
+      message?.id
+      && !chatIdsRef.current.has(message.id)
+      && !isStaleDay(message.day, chatDayRef.current)
+    ));
     if (!fresh.length) return 0;
-    fresh.forEach((message) => {
-      chatIdsRef.current.add(message.id);
-      chatLastIdRef.current = Math.max(chatLastIdRef.current || 0, Number(message.id) || 0);
-    });
-    setChatMessages((previous) => [...previous, ...fresh]);
+    // Sorted by id, never by arrival: a catch-up page and a live socket message
+    // can race, and the reader must still see them in the order they were sent.
+    commitChat(mergeMessages(chatMessagesRef.current, fresh));
     return fresh.length;
-  }, []);
+  }, [commitChat]);
 
   const loadChat = useCallback(async () => {
     if (!entitled) return;
@@ -365,10 +468,11 @@ export function PrivateMediaProvider({ children }) {
     setChatError(null);
     try {
       const data = await privateMediaApi.listChat({ limit: 40 });
+      const changed = applyChatMeta(data);
       const list = data.messages || [];
-      chatIdsRef.current = new Set(list.map((message) => message.id));
-      chatLastIdRef.current = list.reduce((max, message) => Math.max(max, Number(message.id) || 0), 0);
-      setChatMessages(list);
+      // Union, not replace: a message delivered by the socket while this request
+      // was in flight is already in the ref and must survive.
+      commitChat(mergeMessages(changed ? [] : chatMessagesRef.current, list));
       setChatHasMore(Boolean(data.hasMore));
       setChatUnread(Number(data.unread) || 0);
       // Opening the page while the chat is on screen means these are read.
@@ -378,31 +482,43 @@ export function PrivateMediaProvider({ children }) {
     } finally {
       setChatLoading(false);
     }
-  }, [entitled, isChatOnScreen, scheduleMarkRead]);
+  }, [applyChatMeta, commitChat, entitled, isChatOnScreen, scheduleMarkRead]);
+  chatLoadRef.current = loadChat;
 
   /**
    * Reconnect repair: ask only for what this tab does not have. Idempotent by
    * message id, so a socket that redelivers the same message cannot duplicate
-   * it and cannot ring twice.
+   * it and cannot ring twice. Pages until caught up, so a tab that slept through
+   * more than one page of messages still loses nothing.
    */
   const syncChat = useCallback(async () => {
     if (!entitled) return;
     try {
-      const after = chatLastIdRef.current;
-      const data = await privateMediaApi.listChat({ limit: 100, after: after || undefined });
-      const added = mergeChat(data.messages);
-      if (!after) {
+      let cursor = chatLastIdRef.current;
+      if (!cursor) {
         // No cursor yet: fall back to a normal page.
         await loadChat();
         return;
       }
-      if (added && !isChatOnScreen()) {
-        setChatUnread((count) => count + added);
-      } else if (added) {
-        scheduleMarkRead();
+      let added = 0;
+      for (let page = 0; page < 5; page += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const data = await privateMediaApi.listChat({ limit: 100, after: cursor });
+        // The tab was offline across midnight: today is a different feed.
+        if (applyChatMeta(data)) {
+          await loadChat();
+          return;
+        }
+        added += mergeChat(data.messages);
+        const next = Number(data.nextAfterId) || cursor;
+        if (!data.hasMore || next === cursor) break;
+        cursor = next;
       }
+      if (!added) return;
+      if (isChatOnScreen()) scheduleMarkRead();
+      else setChatUnread((count) => count + added);
     } catch { /* the next reconnect retries */ }
-  }, [entitled, isChatOnScreen, loadChat, mergeChat, scheduleMarkRead]);
+  }, [applyChatMeta, entitled, isChatOnScreen, loadChat, mergeChat, scheduleMarkRead]);
   chatSyncRef.current = syncChat;
 
   const loadMoreChat = useCallback(async () => {
@@ -410,16 +526,16 @@ export function PrivateMediaProvider({ children }) {
     setChatLoading(true);
     try {
       const data = await privateMediaApi.listChat({ limit: 30, before: chatMessages[0]?.id });
+      applyChatMeta(data);
       const list = (data.messages || []).filter((message) => !chatIdsRef.current.has(message.id));
-      list.forEach((message) => chatIdsRef.current.add(message.id));
-      setChatMessages((previous) => [...list, ...previous]);
+      commitChat(mergeMessages(list, chatMessagesRef.current));
       setChatHasMore(Boolean(data.hasMore));
     } catch (err) {
       setChatError(messageFrom(err, 'Không tải thêm được tin nhắn.'));
     } finally {
       setChatLoading(false);
     }
-  }, [entitled, chatMessages, chatLoading]);
+  }, [commitChat, entitled, chatMessages, chatLoading]);
 
   const sendChat = useCallback(async (content) => {
     const text = String(content || '').trim();
@@ -464,9 +580,16 @@ export function PrivateMediaProvider({ children }) {
     }
   }, [scheduleMarkRead]);
 
-  // Returning to the tab with the chat already open counts as reading.
+  // Returning to the tab with the chat already open counts as reading. It is
+  // also the cheapest moment to notice that midnight passed while the tab slept
+  // (browsers throttle timers in background tabs).
   useEffect(() => {
     const onVisibility = () => {
+      const boundary = new Date(chatDayEndsAtRef.current || 0).getTime();
+      if (Number.isFinite(boundary) && boundary > 0 && Date.now() + chatSkewRef.current >= boundary) {
+        rolloverChat();
+        return;
+      }
       if (isChatOnScreen()) { setChatUnread(0); scheduleMarkRead(); }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -475,12 +598,34 @@ export function PrivateMediaProvider({ children }) {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onVisibility);
     };
-  }, [isChatOnScreen, scheduleMarkRead]);
+  }, [isChatOnScreen, rolloverChat, scheduleMarkRead]);
+
+  /**
+   * The midnight switch. `chatDayEndsAt` is the server's own instant, corrected
+   * for a wrong device clock, so every tab flips at the same moment without a
+   * reload. The server also pushes `private-media:chat-day`; whichever arrives
+   * first wins and the other is a no-op.
+   */
+  useEffect(() => {
+    if (!entitled || !chatDayEndsAt) return undefined;
+    const clientNow = Date.now();
+    const delay = msUntilBoundary(chatDayEndsAt, {
+      serverNow: clientNow + chatSkewRef.current,
+      clientNow,
+    });
+    if (delay == null) return undefined;
+    // +900ms so the first fetch after the boundary cannot still be "yesterday".
+    const timer = setTimeout(() => {
+      rolloverChat();
+      setChatClockTick((value) => value + 1);
+    }, Math.min(delay + 900, 2_147_483_647));
+    return () => clearTimeout(timer);
+  }, [chatDayEndsAt, chatClockTick, entitled, rolloverChat]);
 
   useEffect(() => {
     if (!entitled) return;
     loadChat();
-  }, [entitled, loadChat, roomMode]);
+  }, [entitled, loadChat]);
 
   // Desktop notification permission, only from an explicit user action.
   const enableDesktopNotifications = useCallback(async () => {
@@ -591,10 +736,8 @@ export function PrivateMediaProvider({ children }) {
     const next = value === 'shared' ? 'shared' : 'private';
     setSessionRaw(null);
     setPlaylistDetail(null);
-    setChatMessages([]);
-    setChatUnread(0);
-    chatIdsRef.current = new Set();
-    chatLastIdRef.current = 0;
+    // Chat is deliberately NOT reset: it is one system-wide feed, so switching
+    // between Nghe riêng and Nghe chung must not wipe today's conversation.
     setRoomModeState(next);
     setPrivateMediaRoom(next);
     try { localStorage.setItem(ROOM_KEY, next); } catch { /* private mode */ }
@@ -649,11 +792,18 @@ export function PrivateMediaProvider({ children }) {
       hasMore: chatHasMore,
       loading: chatLoading,
       error: chatError,
+      day: chatDay,
+      dayEndsAt: chatDayEndsAt,
       send: sendChat,
       loadMore: loadMoreChat,
       markRead: markChatRead,
       setOpen: setChatOpen,
       sync: syncChat,
+      reload: loadChat,
+    },
+    room: {
+      participants,
+      count: participants.length,
     },
     notifications: {
       prefs: notifyPrefs,
@@ -683,8 +833,9 @@ export function PrivateMediaProvider({ children }) {
     busyAction, socket, socketConnected, roomMode, setRoomMode, seekSignal, seekTo, sendCommand,
     refreshStatus, activationNeeded, playerNotice, waitingAdvance, lease.isOwner, lease.otherTab, takeOver,
     onPlayerFact, playerReady, output.volume, output.muted, output.setVolume, output.toggleMute,
-    chatMessages, chatUnread, chatVisible, chatHasMore, chatLoading, chatError, sendChat, loadMoreChat,
-    markChatRead, setChatOpen, syncChat, notifyPrefs, saveNotifyPrefs, enableDesktopNotifications,
+    chatMessages, chatUnread, chatVisible, chatHasMore, chatLoading, chatError, chatDay, chatDayEndsAt,
+    sendChat, loadMoreChat, loadChat, markChatRead, setChatOpen, syncChat, participants,
+    notifyPrefs, saveNotifyPrefs, enableDesktopNotifications,
     playlists, playlistsLoading, playlistDetail, playlistBusy,
     refreshPlaylists, selectPlaylist, createPlaylist, updatePlaylist, deletePlaylist,
     addPlaylistItems, removePlaylistItem, reorderPlaylistItems, importPlaylist, playPlaylist,

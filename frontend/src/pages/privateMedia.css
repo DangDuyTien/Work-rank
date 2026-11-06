@@ -1341,7 +1341,150 @@
   .pm-now__dot.is-live { animation: none; }
 }
 
-/* ── Chat ────────────────────────────────────────────────────────────────── */
+/* ── Phòng nghe chung (avatars) ──────────────────────────────────────────── */
+
+.pm-room {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 14px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card, var(--radius-content));
+}
+
+.pm-room__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pm-room__head h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pm-room__live,
+.pm-chat__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pm-room__live i,
+.pm-chat__live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-disabled, #a3a3a3);
+}
+
+.pm-room__live.is-live i,
+.pm-chat__live.is-live i {
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.pm-room__live.is-live,
+.pm-chat__live.is-live {
+  color: var(--success);
+}
+
+.pm-room__people {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 2px 0 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.pm-room__person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 58px;
+  max-width: 78px;
+  min-height: 56px;
+  padding: 1px 0;
+}
+
+.pm-room__avatar {
+  position: relative;
+  display: inline-flex;
+}
+
+.pm-room__dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  border: 2px solid var(--surface);
+}
+
+.pm-room__name {
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.pm-room__person.is-mine .pm-room__name {
+  color: var(--accent-strong, var(--accent));
+}
+
+.pm-room__playing {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent-strong, var(--accent));
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.pm-room__empty {
+  margin: 0;
+  padding: 6px 2px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.pm-room__note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* ── Chat chung ───────────────────────────────────────────────────────────── */
 
 .pm-chat {
   display: flex;
@@ -1405,6 +1548,30 @@
   display: inline-flex;
 }
 
+.pm-chat__subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft, var(--surface));
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.pm-chat__day {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pm-chat__reset {
+  white-space: nowrap;
+}
+
 .pm-chat__body {
   display: flex;
   flex-direction: column;
@@ -1416,7 +1583,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  height: min(46vh, 420px);
+  height: min(44vh, 380px);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1434,6 +1601,24 @@
   color: var(--text-secondary);
   font-size: 11.5px;
   cursor: pointer;
+}
+
+.pm-chat__divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pm-chat__divider::before,
+.pm-chat__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .pm-chat__empty {
@@ -1461,9 +1646,10 @@
 }
 
 .pm-chat__msg {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
   max-width: 100%;
 }
 
@@ -1471,9 +1657,24 @@
   margin-top: -6px;
 }
 
+.pm-chat__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.pm-chat__body-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
 .pm-chat__meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
   font-size: 11px;
   color: var(--text-muted);
@@ -1485,22 +1686,7 @@
   color: var(--text-secondary);
 }
 
-.pm-chat__avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-hover);
-  color: var(--text-secondary);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-
-.pm-chat__msg.is-mine .pm-chat__avatar {
-  background: var(--accent-soft);
+.pm-chat__msg.is-mine .pm-chat__meta strong {
   color: var(--accent-strong, var(--accent));
 }
 
@@ -1582,6 +1768,13 @@
   padding: 0 14px 10px;
   font-size: 11.5px;
   color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-room__live.is-live i,
+  .pm-chat__live.is-live i {
+    box-shadow: none;
+  }
 }
 
 /* ── Buttons / links used inside the panels ──────────────────────────────── */

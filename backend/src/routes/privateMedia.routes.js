@@ -61,11 +61,15 @@ router.post('/playlists/:id/items', requirePrivateMedia('view'), asyncHandler(co
 router.patch('/playlists/:id/items', requirePrivateMedia('view'), asyncHandler(controller.reorderPlaylistItems));
 router.delete('/playlists/:id/items/:itemId', requirePrivateMedia('view'), asyncHandler(controller.removePlaylistItem));
 
-// ── Shared listening chat ───────────────────────────────────────────────────
+// ── System-wide chat ("Chat chung") ────────────────────────────────────────
+// The same feed in Nghe riêng and Nghe chung. No room parameter exists.
 router.get('/chat', requirePrivateMedia('view'), asyncHandler(controller.listChat));
 router.get('/chat/unread', requirePrivateMedia('view'), asyncHandler(controller.getChatUnread));
 router.post('/chat/read', requirePrivateMedia('view'), asyncHandler(controller.markChatRead));
 router.post('/chat', requirePrivateMedia('view'), privateMediaChatLimiter, asyncHandler(controller.sendChat));
+
+// Who is in the shared listening room (deduplicated by account).
+router.get('/participants', requirePrivateMedia('view'), asyncHandler(controller.getParticipants));
 
 // Access management — owner only, no delegation of this permission
 router.get('/grants', requirePrivateMedia('manage_access'), asyncHandler(controller.listGrants));

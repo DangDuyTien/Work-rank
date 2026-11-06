@@ -83,9 +83,41 @@ function serializeSession(s) {
     lastFailure: s.lastFailure || null, updatedAt: s.updatedAt,
   };
 }
+/**
+ * Create the session row at most once per key, even when several tabs of the
+ * same account open the page at the same instant.
+ *
+ * `findOrCreate` opens its own transaction; two tabs then run two transactions
+ * that both INSERT the same unique `session_key` and deadlock on MySQL (the
+ * loser waits for the lock timeout and the page receives a 500 on its first
+ * visit). This helper de-duplicates the work in-process and does the INSERT
+ * outside any caller transaction, so a lost race is a normal unique violation
+ * that resolves to a re-read.
+ */
+const ensureInFlight = new Map();
+function ensureSessionRow(sessionKey) {
+  if (ensureInFlight.has(sessionKey)) return ensureInFlight.get(sessionKey);
+  const work = (async () => {
+    const existing = await Session.findOne({ where: { sessionKey }, attributes: ['id'] });
+    if (existing) return Number(existing.id);
+    try {
+      const created = await Session.create({ sessionKey });
+      return Number(created.id);
+    } catch (error) {
+      if (error?.name !== 'SequelizeUniqueConstraintError') throw error;
+      const row = await Session.findOne({ where: { sessionKey }, attributes: ['id'] });
+      return Number(row?.id);
+    }
+  })().finally(() => ensureInFlight.delete(sessionKey));
+  ensureInFlight.set(sessionKey, work);
+  return work;
+}
+
 async function getSession(userId, room, t) {
   const sessionKey = await sessionKeyFor(userId, room);
-  const [s] = await Session.findOrCreate({ where: { sessionKey }, defaults: { sessionKey }, transaction: t });
+  const sessionId = await ensureSessionRow(sessionKey);
+  let s = await Session.findByPk(sessionId, { transaction: t });
+  if (!s) throw new Error('Không mở được phiên nghe');
   if (t) await s.reload({ transaction: t, lock: t.LOCK.UPDATE });
   // Upgrade the old queue/index shape once, without changing the current song.
   if ((s.queue || []).some((q) => !q.id || !q.status) || (s.currentVideoId && !s.currentQueueItemId)) {
@@ -100,6 +132,42 @@ async function getSession(userId, room, t) {
   return s;
 }
 async function getSessionById(id) { return id ? Session.findByPk(id) : null; }
+/**
+ * Storage anchor for the system-wide chat channel.
+ *
+ * Chat is no longer scoped to whoever is listening: Nghe riêng and Nghe chung
+ * read and write the SAME feed. The shared room row is used purely as a stable
+ * id to hang those messages and read markers on — no playback column is read or
+ * written here, so creating it cannot disturb music, the queue or a playlist.
+ *
+ * Deliberately NOT `findOrCreate`: that helper opens its own transaction, and
+ * on the single-connection SQLite test fixture a concurrent chat write would
+ * then fail with "cannot start a transaction within a transaction". The anchor
+ * never changes, so it is resolved once and cached.
+ */
+let chatAnchorCache = null;
+async function getChatAnchorSession() {
+  if (chatAnchorCache) return chatAnchorCache;
+  const read = () => Session.findOne({
+    where: { sessionKey: SHARED_ROOM_KEY },
+    attributes: ['id', 'sessionKey'],
+  });
+  let row = await read();
+  if (!row) {
+    try {
+      row = await Session.create({ sessionKey: SHARED_ROOM_KEY });
+    } catch (error) {
+      // Two processes/requests may race on the unique session_key.
+      if (error?.name !== 'SequelizeUniqueConstraintError') throw error;
+      row = await read();
+    }
+  }
+  if (!row) throw new Error('Không tạo được kênh chat chung');
+  chatAnchorCache = { sessionId: Number(row.id), sessionKey: row.sessionKey };
+  return chatAnchorCache;
+}
+/** Test seam: forget the cached anchor after the database was rebuilt. */
+function resetChatAnchorCache() { chatAnchorCache = null; }
 async function getSessionState(userId, room) {
   return transaction(async (t) => serializeSession(await getSession(userId, room, t)));
 }
@@ -477,6 +545,7 @@ async function syncActiveCycle({ playlistId, addedItems = [], removedItemIds = [
 module.exports = {
   ACTIONS, ACTION_LIST, PrivateMediaCommandError, DEFAULT_SESSION_KEY, SHARED_ROOM_KEY,
   normalizeRoom, sessionKeyFor, getSession, getSessionById, getSessionState, serializeSession,
+  getChatAnchorSession, resetChatAnchorCache,
   issueCommand, acknowledgeCommand, setPlayerPresence, syncPlayerProgress, autoAdvance,
   recentCommands, recentVideos, normalizeVideoId, syncActiveCycle,
   // exported for tests

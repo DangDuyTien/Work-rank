@@ -9,11 +9,14 @@ const realtime = require('../services/privateMedia/realtime.service');
 const devices = require('../services/privateMedia/device.service');
 const audit = require('../services/privateMedia/audit.service');
 const chats = require('../services/privateMedia/chat.service');
+const chatClock = require('../services/privateMedia/chatClock.service');
 const NAMESPACE = '/private-media';
 
 function registerPrivateMediaNamespace(io) {
   const nsp = io.of(NAMESPACE);
   realtime.attach(nsp);
+  // The 00:00 Vietnam rollover is pushed from the server, not guessed per tab.
+  chatClock.start();
   nsp.use(async (socket, next) => {
     try {
       const auth = socket.handshake.auth || {};
@@ -41,6 +44,25 @@ function registerPrivateMediaNamespace(io) {
     const room = socket.pmRoom;
     // Account-scoped room: a read marker reaches this user's other tabs only.
     socket.join(realtime.userRoom(userId));
+    /**
+     * Chat is one channel for the whole system, so every entitled WEB socket
+     * joins the chat room regardless of the listening mode. A device socket is a
+     * hotkey helper: it is not in the room and never receives message bodies.
+     */
+    if (socket.clientType === 'web') {
+      socket.join(realtime.chatRoom());
+      socket.emit('private-media:chat-day', chatClock.payloadAt());
+    }
+    /**
+     * Shared listening presence. Membership is keyed by account, so opening a
+     * second tab does not add a second avatar, and closing one tab does not make
+     * the person leave while another tab is still listening.
+     */
+    const listening = room === 'shared' && socket.clientType === 'web'
+      ? realtime.joinListeningRoom(socket.id, socket.user)
+      : { joined: false };
+    if (listening.joined) realtime.broadcastParticipants();
+    else realtime.emitParticipantsTo(socket);
     const key = await sessions.sessionKeyFor(userId, room);
     let isPlayer = false;
     let lastTick = 0;
@@ -73,6 +95,8 @@ function registerPrivateMediaNamespace(io) {
         const state = await sessions.setPlayerPresence(true, userId, room);
         if (!socket.connected) { realtime.unregisterPlayer(socket.id, key); return; }
         realtime.broadcastState(state, key);
+        // The "đang phát" badge in the participant list follows the real player.
+        if (room === 'shared') realtime.broadcastParticipants();
         if (first && room === 'shared') await audit.record({ action: 'JOIN_LISTENING_SESSION', actorUserId: userId, source: 'WEB', metadata: { sessionId: state.sessionId } });
         if (typeof ack === 'function') ack({ ok: true, state });
       } catch { /* next hello repairs presence */ }
@@ -137,19 +161,30 @@ function registerPrivateMediaNamespace(io) {
     /**
      * Chat rides the same authenticated socket as playback, so a revoked account
      * loses it at the same moment it loses the player. The sender identity is
-     * `userId` from the handshake — never a field in the payload.
+     * `userId` from the handshake — never a field in the payload, and never a
+     * room: there is exactly one public channel.
      */
     socket.on('private-media:chat-send', async (payload = {}, ack) => {
       try {
         if (!await authorized()) return;
         const result = await chats.createMessage({
           userId,
-          room,
           content: payload.content,
           clientMessageId: payload.clientMessageId,
         });
-        if (!result.duplicate) realtime.broadcastChat(key, result.message);
-        if (typeof ack === 'function') ack({ ok: true, message: result.message, duplicate: result.duplicate });
+        // A duplicate retry is still acknowledged (so the sender stops retrying)
+        // but is not re-broadcast: the room already has that message id.
+        if (!result.duplicate) realtime.broadcastChat(result.message);
+        if (typeof ack === 'function') {
+          ack({
+            ok: true,
+            message: result.message,
+            duplicate: result.duplicate,
+            day: result.day,
+            dayEndsAt: result.dayEndsAt,
+            serverNow: result.serverNow,
+          });
+        }
       } catch (error) {
         if (typeof ack === 'function') ack({ ok: false, error: error.code || 'CHAT_FAILED', message: error.message });
       }
@@ -162,7 +197,7 @@ function registerPrivateMediaNamespace(io) {
     socket.on('private-media:chat-read', async (payload = {}, ack) => {
       try {
         if (!await authorized()) return;
-        const result = await chats.markRead({ userId, room, messageId: payload.messageId ?? null });
+        const result = await chats.markRead({ userId, messageId: payload.messageId ?? null });
         realtime.broadcastToUser(userId, 'private-media:chat-read', result);
         if (typeof ack === 'function') ack({ ok: true, ...result });
       } catch (error) {
@@ -170,13 +205,22 @@ function registerPrivateMediaNamespace(io) {
       }
     });
     socket.on('disconnect', async () => {
+      // Leaving shared listening is about the account's last socket, not about
+      // whether this particular tab owned the player.
+      if (listening.joined || room === 'shared') {
+        const { left } = realtime.leaveListeningRoom(socket.id, userId);
+        if (left) realtime.broadcastParticipants();
+      }
       if (!isPlayer) return;
       isPlayer = false;
       realtime.unregisterPlayer(socket.id, key);
       try {
         const state = await sessions.setPlayerPresence(realtime.playerCount(key) > 0, userId, room);
         realtime.broadcastState(state, key);
-        if (room === 'shared') await audit.record({ action: 'LEAVE_LISTENING_SESSION', actorUserId: userId, source: 'WEB', metadata: { sessionId: state.sessionId } });
+        if (room === 'shared') {
+          realtime.broadcastParticipants();
+          await audit.record({ action: 'LEAVE_LISTENING_SESSION', actorUserId: userId, source: 'WEB', metadata: { sessionId: state.sessionId } });
+        }
       } catch { /* next hello repairs presence */ }
     });
     snapshot().catch(() => {});

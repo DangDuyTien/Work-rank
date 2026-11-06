@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowUp, Cast, Check, Copy, Keyboard, Link2, ListMusic, ListPlus, Loader2,
   MonitorPlay, MonitorSmartphone, PictureInPicture2, Play, Plus, Radio,
-  RefreshCw, Search, Send, ShieldCheck, SkipForward, Trash2, UserPlus, Users, X,
+  RefreshCw, Search, Send, ShieldCheck, SkipForward, Trash2, UserPlus, X,
 } from 'lucide-react';
 import {
   PageShell, PageHeader, Card, Button, Notice, AnimatedModal, SegmentedControl,
@@ -12,6 +12,7 @@ import MiniPlayer, { MediaControls, PIP_WIDTH, PIP_HEIGHT } from '../components/
 import SeekBar from '../components/privateMedia/SeekBar';
 import VolumeBar from '../components/privateMedia/VolumeBar';
 import ChatPanel from '../components/privateMedia/ChatPanel';
+import ListeningRoom from '../components/privateMedia/ListeningRoom';
 import PlaylistPanel from '../components/privateMedia/PlaylistPanel';
 import { formatTime } from '../components/privateMedia/mediaTime';
 import useMediaClock from '../hooks/useMediaClock';
@@ -776,6 +777,7 @@ export default function PrivateMedia() {
         </div>
 
         <aside className="pm-rail">
+          <ListeningRoom />
           <ChatPanel userId={user?.id} />
 
           <Card className="pm-status">
@@ -802,21 +804,6 @@ export default function PrivateMedia() {
                 Tab này không phát âm thanh. <button type="button" className="pm-link" onClick={pm.player.takeOver}>Phát ở tab này</button>
               </p>
             )}
-          </Card>
-
-          <Card className="pm-rail-card">
-            <h2 className="pm-rail__title"><Users size={15} aria-hidden="true" /> Chế độ nghe</h2>
-            <SegmentedControl
-              ariaLabel="Chế độ nghe"
-              value={pm.roomMode}
-              onChange={pm.setRoomMode}
-              options={[{ key: 'private', label: 'Nghe riêng' }, { key: 'shared', label: 'Nghe chung' }]}
-            />
-            <p className="pm-rail__note">
-              {pm.roomMode === 'shared'
-                ? 'Bài hát, timeline, hàng chờ và chat dùng chung. Âm lượng và tắt tiếng chỉ áp dụng cho bạn.'
-                : 'Phiên nghe riêng của bạn. Âm lượng được ghi nhớ trên thiết bị này.'}
-            </p>
           </Card>
 
           <Card className="pm-rail-card">

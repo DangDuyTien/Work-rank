@@ -1,15 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Bell, BellOff, ChevronDown, Loader2, MessageSquare, Send, Volume2,
+  Bell, BellOff, CalendarDays, ChevronDown, Loader2, MessageSquare, Send, Volume2,
 } from 'lucide-react';
+import DefaultAvatar from '../DefaultAvatar';
 import { usePrivateMedia } from '../../context/PrivateMediaContext';
 import { playNotificationTing } from '../../utils/mediaNotifications';
+import {
+  dayHeading, isGrouped, timeLabel,
+} from './chatFeed';
 
 /**
- * CHAT NGHE CHUNG
+ * CHAT CHUNG
  *
- * Presentation only. The sender identity, rate limit and persistence live on the
- * server; this component never decides who wrote a message or who may read it.
+ * One system-wide channel: whatever a person writes here is read by everybody,
+ * in Nghe riêng and Nghe chung alike. The server owns the sender identity, the
+ * rate limit, the persistence and the day boundary; this component never decides
+ * who wrote a message or who may read it.
  *
  * Scroll rules that matter for usability:
  *   - if the reader is at the bottom, new messages follow
@@ -17,21 +23,8 @@ import { playNotificationTing } from '../../utils/mediaNotifications';
  *   - the unread counter only grows while the panel is collapsed/off-screen
  *   - leaving the page marks the panel closed, so the badge keeps counting
  */
-
-function timeLabel(value) {
-  try {
-    return new Date(value).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return '';
-  }
-}
-
-function initials(name) {
-  return String(name || '?').trim().split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
-}
-
 export default function ChatPanel({ userId }) {
-  const { chat, roomMode, notifications } = usePrivateMedia();
+  const { chat, notifications, socketConnected } = usePrivateMedia();
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [open, setOpenState] = useState(true);
@@ -60,10 +53,11 @@ export default function ChatPanel({ userId }) {
     scrollToBottom('smooth');
   }, [chat.messages, scrollToBottom]);
 
+  // A new day starts at the top of an empty feed, not at yesterday's scroll.
   useEffect(() => {
     atBottomRef.current = true;
     scrollToBottom('auto');
-  }, [roomMode, scrollToBottom]);
+  }, [chat.day, scrollToBottom]);
 
   const onScroll = () => {
     const node = listRef.current;
@@ -105,15 +99,25 @@ export default function ChatPanel({ userId }) {
     else setPermissionNote('Chưa cấp quyền thông báo.');
   };
 
+  const day = chat.day || null;
+  const heading = dayHeading(day, day);
+
   return (
-    <section className={`pm-chat${open ? '' : ' is-collapsed'}`} aria-label="Chat nghe chung">
+    <section className={`pm-chat${open ? '' : ' is-collapsed'}`} aria-label="Chat chung">
       <header className="pm-chat__head">
         <h2>
           <MessageSquare size={15} aria-hidden="true" />
-          Chat nghe chung
+          Chat chung
           {chat.unread > 0 && <em className="pm-chat__badge">{chat.unread > 9 ? '9+' : chat.unread}</em>}
         </h2>
         <div className="pm-chat__head-tools">
+          <span
+            className={`pm-chat__live${socketConnected ? ' is-live' : ''}`}
+            title={socketConnected ? 'Đang nhận tin nhắn trực tiếp' : 'Đang kết nối lại…'}
+          >
+            <i aria-hidden="true" />
+            {socketConnected ? 'Trực tiếp' : 'Ngoại tuyến'}
+          </span>
           <button
             type="button"
             className={`pm-chat__toggle pm-chat__toggle--settings${prefs.notify ? '' : ' is-off'}`}
@@ -135,6 +139,16 @@ export default function ChatPanel({ userId }) {
           </button>
         </div>
       </header>
+
+      <div className="pm-chat__subhead">
+        <span className="pm-chat__day">
+          <CalendarDays size={12} aria-hidden="true" />
+          {heading || 'Hôm nay'}
+        </span>
+        <span className="pm-chat__reset" title="Lịch sử chat được làm mới theo ngày, giờ Việt Nam">
+          00:00 hằng ngày
+        </span>
+      </div>
 
       {settingsOpen && (
         <div className="pm-chat__settings">
@@ -188,7 +202,7 @@ export default function ChatPanel({ userId }) {
       )}
 
       <div className="pm-chat__body">
-        <div className="pm-chat__list" ref={listRef} onScroll={onScroll}>
+        <div className="pm-chat__list" ref={listRef} onScroll={onScroll} role="log" aria-label="Tin nhắn hôm nay">
           {chat.hasMore && (
             <button type="button" className="pm-chat__more" onClick={chat.loadMore} disabled={chat.loading}>
               {chat.loading ? <Loader2 size={13} className="pm-spin" aria-hidden="true" /> : null}
@@ -199,30 +213,44 @@ export default function ChatPanel({ userId }) {
           {!chat.messages.length && !chat.loading && (
             <div className="pm-chat__empty">
               <MessageSquare size={22} aria-hidden="true" />
-              <p>Chưa có tin nhắn nào.</p>
-              <span>
-                {roomMode === 'shared'
-                  ? 'Mọi người trong phiên nghe chung đều thấy tin nhắn này.'
-                  : 'Bạn đang nghe riêng — bật “Nghe chung” để trò chuyện cùng người khác.'}
-              </span>
+              <p>Hôm nay chưa có tin nhắn nào.</p>
+              <span>Mọi người ở cả hai chế độ nghe đều thấy tin nhắn này. Lịch sử tự làm mới lúc 00:00.</span>
+            </div>
+          )}
+
+          {chat.messages.length > 0 && (
+            <div className="pm-chat__divider" role="separator">
+              <span>{heading || 'Hôm nay'}</span>
             </div>
           )}
 
           {chat.messages.map((message, index) => {
             const mine = Number(message.user?.id) === Number(userId);
-            const previous = chat.messages[index - 1];
-            const grouped = previous && Number(previous.user?.id) === Number(message.user?.id)
-              && new Date(message.createdAt) - new Date(previous.createdAt) < 120000;
+            const grouped = isGrouped(chat.messages[index - 1], message);
+            const name = mine ? 'Bạn' : message.user?.name || 'Thành viên';
             return (
               <article key={message.id} className={`pm-chat__msg${mine ? ' is-mine' : ''}${grouped ? ' is-grouped' : ''}`}>
-                {!grouped && (
-                  <div className="pm-chat__meta">
-                    <span className="pm-chat__avatar" aria-hidden="true">{initials(message.user?.name)}</span>
-                    <strong>{mine ? 'Bạn' : message.user?.name || 'Thành viên'}</strong>
-                    <time dateTime={message.createdAt}>{timeLabel(message.createdAt)}</time>
-                  </div>
-                )}
-                <p className="pm-chat__text">{message.content}</p>
+                <span className="pm-chat__avatar" aria-hidden={grouped ? 'true' : undefined}>
+                  {grouped ? null : (
+                    <DefaultAvatar
+                      src={message.user?.avatarUrl}
+                      name={message.user?.name}
+                      userId={message.user?.id}
+                      size={26}
+                      shape="circle"
+                      alt={name}
+                    />
+                  )}
+                </span>
+                <div className="pm-chat__body-col">
+                  {!grouped && (
+                    <div className="pm-chat__meta">
+                      <strong>{name}</strong>
+                      <time dateTime={message.createdAt}>{timeLabel(message.createdAt)}</time>
+                    </div>
+                  )}
+                  <p className="pm-chat__text">{message.content}</p>
+                </div>
               </article>
             );
           })}

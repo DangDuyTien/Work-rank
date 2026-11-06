@@ -21,6 +21,7 @@ const youtubeService = require('../services/privateMedia/youtube.service');
 const audit = require('../services/privateMedia/audit.service');
 const playlistService = require('../services/privateMedia/playlist.service');
 const chatService = require('../services/privateMedia/chat.service');
+const chatClock = require('../services/privateMedia/chatClock.service');
 
 function fail(res, error, fallbackMessage = 'Không thực hiện được yêu cầu') {
   const status = Number(error?.status) || 500;
@@ -60,6 +61,10 @@ async function getStatus(req, res) {
         online: Boolean(session?.playerOnline),
         socketCount: realtime.playerCount(session?.sessionKey),
       },
+      // Who is in the shared listening room right now (deduplicated by account).
+      // The page paints avatars from this before the socket has said a word.
+      participants: realtime.listeningParticipants(),
+      chat: chatClock.payloadAt(),
       telegram: {
         // Bot configuration is not a secret; the token itself never appears here.
         enabled: telegramStatus.enabled,
@@ -531,14 +536,24 @@ async function importPlaylist(req, res) {
   }
 }
 
-// ── Shared listening chat ───────────────────────────────────────────────────
+// ── System-wide chat ("Chat chung") ─────────────────────────────────────────
+// One channel for both listening modes. There is deliberately no room header:
+// a caller cannot ask for a private copy of the feed.
+
+/** GET /api/private-media/participants — who is listening right now. */
+async function getParticipants(req, res) {
+  try {
+    return res.status(200).json({ ...realtime.listeningSnapshot(), chat: chatClock.payloadAt() });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
 
 /** GET /api/private-media/chat?before=&after=&limit= */
 async function listChat(req, res) {
   try {
     return res.status(200).json(await chatService.listMessages({
       userId: req.user.id,
-      room: roomOf(req),
       beforeId: req.query.before || null,
       afterId: req.query.after || null,
       limit: req.query.limit,
@@ -551,7 +566,7 @@ async function listChat(req, res) {
 /** GET /api/private-media/chat/unread — server-side truth for the tab badge. */
 async function getChatUnread(req, res) {
   try {
-    return res.status(200).json(await chatService.getUnread({ userId: req.user.id, room: roomOf(req) }));
+    return res.status(200).json(await chatService.getUnread({ userId: req.user.id }));
   } catch (error) {
     return fail(res, error);
   }
@@ -562,7 +577,6 @@ async function markChatRead(req, res) {
   try {
     const result = await chatService.markRead({
       userId: req.user.id,
-      room: roomOf(req),
       messageId: req.body?.messageId ?? null,
     });
     // Other tabs/devices of the same account clear their badge too. Scoped to
@@ -579,13 +593,10 @@ async function sendChat(req, res) {
   try {
     const result = await chatService.createMessage({
       userId: req.user.id,
-      room: roomOf(req),
       content: req.body?.content,
       clientMessageId: req.body?.clientMessageId,
     });
-    if (!result.duplicate) {
-      realtime.broadcastChat(result.sessionKey, result.message);
-    }
+    if (!result.duplicate) realtime.broadcastChat(result.message);
     return res.status(201).json(result);
   } catch (error) {
     return fail(res, error);
@@ -675,5 +686,6 @@ module.exports = {
   getChatUnread,
   markChatRead,
   sendChat,
+  getParticipants,
   deviceCommand,
 };

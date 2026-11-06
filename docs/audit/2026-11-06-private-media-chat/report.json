@@ -1,0 +1,123 @@
+{
+  "startedAt": "2026-11-06T07:48:55.504Z",
+  "run": "b1hs",
+  "checks": [
+    {
+      "name": "four tabs opened: owner (2 tabs, shared) + guest (private) + guest (mobile, shared)",
+      "status": "PASS"
+    },
+    {
+      "name": "shared participant avatars show one chip per account",
+      "status": "PASS",
+      "evidence": [
+        "Bảo Trâm",
+        "Bạn"
+      ]
+    },
+    {
+      "name": "online state + total listeners",
+      "status": "PASS",
+      "evidence": "2 người đang nghe"
+    },
+    {
+      "name": "private-mode tab sees the room but is not counted in it",
+      "status": "PASS",
+      "evidence": [
+        "Bảo Trâm",
+        "QA Owner"
+      ]
+    },
+    {
+      "name": "a message written in Nghe riêng arrives in Nghe chung tabs",
+      "status": "PASS"
+    },
+    {
+      "name": "a message written in Nghe chung arrives in a Nghe riêng tab",
+      "status": "PASS"
+    },
+    {
+      "name": "both tabs show the same messages in the same order",
+      "status": "PASS",
+      "evidence": [
+        "QAb1hs · Tin từ chế độ nghe riêng",
+        "QAb1hs · Tin từ chế độ nghe chung"
+      ]
+    },
+    {
+      "name": "no duplicated message bubbles",
+      "status": "PASS"
+    },
+    {
+      "name": "message shows avatar, name and time",
+      "status": "PASS",
+      "evidence": "Minh Anh23:56"
+    },
+    {
+      "name": "switching Nghe chung → Nghe riêng keeps today's history",
+      "status": "PASS",
+      "evidence": 2
+    },
+    {
+      "name": "a full page reload restores the same day",
+      "status": "PASS",
+      "evidence": 2
+    },
+    {
+      "name": "reconnect delivers exactly the missed messages, once",
+      "status": "PASS",
+      "evidence": 2
+    },
+    {
+      "name": "screenshots captured",
+      "status": "PASS",
+      "evidence": "/tmp/pm-chat-qa"
+    },
+    {
+      "name": "feed before midnight",
+      "status": "PASS",
+      "evidence": {
+        "beforeDay": "Hôm nay · 09/11",
+        "beforeMessages": 4
+      }
+    },
+    {
+      "name": "00:00 switches every open tab to the new day without a reload",
+      "status": "PASS",
+      "evidence": {
+        "day": "Hôm nay · 10/11",
+        "messages": 0,
+        "waitedSeconds": 203
+      }
+    },
+    {
+      "name": "the private-mode tab switched at the same moment",
+      "status": "PASS",
+      "evidence": {
+        "day": "Hôm nay · 10/11",
+        "messages": 0
+      }
+    },
+    {
+      "name": "the new day starts empty and accepts new messages only",
+      "status": "PASS"
+    },
+    {
+      "name": "the chat endpoint rejects an unauthenticated caller",
+      "status": "PASS",
+      "evidence": 401
+    }
+  ],
+  "errors": [
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  ],
+  "finishedAt": "2026-11-06T07:52:29.598Z",
+  "passed": 18,
+  "failed": 0
+}
