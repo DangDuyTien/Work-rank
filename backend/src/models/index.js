@@ -75,6 +75,7 @@ const PrivateMediaAuditLog = require('./PrivateMediaAuditLog');
 const PrivateMediaPlaylist = require('./PrivateMediaPlaylist');
 const PrivateMediaPlaylistItem = require('./PrivateMediaPlaylistItem');
 const PrivateMediaChatMessage = require('./PrivateMediaChatMessage');
+const PrivateMediaChatRead = require('./PrivateMediaChatRead');
 const PrivateMediaPlaylistProgress = require('./PrivateMediaPlaylistProgress');
 
 Team.hasMany(User, { foreignKey: 'teamId' });
@@ -260,6 +261,8 @@ PrivateMediaCommand.belongsTo(User, { as: 'issuedBy', foreignKey: 'issuedByUserI
 PrivateMediaPlaylist.belongsTo(User, { as: 'owner', foreignKey: 'ownerUserId', constraints: false });
 PrivateMediaPlaylist.hasMany(PrivateMediaPlaylistItem, { as: 'items', foreignKey: 'playlistId', constraints: false });
 PrivateMediaPlaylistItem.belongsTo(PrivateMediaPlaylist, { as: 'playlist', foreignKey: 'playlistId', constraints: false });
+PrivateMediaChatRead.belongsTo(PrivateMediaSession, { as: 'session', foreignKey: 'sessionId', constraints: false });
+PrivateMediaChatRead.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
 PrivateMediaChatMessage.belongsTo(PrivateMediaSession, { as: 'session', foreignKey: 'sessionId', constraints: false });
 PrivateMediaChatMessage.belongsTo(User, { as: 'user', foreignKey: 'userId', constraints: false });
 PrivateMediaPlaylistProgress.belongsTo(PrivateMediaPlaylist, { as: 'playlist', foreignKey: 'playlistId', constraints: false });
@@ -348,6 +351,7 @@ module.exports = {
   PrivateMediaPlaylist,
   PrivateMediaPlaylistItem,
   PrivateMediaChatMessage,
+  PrivateMediaChatRead,
   PrivateMediaPlaylistProgress,
 };
 

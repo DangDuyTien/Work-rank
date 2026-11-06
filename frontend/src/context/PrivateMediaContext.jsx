@@ -10,6 +10,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/UiContext';
 import PersistentPlayer from '../components/privateMedia/PersistentPlayer';
 import { createPlayerOwnership } from '../components/privateMedia/playerOwnership';
+import {
+  bindAudioUnlock, notificationPermission, playNotificationTing, readNotifyPrefs,
+  requestNotificationPermission, setTabBadge, showDesktopNotification, writeNotifyPrefs,
+} from '../utils/mediaNotifications';
 
 /**
  * PRIVATE MEDIA — APPLICATION SHELL CONTROLLER
@@ -76,9 +80,13 @@ export function PrivateMediaProvider({ children }) {
   const [busyAction, setBusyAction] = useState(null);
   const [socket, setSocket] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
+  // Bumped on every (re)connect. The player uses it to re-send an ENDED report
+  // that a dropped socket may have swallowed.
+  const [connectionEpoch, setConnectionEpoch] = useState(0);
   const [seekSignal, setSeekSignal] = useState(null);
   const [activationNeeded, setActivationNeeded] = useState(false);
   const [playerNotice, setPlayerNotice] = useState(null);
+  const [waitingAdvance, setWaitingAdvance] = useState(false);
   const activationRef = useRef(null);
   const failureRef = useRef(null);
 
@@ -158,9 +166,13 @@ export function PrivateMediaProvider({ children }) {
       transports: ['websocket', 'polling'],
     });
 
+    socketRef.current = client;
     client.on('connect', () => {
       setSocketConnected(true);
+      setConnectionEpoch((value) => value + 1);
       client.emit('private-media:subscribe');
+      // Reconnect repair: fetch only what this tab missed while offline.
+      chatSyncRef.current?.();
     });
     client.on('disconnect', () => setSocketConnected(false));
     client.on('connect_error', () => setSocketConnected(false));
@@ -172,11 +184,14 @@ export function PrivateMediaProvider({ children }) {
     client.on('private-media:chat-message', (message) => {
       if (message) chatPushRef.current?.(message);
     });
+    // A read marker set in another tab of this account clears the badge here.
+    client.on('private-media:chat-read', () => setChatUnread(0));
 
     setSocket(client);
     return () => {
       client.removeAllListeners();
       client.disconnect();
+      if (socketRef.current === client) socketRef.current = null;
       setSocket(null);
       setSocketConnected(false);
     };
@@ -219,10 +234,20 @@ export function PrivateMediaProvider({ children }) {
   }, [sendCommand]);
 
   // ── Player facts ─────────────────────────────────────────────────────────
+  // ENDED is the one fact that must actually arrive: if the packet is dropped
+  // (a link that dies mid-track, a socket that looks connected but is not) the
+  // queue would wait forever. socket.io's ack-with-timeout tells us honestly
+  // whether the server received it, and the player retries when it did not.
+  // The server is idempotent per queue item, so a retry can never skip a track.
   const onPlayerFact = useCallback((fact) => {
     if (!fact) return;
-    if (fact.type === 'ended') socket?.emit('private-media:player-ended', fact.payload);
-    else if (fact.type === 'error') socket?.emit('private-media:player-error', fact.payload);
+    if (fact.type === 'ended') {
+      if (!socket) { fact.onUndelivered?.(); return; }
+      socket.timeout(6000).emit('private-media:player-ended', fact.payload, (err, ack) => {
+        if (err) fact.onUndelivered?.(err);
+        else fact.onDelivered?.(ack);
+      });
+    } else if (fact.type === 'error') socket?.emit('private-media:player-error', fact.payload);
     else if (fact.type === 'duration') socket?.emit('private-media:player-progress', fact.payload);
   }, [socket]);
 
@@ -236,40 +261,149 @@ export function PrivateMediaProvider({ children }) {
   }, [socketConnected, lease.isOwner, socket]);
 
   // ── Chat ─────────────────────────────────────────────────────────────────
+  // The feed lives here, above the router, so a route change cannot drop it.
+  // The server is the source of truth: history on mount, `after=` cursor on
+  // reconnect, and a read marker so the badge survives a refresh.
   const [chatMessages, setChatMessages] = useState([]);
   const [chatHasMore, setChatHasMore] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
   const [chatUnread, setChatUnread] = useState(0);
+  const [chatVisible, setChatVisible] = useState(false);
   const chatIdsRef = useRef(new Set());
-  const chatOpenRef = useRef(true);
+  const chatLastIdRef = useRef(0);
+  const chatOpenRef = useRef(false);
   const chatPushRef = useRef(null);
+  const chatSyncRef = useRef(null);
+  const chatMarkTimerRef = useRef(null);
+  const socketRef = useRef(null);
 
-  const chatPush = useCallback((message) => {
+  // ── Notification preferences (per user, per device) ──────────────────────
+  const [notifyPrefs, setNotifyPrefs] = useState(() => readNotifyPrefs(user?.id));
+  const notifyRef = useRef(notifyPrefs);
+  notifyRef.current = notifyPrefs;
+
+  useEffect(() => { setNotifyPrefs(readNotifyPrefs(user?.id)); }, [user?.id]);
+  useEffect(() => bindAudioUnlock(), []);
+
+  const saveNotifyPrefs = useCallback((patch) => {
+    setNotifyPrefs((previous) => {
+      const next = writeNotifyPrefs(user?.id, { ...previous, ...patch });
+      return next;
+    });
+  }, [user?.id]);
+
+  // The tab badge is the one place that reflects "somebody wrote to me".
+  useEffect(() => {
+    setTabBadge(notifyPrefs.notify ? chatUnread : 0);
+  }, [chatUnread, notifyPrefs.notify]);
+  useEffect(() => () => setTabBadge(0), []);
+
+  const isChatOnScreen = useCallback(() => (
+    chatOpenRef.current
+    && typeof document !== 'undefined'
+    && document.visibilityState === 'visible'
+  ), []);
+
+  const markChatRead = useCallback((messageId = null) => {
+    setChatUnread(0);
+    const id = messageId ?? (chatLastIdRef.current || null);
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('private-media:chat-read', { messageId: id }, () => {});
+    } else {
+      privateMediaApi.markChatRead(id).catch(() => {});
+    }
+  }, []);
+
+  const scheduleMarkRead = useCallback(() => {
+    if (chatMarkTimerRef.current) return;
+    chatMarkTimerRef.current = setTimeout(() => {
+      chatMarkTimerRef.current = null;
+      markChatRead();
+    }, 350);
+  }, [markChatRead]);
+
+  const chatPush = useCallback((message, { live = true } = {}) => {
     if (!message?.id || chatIdsRef.current.has(message.id)) return;
     chatIdsRef.current.add(message.id);
+    chatLastIdRef.current = Math.max(chatLastIdRef.current || 0, Number(message.id) || 0);
     setChatMessages((previous) => [...previous, message]);
-    if (!chatOpenRef.current) setChatUnread((count) => count + 1);
-  }, []);
+
+    const mine = Number(message.user?.id) === Number(user?.id);
+    // Own messages, history loads and reconnect catch-up never notify.
+    if (!live || mine) return;
+    if (isChatOnScreen()) { scheduleMarkRead(); return; }
+
+    setChatUnread((count) => count + 1);
+    const prefs = notifyRef.current;
+    if (prefs.sound) playNotificationTing(prefs.volume);
+    if (prefs.notify) {
+      showDesktopNotification({
+        title: '3WIN MEDIA · Nghe chung',
+        body: `${message.user?.name || 'Thành viên'}: ${String(message.content || '').slice(0, 140)}`,
+        tag: `pm-chat-${modeRef.current}`,
+        onClick: () => navigate('/private/media'),
+      });
+    }
+  }, [isChatOnScreen, navigate, scheduleMarkRead, user?.id]);
   chatPushRef.current = chatPush;
+
+  const mergeChat = useCallback((list) => {
+    const fresh = (list || []).filter((message) => message?.id && !chatIdsRef.current.has(message.id));
+    if (!fresh.length) return 0;
+    fresh.forEach((message) => {
+      chatIdsRef.current.add(message.id);
+      chatLastIdRef.current = Math.max(chatLastIdRef.current || 0, Number(message.id) || 0);
+    });
+    setChatMessages((previous) => [...previous, ...fresh]);
+    return fresh.length;
+  }, []);
 
   const loadChat = useCallback(async () => {
     if (!entitled) return;
     setChatLoading(true);
     setChatError(null);
     try {
-      const data = await privateMediaApi.listChat({ limit: 30 });
+      const data = await privateMediaApi.listChat({ limit: 40 });
       const list = data.messages || [];
       chatIdsRef.current = new Set(list.map((message) => message.id));
+      chatLastIdRef.current = list.reduce((max, message) => Math.max(max, Number(message.id) || 0), 0);
       setChatMessages(list);
       setChatHasMore(Boolean(data.hasMore));
-      setChatUnread(0);
+      setChatUnread(Number(data.unread) || 0);
+      // Opening the page while the chat is on screen means these are read.
+      if (isChatOnScreen()) scheduleMarkRead();
     } catch (err) {
       setChatError(messageFrom(err, 'Không tải được tin nhắn.'));
     } finally {
       setChatLoading(false);
     }
-  }, [entitled]);
+  }, [entitled, isChatOnScreen, scheduleMarkRead]);
+
+  /**
+   * Reconnect repair: ask only for what this tab does not have. Idempotent by
+   * message id, so a socket that redelivers the same message cannot duplicate
+   * it and cannot ring twice.
+   */
+  const syncChat = useCallback(async () => {
+    if (!entitled) return;
+    try {
+      const after = chatLastIdRef.current;
+      const data = await privateMediaApi.listChat({ limit: 100, after: after || undefined });
+      const added = mergeChat(data.messages);
+      if (!after) {
+        // No cursor yet: fall back to a normal page.
+        await loadChat();
+        return;
+      }
+      if (added && !isChatOnScreen()) {
+        setChatUnread((count) => count + added);
+      } else if (added) {
+        scheduleMarkRead();
+      }
+    } catch { /* the next reconnect retries */ }
+  }, [entitled, isChatOnScreen, loadChat, mergeChat, scheduleMarkRead]);
+  chatSyncRef.current = syncChat;
 
   const loadMoreChat = useCallback(async () => {
     if (!entitled || !chatMessages.length || chatLoading) return;
@@ -302,7 +436,7 @@ export function PrivateMediaProvider({ children }) {
           settled = true;
           clearTimeout(timer);
           if (ack?.ok) {
-            chatPush(ack.message);
+            chatPush(ack.message, { live: false });
             resolve({ ok: true });
           } else {
             setChatError(ack?.message || 'Không gửi được tin nhắn.');
@@ -313,7 +447,7 @@ export function PrivateMediaProvider({ children }) {
     }
     try {
       const data = await privateMediaApi.sendChat({ content: text, clientMessageId });
-      if (data?.message) chatPush(data.message);
+      if (data?.message) chatPush(data.message, { live: false });
       return { ok: true };
     } catch (err) {
       setChatError(messageFrom(err, 'Không gửi được tin nhắn.'));
@@ -321,16 +455,39 @@ export function PrivateMediaProvider({ children }) {
     }
   }, [socket, chatPush]);
 
-  const markChatRead = useCallback(() => setChatUnread(0), []);
   const setChatOpen = useCallback((open) => {
-    chatOpenRef.current = open;
-    if (open) setChatUnread(0);
-  }, []);
+    chatOpenRef.current = Boolean(open);
+    setChatVisible(Boolean(open));
+    if (open) {
+      setChatUnread(0);
+      if (document.visibilityState === 'visible') scheduleMarkRead();
+    }
+  }, [scheduleMarkRead]);
+
+  // Returning to the tab with the chat already open counts as reading.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (isChatOnScreen()) { setChatUnread(0); scheduleMarkRead(); }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onVisibility);
+    };
+  }, [isChatOnScreen, scheduleMarkRead]);
 
   useEffect(() => {
     if (!entitled) return;
     loadChat();
   }, [entitled, loadChat, roomMode]);
+
+  // Desktop notification permission, only from an explicit user action.
+  const enableDesktopNotifications = useCallback(async () => {
+    const result = await requestNotificationPermission();
+    if (result === 'granted') saveNotifyPrefs({ notify: true });
+    return result;
+  }, [saveNotifyPrefs]);
 
   // ── Playlists ────────────────────────────────────────────────────────────
   const [playlists, setPlaylists] = useState([]);
@@ -435,7 +592,9 @@ export function PrivateMediaProvider({ children }) {
     setSessionRaw(null);
     setPlaylistDetail(null);
     setChatMessages([]);
+    setChatUnread(0);
     chatIdsRef.current = new Set();
+    chatLastIdRef.current = 0;
     setRoomModeState(next);
     setPrivateMediaRoom(next);
     try { localStorage.setItem(ROOM_KEY, next); } catch { /* private mode */ }
@@ -470,6 +629,8 @@ export function PrivateMediaProvider({ children }) {
       notice: playerNotice,
       setNotice: setPlayerNotice,
       isPlayerOwner: lease.isOwner,
+      waitingForAdvance: waitingAdvance,
+      waitingForAdvance: waitingAdvance,
       otherTab: lease.otherTab,
       takeOver,
       onPlayerFact,
@@ -484,6 +645,7 @@ export function PrivateMediaProvider({ children }) {
     chat: {
       messages: chatMessages,
       unread: chatUnread,
+      visible: chatVisible,
       hasMore: chatHasMore,
       loading: chatLoading,
       error: chatError,
@@ -491,6 +653,13 @@ export function PrivateMediaProvider({ children }) {
       loadMore: loadMoreChat,
       markRead: markChatRead,
       setOpen: setChatOpen,
+      sync: syncChat,
+    },
+    notifications: {
+      prefs: notifyPrefs,
+      setPrefs: saveNotifyPrefs,
+      permission: notificationPermission(),
+      requestPermission: enableDesktopNotifications,
     },
     playlists: {
       list: playlists,
@@ -512,10 +681,11 @@ export function PrivateMediaProvider({ children }) {
   }), [
     entitled, access.isOwner, access.permissions, access.loading, session, status, loading, error,
     busyAction, socket, socketConnected, roomMode, setRoomMode, seekSignal, seekTo, sendCommand,
-    refreshStatus, activationNeeded, playerNotice, lease.isOwner, lease.otherTab, takeOver,
+    refreshStatus, activationNeeded, playerNotice, waitingAdvance, lease.isOwner, lease.otherTab, takeOver,
     onPlayerFact, playerReady, output.volume, output.muted, output.setVolume, output.toggleMute,
-    chatMessages, chatUnread, chatHasMore, chatLoading, chatError, sendChat, loadMoreChat,
-    markChatRead, setChatOpen, playlists, playlistsLoading, playlistDetail, playlistBusy,
+    chatMessages, chatUnread, chatVisible, chatHasMore, chatLoading, chatError, sendChat, loadMoreChat,
+    markChatRead, setChatOpen, syncChat, notifyPrefs, saveNotifyPrefs, enableDesktopNotifications,
+    playlists, playlistsLoading, playlistDetail, playlistBusy,
     refreshPlaylists, selectPlaylist, createPlaylist, updatePlaylist, deletePlaylist,
     addPlaylistItems, removePlaylistItem, reorderPlaylistItems, importPlaylist, playPlaylist,
     queuePlaylist,
@@ -539,6 +709,8 @@ export function PrivateMediaProvider({ children }) {
           onActivationNeeded={setActivationNeeded}
           onReady={playerReady}
           onNotice={setPlayerNotice}
+          onWaitingAdvance={setWaitingAdvance}
+          connectionEpoch={connectionEpoch}
           onOpenPage={() => navigate('/private/media')}
         />
       )}

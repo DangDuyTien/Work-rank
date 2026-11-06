@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowUp, Cast, Check, Copy, Keyboard, Link2, Loader2, MonitorPlay,
-  MonitorSmartphone, PictureInPicture2, Play, Plus, Radio, RefreshCw, Search,
-  Send, ShieldCheck, SkipForward, Trash2, UserPlus, Users, X,
+  ArrowUp, Cast, Check, Copy, Keyboard, Link2, ListMusic, ListPlus, Loader2,
+  MonitorPlay, MonitorSmartphone, PictureInPicture2, Play, Plus, Radio,
+  RefreshCw, Search, Send, ShieldCheck, SkipForward, Trash2, UserPlus, Users, X,
 } from 'lucide-react';
 import {
   PageShell, PageHeader, Card, Button, Notice, AnimatedModal, SegmentedControl,
@@ -18,6 +18,7 @@ import useMediaClock from '../hooks/useMediaClock';
 import { usePrivateMedia } from '../context/PrivateMediaContext';
 import { privateMediaApi, codeFrom, messageFrom } from '../services/privateMediaApi';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/UiContext';
 import './privateMedia.css';
 
 /**
@@ -153,10 +154,22 @@ export default function PrivateMedia() {
 
   useEffect(() => { loadRecent(); }, [loadRecent, pm.roomMode, session?.video?.videoId]);
 
+  /**
+   * Two distinct intents, never merged:
+   *   playNow  → LOAD_VIDEO  (this becomes the current track)
+   *   queue    → QUEUE_ADD   (plays after the current track, same session)
+   *
+   * Nghe riêng defaults to "phát ngay" and Nghe chung defaults to "thêm vào hàng
+   * chờ", exactly like before; both now expose the other action explicitly.
+   */
   const loadVideo = useCallback(async (video, queue = [], options = {}) => {
     if (!video?.videoId) return null;
-    const enqueue = !options.playNow && pm.roomMode === 'shared';
-    return pm.sendCommand(enqueue ? 'QUEUE_ADD' : 'LOAD_VIDEO', { ...video, queue }, { busyKey: `load:${video.videoId}` });
+    const shared = pm.roomMode === 'shared';
+    const playNow = options.playNow ?? !shared;
+    const action = playNow ? 'LOAD_VIDEO' : 'QUEUE_ADD';
+    return pm.sendCommand(action, { ...video, queue }, {
+      busyKey: `${playNow ? 'load' : 'queue'}:${video.videoId}`,
+    });
   }, [pm]);
 
   const runSearch = useCallback(async (event) => {
@@ -204,11 +217,62 @@ export default function PrivateMedia() {
     }
   }, [query, loadVideo]);
 
-  const addResultToPlaylist = useCallback(async (item) => {
-    if (!playlists.detail?.editable) return;
-    const result = await playlists.addItems(playlists.detail.id, [item]);
-    if (result) setSearchNote(`Đã thêm “${item.title || item.videoId}” vào ${playlists.detail.title}.`);
+  // ── Save to playlist (from any search result) ────────────────────────────
+  // Distinct from "hàng chờ": a queue is this session, a playlist is stored.
+  const toast = useToast();
+  const [saveTarget, setSaveTarget] = useState(null);
+  const [saveChoice, setSaveChoice] = useState('');
+  const [saveNewTitle, setSaveNewTitle] = useState('');
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const editablePlaylists = useMemo(
+    () => playlists.list.filter((playlist) => playlist.editable),
+    [playlists.list],
+  );
+
+  const openSaveDialog = useCallback(async (video) => {
+    if (!video?.videoId) return;
+    setSaveTarget(video);
+    setSaveError(null);
+    setSaveNewTitle('');
+    setSaveChoice('');
+    const list = await playlists.refresh();
+    const editable = (list || []).filter((playlist) => playlist.editable);
+    if (editable.length === 1) setSaveChoice(String(editable[0].id));
   }, [playlists]);
+
+  const confirmSave = useCallback(async () => {
+    if (!saveTarget || saveBusy) return;
+    setSaveBusy(true);
+    setSaveError(null);
+    try {
+      let playlistId = saveChoice ? Number(saveChoice) : null;
+      let title = editablePlaylists.find((playlist) => String(playlist.id) === String(playlistId))?.title || 'playlist';
+      if (!playlistId) {
+        const name = saveNewTitle.trim();
+        if (!name) {
+          setSaveError('Chọn một playlist hoặc đặt tên playlist mới.');
+          return;
+        }
+        const created = await playlists.create({ title: name });
+        if (!created?.playlist) {
+          setSaveError('Không tạo được playlist.');
+          return;
+        }
+        playlistId = created.playlist.id;
+        title = created.playlist.title;
+      }
+      const result = await playlists.addItems(playlistId, [saveTarget]);
+      if (!result) {
+        setSaveError('Không lưu được video. Thử lại sau.');
+        return;
+      }
+      toast.success(`Đã lưu “${saveTarget.title || saveTarget.videoId}” vào ${title}.`);
+      setSaveTarget(null);
+    } finally {
+      setSaveBusy(false);
+    }
+  }, [saveTarget, saveBusy, saveChoice, saveNewTitle, playlists, editablePlaylists, toast]);
 
   // ── Mini window (Document Picture-in-Picture) ────────────────────────────
   const [miniOpen, setMiniOpen] = useState(false);
@@ -500,25 +564,39 @@ export default function PrivateMedia() {
                         {item.durationSeconds ? ` · ${formatTime(item.durationSeconds)}` : ''}
                       </span>
                     </div>
-                    {playlists.detail?.editable && (
-                      <Button size="sm" variant="secondary" aria-label={`Thêm ${item.title} vào ${playlists.detail.title}`} onClick={() => addResultToPlaylist(item)} disabled={playlists.busy}>
-                        <Plus size={14} aria-hidden="true" />
+                    <div className="pm-result__actions">
+                      <Button
+                        variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
+                        size="sm"
+                        onClick={() => loadVideo(item, [], { playNow: true })}
+                        disabled={!canControl || pm.busyAction === `load:${item.videoId}`}
+                        title="Phát ngay video này"
+                      >
+                        {pm.busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+                        {pm.roomMode === 'shared' ? 'Phát ngay' : 'Phát'}
                       </Button>
-                    )}
-                    <Button
-                      variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
-                      size="sm"
-                      onClick={() => loadVideo(item)}
-                      disabled={!(pm.roomMode === 'shared' ? canQueue : canControl) || pm.busyAction === `load:${item.videoId}`}
-                    >
-                      {pm.busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
-                      {pm.roomMode === 'shared' ? 'Thêm vào hàng chờ' : 'Phát'}
-                    </Button>
-                    {pm.roomMode === 'shared' && (
-                      <Button size="sm" variant="secondary" disabled={!canControl || Boolean(pm.busyAction)} onClick={() => loadVideo(item, [], { playNow: true })}>
-                        Phát ngay
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => loadVideo(item, [], { playNow: false })}
+                        disabled={!canQueue || pm.busyAction === `queue:${item.videoId}`}
+                        aria-label={`Thêm ${item.title || item.videoId} vào hàng chờ`}
+                        title="Thêm vào hàng chờ (phát sau bài hiện tại)"
+                      >
+                        {pm.busyAction === `queue:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <ListPlus size={14} aria-hidden="true" />}
+                        Hàng chờ
                       </Button>
-                    )}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openSaveDialog(item)}
+                        aria-label={`Lưu ${item.title || item.videoId} vào playlist`}
+                        title="Lưu vào playlist để nghe lại sau"
+                      >
+                        <ListMusic size={14} aria-hidden="true" />
+                        Playlist
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -541,15 +619,36 @@ export default function PrivateMedia() {
                           {item.lastPlayedAt ? ` · ${relativeTime(item.lastPlayedAt)}` : ''}
                         </span>
                       </div>
-                      <Button
-                        variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
-                        size="sm"
-                        onClick={() => loadVideo(item)}
-                        disabled={!(pm.roomMode === 'shared' ? canQueue : canControl) || pm.busyAction === `load:${item.videoId}`}
-                      >
-                        {pm.busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
-                        {pm.roomMode === 'shared' ? 'Thêm vào hàng chờ' : 'Phát'}
-                      </Button>
+                      <div className="pm-result__actions">
+                        <Button
+                          variant={currentVideoId === item.videoId ? 'secondary' : 'accent'}
+                          size="sm"
+                          onClick={() => loadVideo(item, [], { playNow: true })}
+                          disabled={!canControl || pm.busyAction === `load:${item.videoId}`}
+                        >
+                          {pm.busyAction === `load:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+                          {pm.roomMode === 'shared' ? 'Phát ngay' : 'Phát'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => loadVideo(item, [], { playNow: false })}
+                          disabled={!canQueue || pm.busyAction === `queue:${item.videoId}`}
+                          aria-label={`Thêm ${item.title || item.videoId} vào hàng chờ`}
+                        >
+                          {pm.busyAction === `queue:${item.videoId}` ? <Loader2 size={14} className="pm-spin" aria-hidden="true" /> : <ListPlus size={14} aria-hidden="true" />}
+                          Hàng chờ
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => openSaveDialog(item)}
+                          aria-label={`Lưu ${item.title || item.videoId} vào playlist`}
+                        >
+                          <ListMusic size={14} aria-hidden="true" />
+                          Playlist
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -591,6 +690,11 @@ export default function PrivateMedia() {
               onActivate={() => pm.player.activationRef.current?.activate()}
             />
 
+            {pm.player.waitingForAdvance && (
+              <p className="pm-now__handoff" role="status">
+                <Loader2 size={13} className="pm-spin" aria-hidden="true" /> Đang chuyển sang bài tiếp theo…
+              </p>
+            )}
             {pm.player.otherTab && (
               <p className="pm-now__handoff">
                 Tab này đang tắt tiếng để tránh trùng âm thanh.
@@ -650,6 +754,12 @@ export default function PrivateMedia() {
               </AnimatedList>
             ) : (
               <p className="pm-rail__note">Hàng chờ đang trống. Bài thêm thủ công luôn phát trước danh sách đang chạy.</p>
+            )}
+
+            {session?.queue?.length > 0 && (
+              <p className="pm-rail__note pm-queue-card__auto">
+                Hết bài sẽ tự phát bài kế tiếp trong hàng chờ — không cần bấm “Bài tiếp theo”.
+              </p>
             )}
 
             <div className="pm-queue-card__actions">
@@ -883,6 +993,55 @@ export default function PrivateMedia() {
         onCommand={(action, payload) => pm.sendCommand(action, payload)}
         themeMode={miniTheme}
       />
+
+      <AnimatedModal
+        isOpen={Boolean(saveTarget)}
+        onClose={() => { if (!saveBusy) setSaveTarget(null); }}
+        title="Lưu vào playlist"
+        maxWidth={440}
+        actions={(
+          <>
+            <Button variant="secondary" onClick={() => setSaveTarget(null)} disabled={saveBusy}>Hủy</Button>
+            <Button variant="primary" onClick={confirmSave} disabled={saveBusy}>
+              {saveBusy ? <Loader2 size={15} className="pm-spin" aria-hidden="true" /> : <Check size={15} aria-hidden="true" />} Lưu
+            </Button>
+          </>
+        )}
+      >
+        <p className="pm-modal__lead">{saveTarget?.title || saveTarget?.videoId}</p>
+        {editablePlaylists.length > 0 ? (
+          <div className="pm-save-list" role="radiogroup" aria-label="Chọn playlist">
+            {editablePlaylists.map((playlist) => (
+              <label key={playlist.id} className={`pm-save-option${String(saveChoice) === String(playlist.id) ? ' is-on' : ''}`}>
+                <input
+                  type="radio"
+                  name="pm-save-playlist"
+                  value={playlist.id}
+                  checked={String(saveChoice) === String(playlist.id)}
+                  onChange={() => { setSaveChoice(String(playlist.id)); setSaveNewTitle(''); }}
+                />
+                <span>
+                  <strong>{playlist.title}</strong>
+                  <small>{playlist.itemCount} video · {playlist.visibility === 'shared' ? 'chia sẻ' : 'riêng tư'}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="pm-rail__note">Bạn chưa có playlist nào có quyền sửa. Đặt tên bên dưới để tạo mới.</p>
+        )}
+        <div className="pm-save-new">
+          <input
+            type="text"
+            value={saveNewTitle}
+            onChange={(event) => { setSaveNewTitle(event.target.value); if (event.target.value) setSaveChoice(''); }}
+            placeholder="Hoặc tạo playlist mới…"
+            aria-label="Tên playlist mới"
+            maxLength={120}
+          />
+        </div>
+        {saveError && <Notice type="error" icon={X}>{saveError}</Notice>}
+      </AnimatedModal>
 
       <AnimatedModal
         isOpen={Boolean(grantTarget)}

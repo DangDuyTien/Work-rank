@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { expectedPosition } from './mediaTime';
+import {
+  ADVANCE_STALL_MS, decidePlayerAction, shouldReportEnded, YT_STATE,
+} from './playerSync';
 
 /**
  * PRIVATE MEDIA — PERSISTENT AUDIO PLAYER
@@ -67,12 +70,18 @@ export default function PersistentPlayer({
   onReady,
   onActivationNeeded,
   onNotice,
+  onWaitingAdvance,
+  connectionEpoch,
   activationRef,
 }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const live = useRef({ session, volume, muted });
   live.current = { session, volume, muted };
+  const factRef = useRef(onPlayerFact);
+  factRef.current = onPlayerFact;
+  const noticeRef = useRef(onNotice);
+  noticeRef.current = onNotice;
 
   const loadedRef = useRef(null);
   const loadedAtRef = useRef(0);
@@ -81,11 +90,47 @@ export default function PersistentPlayer({
   const lastSeekRef = useRef(0);
   const attemptedRef = useRef(null);
   const blockedRef = useRef(false);
+  // Which queue item already reported its end, and how many times.
+  const endedRef = useRef({ itemId: null, at: 0, attempts: 0 });
+  const stallNoticeRef = useRef(0);
 
   const [ready, setReady] = useState(false);
   const [apiError, setApiError] = useState(false);
   const [needsActivation, setNeedsActivation] = useState(false);
+  const [waitingAdvance, setWaitingAdvance] = useState(false);
   const [recoveryGeneration, setRecoveryGeneration] = useState(0);
+
+  const reportEnded = useCallback((itemId, eventId) => {
+    if (!itemId) return false;
+    const now = Date.now();
+    if (!shouldReportEnded({ itemId, lastReport: endedRef.current, now })) return false;
+    endedRef.current = {
+      itemId,
+      at: now,
+      attempts: (endedRef.current.itemId === itemId ? endedRef.current.attempts : 0) + 1,
+    };
+    setWaitingAdvance(true);
+    // The iframe callbacks are created once per player instance, so they must
+    // reach the current reporter through a ref instead of a stale closure.
+    factRef.current?.({
+      type: 'ended',
+      payload: { currentQueueItemId: itemId, eventId },
+      // No ack: the report never reached the server. Re-arm and try once more
+      // (bounded by shouldReportEnded) instead of waiting for a transition
+      // that was never requested. Never touches the player, so it cannot
+      // replay the finished track.
+      onUndelivered: () => {
+        if (endedRef.current.itemId !== itemId) return;
+        endedRef.current = { itemId, at: 0, attempts: endedRef.current.attempts };
+        setTimeout(() => {
+          if (endedRef.current.itemId !== itemId) return;
+          if (live.current.session?.currentQueueItemId !== itemId) return;
+          reportEnded(itemId, `retry-${itemId}-${Date.now()}`);
+        }, 1500);
+      },
+    });
+    return true;
+  }, []);
 
   // ── Intent → player ──────────────────────────────────────────────────────
   const apply = useCallback(() => {
@@ -94,13 +139,8 @@ export default function PersistentPlayer({
     if (!player?.loadVideoById) return;
     const itemId = state?.currentQueueItemId;
 
-    if (!state?.video) {
-      if (loadedRef.current) player.stopVideo?.();
-      loadedRef.current = null;
-      return;
-    }
     // A failed iframe keeps its identity until the replacement player exists.
-    if (failedTrackRef.current && failedTrackRef.current !== itemId) {
+    if (state?.video && failedTrackRef.current && failedTrackRef.current !== itemId) {
       if (!recoveringRef.current) {
         recoveringRef.current = true;
         setRecoveryGeneration((value) => value + 1);
@@ -108,34 +148,70 @@ export default function PersistentPlayer({
       return;
     }
 
-    const isNewTrack = loadedRef.current !== itemId;
-    const target = expectedPosition(state);
+    const decision = decidePlayerAction({
+      session: state,
+      now: Date.now(),
+      loadedItemId: loadedRef.current,
+      loadedAt: loadedAtRef.current,
+      lastSeekAt: lastSeekRef.current,
+      playerState: player.getPlayerState?.(),
+      playerTime: player.getCurrentTime?.() || 0,
+      endedItemId: endedRef.current.itemId,
+      blocked: blockedRef.current,
+    });
 
-    if (isNewTrack) {
-      loadedRef.current = itemId;
-      loadedAtRef.current = Date.now();
-      attemptedRef.current = null;
-      blockedRef.current = false;
-      setNeedsActivation(false);
-      const method = state.status === 'PLAYING' ? 'loadVideoById' : 'cueVideoById';
-      player[method]?.({ videoId: state.video.videoId, startSeconds: target });
-    } else if (state.status === 'PLAYING'
-      && Date.now() - loadedAtRef.current > 3000
-      && Date.now() - lastSeekRef.current > 4000
-      && player.getPlayerState?.() === 1) {
-      // Drift correction: only when the gap is real, never while buffering.
-      const actual = player.getCurrentTime?.() || 0;
-      if (Math.abs(actual - target) > 2.5) {
-        lastSeekRef.current = Date.now();
-        player.seekTo(target, true);
+    switch (decision.type) {
+      case 'load':
+      case 'cue': {
+        loadedRef.current = decision.itemId;
+        loadedAtRef.current = Date.now();
+        attemptedRef.current = null;
+        blockedRef.current = false;
+        endedRef.current = { itemId: null, at: 0, attempts: 0 };
+        stallNoticeRef.current = 0;
+        setNeedsActivation(false);
+        setWaitingAdvance(false);
+        const method = decision.type === 'load' ? 'loadVideoById' : 'cueVideoById';
+        player[method]?.({ videoId: decision.videoId, startSeconds: decision.position });
+        break;
       }
+      case 'seek':
+        lastSeekRef.current = Date.now();
+        player.seekTo?.(decision.position, true);
+        break;
+      case 'play':
+        player.playVideo?.();
+        break;
+      case 'pause':
+        player.pauseVideo?.();
+        break;
+      case 'stop':
+        player.stopVideo?.();
+        loadedRef.current = null;
+        break;
+      case 'report-ended':
+        reportEnded(decision.itemId, `auto-${decision.itemId}-${Date.now()}`);
+        break;
+      case 'wait': {
+        // The server has not moved on yet. Waiting is the correct behaviour:
+        // touching the player here is what replayed the last second.
+        const endedAt = endedRef.current.at || Date.now();
+        if (Date.now() - endedAt > ADVANCE_STALL_MS && Date.now() - stallNoticeRef.current > ADVANCE_STALL_MS * 4) {
+          stallNoticeRef.current = Date.now();
+          noticeRef.current?.('Bài đã hết nhưng chưa chuyển được bài tiếp theo. Kiểm tra kết nối rồi bấm “Bài tiếp theo”.');
+        }
+        break;
+      }
+      case 'none':
+      default:
+        if (decision.reason === 'IDLE' || decision.reason === 'NO_MEDIA') {
+          if (loadedRef.current) player.stopVideo?.();
+          loadedRef.current = null;
+          setWaitingAdvance(false);
+        }
+        break;
     }
-
-    const actualState = player.getPlayerState?.();
-    if (state.status === 'PLAYING' && !blockedRef.current && actualState !== 1 && actualState !== 3) player.playVideo?.();
-    if (state.status === 'PAUSED' && actualState !== 2 && actualState !== 5) player.pauseVideo?.();
-    if (state.status === 'STOPPED' && actualState !== 0) player.stopVideo?.();
-  }, []);
+  }, [reportEnded]);
 
   // ── Create the player exactly once per recovery ──────────────────────────
   useEffect(() => {
@@ -169,12 +245,20 @@ export default function PersistentPlayer({
           },
           onStateChange: ({ data, target }) => {
             if (cancelled) return;
-            if (data === 1) { blockedRef.current = false; setNeedsActivation(false); }
-            if (data === 0 && loadedRef.current) {
-              const currentId = target?.getVideoData?.().video_id;
-              if (currentId === live.current.session?.video?.videoId) {
-                onPlayerFact?.({ type: 'ended', payload: { currentQueueItemId: loadedRef.current } });
-              }
+            if (data === YT_STATE.PLAYING) {
+              blockedRef.current = false;
+              setNeedsActivation(false);
+              setWaitingAdvance(false);
+            }
+            if (data === YT_STATE.ENDED) {
+              // Report the end of the item that is actually in the player, and
+              // only while the server still describes that same item.
+              const itemId = loadedRef.current;
+              const current = live.current.session;
+              if (!itemId || !current?.video || current.currentQueueItemId !== itemId) return;
+              const playerVideoId = target?.getVideoData?.().video_id;
+              if (playerVideoId && playerVideoId !== current.video.videoId) return;
+              reportEnded(itemId, `state-${itemId}-${Date.now()}`);
             }
           },
           onError: ({ data }) => {
@@ -182,7 +266,7 @@ export default function PersistentPlayer({
             const itemId = failedTrackRef.current || loadedRef.current;
             if (!itemId) return;
             failedTrackRef.current = itemId;
-            onPlayerFact?.({ type: 'error', payload: { currentQueueItemId: itemId, errorCode: data } });
+            factRef.current?.({ type: 'error', payload: { currentQueueItemId: itemId, errorCode: data } });
           },
         },
       });
@@ -208,10 +292,31 @@ export default function PersistentPlayer({
 
   useEffect(() => {
     if (!ready || !seekSignal) return;
+    // An explicit seek is a deliberate restart: the user may replay a finished
+    // track, so the "already ended" guard is released here (and only here).
+    endedRef.current = { itemId: null, at: 0, attempts: 0 };
+    setWaitingAdvance(false);
     playerRef.current?.seekTo?.(seekSignal.position, true);
     lastSeekRef.current = Date.now();
     loadedAtRef.current = Date.now();
   }, [ready, seekSignal]);
+
+  // A dropped socket can swallow the ENDED report. When the transport comes
+  // back, re-arm and re-send it for an item that is still finished in the
+  // player — otherwise the queue waits forever for an event nobody sends again.
+  // This is deterministic (transport state), not a timeout guess.
+  useEffect(() => {
+    if (!ready || !connectionEpoch) return;
+    const itemId = endedRef.current.itemId;
+    const state = live.current.session;
+    if (!itemId || !state?.video || state.currentQueueItemId !== itemId) return;
+    const playerState = playerRef.current?.getPlayerState?.();
+    // Only a player that genuinely finished may be re-reported: a cued or
+    // unstarted player is a different situation and must not skip a track.
+    if (playerState !== YT_STATE.ENDED) return;
+    endedRef.current = { itemId, at: 0, attempts: 0 };
+    reportEnded(itemId, `reconnect-${itemId}-${Date.now()}`);
+  }, [connectionEpoch, ready, reportEnded]);
 
   // ── Facts: duration + autoplay watchdog ──────────────────────────────────
   useEffect(() => {
@@ -222,21 +327,38 @@ export default function PersistentPlayer({
       const state = live.current.session;
       if (!state?.video) return;
       const duration = player?.getDuration?.();
+      const playerState = player?.getPlayerState?.();
       if (duration > 0) {
-        onPlayerFact?.({ type: 'duration', payload: { currentQueueItemId: state.currentQueueItemId, durationSeconds: duration } });
+        // The server still owns time and status; this is only the track length
+        // plus a position hint it may use for diagnostics.
+        factRef.current?.({
+          type: 'duration',
+          payload: {
+            currentQueueItemId: state.currentQueueItemId,
+            durationSeconds: duration,
+            position: player?.getCurrentTime?.() || 0,
+            playerState,
+          },
+        });
       }
-      if (state.status === 'PLAYING' && player?.getPlayerState?.() !== 1 && player?.getPlayerState?.() !== 3) {
-        if (attemptedRef.current === state.currentQueueItemId) {
-          blockedRef.current = true;
-          setNeedsActivation(true);
-        }
-        attemptedRef.current = state.currentQueueItemId;
+      if (state.status !== 'PLAYING') return;
+      if (playerState === YT_STATE.PLAYING || playerState === YT_STATE.BUFFERING) {
+        attemptedRef.current = null;
+        return;
       }
+      // A finished item must never be treated as a blocked autoplay.
+      if (playerState === YT_STATE.ENDED || endedRef.current.itemId === state.currentQueueItemId) return;
+      if (attemptedRef.current === state.currentQueueItemId) {
+        blockedRef.current = true;
+        setNeedsActivation(true);
+      }
+      attemptedRef.current = state.currentQueueItemId;
     }, 3000);
     return () => clearInterval(timer);
-  }, [ready, apply, onPlayerFact]);
+  }, [ready, apply]);
 
   useEffect(() => { onActivationNeeded?.(needsActivation); }, [needsActivation, onActivationNeeded]);
+  useEffect(() => { onWaitingAdvance?.(waitingAdvance); }, [waitingAdvance, onWaitingAdvance]);
   useEffect(() => {
     if (apiError) onNotice?.('Không tải được trình phát YouTube. Kiểm tra mạng rồi tải lại trang.');
   }, [apiError, onNotice]);
@@ -244,7 +366,10 @@ export default function PersistentPlayer({
   const activate = useCallback(() => {
     blockedRef.current = false;
     setNeedsActivation(false);
-    playerRef.current?.seekTo?.(expectedPosition(live.current.session), true);
+    const session = live.current.session;
+    // An ended item waits for the server; resuming it would replay the tail.
+    if (endedRef.current.itemId && endedRef.current.itemId === session?.currentQueueItemId) return;
+    playerRef.current?.seekTo?.(expectedPosition(session), true);
     playerRef.current?.playVideo?.();
   }, []);
 

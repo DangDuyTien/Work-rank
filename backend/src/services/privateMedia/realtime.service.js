@@ -16,6 +16,11 @@ function playersRoom(sessionKey) {
   return `pm:${sessionKey || DEFAULT_KEY}:players`;
 }
 
+/** One room per account: lets a read marker reach that account's other tabs. */
+function userRoom(userId) {
+  return `pm:user:${Number(userId) || 0}`;
+}
+
 function roomKeyOf(state, fallback) {
   return state?.sessionKey || fallback || DEFAULT_KEY;
 }
@@ -46,6 +51,13 @@ function broadcastCommand(command, sessionKey) {
 function broadcastChat(sessionKey, message) {
   if (!namespace || !message) return;
   namespace.to(controllersRoom(sessionKey)).emit('private-media:chat-message', message);
+}
+
+/** Deliver an event to every live socket of one account (never to other users). */
+function broadcastToUser(userId, event, payload) {
+  if (!namespace || !event) return 0;
+  namespace.to(userRoom(userId)).emit(event, payload);
+  return 1;
 }
 
 function broadcastPlayerPresence(online, state = null, sessionKey) {  if (!namespace) return;
@@ -122,6 +134,7 @@ module.exports = {
   broadcastState,
   broadcastCommand,
   broadcastChat,
+  broadcastToUser,
   broadcastPlayerPresence,
   registerPlayer,
   unregisterPlayer,
@@ -130,4 +143,5 @@ module.exports = {
   revokeDevice,
   controllersRoom,
   playersRoom,
+  userRoom,
 };

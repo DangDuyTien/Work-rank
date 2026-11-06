@@ -14,7 +14,7 @@
  */
 
 const { Op } = require('sequelize');
-const { PrivateMediaChatMessage: Message, User } = require('../../models');
+const { PrivateMediaChatMessage: Message, PrivateMediaChatRead: Read, User } = require('../../models');
 const access = require('./access.service');
 const sessions = require('./session.service');
 
@@ -85,27 +85,129 @@ function serialize(row, users) {
   };
 }
 
-async function listMessages({ userId, room, beforeId = null, limit = PAGE_SIZE } = {}) {
+async function listMessages({ userId, room, beforeId = null, afterId = null, limit = PAGE_SIZE } = {}) {
   await requireEntitled(userId);
   const state = await sessions.getSessionState(userId, room);
   const take = Math.min(Math.max(Number(limit) || PAGE_SIZE, 1), 100);
   const where = { sessionId: state.sessionId, deletedAt: null };
+  const marker = await readMarker(state.sessionId, userId);
+  const lastReadMessageId = marker?.lastReadMessageId == null ? null : Number(marker.lastReadMessageId);
+
+  // Reconnect catch-up: everything after the cursor this tab already holds.
+  // Ascending order and the same shape as a page, so the client can merge.
+  if (afterId) {
+    const rows = await Message.findAll({
+      where: { ...where, id: { [Op.gt]: Number(afterId) } },
+      order: [['id', 'ASC']],
+      limit: take,
+    });
+    const people = await loadUsers(rows);
+    return {
+      sessionId: state.sessionId,
+      sessionKey: state.sessionKey,
+      messages: rows.map((row) => serialize(row, people)),
+      hasMore: rows.length === take,
+      nextBeforeId: null,
+      nextAfterId: rows.length ? rows[rows.length - 1].id : Number(afterId),
+      lastReadMessageId,
+      unread: await unreadCount(state.sessionId, userId, lastReadMessageId),
+      mode: 'after',
+    };
+  }
+
   if (beforeId) where.id = { [Op.lt]: Number(beforeId) };
 
   const rows = await Message.findAll({ where, order: [['id', 'DESC']], limit: take + 1 });
   const hasMore = rows.length > take;
   const page = rows.slice(0, take).reverse();
-  const users = new Map();
-  if (page.length) {
-    const people = await User.findAll({ where: { id: { [Op.in]: [...new Set(page.map((row) => Number(row.userId)))] } }, attributes: ['id', 'name', 'avatarUrl'] });
-    people.forEach((person) => users.set(Number(person.id), person));
-  }
+  const users = await loadUsers(page);
   return {
     sessionId: state.sessionId,
     sessionKey: state.sessionKey,
     messages: page.map((row) => serialize(row, users)),
     hasMore,
     nextBeforeId: hasMore && page.length ? page[0].id : null,
+    nextAfterId: page.length ? page[page.length - 1].id : null,
+    lastReadMessageId,
+    unread: await unreadCount(state.sessionId, userId, lastReadMessageId),
+    mode: 'page',
+  };
+}
+
+async function loadUsers(rows) {
+  const users = new Map();
+  if (!rows.length) return users;
+  const people = await User.findAll({
+    where: { id: { [Op.in]: [...new Set(rows.map((row) => Number(row.userId)))] } },
+    attributes: ['id', 'name', 'avatarUrl'],
+  });
+  people.forEach((person) => users.set(Number(person.id), person));
+  return users;
+}
+
+async function readMarker(sessionId, userId) {
+  if (!sessionId || !userId) return null;
+  return Read.findOne({ where: { sessionId: Number(sessionId), userId: Number(userId) } });
+}
+
+/**
+ * Unread = messages newer than this account's marker, written by somebody else.
+ * Own messages never count, and a duplicated socket delivery cannot inflate it
+ * because the count is derived from ids, not from an event counter.
+ */
+async function unreadCount(sessionId, userId, lastReadMessageId) {
+  if (!sessionId) return 0;
+  const where = {
+    sessionId: Number(sessionId),
+    deletedAt: null,
+    userId: { [Op.ne]: Number(userId) },
+  };
+  if (lastReadMessageId) where.id = { [Op.gt]: Number(lastReadMessageId) };
+  return Message.count({ where });
+}
+
+/** Move the marker forward only. Returns the stored value and the new unread. */
+async function markRead({ userId, room, messageId = null } = {}) {
+  await requireEntitled(userId);
+  const state = await sessions.getSessionState(userId, room);
+  let target = messageId == null ? null : Number(messageId);
+  if (target == null) {
+    const newest = await Message.findOne({
+      where: { sessionId: state.sessionId, deletedAt: null },
+      order: [['id', 'DESC']],
+      attributes: ['id'],
+    });
+    target = newest ? Number(newest.id) : null;
+  }
+  const existing = await readMarker(state.sessionId, userId);
+  if (target == null) {
+    return { sessionId: state.sessionId, lastReadMessageId: existing?.lastReadMessageId ?? null, unread: 0 };
+  }
+  if (existing) {
+    if (!existing.lastReadMessageId || Number(existing.lastReadMessageId) < target) {
+      await existing.update({ lastReadMessageId: target });
+    }
+  } else {
+    await Read.create({ sessionId: state.sessionId, userId: Number(userId), lastReadMessageId: target });
+  }
+  const stored = Math.max(target, Number(existing?.lastReadMessageId) || 0);
+  return {
+    sessionId: state.sessionId,
+    lastReadMessageId: stored,
+    unread: await unreadCount(state.sessionId, userId, stored),
+  };
+}
+
+async function getUnread({ userId, room } = {}) {
+  await requireEntitled(userId);
+  const state = await sessions.getSessionState(userId, room);
+  const marker = await readMarker(state.sessionId, userId);
+  const lastReadMessageId = marker?.lastReadMessageId == null ? null : Number(marker.lastReadMessageId);
+  return {
+    sessionId: state.sessionId,
+    sessionKey: state.sessionKey,
+    lastReadMessageId,
+    unread: await unreadCount(state.sessionId, userId, lastReadMessageId),
   };
 }
 
@@ -166,4 +268,7 @@ module.exports = {
   createMessage,
   cleanContent,
   resetRateLimit,
+  markRead,
+  getUnread,
+  unreadCount,
 };

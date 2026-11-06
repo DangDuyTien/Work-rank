@@ -190,8 +190,21 @@ export const privateMediaApi = {
   },
 
   // ── Shared listening chat ────────────────────────────────────────────────
-  async listChat({ limit = 30, before = null } = {}) {
-    const res = await api.get(`${BASE}/chat`, { params: { limit, ...(before ? { before } : {}) } });
+  async listChat({ limit = 30, before = null, after = null } = {}) {
+    const res = await api.get(`${BASE}/chat`, {
+      params: { limit, ...(before ? { before } : {}), ...(after ? { after } : {}) },
+    });
+    return res.data;
+  },
+
+  /** Server-side unread truth (survives refresh, reconnect and other devices). */
+  async getChatUnread() {
+    const res = await api.get(`${BASE}/chat/unread`);
+    return res.data;
+  },
+
+  async markChatRead(messageId = null) {
+    const res = await api.post(`${BASE}/chat/read`, messageId ? { messageId } : {});
     return res.data;
   },
 

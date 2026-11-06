@@ -34,8 +34,12 @@ function sanitizeMetadata(value, depth = 0) {
 /**
  * Best-effort write. An audit failure must never break a control command, but
  * it is logged loudly so the gap is visible in operations.
+ *
+ * `transaction` matters: a write issued on the default connection while a
+ * session transaction holds the SQLite write lock fails with SQLITE_BUSY and
+ * would silently drop the record. Callers inside a transaction must pass it.
  */
-async function record({ action, actorUserId = null, targetUserId = null, source = 'WEB', metadata = null }) {
+async function record({ action, actorUserId = null, targetUserId = null, source = 'WEB', metadata = null, transaction = null }) {
   try {
     await PrivateMediaAuditLog.create({
       action: String(action).slice(0, 48),
@@ -43,7 +47,7 @@ async function record({ action, actorUserId = null, targetUserId = null, source 
       targetUserId: targetUserId ? Number(targetUserId) : null,
       source: ['WEB', 'TELEGRAM', 'HOTKEY', 'SYSTEM'].includes(source) ? source : 'SYSTEM',
       metadata: metadata ? sanitizeMetadata(metadata) : null,
-    });
+    }, transaction ? { transaction } : undefined);
   } catch (error) {
     console.error('[private-media] audit write failed:', action, error.message);
   }

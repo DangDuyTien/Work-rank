@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronDown, Loader2, MessageSquare, Send } from 'lucide-react';
+import {
+  Bell, BellOff, ChevronDown, Loader2, MessageSquare, Send, Volume2,
+} from 'lucide-react';
 import { usePrivateMedia } from '../../context/PrivateMediaContext';
+import { playNotificationTing } from '../../utils/mediaNotifications';
 
 /**
  * CHAT NGHE CHUNG
@@ -11,7 +14,8 @@ import { usePrivateMedia } from '../../context/PrivateMediaContext';
  * Scroll rules that matter for usability:
  *   - if the reader is at the bottom, new messages follow
  *   - if the reader scrolled up, new messages do NOT yank the view
- *   - the unread counter only grows while the panel is collapsed/out of view
+ *   - the unread counter only grows while the panel is collapsed/off-screen
+ *   - leaving the page marks the panel closed, so the badge keeps counting
  */
 
 function timeLabel(value) {
@@ -27,16 +31,22 @@ function initials(name) {
 }
 
 export default function ChatPanel({ userId }) {
-  const { chat, roomMode } = usePrivateMedia();
+  const { chat, roomMode, notifications } = usePrivateMedia();
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [open, setOpenState] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [permissionNote, setPermissionNote] = useState(null);
   const listRef = useRef(null);
   const atBottomRef = useRef(true);
 
   const registerOpen = chat.setOpen;
 
-  useEffect(() => { registerOpen(open); }, [open, registerOpen]);
+  useEffect(() => {
+    registerOpen(open);
+    // The panel unmounting means the user cannot see it any more.
+    return () => registerOpen(false);
+  }, [open, registerOpen]);
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const node = listRef.current;
@@ -84,6 +94,17 @@ export default function ChatPanel({ userId }) {
     }
   };
 
+  const prefs = notifications.prefs;
+  const permission = notifications.permission;
+
+  const askPermission = async () => {
+    const result = await notifications.requestPermission();
+    if (result === 'granted') setPermissionNote('Đã bật thông báo trên máy tính.');
+    else if (result === 'denied') setPermissionNote('Trình duyệt đã từ chối. Bạn vẫn thấy số tin chưa đọc trên tiêu đề tab.');
+    else if (result === 'unsupported') setPermissionNote('Trình duyệt này không hỗ trợ thông báo hệ thống.');
+    else setPermissionNote('Chưa cấp quyền thông báo.');
+  };
+
   return (
     <section className={`pm-chat${open ? '' : ' is-collapsed'}`} aria-label="Chat nghe chung">
       <header className="pm-chat__head">
@@ -92,16 +113,79 @@ export default function ChatPanel({ userId }) {
           Chat nghe chung
           {chat.unread > 0 && <em className="pm-chat__badge">{chat.unread > 9 ? '9+' : chat.unread}</em>}
         </h2>
-        <button
-          type="button"
-          className="pm-chat__toggle"
-          onClick={() => setOpenState(!open)}
-          aria-expanded={open}
-          aria-label={open ? 'Thu gọn chat' : 'Mở chat'}
-        >
-          <ChevronDown size={16} aria-hidden="true" />
-        </button>
+        <div className="pm-chat__head-tools">
+          <button
+            type="button"
+            className={`pm-chat__toggle pm-chat__toggle--settings${prefs.notify && prefs.sound ? '' : ' is-off'}`}
+            onClick={() => setSettingsOpen((value) => !value)}
+            aria-expanded={settingsOpen}
+            aria-label="Cài đặt thông báo tin nhắn"
+            title="Cài đặt thông báo"
+          >
+            {prefs.notify || prefs.sound ? <Bell size={15} aria-hidden="true" /> : <BellOff size={15} aria-hidden="true" />}
+          </button>
+          <button
+            type="button"
+            className="pm-chat__toggle"
+            onClick={() => setOpenState(!open)}
+            aria-expanded={open}
+            aria-label={open ? 'Thu gọn chat' : 'Mở chat'}
+          >
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
+        </div>
       </header>
+
+      {settingsOpen && (
+        <div className="pm-chat__settings">
+          <label className="pm-chat__setting">
+            <input
+              type="checkbox"
+              checked={prefs.notify}
+              onChange={(event) => notifications.setPrefs({ notify: event.target.checked })}
+            />
+            <span>Thông báo tin nhắn</span>
+          </label>
+          <label className="pm-chat__setting">
+            <input
+              type="checkbox"
+              checked={prefs.sound}
+              onChange={(event) => {
+                const next = event.target.checked;
+                notifications.setPrefs({ sound: next });
+                if (next) playNotificationTing(prefs.volume);
+              }}
+            />
+            <span><Volume2 size={13} aria-hidden="true" /> Âm báo</span>
+          </label>
+          <label className="pm-chat__setting pm-chat__setting--range">
+            <span>Âm lượng thông báo</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={prefs.volume}
+              aria-label="Âm lượng thông báo"
+              onChange={(event) => notifications.setPrefs({ volume: Number(event.target.value) })}
+              onMouseUp={() => { if (prefs.sound) playNotificationTing(prefs.volume); }}
+            />
+            <b>{prefs.volume}%</b>
+          </label>
+          <div className="pm-chat__setting-row">
+            {permission === 'granted' ? (
+              <span className="pm-chat__setting-note">Thông báo hệ thống đã bật.</span>
+            ) : permission === 'denied' ? (
+              <span className="pm-chat__setting-note">Trình duyệt đang chặn thông báo hệ thống.</span>
+            ) : (
+              <button type="button" className="pm-link" onClick={askPermission}>
+                Bật thông báo trên máy tính
+              </button>
+            )}
+          </div>
+          {permissionNote && <p className="pm-chat__setting-note">{permissionNote}</p>}
+        </div>
+      )}
 
       <div className="pm-chat__body">
         <div className="pm-chat__list" ref={listRef} onScroll={onScroll}>

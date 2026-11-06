@@ -1399,6 +1399,12 @@
   cursor: pointer;
 }
 
+/* The bell is not a mobile affordance: notification settings must be reachable
+   at every width, including the wide layout where the panel is always open. */
+.pm-chat__toggle--settings {
+  display: inline-flex;
+}
+
 .pm-chat__body {
   display: flex;
   flex-direction: column;
@@ -2114,4 +2120,326 @@
   .pm-playlists__form input {
     min-width: 0;
   }
+}
+
+/* ── Chat notification settings (V3) ───────────────────────────────────────
+   Small inline panel under the chat header. Same tokens as the rest of the
+   page: no new palette, no new radius, no layout shift. */
+.pm-chat__head-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pm-chat__toggle.is-off {
+  opacity: 0.55;
+}
+
+.pm-chat__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft, var(--surface));
+}
+
+.pm-chat__setting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pm-chat__setting span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pm-chat__setting input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.pm-chat__setting--range {
+  gap: 10px;
+  cursor: default;
+}
+
+.pm-chat__setting--range input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.pm-chat__setting--range b {
+  min-width: 34px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.pm-chat__setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pm-chat__setting-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-tertiary, var(--text-secondary));
+}
+
+/* ── Result action group + save-to-playlist dialog (V3) ──────────────────── */
+.pm-result__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pm-queue-card__auto {
+  margin-top: 2px;
+}
+
+.pm-save-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0 0 10px;
+}
+
+.pm-save-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-interactive, 8px);
+  cursor: pointer;
+  transition: border-color var(--motion-fast, 120ms) var(--ease-out, ease), background var(--motion-fast, 120ms) var(--ease-out, ease);
+}
+
+.pm-save-option.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.pm-save-option input[type="radio"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.pm-save-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pm-save-option strong {
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-save-option small {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pm-save-new input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-interactive, 8px);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+/* ── Result action group + save-to-playlist dialog (V3) ──────────────────── */
+.pm-result__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pm-queue-card__auto {
+  margin-top: 2px;
+}
+
+.pm-save-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0 0 10px;
+}
+
+.pm-save-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-interactive, 8px);
+  cursor: pointer;
+  transition: border-color var(--motion-fast, 120ms) var(--ease-out, ease), background var(--motion-fast, 120ms) var(--ease-out, ease);
+}
+
+.pm-save-option.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.pm-save-option input[type="radio"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.pm-save-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pm-save-option strong {
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-save-option small {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pm-save-new input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-interactive, 8px);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+/* ── Playlist playback modes (V3): sequential / shuffle / repeat ─────────── */
+.pm-playlist-modes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0 10px;
+  border-bottom: 1px dashed var(--border);
+  margin-bottom: 10px;
+}
+
+.pm-playlist-modes__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.pm-playlist-modes__group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.pm-btn--sm {
+  padding: 4px 9px;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.pm-btn--sm.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.pm-playlist-modes__repeat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pm-playlist-modes__repeat input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ── Playlist playback modes (V3): sequential / shuffle / repeat ─────────── */
+.pm-playlist-modes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0 10px;
+  border-bottom: 1px dashed var(--border);
+  margin-bottom: 10px;
+}
+
+.pm-playlist-modes__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.pm-playlist-modes__group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.pm-btn--sm {
+  padding: 4px 9px;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.pm-btn--sm.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.pm-playlist-modes__repeat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pm-playlist-modes__repeat input {
+  accent-color: var(--accent);
+  cursor: pointer;
 }

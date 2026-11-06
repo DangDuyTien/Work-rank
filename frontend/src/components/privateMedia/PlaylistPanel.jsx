@@ -247,9 +247,10 @@ export default function PlaylistPanel({ canPlay, canQueue }) {
                 type="button"
                 className={resumeItem ? 'pm-btn' : 'pm-btn pm-btn--primary'}
                 disabled={!canPlay || !detail.itemCount || playlists.busy}
-                onClick={() => playlists.play(detail.id, { mode: 'sequential', repeat: detail.repeatMode })}
+                onClick={() => playlists.play(detail.id, { mode: detail.playbackMode, repeat: detail.repeatMode })}
+                title={detail.playbackMode === 'shuffle' ? 'Phát ngẫu nhiên theo cài đặt của playlist' : 'Phát tuần tự theo cài đặt của playlist'}
               >
-                <Play size={14} aria-hidden="true" /> Phát từ đầu
+                <Play size={14} aria-hidden="true" /> Phát {detail.playbackMode === 'shuffle' ? 'ngẫu nhiên' : 'từ đầu'}
               </button>
               <button
                 type="button"
@@ -282,6 +283,41 @@ export default function PlaylistPanel({ canPlay, canQueue }) {
               )}
             </div>
           </div>
+
+          {detail.editable && (
+            <div className="pm-playlist-modes">
+              <span className="pm-playlist-modes__label">Cách phát</span>
+              <div className="pm-playlist-modes__group" role="group" aria-label="Cách phát của playlist">
+                <button
+                  type="button"
+                  className={`pm-btn pm-btn--sm${detail.playbackMode === 'sequential' ? ' is-on' : ''}`}
+                  aria-pressed={detail.playbackMode === 'sequential'}
+                  disabled={playlists.busy}
+                  onClick={() => playlists.update(detail.id, { playbackMode: 'sequential' })}
+                >
+                  Tuần tự
+                </button>
+                <button
+                  type="button"
+                  className={`pm-btn pm-btn--sm${detail.playbackMode === 'shuffle' ? ' is-on' : ''}`}
+                  aria-pressed={detail.playbackMode === 'shuffle'}
+                  disabled={playlists.busy}
+                  onClick={() => playlists.update(detail.id, { playbackMode: 'shuffle' })}
+                >
+                  <Shuffle size={13} aria-hidden="true" /> Ngẫu nhiên
+                </button>
+              </div>
+              <label className="pm-playlist-modes__repeat">
+                <input
+                  type="checkbox"
+                  checked={detail.repeatMode === 'all'}
+                  disabled={playlists.busy}
+                  onChange={(event) => playlists.update(detail.id, { repeatMode: event.target.checked ? 'all' : 'off' })}
+                />
+                <span>Lặp lại playlist</span>
+              </label>
+            </div>
+          )}
 
           {detail.editable && (
             <div className="pm-playlist-detail__add">

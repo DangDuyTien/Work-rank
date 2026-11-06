@@ -533,15 +533,42 @@ async function importPlaylist(req, res) {
 
 // ── Shared listening chat ───────────────────────────────────────────────────
 
-/** GET /api/private-media/chat?before=&limit= */
+/** GET /api/private-media/chat?before=&after=&limit= */
 async function listChat(req, res) {
   try {
     return res.status(200).json(await chatService.listMessages({
       userId: req.user.id,
       room: roomOf(req),
       beforeId: req.query.before || null,
+      afterId: req.query.after || null,
       limit: req.query.limit,
     }));
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** GET /api/private-media/chat/unread — server-side truth for the tab badge. */
+async function getChatUnread(req, res) {
+  try {
+    return res.status(200).json(await chatService.getUnread({ userId: req.user.id, room: roomOf(req) }));
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+/** POST /api/private-media/chat/read — { messageId } (defaults to the newest). */
+async function markChatRead(req, res) {
+  try {
+    const result = await chatService.markRead({
+      userId: req.user.id,
+      room: roomOf(req),
+      messageId: req.body?.messageId ?? null,
+    });
+    // Other tabs/devices of the same account clear their badge too. Scoped to
+    // the user's own room, never to the shared controller room.
+    realtime.broadcastToUser(req.user.id, 'private-media:chat-read', result);
+    return res.status(200).json(result);
   } catch (error) {
     return fail(res, error);
   }
@@ -645,6 +672,8 @@ module.exports = {
   reorderPlaylistItems,
   importPlaylist,
   listChat,
+  getChatUnread,
+  markChatRead,
   sendChat,
   deviceCommand,
 };

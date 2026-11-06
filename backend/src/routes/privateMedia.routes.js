@@ -63,6 +63,8 @@ router.delete('/playlists/:id/items/:itemId', requirePrivateMedia('view'), async
 
 // ── Shared listening chat ───────────────────────────────────────────────────
 router.get('/chat', requirePrivateMedia('view'), asyncHandler(controller.listChat));
+router.get('/chat/unread', requirePrivateMedia('view'), asyncHandler(controller.getChatUnread));
+router.post('/chat/read', requirePrivateMedia('view'), asyncHandler(controller.markChatRead));
 router.post('/chat', requirePrivateMedia('view'), privateMediaChatLimiter, asyncHandler(controller.sendChat));
 
 // Access management — owner only, no delegation of this permission

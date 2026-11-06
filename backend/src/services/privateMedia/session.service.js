@@ -377,24 +377,55 @@ async function syncPlayerProgress(payload, userId, room) {
     return serializeSession(s);
   });
 }
-async function autoAdvance({ userId, room, currentQueueItemId, errorCode } = {}) {
+/**
+ * Advance exactly once for one finished queue item.
+ *
+ * A player-reported ENDED for the CURRENT queue item is authoritative. It used
+ * to be rejected whenever the server's own clock estimate was more than three
+ * seconds behind the reported end (`position(s) < durationSeconds - 3`). That
+ * estimate is derived from `referenceTime`, which only moves when a command is
+ * issued, so it drifts behind real playback for buffering, late autoplay and
+ * metadata that is a couple of seconds longer than the actual video. The
+ * rejection had no way to resolve itself: the browser kept the finished player
+ * alive, re-fired ENDED, and the room never advanced — "queue exists but nothing
+ * plays next".
+ *
+ * The guard is now limited to what is physically impossible: a track with a
+ * known length that has not started at all. A stale or duplicated report cannot
+ * pass anyway, because the transaction compares `currentQueueItemId` — the
+ * first accepted ENDED replaces it with a fresh UUID, so every later report for
+ * the old item is `stale`.
+ */
+async function autoAdvance({ userId, room, currentQueueItemId, errorCode, eventId } = {}) {
   if (!access.hasPermission(await access.getEntitlement(userId), 'view')) fail('NOT_FOUND', 'Not found', 404);
   const result = await transaction(async (t) => {
     const s = await getSession(userId, room, t);
     if (!currentQueueItemId || currentQueueItemId !== s.currentQueueItemId || !s.currentVideoId) return { advanced: false, stale: true, state: serializeSession(s) };
     const failed = ['2', '5', '100', '101', '150', '153'].includes(String(errorCode));
-    // A player-reported ENDED for the CURRENT item is authoritative. The guard
-    // only rejects an early report when we actually know the track length, which
-    // is what protects against stale/heartbeat-driven transitions.
-    const early = s.status !== 'PLAYING' || (Boolean(s.durationSeconds) && position(s) < s.durationSeconds - 3);
-    if (!failed && early) return { advanced: false, premature: true, state: serializeSession(s) };
+    const duration = Number(s.durationSeconds) || 0;
+    const at = position(s);
+    const impossible = !failed && duration > 30 && at < 1;
+    if (impossible) return { advanced: false, premature: true, reason: 'NOT_STARTED', state: serializeSession(s) };
     const previousId = s.currentQueueItemId;
+    const previousRevision = Number(s.revision) || 0;
     if (!failed) s.lastFailure = null;
     if (failed) s.lastFailure = { itemId: previousId, at: new Date().toISOString(), message: 'Không thể phát bài này, đã chuyển sang bài tiếp theo.' };
     const advanced = advance(s, failed);
     s.referenceTime = new Date(); s.revision++;
     await s.save({ transaction: t });
-    await audit.record({ action: 'AUTO_ADVANCE', actorUserId: userId, source: 'SYSTEM', metadata: { sessionId: s.id, previousId, failed, advanced } });
+    await audit.record({
+      action: 'AUTO_ADVANCE',
+      actorUserId: userId,
+      source: 'SYSTEM',
+      transaction: t,
+      metadata: {
+        sessionId: s.id, sessionKey: s.sessionKey, previousId, failed, advanced,
+        eventId: eventId ? String(eventId).slice(0, 64) : null,
+        fromRevision: previousRevision, toRevision: Number(s.revision),
+        positionAtEnd: Math.round(at), durationSeconds: duration || null,
+        nextItemId: s.currentQueueItemId || null,
+      },
+    });
     return { advanced, state: serializeSession(s) };
   });
   // Bookmark outside the transaction: one write, never inside the session lock.

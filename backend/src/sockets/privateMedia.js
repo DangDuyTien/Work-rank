@@ -39,6 +39,8 @@ function registerPrivateMediaNamespace(io) {
   nsp.on('connection', async (socket) => {
     const userId = Number(socket.user.id);
     const room = socket.pmRoom;
+    // Account-scoped room: a read marker reaches this user's other tabs only.
+    socket.join(realtime.userRoom(userId));
     const key = await sessions.sessionKeyFor(userId, room);
     let isPlayer = false;
     let lastTick = 0;
@@ -84,15 +86,39 @@ function registerPrivateMediaNamespace(io) {
         socket.emit('private-media:state', state);
       } catch { /* progress is advisory */ }
     });
-    const ended = async (payload = {}, error = false) => {
+    /**
+     * One finished queue item, one advance.
+     *
+     * The ack tells the reporting browser whether the server accepted the end,
+     * so the player can stop waiting instead of guessing with a timer. The
+     * server itself stays idempotent: a second report for the same queue item
+     * is `stale` and never advances again.
+     */
+    const ended = async (payload = {}, error = false, ack) => {
       try {
         if (!isPlayer || !await authorized()) return;
-        const result = await sessions.autoAdvance({ userId, room, currentQueueItemId: payload.currentQueueItemId, errorCode: error ? payload.errorCode : null });
-        if (!result.stale && !result.premature) realtime.broadcastState(result.state, key);
+        const result = await sessions.autoAdvance({
+          userId,
+          room,
+          currentQueueItemId: payload.currentQueueItemId,
+          errorCode: error ? payload.errorCode : null,
+          eventId: payload.eventId,
+        });
+        const accepted = !result.stale && !result.premature;
+        if (accepted) realtime.broadcastState(result.state, key);
+        if (typeof ack === 'function') {
+          ack({
+            ok: accepted,
+            stale: Boolean(result.stale),
+            premature: Boolean(result.premature),
+            advanced: Boolean(result.advanced),
+            state: result.state,
+          });
+        }
       } catch { /* canonical snapshot repairs a failed report */ }
     };
-    socket.on('private-media:player-ended', (payload) => ended(payload));
-    socket.on('private-media:player-error', (payload) => ended(payload, true));
+    socket.on('private-media:player-ended', (payload, ack) => ended(payload, false, ack));
+    socket.on('private-media:player-error', (payload, ack) => ended(payload, true, ack));
     socket.on('private-media:player-ack', async (payload = {}, ack) => {
       try {
         if (!isPlayer || !await authorized()) return;
@@ -126,6 +152,21 @@ function registerPrivateMediaNamespace(io) {
         if (typeof ack === 'function') ack({ ok: true, message: result.message, duplicate: result.duplicate });
       } catch (error) {
         if (typeof ack === 'function') ack({ ok: false, error: error.code || 'CHAT_FAILED', message: error.message });
+      }
+    });
+    /**
+     * Read marker. Sent when the panel is actually visible and scrolled to the
+     * newest message — never on tab focus alone, because a focused tab with a
+     * collapsed chat has not read anything.
+     */
+    socket.on('private-media:chat-read', async (payload = {}, ack) => {
+      try {
+        if (!await authorized()) return;
+        const result = await chats.markRead({ userId, room, messageId: payload.messageId ?? null });
+        realtime.broadcastToUser(userId, 'private-media:chat-read', result);
+        if (typeof ack === 'function') ack({ ok: true, ...result });
+      } catch (error) {
+        if (typeof ack === 'function') ack({ ok: false, error: error.code || 'CHAT_READ_FAILED' });
       }
     });
     socket.on('disconnect', async () => {
