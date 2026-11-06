@@ -116,13 +116,13 @@ export default function ChatPanel({ userId }) {
         <div className="pm-chat__head-tools">
           <button
             type="button"
-            className={`pm-chat__toggle pm-chat__toggle--settings${prefs.notify && prefs.sound ? '' : ' is-off'}`}
+            className={`pm-chat__toggle pm-chat__toggle--settings${prefs.notify ? '' : ' is-off'}`}
             onClick={() => setSettingsOpen((value) => !value)}
             aria-expanded={settingsOpen}
             aria-label="Cài đặt thông báo tin nhắn"
             title="Cài đặt thông báo"
           >
-            {prefs.notify || prefs.sound ? <Bell size={15} aria-hidden="true" /> : <BellOff size={15} aria-hidden="true" />}
+            {prefs.notify ? <Bell size={15} aria-hidden="true" /> : <BellOff size={15} aria-hidden="true" />}
           </button>
           <button
             type="button"

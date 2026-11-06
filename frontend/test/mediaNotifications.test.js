@@ -82,18 +82,34 @@ beforeEach(() => {
   started = 0;
 });
 
-test('preferences default on, persist per user and clamp the volume', () => {
+test('preferences default to a silent badge and persist per user', () => {
   const defaults = mod.readNotifyPrefs(7);
-  assert.deepEqual(defaults, { notify: true, sound: true, volume: 55 });
+  assert.deepEqual(defaults, { notify: true, sound: false, volume: 55 }, 'the ting is off by default');
 
-  mod.writeNotifyPrefs(7, { notify: false, sound: false, volume: 240 });
+  mod.writeNotifyPrefs(7, { notify: false, sound: true, volume: 240 });
   const stored = mod.readNotifyPrefs(7);
   assert.equal(stored.notify, false);
-  assert.equal(stored.sound, false);
+  assert.equal(stored.sound, true, 'an explicit opt-in is honoured');
   assert.equal(stored.volume, 100, 'reading clamps an out-of-range volume');
 
   // Another user is unaffected by user 7's choice.
-  assert.deepEqual(mod.readNotifyPrefs(8), { notify: true, sound: true, volume: 55 });
+  assert.deepEqual(mod.readNotifyPrefs(8), { notify: true, sound: false, volume: 55 });
+});
+
+test('prefs stored before the silent default do not keep ringing', () => {
+  // Exactly what the previous build wrote: no version tag, sound on.
+  globalThis.localStorage.setItem(
+    'workrank:private-media:notify:v1:9',
+    JSON.stringify({ notify: true, sound: true, volume: 80 }),
+  );
+  const migrated = mod.readNotifyPrefs(9);
+  assert.equal(migrated.sound, false, 'an old "sound on" default must be dropped');
+  assert.equal(migrated.notify, true, 'the badge stays on');
+  assert.equal(migrated.volume, 80, 'other choices are kept');
+
+  // Turning it on after the migration is a real choice and sticks.
+  mod.writeNotifyPrefs(9, { ...migrated, sound: true });
+  assert.equal(mod.readNotifyPrefs(9).sound, true);
 });
 
 test('tab title shows the unread count and restores the original title', () => {

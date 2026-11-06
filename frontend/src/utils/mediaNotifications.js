@@ -17,11 +17,17 @@
 const TING_GAP_MS = 900;          // coalesce bursts into one sound
 const TITLE_APP_NAME = '3WIN MEDIA';
 const STORAGE_PREFIX = 'workrank:private-media:notify:v1:';
+/**
+ * Bumped when the meaning of a stored preference changes. v1 shipped with the
+ * "ting" on by default; the owner asked for a silent badge (count on the tab is
+ * enough), so v1 prefs are migrated once to `sound: false`.
+ */
+const PREFS_VERSION = 2;
 
 export const DEFAULT_NOTIFY_PREFS = Object.freeze({
   notify: true,   // tab title / favicon / desktop notification
-  sound: true,    // the "ting"
-  volume: 55,     // 0..100
+  sound: false,   // the "ting" — off unless the user turns it on themselves
+  volume: 55,     // 0..100, only used when sound is on
 });
 
 function storageKey(userId) {
@@ -32,9 +38,13 @@ export function readNotifyPrefs(userId) {
   try {
     const raw = JSON.parse(localStorage.getItem(storageKey(userId)));
     if (!raw || typeof raw !== 'object') return { ...DEFAULT_NOTIFY_PREFS };
+    // Prefs written before the version tag carry the old "sound on" default, so
+    // they must not keep ringing; only an explicit choice made after the
+    // migration is honoured.
+    const migrated = Number(raw.v) !== PREFS_VERSION;
     return {
       notify: raw.notify !== false,
-      sound: raw.sound !== false,
+      sound: migrated ? DEFAULT_NOTIFY_PREFS.sound : raw.sound === true,
       volume: Math.max(0, Math.min(100, Number.isFinite(Number(raw.volume)) ? Number(raw.volume) : DEFAULT_NOTIFY_PREFS.volume)),
     };
   } catch {
@@ -44,7 +54,7 @@ export function readNotifyPrefs(userId) {
 
 export function writeNotifyPrefs(userId, prefs) {
   try {
-    localStorage.setItem(storageKey(userId), JSON.stringify(prefs));
+    localStorage.setItem(storageKey(userId), JSON.stringify({ ...prefs, v: PREFS_VERSION }));
   } catch { /* private mode: preferences stay in memory for this session */ }
   return prefs;
 }

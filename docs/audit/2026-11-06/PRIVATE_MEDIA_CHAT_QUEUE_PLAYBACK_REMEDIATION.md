@@ -10,7 +10,7 @@
 
 Bốn yêu cầu gốc:
 
-1. Chat không được mất khi đổi route / refresh / mất mạng; có đếm tin chưa đọc trên tiêu đề tab Chrome và tiếng "ting" kiểu Telegram.
+1. Chat không được mất khi đổi route / refresh / mất mạng; có đếm tin chưa đọc trên tiêu đề tab Chrome, ví dụ `(1)`, `(2)`, `(9+)`. **Chủ sở hữu đã chốt lại (06/11): bỏ tiếng — chỉ cần con số trên tab.** Âm báo vẫn còn nhưng **mặc định tắt**, chỉ bật khi tự tay chọn.
 2. Video không được phát lại ~1 giây cuối sau khi hết bài.
 3. Hàng chờ nghe chung phải tự chuyển bài (A → B → C → IDLE) mà không bấm "Bài tiếp theo".
 4. Nghe riêng phải có hàng chờ và lưu được vào playlist (tuần tự / ngẫu nhiên / lặp lại).
@@ -59,6 +59,7 @@ Ràng buộc:
 - Socket: `private-media:chat-read` → broadcast `private-media:chat-read` tới room riêng của user (`userRoom(userId)`) để tab khác của cùng tài khoản cũng xoá badge.
 - Client: `chatPush(message, {live})` chỉ báo khi `live && !mine && !isChatOnScreen()`; `chatIdsRef` chống trùng theo `id`; `syncChat()` dùng `after=` để vá đúng phần thiếu khi reconnect.
 - `ChatPanel` đăng ký `registerOpen(open)` khi mount/unmount → rời trang là "không nhìn thấy" nên badge tiếp tục đếm.
+- **Âm báo mặc định TẮT** (`DEFAULT_NOTIFY_PREFS.sound = false`): badge trên tab là tín hiệu chính, đủ để nhận biết `(1)`/`(2)` mà không làm ồn khi đang nghe nhạc. Prefs cũ (bản trước ghi `sound: true`) được **migrate một lần** qua `PREFS_VERSION = 2`, nên không ai còn bị kêu sau khi cập nhật; bật lại bằng tay thì lưu đúng lựa chọn đó.
 
 **Bằng chứng:** backend test 47–51 (persist/paginate/dedupe/quyền), e2e test 1 và 2.
 
@@ -218,7 +219,7 @@ Mọi chuyển bài vẫn đi qua đúng một `advance()`, trong transaction, c
 |---|---|
 | `backend/test/private_media_v3_chat_queue_playback.test.js` | 15 test (ENDED thật, ENDED giả, trùng, 2 browser, A→B→C→IDLE, solo/shared, chat cursor/unread, REST, playlist, shuffle, admin 404, thu hồi quyền) |
 | `frontend/test/playerSync.test.js` | 9 test quyết định player |
-| `frontend/test/mediaNotifications.test.js` | 6 test prefs/tiêu đề/ting/autoplay/Notification |
+| `frontend/test/mediaNotifications.test.js` | 7 test prefs/migrate prefs cũ/tiêu đề/ting/autoplay/Notification |
 | `frontend/e2e/private-media-v3.spec.js` | 10 kịch bản browser thật, 2 context |
 
 ---
@@ -237,7 +238,7 @@ backend  … test/persistence_regressions.test.js test/socket_room_auth.test.js
          → # tests 9   # pass 9   # fail 0
 
 frontend npm run test:unit
-         → # tests 15  # pass 15  # fail 0        (9 playerSync + 6 notifications)
+         → # tests 16  # pass 16  # fail 0        (9 playerSync + 7 notifications)
 
 frontend npm run check
          → 112 files, 0 errors
@@ -264,9 +265,9 @@ run      E2E_BASE_URL=http://127.0.0.1:5199 npx playwright test e2e/private-medi
 
 | # | Kịch bản | Kết quả | Bằng chứng cụ thể |
 |---|---|---|---|
-| 1 | Chat sống qua đổi route; đếm `(3) Tin nhắn mới`; ting gộp burst; đọc trên trang thì im lặng; rời trang thì ting + `(1)` | **PASS** | title `(3) Tin nhắn mới — 3WIN MEDIA`; burst 3 tin ⇒ ≤ 2 ting (không phải 3); 4 dòng không trùng; rời trang ⇒ `(1)` + đúng 1 ting |
+| 1 | Chat sống qua đổi route; đếm `(3)` trên tab; **hoàn toàn im lặng** | **PASS** | title `(3) Tin nhắn mới — 3WIN MEDIA`; burst 3 tin ⇒ **0** oscillator (không tiếng); 4 dòng không trùng; rời trang ⇒ `(1)`, vẫn 0 tiếng |
 | 2 | Refresh giữ nguyên lịch sử, không nhân đôi | **PASS** | số dòng trước = sau khi `reload()` |
-| 3 | Cài đặt thông báo chỉ sau nút bấm; mute + âm lượng lưu qua reload; quyền báo trung thực | **PASS** | `aria-expanded=false` lúc đầu; mặc định `Thông báo=on`, `Âm báo=on`, `Âm lượng=55%`; tắt Âm báo + 20% ⇒ `localStorage` `"sound":false,"volume":20` ⇒ reload vẫn giữ; permission `granted` (headed) ⇒ hiện "Thông báo hệ thống đã bật." |
+| 3 | Cài đặt thông báo chỉ sau nút bấm; **mặc định im lặng**; bật/tắt lưu qua reload; quyền báo trung thực | **PASS** | `aria-expanded=false` lúc đầu; mặc định `Thông báo=on`, **`Âm báo=off`**, `Âm lượng=55%`; bật Âm báo + 20% ⇒ `localStorage` `"sound":true,"volume":20` ⇒ reload vẫn giữ; tắt lại ⇒ reload vẫn tắt; permission `granted` (headed) ⇒ hiện "Thông báo hệ thống đã bật." |
 | 4 | Nghe riêng: hết A tự sang B, không replay | **PASS** | `loadVideoById(B)` đúng **1** lần; `playVideo` sau ENDED = **0**; `seekTo(≥197)` sau ENDED = **0** |
 | 5 | Mất mạng đúng lúc hết bài: không replay, nối lại tự sang B | **PASS** | offline 7s: `playVideo`=0, `seekTo`=0, `loadVideoById`=0; online: hiện QA B, load B đúng 1 lần |
 | 6 | Nghe chung 2 browser: A → B → C không bấm Next | **PASS** | cả hai tab hiện B rồi C; `Đang chờ · 0` sau khi hết |
@@ -275,7 +276,7 @@ run      E2E_BASE_URL=http://127.0.0.1:5199 npx playwright test e2e/private-medi
 | 9 | Autoplay bị chặn: hiện "Kích hoạt trình phát trên thiết bị này", không giả vờ đang phát | **PASS** | player state = 5 (CUED), không phải 1; bấm nút ⇒ state = 1, nút biến mất |
 | 10 | Tab ẩn nhận thông báo hệ thống thật; click quay về trang media | **PASS** | `Notification` thật được khởi tạo, `body` chứa nội dung tin; `onclick()` ⇒ URL `/private/media` |
 
-Chạy **2 lần liên tiếp trên DB mới** đều `10 passed` (1.4m và 58.4s).
+Chạy **2 lần liên tiếp trên DB mới** đều `10 passed` (59.8s và 55.6s) — sau khi đổi sang chế độ im lặng mặc định.
 
 **Ghi chú trung thực về QA:** trong headless Chromium, `Notification.permission` luôn là `denied` (giới hạn của headless), nên bài test được thiết kế để **chấp nhận cả hai trạng thái** và kiểm tra nhánh UI tương ứng; bằng chứng `granted` ở trên lấy từ cửa sổ Chromium **headed**. Player YouTube trong e2e được thay bằng một fake tất định (`window.__yt`) vì headless không giải mã video thật được — lỗi đang sửa nằm ở code của chúng ta, không nằm ở YouTube; mọi thứ còn lại (React, socket, server, DB) là thật. Ở kịch bản 10, trạng thái "tab ẩn" được **mô phỏng** (`visibilityState = 'hidden'`) vì Playwright mở mỗi page trong một cửa sổ riêng nên không thể làm tab kia thật sự bị ẩn; `Notification` và handler click vẫn là thật.
 
@@ -294,7 +295,7 @@ Chạy **2 lần liên tiếp trên DB mới** đều `10 passed` (1.4m và 58.4
 ## 14. Rủi ro còn lại và việc cần làm khi triển khai
 
 1. **Bắt buộc chạy migration** trước khi deploy backend: `cd backend && npm run db:migrate` (bảng `private_media_chat_reads`). Thiếu bước này, `GET /chat` sẽ lỗi khi tính unread.
-2. **Âm thanh ting** dùng Web Audio; AudioContext khởi đầu `suspended` cho tới khi người dùng có tương tác thật. Nếu tab chưa từng được bấm, ting sẽ **im lặng** (không lỗi) — đây là hành vi đúng theo chính sách autoplay, không phải bug.
+2. **Âm báo mặc định tắt.** Nếu người dùng tự bật, âm thanh dùng Web Audio và AudioContext khởi đầu `suspended` cho tới khi có tương tác thật — tab chưa từng được bấm sẽ **im lặng** (không lỗi), đúng chính sách autoplay.
 3. **Thông báo desktop** chỉ hoạt động khi tab còn mở; không có service worker/push (đúng phạm vi yêu cầu). Khi tab đóng hẳn, chỉ còn cách mở lại trang.
 4. **Thông báo hệ thống**: handler click đã được kiểm chứng bằng `Notification` thật (e2e #10). Phần **không** automation được là cú bấm vào bong bóng của hệ điều hành (macOS/Windows sở hữu hành vi đó), và hộp thoại xin quyền của trình duyệt.
 5. **Telegram bot**: luồng lệnh dùng chung engine đã test (36, 54) nhưng bot thật không chạy trong QA vì thiếu `TELEGRAM_BOT_TOKEN` — xem G51.
@@ -319,9 +320,9 @@ Chạy **2 lần liên tiếp trên DB mới** đều `10 passed` (1.4m và 58.4
 | G6 Unread chỉ reset khi thực sự đọc | **PASS** | e2e #1: ở lại trang ⇒ `(0)`; rời trang ⇒ tăng lại |
 | G7 Tin của chính mình không tăng unread | **PASS** | `chatPush` bỏ qua `mine`; backend `unreadCount` loại `user_id` (test 47) |
 | G8 Giao trùng không tăng đúp | **PASS** | dedupe theo `message.id` trước khi tăng |
-| G9 Ting tự tạo, không dùng audio của Telegram | **PASS** | 2 dao động sin E6→B6 tổng hợp; e2e đếm oscillator |
-| G10 Bật/Tắt thông báo + Âm báo + Âm lượng 0–100, lưu theo user/device | **PASS** | e2e #3 (localStorage `"sound":false,"volume":20` sau reload) |
-| G11 Gộp burst, không kêu mỗi tin | **PASS** | e2e #1: 3 tin ⇒ ≤ 2 ting (không phải 3) |
+| G9 Ting tự tạo, không dùng audio của Telegram | **PASS** | 2 dao động sin E6→B6 tổng hợp; **tắt mặc định**, chỉ dùng khi tự bật (e2e #3) |
+| G10 Bật/Tắt thông báo + Âm báo + Âm lượng 0–100, lưu theo user/device | **PASS** | e2e #3: mặc định `Âm báo=off`; bật + 20% ⇒ `"sound":true,"volume":20`; tắt lại ⇒ reload vẫn tắt |
+| G11 Badge là tín hiệu chính: không kêu dù nhiều tin | **PASS** | e2e #1: 3 tin ⇒ **0** oscillator, title vẫn `(3)`; tin lẻ ⇒ `(1)`, vẫn 0 tiếng |
 | G12 Không đổi/không tạm dừng âm lượng video | **PASS** | module thông báo có **0** tham chiếu `setVolume`, đồ thị audio riêng |
 | G13 Xử lý autoplay trung thực | **PASS** | `playNotificationTing` trả `blocked/unsupported`, không ném lỗi; unit test "suspended context" |
 | G14 Desktop notification chỉ sau nút bấm | **PASS** | e2e #3: popover đóng lúc đầu, `aria-expanded=false`, chỉ `requestPermission` trong `askPermission` |
@@ -383,7 +384,7 @@ Chạy **2 lần liên tiếp trên DB mới** đều `10 passed` (1.4m và 58.4
 | G45 `npm run check` | **PASS** | 112 file, 0 lỗi |
 | G46 Build frontend | **PASS** | `✓ built in 14.69s` |
 | G47 Backend regression liên quan | **PASS** | 55/55 + 15/15 + 9/9 |
-| G48 Frontend unit | **PASS** | 15/15 |
+| G48 Frontend unit | **PASS** | 16/16 |
 | G49 QA browser ≥ 2 context được cấp quyền | **PASS** | 10/10 headed, 2 lần liên tiếp trên DB mới |
 | G50 Report có bằng chứng, không PASS giả | **PASS** | tài liệu này; các mục `UNVERIFIED` được nêu rõ |
 | G51 Bot Telegram thật (gửi/nhận trên Telegram) | **UNVERIFIED** | QA không có `TELEGRAM_BOT_TOKEN`; chỉ kiểm chứng đường lệnh |

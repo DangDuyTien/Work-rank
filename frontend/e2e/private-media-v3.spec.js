@@ -190,7 +190,7 @@ async function openQaPlaylist(page) {
 
 test.describe.configure({ mode: 'serial' });
 
-test('chat survives a route change, keeps unread in the tab title, and rings once', async ({ browser, request }) => {
+test('chat survives a route change and counts unread on the tab, silently', async ({ browser, request }) => {
   const owner = await loginAs(request, OWNER);
   const friend = await loginAs(request, FRIEND);
   const a = await openApp(browser, owner, { room: 'shared' });
@@ -218,16 +218,10 @@ test('chat survives a route change, keeps unread in the tab title, and rings onc
   const title = await a.page.title();
   expect(title).toContain('3WIN MEDIA');
 
-  // A burst of three messages must not ring three times: the sound is
-  // coalesced inside a short window while the unread counter is not (it says
-  // three). Three messages ringing once each would be 6 oscillators, so any
-  // even count below that proves at least one burst was merged.
-  await expect.poll(async () => a.page.evaluate(() => window.__tingCount || 0), { timeout: 5_000 })
-    .toBeGreaterThanOrEqual(2);
+  // The badge IS the notification: no sound, no matter how many messages land.
+  // (The fake player counts oscillators; a silent badge creates none.)
   await a.page.waitForTimeout(1500);
-  const burstTings = await a.page.evaluate(() => window.__tingCount || 0);
-  expect(burstTings % 2, 'a ting is two oscillators').toBe(0);
-  expect(burstTings, 'three messages must not ring three times').toBeLessThanOrEqual(4);
+  expect(await a.page.evaluate(() => window.__tingCount || 0), 'the badge must stay silent').toBe(0);
 
   // A comes back: the history is intact and the badge is cleared.
   await a.page.goto('/private/media');
@@ -246,22 +240,18 @@ test('chat survives a route change, keeps unread in the tab title, and rings onc
   expect(await a.page.title()).not.toContain('Tin nhắn mới');
   expect(await chat.locator('article.pm-chat__msg').count()).toBe(rowsBefore + 1);
 
-  // Reading on screen is quiet by design: no second chime for a message the
-  // person is literally looking at. (The counter lives on a fresh document
-  // after the navigation above, so it is baselined here, not at zero.)
+  // Reading on screen is quiet by design, and so is everything else now.
   await a.page.waitForTimeout(800);
   expect(await a.page.evaluate(() => window.__tingCount || 0)).toBe(tingsBefore);
 
-  // Leave the page again: the next message must ring exactly once and raise
-  // the badge, which is the whole point of the notification work.
-  // Navigating by clicking (not `goto`) is what a person actually does — and it
-  // is also what unlocks the AudioContext, so the chime is allowed to play.
+  // Leave the page again: the next message raises the badge and still makes no
+  // noise — the count on the tab is what tells the person someone wrote.
   await a.page.getByRole('link', { name: /Tổng quan/ }).first().click();
   await a.page.waitForURL('**/dashboard');
-  const awayTings = await a.page.evaluate(() => window.__tingCount || 0);
   await sendChat(b.page, fifth);
   await expect.poll(async () => a.page.title(), { timeout: 10_000 }).toContain('(1) Tin nhắn mới');
-  await expect.poll(async () => a.page.evaluate(() => window.__tingCount || 0), { timeout: 5_000 }).toBe(awayTings + 2);
+  await a.page.waitForTimeout(1200);
+  expect(await a.page.evaluate(() => window.__tingCount || 0), 'a lone message must be silent too').toBe(tingsBefore);
 
   await a.context.close();
   await b.context.close();
@@ -293,7 +283,7 @@ test('a refresh restores the same chat history with no duplicates', async ({ bro
   await b.context.close();
 });
 
-test('notification settings are behind an explicit button, mute sticks, and permission is honest', async ({ browser, request }) => {
+test('notification settings are behind an explicit button, silent by default, and opt-in sticks', async ({ browser, request }) => {
   const owner = await loginAs(request, OWNER);
   const context = await browser.newContext();
   const origin = new URL(process.env.E2E_BASE_URL || 'http://127.0.0.1:5199').origin;
@@ -326,8 +316,8 @@ test('notification settings are behind an explicit button, mute sticks, and perm
   await expect(soundBox).toBeVisible();
   await expect(volume).toBeVisible();
   await expect(notifyBox).toBeChecked();
-  await expect(soundBox).toBeChecked();
-  // 55% is the shipped default: audible, but never louder than the video.
+  // Silent by default: the count on the tab is the notification.
+  await expect(soundBox).not.toBeChecked();
   await expect(volume).toHaveValue('55');
 
   // Honest permission reporting, not a fake "enabled" badge.
@@ -339,23 +329,30 @@ test('notification settings are behind an explicit button, mute sticks, and perm
     await expect(page.getByRole('button', { name: 'Bật thông báo trên máy tính' })).toBeVisible();
   }
 
-  // Mute is a real setting: it survives a reload, per user, on this device.
-  await soundBox.uncheck();
-  await expect(soundBox).not.toBeChecked();
+  // Turning the sound on is still possible, and it is remembered.
+  await soundBox.check();
+  await expect(soundBox).toBeChecked();
   await volume.fill('20');
   await expect(page.getByText('20%')).toBeVisible();
   const stored = await page.evaluate((userId) => (
     localStorage.getItem(`workrank:private-media:notify:v1:${userId}`)
   ), owner.user.id);
-  expect(stored).toContain('"sound":false');
+  expect(stored).toContain('"sound":true');
   expect(stored).toContain('"volume":20');
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Điều khiển media' })).toBeVisible({ timeout: 20_000 });
   await page.getByRole('button', { name: 'Cài đặt thông báo tin nhắn' }).click();
-  await expect(page.getByRole('checkbox', { name: 'Âm báo' })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Âm báo' })).toBeChecked();
   await expect(page.getByRole('checkbox', { name: 'Thông báo tin nhắn' })).toBeChecked();
   await expect(page.getByRole('slider', { name: 'Âm lượng thông báo' })).toHaveValue('20');
+
+  // …and switching it back off sticks too.
+  await page.getByRole('checkbox', { name: 'Âm báo' }).uncheck();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Điều khiển media' })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole('button', { name: 'Cài đặt thông báo tin nhắn' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Âm báo' })).not.toBeChecked();
 
   await context.close();
 });
